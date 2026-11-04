@@ -34,6 +34,7 @@ import type {
   OperationOptions,
   Position,
   RankPosition,
+  RootConfigPatch,
   Services,
   StageInput,
   StagePatch,
@@ -280,7 +281,7 @@ export interface CoreOperations {
   'stories.move': { input: { key: string; stage: Slug; top: boolean } & OperationOptions; result: Story };
   'stories.rank': { input: { key: string; position: RankPosition } & OperationOptions; result: Story };
   'stories.remove': { input: { key: string } & OperationOptions; result: undefined };
-  'config.updateRootConfig': { input: { onboardingComplete: boolean } & OperationOptions; result: RowblyConfig };
+  'config.updateRootConfig': { input: RootConfigPatch & OperationOptions; result: RowblyConfig };
   'feature-flags.set': { input: { key: string; enabled: boolean } & OperationOptions; result: FeatureFlag };
   'plugins.enable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   'plugins.disable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };

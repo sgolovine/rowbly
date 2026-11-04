@@ -1237,24 +1237,40 @@ and preserves local Me. Invalid or missing registration paths create nothing. Wi
 Root, Continue returns to the startup picker when roots have been registered; with none, it opens setup.
 An explicit missing `--data-root` still fails before onboarding; a missing registered default is shown in the startup picker.
 
-Data Root onboarding asks how you work: **Plain Kanban**, **Software Factory**, or **Both**.
-Plain Kanban turns Software Factory off; the other modes turn it on. Choose an existing Board, or
-create the first Board. Kanban and Both then offer optional Plugins; Software Factory goes straight
-to factory guidance. Unchecked Plugins are turned off with their Plugin Data kept.
+Data Root onboarding is a row of step tabs on the main screen: **Mode**, **Board**, **Plugins**,
+**AI and skills**, **Factory setup**, **Stage Prompts** and **Finish**. Click a tab to open its step,
+or use the **Back** (`ctrl+←`) and **Next** (`ctrl+→`) Buttons below it; **Next** never requires the
+step to be done, and on Finish it finishes onboarding. While you edit a text field, those keys stay
+with the field; the Buttons still work. **Skip onboarding** (`ctrl+k`) saves completion as below.
+Nothing opens as a Modal: after each choice the step stays on screen with its result, and its tab
+gets a `✓`.
 
-The separate AI usage question offers official agent skills. Choose a skill, destination folder and
-harness to install it through the same service as `rowbly skills install`; existing folders are never
-overwritten. Skills already installed below the current folder, or installed on this screen, are
-marked **(installed)** with their skills folders and stay selectable for another harness or folder.
-Choose **Continue** to leave the step, whether or not you installed anything. Choosing agent skills
-answers the AI usage question, so onboarding does not ask it after the skills step: Software Factory
-and Both return to factory guidance, which then offers **Finish onboarding**. The screen also explains creating and installing custom skills. Factory guidance opens
-Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
-Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
-for the Board right away, without asking again, and lists what it added, kept and skipped; nothing
-is added unless you choose it. Factory setup from a Board's settings still asks first. Both open in the
-onboarding screen itself rather than a modal, and `esc` returns to factory guidance. Use the editor to change and
-enable the instructions you want.
+**Mode** asks how you work: **Plain Kanban**, **Software Factory**, or **Both**. Plain Kanban turns
+Software Factory off and hides the two factory steps; the other modes turn it on and show them, and
+Software Factory alone hides Plugins. Reopened onboarding does not remember the mode: it shows the
+factory steps when Software Factory is on. **Board** chooses an existing Board, or creates the first
+Board. **Plugins** offers the optional Plugins; unchecked Plugins are turned off with their Plugin
+Data kept.
+
+**AI and skills** asks whether you will use AI agents. **Yes** offers official agent skills. Choose a
+skill, destination folder and harness to install it through the same service as `rowbly skills
+install`; existing folders are never overwritten. Skills already installed below the current folder,
+or installed on this screen, are marked **(installed)** with their skills folders and stay selectable
+for another harness or folder. **Continue** goes to the next step, whether or not you installed
+anything. The screen also explains creating and installing custom skills.
+
+**Factory setup** runs `software-factory setup` for your chosen Board as soon as the step opens,
+without asking again, and lists inside the step the Stages and Stage Prompts it added, kept and
+skipped; it keeps the Stages and Stage Prompts you already have. Factory setup from a Board's
+settings still asks first. **Stage Prompts** shows Stage Prompt editing for the Board
+inside the step, and explains skills and `ROWBLY.md`. Use it to change and enable the instructions you
+want.
+
+Onboarding saves each step you finish in the Data Root's committed `rowbly.config.json`, as
+`onboardingSteps`: Mode chosen, Board chosen or created, Plugin choices saved, the AI question
+answered, Factory setup run, and Stage Prompts left with **Next**. Like completion, this progress is
+shared. Opening onboarding again, from **Settings › Onboarding** or by switching to an incomplete Data
+Root, shows those marks and opens the first step not done. Saving progress never clears completion.
 
 Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for
 global onboarding, or in the Data Root's committed `rowbly.config.json` for Data Root onboarding.

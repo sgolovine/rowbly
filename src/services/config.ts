@@ -6,7 +6,12 @@ export function createConfigService(ctx: RowblyContext, _repos: Repositories, op
   return {
     updateRootConfig: (patch, opts = {}) =>
       ops.run('config.updateRootConfig', { ...patch, ...opts }, (changes) =>
-        changes.updateRootConfig((config) => ({ ...config, onboardingComplete: patch.onboardingComplete })),
+        // Only the keys given change, so saving step progress never clears completion (ADR-0057).
+        changes.updateRootConfig((config) => ({
+          ...config,
+          ...(patch.onboardingComplete === undefined ? {} : { onboardingComplete: patch.onboardingComplete }),
+          ...(patch.onboardingSteps === undefined ? {} : { onboardingSteps: patch.onboardingSteps }),
+        })),
       ),
     effective: (boardId) => resolveCascade(ctx.root, boardId),
     global: () => resolveGlobal(ctx.root),
