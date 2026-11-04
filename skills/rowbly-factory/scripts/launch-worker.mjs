@@ -366,7 +366,7 @@ async function prepareCheckout() {
   if (prefix.code !== 0) throw new Error(`Cannot locate the Data Root in Git: ${prefix.stderr.trim()}`);
   const rootPrefix = prefix.stdout.replace(/\n$/, '');
   out.dataRootChanges = (await changes('.')).filter((entry) =>
-    [entry.path, entry.from].some((path) => path !== undefined && path.startsWith(rootPrefix)),
+    [entry.path, entry.from].some((path) => path?.startsWith(rootPrefix)),
   );
   const policyPath = (path) => /(?:^|\/)ROWBLY\.md$|\/stage-prompts\/[^/]+\.md$/.test(path);
   out.policyChanges = out.dataRootChanges.filter((entry) =>
