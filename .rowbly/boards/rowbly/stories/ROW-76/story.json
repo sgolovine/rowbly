@@ -29,18 +29,18 @@
     "comments": {
       "comments": [
         {
-          "id": "S3RMRRtI",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:7dc93eb1-cd43-40c7-a902-f748402b7891 (thread mcp:7dc93eb1-cd43-40c7-a902-f748402b7891, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-76-implementation-launch.json. Branch: factory/row-76-implementation. PR: https://github.com/sgolovine/rowbly/pull/160. Head: 1b727229b22eeba63ce852a18b5632e5e19d5fe1 (verified gh pr view 160).",
-          "createdAt": "2026-11-04T00:50:54.403Z",
-          "updatedAt": "2026-11-04T00:50:54.403Z"
-        },
-        {
           "id": "59s6z86q",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/160 (branch factory/row-76-implementation, head 1b727229b22eeba63ce852a18b5632e5e19d5fe1). ModalFrame shows a clickable Close Button (esc key cap) in place of the hint strip for info modals (generic Modal, onClose, footer only esc, no Form or ConfirmDialog). The line goes blank when covered, and the ✕ stays. Docs: Modal.md, the rowbly-tui-design SKILL.md and user-guide.md. Validation: typecheck and lint pass, test:unit passes (79 tests in 21 files) and test:cli passes (21 tests in 4 files). agentic-tui screenshots are in the PR comment: Factory setup after it ran and Keys show Close, and clicks close them. New Story, New Board and ConfirmDialog keep their hints. No review findings to answer.",
           "createdAt": "2026-11-04T00:50:57.106Z",
           "updatedAt": "2026-11-04T00:50:57.106Z"
+        },
+        {
+          "id": "S3RMRRtI",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:7dc93eb1-cd43-40c7-a902-f748402b7891 (thread mcp:7dc93eb1-cd43-40c7-a902-f748402b7891, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-76-implementation-launch.json. Branch: factory/row-76-implementation. PR: https://github.com/sgolovine/rowbly/pull/160. Head: 1b727229b22eeba63ce852a18b5632e5e19d5fe1 (verified gh pr view 160).",
+          "createdAt": "2026-11-04T00:50:54.403Z",
+          "updatedAt": "2026-11-04T00:50:54.403Z"
         }
       ]
     }
