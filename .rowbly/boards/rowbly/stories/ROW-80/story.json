@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:10:18.449Z",
-  "updatedAt": "2026-11-04T01:41:00.464Z",
+  "updatedAt": "2026-11-04T01:41:01.095Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -54,6 +54,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/165 at 9ceed8726e7103c847271f1935c1a9b72b0c623a by codex/gpt-6.1-sol: APPROVED. Verified the implementation and reviewer launch receipts: reviewer mcp:e1083a3b-7369-466f-b9fe-2ededadf6c16 is distinct from implementing worker mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a using claudeAgent/claude-opus-5-5; the two authored commits and main merge are accounted for by its implementation record. Read the full diff, RootOnboarding and SkillInstall, the onboarding guide and both skill reference passages against all acceptance criteria and AGENTS.md. SkillInstall completion calls afterAi, which marks AI answered and returns Factory/Both to factory guidance with Finish onboarding, or Kanban to its final step; paths that never open skills still ask the AI question. The change remains compatible with ROW-78's separate inline Plugin-screen changes; ROW-86's proposed redesign is outside this review. No required findings and no new test required for this flow-only change. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), and pnpm test:cli (21 passed), all successfully. All four screenshot URLs return HTTP 200. All six current-head GitHub checks are completed with SUCCESS.",
           "createdAt": "2026-11-04T01:41:00.464Z",
           "updatedAt": "2026-11-04T01:41:00.464Z"
+        },
+        {
+          "id": "TgovwT1N",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/165 at 9ceed8726e7103c847271f1935c1a9b72b0c623a. Merge commit 9efe3aba1c830f9d5003b9f57c56f6a963171b46. Main CI run 41755528631 is in progress.",
+          "createdAt": "2026-11-04T01:41:01.094Z",
+          "updatedAt": "2026-11-04T01:41:01.094Z"
         }
       ]
     }
