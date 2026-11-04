@@ -28,8 +28,9 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
 | [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042, 0053 and 0057 |
 | [0057](0057-data-root-onboarding-saves-step-progress.md) | Data Root onboarding saves its step progress beside its completion flag | Accepted; amends 0041 |
-| [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted; amended by 0055 |
-| [0055](0055-missing-data-roots-are-listed-last.md) | Missing Data Roots are listed last, and picking one offers to delete it from the list | Accepted; amends 0042 |
+| [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted; amended by 0055 and 0056 |
+| [0055](0055-missing-data-roots-are-listed-last.md) | Missing Data Roots are listed last, and picking one offers to delete it from the list | Accepted; amends 0042, amended by 0056 |
+| [0056](0056-new-data-root-is-pinned-at-the-top.md) | **+ New Data Root** is a button pinned above the known Data Roots | Accepted; amends 0042 and 0055 |
 | [0049](0049-the-tui-checks-npm-for-a-newer-release.md) | The TUI checks npm for a newer Rowbly release when it starts | Accepted |
 
 ### Plugins
