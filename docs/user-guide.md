@@ -1267,7 +1267,7 @@ An explicit missing `--data-root` still fails before onboarding; a missing regis
 Data Root onboarding has six step tabs: **Usage**, **Board**, **Plugins**, **Agent skills**,
 **Stage Prompts** and **Summary**. With exactly one Board, the Board tab is hidden: onboarding puts
 that Board in context and marks the step done. Adding or removing a Board recomputes this choice.
-Click any tab to open its step, or use **Back** (`ctrl+←`) and **Next** (`ctrl+→`). **Next** never
+Click any tab to open its step, or use **Back** (`shift+←`) and **Next** (`shift+→`). **Next** never
 requires completion and finishes onboarding on Summary. Text fields keep their keys; the Buttons
 still work. **Skip onboarding** (`ctrl+k`) saves completion. Results stay inline, without Modals,
 and completed tabs have a `✓`. Changes are saved as they happen.
