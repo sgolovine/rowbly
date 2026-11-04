@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T02:14:53.495Z",
+  "updatedAt": "2026-11-04T02:14:54.164Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "q1sTbz3y",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
-          "createdAt": "2026-11-04T02:14:51.513Z",
-          "updatedAt": "2026-11-04T02:14:51.513Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -35,6 +24,24 @@
         "startedAt": "2026-11-04T02:06:40.284Z",
         "finishedAt": "2026-11-04T02:14:52.247Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "q1sTbz3y",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
+          "createdAt": "2026-11-04T02:14:51.513Z",
+          "updatedAt": "2026-11-04T02:14:51.513Z"
+        },
+        {
+          "id": "8FWdOX1x",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Skill text only: the factory skips every git sync when the Git Plugin is off and treats publication as done; one failed-sync rule for start and while running: 3 tries in all about 10 s and 20 s apart, no retry for conflicts or evidence, Automatic Merge Conflict Resolution Off, or exits 2 and 3. AGENTS.md summary and remote-launch.md step 6 match. Checks: typecheck, lint, test:unit 79 and test:cli 21 pass. No screenshots: no TUI or CLI change. No review findings to answer.",
+          "createdAt": "2026-11-04T02:14:54.163Z",
+          "updatedAt": "2026-11-04T02:14:54.163Z"
+        }
+      ]
     }
   }
 }
