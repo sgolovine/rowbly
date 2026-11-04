@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:20:36.124Z",
+  "updatedAt": "2026-11-04T05:20:36.746Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -131,6 +131,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca by codex/gpt-6-astra: CHANGES REQUESTED.  1. [P2] skills/rowbly-factory/scripts/launch-worker.mjs:439 and 558-560: reject missing or null synchronization state from git show. The preferences check accepts the other three fields, then syncState(undefined/null) bypasses validation and returns an empty evidence list. In two fresh private repositories, a successful show returning otherwise-valid preferences with synchronizationRun omitted or null led to later git status, git pull --ff-only, and status ready. This proves neither settlement nor the absence of an outstanding run/evidence; the actual git show contract supplies a synchronizationRun object even before the first run. Require a non-null usable status object at this inspection boundary and fail closed before sync, cleanup or pull when it is absent. Keep legitimate configuration/transport errors separately classified. Verify omitted and null states cannot reach any later Git operation; do not infer an empty state from an unreadable/missing result.  Fresh full review covered all four changed files and surrounding launch/command execution, full policy enumeration and both rename directions, staged/working/untracked diffs, enabled/loaded inspection, pending identities, evidence on success/failure, retry and settlement rules, per-machine/per-Stage scope, and composition with PR172/current main. All four original findings are repaired for their original inputs; the remaining finding extends the malformed-inspection boundary. Re-ran all 19 retained probes in new private repositories and six additional boundary probes: transport errors and malformed active runs stop, and renames into/out of the Data Root stop with reviewable policy diffs; omitted/null state incorrectly returns ready. Original Opus and correction Sol launch receipts and records account for the commits; verified Astra reviewer is independent of every author. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21) at this head. All six CI checks COMPLETED/SUCCESS; all 11 original/correction image URLs HTTP 200. No live rook/preferences/Board operations, product edits, agents or merge. Evidence: /tmp/row89-review2-evidence, especially boundaries/{missing-run,null-run}.result and .git-calls.  Policy review: the revised proposal correctly exempts waiting from automatic retry, retains/reconciles run identity and evidence, and requires policy/dirty review. Approve its text with this editorial replacement for the final sentence of replacement 2: \"Run no other Git or Board command during sync or backoff, except the bounded rowbly git show settlement reads permitted by the skill's Confirm publication protocol.\" This makes the general prohibition consistent with the explicit status-read exception in replacement 3 and the existing skill. The other proposed replacements are approved as written. Apply/publish only after the preparation blocker is repaired and independently approved; this review does not approve deploying the current script or moving ROW-89 Done.",
           "createdAt": "2026-11-04T05:20:36.123Z",
           "updatedAt": "2026-11-04T05:20:36.123Z"
+        },
+        {
+          "id": "jAsdyXao",
+          "author": "sunny",
+          "body": "Returned to In Progress: factory/row-89-part2, https://github.com/sgolovine/rowbly/pull/174, head bcb2e0b1184d3667498c21c173b2e4f91f61f3ca: missing or null synchronizationRun from otherwise-valid git show passes validation, runs later Git operations and returns ready; require a usable non-null status object and fail closed before sync/cleanup/pull. PR172 factory/row-89-implementation at 775085cab8aee7f732459d66c1c6d1b07bd27422 is independently APPROVED but not merged because both approvals are required first. Both heads pass all four local checks (79 unit,21 CLI) and all six CI checks; all 11 images return 200. Revised policy text approved with the settlement-read exception stated in review174; do not apply/publish until repair approval, and do not move Done before publication.",
+          "createdAt": "2026-11-04T05:20:36.745Z",
+          "updatedAt": "2026-11-04T05:20:36.745Z"
         }
       ]
     }
