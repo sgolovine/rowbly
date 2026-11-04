@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T00:30:21.099Z",
+  "updatedAt": "2026-11-04T00:30:21.739Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:23:16.874Z",
         "finishedAt": "2026-11-04T00:30:19.853Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "J8ra1PFW",
+          "author": "sunny",
+          "body": "Refinement: the cause is that Factory setup and Stage Prompt editing are pushed routes drawn as Modals, and onboarding keeps its step only in memory. The description now lists requirements for step tabs, Back, Next and Skip Buttons, inline steps, completion marks, and step progress saved in rowbly.config.json, which needs a new ADR amending ADR-0041 section 2 (the Story asks for this). Inline Stage Prompt editing within onboarding belongs to ROW-78; this Story hosts it in its Stage Prompts step. Ready for development.",
+          "createdAt": "2026-11-04T00:30:21.738Z",
+          "updatedAt": "2026-11-04T00:30:21.738Z"
+        }
+      ]
     }
   }
 }
