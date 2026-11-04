@@ -322,10 +322,13 @@ export function Form({
       } else if (key.upArrow || (!typed && input === 'k')) {
         moveFocus(-1);
       } else if (field.kind === 'boolean') {
-        if (input === ' ' || key.leftArrow || key.rightArrow) set(field.name, raw !== true);
+        if (input === ' ' || ((key.leftArrow || key.rightArrow) && !key.shift)) set(field.name, raw !== true);
       } else if (field.kind === 'select') {
         const options = field.options ?? [];
-        const step = key.rightArrow || input === 'l' || input === ' ' ? 1 : key.leftArrow || input === 'h' ? -1 : 0;
+        // shift+←/→ is left to the screen (onboarding step navigation).
+        const right = key.rightArrow && !key.shift;
+        const left = key.leftArrow && !key.shift;
+        const step = right || input === 'l' || input === ' ' ? 1 : left || input === 'h' ? -1 : 0;
         if (step && options.length > 0) {
           const at = typeof raw === 'string' ? options.indexOf(raw) : -1;
           set(field.name, options[(at + step + options.length) % options.length] ?? null);

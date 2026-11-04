@@ -31,18 +31,18 @@
           "updatedAt": "2026-11-04T17:36:51.945Z"
         },
         {
-          "id": "iteHgwyn",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/175 at 244f001d63cd6e88816ae4dffaf04b34e031f8cc by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-90 and the repository guidance, including Shift+arrow navigation, removal of the Ctrl+arrow alias, text-field capture, select/boolean arrow handling, unchanged Skip and Board keys, Button/footer keys and all three documentation updates. The two commits match the verified Claude implementation record; this is a separate Codex reviewer. Reviewed base 6ddf84dce89cad9fc2bba6a637ec72745f844b2f. Local checks passed: pnpm typecheck, pnpm lint, pnpm test:unit (79), pnpm test:cli (21), and git diff --check. All four screenshot URLs in the PR body return HTTP 200. No files excluded; interactive behavior was assessed through code and the author's recorded terminal evidence, without a new terminal session. All six GitHub checks remain queued, so merge must wait for the supervisor's resume.",
-          "createdAt": "2026-11-04T17:42:03.135Z",
-          "updatedAt": "2026-11-04T17:42:03.135Z"
-        },
-        {
           "id": "TrVzlOqd",
           "author": "sunny",
           "body": "Merged https://github.com/sgolovine/rowbly/pull/175 at 244f001d63cd6e88816ae4dffaf04b34e031f8cc",
           "createdAt": "2026-11-04T17:52:39.249Z",
           "updatedAt": "2026-11-04T17:52:39.249Z"
+        },
+        {
+          "id": "iteHgwyn",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/175 at 244f001d63cd6e88816ae4dffaf04b34e031f8cc by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-90 and the repository guidance, including Shift+arrow navigation, removal of the Ctrl+arrow alias, text-field capture, select/boolean arrow handling, unchanged Skip and Board keys, Button/footer keys and all three documentation updates. The two commits match the verified Claude implementation record; this is a separate Codex reviewer. Reviewed base 6ddf84dce89cad9fc2bba6a637ec72745f844b2f. Local checks passed: pnpm typecheck, pnpm lint, pnpm test:unit (79), pnpm test:cli (21), and git diff --check. All four screenshot URLs in the PR body return HTTP 200. No files excluded; interactive behavior was assessed through code and the author's recorded terminal evidence, without a new terminal session. All six GitHub checks remain queued, so merge must wait for the supervisor's resume.",
+          "createdAt": "2026-11-04T17:42:03.135Z",
+          "updatedAt": "2026-11-04T17:42:03.135Z"
         }
       ]
     }

@@ -214,7 +214,7 @@ no Board or Home Config level.
 
 Bare `rowbly` first offers global onboarding (Me and registration of existing Data Roots), then shared
 Data Root onboarding (step tabs: Usage, Board, Plugins, Agent skills, Stage Prompts,
-Summary; Back `ctrl+←`, Next `ctrl+→`). `ctrl+k` skips and saves completion. `onboardingComplete` is
+Summary; Back `shift+←`, Next `shift+→`). `ctrl+k` skips and saves completion. `onboardingComplete` is
 optional in the Home Config and in `rowbly.config.json`; absent means incomplete. The latter flag is
 committed and suppresses onboarding for everyone sharing it. `rowbly.config.json` also saves the
 finished Data Root steps as an optional `onboardingSteps` list of step ids (unknown ids ignored);

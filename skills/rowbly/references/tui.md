@@ -20,8 +20,8 @@ Onboarding reopens either flow without clearing flags. Global onboarding sets gl
 existing Data Roots only. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
 and Summary tabs. Exactly one Board skips its tab, puts it in context and marks it done; no Boards
 offers creation, several offers selection. Plugins is always shown, Stage Prompts only with Software
-Factory on. Agent skills opens directly without an AI question. Click any tab; Back `ctrl+←`, Next
-`ctrl+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
+Factory on. Agent skills opens directly without an AI question. Click any tab; Back `shift+←`, Next
+`shift+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
 Stage Prompts offers default prompts, minimal placeholders (all off), or inline editing (`esc`
 returns). Population is explicit, keeps existing Stages/prompts/files and shows added/kept/skipped
 inline; errors allow retry. Skills is done on install or continuing, Stage Prompts on successful

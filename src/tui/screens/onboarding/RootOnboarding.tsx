@@ -28,7 +28,7 @@ import {
 import { SkillInstall } from './SkillInstall';
 
 const MODE_LABEL: Record<Mode, string> = { kanban: 'Plain Kanban', factory: 'Software Factory', both: 'Both' };
-const NAV_HINT: KeyHint = { key: 'ctrl+←/→', description: 'back/next step' };
+const NAV_HINT: KeyHint = { key: 'shift+←/→', description: 'back/next step' };
 
 /**
  * Data Root onboarding as step tabs with Back, Next and Skip onboarding. Each action changes only the
@@ -170,7 +170,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   useInput(
     (_input, key) => {
       // A text field being edited keeps its keys.
-      if (!key.ctrl || shell.captured().text) return;
+      if (!key.shift || shell.captured().text) return;
       if (key.leftArrow) back();
       else if (key.rightArrow) next();
     },
