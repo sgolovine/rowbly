@@ -254,8 +254,15 @@ export interface SetupService {
   init(opts: InitOptions): Promise<InitResult>;
 }
 
+/** The onboarding keys `config.updateRootConfig` saves; an absent key keeps its stored value. */
+export interface RootConfigPatch {
+  onboardingComplete?: boolean;
+  /** Replaces the saved step ids (ADR-0057). */
+  onboardingSteps?: string[];
+}
+
 export interface ConfigService {
-  updateRootConfig(patch: { onboardingComplete: boolean }, opts?: OperationOptions): Promise<RowblyConfig>;
+  updateRootConfig(patch: RootConfigPatch, opts?: OperationOptions): Promise<RowblyConfig>;
   effective(boardId: Slug): Promise<EffectiveBoardConfig>;
   /** The global level alone: the stored `rowbly.config.json` and the Stages and Custom Fields a Board without its own gets. */
   global(): Promise<EffectiveGlobalConfig>;

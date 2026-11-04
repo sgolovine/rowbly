@@ -213,15 +213,18 @@ no Board or Home Config level.
 ## TUI onboarding
 
 Bare `rowbly` first offers global onboarding (Me and registration of existing Data Roots), then shared
-Data Root onboarding (mode, Board, Plugins, AI skills and Stage Prompts). `ctrl+k` skips and saves
-completion. `onboardingComplete` is optional in the Home Config and in `rowbly.config.json`; absent
-means incomplete. The latter flag is committed and suppresses onboarding for everyone sharing it.
+Data Root onboarding (step tabs: Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts,
+Finish; Back `ctrl+←`, Next `ctrl+→`). `ctrl+k` skips and saves completion. `onboardingComplete` is
+optional in the Home Config and in `rowbly.config.json`; absent means incomplete. The latter flag is
+committed and suppresses onboarding for everyone sharing it. `rowbly.config.json` also saves the
+finished Data Root steps as an optional `onboardingSteps` list of step ids (unknown ids ignored);
+reopening shows them and starts at the first step not done, and saving it never clears completion.
 Settings › Onboarding reopens either flow without clearing completion. Registration never creates a
 Data Root; setup still creates missing Data Roots. Named missing paths still fail. Plain Kanban turns
 Software Factory off; Factory/Both turn it on. Skill installs choose a folder and harness and never
-overwrite existing skills. Factory guidance can run Factory setup (`software-factory setup` for the
-Board) at once, without a second confirmation; nothing is added unless it is chosen. Factory setup in
-a Board's settings still asks first.
+overwrite existing skills. The Factory setup step runs `software-factory setup` for the Board when it
+opens, without a second confirmation, and lists what it added and kept inline. Factory setup in a
+Board's settings still asks first.
 
 ## Board Stats
 

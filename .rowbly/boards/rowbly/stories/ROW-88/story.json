@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Rowbly factory should not depend on git sync.",
   "description": "Git sync is a seperate plugin from rowbly factory and we do not want to create a dependency. If the git plugin is enabled, the factory skill should do a sync. If the plugin is not enabled, skip the sync. Currently if one git sync fails, rowbly factory skill will stop. Change instructions so agent can try up to 3 times, with exponential backoff between tries.",
-  "stage": "in-pr",
-  "rank": "a4",
+  "stage": "in-progress",
+  "rank": "a7",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T02:14:54.818Z",
+  "updatedAt": "2026-11-04T03:11:04.825Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,20 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Skill text only: the factory skips every git sync when the Git Plugin is off and treats publication as done; one failed-sync rule for start and while running: 3 tries in all about 10 s and 20 s apart, no retry for conflicts or evidence, Automatic Merge Conflict Resolution Off, or exits 2 and 3. AGENTS.md summary and remote-launch.md step 6 match. Checks: typecheck, lint, test:unit 79 and test:cli 21 pass. No screenshots: no TUI or CLI change. No review findings to answer.",
           "createdAt": "2026-11-04T02:14:54.163Z",
           "updatedAt": "2026-11-04T02:14:54.163Z"
+        },
+        {
+          "id": "hKLGhRON",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/169 at b1b2ed590f3ed1bcef42292dccaf160621660c03 by codex/gpt-6-astra: CHANGES REQUESTED. 1. skills/rowbly-factory/SKILL.md:35,61 — The skip rule covers Git off only. The clarified ROW-88 requirement also covers Git not loaded; plugins list exposes enabled and loaded separately, and an enabled Plugin can fail to load. That case is neither on-and-loaded nor off, leaving publication gates and Git commands unresolved. Require enabled AND loaded before Git setup/sync, and explicitly skip every sync/publication gate when either is false, including the remote-launch step 6 wording. 2. skills/rowbly-factory/SKILL.md:112-114 — Waiting until last settles does not establish publication: last can retain an older success while requested/active is present, or the new run can finish failed/interrupted. git show itself exits successfully for a failed result. Require requested/active to clear and a fresh completed last.kind=synchronized for the relevant attempt before releasing dependent GO/reply/remote-start gates. Route a settled failed/interrupted result through the bounded failure policy while keeping those gates closed. Reviewed all three changed files against the supervisor-confirmed refinement, plugin status rendering, synchronization result contract, startup and remote-launch composition, and preserved commit/event/evidence rules. Verified both launch receipts and the sole authoring commit: reviewer mcp:6555caf2-ee96-48c9-802d-23d30f52d9d8 is independent of implementing worker mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (claudeAgent/claude-opus-5-5). These findings are ROW-88 acceptance gaps; no additional ROW-89 startup/classification work is requested. No image URLs are present; this skill/doc-only change requires no TUI/CLI screenshot.",
+          "createdAt": "2026-11-04T03:11:03.514Z",
+          "updatedAt": "2026-11-04T03:11:03.514Z"
+        },
+        {
+          "id": "jSNMsJOX",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-88-implementation, PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Independent review requests changes: (1) SKILL.md:35,61 must skip sync/publication when Git is not loaded as well as off, composing with remote-launch step 6; (2) SKILL.md:112-114 must require no pending/active run and a fresh completed last.kind=synchronized, keeping dependent gates closed and applying failure policy for failed/interrupted completion. Review: https://github.com/sgolovine/rowbly/pull/169#issuecomment-6621461862. Local checks passed: typecheck, lint, unit 79, CLI 21. Six GitHub checks passed at inspection; mergeability UNKNOWN. No images present or required. No product or Board changes.",
+          "createdAt": "2026-11-04T03:11:04.179Z",
+          "updatedAt": "2026-11-04T03:11:04.179Z"
         },
         {
           "id": "q1sTbz3y",

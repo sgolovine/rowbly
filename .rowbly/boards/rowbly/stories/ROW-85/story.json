@@ -5,14 +5,14 @@
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
   "stage": "in-progress",
-  "rank": "a9",
+  "rank": "a8",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T02:55:49.314Z",
+  "updatedAt": "2026-11-04T03:13:58.734Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -64,11 +64,39 @@
           "updatedAt": "2026-11-04T02:40:14.189Z"
         },
         {
+          "id": "JLCwJK6M",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-85-implementation, PR https://github.com/sgolovine/rowbly/pull/168, head 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91. Fresh independent full review CHANGES REQUESTED: P2 at src/tui/shell/DataRootList.tsx:188-191: overflow hides rows visually but leaves hidden row mouse targets active; clicking the modal footer opens an invisible Data Root. Restrict hits to each row intersection with the roots viewport, including partially clipped rows. Prior pinning cases pass. Also conflicts with main only in docs/agents/adr/README.md after merged ROW-77; preserve both ADR-0056 and ADR-0057 and their statuses. Review: https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621473204. All 27 screenshot URLs HTTP 200; typecheck, lint, unit 79 and CLI 21 PASS. Empty checks are waiting, not failed. No merge or product/Board edits.",
+          "createdAt": "2026-11-04T03:11:46.892Z",
+          "updatedAt": "2026-11-04T03:11:46.892Z"
+        },
+        {
+          "id": "P7CiUCsX",
+          "author": "sunny",
+          "body": "Correction 2 pushed to https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation), head 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91. Response to review finding 1 (P2, wrapped labels or a short terminal scroll the button away): fixed. DataRootList draws every Data Root in a viewport below the fixed + New Data Root button and search line, sized to the room left and scrolled to the highlighted row's measured position, so wrapped rows count at their real height. The gaps go when fewer than three lines are left. The modal ScrollBody never scrolls. Checked with agentic-tui with 14 known Data Roots, current one last: 120x30 wrapped labels, 100x20 short labels and 120x30 short labels. In each, the button stayed visible on open and after page up, wheel and up to the button; page down and a no-match search were also checked at 120x30 wrapped labels and at 100x20. The startup picker still highlights the default first and up reaches the button. Screenshots (14, all return 200, branch pr-assets/factory/row-85-correction-2): https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621369308. PR Notes updated. Validation after merging origin/main: typecheck, lint, test:unit 79 and test:cli 21 pass. The new head needs a fresh independent review.",
+          "createdAt": "2026-11-04T03:03:44.706Z",
+          "updatedAt": "2026-11-04T03:03:44.706Z"
+        },
+        {
           "id": "X9h0F842",
           "author": "sunny",
           "body": "Returned to In Progress: branch factory/row-85-implementation, PR https://github.com/sgolovine/rowbly/pull/168, head 88db9395489cf1c84ee34117171ce65d75deb92d. Fresh independent review CHANGES REQUESTED: the two-line row budget still lets the outer modal scroll away + New Data Root with wrapped labels at 120x30, and its minimum one row overflows a 100x20 terminal. Keep the button pinned despite actual row height and short body space. Review: https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621261834. All six GitHub checks, typecheck, lint, unit 79 and CLI 21 pass; all 13 screenshot URLs return 200.",
           "createdAt": "2026-11-04T02:55:18.882Z",
           "updatedAt": "2026-11-04T02:55:18.882Z"
+        },
+        {
+          "id": "ZYaPvoey",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/168 at 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91 by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. [P2] Clip Data Root mouse targets to the roots viewport (src/tui/shell/DataRootList.tsx:188-191). The measured viewport renders every result and hides the overflow, but every rendered DataRootRow still registers an unrestricted clickable SelectListRow. The mouse registry uses measureElement bounds without intersecting the viewport, so invisible rows above/below it receive clicks on other parts of the modal. Reproduced twice with the exact-head built CLI through agentic-tui: 14 roots with wrapped labels at 120x30, current Root 13 last; open D, type a query with no matches, then Escape to clear (Root 00 highlighted). Click terminal column 55, row 26, visibly the modal's key-hint footer: the switcher closes and opens invisible Root 04. Before/after text evidence is retained at /tmp/row85-review3-dPNkrE/ghost-before.txt and ghost-after.txt. Restrict row hit testing to the visible intersection with the roots viewport, including partially clipped rows; clicks on the button, search line, gaps, count and footer must never activate a hidden root. Verify mouse selection of visible roots after scrolling as well. Fresh full-PR review covered the complete diff and touched files; measured viewport dimensions, measurement/ref lifecycle and focus reveal; initial current/default selection; -1 button navigation; page and wheel movement; search and no-match behavior; missing-last ordering; click handling; guide/skill updates; ADR-0056 and its amendments/index; and all four byte-identical reference copies. The prior pinning finding is fixed in the checked cases: the switcher button remains visible with wrapped labels at 120x30 and short labels at 100x20, current root last, through page/wheel navigation and navigation to the button. Also checked the short-label 120x30 switcher and startup picker default selection, Arrow Up to the button, page/wheel movement and no-match search. No product or Board changes were made. Provenance: read all three retained authoring launch receipts and the reviewer receipt. Implementers mcp:d292c972-e536-408b-865d-ec84fe0b4c13, mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 and mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0 each used claudeAgent/claude-opus-5-5, effort=\"medium\", fastMode=false. Their recorded heads account for all nine PR commits, including main merges. This distinct reviewer is mcp:db3a87dc-7cdf-47e5-8dc5-3061a4d95d6b, codex/gpt-6.1-sol, reasoningEffort=\"medium\", serviceTier=\"default\". Validation: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79 tests); pnpm test:cli PASS (21 tests). All 27 linked screenshot URLs returned HTTP 200. At the final state read the head was unchanged, GitHub reported CONFLICTING/DIRTY, and statusCheckRollup was empty (waiting, not failure). Independently fetched main and merge-tree identified only docs/agents/adr/README.md as conflicting, where already-merged ROW-77 adds ADR-0057 next to this PR's ADR-0056 edits; retain both ADRs and their amendment statuses when updating the branch. No merge. Private AGENTIC_TUI_STATE_DIR /tmp/row85-review3-dPNkrE/state was reported before use; every owned session was killed and the scoped daemon stopped successfully. ",
+          "createdAt": "2026-11-04T03:11:46.120Z",
+          "updatedAt": "2026-11-04T03:11:46.120Z"
+        },
+        {
+          "id": "bbCOmFs4",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0 (thread mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-2-launch.json. Branch: factory/row-85-correction-2, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91.",
+          "createdAt": "2026-11-04T03:03:42.737Z",
+          "updatedAt": "2026-11-04T03:03:42.737Z"
         },
         {
           "id": "cyMpzecM",
@@ -105,9 +133,9 @@
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0",
+        "worker": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
         "by": "sunny",
-        "startedAt": "2026-11-04T02:55:48.570Z"
+        "startedAt": "2026-11-04T03:13:57.985Z"
       }
     }
   }

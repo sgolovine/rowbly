@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Data root onboarding should walk you through steps",
   "description": "Problem: Data Root onboarding (src/tui/screens/onboarding/RootOnboarding.tsx) keeps its step only in memory and has no step indicator. Its factory step pushes the Factory setup and Stage Prompt editing routes, which the Shell draws as Modals over onboarding, so after esc the person is back on the same factory menu with no sign the action ran (see the attached screenshot). Goal: make Data Root onboarding a step-by-step flow on the main screen, with progress saved in the Data Root configuration. Requirements: (1) No Modals: every onboarding action happens inside the onboarding screen; Factory setup runs inline in its step and shows what it added and kept there; inline Stage Prompt editing within onboarding is ROW-78, so the Stage Prompts step hosts what ROW-78 builds instead of building it again. (2) Step tabs at the top: Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish; the two factory steps appear only when Software Factory is on (Software Factory or Both), Plugins is left out for the Software Factory mode as today, and clicking a tab opens its step. (3) On-screen Back, Next and Skip onboarding Buttons with key caps that follow the rowbly-tui-design skill; Skip keeps ctrl+k and saves onboardingComplete as today; Back and Next must not use ctrl+b or ctrl+n (already bound) or take keys from text fields and lists; Next never requires a step to be complete, and Next on the last step finishes onboarding. (4) Completion marks: a tab shows a mark once its step is done (Mode chosen, Board chosen or created, Plugin choices saved, AI question answered or a skill installed, factory setup ran successfully, Stage Prompts step left with Next), and after an action the step stays on screen with its result instead of returning to a menu. (5) Progress in config, as the original Story asks: completed steps are saved in the committed rowbly.config.json beside onboardingComplete as an optional field (for example onboardingSteps, a list of step ids; unknown ids are ignored), shared like that flag; reopening onboarding (Settings, Onboarding, or switching to an incomplete Data Root) shows the saved marks and opens the first incomplete step; absent means no steps are complete, and saving progress never clears onboardingComplete. Decisions and docs: add a new ADR in docs/agents/adr/ amending ADR-0041 section 2 (no new persistent settings) to allow saved step progress, update the Status line of ADR-0041 and add a row to docs/agents/adr/README.md; update docs/architecture/data-model.md for the new field, docs/architecture/operations.md if the input of config.updateRootConfig changes (today it patches only onboardingComplete), the Onboarding section of docs/user-guide.md, and the skills/rowbly reference if it describes onboarding. Out of scope: global onboarding, Settings, and the Stage Prompts screen outside onboarding. Tests: none required by AGENTS.md; verify in the TUI with agentic-tui screenshots in the PR. Related: ROW-78 (inline Stage Prompt editing within onboarding, Settings unchanged).",
-  "stage": "in-pr",
-  "rank": "a5",
+  "stage": "done",
+  "rank": "b0V",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:57:49.622Z",
+  "updatedAt": "2026-11-04T03:02:25.886Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -71,11 +71,25 @@
           "updatedAt": "2026-11-04T02:44:01.046Z"
         },
         {
+          "id": "cU96m3z3",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/171 at d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d by codex/gpt-6.1-sol: APPROVED. No actionable findings. Fresh full review of all 22 changed files against ROW-77, AGENTS.md and the TUI design system, including tab visibility/navigation and text/list focus guards, completion marks, inline ROW-75/ROW-78 integration, config schema and patch semantics, unknown step preservation, startup/Settings/Data Root switch routing, ADR-0057 and the documentation/reference updates. The prior P2 is resolved: successful Factory setup immediately persists its mark; RootOnboarding retains the result and passes it into the remounted FactorySetupScreen after Plugin reload, preventing a duplicate auto-run while keeping the inline result. Ctrl+K, Skip, quit and Data Root switching no longer depend on an in-memory deferred mark; choosing a Board clears the cached setup result. Both implementing workers' verified receipts identify claudeAgent/claude-opus-5-5, and the reviewer receipt identifies distinct worker mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70 using codex/gpt-6.1-sol; all eight PR commits are accounted for by the two implementation records. Reviewed base: 95a86a6401da8fb23765e21d8fc3fa95a01d4fab. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head CI checks are COMPLETED/SUCCESS; all 16 original and correction screenshot URLs returned HTTP 200. No files excluded, no product edits, no new TUI session; exit/remount verification is by code-path inspection and the supplied correction evidence. ROW-86 redesign remains out of scope.",
+          "createdAt": "2026-11-04T03:02:24.537Z",
+          "updatedAt": "2026-11-04T03:02:24.537Z"
+        },
+        {
           "id": "h3CkZbIc",
           "author": "sunny",
           "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
           "createdAt": "2026-11-04T01:58:00.166Z",
           "updatedAt": "2026-11-04T01:58:00.166Z"
+        },
+        {
+          "id": "l47PgpQO",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/171 at d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d. Merge commit 55395901290024a464475fa41d7df534cec0a955. Fresh independent review approved: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621354247. All four local checks and all six PR CI checks passed; all 16 screenshot URLs HTTP 200. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41764470254.",
+          "createdAt": "2026-11-04T03:02:25.174Z",
+          "updatedAt": "2026-11-04T03:02:25.174Z"
         },
         {
           "id": "vxWJYNtq",
@@ -85,16 +99,6 @@
           "updatedAt": "2026-11-04T02:49:02.817Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:57:48.887Z"
-      }
     }
   }
 }

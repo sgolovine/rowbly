@@ -44,7 +44,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 
 | Record | File | Holds |
 | --- | --- | --- |
-| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages`, `customFields` and `featureFlags` (Experimental Features), and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
+| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `onboardingComplete` and `onboardingSteps` ([Onboarding completion](#onboarding-completion)), `stages`, `customFields` and `featureFlags` (Experimental Features), and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
 | Local State | `local.json` | optional `board` (the current Board) and `me` (the local Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
 | Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
@@ -150,6 +150,14 @@ for everyone sharing that configuration. The Home Config flag is independent and
 `config.updateRootConfig` saves the Data Root flag through the normal Operation pipeline;
 `updateHomeConfig` saves the global flag. Reopening either flow in Settings keeps the flags set.
 See [ADR-0041](../agents/adr/0041-onboarding-completion-has-two-levels.md).
+
+Beside it, an optional `onboardingSteps` list holds the ids of the Data Root onboarding steps
+completed so far (`mode`, `board`, `plugins`, `ai`, `factory-setup`, `stage-prompts`), shared the
+same way. Absent means none; unknown ids are ignored when read and kept when saved.
+`config.updateRootConfig` changes only the keys it is given, so saving progress never clears
+`onboardingComplete`, and saved steps never set it. Opening Data Root onboarding shows the saved
+steps as done and starts at the first incomplete one
+([ADR-0057](../agents/adr/0057-data-root-onboarding-saves-step-progress.md)).
 
 ## Software Factory Run metadata
 

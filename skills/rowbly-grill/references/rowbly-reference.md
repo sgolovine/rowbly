@@ -384,7 +384,7 @@ New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift
 - Data Root `rowbly.config.json` → `featureFlags: { [key]: boolean }`; absent uses code default, explicit false wins, unknown keys kept; no Board/Home Config level.
 - TUI: Settings → Global → Experimental Features; `enter` turns the selected feature on/off. Empty registry has no toggle hint.
 
-TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared.
+TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared. `rowbly.config.json` also keeps optional `onboardingSteps` (finished Data Root step ids; reopening starts at the first not done).
 
 TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (New pinned at the top, then default first, others in registered order, missing last). `enter`/click opens, `n` opens setup, typing (or `/`) fuzzy-searches name and path, `esc` clears; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
 
