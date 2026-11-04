@@ -3,7 +3,7 @@
   "key": "ROW-75",
   "boardId": "rowbly",
   "name": "Remove duplicate confirmation during board setup",
-  "description": "When the user clicks \"Add factory Stages and default Stage Prompts\", it asks the user to confirm again which is redundant.",
+  "description": "## Problem: In Data Root onboarding (Software Factory or Both mode), choosing \"Add factory Stages and default Stage Prompts\" opens the Factory setup screen, which asks again with a single \"Set up Board <id>\" choice before running. The second confirmation is redundant (see attachment aYRu63f7R). ## Scope: src/tui/screens/onboarding/RootOnboarding.tsx (factory step, pluginRoute to software-factory factory-setup) and src/plugins/software-factory/FactorySetupScreen.tsx. ## Acceptance: (1) From onboarding, choosing the item runs software-factory setup right away for the Board, shows Setting up… and then the list of added/kept/skipped Stages and Stage Prompts, with no extra confirmation. Errors still show through ui.error. (2) Factory setup opened from Board settings (tui.ts settings entry) keeps its \"Set up Board <id>\" confirmation. (3) Setup runs only once per visit (no double run on re-render). (4) docs/user-guide.md (Data Root onboarding, \"when you confirm\") and skills/rowbly/references/setup.md are updated if they describe a confirmation. ## Notes: Suggested approach: onboarding passes a route param such as run: true, and the screen runs setupFactory on mount when it is set. Consistent with ADR-0053 §2.4 (runs only when chosen), so no ADR change. No test required (AGENTS.md: screens and flows).",
   "stage": "in-refinement",
   "rank": "a08",
   "priority": null,
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:03:27.354Z",
-  "updatedAt": "2026-11-04T00:28:47.151Z",
+  "updatedAt": "2026-11-04T00:29:04.391Z",
   "plugins": {
     "attachments": {
       "attachments": [
