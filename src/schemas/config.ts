@@ -15,6 +15,8 @@ export const RowblyConfigSchema = z.object({
   version: VersionSchema,
   /** Shared completion of Data Root onboarding (ADR-0041). */
   onboardingComplete: z.boolean().optional(),
+  /** Ids of the Data Root onboarding steps completed so far (ADR-0057); readers ignore unknown ids. */
+  onboardingSteps: z.array(z.string()).optional(),
   stages: StageListSchema.optional(),
   customFields: CustomFieldListSchema.optional(),
   /** Experimental feature overrides, shared by every Board in this Data Root. */

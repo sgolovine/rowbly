@@ -71,20 +71,6 @@
           "updatedAt": "2026-11-04T02:44:01.046Z"
         },
         {
-          "id": "h3CkZbIc",
-          "author": "sunny",
-          "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
-          "createdAt": "2026-11-04T01:58:00.166Z",
-          "updatedAt": "2026-11-04T01:58:00.166Z"
-        },
-        {
-          "id": "vxWJYNtq",
-          "author": "sunny",
-          "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
-          "createdAt": "2026-11-04T02:49:02.817Z",
-          "updatedAt": "2026-11-04T02:49:02.817Z"
-        },
-        {
           "id": "cU96m3z3",
           "author": "sunny",
           "body": "Review of https://github.com/sgolovine/rowbly/pull/171 at d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d by codex/gpt-6.1-sol: APPROVED. No actionable findings. Fresh full review of all 22 changed files against ROW-77, AGENTS.md and the TUI design system, including tab visibility/navigation and text/list focus guards, completion marks, inline ROW-75/ROW-78 integration, config schema and patch semantics, unknown step preservation, startup/Settings/Data Root switch routing, ADR-0057 and the documentation/reference updates. The prior P2 is resolved: successful Factory setup immediately persists its mark; RootOnboarding retains the result and passes it into the remounted FactorySetupScreen after Plugin reload, preventing a duplicate auto-run while keeping the inline result. Ctrl+K, Skip, quit and Data Root switching no longer depend on an in-memory deferred mark; choosing a Board clears the cached setup result. Both implementing workers' verified receipts identify claudeAgent/claude-opus-5-5, and the reviewer receipt identifies distinct worker mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70 using codex/gpt-6.1-sol; all eight PR commits are accounted for by the two implementation records. Reviewed base: 95a86a6401da8fb23765e21d8fc3fa95a01d4fab. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head CI checks are COMPLETED/SUCCESS; all 16 original and correction screenshot URLs returned HTTP 200. No files excluded, no product edits, no new TUI session; exit/remount verification is by code-path inspection and the supplied correction evidence. ROW-86 redesign remains out of scope.",
@@ -92,11 +78,25 @@
           "updatedAt": "2026-11-04T03:02:24.537Z"
         },
         {
+          "id": "h3CkZbIc",
+          "author": "sunny",
+          "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
+          "createdAt": "2026-11-04T01:58:00.166Z",
+          "updatedAt": "2026-11-04T01:58:00.166Z"
+        },
+        {
           "id": "l47PgpQO",
           "author": "sunny",
           "body": "Merged https://github.com/sgolovine/rowbly/pull/171 at d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d. Merge commit 55395901290024a464475fa41d7df534cec0a955. Fresh independent review approved: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621354247. All four local checks and all six PR CI checks passed; all 16 screenshot URLs HTTP 200. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41764470254.",
           "createdAt": "2026-11-04T03:02:25.174Z",
           "updatedAt": "2026-11-04T03:02:25.174Z"
+        },
+        {
+          "id": "vxWJYNtq",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
+          "createdAt": "2026-11-04T02:49:02.817Z",
+          "updatedAt": "2026-11-04T02:49:02.817Z"
         }
       ]
     }
