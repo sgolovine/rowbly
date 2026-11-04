@@ -421,7 +421,8 @@ async function prepareCheckout() {
       show.code !== 0 ||
       typeof preferences?.automaticCommits !== 'boolean' ||
       typeof preferences?.frequency !== 'string' ||
-      typeof preferences?.synchronization?.enabled !== 'boolean'
+      typeof preferences?.synchronization?.enabled !== 'boolean' ||
+      preferences.synchronizationRun == null
     ) {
       out.git.inspection = { code: show.code, error: rowblyError(show), stdout: show.stdout, stderr: show.stderr };
       fail(
