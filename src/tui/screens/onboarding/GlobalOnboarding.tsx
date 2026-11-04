@@ -95,6 +95,8 @@ export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Pro
               }
               const me = await setGlobalMe(home, handle);
               if (ctx) applyGlobalMe(ctx, me);
+              // Back to Me shows the saved handle.
+              saved.reload();
               setMeResult(`Saved ${handle} as global Me.`);
             }}
           />
