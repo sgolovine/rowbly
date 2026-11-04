@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T01:54:50.747Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
+    "at": "2026-11-04T01:58:01.077Z",
+    "source": "Verified worker plan: pinned button, selection/search/wheel preservation, required ADR amendment; ADR numbers coordinated",
+    "by": "sunny"
   }
 }
