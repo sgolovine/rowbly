@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:2c77af36-6fd3-49da-8887-7ed73c70fb20",
-    "at": "2026-11-04T00:53:06.250Z",
-    "source": "Verified exact-head APPROVED review; merge waiting for UNKNOWN state to settle",
+    "at": "2026-11-04T00:57:40.618Z",
+    "source": "Verified merged PR #158 and final reviewer FACTORY-DONE",
     "by": "sunny"
   }
 }
