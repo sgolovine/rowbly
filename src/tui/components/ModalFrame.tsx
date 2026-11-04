@@ -108,7 +108,8 @@ export function ModalFrame({
       </Box>
       {footer && (
         <Box
-          paddingX={2}
+          // The Close Button pads its own label, so it lines up with the body text.
+          paddingX={info ? 1 : 2}
           flexShrink={0}
           borderStyle="single"
           borderBottom={false}
