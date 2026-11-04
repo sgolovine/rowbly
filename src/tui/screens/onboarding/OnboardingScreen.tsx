@@ -29,8 +29,7 @@ export function OnboardingScreen({ params }: ScreenProps) {
     try {
       if (global) await updateHomeConfig(home, (config) => ({ ...config, onboardingComplete: true }));
       else if (services) await services.config.updateRootConfig({ onboardingComplete: true });
-      if (params.reopen) router.pop();
-      else if (global) {
+      if (global) {
         const next = await onboardingRoute(ctx, services);
         router.reset(next.screen, next.params);
       } else router.reset('home');
