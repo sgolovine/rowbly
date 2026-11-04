@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:d08ebab8-4061-4081-b3d6-b0c77c322860",
-    "at": "2026-11-04T00:33:33.439Z",
-    "source": "Worker progress message: picker/switcher fuzzy search research",
+    "at": "2026-11-04T00:35:00.490Z",
+    "source": "Verified final worker message FACTORY-DONE; retained exact block",
     "by": "sunny"
   }
 }
