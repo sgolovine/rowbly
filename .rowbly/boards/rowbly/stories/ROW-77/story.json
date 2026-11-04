@@ -29,18 +29,18 @@
     "comments": {
       "comments": [
         {
+          "id": "B1yQ6hc7",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/171 (head 47495cf92bcd7730d511e3034b142a81bc2fe8da, branch factory/row-77-implementation). Data Root onboarding is step tabs (Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish) with Back ctrl+left, Next ctrl+right and Skip onboarding ctrl+k Buttons. Every step runs inline and keeps its result. Finished steps are saved as onboardingSteps in rowbly.config.json, and reopening opens the first step not done. ADR-0057 amends ADR-0041 section 2. The step reuses OnboardingPluginStep (ROW-78) and the Factory setup auto-run (ROW-75). The Factory setup mark is saved on leaving the step, so a rowbly.config.json Plugin reload does not run setup twice. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run with 11 screenshots in the PR. No review findings to answer yet.",
+          "createdAt": "2026-11-04T02:44:03.173Z",
+          "updatedAt": "2026-11-04T02:44:03.173Z"
+        },
+        {
           "id": "J8ra1PFW",
           "author": "sunny",
           "body": "Refinement: the cause is that Factory setup and Stage Prompt editing are pushed routes drawn as Modals, and onboarding keeps its step only in memory. The description now lists requirements for step tabs, Back, Next and Skip Buttons, inline steps, completion marks, and step progress saved in rowbly.config.json, which needs a new ADR amending ADR-0041 section 2 (the Story asks for this). Inline Stage Prompt editing within onboarding belongs to ROW-78; this Story hosts it in its Stage Prompts step. Ready for development.",
           "createdAt": "2026-11-04T00:30:21.738Z",
           "updatedAt": "2026-11-04T00:30:21.738Z"
-        },
-        {
-          "id": "h3CkZbIc",
-          "author": "sunny",
-          "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
-          "createdAt": "2026-11-04T01:58:00.166Z",
-          "updatedAt": "2026-11-04T01:58:00.166Z"
         },
         {
           "id": "YLOo6Men",
@@ -50,11 +50,11 @@
           "updatedAt": "2026-11-04T02:44:01.046Z"
         },
         {
-          "id": "B1yQ6hc7",
+          "id": "h3CkZbIc",
           "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/171 (head 47495cf92bcd7730d511e3034b142a81bc2fe8da, branch factory/row-77-implementation). Data Root onboarding is step tabs (Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish) with Back ctrl+left, Next ctrl+right and Skip onboarding ctrl+k Buttons. Every step runs inline and keeps its result. Finished steps are saved as onboardingSteps in rowbly.config.json, and reopening opens the first step not done. ADR-0057 amends ADR-0041 section 2. The step reuses OnboardingPluginStep (ROW-78) and the Factory setup auto-run (ROW-75). The Factory setup mark is saved on leaving the step, so a rowbly.config.json Plugin reload does not run setup twice. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run with 11 screenshots in the PR. No review findings to answer yet.",
-          "createdAt": "2026-11-04T02:44:03.173Z",
-          "updatedAt": "2026-11-04T02:44:03.173Z"
+          "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
+          "createdAt": "2026-11-04T01:58:00.166Z",
+          "updatedAt": "2026-11-04T01:58:00.166Z"
         }
       ]
     }
