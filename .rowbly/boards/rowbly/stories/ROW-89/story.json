@@ -12,16 +12,17 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T02:16:16.234Z",
+  "updatedAt": "2026-11-04T02:21:15.378Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
         "stage": "in-refinement",
-        "status": "running",
+        "status": "finished",
         "attempt": 1,
         "worker": "mcp:21f1e6fd-1150-439f-95eb-e9b41b4561a7",
         "by": "sunny",
-        "startedAt": "2026-11-04T02:16:15.459Z"
+        "startedAt": "2026-11-04T02:16:15.459Z",
+        "finishedAt": "2026-11-04T02:21:15.377Z"
       }
     }
   }
