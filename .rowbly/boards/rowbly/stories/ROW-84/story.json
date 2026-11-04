@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:22:43.663Z",
-  "updatedAt": "2026-11-04T01:25:54.616Z",
+  "updatedAt": "2026-11-04T01:25:55.926Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:06dad2e5-cb38-4d27-b257-c31ce0c65a00",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:18:22.162Z",
+        "finishedAt": "2026-11-04T01:25:54.615Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -36,19 +47,15 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/164 (branch factory/row-84-implementation, head 95ce69eaa6e977ecf172ed70ffe055bf5976ae94). Settings › Onboarding now resets to the full-screen onboarding route for both levels; the reopen/pop Modal path is removed, so finishing or ctrl+k ends like startup onboarding and completion flags stay set. User guide Onboarding section updated. Validation: pnpm typecheck, pnpm lint, pnpm test:unit (79/79) and pnpm test:cli (21/21) pass; agentic-tui screenshots of both flows in the PR. No review findings to answer.",
           "createdAt": "2026-11-04T01:16:33.468Z",
           "updatedAt": "2026-11-04T01:16:33.468Z"
+        },
+        {
+          "id": "YV3kSNYJ",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/164 at 95ce69eaa6e977ecf172ed70ffe055bf5976ae94. Independent codex/gpt-6-astra review approved this head; all six CI checks passed and all five screenshot URLs returned HTTP 200. Merge commit 9ef01ad9f786762268696123a05088cce5d64e90. Local typecheck, lint, unit tests (79/79) and CLI tests (21/21) passed. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41753818781.",
+          "createdAt": "2026-11-04T01:25:55.925Z",
+          "updatedAt": "2026-11-04T01:25:55.925Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:06dad2e5-cb38-4d27-b257-c31ce0c65a00",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:18:22.162Z",
-        "finishedAt": "2026-11-04T01:25:54.615Z"
-      }
     }
   }
 }
