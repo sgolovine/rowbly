@@ -33,8 +33,8 @@ const ACTION_KEYS = new Set(['n', 'e', 'd']);
 /**
  * The known Data Roots of the Home Config, opened from the header's Data Root button or `D`. Picking
  * one opens it in place of the current one, which stays open when it cannot be read; the labels and
- * the default stay as they are. **+ New Data Root** (or `n`) opens setup, which switches to the new one.
- * Either asks first while a form holds unsaved changes. `e` edits the highlighted one's label and
+ * the default stay as they are. **+ New Data Root** (or `n`), pinned at the top, opens setup, which
+ * switches to the new one. Either asks first while a form holds unsaved changes. `e` edits the highlighted one's label and
  * default; `d` forgets it or deletes its folder, asking which, except the one that is open. Typing
  * any other key searches them (`DataRootList`). Missing ones are listed last, and picking one says it
  * no longer exists and offers to delete it from the list.
@@ -174,6 +174,8 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
             actionKey={(input) => ACTION_KEYS.has(input)}
             onHighlight={setHighlighted}
             onPick={pick}
+            // `Opening …` takes its gap and line.
+            below={opening ? 2 : 0}
             renderRow={(root, highlighted, onClick) => (
               <DataRootRow root={root} home={home} highlighted={highlighted} active={picking} onClick={onClick} />
             )}
