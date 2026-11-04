@@ -29,6 +29,13 @@
     "comments": {
       "comments": [
         {
+          "id": "AM5EgHXV",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/159, head f87b4e0717e34854b56b93ac48a9499a8a0b24d4. Removed the Label field and its intro sentence from the TUI New Data Root form and the interactive label prompt from rowbly init. --label is kept. Updated docs/user-guide.md. Validation: typecheck and lint pass, test:unit 79 passed, test:cli 21 passed; checked by hand with the built CLI (form fields, no init label prompt, init --label Work records the label). Before/after screenshots are in the PR comment. No review findings.",
+          "createdAt": "2026-11-04T00:49:39.799Z",
+          "updatedAt": "2026-11-04T00:49:39.799Z"
+        },
+        {
           "id": "SCxuFwAy",
           "author": "sunny",
           "body": "Refinement: the Label setup field is the Data Root label in ~/.rowblyrc.json (header/switcher name), not a Board label. Plan: remove it from the TUI New Data Root form and the interactive rowbly init prompt; keep --label and the switcher e edit so it can still be set. Ready for In Progress.",
@@ -41,13 +48,6 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2 (thread mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-74-implementation-launch.json. Branch: factory/row-74-implementation. PR: https://github.com/sgolovine/rowbly/pull/159. Head: f87b4e0717e34854b56b93ac48a9499a8a0b24d4 (verified gh pr view 159).",
           "createdAt": "2026-11-04T00:49:27.757Z",
           "updatedAt": "2026-11-04T00:49:27.757Z"
-        },
-        {
-          "id": "AM5EgHXV",
-          "author": "sunny",
-          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/159, head f87b4e0717e34854b56b93ac48a9499a8a0b24d4. Removed the Label field and its intro sentence from the TUI New Data Root form and the interactive label prompt from rowbly init. --label is kept. Updated docs/user-guide.md. Validation: typecheck and lint pass, test:unit 79 passed, test:cli 21 passed; checked by hand with the built CLI (form fields, no init label prompt, init --label Work records the label). Before/after screenshots are in the PR comment. No review findings.",
-          "createdAt": "2026-11-04T00:49:39.799Z",
-          "updatedAt": "2026-11-04T00:49:39.799Z"
         }
       ]
     }
