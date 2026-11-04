@@ -1247,7 +1247,8 @@ answers the AI usage question, so onboarding does not ask it after the skills st
 and Both return to factory guidance, which then offers **Finish onboarding**. The screen also explains creating and installing custom skills. Factory guidance opens
 Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
 Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
-for the Board when you confirm; nothing is added unless you choose it. Use the editor to change and
+for the Board right away, without asking again, and lists what it added, kept and skipped; nothing
+is added unless you choose it. Factory setup from a Board's settings still asks first. Use the editor to change and
 enable the instructions you want.
 
 Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for
