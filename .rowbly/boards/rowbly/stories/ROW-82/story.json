@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:32:15.240Z",
+  "updatedAt": "2026-11-04T01:32:16.467Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:20:45.725Z",
+        "finishedAt": "2026-11-04T01:32:15.239Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -50,19 +61,15 @@
           "body": "Implementation record: In Progress attempt 1, finished (returned-work visit started 2026-11-04T01:20:45.725Z). Worker: mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468 (thread mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 correction launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-correction-1-launch.json. Branch: factory/row-82-correction-1, pushed to factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: 19ca37dd0298c32875491ccff05b8d8c1cecc43e (verified gh pr view 163). Changes: ADR-0055 amendment and composed merge of ROW-81/ROW-84.",
           "createdAt": "2026-11-04T01:32:13.097Z",
           "updatedAt": "2026-11-04T01:32:13.097Z"
+        },
+        {
+          "id": "9safBIpT",
+          "author": "sunny",
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/163, head 19ca37dd0298c32875491ccff05b8d8c1cecc43e. 1. Review finding 1 fixed in 4d263553: ADR-0055 amends ADR-0042 section 1 so that missing Data Roots, including a missing default, are listed after the existing ones in the startup picker and the D switcher, and picking one offers to delete it from the list. ADR-0042 Status and the ADR index are updated, and number 0055 is unused on main and the open PR branches. Merge 19ca37dd brings in origin/main with ROW-81 #162 and ROW-84 #164: missingLast and the missing-root dialog now run on top of the shared DataRootList search, and the docs keep both Stories' text. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass, and all six GitHub checks succeed. agentic-tui evidence of the composed build (search, missing-last including the default, the dialog from search and for a root gone after loading, delete, the wheel ignored under the dialog): https://github.com/sgolovine/rowbly/pull/163#issuecomment-6620065821. Rendered ADRs: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619969908.",
+          "createdAt": "2026-11-04T01:32:16.466Z",
+          "updatedAt": "2026-11-04T01:32:16.466Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:20:45.725Z",
-        "finishedAt": "2026-11-04T01:32:15.239Z"
-      }
     }
   }
 }
