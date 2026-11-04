@@ -174,8 +174,7 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
             actionKey={(input) => ACTION_KEYS.has(input)}
             onHighlight={setHighlighted}
             onPick={pick}
-            // A row is the name and the path below it; `Opening …` takes its gap and line.
-            rowHeight={2}
+            // `Opening …` takes its gap and line.
             below={opening ? 2 : 0}
             renderRow={(root, highlighted, onClick) => (
               <DataRootRow root={root} home={home} highlighted={highlighted} active={picking} onClick={onClick} />
