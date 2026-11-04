@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T02:16:43.849Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:f97c8696-680d-4ced-a96a-ce046ea705dc",
+    "at": "2026-11-04T02:17:35.763Z",
+    "source": "Verified reviewer started provenance, exact-head diff and merge-gate inspection",
+    "by": "sunny"
   }
 }
