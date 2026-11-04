@@ -57,20 +57,6 @@
           "updatedAt": "2026-11-04T17:39:47.412Z"
         },
         {
-          "id": "ZuSkv4xB",
-          "author": "sunny",
-          "body": "Returned to In Progress: branch factory/row-91, PR https://github.com/sgolovine/rowbly/pull/176, head dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 conflicts with main in src/tui/screens/onboarding/RootOnboarding.tsx, verified after git fetch origin with git merge-tree. ROW-90 PR #175 is merged into main; its shift+←/→ keys and hint win as ROW-91 specifies. Independent review at this head was APPROVED with no findings. Local validation passed: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed). Return for conflict resolution; no fixes made by this reviewer.",
-          "createdAt": "2026-11-04T17:54:00.084Z",
-          "updatedAt": "2026-11-04T17:54:00.084Z"
-        },
-        {
-          "id": "qMNp9fEm",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/176 at dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-91, AGENTS.md and the TUI design rules, including surrounding Form/key-capture behavior, shared navigation, Me saving in place and displaying the saved handle on return, registration/escape, completion/skip routing, skills completion and both documentation updates. All three implementation commits are covered by the verified claudeAgent/claude-opus-5-5 record; this reviewer is the separate recorded codex/gpt-6.1-sol worker. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed); git diff --check also passed. All five screenshot URLs in the PR description return HTTP 200; inspected the saved-Me and Agent skills images. Reviewed base a259f38714c7ee6a618c0deee44ecb4f4486df84 and revalidated the unchanged head before posting. CI remains queued in the single status snapshot; merge readiness still requires all current-head checks to pass. ROW-90 key changes remain outside this review, as the Story specifies.",
-          "createdAt": "2026-11-04T17:44:26.331Z",
-          "updatedAt": "2026-11-04T17:44:26.331Z"
-        },
-        {
           "id": "WU3gn21g",
           "author": "sunny",
           "body": "Review of https://github.com/sgolovine/rowbly/pull/176 at a6772e215accebd7b8468bac35f45538e701a5c1 by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all seven changed files against ROW-91, AGENTS.md and the Rowbly TUI design rules, including the merge resolution, shared shift+←/→ hint, GlobalOnboarding key.shift handler, Form/text capture and mouse Buttons, saving Me in place and restoring its saved handle, Back navigation, registration/escape, completion/skip routing, skills completion and all three documentation updates. The diff against main excludes ROW-90's own changes. The three implementation commits and merge commit are accounted for by the verified claudeAgent/claude-opus-5-5 records; reviewer worker/thread mcp:c6ecb533-e906-42b8-a639-37f6964636d6 is the separate recorded codex/gpt-6.1-sol worker and differs from every implementing worker/model. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed) and git diff --check; all passed. All five screenshot URLs in the PR description return HTTP 200. GitHub's current-head rollup has all six checks COMPLETED/SUCCESS, the PR is MERGEABLE/CLEAN, and there are no change-requesting reviews or unresolved review threads. Reviewed base 0ea4de6617be314ac8937c7e01a08f4dd7ad43df and revalidated the unchanged base/head immediately before posting. No new TUI sessions or daemons were started; interaction evidence is the author's agentic-tui captures and recorded manual run, with surrounding behavior checked in source.",
@@ -78,11 +64,25 @@
           "updatedAt": "2026-11-04T18:05:51.771Z"
         },
         {
+          "id": "ZuSkv4xB",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-91, PR https://github.com/sgolovine/rowbly/pull/176, head dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 conflicts with main in src/tui/screens/onboarding/RootOnboarding.tsx, verified after git fetch origin with git merge-tree. ROW-90 PR #175 is merged into main; its shift+←/→ keys and hint win as ROW-91 specifies. Independent review at this head was APPROVED with no findings. Local validation passed: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed). Return for conflict resolution; no fixes made by this reviewer.",
+          "createdAt": "2026-11-04T17:54:00.084Z",
+          "updatedAt": "2026-11-04T17:54:00.084Z"
+        },
+        {
           "id": "q5i3omUn",
           "author": "sunny",
           "body": "Merged https://github.com/sgolovine/rowbly/pull/176 at a6772e215accebd7b8468bac35f45538e701a5c1. Merge commit: 1b8a6fca1255519941bc9fe6cf04a65dd94a1af7. Main CI run 41883521235 is queued. Checkout clean; no TUI sessions or daemons started; worktree and evidence retained.",
           "createdAt": "2026-11-04T18:05:52.493Z",
           "updatedAt": "2026-11-04T18:05:52.493Z"
+        },
+        {
+          "id": "qMNp9fEm",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/176 at dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-91, AGENTS.md and the TUI design rules, including surrounding Form/key-capture behavior, shared navigation, Me saving in place and displaying the saved handle on return, registration/escape, completion/skip routing, skills completion and both documentation updates. All three implementation commits are covered by the verified claudeAgent/claude-opus-5-5 record; this reviewer is the separate recorded codex/gpt-6.1-sol worker. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed); git diff --check also passed. All five screenshot URLs in the PR description return HTTP 200; inspected the saved-Me and Agent skills images. Reviewed base a259f38714c7ee6a618c0deee44ecb4f4486df84 and revalidated the unchanged head before posting. CI remains queued in the single status snapshot; merge readiness still requires all current-head checks to pass. ROW-90 key changes remain outside this review, as the Story specifies.",
+          "createdAt": "2026-11-04T17:44:26.331Z",
+          "updatedAt": "2026-11-04T17:44:26.331Z"
         }
       ]
     }

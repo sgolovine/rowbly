@@ -1,3 +1,5 @@
+import type { KeyHint } from '../../keymap';
+
 /** How a person uses the Data Root, chosen in the Usage step. */
 export type Mode = 'kanban' | 'factory' | 'both';
 
@@ -33,3 +35,6 @@ export function completedSteps(done: readonly string[]): string[] {
 export function firstIncomplete(steps: readonly StepId[], done: readonly string[]): StepId {
   return steps.find((id) => id !== 'finish' && !done.includes(id)) ?? 'finish';
 }
+
+/** The key hint for onboarding's Back and Next Buttons, shown on every step. */
+export const NAV_HINT: KeyHint = { key: 'shift+←/→', description: 'back/next step' };
