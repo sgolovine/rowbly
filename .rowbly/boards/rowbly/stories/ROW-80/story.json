@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:10:18.449Z",
-  "updatedAt": "2026-11-04T01:34:21.664Z",
+  "updatedAt": "2026-11-04T01:34:22.897Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:26:46.269Z",
+        "finishedAt": "2026-11-04T01:34:21.663Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -29,19 +40,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a (thread mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-80-implementation-launch.json. Branch: factory/row-80-implementation. PR: https://github.com/sgolovine/rowbly/pull/165. Head: 9ceed8726e7103c847271f1935c1a9b72b0c623a (verified gh pr view 165).",
           "createdAt": "2026-11-04T01:34:19.552Z",
           "updatedAt": "2026-11-04T01:34:19.552Z"
+        },
+        {
+          "id": "RiXryPlo",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/165 on branch factory/row-80-implementation, head 9ceed8726e7103c847271f1935c1a9b72b0c623a. Change: leaving the onboarding skills step (SkillInstall onDone = afterAi) sets aiAsked and returns to factory guidance (Software Factory, Both), which then offers Finish onboarding, or to the final step (Plain Kanban); the AI usage question is no longer asked after skills. Users who never open the skills step are still asked as before. docs/user-guide.md Onboarding updated; skills/rowbly/references/setup.md and tui.md checked, no change. Validation after merging origin/main: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed) all pass; no new test per AGENTS.md. Checked by hand in a fresh Data Root with agentic-tui: Software Factory, Choose agent skills, Continue shows factory guidance with Finish onboarding; origin/main shows the AI question. Before and after screenshots are in the PR comment (pr-assets/factory/row-80-implementation). No review findings to answer.",
+          "createdAt": "2026-11-04T01:34:22.896Z",
+          "updatedAt": "2026-11-04T01:34:22.896Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:26:46.269Z",
-        "finishedAt": "2026-11-04T01:34:21.663Z"
-      }
     }
   }
 }
