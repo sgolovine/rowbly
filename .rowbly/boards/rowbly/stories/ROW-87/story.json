@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Onboarding layout changes.",
   "description": "Summary: while onboarding is the root screen, show only the onboarding panel and the footer, and hide the header and every sidebar (see attachment aroOVSTy9). Current behavior: `src/tui/shell/Shell.tsx` always renders `Header`, the Boards `Sidebar` and any Plugin Sidebar around the root screen. Global onboarding (Welcome to Rowbly) and Data Root onboarding are root routes chosen by `src/tui/onboardingRoute.ts`, so they show inside that full frame. Scope: (1) In `Shell.tsx`, when `router.stack[0].screen` is `onboarding` (either level), do not render `Header`, the Boards Sidebar or the Plugin Sidebar. (2) The main Panel (titled Welcome to Rowbly or Data Root onboarding) fills the terminal: its width does not reserve sidebar columns or gaps, its height does not subtract `HEADER_HEIGHT`, and `LayoutContext` gets the matching width and height. (3) Keep the footer with the onboarding key hints (enter, ctrl+k skip onboarding, ? help, q quit), toasts and the help overlay. (4) While onboarding is the root screen, the keys for hidden chrome do nothing and show no hints: ctrl+b, the backslash, { and } keys, the Board number and [ ] keys, ctrl+p find Stories (also drop its footer hint), n new Story, the comma for Settings, D for Data Roots, and Plugin Action keys. (5) Finishing or skipping onboarding (router.reset to home, board or setup) brings the normal frame back. Out of scope: reopening onboarding from Settings, which is a modal today (ROW-84 makes it full screen, and it then gets this layout), and the onboarding steps, tabs and content (ROW-86). Acceptance criteria: on first run (global onboarding) and on Data Root onboarding, no header row or sidebar is drawn and the bordered onboarding panel spans the full width and fills the height above the footer; after onboarding completes or is skipped, the header and Boards sidebar are back as before; the keys listed above do nothing during onboarding. Verification: no new test is needed (layout change, AGENTS.md Tests). Check `pnpm dev` with a fresh HOME and a Data Root whose `onboardingComplete` is false. Add agentic-tui screenshots of both onboarding levels to the PR. Update `docs/user-guide.md` and `skills/rowbly/references/tui.md` if they describe the frame during onboarding.",
-  "stage": "in-pr",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "b0W",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:37:45.012Z",
-  "updatedAt": "2026-11-04T03:06:40.321Z",
+  "updatedAt": "2026-11-04T03:06:40.984Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:f8b57055-30f9-4334-8114-5fe1fd2afd25",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:03:10.821Z",
-        "finishedAt": "2026-11-04T03:06:38.416Z"
-      }
     },
     "comments": {
       "comments": [
