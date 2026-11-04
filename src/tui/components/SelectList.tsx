@@ -1,6 +1,6 @@
-import { Box, Text, useInput } from 'ink';
-import { useEffect, useState } from 'react';
-import { useIsActive, useKeyCapture } from '../hooks';
+import { Box, type DOMElement, Text, useInput } from 'ink';
+import { useEffect, useRef, useState } from 'react';
+import { useIsActive, useKeyCapture, useMouse, WHEEL_LINES } from '../hooks';
 import { moveDelta } from '../keymap';
 import { theme } from '../theme';
 import { SelectListRow } from './SelectListRow';
@@ -42,6 +42,7 @@ export interface SelectListProps<T> {
 /**
  * A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. In single mode
  * a click on an item picks it, as `enter` does. A right click highlights the item and calls `onContextMenu`.
+ * A wheel notch moves the highlight by `WHEEL_LINES` while the list is longer than `limit`.
  */
 export function SelectList<T>({
   items,
@@ -116,6 +117,19 @@ export function SelectList<T>({
     { isActive: active },
   );
 
+  // Only a list that scrolls takes the wheel, so a short one leaves it to an enclosing ScrollBody or modal.
+  const listRef = useRef<DOMElement>(null);
+  useMouse(
+    listRef,
+    {
+      onWheel: (direction) =>
+        setCursor((current) =>
+          Math.max(0, Math.min(visible.length - 1, Math.min(current, visible.length - 1) + direction * WHEEL_LINES)),
+        ),
+    },
+    active && visible.length > limit,
+  );
+
   const start = Math.max(0, Math.min(index - Math.floor(limit / 2), visible.length - limit));
   const rows = visible.slice(start, start + limit);
 
@@ -130,37 +144,39 @@ export function SelectList<T>({
       {visible.length === 0 && (
         <Text color={theme.inkFaint}>{items.length === 0 ? emptyText : `No matches for "${filter}".`}</Text>
       )}
-      {rows.map((item, i) => {
-        const highlighted = start + i === index;
-        const checkbox = multi ? (selected.includes(item.value) ? '[x] ' : '[ ] ') : '';
-        // In single mode a click picks the item, as `enter` on it does.
-        const pick =
-          !multi && onSelect
-            ? () => {
+      <Box ref={listRef} flexDirection="column">
+        {rows.map((item, i) => {
+          const highlighted = start + i === index;
+          const checkbox = multi ? (selected.includes(item.value) ? '[x] ' : '[ ] ') : '';
+          // In single mode a click picks the item, as `enter` on it does.
+          const pick =
+            !multi && onSelect
+              ? () => {
+                  setCursor(start + i);
+                  onSelect(item);
+                }
+              : undefined;
+          const menu = onContextMenu
+            ? (x: number, y: number) => {
                 setCursor(start + i);
-                onSelect(item);
+                onContextMenu(item, x, y);
               }
             : undefined;
-        const menu = onContextMenu
-          ? (x: number, y: number) => {
-              setCursor(start + i);
-              onContextMenu(item, x, y);
-            }
-          : undefined;
-        return (
-          <SelectListRow
-            key={String(item.value)}
-            highlighted={highlighted}
-            active={active}
-            onClick={pick}
-            onContextMenu={menu}
-          >
-            {checkbox}
-            {item.label}
-            {item.description && <Text color={theme.inkFaint}> {item.description}</Text>}
-          </SelectListRow>
-        );
-      })}
+          return (
+            <SelectListRow
+              key={String(item.value)}
+              highlighted={highlighted}
+              active={active}
+              onClick={pick}
+              onContextMenu={menu}
+            >
+              {checkbox}
+              {item.label}
+              {item.description && <Text color={theme.inkFaint}> {item.description}</Text>}
+            </SelectListRow>
+          );
+        })}
+      </Box>
       {visible.length > rows.length && <Text color={theme.inkFaint}>{`  ${index + 1}/${visible.length}`}</Text>}
     </Box>
   );
