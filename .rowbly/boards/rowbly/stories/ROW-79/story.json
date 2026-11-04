@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-04T00:47:09.384Z",
+  "updatedAt": "2026-11-04T00:47:11.220Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7",
+        "by": "sunny",
+        "startedAt": "2026-11-04T00:41:52.076Z",
+        "finishedAt": "2026-11-04T00:47:09.382Z"
+      }
     },
     "comments": {
       "comments": [
@@ -41,19 +52,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7 (thread mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 t3_thread_launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-79-implementation-launch.json. Branch: factory/row-79-implementation. PR: https://github.com/sgolovine/rowbly/pull/158. Head: eaf4009472cd173e2746f9e8ab21ed2a16fbec9b (verified gh pr view 158).",
           "createdAt": "2026-11-04T00:46:56.559Z",
           "updatedAt": "2026-11-04T00:46:56.559Z"
+        },
+        {
+          "id": "Mb4OFQV0",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/158 on factory/row-79-implementation, head eaf4009472cd173e2746f9e8ab21ed2a16fbec9b. Onboarding Agent skills step marks installed skills as Install <name> (installed) with their skills folders (from listAllSkills(cwd) plus installs made on this screen); installed skills stay selectable; the last item is now Continue (calls onDone). The user guide onboarding paragraph is updated. Validation: pnpm typecheck pass, pnpm lint pass, pnpm test:unit 79 passed, pnpm test:cli 21 passed; checked by hand with the built CLI on a fresh Data Root (installed rowbly, saw it marked, chose Continue); screenshots in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T00:47:11.219Z",
+          "updatedAt": "2026-11-04T00:47:11.219Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:41:52.076Z",
-        "finishedAt": "2026-11-04T00:47:09.382Z"
-      }
     }
   }
 }
