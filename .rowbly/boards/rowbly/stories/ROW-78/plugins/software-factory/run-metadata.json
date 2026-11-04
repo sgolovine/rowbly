@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T01:27:38.987Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:bd258b2f-c35a-4311-818b-c3b4ad839582",
+    "at": "2026-11-04T01:30:36.463Z",
+    "source": "Worker pushed inline onboarding screens and reported private screenshot directory before use",
+    "by": "sunny"
   }
 }
