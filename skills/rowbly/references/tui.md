@@ -21,8 +21,8 @@ existing Data Roots only, in Welcome, Me and Data Roots steps with the same Back
 last step) and Skip onboarding Buttons; saving Me stays on its step. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
 and Summary tabs. Exactly one Board skips its tab, puts it in context and marks it done; no Boards
 offers creation, several offers selection. Plugins is always shown, Stage Prompts only with Software
-Factory on. Agent skills opens directly without an AI question. Click any tab; Back `ctrl+←`, Next
-`ctrl+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
+Factory on. Agent skills opens directly without an AI question. Click any tab; Back `shift+←`, Next
+`shift+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
 Stage Prompts offers default prompts, minimal placeholders (all off), or inline editing (`esc`
 returns). Population is explicit, keeps existing Stages/prompts/files and shows added/kept/skipped
 inline; errors allow retry. Skills is done on install or Next, Stage Prompts on successful

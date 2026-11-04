@@ -1261,7 +1261,7 @@ In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The
 Global onboarding sets your existing **Me** handle in the Home Config and registers existing Data
 Roots by their Data Root folder path, with an optional label and default. It never creates a Data Root
 and preserves local Me. Its **Welcome**, **Me** and **Data Roots** steps share Data Root onboarding's
-**Back** (`ctrl+←`), **Next** (`ctrl+→`) and **Skip onboarding** (`ctrl+k`) Buttons. Saving the Me
+**Back** (`shift+←`), **Next** (`shift+→`) and **Skip onboarding** (`ctrl+k`) Buttons. Saving the Me
 form stores the handle and stays on the step; Next moves on without saving. **Register an existing
 Data Root** opens a form that `esc` leaves. Invalid or missing registration paths create nothing.
 Without an open Data Root, **Finish** on Data Roots returns to the startup picker when roots have
@@ -1271,7 +1271,7 @@ An explicit missing `--data-root` still fails before onboarding; a missing regis
 Data Root onboarding has six step tabs: **Usage**, **Board**, **Plugins**, **Agent skills**,
 **Stage Prompts** and **Summary**. With exactly one Board, the Board tab is hidden: onboarding puts
 that Board in context and marks the step done. Adding or removing a Board recomputes this choice.
-Click any tab to open its step, or use **Back** (`ctrl+←`) and **Next** (`ctrl+→`). **Next** never
+Click any tab to open its step, or use **Back** (`shift+←`) and **Next** (`shift+→`). **Next** never
 requires completion and finishes onboarding on Summary. Text fields keep their keys; the Buttons
 still work. **Skip onboarding** (`ctrl+k`) saves completion. Results stay inline, without Modals,
 and completed tabs have a `✓`. Changes are saved as they happen.

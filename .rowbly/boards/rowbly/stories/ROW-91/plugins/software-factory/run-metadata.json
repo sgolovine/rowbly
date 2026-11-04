@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T17:30:31.449Z"
+    "startedAt": "2026-11-04T17:54:34.429Z"
   },
   "identity": {
-    "worker": "mcp:0d554a0f-f81b-4558-8619-8edcf1834867",
+    "worker": "mcp:c6b81a42-59cf-4a40-a269-eb4e8e1f6bf6",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:0d554a0f-f81b-4558-8619-8edcf1834867",
+    "threadId": "mcp:c6b81a42-59cf-4a40-a269-eb4e8e1f6bf6",
     "verification": {
-      "source": "t3_thread_launch receipt: threadId mcp:0d554a0f-f81b-4558-8619-8edcf1834867, claudeAgent/claude-opus-5-5 effort=medium fastMode=false, worktree /home/sgolovine/.t3/worktrees/rowbly/factory-row-91 branch factory/row-91 from origin/main",
-      "verifiedAt": "2026-11-04T17:30:32.227Z",
+      "source": "t3_thread_launch receipt: threadId mcp:c6b81a42-59cf-4a40-a269-eb4e8e1f6bf6, claudeAgent/claude-opus-5-5 effort=medium fastMode=false, worktree branch factory/row-91-r2 from origin/factory/row-91",
+      "verifiedAt": "2026-11-04T17:54:35.212Z",
       "by": "sunny"
     }
   },
@@ -33,6 +33,6 @@
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T17:30:31.449Z"
+    "selectedAt": "2026-11-04T17:54:34.429Z"
   }
 }

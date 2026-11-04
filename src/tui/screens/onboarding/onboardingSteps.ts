@@ -37,4 +37,4 @@ export function firstIncomplete(steps: readonly StepId[], done: readonly string[
 }
 
 /** The key hint for onboarding's Back and Next Buttons, shown on every step. */
-export const NAV_HINT: KeyHint = { key: 'ctrl+←/→', description: 'back/next step' };
+export const NAV_HINT: KeyHint = { key: 'shift+←/→', description: 'back/next step' };

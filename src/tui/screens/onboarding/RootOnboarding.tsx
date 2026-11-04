@@ -169,7 +169,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   useInput(
     (_input, key) => {
       // A text field being edited keeps its keys.
-      if (!key.ctrl || shell.captured().text) return;
+      if (!key.shift || shell.captured().text) return;
       if (key.leftArrow) back();
       else if (key.rightArrow) next();
     },

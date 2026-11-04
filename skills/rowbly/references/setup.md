@@ -214,7 +214,7 @@ no Board or Home Config level.
 
 Bare `rowbly` first offers global onboarding (Me and registration of existing Data Roots), then shared
 Data Root onboarding (step tabs: Usage, Board, Plugins, Agent skills, Stage Prompts,
-Summary; Back `ctrl+←`, Next `ctrl+→`). `ctrl+k` skips and saves completion. `onboardingComplete` is
+Summary; Back `shift+←`, Next `shift+→`). `ctrl+k` skips and saves completion. `onboardingComplete` is
 optional in the Home Config and in `rowbly.config.json`; absent means incomplete. The latter flag is
 committed and suppresses onboarding for everyone sharing it. `rowbly.config.json` also saves the
 finished Data Root steps as an optional `onboardingSteps` list of step ids (unknown ids ignored);
@@ -227,7 +227,7 @@ marked done; with none create one, with several choose one. Plugins shows in all
 skills opens directly without an AI question. Stage Prompts (Factory/Both) offers default prompts,
 minimal placeholders (all off), or inline editing (`esc` returns); setup runs only when chosen,
 keeps existing Stages, Stage Prompts and files, and shows added/kept/skipped inline. Skills is done
-on install or continuing; Stage Prompts on successful setup or Next. Summary shows this visit's
+on install or Next; Stage Prompts on successful setup or Next. Summary shows this visit's
 choices, installed skill folders and prompt outcome; unvisited steps read not changed in this visit.
 Legacy `ai` counts as `skills` and `factory-setup` as `stage-prompts` complete; saves keep old and
 unknown ids. Tabs open freely, Next requires no completion, and writes are immediate.
