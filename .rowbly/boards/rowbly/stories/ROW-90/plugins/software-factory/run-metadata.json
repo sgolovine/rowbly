@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T17:38:03.733Z"
   },
+  "identity": {
+    "worker": "mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2",
+    "verification": {
+      "source": "t3_thread_launch receipt: threadId mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2, codex/gpt-6.1-sol reasoningEffort=high serviceTier=default, worktree branch review/row-90 from origin/factory/row-90",
+      "verifiedAt": "2026-11-04T17:38:04.589Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "codex",
     "model": "gpt-6.1-sol",
