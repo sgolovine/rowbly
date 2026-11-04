@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T17:30:31.449Z"
   },
+  "identity": {
+    "worker": "mcp:0d554a0f-f81b-4558-8619-8edcf1834867",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:0d554a0f-f81b-4558-8619-8edcf1834867",
+    "verification": {
+      "source": "t3_thread_launch receipt: threadId mcp:0d554a0f-f81b-4558-8619-8edcf1834867, claudeAgent/claude-opus-5-5 effort=medium fastMode=false, worktree /home/sgolovine/.t3/worktrees/rowbly/factory-row-91 branch factory/row-91 from origin/main",
+      "verifiedAt": "2026-11-04T17:30:32.227Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "claudeAgent",
     "model": "claude-opus-5-5",
