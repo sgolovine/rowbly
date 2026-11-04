@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-91",
+  "boardId": "rowbly",
+  "name": "Onboarding: Consistent continue / back buttons",
+  "description": "- Remove \"Continue without installing more skills\"\n- Add consistent back and continue buttons to all steps.",
+  "stage": "todo",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-04T17:15:29.207Z",
+  "updatedAt": "2026-11-04T17:15:29.212Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aXtyM5EaN",
+          "name": "image-20261104-1715.png",
+          "type": "image/png",
+          "size": 110106,
+          "createdAt": "2026-11-04T17:15:29.211Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
