@@ -1014,6 +1014,28 @@ JSON error on stderr and the safe run summary in `error.details.synchronizationR
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
 `git show` remains an inspection command and can successfully display a previous failed result.
+With Automatic Merge Conflict Resolution Off, `git sync` returns `USAGE` (exit 2) with the hint
+`rowbly git configure --automatic-merge-resolution on`.
+
+A failed attempt names why in `error.details.reason` (also `last.reason` in the run summary), says
+whether trying again can help in `error.details.retryable`, and lists the paths concerned in
+`error.details.paths` when it knows them. The hint follows the reason:
+
+| `reason` | Cause | Retryable |
+| --- | --- | --- |
+| `capture-changed` | Another writer, such as the TUI, kept saving Rowbly data; the message names the Stories by Story Key | yes |
+| `index-changed` | Another Git command changed what is staged during Sync; the message names the staged paths | yes |
+| `network` | Fetch or push failed; a local result is kept | yes |
+| `resolution-off` | Automatic Merge Conflict Resolution is Off in this checkout (exit 2) | no |
+| `no-upstream` | No checked-out branch, or no configured Git upstream | no |
+| `conflict` | A Git operation in progress, a conflict outside Rowbly data, or local or staged content Sync would overwrite | no |
+| `evidence` | Merge Evidence disagrees at the same path | no |
+| `unexpected` | Anything else | no |
+
+Commands that only read, such as `git status` and `git diff`, may run beside Sync: they refresh the
+index's cached file details without changing what is staged, and Sync compares what is staged. When
+Rowbly data or the staged files change while Sync prepares, it waits until the Data Root has not
+changed for 2 seconds (at most 15 seconds) and prepares again, up to three times.
 
 ### Sync with Git
 

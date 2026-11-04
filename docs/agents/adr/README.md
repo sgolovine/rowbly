@@ -41,7 +41,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0012](0012-plugins-intercept-service-operations.md) | Plugins intercept Service Layer operations through Change Sets | Accepted; amended by 0019 and 0020 |
 | [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted; amended by 0022 |
 | [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 and 0035 |
-| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022, extended by 0044 and 0051 |
+| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022 and 0058, extended by 0044 and 0051 |
 | [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
 | [0028](0028-plugin-badges-can-load-from-files.md) | Plugin badges can load what they show from the Plugin's files | Accepted |
 | [0029](0029-plugin-sidebars-filter-the-board.md) | A Plugin can add a Plugin Sidebar that filters the board | Accepted |
@@ -80,7 +80,8 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | --- | --- | --- |
 | [0027](0027-tests-guard-only-what-review-cannot-check.md) | Tests guard only what review cannot check | Accepted |
 
-| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted; amended by 0035 and 0050 |
+| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted; amended by 0035, 0050 and 0058 |
 | [0037](0037-clipboard-reads-use-an-isolated-native-child.md) | Clipboard images are read by an isolated optional native child | Accepted |
 | [0038](0038-story-image-paste-is-an-exclusive-plugin-contribution.md) | Story image paste is an exclusive Plugin contribution | Accepted |
 | [0050](0050-merge-evidence-records-only-decisions-and-is-retained.md) | Merge Evidence records only real decisions and is kept as audit history | Accepted; amends 0034 |
+| [0058](0058-git-sync-compares-index-content-and-names-failure-reasons.md) | Git synchronization compares index content and names why it failed | Accepted; amends 0034 and 0020 |

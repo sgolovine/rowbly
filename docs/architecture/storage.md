@@ -107,10 +107,13 @@ gate before their Data Root lock, and release both before reactions. Git locatio
 Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
 
 A detached candidate supplies an expected branch ref/OID, before/after index bytes and exact changed
-working-file bytes/modes. Publication rechecks the index and each changed path, stages existing
+working-file bytes/modes. Publication rechecks the index's staged content (path, mode, object and
+stage of each entry, ADR-0058 §1), so a stat-cache refresh by `git status` or an editor does not
+stop it, and each changed path. It stages existing
 Data Root transactions (including binary Plugin files and executable modes), reserves the real
-`index.lock` exclusively with a random ownership token, pins the candidate, then atomically persists
-`rowbly/publication.json` under the common Git directory. This durable intent precedes local effects.
+`index.lock` exclusively with a random ownership token (waiting up to 2 seconds while another Git
+command holds it), records the index bytes read under that reservation, pins the candidate, then
+atomically persists `rowbly/publication.json` under the common Git directory. This durable intent precedes local effects.
 Unrelated staged entries are carried forward in the prepared index; no live whole-tree index is read
 from the candidate. No network operation belongs inside this gate.
 
@@ -133,8 +136,11 @@ filesystem operations atomic with Rowbly's syscall.
 Index-lock ownership uses private hardlinks whose device/inode identity and expected bytes must
 match the live lock. The reservation token is retained, and the prepared index payload keeps a private
 inode reference across installation. A pending owned index lock is distinguishable from an already
-installed index. Equal bytes alone never authorize replacing or removing `index.lock`: a new foreign
-lock containing the prepared index bytes is preserved and blocks completion. Safe pre-effect
+installed index. Equal bytes alone never authorize replacing or removing `index.lock`: a foreign lock
+before installation, even one containing the prepared index bytes, is preserved and blocks
+completion. Once the candidate index is installed, the reservation is released; another Git command
+may then refresh the index's caches or hold its own `index.lock`, so the remaining checks and
+recovery compare staged content and leave that lock to its holder (ADR-0058 §1). Safe pre-effect
 ref-refusal releases its verified reservation before discarding other staged data.
 
 Prepared publication and recovery refusals report `DATA_INTEGRITY` (exit 6). Details identify the
