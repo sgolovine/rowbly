@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:37:45.012Z",
-  "updatedAt": "2026-11-04T03:06:39.662Z",
+  "updatedAt": "2026-11-04T03:06:40.321Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -66,6 +66,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/170 at 530d866328cf0720b2f076e7ea31e6c078dbfcc3 by codex/gpt-6.1-sol: APPROVED.\\nReviewed all four changed files against ROW-87 and AGENTS.md: root-route detection for both onboarding levels, removal of Header and both sidebars, full Panel/LayoutContext dimensions, hidden chrome key and hint gates, preservation of onboarding input, footer, toasts and help, and restoration after router.reset. Verified independent worker/model provenance against both launch receipts and accounted for the branch commits. Inspected integration with current main, including ROW-77 tabs and inline Plugin controls; git merge-tree reports a clean merge. Both documentation updates match the behavior. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) passed. All six registered current-head GitHub checks succeeded; all four screenshot URLs returned HTTP 200. No blocking findings. Interactive behavior was assessed from code and the existing agentic-tui evidence; no new TUI session was started. Merge remains subject to a fresh unchanged-head and clean-mergeability check.",
           "createdAt": "2026-11-04T03:06:39.661Z",
           "updatedAt": "2026-11-04T03:06:39.661Z"
+        },
+        {
+          "id": "V8nOeogg",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/170 at 530d866328cf0720b2f076e7ea31e6c078dbfcc3; merge commit 6d95e2a1530b7d50104242b85ca1b5207136e985. Independent review approved; all four local checks and six PR checks passed; four screenshot URLs returned 200.",
+          "createdAt": "2026-11-04T03:06:40.320Z",
+          "updatedAt": "2026-11-04T03:06:40.320Z"
         }
       ]
     }
