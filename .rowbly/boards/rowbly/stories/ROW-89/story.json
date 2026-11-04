@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T04:47:39.918Z",
+  "updatedAt": "2026-11-04T04:47:41.129Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:21:48.748Z",
+        "finishedAt": "2026-11-04T04:47:39.918Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -57,19 +68,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4 (thread mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-implementation-launch.json and retained worker final report /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-final-report.md. Branch: factory/row-89-part2. PR: https://github.com/sgolovine/rowbly/pull/174. Head: 490d417c19cc3623a18982b76c2352aa5070a830. Both parts authored by this same verified worker; no other authoring thread.",
           "createdAt": "2026-11-04T04:47:39.198Z",
           "updatedAt": "2026-11-04T04:47:39.198Z"
+        },
+        {
+          "id": "xURwuHaL",
+          "author": "sunny",
+          "body": "Delivered as two draft PRs on main. Part 1 (CLI): https://github.com/sgolovine/rowbly/pull/172, head a669b58efb62643b2ea6156a8874fd06cb1ec8cb, branch factory/row-89-implementation. It covers F4 (index content check, also in recovery), F3 (quiet wait, capture-changed names Story Keys, retryable), F5 (details.reason, retryable and paths), F1 CLI (resolution Off exits 2 with the configure hint), ADR-0058, docs, and the fix for main's flaky storage test. Part 2 (skill): https://github.com/sgolovine/rowbly/pull/174, head 490d417c19cc3623a18982b76c2352aa5070a830, branch factory/row-89-part2, built on PR 169. It adds prepare-checkout in launch-worker.mjs (prerequisites, memory, policy stop, sync only for a dirty Data Root with reason-based retries, reported or opt-in cleanup, ff-only pull, one JSON result), and skill text for scoped startup checks (a failing machine leaves capacity; a Stage Prompt naming an unknown Stage skips only its Stage), reason-based sync classification and policy handling. Validation on each head: typecheck, lint, test:unit 79 and test:cli 21 pass; the suite stays at 100 tests. prepare-checkout was tested by hand for each status in a sandbox repository; it was not run on rook. Screenshots are on pr-assets/factory/row-89-implementation and pr-assets/factory/row-89-part2, linked from both PRs. The proposed ROWBLY.md text (In Refinement Stage, git configure permission, rook prepare-checkout call, rook Rowbly command) was sent to the supervisor for review.",
+          "createdAt": "2026-11-04T04:47:41.128Z",
+          "updatedAt": "2026-11-04T04:47:41.128Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:21:48.748Z",
-        "finishedAt": "2026-11-04T04:47:39.918Z"
-      }
     }
   }
 }
