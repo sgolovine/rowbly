@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:19:43.500Z",
+  "updatedAt": "2026-11-04T01:19:44.132Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -47,6 +47,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/163 at b184dff8749123a1b98e790c6e6bd7e109955f28 by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. docs/agents/adr/0042-tui-startup-asks-for-a-data-root.md:12-14 (implemented at src/tui/screens/setup/DataRootPickerScreen.tsx:49): ADR-0042 §1 still requires the default Data Root first and other roots in registered order. The new missingLast partition intentionally changes that accepted decision when the default is missing or a missing registered root precedes an existing one. AGENTS.md and the ADR index require a new ADR to amend an accepted decision, an update to the old ADR's Status line, and an index entry in the same change. Add that amendment in docs/agents/adr/ documenting missing roots after existing roots, including a missing default; preserve the intended implementation. I verified the implementation and reviewer launch receipts, both authored commits and the two main merges; reviewer worker/thread mcp:afb01914-c84b-4acb-a271-4b9aa2181d13 uses codex/gpt-6.1-sol, distinct from implementing worker mcp:84b28722-ce2f-401d-aaff-38e87f85da1f using claudeAgent/claude-opus-5-5. Reviewed all eight changed files, stable grouping, selection callbacks, missing-on-open handling, confirmation/cancel behavior, list-only removal, current-root protection, shared UI conventions and user/skill documentation. No code blocker found. All seven screenshot URLs return HTTP 200; inspected the missing-root modal image. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests), and pnpm test:cli (21 tests) passed. All six current-head GitHub checks are SUCCESS; mergeability remains UNKNOWN. ROW-81's unmerged shared DataRootList is not part of this diff; no intent conflict was identified.",
           "createdAt": "2026-11-04T01:19:43.499Z",
           "updatedAt": "2026-11-04T01:19:43.499Z"
+        },
+        {
+          "id": "klGIzUCm",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-82-implementation; PR https://github.com/sgolovine/rowbly/pull/163; head b184dff8749123a1b98e790c6e6bd7e109955f28. Independent review requests one required change: add an ADR amending ADR-0042 section 1 for missing-last ordering, update ADR-0042 Status and the ADR index. Review: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619877477. No code blocker. All four local checks passed and all six GitHub checks succeeded; all seven screenshot URLs HTTP 200. Mergeability UNKNOWN; no merge attempted.",
+          "createdAt": "2026-11-04T01:19:44.131Z",
+          "updatedAt": "2026-11-04T01:19:44.131Z"
         }
       ]
     }
