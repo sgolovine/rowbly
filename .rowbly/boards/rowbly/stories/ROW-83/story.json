@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:17:19.754Z",
-  "updatedAt": "2026-11-04T01:09:44.653Z",
+  "updatedAt": "2026-11-04T01:09:45.995Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -34,6 +34,17 @@
         }
       ]
     },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:8bd10cc7-ff2a-4be7-997d-a55be04d79a8",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:06:20.315Z",
+        "finishedAt": "2026-11-04T01:09:44.652Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -49,19 +60,15 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/161, branch factory/row-83-implementation, head 4794aafc6b240589a0a387c98e5efe798123f4f6. List view wheel (BoardList onWheel, BoardScreen wheelList: firstListRow by WHEEL_LINES, listCursor clamped) and SelectList wheel (active and longer than limit; highlight by WHEEL_LINES, clamped), which covers the Data Root picker. Docs: user-guide, skills/rowbly/references/tui.md. Validation after merging origin/main: typecheck, lint, test:unit (79), test:cli (21) pass; checked in the TUI with agentic-tui on a 22-Story list view and a 14-entry picker; screenshots in the PR comment. No review findings to answer.",
           "createdAt": "2026-11-04T01:04:35.586Z",
           "updatedAt": "2026-11-04T01:04:35.586Z"
+        },
+        {
+          "id": "GrHRUkYV",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/161 at 4794aafc6b240589a0a387c98e5efe798123f4f6 by codex/gpt-6.1-sol: APPROVED. Verified the retained authoring and reviewer launch receipts: reviewer worker/thread mcp:8bd10cc7-ff2a-4be7-997d-a55be04d79a8 is independent of implementing worker mcp:4a99a5ca-2f77-49ec-966d-c9d5c166eb3c (claudeAgent/claude-opus-5-5); all three branch commits are accounted for, including the main metadata merge. Read the complete diff and surrounding mouse dispatch, Board list/window/cursor, SelectList, picker and StoryFinder code against ROW-83 and repository guidance. The Board list moves its window by WHEEL_LINES, clamps the highlight and updates the existing markers; SelectList moves the highlight by WHEEL_LINES only while active and longer than its limit, leaving short lists available to enclosing scroll handlers. The documentation covers both surfaces, the compact reference does not mention the wheel and needs no refresh, and no added tests are required for this screen behavior. No must-fix findings. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed). Checked all six screenshot URLs with curl (all HTTP 200) and inspected the list/picker wheel captures. ROW-81 and ROW-82 remain outside this diff.",
+          "createdAt": "2026-11-04T01:09:45.994Z",
+          "updatedAt": "2026-11-04T01:09:45.994Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:8bd10cc7-ff2a-4be7-997d-a55be04d79a8",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:06:20.315Z",
-        "finishedAt": "2026-11-04T01:09:44.652Z"
-      }
     }
   }
 }
