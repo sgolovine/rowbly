@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:37:45.012Z",
-  "updatedAt": "2026-11-04T02:05:35.318Z",
+  "updatedAt": "2026-11-04T02:14:20.775Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,17 +26,6 @@
         }
       ]
     },
-    "comments": {
-      "comments": [
-        {
-          "id": "BdUH7yzZ",
-          "author": "sunny",
-          "body": "Refinement: the change goes in Shell.tsx, which hides Header and the sidebars when the root route is onboarding. Overlaps: ROW-84 (reopen from Settings becomes full screen and then gets this layout; build this first or share the condition) and ROW-86 (same onboarding screen, but the content layer). Ready for development.",
-          "createdAt": "2026-11-04T00:39:26.469Z",
-          "updatedAt": "2026-11-04T00:39:26.469Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -46,6 +35,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T02:05:34.550Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "BdUH7yzZ",
+          "author": "sunny",
+          "body": "Refinement: the change goes in Shell.tsx, which hides Header and the sidebars when the root route is onboarding. Overlaps: ROW-84 (reopen from Settings becomes full screen and then gets this layout; build this first or share the condition) and ROW-86 (same onboarding screen, but the content layer). Ready for development.",
+          "createdAt": "2026-11-04T00:39:26.469Z",
+          "updatedAt": "2026-11-04T00:39:26.469Z"
+        },
+        {
+          "id": "LNsZJa5g",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:a1f4dcad-4919-4c6b-9835-e34106679fc0 (thread mcp:a1f4dcad-4919-4c6b-9835-e34106679fc0, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-87-implementation-launch.json. Branch: factory/row-87-implementation. PR: https://github.com/sgolovine/rowbly/pull/170. Head: 530d866328cf0720b2f076e7ea31e6c078dbfcc3.",
+          "createdAt": "2026-11-04T02:14:20.775Z",
+          "updatedAt": "2026-11-04T02:14:20.775Z"
+        }
+      ]
     }
   }
 }
