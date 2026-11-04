@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:14:33.641Z",
+  "updatedAt": "2026-11-04T01:14:34.865Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "ywLicUj1",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:84b28722-ce2f-401d-aaff-38e87f85da1f (thread mcp:84b28722-ce2f-401d-aaff-38e87f85da1f, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-implementation-launch.json. Branch: factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: b184dff8749123a1b98e790c6e6bd7e109955f28 (verified gh pr view 163).",
-          "createdAt": "2026-11-04T01:14:31.551Z",
-          "updatedAt": "2026-11-04T01:14:31.551Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -35,6 +24,24 @@
         "startedAt": "2026-11-04T01:05:36.089Z",
         "finishedAt": "2026-11-04T01:14:33.640Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "ywLicUj1",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:84b28722-ce2f-401d-aaff-38e87f85da1f (thread mcp:84b28722-ce2f-401d-aaff-38e87f85da1f, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-implementation-launch.json. Branch: factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: b184dff8749123a1b98e790c6e6bd7e109955f28 (verified gh pr view 163).",
+          "createdAt": "2026-11-04T01:14:31.551Z",
+          "updatedAt": "2026-11-04T01:14:31.551Z"
+        },
+        {
+          "id": "zmDGqkRH",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/163 (branch factory/row-82-implementation, head b184dff8749123a1b98e790c6e6bd7e109955f28). Missing Data Roots are listed last in the startup picker and the D switcher. Picking one opens a modal that says the Data Root no longer exists and asks to delete it from the list (removes its ~/.rowblyrc.json entry); a root that vanishes after the list loads gets the same modal. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass; manual agentic-tui run of switcher and picker, including the ROW-83 wheel after merging main. Screenshots: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619803940. No review findings to answer.",
+          "createdAt": "2026-11-04T01:14:34.864Z",
+          "updatedAt": "2026-11-04T01:14:34.864Z"
+        }
+      ]
     }
   }
 }
