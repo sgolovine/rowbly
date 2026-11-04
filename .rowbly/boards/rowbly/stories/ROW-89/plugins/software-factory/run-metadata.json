@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T05:13:07.486Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:5c801dca-aa38-481c-8370-4c8a2c5b5ff6",
+    "at": "2026-11-04T05:14:31.858Z",
+    "source": "Verified fresh Astra review accepted both repaired exact heads/revised policy, author receipt checks first; bothPRs linked, no livewrites/polling",
+    "by": "sunny"
   }
 }
