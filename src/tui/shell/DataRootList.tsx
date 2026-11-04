@@ -14,6 +14,9 @@ function printable(input: string, key: Key): boolean {
   return input.length > 0 && !/[\u0000-\u001f\u007f]/.test(input);
 }
 
+/** The lines around the Data Roots: the button and the search line, each with its gap, and the count. */
+const CHROME = 5;
+
 /**
  * **+ New Data Root** pinned at the top, whatever the query, then a search line and the known Data
  * Roots (ADR-0056). Typing a key the screen does not use (`actionKey`) or `/` starts the search; while
@@ -21,7 +24,8 @@ function printable(input: string, key: Key): boolean {
  * highlights the best match, or **+ New Data Root** when nothing matches. `↑/↓` move, `enter` or a
  * click picks (`null` is **+ New Data Root**). The query is the parent's (`null` while the search is
  * not focused), so its own keys can wait. With more than `limit` matches the Data Roots scroll below
- * the button, and the mouse wheel moves the highlight.
+ * the button: `page up/down` and the mouse wheel move the highlight. Without a `limit`, as many show as
+ * fit the layout's height, so a modal around it never scrolls the button away.
  */
 export function DataRootList({
   roots,
@@ -35,7 +39,9 @@ export function DataRootList({
   onPick,
   renderRow,
   newRow,
-  limit = Number.POSITIVE_INFINITY,
+  limit,
+  rowHeight = 1,
+  below = 0,
 }: {
   roots: readonly KnownDataRootChoice[];
   home: string;
@@ -52,9 +58,17 @@ export function DataRootList({
   onPick(root: KnownDataRootChoice | null): void;
   renderRow(root: KnownDataRootChoice, highlighted: boolean, onClick: (() => void) | undefined): ReactNode;
   newRow(highlighted: boolean, onClick: (() => void) | undefined): ReactNode;
+  /** The most Data Roots shown at once; by default, as many as fit the layout's height. */
   limit?: number;
+  /** The lines each Data Root's row takes. */
+  rowHeight?: number;
+  /** The lines the screen shows below the list, inside the same height. */
+  below?: number;
 }) {
-  const { width } = useLayout();
+  const { width, height } = useLayout();
+  const rows =
+    limit ??
+    (height === undefined ? Number.POSITIVE_INFINITY : Math.max(1, Math.floor((height - CHROME - below) / rowHeight)));
   const searching = query !== null;
   const results = useMemo(() => searchDataRoots(roots, query ?? '', home), [roots, query, home]);
   // The highlighted Data Root's index; -1 is **+ New Data Root**, above them. Kept across a remount,
@@ -81,6 +95,7 @@ export function DataRootList({
     (input, key) => {
       if (key.upArrow) move(-1);
       else if (key.downArrow) move(1);
+      else if (key.pageUp || key.pageDown) move((key.pageUp ? -1 : 1) * Math.min(rows, results.length));
       else if (key.return) onPick(highlighted);
       else if (searching) {
         if (key.escape) search(null);
@@ -96,9 +111,9 @@ export function DataRootList({
     {
       onWheel: (direction) => setCursor((current) => clamp(clamp(current) + direction * WHEEL_LINES)),
     },
-    active && results.length > limit,
+    active && results.length > rows,
   );
-  const shown = Math.min(limit, results.length);
+  const shown = Math.min(rows, results.length);
   const start = Math.max(0, Math.min(index - Math.floor(shown / 2), results.length - shown));
   const click = (at: number, root: KnownDataRootChoice | null) =>
     active
