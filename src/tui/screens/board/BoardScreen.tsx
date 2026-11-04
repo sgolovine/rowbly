@@ -24,6 +24,7 @@ import {
   useServices,
   useSidebarFilter,
   useToast,
+  WHEEL_LINES,
 } from '../../hooks';
 import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
@@ -248,6 +249,17 @@ export function BoardScreen({ params }: ScreenProps) {
     // Several notches can arrive before a render, so each one scrolls from the latest first card.
     firstRows.current.set(stage.key, top);
     if (at === col) setCursor({ col, row: Math.max(top, Math.min(row, top + size - 1)) });
+    rescroll();
+  };
+
+  /** A wheel notch over the list scrolls it by `WHEEL_LINES` lines; the cursor stays on screen. */
+  const wheelList = (direction: -1 | 1) => {
+    const current = firstListRow.current;
+    const top = Math.max(0, Math.min(current + direction * WHEEL_LINES, rows.length - listSize));
+    if (top === current) return;
+    // Several notches can arrive before a render, so each one scrolls from the latest first line.
+    firstListRow.current = top;
+    setListCursor((at) => Math.max(top, Math.min(at, rows.length - 1, top + listSize - 1)));
     rescroll();
   };
 
@@ -580,6 +592,7 @@ export function BoardScreen({ params }: ScreenProps) {
             active={active && mode === 'view'}
             onClick={clickRow}
             onContextMenu={lineMenu}
+            onWheel={wheelList}
           />
         </Box>
       ) : (

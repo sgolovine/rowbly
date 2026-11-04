@@ -44,11 +44,11 @@
           "updatedAt": "2026-11-04T01:04:31.707Z"
         },
         {
-          "id": "hq2r6NyI",
+          "id": "EqAIBJKE",
           "author": "sunny",
-          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/161, branch factory/row-83-implementation, head 4794aafc6b240589a0a387c98e5efe798123f4f6. List view wheel (BoardList onWheel, BoardScreen wheelList: firstListRow by WHEEL_LINES, listCursor clamped) and SelectList wheel (active and longer than limit; highlight by WHEEL_LINES, clamped), which covers the Data Root picker. Docs: user-guide, skills/rowbly/references/tui.md. Validation after merging origin/main: typecheck, lint, test:unit (79), test:cli (21) pass; checked in the TUI with agentic-tui on a 22-Story list view and a 14-entry picker; screenshots in the PR comment. No review findings to answer.",
-          "createdAt": "2026-11-04T01:04:35.586Z",
-          "updatedAt": "2026-11-04T01:04:35.586Z"
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/161 at 4794aafc6b240589a0a387c98e5efe798123f4f6. Merge commit 639999cf36099efbf18bd8f49bc9121ff54b7ee0.",
+          "createdAt": "2026-11-04T01:09:46.664Z",
+          "updatedAt": "2026-11-04T01:09:46.664Z"
         },
         {
           "id": "GrHRUkYV",
@@ -58,11 +58,11 @@
           "updatedAt": "2026-11-04T01:09:45.994Z"
         },
         {
-          "id": "EqAIBJKE",
+          "id": "hq2r6NyI",
           "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/161 at 4794aafc6b240589a0a387c98e5efe798123f4f6. Merge commit 639999cf36099efbf18bd8f49bc9121ff54b7ee0.",
-          "createdAt": "2026-11-04T01:09:46.664Z",
-          "updatedAt": "2026-11-04T01:09:46.664Z"
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/161, branch factory/row-83-implementation, head 4794aafc6b240589a0a387c98e5efe798123f4f6. List view wheel (BoardList onWheel, BoardScreen wheelList: firstListRow by WHEEL_LINES, listCursor clamped) and SelectList wheel (active and longer than limit; highlight by WHEEL_LINES, clamped), which covers the Data Root picker. Docs: user-guide, skills/rowbly/references/tui.md. Validation after merging origin/main: typecheck, lint, test:unit (79), test:cli (21) pass; checked in the TUI with agentic-tui on a 22-Story list view and a 14-entry picker; screenshots in the PR comment. No review findings to answer.",
+          "createdAt": "2026-11-04T01:04:35.586Z",
+          "updatedAt": "2026-11-04T01:04:35.586Z"
         }
       ]
     }
