@@ -21,18 +21,20 @@ export function OnboardingPluginStep({
   title,
   plugin,
   screen,
+  params,
   onBack,
 }: {
   title: string;
   plugin: string;
   screen: string;
+  params?: Record<string, unknown>;
   onBack(): void;
 }) {
   const shell = useContext(ShellContext);
   const active = useIsActive();
   const [hints, setHints] = useState<readonly KeyHint[]>([]);
   const childShell = useMemo(() => sectionShell(shell, setHints), [shell]);
-  const route = pluginRoute(plugin, screen, { title });
+  const route = pluginRoute(plugin, screen, { ...params, title });
   const Screen = pluginsScreens[route.screen];
   useKeyCapture(active, { text: false, escape: true });
   useEscape(active, () => {

@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T00:30:22.402Z",
+  "updatedAt": "2026-11-04T01:58:00.167Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,6 +26,16 @@
         }
       ]
     },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4155cd38-6107-4caf-9ed4-03923a3768da",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:53:27.092Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -34,6 +44,13 @@
           "body": "Refinement: the cause is that Factory setup and Stage Prompt editing are pushed routes drawn as Modals, and onboarding keeps its step only in memory. The description now lists requirements for step tabs, Back, Next and Skip Buttons, inline steps, completion marks, and step progress saved in rowbly.config.json, which needs a new ADR amending ADR-0041 section 2 (the Story asks for this). Inline Stage Prompt editing within onboarding belongs to ROW-78; this Story hosts it in its Stage Prompts step. Ready for development.",
           "createdAt": "2026-11-04T00:30:21.738Z",
           "updatedAt": "2026-11-04T00:30:21.738Z"
+        },
+        {
+          "id": "h3CkZbIc",
+          "author": "sunny",
+          "body": "Factory coordination: ADR-0057 is allocated to ROW-77 for saved onboarding progress amending ADR-0041. ROW-85 uses ADR-0056 for button placement. Check main and open PR branches before publication and preserve existing ADR numbers.",
+          "createdAt": "2026-11-04T01:58:00.166Z",
+          "updatedAt": "2026-11-04T01:58:00.166Z"
         }
       ]
     }

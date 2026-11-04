@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
-  "stage": "in-progress",
-  "rank": "aB",
+  "stage": "in-pr",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T00:38:55.084Z",
+  "updatedAt": "2026-11-04T02:04:30.251Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -29,11 +29,32 @@
     "comments": {
       "comments": [
         {
+          "id": "9tbQaM2I",
+          "author": "sunny",
+          "body": "Factory coordination: ADR-0056 is allocated to ROW-85 for amending ADR-0055 about New Data Root button placement. ROW-77 uses ADR-0057 for saved progress. Check main and open PR branches before publication and preserve existing ADR numbers.",
+          "createdAt": "2026-11-04T01:57:59.261Z",
+          "updatedAt": "2026-11-04T01:57:59.261Z"
+        },
+        {
+          "id": "DfvAcaN4",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation, head 9c74bbae537bee07d3d4deb1013d2206983c6523). + New Data Root is now a button pinned above the known Data Roots in the shared DataRootList, so it applies to the startup picker and the D switcher. The initial highlight stays on the current/default root; up-arrow reaches the button; a search with no matches highlights it. ADR-0056 amends ADR-0055 and ADR-0042. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run of the picker and switcher; screenshots in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T02:04:29.593Z",
+          "updatedAt": "2026-11-04T02:04:29.593Z"
+        },
+        {
           "id": "jdiccicE",
           "author": "sunny",
           "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
           "createdAt": "2026-11-04T00:38:54.419Z",
           "updatedAt": "2026-11-04T00:38:54.419Z"
+        },
+        {
+          "id": "qMAjyBP8",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
+          "createdAt": "2026-11-04T02:04:26.111Z",
+          "updatedAt": "2026-11-04T02:04:26.111Z"
         }
       ]
     }

@@ -173,6 +173,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           title={step === 'setup' ? 'Factory setup' : 'Stage Prompts'}
           plugin="software-factory"
           screen={step === 'setup' ? 'factory-setup' : 'stage-prompts'}
+          params={step === 'setup' ? { run: true } : {}}
           onBack={() => setStep('factory')}
         />
       ) : step === 'factory' ? (

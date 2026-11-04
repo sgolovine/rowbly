@@ -3,14 +3,34 @@
   "key": "ROW-88",
   "boardId": "rowbly",
   "name": "Rowbly factory should not depend on git sync.",
-  "description": "<the refined description, as sent to the supervisor>",
-  "stage": "in-progress",
-  "rank": "aD",
+  "description": "Git sync is a seperate plugin from rowbly factory and we do not want to create a dependency. If the git plugin is enabled, the factory skill should do a sync. If the plugin is not enabled, skip the sync. Currently if one git sync fails, rowbly factory skill will stop. Change instructions so agent can try up to 3 times, with exponential backoff between tries.",
+  "stage": "in-pr",
+  "rank": "a4",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T00:42:58.683Z"
+  "updatedAt": "2026-11-04T02:14:54.818Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "8FWdOX1x",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Skill text only: the factory skips every git sync when the Git Plugin is off and treats publication as done; one failed-sync rule for start and while running: 3 tries in all about 10 s and 20 s apart, no retry for conflicts or evidence, Automatic Merge Conflict Resolution Off, or exits 2 and 3. AGENTS.md summary and remote-launch.md step 6 match. Checks: typecheck, lint, test:unit 79 and test:cli 21 pass. No screenshots: no TUI or CLI change. No review findings to answer.",
+          "createdAt": "2026-11-04T02:14:54.163Z",
+          "updatedAt": "2026-11-04T02:14:54.163Z"
+        },
+        {
+          "id": "q1sTbz3y",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
+          "createdAt": "2026-11-04T02:14:51.513Z",
+          "updatedAt": "2026-11-04T02:14:51.513Z"
+        }
+      ]
+    }
+  }
 }
