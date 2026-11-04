@@ -43,7 +43,8 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   // Saves run one after another, each adding to the list the previous one saved.
   const saving = useRef<Promise<void>>(Promise.resolve());
   const saved = useRef<string[] | null>(null);
-  const pending = useRef(new Set<StepId>());
+  // Factory setup's result, kept here because its screen remounts when saving progress reloads the Plugins.
+  const [setup, setSetup] = useState<unknown>(null);
   const createdBoard = useRef<string | null>(null);
   const data = useAsync(
     async () => ({
@@ -89,35 +90,22 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
     saving.current = save.catch(() => undefined);
     return save;
   };
-  /** Saves the steps marked done while their step was open. */
-  const flush = () => {
-    const ids = [...pending.current];
-    pending.current.clear();
-    return persist(ids);
-  };
-  /**
-   * Marks `id` done and shows `result` on its step. With `later`, it is saved when the person leaves
-   * the step: saving `rowbly.config.json` reloads the Plugins, which would redraw a Plugin screen.
-   */
-  const complete = (id: StepId, result?: string, later = false) => {
+  /** Marks `id` done, shows `result` on its step and saves the mark at once. */
+  const complete = (id: StepId, result?: string) => {
     // Keeps the step open even when the saved marks would now open another; never moves away from one.
     setStep((current) => current ?? id);
     if (result) setResults((prev) => ({ ...prev, [id]: result }));
     setMarked((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    if (!later) return persist([id]);
-    pending.current.add(id);
-    return Promise.resolve();
+    // Factory setup runs again for another Board.
+    if (id === 'board') setSetup(null);
+    return persist([id]);
   };
   const open = (id: StepId) => {
-    void flush().catch(toast.error);
     setSkills(false);
     setStep(id);
   };
-  const finish = () =>
-    run(async () => {
-      await flush();
-      await onDone();
-    });
+  // The same path as the ctrl+k key of the parent: every mark is already saved.
+  const finish = () => run(onDone);
   const back = () => {
     const prev = steps[index - 1];
     if (prev) open(prev);
@@ -127,10 +115,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
       if (step === 'stage-prompts') await complete('stage-prompts');
       const following = steps[index + 1];
       if (following) open(following);
-      else {
-        await flush();
-        await onDone();
-      }
+      else await onDone();
     });
 
   useInput(
@@ -309,8 +294,13 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
               screen="factory-setup"
               params={{
                 run: true,
-                onSetUp: () =>
-                  void complete('factory-setup', 'Factory setup ran. What it added and kept is below.', true),
+                result: setup ?? undefined,
+                onSetUp: (done: unknown) => {
+                  setSetup(done);
+                  void complete('factory-setup', 'Factory setup ran. What it added and kept is below.').catch(
+                    toast.error,
+                  );
+                },
               }}
             />
           </>

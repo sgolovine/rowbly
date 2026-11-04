@@ -21,12 +21,15 @@ const PROMPT_TEXT = { added: 'added', kept: 'kept', skipped: 'skipped' } as cons
  * Sets up the context's Board for a software factory on request (ADR-0053 §2): adds the factory Stages
  * and default Stage Prompts it lacks, then lists what it added, kept and skipped. With `params.run`
  * (onboarding, where the person already chose it) it runs once on open instead of asking again. A host
- * that draws it inline can pass `params.onSetUp`, called after a successful run.
+ * that draws it inline can pass `params.onSetUp`, called with the result after a successful run, and
+ * `params.result`, a result to show instead of running: the screen remounts when the Plugins reload.
  */
 export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
   const active = useIsActive();
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<SetupResult | null>(null);
+  const [result, setResult] = useState<SetupResult | null>(
+    typeof params.result === 'object' && params.result !== null ? (params.result as SetupResult) : null,
+  );
   const [failed, setFailed] = useState(false);
   const started = useRef(false);
   const board = useAsync(
@@ -34,7 +37,7 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
     [plugin, params.boardId],
   );
   // After a failed run the choice shows, so the person can try again.
-  const autoRun = params.run === true && !failed;
+  const autoRun = params.run === true && !failed && !result;
   const run = async (id: string) => {
     if (started.current) return;
     started.current = true;
@@ -44,7 +47,7 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
       setResult(done);
       ui.toast(`Set up Board ${id} for a software factory`);
       // Onboarding, which shows this screen inline, marks its Factory setup step done (ADR-0057).
-      if (typeof params.onSetUp === 'function') params.onSetUp();
+      if (typeof params.onSetUp === 'function') params.onSetUp(done);
     } catch (err) {
       started.current = false;
       setFailed(true);
