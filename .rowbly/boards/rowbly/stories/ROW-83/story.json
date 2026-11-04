@@ -3,7 +3,7 @@
   "key": "ROW-83",
   "boardId": "rowbly",
   "name": "Scroll up/down with mouse wheel in more places",
-  "description": "- When viewing stories in list view, a user should be able to scroll up/down just the same way they do when scrolling a column in board view.\n\n- Whene selecting a data root, the user should be able to scroll  the list.",
+  "description": "## Problem: The mouse wheel scrolls a Stage column in board view, but not the board list view (v) or the Choose a Data Root picker shown at startup outside a Data Root (see attachments). ## Requirements: (1) List view: a wheel notch over the list (src/tui/screens/board/BoardList.tsx, wired from BoardScreen.tsx) scrolls it by WHEEL_LINES lines (src/tui/hooks/mouse.ts), clamped to the rows, the same way wheel() scrolls a column: move firstListRow and clamp listCursor so the highlighted line stays on screen; the ↑ N more / ↓ N more markers update. Ignore the wheel when the list fits. (2) Data Root picker: the wheel scrolls the list in src/tui/screens/setup/DataRootPickerScreen.tsx. Implement it in the shared SelectList (src/tui/components/SelectList.tsx): its window follows the cursor, so a notch moves the highlight by WHEEL_LINES, clamped, like StoryFinder. Register onWheel on the list box only while it is active and has more visible items than limit, so a short list does not swallow the wheel from an enclosing ScrollBody or modal. Every SelectList gets this. ## Out of scope: fuzzy search (ROW-81) and the order or handling of missing Data Roots (ROW-82); these touch the same picker, so keep this change to the wheel. ## Docs: docs/user-guide.md (list view and Data Root picker paragraphs) and skills/rowbly/references/tui.md (Board row and picker); refresh skills/rowbly-reference.md and its three copies only if they mention the wheel. ## Tests: none (AGENTS.md: keys and screens need no test). Verify in the TUI with agentic-tui: list view on a long Board, and the picker with more than 10 Data Roots.",
   "stage": "in-refinement",
   "rank": "a0V",
   "priority": null,
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:17:19.754Z",
-  "updatedAt": "2026-11-04T00:33:28.864Z",
+  "updatedAt": "2026-11-04T00:33:30.138Z",
   "plugins": {
     "attachments": {
       "attachments": [
