@@ -1,12 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { ConflictError, PluginError } from '../../core';
+import { ConflictError, PluginError, UsageError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories } from '../../storage';
 import { gitText } from '../../storage/gitProcess';
 import { canonicalGitRoot, requireRepository, rootGitKey, withGitWorker } from '../../storage/gitRepository';
 import { configuredUpstream, GitSyncPushError, type GitUpstream, synchronizeGit } from '../../storage/gitSync';
+import { GitSyncFailure, retryableReason, syncFailureReason } from '../../storage/gitSyncFailure';
 import {
   type GitSyncState,
   localHost,
@@ -74,6 +75,12 @@ function errorText(err: unknown): string {
   return (err instanceof Error ? err.message : String(err))
     .replace(/(https?:\/\/)[^/\s@]+@/g, '$1[redacted]@')
     .slice(0, 2000);
+}
+/** The reason, retryability and paths a failed result records (ADR-0058 §2). */
+function failureFields(err: unknown): { reason: string; retryable: boolean; paths?: string[] } {
+  const reason = syncFailureReason(err);
+  const paths = err instanceof GitSyncFailure && err.paths.length ? { paths: [...err.paths] } : {};
+  return { reason, retryable: retryableReason(reason), ...paths };
 }
 async function preferences(resource: Resource): Promise<GitSyncOptions> {
   const repos = createRepositories(resource.root);
@@ -218,6 +225,7 @@ function enqueue(file: string, resource: Resource, manual?: ManualRequest): Prom
           id: admitted.active.id,
           kind: 'failed',
           message: errorText(err),
+          ...failureFields(err),
           startedAt: admitted.active.startedAt,
           finishedAt: Date.now(),
           commit,
@@ -247,6 +255,7 @@ function enqueue(file: string, resource: Resource, manual?: ManualRequest): Prom
         id: manual.id,
         kind: 'failed',
         message: errorText(err),
+        ...failureFields(err),
         startedAt,
         finishedAt: Date.now(),
         evidence: [],
@@ -266,6 +275,7 @@ function enqueue(file: string, resource: Resource, manual?: ManualRequest): Prom
           state.last = {
             kind: 'failed',
             message: errorText(err),
+            ...failureFields(err),
             startedAt,
             finishedAt: Date.now(),
             evidence: [],
@@ -414,6 +424,7 @@ export function createGitSync(
         const result = manual.result;
         if (result?.kind !== 'synchronized')
           throw new ConflictError(result?.message ?? 'Sync did not complete', {
+            details: { reason: result?.reason ?? 'unexpected', retryable: result?.retryable ?? false },
             hint: 'Local work is retained. Check the configured upstream, network and Git diagnostics; resolve any reported conflict, then run Sync again.',
           });
         return { ...(await status(source)), last: result };
@@ -423,7 +434,11 @@ export function createGitSync(
         if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
         const current = await preferences(resource);
         if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
-        if (!current.enabled) throw new Error('Automatic Merge Conflict Resolution is Off');
+        if (!current.enabled)
+          throw new UsageError('Automatic Merge Conflict Resolution is Off in this checkout', {
+            details: { reason: 'resolution-off', retryable: false },
+            hint: 'turn it on with `rowbly git configure --automatic-merge-resolution on`, then run `rowbly git sync` again',
+          });
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
         if (
           state.active &&
