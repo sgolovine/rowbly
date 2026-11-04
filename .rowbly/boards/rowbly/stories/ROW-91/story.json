@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T17:15:29.207Z",
-  "updatedAt": "2026-11-04T17:40:20.828Z",
+  "updatedAt": "2026-11-04T17:44:26.332Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,16 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:8ad7e439-17a7-4ad9-b374-4826e5bfc877",
+        "by": "sunny",
+        "startedAt": "2026-11-04T17:40:19.619Z"
+      }
     },
     "comments": {
       "comments": [
@@ -41,18 +51,15 @@
           "body": "PR: https://github.com/sgolovine/rowbly/pull/176 · head dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 · branch factory/row-91 · validation: pnpm typecheck ok, pnpm lint ok, pnpm test:unit 79 passed, pnpm test:cli 21 passed; agentic-tui run of global onboarding (Welcome, Me save, Data Roots, Back, register form esc, Finish to Data Root onboarding) and Agent skills without the Continue item; screenshots in the PR · responses: none (no review findings yet) · note: overlaps ROW-90 on NAV_HINT (now in onboardingSteps.ts) and the GlobalOnboarding ctrl+arrow handler; whichever merges second takes ROW-90 keys",
           "createdAt": "2026-11-04T17:39:47.412Z",
           "updatedAt": "2026-11-04T17:39:47.412Z"
+        },
+        {
+          "id": "qMNp9fEm",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/176 at dfde82b05c2db91de0f5bf8d09e84b0dbf073a27 by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-91, AGENTS.md and the TUI design rules, including surrounding Form/key-capture behavior, shared navigation, Me saving in place and displaying the saved handle on return, registration/escape, completion/skip routing, skills completion and both documentation updates. All three implementation commits are covered by the verified claudeAgent/claude-opus-5-5 record; this reviewer is the separate recorded codex/gpt-6.1-sol worker. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed); git diff --check also passed. All five screenshot URLs in the PR description return HTTP 200; inspected the saved-Me and Agent skills images. Reviewed base a259f38714c7ee6a618c0deee44ecb4f4486df84 and revalidated the unchanged head before posting. CI remains queued in the single status snapshot; merge readiness still requires all current-head checks to pass. ROW-90 key changes remain outside this review, as the Story specifies.",
+          "createdAt": "2026-11-04T17:44:26.331Z",
+          "updatedAt": "2026-11-04T17:44:26.331Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:8ad7e439-17a7-4ad9-b374-4826e5bfc877",
-        "by": "sunny",
-        "startedAt": "2026-11-04T17:40:19.619Z"
-      }
     }
   }
 }
