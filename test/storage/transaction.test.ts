@@ -695,8 +695,12 @@ describe('Git local publication', () => {
       await holder.printed('locked');
       const waiting = deferred();
       const original = io.readFile;
+      let gateReads = 0;
       const spy = vi.spyOn(io, 'readFile').mockImplementation((path) => {
-        if (path === gateLock) waiting.resolve(); // The reader found the gate held.
+        // A second read of the held gate proves the first one finished and recorded its holder.
+        // Releasing after only the first call let the holder delete the lock before that read,
+        // which then found no holder to report.
+        if (path === gateLock && ++gateReads === 2) waiting.resolve();
         return original(path);
       });
       setTraceSink((event) => events.push(event));
