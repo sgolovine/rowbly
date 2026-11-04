@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:3c1df031-b057-47e7-aff6-42bc61a0b905",
-    "at": "2026-11-04T00:37:04.559Z",
-    "source": "Worker progress: OnboardingSettings pushes a stacked route; researching startup path",
+    "at": "2026-11-04T00:38:18.884Z",
+    "source": "Verified final worker message FACTORY-DONE; retained exact block",
     "by": "sunny"
   }
 }
