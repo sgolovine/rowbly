@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T03:15:36.932Z",
+  "updatedAt": "2026-11-04T03:30:21.306Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -46,6 +46,13 @@
           "body": "User decision: use the combined ROW-86 flow. Remove the AI usage question; combine Factory setup and Stage Prompts into one Stage Prompts step with default prompts, minimal prompts and Edit Stage Prompts options; show Plugins in all modes; tabs are Usage, Board (skip when exactly one Board), Plugins, Agent skills, Stage Prompts (Software Factory or Both), Summary. Retain ROW-77 saved onboardingSteps progress, freely clickable tabs, Back/Next/Skip controls, Next without completeness gating, completion marks and inline results. This supersedes conflicting earlier details; ROW-77, ROW-78 and ROW-80 are now merged, so ROW-86 is a follow-up on main. Minimal prompts use the existing placeholder template text and are off by default; setup accepts default|minimal prompts. Do not reintroduce forward-only tabs or apply-on-Finish behavior.",
           "createdAt": "2026-11-04T03:09:14.733Z",
           "updatedAt": "2026-11-04T03:09:14.733Z"
+        },
+        {
+          "id": "ynBXx2XF",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83 (thread mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-86-implementation-launch.json. Branch: factory/row-86-implementation. PR: https://github.com/sgolovine/rowbly/pull/173. Head: c8931910f216f53e93be2998d68fc2401c9c3c62.",
+          "createdAt": "2026-11-04T03:30:21.305Z",
+          "updatedAt": "2026-11-04T03:30:21.305Z"
         }
       ]
     }
