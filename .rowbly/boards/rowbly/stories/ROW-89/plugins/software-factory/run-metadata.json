@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-04T04:58:17.790Z"
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "medium"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "user named GPT6.1Sol temporary override",
+    "fallback": "User requested GPT6.1Sol while Claude session limited until2026-11-04T05:20:19Z",
+    "usage": "user-stated",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-04T04:58:17.790Z"
+  }
+}
