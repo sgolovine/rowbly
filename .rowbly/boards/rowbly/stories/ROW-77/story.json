@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Data root onboarding should walk you through steps",
   "description": "Problem: Data Root onboarding (src/tui/screens/onboarding/RootOnboarding.tsx) keeps its step only in memory and has no step indicator. Its factory step pushes the Factory setup and Stage Prompt editing routes, which the Shell draws as Modals over onboarding, so after esc the person is back on the same factory menu with no sign the action ran (see the attached screenshot). Goal: make Data Root onboarding a step-by-step flow on the main screen, with progress saved in the Data Root configuration. Requirements: (1) No Modals: every onboarding action happens inside the onboarding screen; Factory setup runs inline in its step and shows what it added and kept there; inline Stage Prompt editing within onboarding is ROW-78, so the Stage Prompts step hosts what ROW-78 builds instead of building it again. (2) Step tabs at the top: Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish; the two factory steps appear only when Software Factory is on (Software Factory or Both), Plugins is left out for the Software Factory mode as today, and clicking a tab opens its step. (3) On-screen Back, Next and Skip onboarding Buttons with key caps that follow the rowbly-tui-design skill; Skip keeps ctrl+k and saves onboardingComplete as today; Back and Next must not use ctrl+b or ctrl+n (already bound) or take keys from text fields and lists; Next never requires a step to be complete, and Next on the last step finishes onboarding. (4) Completion marks: a tab shows a mark once its step is done (Mode chosen, Board chosen or created, Plugin choices saved, AI question answered or a skill installed, factory setup ran successfully, Stage Prompts step left with Next), and after an action the step stays on screen with its result instead of returning to a menu. (5) Progress in config, as the original Story asks: completed steps are saved in the committed rowbly.config.json beside onboardingComplete as an optional field (for example onboardingSteps, a list of step ids; unknown ids are ignored), shared like that flag; reopening onboarding (Settings, Onboarding, or switching to an incomplete Data Root) shows the saved marks and opens the first incomplete step; absent means no steps are complete, and saving progress never clears onboardingComplete. Decisions and docs: add a new ADR in docs/agents/adr/ amending ADR-0041 section 2 (no new persistent settings) to allow saved step progress, update the Status line of ADR-0041 and add a row to docs/agents/adr/README.md; update docs/architecture/data-model.md for the new field, docs/architecture/operations.md if the input of config.updateRootConfig changes (today it patches only onboardingComplete), the Onboarding section of docs/user-guide.md, and the skills/rowbly reference if it describes onboarding. Out of scope: global onboarding, Settings, and the Stage Prompts screen outside onboarding. Tests: none required by AGENTS.md; verify in the TUI with agentic-tui screenshots in the PR. Related: ROW-78 (inline Stage Prompt editing within onboarding, Settings unchanged).",
-  "stage": "in-pr",
-  "rank": "a5",
+  "stage": "in-progress",
+  "rank": "a8",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:49:02.818Z",
+  "updatedAt": "2026-11-04T02:49:03.480Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:418a81af-5db6-4a1b-8635-40982eaee413",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:44:35.345Z",
-        "finishedAt": "2026-11-04T02:49:00.949Z"
-      }
     },
     "comments": {
       "comments": [
