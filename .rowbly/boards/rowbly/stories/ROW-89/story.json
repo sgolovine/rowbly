@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:12:30.282Z",
+  "updatedAt": "2026-11-04T05:12:31.505Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
+        "by": "sunny",
+        "startedAt": "2026-11-04T04:58:17.790Z",
+        "finishedAt": "2026-11-04T05:12:30.281Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -99,19 +110,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-part2, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/174. Head: bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
           "createdAt": "2026-11-04T05:12:29.547Z",
           "updatedAt": "2026-11-04T05:12:29.547Z"
+        },
+        {
+          "id": "U6EC0fvn",
+          "author": "sunny",
+          "body": "Returned-work corrections delivered in existing draft PR172 at 775085cab8aee7f732459d66c1c6d1b07bd27422 and PR174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. PR172: 1 capture drift now reaches capture-changed quiet-wait retry, with a deterministic assertion in the kept publication test; 2 detached HEAD returns no-upstream guidance. PR174: 1 complete untracked/staged/rename policy records and reviewable diffs before sync or cleanup; 2 explicit Plugin enabled/loaded inspection fails closed on errors; 3 clean requested/active runs retain identity and return waiting; 4 success/failure evidence retains run/commit paths and blocks readiness or retry. All four local checks pass at each exact head: typecheck, lint, 79 unit and 21 CLI tests, 100 total. Nineteen private preparation probes pass. Fresh screenshots uploaded on retained pr-assets/factory/row-89-correction-1, five URLs HTTP 200, numbered responses on both PRs. PR172 CI all six SUCCESS; PR174 only Clipboard smoke (windows-latest) pending in the final snapshot. Revised exact policy proposal retained at /tmp/row89-correction-evidence-cX046o/POLICY-PROPOSAL.md and sent to supervisor; not applied or approved. No live rook validation, Board mutations, merges or CI polling. Owned TUI resources stopped; branches and evidence retained. Ready for independent review.",
+          "createdAt": "2026-11-04T05:12:31.504Z",
+          "updatedAt": "2026-11-04T05:12:31.504Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:58:17.790Z",
-        "finishedAt": "2026-11-04T05:12:30.281Z"
-      }
     }
   }
 }
