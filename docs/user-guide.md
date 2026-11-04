@@ -1260,8 +1260,12 @@ In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The
 
 Global onboarding sets your existing **Me** handle in the Home Config and registers existing Data
 Roots by their Data Root folder path, with an optional label and default. It never creates a Data Root
-and preserves local Me. Invalid or missing registration paths create nothing. Without an open Data
-Root, Continue returns to the startup picker when roots have been registered; with none, it opens setup.
+and preserves local Me. Its **Welcome**, **Me** and **Data Roots** steps share Data Root onboarding's
+**Back** (`shift+←`), **Next** (`shift+→`) and **Skip onboarding** (`ctrl+k`) Buttons. Saving the Me
+form stores the handle and stays on the step; Next moves on without saving. **Register an existing
+Data Root** opens a form that `esc` leaves. Invalid or missing registration paths create nothing.
+Without an open Data Root, **Finish** on Data Roots returns to the startup picker when roots have
+been registered; with none, it opens setup.
 An explicit missing `--data-root` still fails before onboarding; a missing registered default is shown in the startup picker.
 
 Data Root onboarding has six step tabs: **Usage**, **Board**, **Plugins**, **Agent skills**,
@@ -1281,9 +1285,8 @@ optional Plugins; unchecked Plugins turn off with their Plugin Data kept.
 **Agent skills** directly offers official skills, without an AI usage question. Choose a skill,
 destination folder and harness to install it through `rowbly skills install`'s service; existing
 folders are never overwritten. Installed skills have **(installed)** markers and their folders,
-and remain selectable for another folder or harness. **Continue without installing more skills**
-goes to the next step. Installing a skill or continuing marks this step done. Custom skill commands
-are also explained.
+and remain selectable for another folder or harness. Installing a skill or **Next** marks this step
+done. Custom skill commands are also explained.
 
 **Stage Prompts** explains how the `rowbly-factory` skill supervises Stories in Stages whose Stage
 Prompt is on. Choose **Populate Stage Prompts with default prompts** for Rowbly's pre-built
@@ -1296,8 +1299,8 @@ Errors leave the choices available to retry. Edit here or in **Settings › Stag
 
 **Summary** lists this visit's usage choice (or Software Factory on/off on reopening), Board in
 context, enabled Plugins, installed skills and their folders, and Stage Prompts outcome when
-Software Factory is on. Unvisited steps read **not changed in this visit**. **Finish onboarding**
-saves completion.
+Software Factory is on. Unvisited steps read **not changed in this visit**. **Finish onboarding**,
+like **Finish** in place of Next, saves completion.
 
 Finished steps are saved immediately in the committed `rowbly.config.json` as `onboardingSteps`:
 `mode`, `board`, `plugins`, `skills`, `stage-prompts`. Stage Prompts is marked done after successful
