@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T02:00:18.128Z",
+  "updatedAt": "2026-11-04T02:00:19.435Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:67ebf417-b0c8-4076-86e0-720bc193c88f",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:43:46.637Z",
+        "finishedAt": "2026-11-04T02:00:18.127Z"
+      }
     },
     "comments": {
       "comments": [
@@ -69,19 +80,15 @@
           "body": "Implementation record: In Progress attempt 1, finished (returned-work visit started 2026-11-04T01:43:46.637Z). Worker: mcp:67ebf417-b0c8-4076-86e0-720bc193c88f (thread mcp:67ebf417-b0c8-4076-86e0-720bc193c88f, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 correction launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-correction-1-launch.json. Branch: factory/row-78-correction-1, pushed to factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: f218e390b4238db93d1df8a0fdd9d166ba450903 (verified gh pr view 166). Changes: merge conflict resolution preserving afterAi and inline setup/prompts, followed by main merge for ROW-82.",
           "createdAt": "2026-11-04T02:00:14.817Z",
           "updatedAt": "2026-11-04T02:00:14.817Z"
+        },
+        {
+          "id": "X2R0bziZ",
+          "author": "sunny",
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. 1) Main conflict in src/tui/screens/onboarding/RootOnboarding.tsx: merged origin/main and kept ROW-80's SkillInstall onDone={afterAi} with ROW-78's inline setup/prompts steps. Merged main again for ROW-82 (PR #163, no onboarding overlap). Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: skills Continue returns to factory guidance, Factory setup and Stage Prompts show inline, toggle works, esc goes back, Finish onboarding works, Settings Stage Prompts is unchanged. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620379759. The new head needs independent review.",
+          "createdAt": "2026-11-04T02:00:19.434Z",
+          "updatedAt": "2026-11-04T02:00:19.434Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:67ebf417-b0c8-4076-86e0-720bc193c88f",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:43:46.637Z",
-        "finishedAt": "2026-11-04T02:00:18.127Z"
-      }
     }
   }
 }
