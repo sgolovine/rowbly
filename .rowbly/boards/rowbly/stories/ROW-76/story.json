@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add bottom close button to info modals",
   "description": "**Summary.** Info modals (Modals that only show information and offer no action of their own) can only be closed with `esc`, or with the small `✕` in the top edge, which is easy to miss. Add a clickable **Close** button at the bottom of these Modals. **Context.** The attached screenshot is the Software Factory Factory setup screen (`src/plugins/software-factory/FactorySetupScreen.tsx`) after it ran, opened from Data Root onboarding; its only key hint is `esc back`. Router screens are drawn in a generic `Modal` by `src/tui/shell/Shell.tsx` (route stack, about line 452), where `modalHints` adds `esc back`. `src/tui/components/ModalFrame.tsx` draws the frame, the `✕` (`CloseButton`, only when `onClose` is set and the Modal is on top) and the `KeyHints` strip under a `border` rule; key hints are not clickable. `src/tui/components/Button.tsx` (label, `keyName` key cap, hover, click) should be reused. **Requirements.** (1) An info modal is the top Modal, with `onClose` set, whose footer keys are only the `esc` hint: no other key, no Form or ConfirmDialog inside. Examples: Factory setup after it ran, the Keys (help) Modal, any Plugin screen in that state. (2) An info modal shows a `Close` Button with the `esc` key cap in place of the hint strip, on the same line under the rule, so the Modal keeps its height. A click calls `onClose`, like `esc` and `✕`. (3) Implement it once in `ModalFrame`, so every core and Plugin info modal gets it; Modals with other keys (Forms, pickers, ConfirmDialog, Factory setup before it runs) keep their hint strip unchanged. (4) Under another layer (a nested Modal or a ContextMenu) the line goes quiet like the strip today: it keeps its line and width and ignores clicks. (5) The `✕` in the top edge stays. (6) Follow the TUI design system (`.agents/skills/rowbly-tui-design`): Button tokens, no frame of its own. **Out of scope.** Clickable buttons in ConfirmDialog or Forms; screen Modals (Story, Settings). **Docs.** Update `.agents/skills/rowbly-tui-design/components/Modal.md` and the Modals section of its `SKILL.md`, and mention the Close button in `docs/user-guide.md`. No new tests (AGENTS.md: UI, keys and layout need none); verify with agentic-tui screenshots (rowbly-screenshots skill). **Acceptance criteria.** Factory setup after it ran shows a clickable Close at the bottom that closes the screen as `esc` does; the Keys (help) Modal shows Close and a click closes it; a Form Modal (for example New Story) and a ConfirmDialog show no Close button and keep their hints; `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` pass.",
-  "stage": "in-refinement",
-  "rank": "a04",
+  "stage": "in-progress",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:05:03.135Z",
-  "updatedAt": "2026-11-04T00:27:56.237Z",
+  "updatedAt": "2026-11-04T00:27:56.907Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:317681bd-e018-48ba-94b2-6c268adfdc41",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:24:37.704Z",
-        "finishedAt": "2026-11-04T00:27:33.454Z"
-      }
     }
   }
 }
