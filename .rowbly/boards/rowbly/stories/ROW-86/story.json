@@ -17,18 +17,18 @@
     "comments": {
       "comments": [
         {
-          "id": "NnYTfwvc",
-          "author": "sunny",
-          "body": "User decision: use the combined ROW-86 flow. Remove the AI usage question; combine Factory setup and Stage Prompts into one Stage Prompts step with default prompts, minimal prompts and Edit Stage Prompts options; show Plugins in all modes; tabs are Usage, Board (skip when exactly one Board), Plugins, Agent skills, Stage Prompts (Software Factory or Both), Summary. Retain ROW-77 saved onboardingSteps progress, freely clickable tabs, Back/Next/Skip controls, Next without completeness gating, completion marks and inline results. This supersedes conflicting earlier details; ROW-77, ROW-78 and ROW-80 are now merged, so ROW-86 is a follow-up on main. Minimal prompts use the existing placeholder template text and are off by default; setup accepts default|minimal prompts. Do not reintroduce forward-only tabs or apply-on-Finish behavior.",
-          "createdAt": "2026-11-04T03:09:14.733Z",
-          "updatedAt": "2026-11-04T03:09:14.733Z"
-        },
-        {
           "id": "70rjvSR8",
           "author": "sunny",
           "body": "Refinement: rewrote the description on current main as a follow-up to ROW-77, ROW-78, ROW-80 and ROW-84, using the decisions in Comment NnYTfwvc: six steps Usage, Board (skipped with exactly one Board), Plugins (all modes), Agent skills (no AI question), Stage Prompts (default, minimal or edit; result inline; Software Factory and Both only), Summary. ROW-77 tabs, Back/Next/Skip, completion marks and saved onboardingSteps are kept; saved ai and factory-setup ids count as skills and stage-prompts done. Adds a prompts input (default|minimal) to software-factory setup; minimal writes the placeholder text turned off. Needs a new ADR amending ADR-0057, ADR-0041 and ADR-0053. ROW-80 is superseded. Ready for In Progress.",
           "createdAt": "2026-11-04T03:12:29.086Z",
           "updatedAt": "2026-11-04T03:12:29.086Z"
+        },
+        {
+          "id": "NnYTfwvc",
+          "author": "sunny",
+          "body": "User decision: use the combined ROW-86 flow. Remove the AI usage question; combine Factory setup and Stage Prompts into one Stage Prompts step with default prompts, minimal prompts and Edit Stage Prompts options; show Plugins in all modes; tabs are Usage, Board (skip when exactly one Board), Plugins, Agent skills, Stage Prompts (Software Factory or Both), Summary. Retain ROW-77 saved onboardingSteps progress, freely clickable tabs, Back/Next/Skip controls, Next without completeness gating, completion marks and inline results. This supersedes conflicting earlier details; ROW-77, ROW-78 and ROW-80 are now merged, so ROW-86 is a follow-up on main. Minimal prompts use the existing placeholder template text and are off by default; setup accepts default|minimal prompts. Do not reintroduce forward-only tabs or apply-on-Finish behavior.",
+          "createdAt": "2026-11-04T03:09:14.733Z",
+          "updatedAt": "2026-11-04T03:09:14.733Z"
         }
       ]
     }
