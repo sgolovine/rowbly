@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T18:01:16.989Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:c6ecb533-e906-42b8-a639-37f6964636d6",
+    "at": "2026-11-04T18:05:48.839Z",
+    "source": "worker message: APPROVED and merged PR #176 at a6772e21, FACTORY-DONE (t3 run ordinal 1 completed 18:05:31Z)",
+    "by": "sunny"
   }
 }
