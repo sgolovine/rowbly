@@ -17,6 +17,13 @@
     "comments": {
       "comments": [
         {
+          "id": "45DlwZFH",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (thread mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-correction-1-launch.json. Branch: factory/row-88-correction-1, pushed to factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b473cb3b37025e026554562d4a9bb6421f4c354d.",
+          "createdAt": "2026-11-04T03:26:38.880Z",
+          "updatedAt": "2026-11-04T03:26:38.880Z"
+        },
+        {
           "id": "8FWdOX1x",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Skill text only: the factory skips every git sync when the Git Plugin is off and treats publication as done; one failed-sync rule for start and while running: 3 tries in all about 10 s and 20 s apart, no retry for conflicts or evidence, Automatic Merge Conflict Resolution Off, or exits 2 and 3. AGENTS.md summary and remote-launch.md step 6 match. Checks: typecheck, lint, test:unit 79 and test:cli 21 pass. No screenshots: no TUI or CLI change. No review findings to answer.",
@@ -38,25 +45,18 @@
           "updatedAt": "2026-11-04T03:11:04.179Z"
         },
         {
-          "id": "q1sTbz3y",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
-          "createdAt": "2026-11-04T02:14:51.513Z",
-          "updatedAt": "2026-11-04T02:14:51.513Z"
-        },
-        {
-          "id": "45DlwZFH",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (thread mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-correction-1-launch.json. Branch: factory/row-88-correction-1, pushed to factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b473cb3b37025e026554562d4a9bb6421f4c354d.",
-          "createdAt": "2026-11-04T03:26:38.880Z",
-          "updatedAt": "2026-11-04T03:26:38.880Z"
-        },
-        {
           "id": "mfc55pNj",
           "author": "sunny",
           "body": "PR169 repaired: https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. 1. Git setup and sync require enabled AND loaded. Either false skips every publication gate including remote-launch step 6. 2. Publication requires requested and active cleared plus fresh completed relevant-attempt synchronized success. Settled failed or interrupted results follow 3 total attempts with 10s and 20s backoff and preserved exceptions. Only rowbly git show may establish settlement during sync or backoff, about 5s apart for at most 30s per attempt. Pending at that bound keeps gates closed without retry or another status-wait loop. Checks passed: typecheck, lint, unit 79, CLI 21. CI pending: Verify, Unit tests, CLI tests and Clipboard smoke on macos-latest, windows-latest and ubuntu-latest. Skill/docs only. No screenshots required. No Board mutations.",
           "createdAt": "2026-11-04T03:26:40.863Z",
           "updatedAt": "2026-11-04T03:26:40.863Z"
+        },
+        {
+          "id": "q1sTbz3y",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
+          "createdAt": "2026-11-04T02:14:51.513Z",
+          "updatedAt": "2026-11-04T02:14:51.513Z"
         }
       ]
     }
