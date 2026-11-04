@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:12:28.824Z",
+  "updatedAt": "2026-11-04T05:12:29.547Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -102,6 +102,13 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-implementation, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/172. Head: 775085cab8aee7f732459d66c1c6d1b07bd27422. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
           "createdAt": "2026-11-04T05:12:28.823Z",
           "updatedAt": "2026-11-04T05:12:28.823Z"
+        },
+        {
+          "id": "feM305po",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-part2, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/174. Head: bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
+          "createdAt": "2026-11-04T05:12:29.547Z",
+          "updatedAt": "2026-11-04T05:12:29.547Z"
         }
       ]
     }
