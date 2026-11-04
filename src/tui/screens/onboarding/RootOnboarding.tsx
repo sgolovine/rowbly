@@ -13,7 +13,6 @@ import {
   useServices,
   useToast,
 } from '../../hooks';
-import type { KeyHint } from '../../keymap';
 import { theme } from '../../theme';
 import { OnboardingNav } from './OnboardingNav';
 import { OnboardingPluginStep } from './OnboardingPluginStep';
@@ -21,6 +20,7 @@ import {
   completedSteps,
   firstIncomplete,
   type Mode,
+  NAV_HINT,
   ONBOARDING_STEPS,
   type StepId,
   visibleSteps,
@@ -28,7 +28,6 @@ import {
 import { SkillInstall } from './SkillInstall';
 
 const MODE_LABEL: Record<Mode, string> = { kanban: 'Plain Kanban', factory: 'Software Factory', both: 'Both' };
-const NAV_HINT: KeyHint = { key: 'ctrl+←/→', description: 'back/next step' };
 
 /**
  * Data Root onboarding as step tabs with Back, Next and Skip onboarding. Each action changes only the
@@ -309,7 +308,6 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
         ) : step === 'skills' ? (
           <SkillInstall
             installedThisVisit={installed}
-            onDone={next}
             onInstalled={async (skill) => {
               setInstalled((prev) => [...prev, skill]);
               await complete('skills');

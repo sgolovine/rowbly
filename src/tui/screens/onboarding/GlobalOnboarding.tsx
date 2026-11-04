@@ -1,27 +1,60 @@
-import { Box, Text } from 'ink';
-import { useState } from 'react';
+import { Box, Text, useInput } from 'ink';
+import { useContext, useState } from 'react';
 import { applyGlobalMe, registerExistingDataRoot, setGlobalMe } from '../../../services';
 import { readHomeConfig } from '../../../storage';
 import { Form, Loading, SelectList } from '../../components';
-import { useAsync, useEscape, useIsActive, useKeyCapture, useKeyHints, useRowblyContext } from '../../hooks';
+import {
+  ShellContext,
+  useAsync,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
+  useKeyHints,
+  useRowblyContext,
+} from '../../hooks';
 import { theme } from '../../theme';
+import { OnboardingNav } from './OnboardingNav';
+import { NAV_HINT } from './onboardingSteps';
+
+const STEPS = ['welcome', 'me', 'roots'] as const;
 
 /** Global Me and existing Data Roots only; creating a Data Root belongs to setup. */
 export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Promise<void> }) {
   const ctx = useRowblyContext();
-  const [step, setStep] = useState<'welcome' | 'me' | 'roots' | 'register'>('welcome');
+  const shell = useContext(ShellContext);
+  const [step, setStep] = useState<(typeof STEPS)[number] | 'register'>('welcome');
   const saved = useAsync(() => readHomeConfig(home), [home]);
   const [registered, setRegistered] = useState<string | null>(null);
+  const [meResult, setMeResult] = useState<string | null>(null);
   const active = useIsActive();
+  // The register form is a sub-step of Data Roots: esc returns to it, and Back and Next are hidden.
+  const index = step === 'register' ? -1 : STEPS.indexOf(step);
+  const back = () => {
+    const prev = STEPS[index - 1];
+    if (prev) setStep(prev);
+  };
+  const next = () => {
+    const following = STEPS[index + 1];
+    if (following) setStep(following);
+    else void onDone();
+  };
   useKeyCapture(active && step === 'register', { text: false, escape: true });
   useEscape(active && step === 'register', () => setStep('roots'));
+  useInput(
+    (_input, key) => {
+      // A text field being edited keeps its keys.
+      if (!key.ctrl || shell.captured().text) return;
+      if (key.leftArrow) back();
+      else if (key.rightArrow) next();
+    },
+    { isActive: active && index >= 0 && saved.data !== undefined },
+  );
   useKeyHints(
-    step === 'welcome' || step === 'roots'
-      ? [
-          { key: '↑/↓', description: 'select' },
-          { key: 'enter', description: 'continue' },
-        ]
-      : [],
+    step === 'roots'
+      ? [{ key: '↑/↓', description: 'select' }, { key: 'enter', description: 'choose' }, NAV_HINT]
+      : step === 'register'
+        ? []
+        : [NAV_HINT],
   );
   if (!saved.data)
     return saved.loading ? (
@@ -42,7 +75,6 @@ export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Pro
           <Text color={theme.inkMuted}>
             These choices belong to you in ~/.rowblyrc.json. You can reopen onboarding in Settings.
           </Text>
-          <SelectList items={[{ value: 'next', label: 'Get started' }]} onSelect={() => setStep('me')} />
         </>
       ) : step === 'me' ? (
         <>
@@ -50,17 +82,20 @@ export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Pro
             Global Me is the creator of your Stories. A Data Root’s local Me still takes precedence. Leave empty to keep
             your handle.
           </Text>
+          {meResult && <Text color={theme.accent}>✓ {meResult}</Text>}
           <Form
             initialValues={{ me: saved.data.me ?? '' }}
             fields={[{ name: 'me', label: 'Handle', kind: 'text' }]}
-            submitLabel="next"
+            submitLabel="save"
             onSubmit={async (values) => {
               const handle = String(values.me ?? '').trim();
-              if (handle) {
-                const me = await setGlobalMe(home, handle);
-                if (ctx) applyGlobalMe(ctx, me);
+              if (!handle) {
+                setMeResult('Kept your handle.');
+                return;
               }
-              setStep('roots');
+              const me = await setGlobalMe(home, handle);
+              if (ctx) applyGlobalMe(ctx, me);
+              setMeResult(`Saved ${handle} as global Me.`);
             }}
           />
         </>
@@ -102,16 +137,20 @@ export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Pro
             </Text>
           ))}
           <SelectList
-            items={[
-              { value: 'register', label: 'Register an existing Data Root' },
-              { value: 'done', label: 'Continue' },
-            ]}
-            onSelect={(item) => {
-              if (item.value === 'register') setStep('register');
-              else void onDone();
-            }}
+            items={[{ value: 'register', label: 'Register an existing Data Root' }]}
+            onSelect={() => setStep('register')}
           />
         </>
+      )}
+      {index >= 0 && (
+        <OnboardingNav
+          onBack={back}
+          onNext={next}
+          onSkip={() => void onDone()}
+          first={index === 0}
+          last={index === STEPS.length - 1}
+          clickable={active}
+        />
       )}
     </Box>
   );

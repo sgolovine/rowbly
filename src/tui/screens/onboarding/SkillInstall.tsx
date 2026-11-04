@@ -26,12 +26,10 @@ function shownPath(path: string): string {
  * installed when it is below the current folder (as the CLI picker reads it) or was installed here.
  */
 export function SkillInstall({
-  onDone,
   onInstalled,
   installedThisVisit = NO_INSTALLS,
 }: {
   installedThisVisit?: { name: string; path: string }[];
-  onDone(): void;
   onInstalled?(skill: { name: string; path: string }): Promise<void>;
 }) {
   const [installedHere, setInstalledHere] = useState<{ name: string; path: string }[]>([]);
@@ -124,11 +122,8 @@ export function SkillInstall({
                   }
                 : { value: skill.dir, label: `Install ${skill.name}` },
             ),
-            { value: '', label: 'Continue without installing more skills' },
           ]}
-          onSelect={(item) =>
-            item.value ? setSkill(availableSkills.find((skill) => skill.dir === item.value) ?? null) : onDone()
-          }
+          onSelect={(item) => setSkill(availableSkills.find((skill) => skill.dir === item.value) ?? null)}
         />
       )}
     </Box>
