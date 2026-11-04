@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T01:05:36.089Z"
+    "startedAt": "2026-11-04T01:20:45.725Z"
   },
   "identity": {
-    "worker": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
+    "worker": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
+    "threadId": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
     "verification": {
-      "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
-      "verifiedAt": "2026-11-04T01:05:36.843Z",
+      "source": "Verified T3 correction launch receipt retained at ROW-82-correction-1-launch.json: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
+      "verifiedAt": "2026-11-04T01:21:16.186Z",
       "by": "sunny"
     }
   },
@@ -29,16 +29,10 @@
         "value": false
       }
     ],
-    "rule": "ROWBLY.md coding uses Claude Opus Medium",
+    "rule": "ROWBLY.md coding Claude Opus Medium; returned work continuation on existing PR",
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T01:05:36.089Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
-    "at": "2026-11-04T01:08:10.837Z",
-    "source": "Worker progress: implementation typecheck/lint pass, private screenshot daemon path reported before use",
-    "by": "sunny"
+    "selectedAt": "2026-11-04T01:20:45.725Z"
   }
 }

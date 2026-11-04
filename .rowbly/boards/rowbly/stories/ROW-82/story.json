@@ -5,23 +5,55 @@
   "name": "Data Root Selection Changes",
   "description": "- When selecting a data root, filter missing roots so they appear at the bottom of the list\n- Currently if you attempt to select a data root that is missing, it will give a notification that it does not exist and tell you to remove it from the list. What I want to have happen instead is a modal comes up and says \"This data root no longer exists\" and then prompt the user to delete the data root.",
   "stage": "in-progress",
-  "rank": "a9",
+  "rank": "aE",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:05:36.844Z",
+  "updatedAt": "2026-11-04T01:21:16.187Z",
   "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "QeRe28vn",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/163 at b184dff8749123a1b98e790c6e6bd7e109955f28 by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. docs/agents/adr/0042-tui-startup-asks-for-a-data-root.md:12-14 (implemented at src/tui/screens/setup/DataRootPickerScreen.tsx:49): ADR-0042 §1 still requires the default Data Root first and other roots in registered order. The new missingLast partition intentionally changes that accepted decision when the default is missing or a missing registered root precedes an existing one. AGENTS.md and the ADR index require a new ADR to amend an accepted decision, an update to the old ADR's Status line, and an index entry in the same change. Add that amendment in docs/agents/adr/ documenting missing roots after existing roots, including a missing default; preserve the intended implementation. I verified the implementation and reviewer launch receipts, both authored commits and the two main merges; reviewer worker/thread mcp:afb01914-c84b-4acb-a271-4b9aa2181d13 uses codex/gpt-6.1-sol, distinct from implementing worker mcp:84b28722-ce2f-401d-aaff-38e87f85da1f using claudeAgent/claude-opus-5-5. Reviewed all eight changed files, stable grouping, selection callbacks, missing-on-open handling, confirmation/cancel behavior, list-only removal, current-root protection, shared UI conventions and user/skill documentation. No code blocker found. All seven screenshot URLs return HTTP 200; inspected the missing-root modal image. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests), and pnpm test:cli (21 tests) passed. All six current-head GitHub checks are SUCCESS; mergeability remains UNKNOWN. ROW-81's unmerged shared DataRootList is not part of this diff; no intent conflict was identified.",
+          "createdAt": "2026-11-04T01:19:43.499Z",
+          "updatedAt": "2026-11-04T01:19:43.499Z"
+        },
+        {
+          "id": "klGIzUCm",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-82-implementation; PR https://github.com/sgolovine/rowbly/pull/163; head b184dff8749123a1b98e790c6e6bd7e109955f28. Independent review requests one required change: add an ADR amending ADR-0042 section 1 for missing-last ordering, update ADR-0042 Status and the ADR index. Review: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619877477. No code blocker. All four local checks passed and all six GitHub checks succeeded; all seven screenshot URLs HTTP 200. Mergeability UNKNOWN; no merge attempted.",
+          "createdAt": "2026-11-04T01:19:44.131Z",
+          "updatedAt": "2026-11-04T01:19:44.131Z"
+        },
+        {
+          "id": "ywLicUj1",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:84b28722-ce2f-401d-aaff-38e87f85da1f (thread mcp:84b28722-ce2f-401d-aaff-38e87f85da1f, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-implementation-launch.json. Branch: factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: b184dff8749123a1b98e790c6e6bd7e109955f28 (verified gh pr view 163).",
+          "createdAt": "2026-11-04T01:14:31.551Z",
+          "updatedAt": "2026-11-04T01:14:31.551Z"
+        },
+        {
+          "id": "zmDGqkRH",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/163 (branch factory/row-82-implementation, head b184dff8749123a1b98e790c6e6bd7e109955f28). Missing Data Roots are listed last in the startup picker and the D switcher. Picking one opens a modal that says the Data Root no longer exists and asks to delete it from the list (removes its ~/.rowblyrc.json entry); a root that vanishes after the list loads gets the same modal. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass; manual agentic-tui run of switcher and picker, including the ROW-83 wheel after merging main. Screenshots: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619803940. No review findings to answer.",
+          "createdAt": "2026-11-04T01:14:34.864Z",
+          "updatedAt": "2026-11-04T01:14:34.864Z"
+        }
+      ]
+    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
+        "worker": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
         "by": "sunny",
-        "startedAt": "2026-11-04T01:05:36.089Z"
+        "startedAt": "2026-11-04T01:20:45.725Z"
       }
     }
   }

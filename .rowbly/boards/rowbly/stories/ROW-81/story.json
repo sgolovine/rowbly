@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Fuzzy search when choosing a data root",
   "description": "## Summary: Let people type to fuzzy-find a Data Root wherever they choose one, instead of scrolling a long list (the attachment shows the startup picker with 25 known Data Roots). ## Current behavior: (1) The startup picker \"Choose a Data Root\" (src/tui/screens/setup/DataRootPickerScreen.tsx, route data-roots from src/tui/onboardingRoute.ts) uses SelectList, whose \"/\" filter only does a case-insensitive substring match on the row label (label or path plus the default/missing suffix) and ignores the path when a label is set. (2) The Data Root switcher modal (src/tui/shell/DataRootSwitcher.tsx, opened with D or the header button) has no search at all. ## Scope: Add type-to-search to both. Reuse fuzzySearch from src/core/fuzzySearch.ts, which is already used by SearchableSelectPicker and storySearch. Put the matching in one shared helper (for example src/tui/shell/dataRootSearch.ts), not two copies. Search fields for each known Data Root: its name (dataRootName: label, Global or folder), its full path and its tilde path. Ties keep the current order (default first, then registered order; keep ROW-82 ordering if it lands first). ## Interaction: (a) A search line sits above the list, styled like the StoryFinder and SearchableSelectPicker field (theme.fieldFocus, placeholder \"Type to search…\"). (b) Typing any printable character that is not an action key of that screen starts the search with that character. \"/\" also focuses it. n (new Data Root), and in the switcher e (edit) and d (delete), keep their meaning while the search is not focused (the AGENTS.md rule that n creates). (c) While the search is focused, every printable key is text. Up/down move the highlight, enter opens the highlighted row, and esc clears the query and leaves the search (in the switcher, esc with an empty, unfocused search closes the modal as now). (d) Each change to the query moves the highlight to the best match. (e) The + New Data Root row stays visible and reachable whatever the query is. With no matches, show \"No matching Data Roots.\" above it. (f) Key hints name the search (for example \"type search\"), and the position counter counts the matching rows. ## Acceptance: On the startup picker and in the switcher, typing \"crew\" highlights Crewsum (matched by label) and typing \"row-14\" highlights the row-14-story-linking worktree root (matched by path). A subsequence such as \"rwtst\" finds \"Rowbly Test\". enter opens the highlighted match. esc restores the full list. n still opens New Data Root setup when the search is not focused. Opening, missing-root handling and unsaved-changes confirmation behave as today. ## Out of scope: List order changes and the missing-root modal (ROW-82), mouse-wheel scrolling (ROW-83), moving + New Data Root to the top (ROW-85). ## Docs: docs/user-guide.md (the startup picker paragraph near line 63, the switcher paragraph near line 180, and the D row in the key table near line 1097), skills/rowbly/references/tui.md, and skills/rowbly/references/setup.md if it describes the picker keys. ## Tests: None required (AGENTS.md: keys, screens and filters add no test). Verify with pnpm dev in a folder without .rowbly and with the D switcher, plus an agentic-tui screenshot for the PR. ## Overlaps: ROW-82, ROW-83 and ROW-85 change the same two files. Sequence them; when one lands first, merge origin/main into this branch and resolve conflicts (no rebase or force push).",
-  "stage": "in-progress",
-  "rank": "a8",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:03:09.119Z",
-  "updatedAt": "2026-11-04T00:59:16.129Z",
+  "updatedAt": "2026-11-04T01:17:48.885Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,6 +26,16 @@
         }
       ]
     },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:33a0ba80-e14b-46b6-87ee-1e49025dcba1",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:13:21.686Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -34,18 +44,29 @@
           "body": "Refinement: the startup picker (DataRootPickerScreen) and the D switcher (DataRootSwitcher) are both in scope. Reuse core fuzzySearch over the name, full path and tilde path. Printable keys other than n/e/d start the search, \"/\" focuses it, esc clears it, and + New Data Root always stays visible. ROW-82, ROW-83 and ROW-85 edit the same files: sequence them, and merge origin/main when one lands first (no rebase). Ready for In Progress.",
           "createdAt": "2026-11-04T00:35:03.649Z",
           "updatedAt": "2026-11-04T00:35:03.649Z"
+        },
+        {
+          "id": "HrMRDhuR",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/162 at a269306b5da4339a5bd55ffc07fae3a20ca10190 by codex/gpt-6.1-sol: APPROVED. Verified the supplied launch receipts and accounted for all four branch commits under the recorded Claude Opus 5.5 implementation; this reviewer is a different worker and model. Reviewed the full diff and touched files against ROW-81 and AGENTS.md, including shared fuzzy matching over name/full/tilde paths, stable ties, query highlight resets, text/action key capture, New Data Root reachability, opening/error and unsaved-change flows, documentation and identical reference copies. Confirmed ROW-83 wheel composition: the startup list retains three-row clamped highlight movement and short lists leave wheel handling to their enclosing viewport; row-object selection callbacks remain compatible with separate ROW-82 work. Direct helper checks passed for crew, row-14, rwtst, tilde paths, no matches and empty-query order. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) all passed. All ten screenshot URLs returned HTTP 200. All six current-head GitHub checks succeeded; mergeability remains UNKNOWN, so approval does not yet authorize bypassing that merge gate.",
+          "createdAt": "2026-11-04T01:17:48.885Z",
+          "updatedAt": "2026-11-04T01:17:48.885Z"
+        },
+        {
+          "id": "Hyjc08YG",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/162 (head a269306b5da4339a5bd55ffc07fae3a20ca10190, branch factory/row-81-implementation). The startup picker and the D switcher share DataRootList and searchDataRoots: core fuzzySearch over name, full path and ~ path, best match highlighted, + New Data Root always shown, n/e/d kept, esc clears. The picker keeps ROW-83 mouse-wheel scrolling. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass after merging origin/main with ROW-83; checked by hand with agentic-tui (crew, row-14, rwtst, no match, esc, n, enter, e, missing-root error, wheel). Screenshots on pr-assets/factory/row-81-implementation, linked from a PR comment. No review findings to answer.",
+          "createdAt": "2026-11-04T01:12:27.447Z",
+          "updatedAt": "2026-11-04T01:12:27.447Z"
+        },
+        {
+          "id": "dbSGtNBP",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:7e61c84d-5772-4427-9f17-906c8d1bdd05 (thread mcp:7e61c84d-5772-4427-9f17-906c8d1bdd05, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-81-implementation-launch.json. Branch: factory/row-81-implementation. PR: https://github.com/sgolovine/rowbly/pull/162. Head: a269306b5da4339a5bd55ffc07fae3a20ca10190 (verified gh pr view 162).",
+          "createdAt": "2026-11-04T01:12:23.982Z",
+          "updatedAt": "2026-11-04T01:12:23.982Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:7e61c84d-5772-4427-9f17-906c8d1bdd05",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:59:15.372Z"
-      }
     }
   }
 }
