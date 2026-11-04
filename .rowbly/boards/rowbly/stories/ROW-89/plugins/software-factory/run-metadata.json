@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T02:16:15.459Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:21f1e6fd-1150-439f-95eb-e9b41b4561a7",
+    "at": "2026-11-04T02:17:11.703Z",
+    "source": "Verified worker began read-only refinement research with PR169 scope acknowledged",
+    "by": "sunny"
   }
 }
