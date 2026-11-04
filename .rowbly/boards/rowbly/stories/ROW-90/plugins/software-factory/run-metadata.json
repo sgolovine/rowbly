@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T17:18:28.444Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:da9e5d42-cdf5-4054-8c34-17d429f7dd0a",
+    "at": "2026-11-04T17:21:04.718Z",
+    "source": "worker message: FACTORY-DONE with block (t3 run ordinal 1 completed 17:20:47Z)",
+    "by": "sunny"
   }
 }
