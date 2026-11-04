@@ -8,7 +8,8 @@ screen, ask them to open it; do not start `rowbly` with no command in your own s
 Without `--data-root`, the TUI opens the nearest `.rowbly/` in the current directory or a parent.
 Outside one, known Data Roots appear before onboarding: default first, other registered roots next,
 **+ New Data Root** last. Labels, paths and missing markers identify them. `enter` or a click opens
-one; `n` opens setup. Failed opens leave the picker available. With no known roots, the home-folder
+one; `n` opens setup. Typing searches them (`/` or any key other than `n`, `q`, `?`, `,`, `D`): fuzzy
+over name, full path and `~` path, best match highlighted, `esc` clears. Failed opens leave the picker available. With no known roots, the home-folder
 fallback and first-run onboarding/setup remain available. After selection, global onboarding opens when its Home Config `onboardingComplete` flag is absent or false,
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
@@ -35,7 +36,7 @@ Node's environment proxy (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`) the check
 | `enter` | select or open (a click does the same) |
 | `/` | filter (on the board and the Stories list: the filter form) |
 | `esc` | back, or cancel the open form |
-| `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
+| `D` | switch Data Root (or click its name at the left of the header); in the switcher typing (`/` or any key other than `n`, `e`, `d`) searches by name or path and `esc` clears the search, `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
 | `,` | settings: Boards, Stages, Fields, Me, Preferences, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
 | `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar. With the sidebar focused (click it), `n` new Board, `e` edit and `d` delete the selected Board; a right click on a Board opens a menu with Edit and Delete for it |

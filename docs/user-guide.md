@@ -65,7 +65,13 @@ The TUI uses `--data-root` when given; otherwise it opens the nearest `.rowbly/`
 directory or a parent. Outside one, it asks you to choose from the known Data Roots in
 `~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
 registered order, and **+ New Data Root** is last. Paths, labels and `missing` markers help identify
-roots. Use `↑`/`↓` and `enter`, or click a row; `n` opens the existing setup flow. A failed open
+roots. Use `↑`/`↓` and `enter`, or click a row; `n` opens the existing setup flow. Type to search:
+`/` or any other key except the shell's (`q`, `?`, `,`, `D`) starts the search line above the list,
+which fuzzy-matches each root's name, full path and `~` path, so `crew` finds a root labelled
+Crewsum and `row-14` a root whose path holds it. Each change highlights the best match; **+ New Data
+Root** stays below the matches, with `No matching Data Roots.` when there are none. While the search
+has focus every key is text, `↑`/`↓` move and `enter` opens; `esc` clears it and shows every root
+again. A failed open
 keeps the picker available. Selection comes before incomplete global onboarding, followed by the
 selected Data Root's onboarding. With no known Data Roots, the existing home-folder fallback and
 first-run onboarding/setup apply. An explicit missing `--data-root` still fails before onboarding.
@@ -179,7 +185,9 @@ rowbly config show [--board <id>]
 - In the TUI, the button at the far left of the header names the Data Root that is open: its label in
   `~/.rowblyrc.json`, else **Global** for `~/.rowbly`, else the folder that holds it. Click it, or press
   `D`, to open the Data Root switcher. It lists the known Data Roots with their paths and marks the
-  `current` one, the `default` one and any that are `missing`. `enter` (or a click) opens the
+  `current` one, the `default` one and any that are `missing`. Type to search them, as in the startup
+  picker: `/` or any key except `n`, `e` and `d` starts the search, and `esc` clears it (`esc` again
+  closes the switcher). `enter` (or a click) opens the
   highlighted one with its own Boards, Plugins and Me, on the home screen; the screens, filters and
   sidebar picks of the previous one close. Switching changes nothing in `~/.rowblyrc.json`: the labels
   and the default stay as they are; the next TUI launch follows the startup choice described above. A Data Root that
@@ -1093,7 +1101,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
-| `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, create one, `e` edit its label and default, or `d` forget or delete it |
+| `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root (type to search them), create one, `e` edit its label and default, or `d` forget or delete it |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Skills, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
