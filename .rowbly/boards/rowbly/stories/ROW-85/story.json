@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T02:49:42.776Z",
+  "updatedAt": "2026-11-04T02:49:44.019Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:40:45.291Z",
+        "finishedAt": "2026-11-04T02:49:42.775Z"
+      }
     },
     "comments": {
       "comments": [
@@ -76,19 +87,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 (thread mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-1-launch.json. Branch: factory/row-85-correction-1, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 88db9395489cf1c84ee34117171ce65d75deb92d.",
           "createdAt": "2026-11-04T02:49:42.066Z",
           "updatedAt": "2026-11-04T02:49:42.066Z"
+        },
+        {
+          "id": "BCHBEIeh",
+          "author": "sunny",
+          "body": "Correction 1 pushed to https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation), head 88db9395489cf1c84ee34117171ce65d75deb92d. Response to review finding 1 (P2, D switcher scrolls the button away): fixed. DataRootList now shows only as many Data Roots as fit the modal body (rowHeight 2 in the switcher, room kept for the Opening line), so the modal ScrollBody never scrolls and + New Data Root stays pinned while the roots scroll below it. page up/page down now move the highlight; the mouse wheel moves it three rows as before. Checked with agentic-tui: 14 known Data Roots, current one last, 120x30, button visible on open, after page up, wheel, up to the button, page down and a no-match search. Screenshots (7, all return 200): https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621176212. PR Notes updated. Validation after merging origin/main: typecheck, lint, test:unit 79 and test:cli 21 pass. The new head needs a fresh independent review.",
+          "createdAt": "2026-11-04T02:49:44.019Z",
+          "updatedAt": "2026-11-04T02:49:44.019Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:40:45.291Z",
-        "finishedAt": "2026-11-04T02:49:42.775Z"
-      }
     }
   }
 }
