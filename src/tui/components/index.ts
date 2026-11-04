@@ -9,6 +9,7 @@ export * from './FullScreenEditor';
 export { FormNavigationContext } from './formNavigation';
 export { KeyHints } from './KeyHints';
 export * from './MarkdownView';
+export * from './MissingDataRootModal';
 export * from './Modal';
 export * from './markdown';
 export { useCovered } from './modalLayer';
