@@ -57,11 +57,11 @@
           "updatedAt": "2026-11-04T01:35:14.331Z"
         },
         {
-          "id": "k37Rmwo8",
+          "id": "X2R0bziZ",
           "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/166 (branch factory/row-78-implementation, head 08f379003dbd57fc207901edc42d7c94f5145e4d). Onboarding Open Stage Prompt editing, and Add factory Stages and default Stage Prompts, now draw the software-factory screen inline in onboarding's main area (new OnboardingPluginStep, resolved through PluginScreenHost with the Settings section shell, which moved to hooks). esc returns to Guide your Software Factory; Settings is unchanged. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass. Checked by hand with agentic-tui: inline list, hints and explanation; toggle, editor, remove confirm and cancel; esc back; finish onboarding; Settings Stage Prompts. Screenshots are in a PR comment. No review findings to answer.",
-          "createdAt": "2026-11-04T01:35:17.803Z",
-          "updatedAt": "2026-11-04T01:35:17.803Z"
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. 1) Main conflict in src/tui/screens/onboarding/RootOnboarding.tsx: merged origin/main and kept ROW-80's SkillInstall onDone={afterAi} with ROW-78's inline setup/prompts steps. Merged main again for ROW-82 (PR #163, no onboarding overlap). Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: skills Continue returns to factory guidance, Factory setup and Stage Prompts show inline, toggle works, esc goes back, Finish onboarding works, Settings Stage Prompts is unchanged. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620379759. The new head needs independent review.",
+          "createdAt": "2026-11-04T02:00:19.434Z",
+          "updatedAt": "2026-11-04T02:00:19.434Z"
         },
         {
           "id": "gSXghBIx",
@@ -71,11 +71,11 @@
           "updatedAt": "2026-11-04T02:00:14.817Z"
         },
         {
-          "id": "X2R0bziZ",
+          "id": "k37Rmwo8",
           "author": "sunny",
-          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. 1) Main conflict in src/tui/screens/onboarding/RootOnboarding.tsx: merged origin/main and kept ROW-80's SkillInstall onDone={afterAi} with ROW-78's inline setup/prompts steps. Merged main again for ROW-82 (PR #163, no onboarding overlap). Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: skills Continue returns to factory guidance, Factory setup and Stage Prompts show inline, toggle works, esc goes back, Finish onboarding works, Settings Stage Prompts is unchanged. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620379759. The new head needs independent review.",
-          "createdAt": "2026-11-04T02:00:19.434Z",
-          "updatedAt": "2026-11-04T02:00:19.434Z"
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/166 (branch factory/row-78-implementation, head 08f379003dbd57fc207901edc42d7c94f5145e4d). Onboarding Open Stage Prompt editing, and Add factory Stages and default Stage Prompts, now draw the software-factory screen inline in onboarding's main area (new OnboardingPluginStep, resolved through PluginScreenHost with the Settings section shell, which moved to hooks). esc returns to Guide your Software Factory; Settings is unchanged. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass. Checked by hand with agentic-tui: inline list, hints and explanation; toggle, editor, remove confirm and cancel; esc back; finish onboarding; Settings Stage Prompts. Screenshots are in a PR comment. No review findings to answer.",
+          "createdAt": "2026-11-04T01:35:17.803Z",
+          "updatedAt": "2026-11-04T01:35:17.803Z"
         }
       ]
     }
