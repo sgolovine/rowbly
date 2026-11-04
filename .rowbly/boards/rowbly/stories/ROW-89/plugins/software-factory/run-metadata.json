@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:6fb7c5f3-421a-4485-bb7b-68780d23a419",
-    "at": "2026-11-04T04:52:28.979Z",
-    "source": "Verified both pinnedheads/provenance and siximages200; deterministic sandbox found verifyFiles concurrentedit genericerror bypasses capturechanged quietwait/retry; remaining review ongoing",
+    "at": "2026-11-04T04:53:36.415Z",
+    "source": "Verified sandbox PR174 blockers: untracked policydirectory collapse bypasses guard, evidence dropped on success, DATA_INTEGRITY status misread as Gitoff permits unsafe cleanup; bothPRs changesrequested pending fullreview",
     "by": "sunny"
   }
 }
