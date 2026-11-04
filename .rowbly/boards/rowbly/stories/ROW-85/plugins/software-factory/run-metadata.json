@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T03:04:17.732Z"
   },
+  "identity": {
+    "worker": "mcp:db3a87dc-7cdf-47e5-8dc5-3061a4d95d6b",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:db3a87dc-7cdf-47e5-8dc5-3061a4d95d6b",
+    "verification": {
+      "source": "Verified T3 launch receipt codex/gpt-6.1-sol reasoningEffort=medium serviceTier=default",
+      "verifiedAt": "2026-11-04T03:04:18.662Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "codex",
     "model": "gpt-6.1-sol",
