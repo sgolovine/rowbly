@@ -219,8 +219,9 @@ means incomplete. The latter flag is committed and suppresses onboarding for eve
 Settings › Onboarding reopens either flow without clearing completion. Registration never creates a
 Data Root; setup still creates missing Data Roots. Named missing paths still fail. Plain Kanban turns
 Software Factory off; Factory/Both turn it on. Skill installs choose a folder and harness and never
-overwrite existing skills. Factory guidance can open Factory setup (`software-factory setup` for the
-Board); nothing is added unless it is chosen.
+overwrite existing skills. Factory guidance can run Factory setup (`software-factory setup` for the
+Board) at once, without a second confirmation; nothing is added unless it is chosen. Factory setup in
+a Board's settings still asks first.
 
 ## Board Stats
 

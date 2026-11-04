@@ -6,8 +6,10 @@ import {
   Text,
   theme,
   useAsync,
+  useEffect,
   useIsActive,
   useKeyHints,
+  useRef,
   useState,
 } from '../../plugin-api/tui';
 import { type SetupResult, setupFactory } from './setup';
@@ -17,22 +19,25 @@ const PROMPT_TEXT = { added: 'added', kept: 'kept', skipped: 'skipped' } as cons
 
 /**
  * Sets up the context's Board for a software factory on request (ADR-0053 §2): adds the factory Stages
- * and default Stage Prompts it lacks, then lists what it added, kept and skipped. A host that draws it
- * inline can pass `params.onSetUp`, called after a successful run.
+ * and default Stage Prompts it lacks, then lists what it added, kept and skipped. With `params.run`
+ * (onboarding, where the person already chose it) it runs once on open instead of asking again. A host
+ * that draws it inline can pass `params.onSetUp`, called after a successful run.
  */
 export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
   const active = useIsActive();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SetupResult | null>(null);
+  const [failed, setFailed] = useState(false);
+  const started = useRef(false);
   const board = useAsync(
     async () => (typeof params.boardId === 'string' ? params.boardId : await plugin.services.context.resolveBoard()),
     [plugin, params.boardId],
   );
-  useKeyHints(active && board.data && !busy && !result ? [{ key: 'enter', description: 'set up Board' }] : []);
-  if (board.loading && !board.data) return <Loading />;
-  if (!board.data) return <Text color={theme.danger}>Choose a Board first.</Text>;
-  const id = board.data;
-  const run = async () => {
+  // After a failed run the choice shows, so the person can try again.
+  const autoRun = params.run === true && !failed;
+  const run = async (id: string) => {
+    if (started.current) return;
+    started.current = true;
     setBusy(true);
     try {
       const done = await setupFactory(plugin, id);
@@ -41,11 +46,22 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
       // Onboarding, which shows this screen inline, marks its Factory setup step done (ADR-0057).
       if (typeof params.onSetUp === 'function') params.onSetUp();
     } catch (err) {
+      started.current = false;
+      setFailed(true);
       ui.error(err);
     } finally {
       setBusy(false);
     }
   };
+  useEffect(() => {
+    if (autoRun && board.data) void run(board.data);
+  }, [autoRun, board.data]);
+  useKeyHints(
+    active && board.data && !autoRun && !busy && !result ? [{ key: 'enter', description: 'set up Board' }] : [],
+  );
+  if (board.loading && !board.data) return <Loading />;
+  if (!board.data) return <Text color={theme.danger}>Choose a Board first.</Text>;
+  const id = board.data;
   return (
     <Box flexDirection="column" gap={1}>
       <Text>
@@ -74,12 +90,12 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
             </Text>
           ))}
         </Box>
-      ) : busy ? (
+      ) : busy || autoRun ? (
         <Loading label="Setting up…" />
       ) : (
         <SelectList
           items={[{ value: 'setup', label: `Set up Board ${id}` }]}
-          onSelect={() => void run()}
+          onSelect={() => void run(id)}
           isActive={active}
         />
       )}

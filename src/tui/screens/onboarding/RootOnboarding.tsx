@@ -2,20 +2,19 @@ import { Box, Text } from 'ink';
 import { useRef, useState } from 'react';
 import { keyPrefixFromName, slugFromName } from '../../../core';
 import { Form, Loading, SelectList } from '../../components';
-import { pluginRoute, useAsync, useKeyHints, usePlugins, useServices, useToast } from '../../hooks';
-import { useRouter } from '../../router';
+import { useAsync, useKeyHints, usePlugins, useServices, useToast } from '../../hooks';
 import { theme } from '../../theme';
+import { OnboardingPluginStep } from './OnboardingPluginStep';
 import { SkillInstall } from './SkillInstall';
 
 type Mode = 'kanban' | 'factory' | 'both';
-type Step = 'mode' | 'board' | 'plugins' | 'ai' | 'skills' | 'factory' | 'done';
+type Step = 'mode' | 'board' | 'plugins' | 'ai' | 'skills' | 'factory' | 'setup' | 'prompts' | 'done';
 
 /** Setup choices change only the selected records; completion is saved by the parent. */
 export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   const services = useServices();
   const plugins = usePlugins();
   const toast = useToast();
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>('kanban');
   const [step, setStep] = useState<Step>('mode');
   const [aiAsked, setAiAsked] = useState(false);
@@ -29,7 +28,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           { key: 'space', description: 'toggle Plugin' },
           { key: 'enter', description: 'save choices' },
         ]
-      : step === 'skills'
+      : step === 'skills' || step === 'setup' || step === 'prompts'
         ? []
         : [{ key: 'enter', description: 'continue' }],
   );
@@ -169,6 +168,14 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
         </>
       ) : step === 'skills' ? (
         <SkillInstall onDone={afterAi} />
+      ) : step === 'setup' || step === 'prompts' ? (
+        <OnboardingPluginStep
+          title={step === 'setup' ? 'Factory setup' : 'Stage Prompts'}
+          plugin="software-factory"
+          screen={step === 'setup' ? 'factory-setup' : 'stage-prompts'}
+          params={step === 'setup' ? { run: true } : {}}
+          onBack={() => setStep('factory')}
+        />
       ) : step === 'factory' ? (
         <>
           <Text bold>Guide your Software Factory</Text>
@@ -194,11 +201,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
               void run(async () => {
                 if (item.value === 'prompts' || item.value === 'setup') {
                   await plugins.reload();
-                  const route =
-                    item.value === 'setup'
-                      ? pluginRoute('software-factory', 'factory-setup', { title: 'Factory setup' })
-                      : pluginRoute('software-factory', 'stage-prompts');
-                  router.push(route.screen, route.params);
+                  setStep(item.value);
                 } else if (item.value === 'skills') setStep('skills');
                 else if (item.value === 'ai') setStep('ai');
                 else await onDone();

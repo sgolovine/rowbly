@@ -3,6 +3,7 @@ export * from './dataRootChanges';
 export * from './layout';
 export * from './mouse';
 export * from './plugins';
+export * from './sectionShell';
 export * from './shell';
 export * from './toasts';
 export * from './useAsync';
