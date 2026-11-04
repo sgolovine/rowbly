@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T01:15:24.286Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:afb01914-c84b-4acb-a271-4b9aa2181d13",
+    "at": "2026-11-04T01:17:50.361Z",
+    "source": "Verified reviewer progress: receipts/commits/images checked, local suites running",
+    "by": "sunny"
   }
 }
