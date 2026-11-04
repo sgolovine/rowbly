@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:44:01.837Z",
+  "updatedAt": "2026-11-04T02:44:03.173Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:4155cd38-6107-4caf-9ed4-03923a3768da",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:53:27.092Z",
+        "finishedAt": "2026-11-04T02:44:01.837Z"
+      }
     },
     "comments": {
       "comments": [
@@ -48,19 +59,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:4155cd38-6107-4caf-9ed4-03923a3768da (thread mcp:4155cd38-6107-4caf-9ed4-03923a3768da, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-77-implementation-launch.json. Branch: factory/row-77-implementation. PR: https://github.com/sgolovine/rowbly/pull/171. Head: 47495cf92bcd7730d511e3034b142a81bc2fe8da.",
           "createdAt": "2026-11-04T02:44:01.046Z",
           "updatedAt": "2026-11-04T02:44:01.046Z"
+        },
+        {
+          "id": "B1yQ6hc7",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/171 (head 47495cf92bcd7730d511e3034b142a81bc2fe8da, branch factory/row-77-implementation). Data Root onboarding is step tabs (Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish) with Back ctrl+left, Next ctrl+right and Skip onboarding ctrl+k Buttons. Every step runs inline and keeps its result. Finished steps are saved as onboardingSteps in rowbly.config.json, and reopening opens the first step not done. ADR-0057 amends ADR-0041 section 2. The step reuses OnboardingPluginStep (ROW-78) and the Factory setup auto-run (ROW-75). The Factory setup mark is saved on leaving the step, so a rowbly.config.json Plugin reload does not run setup twice. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run with 11 screenshots in the PR. No review findings to answer yet.",
+          "createdAt": "2026-11-04T02:44:03.173Z",
+          "updatedAt": "2026-11-04T02:44:03.173Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:4155cd38-6107-4caf-9ed4-03923a3768da",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:53:27.092Z",
-        "finishedAt": "2026-11-04T02:44:01.837Z"
-      }
     }
   }
 }
