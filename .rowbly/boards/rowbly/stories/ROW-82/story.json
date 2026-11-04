@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Data Root Selection Changes",
   "description": "- When selecting a data root, filter missing roots so they appear at the bottom of the list\n- Currently if you attempt to select a data root that is missing, it will give a notification that it does not exist and tell you to remove it from the list. What I want to have happen instead is a modal comes up and says \"This data root no longer exists\" and then prompt the user to delete the data root.",
-  "stage": "in-pr",
-  "rank": "a1",
+  "stage": "in-progress",
+  "rank": "aE",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:19:44.132Z",
+  "updatedAt": "2026-11-04T01:19:44.782Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:afb01914-c84b-4acb-a271-4b9aa2181d13",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:15:24.286Z",
-        "finishedAt": "2026-11-04T01:19:42.203Z"
-      }
-    },
     "comments": {
       "comments": [
         {
