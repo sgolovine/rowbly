@@ -59,6 +59,27 @@
           "updatedAt": "2026-11-04T04:47:38.482Z"
         },
         {
+          "id": "U6EC0fvn",
+          "author": "sunny",
+          "body": "Returned-work corrections delivered in existing draft PR172 at 775085cab8aee7f732459d66c1c6d1b07bd27422 and PR174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. PR172: 1 capture drift now reaches capture-changed quiet-wait retry, with a deterministic assertion in the kept publication test; 2 detached HEAD returns no-upstream guidance. PR174: 1 complete untracked/staged/rename policy records and reviewable diffs before sync or cleanup; 2 explicit Plugin enabled/loaded inspection fails closed on errors; 3 clean requested/active runs retain identity and return waiting; 4 success/failure evidence retains run/commit paths and blocks readiness or retry. All four local checks pass at each exact head: typecheck, lint, 79 unit and 21 CLI tests, 100 total. Nineteen private preparation probes pass. Fresh screenshots uploaded on retained pr-assets/factory/row-89-correction-1, five URLs HTTP 200, numbered responses on both PRs. PR172 CI all six SUCCESS; PR174 only Clipboard smoke (windows-latest) pending in the final snapshot. Revised exact policy proposal retained at /tmp/row89-correction-evidence-cX046o/POLICY-PROPOSAL.md and sent to supervisor; not applied or approved. No live rook validation, Board mutations, merges or CI polling. Owned TUI resources stopped; branches and evidence retained. Ready for independent review.",
+          "createdAt": "2026-11-04T05:12:31.504Z",
+          "updatedAt": "2026-11-04T05:12:31.504Z"
+        },
+        {
+          "id": "U7GLZGjm",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-implementation, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/172. Head: 775085cab8aee7f732459d66c1c6d1b07bd27422. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
+          "createdAt": "2026-11-04T05:12:28.823Z",
+          "updatedAt": "2026-11-04T05:12:28.823Z"
+        },
+        {
+          "id": "feM305po",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-part2, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/174. Head: bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
+          "createdAt": "2026-11-04T05:12:29.547Z",
+          "updatedAt": "2026-11-04T05:12:29.547Z"
+        },
+        {
           "id": "gMzkrJ4V",
           "author": "sunny",
           "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
@@ -85,27 +106,6 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
-        },
-        {
-          "id": "U7GLZGjm",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-implementation, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/172. Head: 775085cab8aee7f732459d66c1c6d1b07bd27422. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
-          "createdAt": "2026-11-04T05:12:28.823Z",
-          "updatedAt": "2026-11-04T05:12:28.823Z"
-        },
-        {
-          "id": "feM305po",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-part2, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/174. Head: bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
-          "createdAt": "2026-11-04T05:12:29.547Z",
-          "updatedAt": "2026-11-04T05:12:29.547Z"
-        },
-        {
-          "id": "U6EC0fvn",
-          "author": "sunny",
-          "body": "Returned-work corrections delivered in existing draft PR172 at 775085cab8aee7f732459d66c1c6d1b07bd27422 and PR174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. PR172: 1 capture drift now reaches capture-changed quiet-wait retry, with a deterministic assertion in the kept publication test; 2 detached HEAD returns no-upstream guidance. PR174: 1 complete untracked/staged/rename policy records and reviewable diffs before sync or cleanup; 2 explicit Plugin enabled/loaded inspection fails closed on errors; 3 clean requested/active runs retain identity and return waiting; 4 success/failure evidence retains run/commit paths and blocks readiness or retry. All four local checks pass at each exact head: typecheck, lint, 79 unit and 21 CLI tests, 100 total. Nineteen private preparation probes pass. Fresh screenshots uploaded on retained pr-assets/factory/row-89-correction-1, five URLs HTTP 200, numbered responses on both PRs. PR172 CI all six SUCCESS; PR174 only Clipboard smoke (windows-latest) pending in the final snapshot. Revised exact policy proposal retained at /tmp/row89-correction-evidence-cX046o/POLICY-PROPOSAL.md and sent to supervisor; not applied or approved. No live rook validation, Board mutations, merges or CI polling. Owned TUI resources stopped; branches and evidence retained. Ready for independent review.",
-          "createdAt": "2026-11-04T05:12:31.504Z",
-          "updatedAt": "2026-11-04T05:12:31.504Z"
         }
       ]
     }
