@@ -29,11 +29,11 @@
     "comments": {
       "comments": [
         {
-          "id": "z6rE9G0o",
+          "id": "Mb4OFQV0",
           "author": "sunny",
-          "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
-          "createdAt": "2026-11-04T00:23:37.481Z",
-          "updatedAt": "2026-11-04T00:23:37.481Z"
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/158 on factory/row-79-implementation, head eaf4009472cd173e2746f9e8ab21ed2a16fbec9b. Onboarding Agent skills step marks installed skills as Install <name> (installed) with their skills folders (from listAllSkills(cwd) plus installs made on this screen); installed skills stay selectable; the last item is now Continue (calls onDone). The user guide onboarding paragraph is updated. Validation: pnpm typecheck pass, pnpm lint pass, pnpm test:unit 79 passed, pnpm test:cli 21 passed; checked by hand with the built CLI on a fresh Data Root (installed rowbly, saw it marked, chose Continue); screenshots in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T00:47:11.219Z",
+          "updatedAt": "2026-11-04T00:47:11.219Z"
         },
         {
           "id": "kdNM42nu",
@@ -43,11 +43,11 @@
           "updatedAt": "2026-11-04T00:46:56.559Z"
         },
         {
-          "id": "Mb4OFQV0",
+          "id": "z6rE9G0o",
           "author": "sunny",
-          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/158 on factory/row-79-implementation, head eaf4009472cd173e2746f9e8ab21ed2a16fbec9b. Onboarding Agent skills step marks installed skills as Install <name> (installed) with their skills folders (from listAllSkills(cwd) plus installs made on this screen); installed skills stay selectable; the last item is now Continue (calls onDone). The user guide onboarding paragraph is updated. Validation: pnpm typecheck pass, pnpm lint pass, pnpm test:unit 79 passed, pnpm test:cli 21 passed; checked by hand with the built CLI on a fresh Data Root (installed rowbly, saw it marked, chose Continue); screenshots in the PR. No review findings to answer.",
-          "createdAt": "2026-11-04T00:47:11.219Z",
-          "updatedAt": "2026-11-04T00:47:11.219Z"
+          "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
+          "createdAt": "2026-11-04T00:23:37.481Z",
+          "updatedAt": "2026-11-04T00:23:37.481Z"
         }
       ]
     }
