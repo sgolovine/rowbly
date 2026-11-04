@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:27:29.814Z",
+  "updatedAt": "2026-11-04T05:27:31.029Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
+        "by": "sunny",
+        "startedAt": "2026-11-04T05:21:10.816Z",
+        "finishedAt": "2026-11-04T05:27:29.813Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -134,19 +145,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:70cde097-1121-4446-95a3-c5ef16334be5 (thread mcp:70cde097-1121-4446-95a3-c5ef16334be5, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-2-launch.json. Branch: factory/row-89-correction-2, pushed to factory/row-89-part2. PR: https://github.com/sgolovine/rowbly/pull/174. Head: 1def5f303ae567c403f9d0b26c1250e183e088fb. PR174-only authoring; approved PR172 at775085cab8aee7f732459d66c1c6d1b07bd27422 remains untouched.",
           "createdAt": "2026-11-04T05:27:29.097Z",
           "updatedAt": "2026-11-04T05:27:29.097Z"
+        },
+        {
+          "id": "CpwgLGk4",
+          "author": "sunny",
+          "body": "PR174-only correction delivered at 1def5f303ae567c403f9d0b26c1250e183e088fb: https://github.com/sgolovine/rowbly/pull/174. Response 1 to review6623249636: omitted/null synchronizationRun now fails at git show inspection before sync, cleanup or later Git operations; valid empty state and prior malformed/transport/active/evidence/policy/rename gates preserved. All four local checks pass: typecheck, lint, unit 79, CLI 21; 29 private probes pass; 100 tests unchanged. Four fresh screenshot URLs HTTP200 and numbered response: https://github.com/sgolovine/rowbly/pull/174#issuecomment-6623348308. CI pending in single final snapshot: CLI tests and Clipboard smoke (windows-latest); other four SUCCESS. PR172 unchanged at 775085cab8aee7f732459d66c1c6d1b07bd27422. Evidence /tmp/row89-correction2-evidence-RWHayd; private capture daemon stopped. No live policy or Board edits and no merge. Ready for independent review.",
+          "createdAt": "2026-11-04T05:27:31.028Z",
+          "updatedAt": "2026-11-04T05:27:31.028Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
-        "by": "sunny",
-        "startedAt": "2026-11-04T05:21:10.816Z",
-        "finishedAt": "2026-11-04T05:27:29.813Z"
-      }
     }
   }
 }
