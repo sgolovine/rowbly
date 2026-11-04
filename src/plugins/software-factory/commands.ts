@@ -200,9 +200,12 @@ export const commands: PluginCommands = (group, cli) => {
       'Give a Board the factory Stages (TODO, In Progress, In Review) and default Stage Prompts it does not have',
     )
     .option('--board <id>', 'the Board')
-    .action((opts: { board?: string }, cmd) =>
+    .option('--prompts <kind>', 'default or minimal Stage Prompts', 'default')
+    .action((opts: { board?: string; prompts: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
-        print(await setupFactory(plugin, await resolveBoard(opts.board)), setupText);
+        if (opts.prompts !== 'default' && opts.prompts !== 'minimal')
+          throw new UsageError('Use --prompts default or minimal');
+        print(await setupFactory(plugin, await resolveBoard(opts.board), opts.prompts), setupText);
       }),
     );
 

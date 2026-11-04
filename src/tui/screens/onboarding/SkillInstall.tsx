@@ -13,6 +13,8 @@ import { Form, Loading, SelectList } from '../../components';
 import { useAsync, useEscape, useIsActive, useKeyCapture, useKeyHints, useToast } from '../../hooks';
 import { theme } from '../../theme';
 
+const NO_INSTALLS: { name: string; path: string }[] = [];
+
 /** Shows an installed skill folder relative to the current folder when it is below it. */
 function shownPath(path: string): string {
   const rel = relative(process.cwd(), path);
@@ -23,7 +25,15 @@ function shownPath(path: string): string {
  * One explicit install at a time, using the CLI service's no-overwrite behavior. A skill is marked
  * installed when it is below the current folder (as the CLI picker reads it) or was installed here.
  */
-export function SkillInstall({ onDone }: { onDone(): void }) {
+export function SkillInstall({
+  onDone,
+  onInstalled,
+  installedThisVisit = NO_INSTALLS,
+}: {
+  installedThisVisit?: { name: string; path: string }[];
+  onDone(): void;
+  onInstalled?(skill: { name: string; path: string }): Promise<void>;
+}) {
   const [installedHere, setInstalledHere] = useState<{ name: string; path: string }[]>([]);
   const skills = useAsync(async () => {
     const [available, list] = await Promise.all([officialSkills(), listAllSkills(process.cwd())]);
@@ -31,11 +41,12 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
       const found = list.official.find((entry) => entry.name === skill.name)?.installed ?? [];
       const paths = [
         ...found.map((at) => join(process.cwd(), at.path)),
+        ...installedThisVisit.filter((at) => at.name === skill.name).map((at) => at.path),
         ...installedHere.filter((at) => at.name === skill.name).map((at) => at.path),
       ];
       return { ...skill, installedAt: [...new Set(paths)].map(shownPath) };
     });
-  }, [installedHere]);
+  }, [installedHere, installedThisVisit]);
   const toast = useToast();
   const [skill, setSkill] = useState<{ name: string; dir: string } | null>(null);
   const active = useIsActive();
@@ -95,6 +106,7 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
               });
               toast.push('info', `Installed ${result.name} at ${result.path}`);
               setInstalledHere((prev) => [...prev, { name: result.name, path: join(String(values.cwd), result.path) }]);
+              await onInstalled?.({ name: result.name, path: join(String(values.cwd), result.path) });
               setSkill(null);
             }}
           />
@@ -112,7 +124,7 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
                   }
                 : { value: skill.dir, label: `Install ${skill.name}` },
             ),
-            { value: '', label: 'Continue' },
+            { value: '', label: 'Continue without installing more skills' },
           ]}
           onSelect={(item) =>
             item.value ? setSkill(availableSkills.find((skill) => skill.dir === item.value) ?? null) : onDone()

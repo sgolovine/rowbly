@@ -3,42 +3,36 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T02:21:48.748Z"
+    "startedAt": "2026-11-04T04:58:17.790Z"
   },
   "identity": {
-    "worker": "mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4",
+    "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4",
+    "threadId": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
     "verification": {
-      "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
-      "verifiedAt": "2026-11-04T02:21:49.510Z",
+      "source": "Verified T3 t3_thread_launch receipt: codex/gpt-6.1-sol reasoningEffort=medium serviceTier=default",
+      "verifiedAt": "2026-11-04T04:58:18.526Z",
       "by": "sunny"
     }
   },
   "selection": {
-    "provider": "claudeAgent",
-    "model": "claude-opus-5-5",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
     "options": [
       {
-        "id": "effort",
+        "id": "reasoningEffort",
         "value": "medium"
       },
       {
-        "id": "fastMode",
-        "value": false
+        "id": "serviceTier",
+        "value": "default"
       }
     ],
-    "rule": "ROWBLY.md coding uses Claude Opus Medium",
-    "fallback": null,
-    "usage": "unknown",
+    "rule": "user named GPT6.1Sol temporary override",
+    "fallback": "User requested GPT6.1Sol while Claude session limited until2026-11-04T05:20:19Z",
+    "usage": "user-stated",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T02:21:48.748Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:afbde7f5-e642-48dd-920d-04c0bc01cde4",
-    "at": "2026-11-04T04:34:13.821Z",
-    "source": "Verified part2 resumed on factory/row-89-part2 from6b7de08c in same bound worktree; prepare-checkout code/sandbox prerequisite and clean resolutionOff cases tested; part1checksallpass",
-    "by": "sunny"
+    "selectedAt": "2026-11-04T04:58:17.790Z"
   }
 }

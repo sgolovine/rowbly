@@ -94,7 +94,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
-| `software-factory.setup` | `{ board }` | `{ board, stages, prompts }` |
+| `software-factory.setup` | `{ board, prompts? }` | `{ board, stages, prompts }` |
 | `software-factory.start` | `{ key, worker, retry?, selection? }` | `{ key, stageRun, selection? }` |
 | `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
 | `software-factory.touch` | `{ key, stage, attempt, startedAt, worker, source }` | `{ key, stageRun, heartbeat }` |
@@ -133,6 +133,10 @@ the entry and its file at that level only. A `StagePrompt` result is
 `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off setting,
 `enabled` is true only when it is on, `path` (relative to the Data Root) resolves inside the
 Plugin's folder for the level, and the file exists.
+
+Software Factory's `setup` accepts `prompts: 'default' | 'minimal'` (default `default`). Minimal
+uses the existing Stage Prompt placeholder text for every missing factory Stage Prompt, all off;
+all preservation and conflict rules below apply to both choices.
 
 Software Factory's `setup` gives one Board the factory Stages and default Stage Prompts it lacks
 ([ADR-0053](../agents/adr/0053-software-factory-setup-gives-default-stages-and-stage-prompts.md)), in one

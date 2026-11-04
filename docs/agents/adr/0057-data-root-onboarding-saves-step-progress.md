@@ -1,6 +1,6 @@
 # ADR-0057: Data Root onboarding saves its step progress beside its completion flag
 
-**Status:** Accepted; amends [ADR-0041](0041-onboarding-completion-has-two-levels.md) §2.
+**Status:** Accepted; amends [ADR-0041](0041-onboarding-completion-has-two-levels.md) §2. Amended by [ADR-0059](0059-onboarding-combines-stage-prompt-setup.md) for the combined onboarding flow and setup choices.
 
 ## 1. Context
 
