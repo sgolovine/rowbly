@@ -4,11 +4,72 @@ Use this when `ROWBLY.md` or the user says to start workers on a T3 server that 
 its `t3` CLI, usually on another computer over SSH. The CLI can start and message threads but cannot
 set a model's options, so a **launcher** thread on that server starts each worker with its own
 `t3_thread_launch`. [`scripts/launch-worker.mjs`](../scripts/launch-worker.mjs) does every step and
-checks the result, so do not rebuild them by hand.
+checks the result, so do not rebuild them by hand. Its `prepare-checkout` command updates a
+checkout before it runs workers.
 
 It needs Node 22 or later where you run it, SSH that logs in without a prompt, and the `t3` binary's
 path on the server. The paths below are relative to this skill's folder. `ROWBLY.md` gives the host,
 paths, launcher model and memory floor; this page gives none.
+
+## Prepare a checkout
+
+Update a checkout before it runs workers, as the skill's Update the checkout section says, in one
+call:
+
+```bash
+node scripts/launch-worker.mjs prepare-checkout --project <dir> --rowbly '<command>' \
+  [--ssh <host>] [--path <dirs>] [--t3 <path to t3>] [--data-root <dir>] [--branch <name>] \
+  [--min-free-gb <n>] [--cleanup '<commit message>']
+```
+
+- `--rowbly` is the command that runs Rowbly in that checkout, such as `pnpm --silent dev` or
+  `rowbly`; the script adds `--data-root`, `--json` and `--no-prompt`. `--path` is put in front of
+  `PATH` for every command, for a non-login SSH shell that lacks `node` or `pnpm`. `ROWBLY.md`
+  gives both for each machine.
+- `--data-root` is relative to `--project` (default `.rowbly`); `--branch` is the branch the
+  checkout must be on (default `main`).
+- Leave out `--ssh` for a checkout on this computer.
+
+It runs one command at a time, never beside `rowbly git sync`:
+
+1. Checks `node`, the `--rowbly` command, `gh auth status`, `t3` (with `--t3`), free memory (with
+   `--min-free-gb`) and the branch. It reports every failure at once and changes nothing.
+2. Lists every changed and untracked Data Root file with NUL-delimited status records, including
+   both rename paths. `dataRootChanges` and `policyChanges` contain `{status, path, from?}` records.
+   Changes to `ROWBLY.md` or a Stage Prompt stop it with `policy`, before sync or cleanup.
+   `policyDiff` holds `{paths, staged, worktree, untracked?}` per entry: staged and working diffs,
+   plus the full diff of each new file. Read all of it before resolving policy.
+3. Reads `rowbly plugins list` to establish enabled and loaded status explicitly; only an explicit
+   disabled or unloaded Plugin skips synchronization. A failed or malformed inspection fails
+   closed. With Git on, reads `rowbly git show`; an error (including recovery) fails closed.
+   Retains `sync.synchronizationRun`, commit and evidence. Requested or active runs return
+   `waiting` even with a clean Data Root, before further Git operations. Reconcile the retained
+   identity as the skill's Confirm publication says before preparing again; do not rerun on a loop.
+   Evidence on any success or failure closes readiness and retry gates until reviewed, with paths
+   and run/commit identity retained in `sync`. Preserve the evidence files. After reconciliation,
+   establish a settled result before a fresh preparation attempt.
+   Runs `rowbly git sync` only for changes in the Data Root, with 3 tries about 10 then 20 seconds
+   apart only while `error.details.retryable` is `true`, no outstanding run or evidence is present,
+   and the result is usable. A clean, settled Data Root needs no sync or Automatic Merge Conflict
+   Resolution. A fresh synchronized result must record both start and completion times.
+4. Lists other uncommitted changes (`otherChanges`). Without `--cleanup` it stops with `dirty` and a
+   `diffStat` for you to read. With `--cleanup '<message>'`, after you have read them, it commits
+   them on `factory-cleanup/<date>`, pushes, opens a cleanup PR against `--branch` with `gh` and
+   switches back.
+5. Runs `git pull --ff-only` and reports `pulled.from` and `pulled.to`.
+
+It prints one JSON line with `status`, `prerequisites`, `memory`, `git` (the preferences),
+`dataRootChanges`, `policyChanges`, `sync`, `otherChanges`, `cleanup`, `pulled`, and `failures`:
+one `{check, reason, fix}` for each problem, with `check` one of `node`, `rowbly`, `gh`, `t3`,
+`memory`, `branch`, `policy`, `git`, `sync`, `changes`, `cleanup` or `pull`.
+
+| `status` | Exit | Meaning | Next |
+| --- | --- | --- | --- |
+| `ready` | 0 | Up to date; any Rowbly changes were published | Workers may run there. |
+| `failed` | 1 | A check, the sync (with its `reason`), the cleanup or the pull failed | Apply each `fix`; leave the machine out until it passes. |
+| `policy` | 2 | `ROWBLY.md` or a Stage Prompt has uncommitted changes | Show the user `policyDiff`; never sync or clean them up. |
+| `dirty` | 2 | Changes outside Rowbly data | Read them; run again with `--cleanup` or ask the user. |
+| `waiting` | 2 | The sync is still requested or running | Retain `sync.synchronizationRun`; reconcile it as Confirm publication says before any new preparation or Git operation. |
 
 ## Launch
 

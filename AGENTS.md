@@ -94,15 +94,21 @@ unchanged and does not authorize implementation. Its browser UI has a numbered c
 
 `skills/rowbly-factory/` supervises a Board: it starts a worker for each Story that arrives in a
 Stage whose Stage Prompt is on, records Stage Runs (ADR-0040) and applies the Board changes workers
-report. At start, when the Git Plugin is enabled and loaded, it syncs Rowbly changes that were saved
-but not yet committed through it; it then moves any other uncommitted changes to a cleanup PR and
-pulls the checkout. It commits and pushes Board changes as they happen, when `ROWBLY.md` says to,
-and retries a failed sync for up to 3 total attempts with backoff. Publication requires fresh
-synchronized completion with no requested or active run. When Git is disabled or not loaded, it skips every
-sync and publication gate. The Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no
+report. It updates every checkout it uses before use, its own at start and another machine's before
+that machine's first worker: when the Git Plugin is enabled and loaded and the Data Root has
+uncommitted changes, it syncs them through it; it stops on uncommitted `ROWBLY.md` or Stage Prompt
+changes, moves any other uncommitted changes to a cleanup PR and pulls the checkout. It commits and
+pushes Board changes as they happen, when `ROWBLY.md` says to, and classifies a failed sync by its
+`details.reason`: it retries a retryable one for up to 3 total attempts with backoff, fixes
+Automatic Merge Conflict Resolution Off when `ROWBLY.md` allows, and stops on conflicts and
+evidence. Publication requires fresh synchronized completion with no requested or active run. When
+Git is disabled or not loaded, it skips every sync and publication gate. Startup checks are scoped:
+a failing machine is left out of capacity and a failing Stage is skipped, and only Board-wide
+failures stop the factory. The Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no
 Stage, server, model or way of starting threads. Its `scripts/launch-worker.mjs` starts and verifies
-workers through a `t3` CLI on another computer; it takes every host, path and model as a flag, and
-`ROWBLY.md` holds this repository's values.
+workers through a `t3` CLI on another computer and, with `prepare-checkout`, updates a checkout in
+one call; it takes every host, path and model as a flag, and `ROWBLY.md` holds this repository's
+values.
 
 `skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
 an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to
