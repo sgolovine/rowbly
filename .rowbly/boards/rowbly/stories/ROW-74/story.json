@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:01:20.421Z",
-  "updatedAt": "2026-11-04T00:43:42.718Z",
+  "updatedAt": "2026-11-04T00:49:27.758Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,17 +26,6 @@
         }
       ]
     },
-    "comments": {
-      "comments": [
-        {
-          "id": "SCxuFwAy",
-          "author": "sunny",
-          "body": "Refinement: the Label setup field is the Data Root label in ~/.rowblyrc.json (header/switcher name), not a Board label. Plan: remove it from the TUI New Data Root form and the interactive rowbly init prompt; keep --label and the switcher e edit so it can still be set. Ready for In Progress.",
-          "createdAt": "2026-11-04T00:30:47.799Z",
-          "updatedAt": "2026-11-04T00:30:47.799Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -46,6 +35,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T00:43:41.861Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SCxuFwAy",
+          "author": "sunny",
+          "body": "Refinement: the Label setup field is the Data Root label in ~/.rowblyrc.json (header/switcher name), not a Board label. Plan: remove it from the TUI New Data Root form and the interactive rowbly init prompt; keep --label and the switcher e edit so it can still be set. Ready for In Progress.",
+          "createdAt": "2026-11-04T00:30:47.799Z",
+          "updatedAt": "2026-11-04T00:30:47.799Z"
+        },
+        {
+          "id": "kQlMSjFD",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2 (thread mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-74-implementation-launch.json. Branch: factory/row-74-implementation. PR: https://github.com/sgolovine/rowbly/pull/159. Head: f87b4e0717e34854b56b93ac48a9499a8a0b24d4 (verified gh pr view 159).",
+          "createdAt": "2026-11-04T00:49:27.757Z",
+          "updatedAt": "2026-11-04T00:49:27.757Z"
+        }
+      ]
     }
   }
 }
