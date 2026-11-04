@@ -100,7 +100,10 @@ export async function setupFactory(
     const added: Record<string, StagePromptEntry> = {};
     for (const stage of FACTORY_STAGES) {
       const key = stage.key;
-      const prompt = promptKind === 'minimal' ? { text: templateText(stage), enabled: false } : DEFAULT_PROMPTS[key];
+      const prompt =
+        promptKind === 'minimal'
+          ? { text: templateText(stages.find((s) => s.key === key) ?? stage), enabled: false }
+          : DEFAULT_PROMPTS[key];
       if (!prompt) continue;
       const entry = own[key]
         ? { level: 'board' as const, entry: own[key] }
