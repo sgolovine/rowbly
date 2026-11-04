@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T04:57:23.743Z",
+  "updatedAt": "2026-11-04T04:57:25.056Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:6fb7c5f3-421a-4485-bb7b-68780d23a419",
+        "by": "sunny",
+        "startedAt": "2026-11-04T04:48:18.594Z",
+        "finishedAt": "2026-11-04T04:57:23.742Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -64,19 +75,15 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
+        },
+        {
+          "id": "9T6Ywptf",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/172 at a669b58efb62643b2ea6156a8874fd06cb1ec8cb by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P1] src/storage/gitSyncJournal.ts:378-391: classify capture drift before generic file verification. When an incoming merge changes a Rowbly path and a concurrent writer saves that same path after capture, verifyFiles at line 377 throws before the new capture comparison. A deterministic sandbox publication probe returned \"Publication path changed outside captured snapshot: .rowbly/rowbly.config.json\", reason unexpected; prepareAgain therefore never waits or retries. Check captured Data Root drift first, or classify these pre-intent failures as capture-changed with paths, while keeping unrelated edits and post-intent recovery refusals protected. Extend the existing storage test with this race. 2. [P2] src/storage/gitSync.ts:82-84: handle symbolic-ref failure for detached HEAD. With detached HEAD, git symbolic-ref --quiet HEAD exits 1 and gitText throws before the no-upstream branch. The sandbox probe returned \"Git symbolic-ref failed: \", reason unexpected. Allow this expected failure and produce the documented no-upstream reason and branch/upstream guidance. Coverage: all 22 changed files, surrounding publication/recovery and error paths, ADRs, docs, reference copies, and the deterministic gate-barrier fix. Reviewer identity is the supplied verified Astra worker, independent of the sole verified Claude Opus 5.5 author. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21) at this exact head. All six CI checks SUCCESS; all three screenshot URLs HTTP 200. A private recovery probe after index installation and stat-cache refresh completed the new state, preserved unrelated staged content and a foreign index lock, and removed the journal. Both PRs compose without textual conflicts, including against fetched main. No product or Board edits; no merge. Review evidence: /tmp/row89-review-evidence.",
+          "createdAt": "2026-11-04T04:57:25.055Z",
+          "updatedAt": "2026-11-04T04:57:25.055Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:6fb7c5f3-421a-4485-bb7b-68780d23a419",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:48:18.594Z",
-        "finishedAt": "2026-11-04T04:57:23.742Z"
-      }
     }
   }
 }
