@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "If a user chooses agent skills, skip asking if they will use AI in onboarding",
   "description": "## Problem: In Data Root onboarding (src/tui/screens/onboarding/RootOnboarding.tsx), Software Factory mode goes from Board straight to factory guidance. Choosing \"Choose agent skills\" there opens SkillInstall, and on \"Continue without installing more skills\" its onDone sends the user to the AI step (\"Will you use AI agents with this Data Root?\") because aiAsked is still false (mode !== kanban). Choosing skills already answers that question, so asking it is redundant. Plain Kanban and Both ask the AI question before the skills step and are not affected. ## Acceptance criteria: (1) After the skills step, onboarding never asks the AI usage question: leaving SkillInstall marks AI as answered (aiAsked = true) and returns to factory guidance in Software Factory or Both mode, or to the final step in Plain Kanban mode. (2) Factory guidance then shows \"Finish onboarding\" instead of \"Continue to AI usage\". (3) A user who never opens the skills step is still asked the AI question as today (Kanban and Both after Plugins; Software Factory through \"Continue to AI usage\"). (4) Update docs/user-guide.md ## Onboarding (the paragraph \"The separate AI usage question offers official agent skills\") to say the question is skipped once agent skills have been chosen; check skills/rowbly/references/setup.md and tui.md onboarding lines (no change expected). ## Notes: TUI flow change only; per AGENTS.md no new test. Verify by hand with pnpm dev in a fresh Data Root: choose Software Factory, then Choose agent skills, then Continue, and confirm that factory guidance appears with Finish onboarding.",
-  "stage": "in-progress",
-  "rank": "a0",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:10:18.449Z",
-  "updatedAt": "2026-11-04T01:34:22.897Z",
+  "updatedAt": "2026-11-04T01:34:23.545Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:26:46.269Z",
-        "finishedAt": "2026-11-04T01:34:21.663Z"
-      }
-    },
     "comments": {
       "comments": [
         {
