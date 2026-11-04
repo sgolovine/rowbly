@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T01:33:13.757Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:290cd831-2221-4638-8d4d-506f702bc2f1",
+    "at": "2026-11-04T01:36:24.136Z",
+    "source": "Verified fresh reviewer progress: all receipts and composed net diff checked, prior finding resolved, 19 image URLs passed, suites running",
+    "by": "sunny"
   }
 }
