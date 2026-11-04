@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T03:03:43.476Z",
+  "updatedAt": "2026-11-04T03:03:44.707Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:55:48.570Z",
+        "finishedAt": "2026-11-04T03:03:43.476Z"
+      }
     },
     "comments": {
       "comments": [
@@ -104,19 +115,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0 (thread mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-2-launch.json. Branch: factory/row-85-correction-2, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91.",
           "createdAt": "2026-11-04T03:03:42.737Z",
           "updatedAt": "2026-11-04T03:03:42.737Z"
+        },
+        {
+          "id": "P7CiUCsX",
+          "author": "sunny",
+          "body": "Correction 2 pushed to https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation), head 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91. Response to review finding 1 (P2, wrapped labels or a short terminal scroll the button away): fixed. DataRootList draws every Data Root in a viewport below the fixed + New Data Root button and search line, sized to the room left and scrolled to the highlighted row's measured position, so wrapped rows count at their real height. The gaps go when fewer than three lines are left. The modal ScrollBody never scrolls. Checked with agentic-tui with 14 known Data Roots, current one last: 120x30 wrapped labels, 100x20 short labels and 120x30 short labels. In each, the button stayed visible on open and after page up, wheel and up to the button; page down and a no-match search were also checked at 120x30 wrapped labels and at 100x20. The startup picker still highlights the default first and up reaches the button. Screenshots (14, all return 200, branch pr-assets/factory/row-85-correction-2): https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621369308. PR Notes updated. Validation after merging origin/main: typecheck, lint, test:unit 79 and test:cli 21 pass. The new head needs a fresh independent review.",
+          "createdAt": "2026-11-04T03:03:44.706Z",
+          "updatedAt": "2026-11-04T03:03:44.706Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:55:48.570Z",
-        "finishedAt": "2026-11-04T03:03:43.476Z"
-      }
     }
   }
 }
