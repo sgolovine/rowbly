@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Onboarding: Update next and back hotkeys",
   "description": "## Summary\n\nIn Data Root onboarding, the keys for the **Back** and **Next** (**Finish** on Summary) step navigation change from `ctrl+←` / `ctrl+→` to `shift+←` / `shift+→`. Skip onboarding stays `ctrl+k`.\n\n## Current behavior\n\n- `src/tui/screens/onboarding/RootOnboarding.tsx` (the `useInput` near line 170) ignores input unless `key.ctrl`, then `←` runs `back()` and `→` runs `next()`. A text field being edited keeps its keys (`shell.captured().text`).\n- `src/tui/screens/onboarding/OnboardingNav.tsx` shows the key caps `ctrl+←` (Back) and `ctrl+→` (Next/Finish).\n- `RootOnboarding.tsx` `NAV_HINT` shows `ctrl+←/→  back/next step` in the footer.\n- Global onboarding has no step navigation and is out of scope.\n\n## Changes\n\n1. `RootOnboarding.tsx`: navigate on `key.shift` with `←`/`→` instead of `key.ctrl`, keeping the text-field guard and `isActive: active && !busy`. Do not keep `ctrl+←/→` as an alias.\n2. `OnboardingNav.tsx`: key caps `shift+←` and `shift+→`.\n3. `RootOnboarding.tsx` `NAV_HINT`: `shift+←/→`.\n4. `src/tui/components/Form.tsx` (select and boolean fields, around lines 325-336) treats `←/→` the same with or without shift. On the Agent skills step (`SkillInstall.tsx`, the harness select field), `shift+←/→` would change the option and switch the step. Make those fields ignore arrows with shift held so that only step navigation runs.\n5. Docs: `docs/user-guide.md` (Data Root onboarding paragraph, \"Back (`ctrl+←`) and Next (`ctrl+→`)\"), `skills/rowbly/references/tui.md` (TUI onboarding) and `skills/rowbly/references/setup.md` (TUI onboarding). `skills/rowbly-reference.md` names no keys and needs no change.\n\n## Acceptance criteria\n\n- On every Data Root onboarding step, `shift+→` does what Next/Finish does and `shift+←` does what Back does (nothing on the first step).\n- `ctrl+←/→` no longer navigates.\n- While a text field is being edited, `shift+←/→` stays with the field.\n- On the Agent skills step, `shift+←/→` switches the step without changing the harness option.\n- The Buttons, footer hint and docs show `shift+←` / `shift+→`.\n- The Board `shift+←/→` (move Story between Stages) is unaffected; onboarding is full screen with the shell keys disabled.\n\n## Notes\n\n- No test is required (AGENTS.md: changed keys add no test). Verify by hand in `pnpm dev` with onboarding reopened from Settings › Onboarding. `test/tui/helpers.tsx` already has `shiftLeft`/`shiftRight` sequences.\n- Overlap: ROW-91 (consistent continue/back buttons) changes the same `OnboardingNav` Buttons. This Story changes only the keys, not labels or which steps show the Buttons. Whichever lands second rebases on the other.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0b",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T17:13:36.565Z",
-  "updatedAt": "2026-11-04T17:52:39.249Z",
+  "updatedAt": "2026-11-04T17:52:39.900Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2",
-        "by": "sunny",
-        "startedAt": "2026-11-04T17:38:03.733Z",
-        "finishedAt": "2026-11-04T17:52:37.308Z"
-      }
-    },
     "comments": {
       "comments": [
         {
