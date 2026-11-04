@@ -65,15 +65,15 @@ The TUI uses `--data-root` when given; otherwise it opens the nearest `.rowbly/`
 directory or a parent. Outside one, it asks you to choose from the known Data Roots in
 `~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
 registered order, and **+ New Data Root** is last. Paths, labels and `missing` markers help identify
-roots. Use `↑`/`↓` and `enter`, or click a row; `n` opens the existing setup flow. Type to search:
+roots. Use `↑`/`↓` and `enter`, or click a row; when the list is longer than the window, the mouse
+wheel moves the highlight three rows at a time. `n` opens the existing setup flow. Type to search:
 `/` or any other key except the shell's (`q`, `?`, `,`, `D`) starts the search line above the list,
 which fuzzy-matches each root's name, full path and `~` path, so `crew` finds a root labelled
 Crewsum and `row-14` a root whose path holds it. Each change highlights the best match; **+ New Data
 Root** stays below the matches, with `No matching Data Roots.` when there are none. While the search
 has focus every key is text, `↑`/`↓` move and `enter` opens; `esc` clears it and shows every root
-again. A failed open
-keeps the picker available. Selection comes before incomplete global onboarding, followed by the
-selected Data Root's onboarding. With no known Data Roots, the existing home-folder fallback and
+again. A failed open keeps the picker available. Selection comes before incomplete global onboarding,
+followed by the selected Data Root's onboarding. With no known Data Roots, the existing home-folder fallback and
 first-run onboarding/setup apply. An explicit missing `--data-root` still fails before onboarding.
 
 ```text
@@ -1077,7 +1077,7 @@ the default scope asks you to select one. The preference is off by default and s
 `storyFinderAllBoards` in `~/.rowblyrc.json` across restarts and Data Roots. The finder stays closed
 while a form or modal is open, preserving its text and keys.
 
-The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
+The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. When it is longer than the screen, the mouse wheel over it scrolls it three lines at a time, the highlight moves along to stay on screen, and `↑ N more` / `↓ N more` count the lines above and below. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
 
 When the TUI starts, Rowbly asks npm for its latest release in the background; commands never do. If a newer release is out, a row above the footer says so, for example `Rowbly 0.12.0 is available, update with npm i -g rowbly` (`Rowbly 0.12.0: npm i -g rowbly` on a narrow terminal), until you quit. Run that command to update. Startup and quitting never wait for the check: offline, a registry error or no answer within 3 seconds shows nothing. When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`, with `HTTPS_PROXY`), Rowbly skips the check, because Node cannot cancel a request waiting on that proxy. Set `ROWBLY_NO_UPDATE_CHECK=1` to turn the check off.
 
@@ -1089,7 +1089,7 @@ In New Story and Edit Story, focus the Story field and type or press Enter to se
 
 After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
 
-Story, New Story, Edit Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings. Long sidebar labels wrap; in a short terminal the sidebar scrolls to keep the selected section visible, and `page up`/`page down` or the mouse wheel scroll it while it has focus.
+Story, New Story, Edit Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; a task modal that only shows information, such as Help or Factory setup after it ran, has a **Close** button at the bottom that closes it like `esc` or the `✕`; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings. Long sidebar labels wrap; in a short terminal the sidebar scrolls to keep the selected section visible, and `page up`/`page down` or the mouse wheel scroll it while it has focus.
 
 The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light theme, with dark as the fallback. Rowbly leaves the terminal background visible. Dates in the TUI use local time (for example, `20 Oct 2026, 23:03`); command JSON keeps ISO timestamps.
 

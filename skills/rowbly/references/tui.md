@@ -8,8 +8,9 @@ screen, ask them to open it; do not start `rowbly` with no command in your own s
 Without `--data-root`, the TUI opens the nearest `.rowbly/` in the current directory or a parent.
 Outside one, known Data Roots appear before onboarding: default first, other registered roots next,
 **+ New Data Root** last. Labels, paths and missing markers identify them. `enter` or a click opens
-one; `n` opens setup. Typing searches them (`/` or any key other than `n`, `q`, `?`, `,`, `D`): fuzzy
-over name, full path and `~` path, best match highlighted, `esc` clears. Failed opens leave the picker available. With no known roots, the home-folder
+one; the mouse wheel moves the highlight when the list scrolls; `n` opens setup. Typing searches them
+(`/` or any key other than `n`, `q`, `?`, `,`, `D`): fuzzy over name, full path and `~` path, best match
+highlighted, `esc` clears. Failed opens leave the picker available. With no known roots, the home-folder
 fallback and first-run onboarding/setup remain available. After selection, global onboarding opens when its Home Config `onboardingComplete` flag is absent or false,
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
@@ -58,7 +59,7 @@ default; kept in `~/.rowblyrc.json`).
 
 | Screen | Keys |
 | --- | --- |
-| Board | `←`/`→` Stage, `↑`/`↓` Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage, `shift+↑`/`shift+↓` move it within its Stage, `T`/`B` top / bottom, `n` new Story, `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` list view, `r` reload. The mouse wheel over a Stage scrolls its Stories; the mouse can drag a Story to another Stage or place; a right click on a Story opens a menu of what these keys do (open, edit, move, delete), and `esc` or a click outside closes it |
+| Board | `←`/`→` Stage, `↑`/`↓` Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage, `shift+↑`/`shift+↓` move it within its Stage, `T`/`B` top / bottom, `n` new Story, `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` list view, `r` reload. The mouse wheel over a Stage, or over the list view, scrolls it; the mouse can drag a Story to another Stage or place; a right click on a Story opens a menu of what these keys do (open, edit, move, delete), and `esc` or a click outside closes it |
 | Stories list | `enter` open, `n` new Story, `/` filter and sort, `c` clear, `A` all Boards / this Board |
 | Story | `tab`/`←`/`→` switch between Details and Plugin tabs (Tasks, Specs, Comments, Links), `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks, Task | `enter` open, `n` new Task, `e` edit, `m` move, `d` delete |

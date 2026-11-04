@@ -1,6 +1,7 @@
-import { Box, Text } from 'ink';
+import { Box, type DOMElement, Text } from 'ink';
+import { useRef } from 'react';
 import type { Stage } from '../../../schemas';
-import type { StoryBadges } from '../../hooks';
+import { type StoryBadges, useMouse } from '../../hooks';
 import { theme } from '../../theme';
 import { BoardListRow } from './BoardListRow';
 import type { ListRow } from './layout';
@@ -22,6 +23,8 @@ export interface BoardListProps {
   onClick(index: number): void;
   /** A Story line right-clicked, by its index in `rows`, at cell `x`, `y`. */
   onContextMenu?(index: number, x: number, y: number): void;
+  /** A notch of the wheel over the list: `-1` up, `1` down. Ignored while every line fits. */
+  onWheel?(direction: -1 | 1): void;
 }
 
 /** The list view: one section per Stage, scrolled to `first`. Story lines show the card's badges. */
@@ -36,12 +39,15 @@ export function BoardList({
   active,
   onClick,
   onContextMenu,
+  onWheel,
 }: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;
   const badgesOf = useCardBadges();
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onWheel }, active && onWheel !== undefined && rows.length > size);
   return (
-    <Box flexDirection="column" width={width}>
+    <Box ref={ref} flexDirection="column" width={width}>
       <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
       {shown.map((row, i) => (
         <BoardListRow
