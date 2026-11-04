@@ -26,7 +26,7 @@ import {
   useScreenLabel,
   useToast,
 } from '../hooks';
-import { globalAction, type KeyHint, moveDelta } from '../keymap';
+import { GLOBAL_KEYS, globalAction, type KeyHint, moveDelta } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
 import { bindAction } from './actionFocus';
@@ -117,6 +117,8 @@ export function Shell({
   const idle = atRoot && overlay === null;
   const { plugins } = usePlugins();
   const focus = useScreenFocus(depth);
+  // Onboarding at the root fills the terminal: no header or sidebars, and none of their keys.
+  const chrome = router.stack[0]?.screen !== 'onboarding';
 
   // `none` Actions whose run has not settled, by Plugin and key: shown busy, their key and click ignored.
   const [running, setRunning] = useState<ReadonlySet<string>>(new Set());
@@ -129,39 +131,40 @@ export function Shell({
     });
   // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
   const runningActions = useRef(new Set<string>());
-  const actions: HeaderAction[] = services
-    ? plugins.flatMap((plugin) =>
-        plugin.actions.flatMap((action) => {
-          const run = bindAction(action, focus);
-          if (!run) return [];
-          const id = `${plugin.id}:${action.key}`;
-          const busy = action.target === 'none' && running.has(id);
-          return [
-            {
-              key: action.key,
-              label: busy ? `${action.label}…` : action.label,
-              busy,
-              run: () => {
-                if (action.target === 'none' && runningActions.current.has(id)) return;
-                if (action.target === 'none') runningActions.current.add(id);
-                const ui = pluginUi(plugin.id, router, toast);
-                // The adapter turns a synchronous throw and a rejection alike into one attributed
-                // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
-                const settled = invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
-                  run({ plugin: services.plugins.context(plugin.id), ui }),
-                ).catch((err: unknown) => toast.error(err));
-                if (action.target !== 'none') return;
-                setActionRunning(id, true);
-                void settled.finally(() => {
-                  runningActions.current.delete(id);
-                  setActionRunning(id, false);
-                });
+  const actions: HeaderAction[] =
+    services && chrome
+      ? plugins.flatMap((plugin) =>
+          plugin.actions.flatMap((action) => {
+            const run = bindAction(action, focus);
+            if (!run) return [];
+            const id = `${plugin.id}:${action.key}`;
+            const busy = action.target === 'none' && running.has(id);
+            return [
+              {
+                key: action.key,
+                label: busy ? `${action.label}…` : action.label,
+                busy,
+                run: () => {
+                  if (action.target === 'none' && runningActions.current.has(id)) return;
+                  if (action.target === 'none') runningActions.current.add(id);
+                  const ui = pluginUi(plugin.id, router, toast);
+                  // The adapter turns a synchronous throw and a rejection alike into one attributed
+                  // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
+                  const settled = invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
+                    run({ plugin: services.plugins.context(plugin.id), ui }),
+                  ).catch((err: unknown) => toast.error(err));
+                  if (action.target !== 'none') return;
+                  setActionRunning(id, true);
+                  void settled.finally(() => {
+                    runningActions.current.delete(id);
+                    setActionRunning(id, false);
+                  });
+                },
               },
-            },
-          ];
-        }),
-      )
-    : [];
+            ];
+          }),
+        )
+      : [];
   const actionHints: KeyHint[] = actions
     .filter((action) => !action.busy)
     .map((action) => ({ key: action.key, description: action.label }));
@@ -191,7 +194,7 @@ export function Shell({
       )
     : 'Rowbly';
   const openFinder = () => {
-    if (services && idle && !shell.captured().text) setOverlay({ kind: 'finder' });
+    if (services && chrome && idle && !shell.captured().text) setOverlay({ kind: 'finder' });
   };
   const openDataRoots = () => setOverlay({ kind: 'dataRoots' });
 
@@ -211,7 +214,9 @@ export function Shell({
     if (boardsShown) setPane((was) => (was === 'boards' ? 'main' : was));
     setBoardsShown(!boardsShown);
   };
-  const sidebarFocused = idle && pane !== 'main';
+  const sidebarFocused = chrome && idle && pane !== 'main';
+  // A sidebar focused before Settings reopened onboarding is hidden now, so the main area has focus.
+  const mainFocused = idle && !sidebarFocused;
   // `depth` reloads the list when a modal closes, e.g. after creating a Board, and `changes` when
   // the Data Root changes on disk.
   const changes = useDataRootChanges();
@@ -259,7 +264,7 @@ export function Shell({
   const story = router.stack.findIndex((route) => route.screen === 'story');
   const replaceStory = () => router.replaceAt(story, 'settings');
   const openSettings = () => {
-    if (!services || router.stack.some((route) => route.screen === 'settings')) return;
+    if (!services || !chrome || router.stack.some((route) => route.screen === 'settings')) return;
     if (story < 0) router.push('settings');
     else if (router.stack.some((_, at) => at > story && shell.isDirty(at))) {
       setOverlay({ kind: 'confirm', action: 'settings' });
@@ -275,7 +280,7 @@ export function Shell({
     }
     if (captured.text && !key.escape) return;
     if (idle && key.ctrl && input === 'p') return openFinder();
-    if (atRoot && key.ctrl && input === 'b') return toggleBoards();
+    if (chrome && atRoot && key.ctrl && input === 'b') return toggleBoards();
     const pluginAction = actions.find((a) => a.key === input);
     if (pluginAction && !key.ctrl && !key.meta) return pluginAction.run();
     const action = globalAction(input, key);
@@ -285,7 +290,8 @@ export function Shell({
     else if (action === 'quit' && atRoot) quit();
     else if (action === 'help') setOverlay({ kind: 'help' });
     else if (action === 'settings') openSettings();
-    else if (action === 'dataRoots') openDataRoots();
+    else if (action === 'dataRoots' && chrome) openDataRoots();
+    else if (!chrome) return;
     else if (sidebarFocused && pane === 'boards' && delta && boards.length > 0) {
       const board = boards[boardKey(delta < 0 ? '[' : ']', currentIndex, boards.length) ?? currentIndex];
       if (board && board.id !== boards[currentIndex]?.id) void selection.select(board.id);
@@ -310,20 +316,23 @@ export function Shell({
     ...(sidebarFocused && pane === 'plugin' ? (pluginSidebars.shown?.hints ?? []) : []),
     ...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label, focusedBoard !== undefined) : screenHints),
     ...actionHints,
-    ...(services && atRoot ? [{ key: 'ctrl+p', description: 'find Stories' }] : []),
+    ...(services && chrome && atRoot ? [{ key: 'ctrl+p', description: 'find Stories' }] : []),
   ];
   const label = useScreenLabel(0);
-  const gaps = services ? Number(boardsShown) + Number(pluginShown) : 0;
+  const sidebarsShown = services && chrome;
+  const gaps = sidebarsShown ? Number(boardsShown) + Number(pluginShown) : 0;
   // The sidebars can grow until the main panel would be narrower than `MAIN_MIN_WIDTH`; a narrower
   // terminal takes the room back from the Plugin Sidebar first.
   const room = columns - gaps - MAIN_MIN_WIDTH;
   const fitWidth = (width: number, max: number) => Math.max(SIDEBAR_MIN_WIDTH, Math.min(max, width));
-  const besideBoards = services && pluginShown ? SIDEBAR_MIN_WIDTH : 0;
-  const boardsShownWidth = services && boardsShown ? fitWidth(boardsWidth, room - besideBoards) : 0;
-  const pluginShownWidth = services && pluginShown ? fitWidth(pluginWidth, room - boardsShownWidth) : 0;
+  const besideBoards = sidebarsShown && pluginShown ? SIDEBAR_MIN_WIDTH : 0;
+  const boardsShownWidth = sidebarsShown && boardsShown ? fitWidth(boardsWidth, room - besideBoards) : 0;
+  const pluginShownWidth = sidebarsShown && pluginShown ? fitWidth(pluginWidth, room - boardsShownWidth) : 0;
   // The main panel's border takes a column on each side.
   const mainWidth = Math.max(20, columns - boardsShownWidth - pluginShownWidth - 4 - gaps);
-  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT - (newer ? 1 : 0)) : undefined;
+  const mainHeight = fullscreen
+    ? Math.max(7, rows - (chrome ? HEADER_HEIGHT : 0) - FOOTER_HEIGHT - (newer ? 1 : 0))
+    : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay?.kind === 'main';
   const top = router.stack[depth];
@@ -335,23 +344,25 @@ export function Shell({
           <ContextMenuContext.Provider value={contextMenu}>
             <SidebarFilterContext.Provider value={pluginSidebars.filter}>
               <Box flexDirection="column" height={fullscreen ? rows : undefined}>
-                <Header
-                  root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
-                  label={label}
-                  finder={services ? { onClick: openFinder, clickable: idle } : undefined}
-                  onNewStory={services ? newStory : undefined}
-                  newStoryKey={!sidebarFocused}
-                  onSettings={services ? openSettings : undefined}
-                  clickable={idle}
-                  actions={actions}
-                  actionsClickable={overlay === null}
-                  boardView={
-                    router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined
-                  }
-                  sidebars={pluginSidebars.buttons}
-                />
+                {chrome && (
+                  <Header
+                    root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
+                    label={label}
+                    finder={services ? { onClick: openFinder, clickable: idle } : undefined}
+                    onNewStory={services ? newStory : undefined}
+                    newStoryKey={!sidebarFocused}
+                    onSettings={services ? openSettings : undefined}
+                    clickable={idle}
+                    actions={actions}
+                    actionsClickable={overlay === null}
+                    boardView={
+                      router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined
+                    }
+                    sidebars={pluginSidebars.buttons}
+                  />
+                )}
                 <Box flexGrow={1} columnGap={1}>
-                  {services && boardsShown && (
+                  {sidebarsShown && boardsShown && (
                     <Sidebar
                       title="Boards"
                       entries={boards.map((board) => ({ id: board.id, label: board.name }))}
@@ -370,7 +381,7 @@ export function Shell({
                       button={{ label: '+ New Board', onClick: newBoard }}
                     />
                   )}
-                  {services && pluginSidebars.shown && (
+                  {sidebarsShown && pluginSidebars.shown && (
                     <Sidebar
                       title={pluginSidebars.shown.title}
                       entries={pluginSidebars.shown.entries}
@@ -389,7 +400,7 @@ export function Shell({
                   )}
                   <Panel
                     title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-                    focused={idle && pane === 'main'}
+                    focused={mainFocused}
                     onClick={idle ? () => setPane('main') : undefined}
                     flexGrow={1}
                     flexShrink={1}
@@ -399,13 +410,7 @@ export function Shell({
                     <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
                       {router.stack[0] && (
                         <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
-                          <ScreenSlot
-                            route={router.stack[0]}
-                            depth={0}
-                            top
-                            active={idle && pane === 'main'}
-                            screens={screens}
-                          />
+                          <ScreenSlot route={router.stack[0]} depth={0} top active={mainFocused} screens={screens} />
                         </Box>
                       )}
                       {depth > 0 && top && (
@@ -500,7 +505,7 @@ export function Shell({
                       )}
                       {overlay?.kind === 'help' && (
                         <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
-                          <HelpOverlay hints={hints} />
+                          <HelpOverlay hints={hints} globals={chrome ? GLOBAL_KEYS : ONBOARDING_KEYS} />
                         </Modal>
                       )}
                       {overlay?.kind === 'dataRoots' && (
@@ -567,6 +572,11 @@ export function Shell({
     </BoardSelectionContext.Provider>
   );
 }
+
+/** The global keys that still work while onboarding hides the header and sidebars. */
+const ONBOARDING_KEYS = GLOBAL_KEYS.filter(
+  (hint) => !['[/]', '1-9', 'ctrl+b', '\\', '{/}', ',', 'D'].includes(hint.key),
+);
 
 /** The keys of an open context menu, in place of the screen's. */
 const MENU_HINTS: KeyHint[] = [
