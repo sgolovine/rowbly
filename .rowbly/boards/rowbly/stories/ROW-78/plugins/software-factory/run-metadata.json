@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-04T01:43:46.637Z"
+  },
+  "selection": {
+    "provider": "claudeAgent",
+    "model": "claude-opus-5-5",
+    "options": [
+      {
+        "id": "effort",
+        "value": "medium"
+      },
+      {
+        "id": "fastMode",
+        "value": false
+      }
+    ],
+    "rule": "ROWBLY.md coding Claude Opus Medium; returned work continuation on existing PR",
+    "fallback": null,
+    "usage": "unknown",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-04T01:43:46.637Z"
+  }
+}
