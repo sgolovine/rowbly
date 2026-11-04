@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T01:54:51.501Z",
+  "updatedAt": "2026-11-04T01:57:59.262Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,17 +26,6 @@
         }
       ]
     },
-    "comments": {
-      "comments": [
-        {
-          "id": "jdiccicE",
-          "author": "sunny",
-          "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
-          "createdAt": "2026-11-04T00:38:54.419Z",
-          "updatedAt": "2026-11-04T00:38:54.419Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -46,6 +35,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T01:54:50.747Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "jdiccicE",
+          "author": "sunny",
+          "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
+          "createdAt": "2026-11-04T00:38:54.419Z",
+          "updatedAt": "2026-11-04T00:38:54.419Z"
+        },
+        {
+          "id": "9tbQaM2I",
+          "author": "sunny",
+          "body": "Factory coordination: ADR-0056 is allocated to ROW-85 for amending ADR-0055 about New Data Root button placement. ROW-77 uses ADR-0057 for saved progress. Check main and open PR branches before publication and preserve existing ADR numbers.",
+          "createdAt": "2026-11-04T01:57:59.261Z",
+          "updatedAt": "2026-11-04T01:57:59.261Z"
+        }
+      ]
     }
   }
 }
