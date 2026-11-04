@@ -12,10 +12,27 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T03:13:20.461Z",
+  "updatedAt": "2026-11-04T03:15:36.932Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83",
+        "by": "sunny",
+        "startedAt": "2026-11-04T03:13:19.705Z"
+      }
+    },
     "comments": {
       "comments": [
+        {
+          "id": "6dDtSqaT",
+          "author": "sunny",
+          "body": "Factory coordination: ADR-0059 reserved for ROW-86 combined onboarding amendments. ROW-89 uses ADR-0058; keep existing numbers and verify main plus open branches before final publication.",
+          "createdAt": "2026-11-04T03:15:36.931Z",
+          "updatedAt": "2026-11-04T03:15:36.931Z"
+        },
         {
           "id": "70rjvSR8",
           "author": "sunny",
@@ -31,16 +48,6 @@
           "updatedAt": "2026-11-04T03:09:14.733Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:13:19.705Z"
-      }
     }
   }
 }
