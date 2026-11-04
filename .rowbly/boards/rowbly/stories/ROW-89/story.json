@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T02:21:49.511Z",
+  "updatedAt": "2026-11-04T03:27:47.007Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "gMzkrJ4V",
-          "author": "sunny",
-          "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
-          "createdAt": "2026-11-04T02:21:17.622Z",
-          "updatedAt": "2026-11-04T02:21:17.622Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -34,6 +23,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T02:21:48.748Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "gMzkrJ4V",
+          "author": "sunny",
+          "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
+          "createdAt": "2026-11-04T02:21:17.622Z",
+          "updatedAt": "2026-11-04T02:21:17.622Z"
+        },
+        {
+          "id": "FDce1WBZ",
+          "author": "sunny",
+          "body": "Part 1 of 2 (CLI) is a draft PR: https://github.com/sgolovine/rowbly/pull/172, base main, head factory/row-89-implementation at 03c9588daadd84e217d9f4c976d091bafdc7c42c. It covers F4 (index content check, also in recovery; a Git index.lock after install is tolerated), F3 (quiet wait, capture-changed names Story Keys and is retryable), F5 (details.reason, retryable and paths), F1 CLI (resolution Off exits 2 with the configure hint; no plugins disable hint for a Plugin's own command), ADR-0058 (amends ADR-0034 §5 and ADR-0020 §5) and docs. Validation: typecheck, lint, test:unit 79 and test:cli 21 pass; the suite stays at 100 tests; the storage regression is a block in the kept publication test. Manual checks: 25 of 25 syncs passed under a git status loop; a continuous writer gives capture-changed after 35 s; resolution Off exits 2. Remaining in part 2, after PR 169: skill text for F1, F6, F7 and F8, prepare-checkout (F2) and the skill's use of details.reason (F5). Proposed ROWBLY.md text was sent to the supervisor.",
+          "createdAt": "2026-11-04T03:27:47.006Z",
+          "updatedAt": "2026-11-04T03:27:47.006Z"
+        }
+      ]
     }
   }
 }
