@@ -31,6 +31,13 @@
           "updatedAt": "2026-11-04T02:14:54.163Z"
         },
         {
+          "id": "U7mVPJ88",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. Merge commit 6ce0b285dbf885e5aa5b0ab7165660bc1dddea89. All final gates passed; main CI queued at https://github.com/sgolovine/rowbly/actions/runs/41773495694.",
+          "createdAt": "2026-11-04T04:30:01.889Z",
+          "updatedAt": "2026-11-04T04:30:01.889Z"
+        },
+        {
           "id": "hKLGhRON",
           "author": "sunny",
           "body": "Review of https://github.com/sgolovine/rowbly/pull/169 at b1b2ed590f3ed1bcef42292dccaf160621660c03 by codex/gpt-6-astra: CHANGES REQUESTED. 1. skills/rowbly-factory/SKILL.md:35,61 — The skip rule covers Git off only. The clarified ROW-88 requirement also covers Git not loaded; plugins list exposes enabled and loaded separately, and an enabled Plugin can fail to load. That case is neither on-and-loaded nor off, leaving publication gates and Git commands unresolved. Require enabled AND loaded before Git setup/sync, and explicitly skip every sync/publication gate when either is false, including the remote-launch step 6 wording. 2. skills/rowbly-factory/SKILL.md:112-114 — Waiting until last settles does not establish publication: last can retain an older success while requested/active is present, or the new run can finish failed/interrupted. git show itself exits successfully for a failed result. Require requested/active to clear and a fresh completed last.kind=synchronized for the relevant attempt before releasing dependent GO/reply/remote-start gates. Route a settled failed/interrupted result through the bounded failure policy while keeping those gates closed. Reviewed all three changed files against the supervisor-confirmed refinement, plugin status rendering, synchronization result contract, startup and remote-launch composition, and preserved commit/event/evidence rules. Verified both launch receipts and the sole authoring commit: reviewer mcp:6555caf2-ee96-48c9-802d-23d30f52d9d8 is independent of implementing worker mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (claudeAgent/claude-opus-5-5). These findings are ROW-88 acceptance gaps; no additional ROW-89 startup/classification work is requested. No image URLs are present; this skill/doc-only change requires no TUI/CLI screenshot.",
@@ -64,13 +71,6 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
           "createdAt": "2026-11-04T02:14:51.513Z",
           "updatedAt": "2026-11-04T02:14:51.513Z"
-        },
-        {
-          "id": "U7mVPJ88",
-          "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. Merge commit 6ce0b285dbf885e5aa5b0ab7165660bc1dddea89. All final gates passed; main CI queued at https://github.com/sgolovine/rowbly/actions/runs/41773495694.",
-          "createdAt": "2026-11-04T04:30:01.889Z",
-          "updatedAt": "2026-11-04T04:30:01.889Z"
         }
       ]
     }
