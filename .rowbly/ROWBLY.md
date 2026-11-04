@@ -8,6 +8,9 @@
   Comment or updating the requirements, a person can request another pass with
   `rowbly software-factory run clear <KEY>`; a complete unchanged review input fingerprint suppresses
   a duplicate Comment. The supervisor leaves finished Runs alone.
+- **In Refinement**: a person moves a Story here once they have written it up. The factory
+  researches it and standardizes its description (its Stage Prompt), then moves it to In Progress,
+  or keeps it here with a `## QUESTIONS` section when it cannot proceed.
 - **In Progress**: a person moves a Story here when it is ready to build. The factory takes it to a
   draft PR with `rowbly-dev` (its Stage Prompt), then moves it to In PR.
 - **In PR**: the factory merges the PR when it is ready and moves the Story to Done, or sends it back
@@ -17,8 +20,13 @@
 - **Done**: merged.
 
 Rowbly data is committed on `main` and pushed; the Git Plugin commits each change (Automatic
-Commits On, frequency `change`) and `rowbly git sync` pushes it (Automatic Merge Conflict
-Resolution On).
+Commits On, frequency `change`) and `rowbly git sync` pushes it. Once any outstanding synchronization
+has settled and its evidence has been reconciled, the supervisor may run
+`rowbly git configure --automatic-merge-resolution on --automatic-commits on --frequency change`
+in the checkout on thinkpad or rook when `rowbly git show` reports different preferences, and then
+tells the user. A clean, settled checkout needs no sync or Automatic Merge Conflict Resolution.
+People may keep editing in the TUI while the factory runs; the supervisor is the only automated
+writer and does not stop because of their edits. Run no other Git or Board command during sync or backoff, except the bounded rowbly git show settlement reads permitted by the skill's Confirm publication protocol.
 
 ## The factory (`rowbly-factory`)
 
@@ -37,10 +45,31 @@ Resolution On).
   (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
   ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
   that is intended, not a fallback for sub-agents.
-- **Rook's checkout.** After the supervisor updates its own checkout, it updates rook's shared
-  checkout `~/Projects/rowbly` over SSH the same way: Rowbly changes saved there first through the
-  Git Plugin, a cleanup commit and cleanup PR for any other uncommitted changes, then
-  `git pull --ff-only` on `main`. Only the supervisor pulls there, at start, before any worker runs.
+- **Rook's checkout.** Before rook runs its first worker, the supervisor updates rook's shared
+  checkout `~/Projects/rowbly` with one call, from this checkout:
+
+  ```bash
+  node skills/rowbly-factory/scripts/launch-worker.mjs prepare-checkout \
+    --ssh 192.168.68.62 --project '~/Projects/rowbly' --path '~/.nvm/versions/node/v24.18.0/bin' \
+    --rowbly 'pnpm --silent dev' --t3 '~/.t3/runtime/versions/0.1.2/t3' --min-free-gb 6
+  ```
+
+  Only the supervisor pulls there. This update is per machine: while rook is not `ready`, leave
+  it out of capacity, report its status and each `failures[].fix`, and keep starting workers on
+  thinkpad. Recheck ordinary prerequisite, memory or settled retryable failures on a later loop
+  pass or when the user says they are fixed, within the skill's bounded retry policy.
+  `waiting` is different: retain `sync.synchronizationRun`, including the request or active run
+  identity, keep dependent gates closed, and reconcile that outstanding run through the skill's
+  Confirm publication protocol before another preparation attempt or any other Git operation.
+  A timeout does not authorize a retry or a new status-wait loop. Use only the permitted
+  `rowbly git show` settlement reads during that protocol; do not start another sync.
+  Preserve evidence paths and run/commit identity from successes and failures. Review their
+  source commits and decisions before resuming; evidence closes readiness and retry gates.
+  Preserve every evidence file. After review, establish a settled result before preparing again.
+  `policy` requires review of every staged, working and new policy file and publication according
+  to repository rules before restarting; never send policy to cleanup or run on unpublished policy.
+  `dirty` requires reading every remaining change before an explicitly authorized `--cleanup`
+  attempt, or asking the user. Neither status is retried automatically on each loop pass.
 - **Memory on rook.** Check `free -h` there before each start, and start nothing while less than
   about 6 GB is available.
 - **Worker model**: chosen per Stage (see Model Selection), unless the user names another.
@@ -79,9 +108,14 @@ check threads with:
 
 ```bash
 T3=~/.t3/runtime/versions/0.1.2/t3
+ROWBLY='cd ~/Projects/rowbly && PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev'
+ssh 192.168.68.62 "$ROWBLY --version"
 ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread list --json"
 ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread show --json <threadId>"
 ```
+
+Run Rowbly on rook with this command; check the Node folder (`ls ~/.nvm/versions/node`) after Node
+updates. Calling pnpm by its full path without adding its Node folder to PATH fails with exit 127.
 
 Start every worker, and send it its brief, with the `rowbly-factory` skill's launcher script (its
 `references/remote-launch.md`), run from this checkout with rook's settings. Do not rebuild these
