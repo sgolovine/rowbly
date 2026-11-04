@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T01:57:59.262Z",
+  "updatedAt": "2026-11-04T02:04:26.112Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -51,6 +51,13 @@
           "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
           "createdAt": "2026-11-04T00:38:54.419Z",
           "updatedAt": "2026-11-04T00:38:54.419Z"
+        },
+        {
+          "id": "qMAjyBP8",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
+          "createdAt": "2026-11-04T02:04:26.111Z",
+          "updatedAt": "2026-11-04T02:04:26.111Z"
         }
       ]
     }
