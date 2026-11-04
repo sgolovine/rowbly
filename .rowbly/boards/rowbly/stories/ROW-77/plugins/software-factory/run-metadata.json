@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:418a81af-5db6-4a1b-8635-40982eaee413",
-    "at": "2026-11-04T02:45:26.109Z",
-    "source": "Verified reviewer began provenance/current-head verification and full independent review",
+    "at": "2026-11-04T02:46:29.371Z",
+    "source": "Verified reviewer investigating deferred Factory setup progress lost via parent Ctrl+K or quit; full review/validation ongoing",
     "by": "sunny"
   }
 }
