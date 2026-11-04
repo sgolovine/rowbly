@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T02:40:46.081Z",
+  "updatedAt": "2026-11-04T02:49:42.067Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,16 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:40:45.291Z"
+      }
     },
     "comments": {
       "comments": [
@@ -69,18 +79,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
           "createdAt": "2026-11-04T02:04:26.111Z",
           "updatedAt": "2026-11-04T02:04:26.111Z"
+        },
+        {
+          "id": "63XGPGLi",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 (thread mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-1-launch.json. Branch: factory/row-85-correction-1, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 88db9395489cf1c84ee34117171ce65d75deb92d.",
+          "createdAt": "2026-11-04T02:49:42.066Z",
+          "updatedAt": "2026-11-04T02:49:42.066Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:40:45.291Z"
-      }
     }
   }
 }
