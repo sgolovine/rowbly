@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T17:54:34.429Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:c6b81a42-59cf-4a40-a269-eb4e8e1f6bf6",
+    "at": "2026-11-04T18:00:08.069Z",
+    "source": "worker message: returned work fixed, head a6772e21, FACTORY-DONE (t3 run ordinal 1 completed 17:59:48Z)",
+    "by": "sunny"
   }
 }
