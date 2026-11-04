@@ -15,12 +15,13 @@ function printable(input: string, key: Key): boolean {
 }
 
 /**
- * The known Data Roots with a search line above them, then **+ New Data Root**, which stays whatever
- * the query. Typing a key the screen does not use (`actionKey`) or `/` starts the search; while it is
- * focused every printable key is text and `esc` clears and leaves it. Each change to the query
- * highlights the best match. `↑/↓` move, `enter` or a click picks (`null` is **+ New Data Root**).
- * The query is the parent's (`null` while the search is not focused), so its own keys can wait.
- * With more than `limit` matches the rows scroll, and the mouse wheel moves the highlight.
+ * **+ New Data Root** pinned at the top, whatever the query, then a search line and the known Data
+ * Roots (ADR-0056). Typing a key the screen does not use (`actionKey`) or `/` starts the search; while
+ * it is focused every printable key is text and `esc` clears and leaves it. Each change to the query
+ * highlights the best match, or **+ New Data Root** when nothing matches. `↑/↓` move, `enter` or a
+ * click picks (`null` is **+ New Data Root**). The query is the parent's (`null` while the search is
+ * not focused), so its own keys can wait. With more than `limit` matches the Data Roots scroll below
+ * the button, and the mouse wheel moves the highlight.
  */
 export function DataRootList({
   roots,
@@ -42,7 +43,7 @@ export function DataRootList({
   active: boolean;
   query: string | null;
   onQueryChange(query: string | null): void;
-  /** The path of the Data Root to highlight first; else the first row. */
+  /** The path of the Data Root to highlight first; else the first Data Root, or the button without any. */
   initial?: string;
   /** A key the screen acts on while the search is not focused, so it does not start one. */
   actionKey(input: string, key: Key): boolean;
@@ -56,21 +57,22 @@ export function DataRootList({
   const { width } = useLayout();
   const searching = query !== null;
   const results = useMemo(() => searchDataRoots(roots, query ?? '', home), [roots, query, home]);
-  // Kept across a remount, such as after an edit modal, through `initial`.
+  // The highlighted Data Root's index; -1 is **+ New Data Root**, above them. Kept across a remount,
+  // such as after an edit modal, through `initial`.
   const [cursor, setCursor] = useState(() =>
     Math.max(
       0,
       results.findIndex((root) => root.path === initial),
     ),
   );
-  // The last row is **+ New Data Root**.
-  const index = Math.min(cursor, results.length);
+  const clamp = (at: number) => Math.max(-1, Math.min(results.length - 1, at));
+  const index = clamp(cursor);
   const highlighted = results[index] ?? null;
   // biome-ignore lint/correctness/useExhaustiveDependencies: report only when the highlighted row changes.
   useEffect(() => onHighlight?.(highlighted), [highlighted]);
   useKeyCapture(active && searching, { escape: true });
 
-  const move = (delta: number) => setCursor(Math.max(0, Math.min(results.length, index + delta)));
+  const move = (delta: number) => setCursor(clamp(index + delta));
   const search = (text: string | null) => {
     onQueryChange(text);
     setCursor(0);
@@ -92,10 +94,7 @@ export function DataRootList({
   useMouse(
     rowList,
     {
-      onWheel: (direction) =>
-        setCursor((current) =>
-          Math.max(0, Math.min(results.length, Math.min(current, results.length) + direction * WHEEL_LINES)),
-        ),
+      onWheel: (direction) => setCursor((current) => clamp(clamp(current) + direction * WHEEL_LINES)),
     },
     active && results.length > limit,
   );
@@ -112,6 +111,7 @@ export function DataRootList({
   return (
     // The full width, so a modal around it keeps its size as the matches change.
     <Box flexDirection="column" width={width}>
+      <Box marginBottom={1}>{newRow(index === -1, click(-1, null))}</Box>
       <Box backgroundColor={searching ? theme.fieldFocus : theme.field} paddingX={1} marginBottom={1}>
         <Text color={theme.accent}>/ </Text>
         <TextInput
@@ -130,9 +130,8 @@ export function DataRootList({
       {searching && query.trim() && results.length === 0 && (
         <Text color={theme.inkFaint}>{'  '}No matching Data Roots.</Text>
       )}
-      {newRow(index === results.length, click(results.length, null))}
       {results.length > 0 && (results.length > shown || query?.trim()) && (
-        <Text color={theme.inkFaint}>{`  ${Math.min(index + 1, results.length)}/${results.length}`}</Text>
+        <Text color={theme.inkFaint}>{`  ${index + 1}/${results.length}`}</Text>
       )}
     </Box>
   );
