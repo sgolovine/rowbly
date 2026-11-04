@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T04:46:34.223Z",
+  "updatedAt": "2026-11-04T04:46:34.840Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -96,6 +96,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/173 at 7794f6fbc1e419b7ee7e749f5b2a048228b46c1a by codex/gpt-6-astra: APPROVED. No actionable findings. Fresh independent review covered all 22 changed files (none excluded), against base 75114b4327ed181edbbf41644dfdfe7b74aa41f9, ROW-86 and its confirmed combined flow, AGENTS.md, architecture, TUI rules and ADRs. Checked the six steps, single/multiple/no-Board handling and reloads, direct skills and installed markers, Summary, free tabs and Back/Next/Skip, immediate progress saves and legacy/unknown ids, explicit default/minimal setup, custom Stage names, preservation/conflict behavior, inline results and editor return, and completion. Verified the correction merge manually resolves only the ADR index: 0059 and amendments 0041/0053/0057 coexist with 0056 and amendments 0042/0055 in the existing thematic order. ROW-86 source is unchanged from c8931910; incoming ROW-85 source matches main. No conflict markers or reference drift; all four Rowbly reference copies are byte-identical. Independently ran pnpm typecheck (pass), pnpm lint (pass), pnpm test:unit (79/79) and pnpm test:cli (21/21) on this exact head. All 13 existing screenshot URLs returned HTTP 200, and supplied terminal captures were inspected; no new TUI session was needed for unchanged source. Verified retained launch receipts and the complete eight-commit PR history: original author mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83 and correction author mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b both used codex/gpt-6.1-sol; reviewer mcp:9a750999-a9e9-4739-a13f-2c6a47d57283 uses codex/gpt-6-astra and is independent of both. All six current-head CI checks are COMPLETED/SUCCESS, no changes-requested review exists, and the latest merge state is CLEAN/MERGEABLE. No old-head approval was reused.",
           "createdAt": "2026-11-04T04:46:34.222Z",
           "updatedAt": "2026-11-04T04:46:34.222Z"
+        },
+        {
+          "id": "QYHBPgrm",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/173 at 7794f6fbc1e419b7ee7e749f5b2a048228b46c1a. Merge commit d407041bf1665a435f2927f36332044590e16c81. Fresh independent approval: https://github.com/sgolovine/rowbly/pull/173#issuecomment-6622795933. All four local checks passed; all six PR checks succeeded; all 13 screenshot URLs returned 200. Main CI in progress: https://github.com/sgolovine/rowbly/actions/runs/41775150613.",
+          "createdAt": "2026-11-04T04:46:34.839Z",
+          "updatedAt": "2026-11-04T04:46:34.839Z"
         }
       ]
     }
