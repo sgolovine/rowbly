@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T01:43:46.637Z"
   },
+  "identity": {
+    "worker": "mcp:67ebf417-b0c8-4076-86e0-720bc193c88f",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:67ebf417-b0c8-4076-86e0-720bc193c88f",
+    "verification": {
+      "source": "Verified T3 correction launch receipt ROW-78-correction-1-launch.json: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
+      "verifiedAt": "2026-11-04T01:44:11.065Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "claudeAgent",
     "model": "claude-opus-5-5",
