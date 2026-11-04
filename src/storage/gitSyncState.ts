@@ -13,6 +13,10 @@ const Last = z.object({
   upstream: z.string().optional(),
   evidence: z.array(z.string()).default([]),
   repairs: z.number().default(0),
+  /** A failure's stable reason, whether retrying can help and the paths it concerns (ADR-0058 §2). */
+  reason: z.string().optional(),
+  retryable: z.boolean().optional(),
+  paths: z.array(z.string()).optional(),
 });
 const State = z.object({
   version: z.literal(1),

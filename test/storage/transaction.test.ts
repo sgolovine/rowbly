@@ -390,7 +390,7 @@ describe('Git local publication', () => {
       await seed.cleanup();
     }
     // External editors and Git do not take Rowbly's locks. Refuse at the actual effect boundary.
-    for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging', 'foreign-lock']) {
+    for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging']) {
       signal.throwIfAborted();
       const t = await tempRoot(),
         f = await syncFixture(t.dir, t.path);
@@ -402,9 +402,7 @@ describe('Git local publication', () => {
             : '.rowbly/rowbly.config.json';
       const external = 'unexpected editor bytes\n';
       const { io } = await import('../../src/storage/io');
-      const { stat } = await import('node:fs/promises');
       let injected = false;
-      let foreignInode: number | undefined;
       const refuse = {
         code: 'DATA_INTEGRITY',
         exitCode: 6,
@@ -433,11 +431,6 @@ describe('Git local publication', () => {
                     await mkdir(join(t.dir, path, '..'), { recursive: true });
                     await writeFile(join(t.dir, path), external);
                   }
-                  if (scenario === 'foreign-lock' && point === 'index-effect') {
-                    injected = true;
-                    await writeFile(`${f.repo.index}.lock`, Buffer.from(f.plan.indexAfter, 'base64'), { flag: 'wx' });
-                    foreignInode = (await stat(`${f.repo.index}.lock`)).ino;
-                  }
                 },
               }),
             ).rejects.toMatchObject(refuse);
@@ -460,17 +453,11 @@ describe('Git local publication', () => {
         readPluginFiles(t.root, createRepositories(t.root), 'unknown', [{ scope: 'dataRoot', name: 'blob.bin' }]),
       ).rejects.toMatchObject(refuse);
       expect(await readFile(f.repo.journal, 'utf8')).toContain(f.plan.candidate);
-      if (scenario === 'foreign-lock') {
-        expect((await stat(`${f.repo.index}.lock`)).ino).toBe(foreignInode);
-        expect((await readFile(`${f.repo.index}.lock`)).toString('base64')).toBe(f.plan.indexAfter);
-        await rm(`${f.repo.index}.lock`); // Only the test, as its owner, removes the foreign lock.
-      } else {
-        expect(await readFile(join(t.dir, path), 'utf8')).toBe(external);
-        const edit = f.plan.edits.find((edit) => edit.path === path);
-        if (!edit) throw new Error('Missing edited publication path');
-        if (edit.before) await writeFile(join(t.dir, path), Buffer.from(edit.before.data, 'base64'));
-        else await rm(join(t.dir, path));
-      }
+      expect(await readFile(join(t.dir, path), 'utf8')).toBe(external);
+      const edit = f.plan.edits.find((edit) => edit.path === path);
+      if (!edit) throw new Error('Missing edited publication path');
+      if (edit.before) await writeFile(join(t.dir, path), Buffer.from(edit.before.data, 'base64'));
+      else await rm(join(t.dir, path));
       await coordinated(t.root, 'resume after external cause resolved', async () => undefined);
       expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
       expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
@@ -478,6 +465,50 @@ describe('Git local publication', () => {
       await coordinated(t.root, 'read after later save', async () => {
         expect(await readFile(join(t.path, 'later.txt'), 'utf8')).toBe('later save');
       });
+      await t.cleanup();
+    }
+    signal.throwIfAborted();
+    {
+      // `git status` in the same checkout rewrites only the index's stat cache, before and after
+      // the pre-lock check and after installation, and may hold its own index.lock once the
+      // candidate is installed. Publication still ends in the complete new state and leaves that
+      // lock to its holder (ADR-0058 §1).
+      const t = await tempRoot(),
+        f = await syncFixture(t.dir, t.path);
+      const { stat, utimes } = await import('node:fs/promises');
+      const staged = async (index?: string) =>
+        (await f.process(t.dir, ['ls-files', '--stage', '-z'], index ? { index } : {})).stdout.toString('utf8');
+      const expectedIndex = join(t.dir, 'expected-index');
+      await writeFile(expectedIndex, Buffer.from(f.plan.indexAfter, 'base64'));
+      let foreignInode: number | undefined;
+      const refresh = async (seconds: number) => {
+        const before = await readIndex(f.repo);
+        await utimes(join(t.path, '.gitignore'), seconds, seconds);
+        await f.git('status', '--porcelain');
+        expect(await readIndex(f.repo)).not.toBe(before);
+      };
+      await refresh(1_000_000_000);
+      await withGitWorker(f.repo, () =>
+        withPublication(f.repo, (hold) =>
+          publishPublication(hold, f.plan, {
+            checkpoint: async (point) => {
+              if (point === 'index-token-ready') await refresh(1_000_000_100);
+              if (point === 'index-effect') {
+                await refresh(1_000_000_200);
+                await writeFile(`${f.repo.index}.lock`, 'held by another Git command', { flag: 'wx' });
+                foreignInode = (await stat(`${f.repo.index}.lock`)).ino;
+              }
+            },
+          }),
+        ),
+      );
+      expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+      expect(await f.git('rev-parse', 'HEAD')).toBe(f.plan.candidate);
+      expect(await staged()).toBe(await staged(expectedIndex));
+      expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+      expect((await stat(`${f.repo.index}.lock`)).ino).toBe(foreignInode);
+      await rm(`${f.repo.index}.lock`); // Only the test, as its owner, removes the foreign lock.
+      for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.after);
       await t.cleanup();
     }
     signal.throwIfAborted();
