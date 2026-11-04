@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T03:27:47.746Z",
+  "updatedAt": "2026-11-04T03:27:48.595Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -46,6 +46,13 @@
           "body": "PR 172 head is now a669b58efb62643b2ea6156a8874fd06cb1ec8cb. It adds a fix for main's flaky storage test (CI run 41764595479 at eb400ec0, transaction.test.ts:690, missing publicationHolder). The test's barrier resolved when the reader called readFile on the gate lock, so the holder could release and delete the lock before the read finished, and the reader recorded no holder. I reproduced it deterministically by releasing between the reader's lstat and readFile. The barrier now waits for the reader's second gate read, which can only follow a completed read of the held lock. This is a test-only fix; the trace code is correct. Test count unchanged; typecheck, lint and test:unit pass.",
           "createdAt": "2026-11-04T03:27:47.745Z",
           "updatedAt": "2026-11-04T03:27:47.745Z"
+        },
+        {
+          "id": "yLiuX1lQ",
+          "author": "sunny",
+          "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
+          "createdAt": "2026-11-04T03:27:48.594Z",
+          "updatedAt": "2026-11-04T03:27:48.594Z"
         }
       ]
     }
