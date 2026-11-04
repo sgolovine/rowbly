@@ -133,6 +133,29 @@ result can coexist with a new run. A local commit alone does not prove push succ
 completed `last.kind: synchronized`. Preserve reported evidence paths in your handoff. Do not report
 successful synchronization after a rejected push or while another process is still running it.
 
+### When `git sync` fails
+
+`git sync` with Automatic Merge Conflict Resolution Off exits 2 (`USAGE`) with the hint
+`rowbly git configure --automatic-merge-resolution on`; turn it on only when the user or the
+repository's rules allow it. Other failures exit 4 (`CONFLICT`). Act on `error.details.reason`
+(also `last.reason`), never on the message text. `error.details.retryable` says whether trying again
+can help, and `error.details.paths` lists the paths concerned when known.
+
+| `reason` | Cause | What to do |
+| --- | --- | --- |
+| `capture-changed` | Another writer, such as the TUI, kept saving; the message names the Stories | Wait, then retry a bounded number of times |
+| `index-changed` | Another Git command changed what is staged during Sync | Check `git status`, then retry |
+| `network` | Fetch or push failed; the local result is kept | Check network and credentials, then retry |
+| `resolution-off` | Automatic Merge Conflict Resolution is Off (exit 2) | Configure it when allowed; otherwise ask |
+| `no-upstream` | No checked-out branch, or no configured upstream | Fix the branch or upstream; do not retry first |
+| `conflict` | A Git operation in progress, a conflict outside Rowbly data, or content Sync would overwrite | Stop and report; resolve by hand |
+| `evidence` | Merge Evidence disagrees at the same path | Stop and report the paths |
+| `unexpected` | Anything else | Report the message |
+
+Read-only Git commands such as `git status` may run beside Sync; Sync compares what is staged, not
+the index file's bytes. Still, do not start Rowbly changes in parallel with `git sync` in scripts:
+Sync waits for the Data Root to go quiet and fails with `capture-changed` if it never does.
+
 For a person using the TUI: settings (`,`) → **Git** shows the exact **Automatic Merge Conflict
 Resolution** section. `m` edits its preferences, `e` edits Automatic Commits, and `ctrl+s` saves either
 form. The clickable **Run now** control has the matching `r` key; both are disabled while Off, pending
@@ -157,7 +180,8 @@ Git first (`rowbly plugins disable git`), remember that it was on, run the repai
   Commit. Start from a clean baseline.
 
 
-For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4) with `details.reason`
+(see [When `git sync` fails](#when-git-sync-fails)), and the usual
 JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.

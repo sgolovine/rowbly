@@ -5,8 +5,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import { DataIntegrityError } from '../core';
 import type { DataRoot } from '../schemas';
-import { gitText } from './gitProcess';
+import { gitProcess, gitText } from './gitProcess';
 import { assertGitWorker, type GitRepository, repositoryFor, repositoryPath, withGitWorker } from './gitRepository';
+import { describePaths, GitSyncFailure } from './gitSyncFailure';
 import { type GitDataFiles, readGitDataFiles } from './gitSyncFiles';
 import { entryExists, errorCode, io } from './io';
 import { acquireLock, type LockHandle, type LockTiming } from './lock';
@@ -91,6 +92,78 @@ export async function readIndex(repo: GitRepository): Promise<string | null> {
     throw err;
   }
 }
+/**
+ * The staged content of an index image, one `mode object stage\tpath` line per entry, or `null`
+ * when Git cannot read it. Two images with equal content differ only in caches, such as the stat
+ * data `git status` refreshes (ADR-0058 §1).
+ */
+async function indexContent(repo: GitRepository, bytes: string): Promise<Set<string> | null> {
+  const file = join(repo.gitDir, 'rowbly', `index-content-${randomBytes(8).toString('hex')}`);
+  try {
+    await io.writeFile(file, Buffer.from(bytes, 'base64'));
+    const listed = await gitProcess(repo.top, ['ls-files', '--stage', '-z'], { index: file });
+    return new Set(listed.stdout.toString('utf8').split('\0').filter(Boolean));
+  } catch {
+    return null;
+  } finally {
+    await io.rm(file);
+  }
+}
+
+/**
+ * The paths whose staged entries differ between two index images, or `null` when both stage the
+ * same content. Equal bytes need no Git; an unreadable image differs, with no paths named.
+ */
+async function stagedDifference(
+  repo: GitRepository,
+  expected: string | null,
+  actual: string | null,
+): Promise<string[] | null> {
+  if (expected === actual) return null;
+  if (expected === null || actual === null) return [];
+  const [before, after] = await Promise.all([indexContent(repo, expected), indexContent(repo, actual)]);
+  if (!before || !after) return [];
+  const changed = [...before, ...after].filter((line) => !(before.has(line) && after.has(line)));
+  return changed.length ? [...new Set(changed.map((line) => line.slice(line.indexOf('\t') + 1)))] : null;
+}
+async function sameIndex(repo: GitRepository, expected: string | null, actual: string | null): Promise<boolean> {
+  return (await stagedDifference(repo, expected, actual)) === null;
+}
+
+/** Which journal image the live index stages: equal bytes first, then equal content; `null` for neither. */
+async function indexImage(journal: JournalData, actual: string | null): Promise<'before' | 'after' | null> {
+  if (actual === journal.indexAfter) return 'after';
+  if (actual === journal.indexBefore) return 'before';
+  if (await sameIndex(journal.repo, journal.indexAfter, actual)) return 'after';
+  if (await sameIndex(journal.repo, journal.indexBefore, actual)) return 'before';
+  return null;
+}
+
+/** Fails with `index-changed`, naming the staged paths, unless `actual` stages what `expected` does. */
+async function assertIndexContent(repo: GitRepository, expected: string | null, actual: string | null, when: string) {
+  const paths = await stagedDifference(repo, expected, actual);
+  if (paths === null) return;
+  throw new GitSyncFailure(
+    'index-changed',
+    `Git index changed ${when}${paths.length ? `: staged ${describePaths(paths)}` : ''}`,
+    paths,
+  );
+}
+
+/** Reserves the index, waiting briefly while another Git command, such as `git status`, holds its lock. */
+async function reserveLiveIndex(repo: GitRepository, token: string, options: PublicationOptions) {
+  for (let waited = 0; ; waited += 50) {
+    try {
+      return await reserveIndex(repo, token, options);
+    } catch (err) {
+      if (errorCode(err) !== 'EEXIST') throw err;
+      if (waited >= 2000)
+        throw new GitSyncFailure('index-changed', `Another Git command kept the index locked: ${repo.index}.lock`);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+}
+
 async function readJournal(repo: GitRepository): Promise<JournalData | null> {
   if (!(await entryExists(repo.journal))) return null;
   try {
@@ -152,12 +225,22 @@ async function ownedFile(path: string, reference: string, bytes: string): Promis
     throw err;
   }
 }
-async function indexLockState(journal: JournalData): Promise<'missing' | 'reservation' | 'payload'> {
+/**
+ * Who holds the index lock. Before the candidate index is installed, only Rowbly's reservation
+ * may; once it is installed the reservation is released, and another Git command, such as
+ * `git status`, may hold the lock. Git checks that the index it read is still current before it
+ * writes, so that holder cannot revert the installed index; Rowbly leaves it alone (ADR-0058 §1).
+ */
+async function indexLockState(
+  journal: JournalData,
+  installed = false,
+): Promise<'missing' | 'reservation' | 'payload' | 'foreign'> {
   const { repo, token, indexAfter } = journal;
   const lock = `${repo.index}.lock`;
   if (!(await entryExists(lock))) return 'missing';
   if (await ownedFile(lock, tokenPath(repo, token), indexToken(token))) return 'reservation';
   if (await ownedFile(lock, indexPayloadPath(repo, token), indexAfter)) return 'payload';
+  if (installed) return 'foreign';
   throw new Error(`Prepared index lock has an external holder: ${lock}`);
 }
 async function cleanupReservation(repo: GitRepository) {
@@ -289,12 +372,21 @@ export async function publishPublication(
       (await gitText(repo.top, ['rev-parse', plan.branch])) !== plan.old
     )
       throw new Error('Git branch changed before publication');
-    if ((await readIndex(repo)) !== plan.indexBefore) throw new Error('Git index changed before publication');
+    await assertIndexContent(repo, plan.indexBefore, await readIndex(repo), 'before publication');
     await rootLocks(plan.roots, async () => {
+      for (const capture of captures ?? []) {
+        const now = await readGitDataFiles({ path: capture.root, kind: 'local' });
+        const changed = [...new Set([...Object.keys(now), ...Object.keys(capture.files)])].filter(
+          (path) => !isDeepStrictEqual(now[path], capture.files[path]),
+        );
+        if (changed.length)
+          throw new GitSyncFailure(
+            'capture-changed',
+            `Rowbly data changed while Sync prepared it: another writer, such as the TUI, was saving ${describePaths(changed)}`,
+            changed,
+          );
+      }
       await verifyFiles(journal, false);
-      for (const capture of captures ?? [])
-        if (!isDeepStrictEqual(await readGitDataFiles({ path: capture.root, kind: 'local' }), capture.files))
-          throw new Error('Rowbly capture changed; prepare again');
       for (const root of [...new Set(plan.roots)].sort()) {
         const prefix = relative(repo.top, root).split('\\').join('/');
         const edits = plan.edits.filter((e) => !prefix || e.path.startsWith(`${prefix}/`));
@@ -319,10 +411,14 @@ export async function publishPublication(
     await options.checkpoint?.('staged');
     await io.mkdir(dirname(ownerPath(repo)));
     await writeFileAtomic(ownerPath(repo), JSON.stringify({ token, pid: process.pid, host: hostname(), repo }));
-    await reserveIndex(repo, token, options);
+    await reserveLiveIndex(repo, token, options);
     await io.syncDir(repo.gitDir);
     await gitText(repo.top, ['update-ref', `refs/rowbly/prepared/${token}`, plan.candidate]);
-    if ((await readIndex(repo)) !== plan.indexBefore) throw new Error('Git index changed while reserving publication');
+    // Under the reservation no cooperating Git writes the index, so recovery may compare these
+    // exact bytes; an earlier stat-only refresh changed caches, not content (ADR-0058 §1).
+    const reserved = await readIndex(repo);
+    await assertIndexContent(repo, plan.indexBefore, reserved, 'while reserving publication');
+    journal.indexBefore = reserved;
     await verifyFiles(journal, false);
     await options.checkpoint?.('before-intent');
     await writeJournal(journal);
@@ -359,7 +455,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
     if (
       journal.phase === 'prepared' &&
       untouched.every(Boolean) &&
-      (await readIndex(repo)) === journal.indexBefore &&
+      (await sameIndex(repo, journal.indexBefore, await readIndex(repo))) &&
       (await indexLockState(journal)) === 'reservation'
     ) {
       // CAS refused before any live effect: discard only our staged payload and reservation.
@@ -376,11 +472,12 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   }
   if ((await gitText(repo.top, ['symbolic-ref', 'HEAD'])) !== journal.branch)
     throw new Error('Prepared worktree branch changed externally');
-  const index = await readIndex(repo);
-  if (index !== journal.indexBefore && index !== journal.indexAfter)
-    throw new Error('Prepared index changed externally; preserving publication');
+  // Once installed, the index is no longer reserved: other Git may refresh its caches, so recovery
+  // compares staged content rather than bytes (ADR-0058 §1).
+  const image = await indexImage(journal, await readIndex(repo));
+  if (!image) throw new Error('Prepared index changed externally; preserving publication');
   await verifyFiles(journal, true);
-  await indexLockState(journal);
+  await indexLockState(journal, image === 'after');
   if (current === journal.old) await gitText(repo.top, ['update-ref', journal.branch, journal.candidate, journal.old]);
   await options.checkpoint?.('ref-effect');
   journal.phase = 'ref';
@@ -447,12 +544,12 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   journal.phase = 'files';
   await writeJournal(journal);
   await options.checkpoint?.('files');
-  const beforeInstall = await readIndex(repo);
-  if (beforeInstall !== journal.indexBefore && beforeInstall !== journal.indexAfter)
-    throw new Error(`Prepared index changed externally: ${repo.index}`);
-  const lockState = await indexLockState(journal);
-  if (beforeInstall !== journal.indexAfter) {
-    if (lockState === 'missing') await reserveIndex(repo, journal.token);
+  const beforeInstall = await indexImage(journal, await readIndex(repo));
+  if (!beforeInstall) throw new Error(`Prepared index changed externally: ${repo.index}`);
+  const installed = beforeInstall === 'after';
+  const lockState = await indexLockState(journal, installed);
+  if (!installed) {
+    if (lockState === 'missing') await reserveLiveIndex(repo, journal.token, {});
     const payload = indexPayloadPath(repo, journal.token);
     if (!(await entryExists(payload))) await io.writeFile(payload, Buffer.from(journal.indexAfter, 'base64'));
     if (!(await ownedFile(payload, payload, journal.indexAfter)))
@@ -468,8 +565,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
     await options.checkpoint?.('index-ready');
     if (!(await ownedFile(`${repo.index}.lock`, payload, journal.indexAfter)))
       throw new Error(`Prepared index lock changed externally: ${repo.index}.lock`);
-    const index = await readIndex(repo);
-    if (index !== journal.indexBefore && index !== journal.indexAfter)
+    if (!(await sameIndex(repo, journal.indexBefore, await readIndex(repo))))
       throw new Error(`Prepared index changed externally: ${repo.index}`);
     await io.rename(`${repo.index}.lock`, repo.index);
     await io.syncDir(repo.gitDir);
@@ -477,8 +573,8 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   await options.checkpoint?.('index-effect');
   journal.phase = 'index';
   await writeJournal(journal);
-  await indexLockState(journal);
-  if ((await readIndex(repo)) !== journal.indexAfter)
+  await indexLockState(journal, true);
+  if (!(await sameIndex(repo, journal.indexAfter, await readIndex(repo))))
     throw new Error(`Installed index changed externally: ${repo.index}`);
   await verifyFiles(journal, true);
   for (const edit of journal.edits)
@@ -487,7 +583,8 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   journal.phase = 'complete';
   await writeJournal(journal);
   await options.checkpoint?.('complete');
-  if ((await indexLockState(journal)) !== 'missing') await io.rm(`${repo.index}.lock`);
+  const lock = await indexLockState(journal, true);
+  if (lock === 'reservation' || lock === 'payload') await io.rm(`${repo.index}.lock`);
   await io.rm(tokenPath(repo, journal.token));
   await io.rm(indexInstallPath(repo, journal.token));
   await io.rm(indexPayloadPath(repo, journal.token));

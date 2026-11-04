@@ -99,7 +99,7 @@ stderr even when the command succeeds.
 | 2 | `USAGE` | Bad flags, a missing value, no Board in context, no `--yes`, or a command of a Plugin that is off | Fix the command line; the `hint` says how |
 | 2 | `VALIDATION` | Input that breaks a rule (unknown Stage, Assignee or Custom Field, bad Label) | Use a valid value from `details` |
 | 3 | `NOT_FOUND` | Unknown Board, Story, Task, Comment, Stage, Custom Field, Assignee, Epic or Spec | List the records and check the id |
-| 4 | `CONFLICT` | The id or key prefix exists, a deletion is refused, a Plugin refused the change, or the Data Root lock stayed busy for 10 s | Read the message; do not force a refusal without the user's approval |
+| 4 | `CONFLICT` | The id or key prefix exists, a deletion is refused, a Plugin refused the change, the Data Root lock stayed busy for 10 s, or `git sync` failed (`details.reason`) | Read the message; do not force a refusal without the user's approval. For `git sync`, see [the Git Plugin](references/plugin-git.md) |
 | 5 | `NO_DATA_ROOT` | No `.rowbly/` found, or the Data Root named by `--data-root` or the default is missing (`details.path`) | Check the directory or the path; create one only if the user wants it (`rowbly init`) |
 | 6 | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it | Follow [Check and repair a Data Root](references/doctor.md) |
 

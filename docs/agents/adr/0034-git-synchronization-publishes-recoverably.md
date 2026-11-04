@@ -1,6 +1,6 @@
 # ADR-0034: Git synchronization prepares isolated merges and publishes recoverably
 
-**Status:** Accepted (ROW-15); amended by [ADR-0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) for explicit manual commit-first rebase Sync, and by [ADR-0050](0050-merge-evidence-records-only-decisions-and-is-retained.md) for one-sided additions and evidence retention.
+**Status:** Accepted (ROW-15); amended by [ADR-0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) for explicit manual commit-first rebase Sync, and by [ADR-0050](0050-merge-evidence-records-only-decisions-and-is-retained.md) for one-sided additions and evidence retention, and by [ADR-0058](0058-git-sync-compares-index-content-and-names-failure-reasons.md) §1 for the index fingerprint (staged content) and the index lock after installation.
 
 ## Context
 

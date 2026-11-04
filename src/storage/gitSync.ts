@@ -5,6 +5,7 @@ import type { DataRoot } from '../schemas';
 import type { GitCommitOptions } from './git';
 import { gitProcess, gitText, outsideGitDeadline, withGitDeadline } from './gitProcess';
 import { assertGitWorker, canonicalGitRoot, type GitRepository, rootPrefix } from './gitRepository';
+import { GitSyncFailure, syncFailureReason } from './gitSyncFailure';
 import { type GitDataFiles, isGitDataPath, readGitDataFiles } from './gitSyncFiles';
 import {
   type PublicationEdit,
@@ -18,13 +19,38 @@ import {
 import { entryExists, io } from './io';
 import { writeFileAtomic } from './system';
 
-export class GitSyncPushError extends Error {
+export class GitSyncPushError extends GitSyncFailure {
   constructor(
     message: string,
     readonly local: SyncOutcome,
   ) {
-    super(`Local result saved; push failed: ${message}`);
+    super('network', `Local result saved; push failed: ${message}`);
   }
+}
+
+/** How long Rowbly data must stay unchanged before Sync prepares again, and the longest wait (ADR-0058 §3). */
+const QUIET_MS = 2_000;
+const QUIET_LIMIT_MS = 15_000;
+
+/** Waits until reads of the Data Root stop changing for `QUIET_MS`, or `QUIET_LIMIT_MS` passes. */
+async function settle(read: () => Promise<GitDataFiles>): Promise<void> {
+  const started = Date.now();
+  let last = await read(),
+    since = Date.now();
+  while (Date.now() - since < QUIET_MS && Date.now() - started < QUIET_LIMIT_MS) {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const next = await read();
+    if (!isDeepStrictEqual(next, last)) {
+      last = next;
+      since = Date.now();
+    }
+  }
+}
+
+/** Another writer or Git command changed what Sync prepared: prepare again rather than fail. */
+function prepareAgain(err: unknown): boolean {
+  const reason = syncFailureReason(err);
+  return reason === 'capture-changed' || reason === 'index-changed';
 }
 export interface GitUpstream {
   branch: string;
@@ -53,13 +79,17 @@ interface TreeEntry {
 }
 type Tree = Record<string, TreeEntry>;
 export async function configuredUpstream(repo: GitRepository): Promise<GitUpstream> {
-  const branch = await gitText(repo.top, ['symbolic-ref', '--quiet', 'HEAD']);
-  if (!branch.startsWith('refs/heads/')) throw new Error('Git synchronization requires a checked-out branch');
+  const branch = await gitText(repo.top, ['symbolic-ref', '--quiet', 'HEAD'], { allowFailure: true });
+  if (!branch.startsWith('refs/heads/'))
+    throw new GitSyncFailure(
+      'no-upstream',
+      'Git synchronization requires a checked-out branch; check out a branch and configure its Git upstream',
+    );
   const name = branch.slice(11);
   const remote = await gitText(repo.top, ['config', '--get', `branch.${name}.remote`], { allowFailure: true });
   const mergeRef = await gitText(repo.top, ['config', '--get', `branch.${name}.merge`], { allowFailure: true });
   if (!remote || !mergeRef || mergeRef.includes('\n'))
-    throw new Error('The current branch needs one configured Git upstream');
+    throw new GitSyncFailure('no-upstream', 'The current branch needs one configured Git upstream');
   await gitText(repo.top, ['check-ref-format', mergeRef]);
   return { branch, remote, mergeRef };
 }
@@ -130,9 +160,9 @@ async function commit(
 async function busy(repo: GitRepository) {
   for (const path of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-apply', 'rebase-merge', 'sequencer'])
     if (await entryExists(join(repo.gitDir, path)))
-      throw new Error('Finish the current Git operation before synchronization');
+      throw new GitSyncFailure('conflict', 'Finish the current Git operation before synchronization');
   if ((await gitProcess(repo.top, ['ls-files', '--unmerged', '-z'])).stdout.length)
-    throw new Error('Git synchronization refuses an unmerged index');
+    throw new GitSyncFailure('conflict', 'Git synchronization refuses an unmerged index');
 }
 async function mergeOptions(repo: GitRepository): Promise<string[]> {
   const configured = await gitText(repo.top, ['config', '--get-regexp', '^merge\\..*\\.driver$'], {
@@ -212,7 +242,7 @@ async function runSynchronization(
       const after = afterEntry ? await blob(repo, afterEntry) : null;
       // Every unrelated changed path must still match clean HEAD bytes before local intent.
       if (!owned && !isDeepStrictEqual(await readPublicationFile(repo, path), before))
-        throw new Error(`Upstream would overwrite unrelated local content: ${path}`);
+        throw new GitSyncFailure('conflict', `Upstream would overwrite unrelated local content: ${path}`, [path]);
       const stagedEntry = (
         await gitProcess(repo.top, ['ls-files', '--stage', '-z', '--', `:(literal)${path}`])
       ).stdout.toString('utf8');
@@ -220,7 +250,7 @@ async function runSynchronization(
         !owned &&
         (beforeEntry ? !stagedEntry.startsWith(`${beforeEntry.mode} ${beforeEntry.oid} 0\t`) : stagedEntry !== '')
       )
-        throw new Error(`Upstream would overwrite unrelated staged content: ${path}`);
+        throw new GitSyncFailure('conflict', `Upstream would overwrite unrelated staged content: ${path}`, [path]);
       if (!isDeepStrictEqual(before, after)) edits.push({ path, before, after });
       await put(repo, installIndex, path, after ?? undefined);
     }
@@ -256,7 +286,7 @@ async function runSynchronization(
         return rel !== null && isGitDataPath(rel);
       })
     )
-      throw new Error('Git synchronization refuses already-staged Rowbly changes');
+      throw new GitSyncFailure('conflict', 'Git synchronization refuses already-staged Rowbly changes');
     const indexBefore = await readIndex(repo);
     if (indexBefore === null) throw new Error('Git synchronization requires an existing index');
     const captured = await capture(() => readGitDataFiles(root));
@@ -299,13 +329,13 @@ async function runSynchronization(
           );
           break;
         } catch (err) {
-          if (err instanceof Error && err.message === 'Rowbly capture changed; prepare again' && attempt < 2) continue;
-          throw err;
+          if (!prepareAgain(err) || attempt >= 2) throw err;
+          await settle(() => capture(() => readGitDataFiles(root)));
         }
       }
     }
     await phase('fetching');
-    await gitText(
+    await fetchUpstream(
       repo.top,
       [
         'fetch',
@@ -357,10 +387,14 @@ async function runSynchronization(
             return rel === null || !isGitDataPath(rel);
           })
         )
-          throw new Error(`Non-Rowbly conflicts require manual resolution: ${conflicts.join(', ')}`);
+          throw new GitSyncFailure(
+            'conflict',
+            `Non-Rowbly conflicts require manual resolution: ${conflicts.join(', ')}`,
+            conflicts,
+          );
         // Structural conflict messages also fail closed, even if a path happens to be recognized.
         if (parts.some((text) => /CONFLICT \((?:file\/directory|directory|rename|submodule|distinct)/i.test(text)))
-          throw new Error('Unsupported Git merge topology conflict');
+          throw new GitSyncFailure('conflict', 'Unsupported Git merge topology conflict');
         rootMerge = reconcile(
           { id: base, files: await sourceFiles(repo, await tree(repo, base), prefix) },
           { id: local, files: captured },
@@ -404,8 +438,9 @@ async function runSynchronization(
       try {
         await publish(old, candidate, captured, indexBefore, upstream);
       } catch (err) {
-        if (err instanceof Error && err.message === 'Rowbly capture changed; prepare again' && attempt < 2) continue;
-        throw err;
+        if (!prepareAgain(err) || attempt >= 2) throw err;
+        await settle(() => capture(() => readGitDataFiles(root)));
+        continue;
       }
       // Revalidate installed files, without changing or acknowledging later dirty revisions.
       await validate(await capture(() => readGitDataFiles(root)));
@@ -440,11 +475,23 @@ async function runSynchronization(
         pushed: true,
       };
     }
-    throw new Error('Rowbly changes stayed busy; synchronization will retry on its next interval');
+    throw new GitSyncFailure(
+      'capture-changed',
+      'Rowbly changes stayed busy; synchronization will retry on its next interval',
+    );
   } finally {
     await io.rm(index);
     await io.rm(installIndex);
     await outsideGitDeadline(() => gitText(repo.top, ['update-ref', '-d', fetched])).catch(() => undefined);
+  }
+}
+
+/** Fetches the upstream; a failure, such as no network or no credentials, is `network`. */
+async function fetchUpstream(...args: Parameters<typeof gitText>): Promise<string> {
+  try {
+    return await gitText(...args);
+  } catch (err) {
+    throw new GitSyncFailure('network', err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -510,9 +557,13 @@ async function rebaseCandidate(
         return rel === null || !isGitDataPath(rel);
       })
     )
-      throw new Error(`Non-Rowbly conflicts require manual rebase resolution: ${conflicts.join(', ')}`);
+      throw new GitSyncFailure(
+        'conflict',
+        `Non-Rowbly conflicts require manual rebase resolution: ${conflicts.join(', ')}`,
+        conflicts,
+      );
     if (parts.some((text) => /CONFLICT \((?:file\/directory|directory|rename|submodule|distinct)/i.test(text)))
-      throw new Error('Unsupported Git replay topology conflict');
+      throw new GitSyncFailure('conflict', 'Unsupported Git replay topology conflict');
     const resolved = reconcile(
       { id: parent, files: await sourceFiles(repo, await tree(repo, parent), prefix) },
       { id: tip, files: await sourceFiles(repo, await tree(repo, tip), prefix) },

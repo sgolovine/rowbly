@@ -302,7 +302,7 @@ What a Plugin callback throws becomes (ADR-0020 §5):
 | --- | --- |
 | `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError` | The same code, exit code, message, hint and `details.issues`, plus `details.plugin`, `details.stage` and `details.operation` (when there is one). Rowbly's attribution wins over the Plugin's own details. |
 | A guard's `{ reject, hint?, canForce? }` | `CONFLICT` (exit 4) with `details: { plugin, operation, stage: 'guard', canForce? }`. |
-| Anything else (`TypeError`, `Error`, a string) | `INTERNAL` (exit 1), "Plugin "<id>" failed in …", with the hint to turn it off; `details.cause` holds a Rowbly error's code. |
+| Anything else (`TypeError`, `Error`, a string) | `INTERNAL` (exit 1), "Plugin "<id>" failed in …", with the hint to turn it off, except from the Plugin's own command; `details.cause` holds a Rowbly error's code. |
 | An error from a replacement's `core()` | Unchanged. |
 
 This applies to every callback: hooks, operation bodies, commands, option input, `filterStories`, rows, doctor checks and fixes, TUI field providers, input and filter conversion, summaries, Actions and reactions. Some fail softer:

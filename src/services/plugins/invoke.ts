@@ -85,7 +85,8 @@ function traced(scope: Omit<ExecutionScope, 'ended'>, started: number, thrown?: 
  * - an error already attributed, a `PluginError` naming a Plugin, or a `core()` error: unchanged;
  * - an expected Rowbly error: the same class, code, message, hint and issues, with
  *   `details.plugin`, `details.operation` and `details.stage` (the framework's win);
- * - anything else: an INTERNAL `PluginError` with a hint to turn the Plugin off.
+ * - anything else: an INTERNAL `PluginError`, with a hint to turn the Plugin off unless it came
+ *   from the Plugin's own command.
  */
 export function attribute(at: Invocation, err: unknown): unknown {
   if (typeof err === 'object' && err !== null) {
@@ -101,10 +102,11 @@ export function attribute(at: Invocation, err: unknown): unknown {
     );
   }
   const during = at.operation ? `the ${at.stage} of ${at.operation}` : `its ${at.stage}`;
+  // Turning a Plugin off helps when its hook breaks other work, not when its own command fails (ADR-0058 §4).
   return attributed(
     new PluginError(`Plugin "${at.plugin}" failed in ${during}: ${errorMessage(err)}`, {
       details: { ...where, ...(isRowblyError(err) ? { cause: err.code } : {}) },
-      hint: `turn it off with \`rowbly plugins disable ${at.plugin}\``,
+      ...(at.stage === 'command' ? {} : { hint: `turn it off with \`rowbly plugins disable ${at.plugin}\`` }),
       cause: err,
     }),
   );
