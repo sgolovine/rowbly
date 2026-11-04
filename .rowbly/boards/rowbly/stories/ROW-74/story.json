@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:01:20.421Z",
-  "updatedAt": "2026-11-04T00:30:47.166Z",
+  "updatedAt": "2026-11-04T00:30:47.799Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:27:25.666Z",
         "finishedAt": "2026-11-04T00:30:45.918Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SCxuFwAy",
+          "author": "sunny",
+          "body": "Refinement: the Label setup field is the Data Root label in ~/.rowblyrc.json (header/switcher name), not a Board label. Plan: remove it from the TUI New Data Root form and the interactive rowbly init prompt; keep --label and the switcher e edit so it can still be set. Ready for In Progress.",
+          "createdAt": "2026-11-04T00:30:47.799Z",
+          "updatedAt": "2026-11-04T00:30:47.799Z"
+        }
+      ]
     }
   }
 }
