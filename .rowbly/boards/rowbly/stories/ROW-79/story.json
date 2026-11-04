@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-04T00:23:36.825Z",
+  "updatedAt": "2026-11-04T00:23:37.482Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:20:48.334Z",
         "finishedAt": "2026-11-04T00:23:24.759Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "z6rE9G0o",
+          "author": "sunny",
+          "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
+          "createdAt": "2026-11-04T00:23:37.481Z",
+          "updatedAt": "2026-11-04T00:23:37.481Z"
+        }
+      ]
     }
   }
 }
