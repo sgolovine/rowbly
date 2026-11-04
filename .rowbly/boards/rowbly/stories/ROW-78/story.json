@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T00:22:08.921Z",
+  "updatedAt": "2026-11-04T00:24:45.144Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -29,11 +29,12 @@
     "software-factory": {
       "stageRun": {
         "stage": "in-refinement",
-        "status": "running",
+        "status": "finished",
         "attempt": 1,
         "worker": "mcp:ec7e56ec-26fe-489f-8ebb-a596ea034ce1",
         "by": "sunny",
-        "startedAt": "2026-11-04T00:21:50.638Z"
+        "startedAt": "2026-11-04T00:21:50.638Z",
+        "finishedAt": "2026-11-04T00:24:45.144Z"
       }
     }
   }
