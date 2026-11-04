@@ -26,6 +26,7 @@ export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from '.
 export {
   type KnownDataRootChoice,
   knownDataRoots,
+  missingLast,
   openKnownDataRoot,
   registerExistingDataRoot,
   removeKnownDataRoot,

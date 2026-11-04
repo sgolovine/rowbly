@@ -46,6 +46,11 @@ export async function knownDataRoots(home: string, current: DataRoot | null): Pr
   );
 }
 
+/** Known Data Roots with the missing ones moved to the end, each group keeping its order. */
+export function missingLast<T extends { missing: boolean }>(roots: readonly T[]): T[] {
+  return [...roots.filter((root) => !root.missing), ...roots.filter((root) => root.missing)];
+}
+
 /**
  * Opens the known Data Root at `path` as `--data-root` would, with its Local State and Me. It reads
  * `rowbly.config.json` first, so a Data Root that is gone or broken fails here, naming what to do,
