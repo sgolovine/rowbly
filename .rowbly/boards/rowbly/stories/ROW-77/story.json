@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:57:17.453Z",
+  "updatedAt": "2026-11-04T02:57:18.712Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:50:19.323Z",
+        "finishedAt": "2026-11-04T02:57:17.452Z"
+      }
     },
     "comments": {
       "comments": [
@@ -76,19 +87,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9 (thread mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-77-correction-1-launch.json. Branch: factory/row-77-correction-1, pushed to factory/row-77-implementation. PR: https://github.com/sgolovine/rowbly/pull/171. Head: d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d.",
           "createdAt": "2026-11-04T02:57:16.723Z",
           "updatedAt": "2026-11-04T02:57:16.723Z"
+        },
+        {
+          "id": "2wOb9q85",
+          "author": "sunny",
+          "body": "Correction 1 of https://github.com/sgolovine/rowbly/pull/171, head d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d (branch factory/row-77-implementation, origin/main merged). Responses: 1. Fixed in d24d1977: the Factory setup mark is saved as soon as setup succeeds. Onboarding keeps the setup result and passes it back to FactorySetupScreen as params.result, so the remount after the rowbly.config.json Plugin reload shows it and does not run setup again. The pending set and flush are gone, so ctrl+k, the Skip Button, quitting and switching Data Roots keep every mark. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. agentic-tui evidence (5 images, HTTP 200): setup saved while its step is open with the result kept after the reload, ctrl+k then Settings Onboarding reopens at Stage Prompts, and quit then relaunch opens there too, with no second setup run: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621290068. A fresh independent review is needed for the new head.",
+          "createdAt": "2026-11-04T02:57:18.711Z",
+          "updatedAt": "2026-11-04T02:57:18.711Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:50:19.323Z",
-        "finishedAt": "2026-11-04T02:57:17.452Z"
-      }
     }
   }
 }
