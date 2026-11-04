@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:21:11.553Z",
+  "updatedAt": "2026-11-04T05:27:29.097Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
+        "by": "sunny",
+        "startedAt": "2026-11-04T05:21:10.816Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -127,18 +137,15 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
+        },
+        {
+          "id": "JP5SGAsA",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:70cde097-1121-4446-95a3-c5ef16334be5 (thread mcp:70cde097-1121-4446-95a3-c5ef16334be5, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-2-launch.json. Branch: factory/row-89-correction-2, pushed to factory/row-89-part2. PR: https://github.com/sgolovine/rowbly/pull/174. Head: 1def5f303ae567c403f9d0b26c1250e183e088fb. PR174-only authoring; approved PR172 at775085cab8aee7f732459d66c1c6d1b07bd27422 remains untouched.",
+          "createdAt": "2026-11-04T05:27:29.097Z",
+          "updatedAt": "2026-11-04T05:27:29.097Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
-        "by": "sunny",
-        "startedAt": "2026-11-04T05:21:10.816Z"
-      }
     }
   }
 }
