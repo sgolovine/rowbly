@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T04:58:17.790Z"
+    "startedAt": "2026-11-04T05:21:10.816Z"
   },
   "identity": {
-    "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
+    "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
+    "threadId": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
     "verification": {
       "source": "Verified T3 t3_thread_launch receipt: codex/gpt-6.1-sol reasoningEffort=medium serviceTier=default",
-      "verifiedAt": "2026-11-04T04:58:18.526Z",
+      "verifiedAt": "2026-11-04T05:21:11.552Z",
       "by": "sunny"
     }
   },
@@ -30,15 +30,9 @@
       }
     ],
     "rule": "user named GPT6.1Sol temporary override",
-    "fallback": "User requested GPT6.1Sol while Claude session limited until2026-11-04T05:20:19Z",
+    "fallback": "Thread reserved with user-requested Sol before announced Claude reset; retain verified selection",
     "usage": "user-stated",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T04:58:17.790Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
-    "at": "2026-11-04T05:05:56.906Z",
-    "source": "Verified part2 repair820b843b committed;18sandbox policy/error/active/evidence/disabled/success probes pass, waiting policy revised, all4checks running; no livepolicy/rook touched",
-    "by": "sunny"
+    "selectedAt": "2026-11-04T05:21:10.816Z"
   }
 }

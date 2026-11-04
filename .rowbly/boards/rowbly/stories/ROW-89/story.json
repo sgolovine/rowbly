@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T04:58:18.527Z",
+  "updatedAt": "2026-11-04T05:21:11.553Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -29,6 +29,13 @@
           "body": "Returned to In Progress: factory/row-89-implementation, https://github.com/sgolovine/rowbly/pull/172, head a669b58efb62643b2ea6156a8874fd06cb1ec8cb: concurrent capture edits can bypass quiet-wait retries; detached HEAD returns unexpected instead of no-upstream. factory/row-89-part2, https://github.com/sgolovine/rowbly/pull/174, head 490d417c19cc3623a18982b76c2352aa5070a830: untracked policy directories bypass protection; git show errors are treated as disabled Git; clean checkouts ignore active synchronization; Merge Evidence is discarded. Both independent reviews request changes. All four local checks pass on both heads, all CI checks pass, and all six screenshot URLs return 200. Neither PR merged. Proposed ROWBLY.md policy is not approved: waiting requires outstanding-run reconciliation before another preparation attempt. See exact-head GitHub review comments for fixes and retained evidence.",
           "createdAt": "2026-11-04T04:57:26.334Z",
           "updatedAt": "2026-11-04T04:57:26.334Z"
+        },
+        {
+          "id": "3lZTA61p",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/172 at 775085cab8aee7f732459d66c1c6d1b07bd27422 by codex/gpt-6-astra: APPROVED.  No actionable findings. Fresh full review covered all 22 changed files, publication and recovery context, staged-content fingerprints, index reservation/foreign-lock ownership, capture quiet-wait retries and error reasons, detached HEAD, Plugin command attribution, ADR-0058 and amended ADRs, docs and all four byte-identical reference copies, and the deterministic gate-read barrier fix. Original Opus and correction Sol launch receipts and implementation records account for the commits; reviewer mcp:5c801dca-aa38-481c-8370-4c8a2c5b5ff6 is independent of both workers and models. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), all run at this exact head. Private probes confirm overlapping capture drift returns capture-changed, detached HEAD returns no-upstream, and crash recovery after index installation/stat refresh preserves unrelated staged content and a foreign index lock and completes the new state. All six CI checks are COMPLETED/SUCCESS; all 11 original/correction image URLs across both PRs return HTTP 200. Composition with fetched main and PR174 is textually clean. No product or Board edits, live rook operations, or merge. PR172 is held because the requested two-PR gate requires PR174 approval too. Evidence: /tmp/row89-review2-evidence.",
+          "createdAt": "2026-11-04T05:20:35.498Z",
+          "updatedAt": "2026-11-04T05:20:35.498Z"
         },
         {
           "id": "9T6Ywptf",
@@ -59,11 +66,46 @@
           "updatedAt": "2026-11-04T04:47:38.482Z"
         },
         {
+          "id": "U6EC0fvn",
+          "author": "sunny",
+          "body": "Returned-work corrections delivered in existing draft PR172 at 775085cab8aee7f732459d66c1c6d1b07bd27422 and PR174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. PR172: 1 capture drift now reaches capture-changed quiet-wait retry, with a deterministic assertion in the kept publication test; 2 detached HEAD returns no-upstream guidance. PR174: 1 complete untracked/staged/rename policy records and reviewable diffs before sync or cleanup; 2 explicit Plugin enabled/loaded inspection fails closed on errors; 3 clean requested/active runs retain identity and return waiting; 4 success/failure evidence retains run/commit paths and blocks readiness or retry. All four local checks pass at each exact head: typecheck, lint, 79 unit and 21 CLI tests, 100 total. Nineteen private preparation probes pass. Fresh screenshots uploaded on retained pr-assets/factory/row-89-correction-1, five URLs HTTP 200, numbered responses on both PRs. PR172 CI all six SUCCESS; PR174 only Clipboard smoke (windows-latest) pending in the final snapshot. Revised exact policy proposal retained at /tmp/row89-correction-evidence-cX046o/POLICY-PROPOSAL.md and sent to supervisor; not applied or approved. No live rook validation, Board mutations, merges or CI polling. Owned TUI resources stopped; branches and evidence retained. Ready for independent review.",
+          "createdAt": "2026-11-04T05:12:31.504Z",
+          "updatedAt": "2026-11-04T05:12:31.504Z"
+        },
+        {
+          "id": "U7GLZGjm",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-implementation, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/172. Head: 775085cab8aee7f732459d66c1c6d1b07bd27422. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
+          "createdAt": "2026-11-04T05:12:28.823Z",
+          "updatedAt": "2026-11-04T05:12:28.823Z"
+        },
+        {
+          "id": "aTVsGMo8",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/174 at bcb2e0b1184d3667498c21c173b2e4f91f61f3ca by codex/gpt-6-astra: CHANGES REQUESTED.  1. [P2] skills/rowbly-factory/scripts/launch-worker.mjs:439 and 558-560: reject missing or null synchronization state from git show. The preferences check accepts the other three fields, then syncState(undefined/null) bypasses validation and returns an empty evidence list. In two fresh private repositories, a successful show returning otherwise-valid preferences with synchronizationRun omitted or null led to later git status, git pull --ff-only, and status ready. This proves neither settlement nor the absence of an outstanding run/evidence; the actual git show contract supplies a synchronizationRun object even before the first run. Require a non-null usable status object at this inspection boundary and fail closed before sync, cleanup or pull when it is absent. Keep legitimate configuration/transport errors separately classified. Verify omitted and null states cannot reach any later Git operation; do not infer an empty state from an unreadable/missing result.  Fresh full review covered all four changed files and surrounding launch/command execution, full policy enumeration and both rename directions, staged/working/untracked diffs, enabled/loaded inspection, pending identities, evidence on success/failure, retry and settlement rules, per-machine/per-Stage scope, and composition with PR172/current main. All four original findings are repaired for their original inputs; the remaining finding extends the malformed-inspection boundary. Re-ran all 19 retained probes in new private repositories and six additional boundary probes: transport errors and malformed active runs stop, and renames into/out of the Data Root stop with reviewable policy diffs; omitted/null state incorrectly returns ready. Original Opus and correction Sol launch receipts and records account for the commits; verified Astra reviewer is independent of every author. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21) at this head. All six CI checks COMPLETED/SUCCESS; all 11 original/correction image URLs HTTP 200. No live rook/preferences/Board operations, product edits, agents or merge. Evidence: /tmp/row89-review2-evidence, especially boundaries/{missing-run,null-run}.result and .git-calls.  Policy review: the revised proposal correctly exempts waiting from automatic retry, retains/reconciles run identity and evidence, and requires policy/dirty review. Approve its text with this editorial replacement for the final sentence of replacement 2: \"Run no other Git or Board command during sync or backoff, except the bounded rowbly git show settlement reads permitted by the skill's Confirm publication protocol.\" This makes the general prohibition consistent with the explicit status-read exception in replacement 3 and the existing skill. The other proposed replacements are approved as written. Apply/publish only after the preparation blocker is repaired and independently approved; this review does not approve deploying the current script or moving ROW-89 Done.",
+          "createdAt": "2026-11-04T05:20:36.123Z",
+          "updatedAt": "2026-11-04T05:20:36.123Z"
+        },
+        {
+          "id": "feM305po",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf (thread mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-1-launch.json and exact returned correction report. Branch: factory/row-89-part2, pushed from retained correction local branches. PR: https://github.com/sgolovine/rowbly/pull/174. Head: bcb2e0b1184d3667498c21c173b2e4f91f61f3ca. Both correction parts authored by this same verified worker; existing Claude authorship remains recorded separately.",
+          "createdAt": "2026-11-04T05:12:29.547Z",
+          "updatedAt": "2026-11-04T05:12:29.547Z"
+        },
+        {
           "id": "gMzkrJ4V",
           "author": "sunny",
           "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
           "createdAt": "2026-11-04T02:21:17.622Z",
           "updatedAt": "2026-11-04T02:21:17.622Z"
+        },
+        {
+          "id": "jAsdyXao",
+          "author": "sunny",
+          "body": "Returned to In Progress: factory/row-89-part2, https://github.com/sgolovine/rowbly/pull/174, head bcb2e0b1184d3667498c21c173b2e4f91f61f3ca: missing or null synchronizationRun from otherwise-valid git show passes validation, runs later Git operations and returns ready; require a usable non-null status object and fail closed before sync/cleanup/pull. PR172 factory/row-89-implementation at 775085cab8aee7f732459d66c1c6d1b07bd27422 is independently APPROVED but not merged because both approvals are required first. Both heads pass all four local checks (79 unit,21 CLI) and all six CI checks; all 11 images return 200. Revised policy text approved with the settlement-read exception stated in review174; do not apply/publish until repair approval, and do not move Done before publication.",
+          "createdAt": "2026-11-04T05:20:36.745Z",
+          "updatedAt": "2026-11-04T05:20:36.745Z"
         },
         {
           "id": "pzwHgSei",
@@ -93,9 +135,9 @@
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:28f0a003-d347-4a69-9ae1-efbb35812dcf",
+        "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
         "by": "sunny",
-        "startedAt": "2026-11-04T04:58:17.790Z"
+        "startedAt": "2026-11-04T05:21:10.816Z"
       }
     }
   }
