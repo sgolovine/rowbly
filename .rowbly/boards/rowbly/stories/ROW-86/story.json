@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T04:22:32.114Z",
+  "updatedAt": "2026-11-04T04:26:39.644Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:e675b575-0170-4ab6-9e69-f8e8567703b0",
+        "by": "sunny",
+        "startedAt": "2026-11-04T04:22:31.364Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -50,18 +60,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83 (thread mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-86-implementation-launch.json. Branch: factory/row-86-implementation. PR: https://github.com/sgolovine/rowbly/pull/173. Head: c8931910f216f53e93be2998d68fc2401c9c3c62.",
           "createdAt": "2026-11-04T03:30:21.305Z",
           "updatedAt": "2026-11-04T03:30:21.305Z"
+        },
+        {
+          "id": "XoiX9n2M",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/173 at c8931910f216f53e93be2998d68fc2401c9c3c62 by codex/gpt-6-astra: APPROVED.  No actionable findings. Independently reviewed all 22 changed files against ROW-86, Comment NnYTfwvc, AGENTS.md and the applicable architecture/ADR/TUI rules, with base c22cc017308ba3529e8e3843e76d726dc7118129. Checked the six-step flow, dynamic Board selection and create/delete handling, direct skills and visit summary, free navigation and saved legacy/unknown ids, explicit default/minimal setup, preservation and atomic-conflict paths, custom Stage headings, inline result retention and editor return, completion, and all required docs/reference changes (the four reference copies are byte-identical). Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79/79) and pnpm test:cli (21/21), all passing at this head, plus a disposable service probe verifying exact minimal placeholder text, disabled entries and preservation when default setup follows. All 13 screenshot URLs returned HTTP 200; inspected supplied terminal evidence rather than creating a new TUI session. Provenance: reviewer worker/thread mcp:e675b575-0170-4ab6-9e69-f8e8567703b0, independent of sole implementing worker mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83 (codex/gpt-6.1-sol), including its correction commits and Board-only merges. All six current-head CI checks are COMPLETED/SUCCESS and no changes-requested review exists. Latest mergeability/state is UNKNOWN; this approval does not bypass that merge gate.",
+          "createdAt": "2026-11-04T04:26:39.643Z",
+          "updatedAt": "2026-11-04T04:26:39.643Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:e675b575-0170-4ab6-9e69-f8e8567703b0",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:22:31.364Z"
-      }
     }
   }
 }
