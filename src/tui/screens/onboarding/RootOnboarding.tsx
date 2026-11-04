@@ -155,7 +155,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
     autoBoard.current = onlyBoard.id;
     void (async () => {
       await services.context.use(onlyBoard.id);
-      setBoardChoice(onlyBoard.name);
+      setBoardChoice(onlyBoard.id);
       setSetup(null);
       setPromptChoice(null);
       setResults((prev) => ({ ...prev, board: `Board ${onlyBoard.name} is in context.` }));
@@ -246,7 +246,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
                 onSelect={(item) =>
                   void run(async () => {
                     await services.context.use(item.value);
-                    setBoardChoice(item.label);
+                    setBoardChoice(item.value);
                     await complete('board', `Board ${item.label} is in context.`);
                   })
                 }
@@ -259,13 +259,13 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
                 fields={[{ name: 'name', label: 'Board name', kind: 'text', required: true }]}
                 submitLabel="create Board"
                 onSubmit={async (values) => {
-                  if (createdBoard.current) {
+                  const boards = await services.boards.list();
+                  if (createdBoard.current && boards.some((b) => b.id === createdBoard.current)) {
                     await services.context.use(createdBoard.current);
                     await afterBoard(`Board ${createdBoard.current} is in context.`);
                     return;
                   }
                   const name = String(values.name).trim();
-                  const boards = await services.boards.list();
                   const board = await services.boards.create({
                     name,
                     id: slugFromName(name, new Set(boards.map((b) => b.id))),
@@ -356,8 +356,8 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
             </Text>
             <Text>
               Board in context:{' '}
-              {boardChoice ??
-                `${data.data.boards.find((b) => b.id === data.data?.board)?.name ?? 'none'} · not changed in this visit`}
+              {data.data.boards.find((b) => b.id === (boardChoice ?? data.data?.board))?.name ?? 'none'}
+              {boardChoice ? '' : ' · not changed in this visit'}
             </Text>
             <Text>
               Plugins on:{' '}

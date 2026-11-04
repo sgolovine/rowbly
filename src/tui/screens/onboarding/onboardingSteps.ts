@@ -29,7 +29,7 @@ export function completedSteps(done: readonly string[]): string[] {
   ];
 }
 
-/** The first shown step that is not done, or Finish when every one is. */
+/** The first shown step that is not done, or Summary when every one is. */
 export function firstIncomplete(steps: readonly StepId[], done: readonly string[]): StepId {
   return steps.find((id) => id !== 'finish' && !done.includes(id)) ?? 'finish';
 }
