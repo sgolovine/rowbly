@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:05:03.135Z",
-  "updatedAt": "2026-11-04T01:03:47.019Z",
+  "updatedAt": "2026-11-04T01:03:48.253Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:6b5a1f01-0294-4393-8dfd-a68f32f1128a",
+        "by": "sunny",
+        "startedAt": "2026-11-04T00:54:03.436Z",
+        "finishedAt": "2026-11-04T01:03:47.018Z"
+      }
     },
     "comments": {
       "comments": [
@@ -48,19 +59,15 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/160 at 1b727229b22eeba63ce852a18b5632e5e19d5fe1 by codex/gpt-6.1-sol: APPROVED. Verified implementation provenance (claudeAgent/claude-opus-5-5, worker mcp:7dc93eb1-cd43-40c7-a902-f748402b7891) against the supplied launch receipt and all three authored changes plus the two main merges. My recorded reviewer identity is codex/gpt-6.1-sol, worker/thread mcp:6b5a1f01-0294-4393-8dfd-a68f32f1128a, a different worker and model. Reviewed the complete diff, ModalFrame, Button, Form/ConfirmDialog registration, Shell layering, mouse handling and Factory setup against the Story and design system. The shared Close button uses the existing tokens/key cap and callback, retains the top-edge close control, and becomes noninteractive when covered; screen modals, Forms, ConfirmDialogs and other footer keys retain their hints. All three requested docs are updated; no new tests are required by AGENTS.md. All six screenshot URLs return HTTP 200 and their images show the expected info, covered, Form and ConfirmDialog states. No merge-blocking findings. Local validation at this exact head: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79 tests); pnpm test:cli PASS (21 tests). GitHub's nonempty current-head rollup also has all six checks completed successfully.",
           "createdAt": "2026-11-04T00:58:16.058Z",
           "updatedAt": "2026-11-04T00:58:16.058Z"
+        },
+        {
+          "id": "zZxCizCg",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/160 at 1b727229b22eeba63ce852a18b5632e5e19d5fe1. Merge commit f8eeebb1e97a6ccaa796b9b68b7941ce0c7373da. Independent review approved; all six PR checks passed and all six image URLs returned HTTP 200. Local typecheck, lint, test:unit (79 tests) and test:cli (21 tests) passed. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41751215152.",
+          "createdAt": "2026-11-04T01:03:48.252Z",
+          "updatedAt": "2026-11-04T01:03:48.252Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:6b5a1f01-0294-4393-8dfd-a68f32f1128a",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:54:03.436Z",
-        "finishedAt": "2026-11-04T01:03:47.018Z"
-      }
     }
   }
 }
