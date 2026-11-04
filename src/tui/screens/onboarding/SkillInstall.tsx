@@ -1,13 +1,41 @@
+import { isAbsolute, join, relative } from 'node:path';
 import { Box, Text } from 'ink';
 import { useState } from 'react';
-import { HARNESS_FOLDERS, HARNESSES, type Harness, installSkill, officialSkills } from '../../../services';
+import {
+  HARNESS_FOLDERS,
+  HARNESSES,
+  type Harness,
+  installSkill,
+  listAllSkills,
+  officialSkills,
+} from '../../../services';
 import { Form, Loading, SelectList } from '../../components';
 import { useAsync, useEscape, useIsActive, useKeyCapture, useKeyHints, useToast } from '../../hooks';
 import { theme } from '../../theme';
 
-/** One explicit install at a time, using the CLI service's no-overwrite behavior. */
+/** Shows an installed skill folder relative to the current folder when it is below it. */
+function shownPath(path: string): string {
+  const rel = relative(process.cwd(), path);
+  return rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel : path;
+}
+
+/**
+ * One explicit install at a time, using the CLI service's no-overwrite behavior. A skill is marked
+ * installed when it is below the current folder (as the CLI picker reads it) or was installed here.
+ */
 export function SkillInstall({ onDone }: { onDone(): void }) {
-  const skills = useAsync(officialSkills, []);
+  const [installedHere, setInstalledHere] = useState<{ name: string; path: string }[]>([]);
+  const skills = useAsync(async () => {
+    const [available, list] = await Promise.all([officialSkills(), listAllSkills(process.cwd())]);
+    return available.map((skill) => {
+      const found = list.official.find((entry) => entry.name === skill.name)?.installed ?? [];
+      const paths = [
+        ...found.map((at) => join(process.cwd(), at.path)),
+        ...installedHere.filter((at) => at.name === skill.name).map((at) => at.path),
+      ];
+      return { ...skill, installedAt: [...new Set(paths)].map(shownPath) };
+    });
+  }, [installedHere]);
   const toast = useToast();
   const [skill, setSkill] = useState<{ name: string; dir: string } | null>(null);
   const active = useIsActive();
@@ -66,6 +94,7 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
                 harness: values.harness as Harness,
               });
               toast.push('info', `Installed ${result.name} at ${result.path}`);
+              setInstalledHere((prev) => [...prev, { name: result.name, path: join(String(values.cwd), result.path) }]);
               setSkill(null);
             }}
           />
@@ -74,8 +103,16 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
       ) : (
         <SelectList
           items={[
-            ...availableSkills.map((skill) => ({ value: skill.dir, label: `Install ${skill.name}` })),
-            { value: '', label: 'Continue without installing more skills' },
+            ...availableSkills.map((skill) =>
+              skill.installedAt.length > 0
+                ? {
+                    value: skill.dir,
+                    label: `Install ${skill.name} (installed)`,
+                    description: skill.installedAt.join(', '),
+                  }
+                : { value: skill.dir, label: `Install ${skill.name}` },
+            ),
+            { value: '', label: 'Continue' },
           ]}
           onSelect={(item) =>
             item.value ? setSkill(availableSkills.find((skill) => skill.dir === item.value) ?? null) : onDone()
