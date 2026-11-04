@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:33:11.324Z",
+  "updatedAt": "2026-11-04T05:33:11.988Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -158,6 +158,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/174 at 1def5f303ae567c403f9d0b26c1250e183e088fb by codex/gpt-6-astra: APPROVED.  No actionable findings. Fresh full review covered all four changed files and surrounding command execution, policy enumeration and staged/working/untracked diffs, both rename directions across the Data Root, explicit enabled/loaded inspection, malformed and failed inspection, outstanding request/run identities, success/failure evidence, retry and settlement gates, machine/Stage scope, and composition with fetched main and PR172. Verified original Opus and both Sol correction records/launch receipts account for the commits; reviewer mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf is independent of every implementing worker and model. All 29 retained probes were rerun in fresh private repositories; omitted/null/invalid synchronization state stops before later Git operations, legitimate initial {} remains accepted, and transport/disabled/unloaded/active/evidence/policy/rename cases pass. Two additional configuration probes (resolution-off/no-upstream) also stop without retry or pull. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), at this exact head. All six current-head CI checks COMPLETED/SUCCESS; all 15 image URLs across both PRs HTTP 200. No live rook validation, product/Board edits or spawned agents. No TUI resources created. Evidence: /tmp/row89-review3-evidence. This supersedes the earlier PR174 changes-requested comments, including review6623249636.  PR172 remains unchanged at 775085cab8aee7f732459d66c1c6d1b07bd27422. Its independent approval at issuecomment-6623249375 and reviewer receipt remain valid; its six checks pass. Merge PR172 first, then recheck PR174 against new main without changing this approved head.  Policy review: APPROVED the four exact replacements supplied in the review-3 brief, including the explicit bounded rowbly git show exception to the prohibition on concurrent Git/Board commands. Waiting requires retained identity and reconciliation; evidence closes readiness/retry gates; policy and dirty states require review. This repairs the prior conditional approval's remaining prerequisite. The supervisor must apply and publish that reviewed policy after the product merge before ROW-89 can move Done.",
           "createdAt": "2026-11-04T05:33:11.323Z",
           "updatedAt": "2026-11-04T05:33:11.323Z"
+        },
+        {
+          "id": "6zAnIqke",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/172 at approved head 775085cab8aee7f732459d66c1c6d1b07bd27422 with --merge --match-head-commit. Merge commit b6521203 is now on origin/main. Its exact-head approval remained valid and all six checks passed. The single main-CI inspection immediately after merging showed only prior successful runs; no merge-head run was registered in that snapshot. PR174 at approved head 1def5f303ae567c403f9d0b26c1250e183e088fb composes cleanly locally with new main, but GitHub reports mergeable UNKNOWN / mergeStateStatus UNKNOWN. Handing the wait to the supervisor without polling. Live policy remains unapplied; ROW-89 is not Done.",
+          "createdAt": "2026-11-04T05:33:11.988Z",
+          "updatedAt": "2026-11-04T05:33:11.988Z"
         }
       ]
     }
