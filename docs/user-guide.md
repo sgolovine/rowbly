@@ -146,8 +146,7 @@ rowbly config show [--board <id>]
 - `init` records the new Data Root in the `dataRoots` of `~/.rowblyrc.json`. `--label <label>` names it
   there. `--default` makes it the default Data Root for commands from every directory unless `--data-root`
   names another; any other Data Root marked default stops being the default in the same write. In an
-  interactive terminal `init` asks for the label (leave it empty for none) and whether to make it the
-  default. Without `--default` the defaults stay as they are, and `init` warns when another default
+  interactive terminal `init` asks whether to make it the default; it does not ask for a label. Without `--default` the defaults stay as they are, and `init` warns when another default
   Data Root is opened ahead of the new one. `init` checks the location, the Board and
   `~/.rowblyrc.json` before it writes anything. If it fails after the Data Root exists, the error names
   the Data Root and how to finish setting it up. With `--json` it prints `{ root, board, known }`,
@@ -168,9 +167,9 @@ rowbly config show [--board <id>]
   an `EffectiveBoardConfig`.
 - In the TUI, **+ New Data Root** in the startup picker opens setup; with no known Data Roots, first-run setup follows global onboarding when no Data Root is found. It offers the same three locations
   as `init` (this directory, the home folder, or another folder whose path you type; `esc` goes back to
-  the choice), then asks for the label, whether to make it the default Data Root, the first Board and
-  your handle, which becomes global Me (`~/.rowblyrc.json`). Leave the label, the Board or the handle
-  empty to skip it; an empty handle keeps the global Me you have. The **Me** section of the settings
+  the choice), then asks whether to make it the default Data Root, the first Board and your handle,
+  which becomes global Me (`~/.rowblyrc.json`). It does not ask for a label: the Data Root switcher's `e`
+  sets one later. Leave the Board or the handle empty to skip it; an empty handle keeps the global Me you have. The **Me** section of the settings
   (`,`) shows Me and lists its two levels, **Global** (`~/.rowblyrc.json`) and **This Data Root**
   (`local.json`): `enter` edits the highlighted one; save a handle, or save it empty to clear that
   level. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press

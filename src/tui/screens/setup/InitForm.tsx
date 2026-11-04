@@ -11,8 +11,7 @@ import { theme } from '../../theme';
 const text = (value: FormValues[string] | undefined) => (typeof value === 'string' ? value.trim() : '');
 
 /**
- * The rest of `rowbly init` for `root`: its label, whether it is the default, the first Board and
- * global Me. `stay`: keep the current Data Root and go back, instead of opening the app on the new one.
+ * The rest of `rowbly init` for `root`: whether it is the default, the first Board and global Me. `stay`: keep the current Data Root and go back, instead of opening the app on the new one.
  */
 export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home: string; stay: boolean }) {
   const toast = useToast();
@@ -23,9 +22,7 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
   return (
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
-      <Text color={theme.inkFaint}>
-        The label names it in ~/.rowblyrc.json. Commands use the default Data Root unless --data-root names another.
-      </Text>
+      <Text color={theme.inkFaint}>Commands use the default Data Root unless --data-root names another.</Text>
       <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
       <Text color={theme.inkFaint}>
         Your handle sets global Me (`rowbly whoami`) in ~/.rowblyrc.json, the creator of your Stories in every Data
@@ -33,7 +30,6 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
       </Text>
       <Form
         fields={[
-          { name: 'label', label: 'Label', kind: 'text' },
           { name: 'default', label: 'Default Data Root', kind: 'boolean' },
           { name: 'boardName', label: 'Board name', kind: 'text' },
           { name: 'boardId', label: 'Board id', kind: 'text', fillFrom: { field: 'boardName', format: slugFromName } },
@@ -65,7 +61,6 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
             root,
             home,
             board,
-            label: text(values.label),
             default: values.default === true,
             warn,
           });

@@ -16,7 +16,7 @@ import {
   renderSetLocal,
 } from './render';
 import type { InitFlags } from './types';
-import { askDefault, askLabel, currentContext, firstBoard, initRoot } from './util';
+import { askDefault, currentContext, firstBoard, initRoot } from './util';
 
 export function registerSetup(program: Command): void {
   program
@@ -106,13 +106,12 @@ async function runInit(opts: InitFlags, cmd: Command): Promise<void> {
     // Fail before any prompt rather than after the last one.
     await assertInitTarget(root);
     const board = await firstBoard(opts, globals);
-    const label = await askLabel(opts, globals);
     const makeDefault = await askDefault(opts, globals);
     const result = await createDataRoot({
       root,
       home,
       ...(board ? { board } : {}),
-      ...(label ? { label } : {}),
+      ...(opts.label ? { label: opts.label } : {}),
       default: makeDefault,
       warn: (message) => warnings.push(message),
     });
