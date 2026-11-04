@@ -64,11 +64,25 @@
           "updatedAt": "2026-11-04T01:35:14.331Z"
         },
         {
+          "id": "UbDF8r0b",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7 (thread mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-correction-2-launch.json. Branch: factory/row-78-correction-2, pushed to factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: cfed5c1506ca3fdf67b31199b74ea8093daa9837.",
+          "createdAt": "2026-11-04T02:32:15.365Z",
+          "updatedAt": "2026-11-04T02:32:15.365Z"
+        },
+        {
           "id": "X2R0bziZ",
           "author": "sunny",
           "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. 1) Main conflict in src/tui/screens/onboarding/RootOnboarding.tsx: merged origin/main and kept ROW-80's SkillInstall onDone={afterAi} with ROW-78's inline setup/prompts steps. Merged main again for ROW-82 (PR #163, no onboarding overlap). Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: skills Continue returns to factory guidance, Factory setup and Stage Prompts show inline, toggle works, esc goes back, Finish onboarding works, Settings Stage Prompts is unchanged. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620379759. The new head needs independent review.",
           "createdAt": "2026-11-04T02:00:19.434Z",
           "updatedAt": "2026-11-04T02:00:19.434Z"
+        },
+        {
+          "id": "d8YGI0iA",
+          "author": "sunny",
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head cfed5c1506ca3fdf67b31199b74ea8093daa9837. 1) Main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167: merged origin/main (ba58d2d1), kept ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}; OnboardingPluginStep has an optional params prop and onboarding passes run: true to the inline Factory setup, which runs at once; the user guide combines the immediate-run and Settings-asks-first wording with the inline/esc guidance. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: Factory setup runs inline without confirmation, esc returns to factory guidance, Stage Prompts inline with hints and toggle, Finish onboarding works, Settings Stage Prompts unchanged and Settings Factory setup still asks first. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620938388. The new head needs independent review.",
+          "createdAt": "2026-11-04T02:32:17.642Z",
+          "updatedAt": "2026-11-04T02:32:17.642Z"
         },
         {
           "id": "gSXghBIx",
@@ -90,20 +104,6 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at f218e390b4238db93d1df8a0fdd9d166ba450903 by codex/gpt-6.1-sol: APPROVED. Reviewed all six changed files and surrounding Plugin hosting, Board resolution, key/escape capture, full-screen editor, onboarding completion/skip, Settings and documentation against ROW-78 and the repository TUI rules. No actionable code findings; no files excluded. Verified the three original commits and two correction merge commits against both recorded Claude Opus 5.5 workers and their launch receipts; this independent reviewer is worker mcp:618893bc-ecec-46da-bb3c-343ecb07d2c6. The reviewed merge base is cdd8a494abcfe6c61d25aa3c0d03b675189b649f. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) all pass. All six current-head GitHub checks completed SUCCESS. All 15 image URLs across both screenshot comments return HTTP 200; inspected the inline list/explanation/hints, toggled entry, full-screen editor, factory return and Settings images. No new TUI session was started. Merge remains blocked by current-main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167 merged. Repair must retain ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}, while passing ROW-75 run:true to the inline factory-setup Plugin screen and preserving its immediate-run documentation (Settings still asks first), together with the inline/esc guidance. Do not restore the pushed modal route. A repaired head requires a new independent review.",
           "createdAt": "2026-11-04T02:24:03.880Z",
           "updatedAt": "2026-11-04T02:24:03.880Z"
-        },
-        {
-          "id": "UbDF8r0b",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7 (thread mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-correction-2-launch.json. Branch: factory/row-78-correction-2, pushed to factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: cfed5c1506ca3fdf67b31199b74ea8093daa9837.",
-          "createdAt": "2026-11-04T02:32:15.365Z",
-          "updatedAt": "2026-11-04T02:32:15.365Z"
-        },
-        {
-          "id": "d8YGI0iA",
-          "author": "sunny",
-          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head cfed5c1506ca3fdf67b31199b74ea8093daa9837. 1) Main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167: merged origin/main (ba58d2d1), kept ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}; OnboardingPluginStep has an optional params prop and onboarding passes run: true to the inline Factory setup, which runs at once; the user guide combines the immediate-run and Settings-asks-first wording with the inline/esc guidance. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: Factory setup runs inline without confirmation, esc returns to factory guidance, Stage Prompts inline with hints and toggle, Finish onboarding works, Settings Stage Prompts unchanged and Settings Factory setup still asks first. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620938388. The new head needs independent review.",
-          "createdAt": "2026-11-04T02:32:17.642Z",
-          "updatedAt": "2026-11-04T02:32:17.642Z"
         }
       ]
     }
