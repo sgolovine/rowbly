@@ -46,6 +46,13 @@
           "updatedAt": "2026-11-04T00:47:11.219Z"
         },
         {
+          "id": "Mxg9romL",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/158 at eaf4009472cd173e2746f9e8ab21ed2a16fbec9b by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed both changed files against ROW-79 and AGENTS.md, including listAllSkills on load and after successful installs, session installs at other folders, displayed installation folders, continued selection of installed skills, unchanged no-overwrite service behavior, Continue last with the existing onDone callback, and the onboarding user-guide update. Checked the CLI picker, skills service, useAsync, SelectList, Form and onboarding caller for context. Base 2fb6f4c3073c0badb8ca529581a9a3619f1741dd; full diff covered, no exclusions. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed); all passed. All six current-head CI checks succeeded. Verified all four screenshot URLs return HTTP 200 and inspected the installed and post-Continue screenshots; did not repeat the implementation worker's manual TUI installation. Verified recorded implementation and reviewer launch identities: implementing claudeAgent/claude-opus-5-5 worker mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7; independent reviewer codex/gpt-6.1-sol worker mcp:2c77af36-6fd3-49da-8887-7ed73c70fb20. Both PR commits are accounted for by the recorded implementation and its main merge.",
+          "createdAt": "2026-11-04T00:53:05.490Z",
+          "updatedAt": "2026-11-04T00:53:05.490Z"
+        },
+        {
           "id": "kdNM42nu",
           "author": "sunny",
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7 (thread mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 t3_thread_launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-79-implementation-launch.json. Branch: factory/row-79-implementation. PR: https://github.com/sgolovine/rowbly/pull/158. Head: eaf4009472cd173e2746f9e8ab21ed2a16fbec9b (verified gh pr view 158).",
@@ -58,13 +65,6 @@
           "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
           "createdAt": "2026-11-04T00:23:37.481Z",
           "updatedAt": "2026-11-04T00:23:37.481Z"
-        },
-        {
-          "id": "Mxg9romL",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/158 at eaf4009472cd173e2746f9e8ab21ed2a16fbec9b by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed both changed files against ROW-79 and AGENTS.md, including listAllSkills on load and after successful installs, session installs at other folders, displayed installation folders, continued selection of installed skills, unchanged no-overwrite service behavior, Continue last with the existing onDone callback, and the onboarding user-guide update. Checked the CLI picker, skills service, useAsync, SelectList, Form and onboarding caller for context. Base 2fb6f4c3073c0badb8ca529581a9a3619f1741dd; full diff covered, no exclusions. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed) and pnpm test:cli (21 passed); all passed. All six current-head CI checks succeeded. Verified all four screenshot URLs return HTTP 200 and inspected the installed and post-Continue screenshots; did not repeat the implementation worker's manual TUI installation. Verified recorded implementation and reviewer launch identities: implementing claudeAgent/claude-opus-5-5 worker mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7; independent reviewer codex/gpt-6.1-sol worker mcp:2c77af36-6fd3-49da-8887-7ed73c70fb20. Both PR commits are accounted for by the recorded implementation and its main merge.",
-          "createdAt": "2026-11-04T00:53:05.490Z",
-          "updatedAt": "2026-11-04T00:53:05.490Z"
         }
       ]
     }
