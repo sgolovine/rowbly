@@ -4,26 +4,16 @@
   "boardId": "rowbly",
   "name": "Data Root Selection Changes",
   "description": "- When selecting a data root, filter missing roots so they appear at the bottom of the list\n- Currently if you attempt to select a data root that is missing, it will give a notification that it does not exist and tell you to remove it from the list. What I want to have happen instead is a modal comes up and says \"This data root no longer exists\" and then prompt the user to delete the data root.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0S",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:37:26.286Z",
+  "updatedAt": "2026-11-04T01:49:21.868Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:290cd831-2221-4638-8d4d-506f702bc2f1",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:33:13.757Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -53,6 +43,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/163 at 19ca37dd0298c32875491ccff05b8d8c1cecc43e by codex/gpt-6-astra: APPROVED. Verified the original and correction authoring receipts (both claudeAgent/claude-opus-5-5) and my distinct reviewer receipt (worker/thread mcp:290cd831-2221-4638-8d4d-506f702bc2f1, codex/gpt-6-astra); all seven branch-only commits are accounted for. Reviewed the full PR diff and all 11 files differing from current main, including ADR-0055, ADR-0042 Status and the ADR index: prior finding 1 is resolved. Checked stable missing-last grouping including a missing default in startup, composed DataRootList search, missing-on-open handling, modal confirmation/cancellation, list-only deletion, current-root protection, input/wheel gating and user/skill documentation. No blocking findings. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) passed. All 19 image URLs across original screenshots, ADR renders and composed TUI evidence return HTTP 200; visually inspected ADR and composed picker/modal captures. All six current-head GitHub checks succeeded on the initial inspection; merge readiness is checked separately.",
           "createdAt": "2026-11-04T01:37:26.285Z",
           "updatedAt": "2026-11-04T01:37:26.285Z"
+        },
+        {
+          "id": "cWh4phbm",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/163 at 19ca37dd0298c32875491ccff05b8d8c1cecc43e. Merge commit a87ec5fb551c08c9fccd6faf740fcece39efa7c5. Independent review approved; all six PR checks succeeded, all 19 images load, and all four local checks passed (79 unit, 21 CLI). Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41756486727.",
+          "createdAt": "2026-11-04T01:49:21.217Z",
+          "updatedAt": "2026-11-04T01:49:21.217Z"
         },
         {
           "id": "klGIzUCm",
