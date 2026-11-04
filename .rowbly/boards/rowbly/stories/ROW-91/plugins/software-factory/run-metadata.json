@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:8ad7e439-17a7-4ad9-b374-4826e5bfc877",
-    "at": "2026-11-04T17:44:24.404Z",
-    "source": "worker message: review APPROVED at dfde82b0, awaiting CI (t3 run ordinal 1 completed 17:44:12Z)",
+    "at": "2026-11-04T17:53:57.488Z",
+    "source": "worker message: returned to In Progress for conflict with main, FACTORY-DONE (t3 run ordinal 2 completed 17:53:43Z)",
     "by": "sunny"
   }
 }
