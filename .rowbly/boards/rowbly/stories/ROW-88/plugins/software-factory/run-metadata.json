@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T03:07:14.462Z"
   },
+  "identity": {
+    "worker": "mcp:6555caf2-ee96-48c9-802d-23d30f52d9d8",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:6555caf2-ee96-48c9-802d-23d30f52d9d8",
+    "verification": {
+      "source": "Verified T3 launch receipt codex/gpt-6-astra reasoningEffort=medium serviceTier=default",
+      "verifiedAt": "2026-11-04T03:07:15.213Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "codex",
     "model": "gpt-6-astra",
