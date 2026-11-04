@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:35:37.734Z",
+  "updatedAt": "2026-11-04T05:35:38.375Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -173,6 +173,13 @@
           "body": "Merged https://github.com/sgolovine/rowbly/pull/174 at approved head 1def5f303ae567c403f9d0b26c1250e183e088fb; merge commit e8a96ff6117a145645bc9e1ac987da5ab35960af. Fresh final gates confirmed CLEAN/MERGEABLE and all six checks COMPLETED/SUCCESS. Main CI inspected once after merge: run 41779962844 queued at that snapshot.",
           "createdAt": "2026-11-04T05:35:37.734Z",
           "updatedAt": "2026-11-04T05:35:37.734Z"
+        },
+        {
+          "id": "c5Hga6kY",
+          "author": "sunny",
+          "body": "Verified policy publication f5e3a519905c94af4a599ca9fb8a5536078b5fe1 on origin/main: only .rowbly/ROWBLY.md changed, and its diff exactly matches the four approved replacements, including the bounded settlement-read exception. Supervisor confirmed fresh synchronized publication. Both independently approved PRs are merged; all four review checks passed (typecheck, lint, 79 unit tests, 21 CLI tests). No live rook commands or preferences changes. ROW-89 is ready for Done.",
+          "createdAt": "2026-11-04T05:35:38.374Z",
+          "updatedAt": "2026-11-04T05:35:38.374Z"
         }
       ]
     }
