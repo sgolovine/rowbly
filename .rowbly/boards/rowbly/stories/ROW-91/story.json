@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Onboarding: Consistent continue / back buttons",
   "description": "## Goal\n\nEvery onboarding step uses the same Back / Next / Skip onboarding Buttons for navigation, instead of list items such as **Continue** or **Get started**.\n\n## Current behavior\n\n- **Data Root onboarding** (`src/tui/screens/onboarding/RootOnboarding.tsx`) already shows `OnboardingNav` (Back `ctrl+←`, Next/Finish `ctrl+→`, Skip onboarding `ctrl+k`) under every step.\n- The **Agent skills** step (`SkillInstall.tsx`) also has a **Continue without installing more skills** list item that calls `onDone` (the same as Next). See the attached screenshot.\n- **Global onboarding** (`GlobalOnboarding.tsx`: Welcome, Me, Data Roots, register form) has no Back/Next Buttons. It advances only through a **Get started** list item, the Me form submit (`next`), and a **Continue** list item. There is no way back.\n\n## Changes\n\n1. **Agent skills:** remove the **Continue without installing more skills** item and the now unused `onDone` prop of `SkillInstall`. Next already marks the step done (`next()` in `RootOnboarding`).\n2. **Global onboarding:** show `OnboardingNav` under the Welcome, Me and Data Roots steps, with the same keys and footer hint as Data Root onboarding (text fields keep their keys; the Buttons still work).\n   - Welcome: remove **Get started**. Back is hidden (first step); Next opens Me.\n   - Me: the form submit saves the handle and stays on the step with a ✓ result (label `save`). Next goes to Data Roots without saving, Back to Welcome.\n   - Data Roots: remove **Continue** and keep **Register an existing Data Root**. Back goes to Me. The last step shows **Finish**, which calls `onDone` as Continue did.\n   - Register form: unchanged. `esc` returns to Data Roots; the nav is hidden or Back returns to Data Roots.\n   - Skip onboarding (`ctrl+k`) still saves completion via `OnboardingScreen`.\n3. **Summary** keeps its **Finish onboarding** item as the step action. Finish in the nav does the same.\n\n## Out of scope\n\n- Changing the Back/Next key bindings: that is ROW-90 (shift+←/→). Use whatever keys `OnboardingNav` and `RootOnboarding` have when this lands. If ROW-90 merges first, reuse its keys and hint.\n- The Stage Prompts step choices (`FactorySetupScreen`) need no change.\n\n## Acceptance criteria\n\n- No onboarding step offers a Continue / Get started list item; every step shows the nav Buttons.\n- Global onboarding can go back from Me and Data Roots.\n- Finishing global onboarding still routes as today (startup picker, setup, or Data Root onboarding).\n\n## Docs\n\nUpdate `docs/user-guide.md` › Onboarding (the Continue sentences for global onboarding and Agent skills) and `skills/rowbly/references/tui.md` (Skills is done on install or Next). No test references the removed labels; per AGENTS.md no new test is needed.",
-  "stage": "in-refinement",
+  "stage": "in-progress",
   "rank": "a1",
   "priority": null,
   "labels": [],
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T17:15:29.207Z",
-  "updatedAt": "2026-11-04T17:29:30.291Z",
+  "updatedAt": "2026-11-04T17:29:32.178Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:017e2de5-0a87-4cbb-9d75-4be84e8c66c7",
-        "by": "sunny",
-        "startedAt": "2026-11-04T17:18:29.198Z",
-        "finishedAt": "2026-11-04T17:29:30.291Z"
-      }
     }
   }
 }
