@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-pr",
+    "attempt": 1,
+    "startedAt": "2026-11-04T01:18:22.162Z"
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6-astra",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "medium"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "ROWBLY.md independent review: differs from every implementing claude-opus-5-5 worker",
+    "fallback": null,
+    "usage": "unknown",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-04T01:18:22.162Z"
+  }
+}
