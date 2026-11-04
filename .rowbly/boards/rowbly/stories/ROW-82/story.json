@@ -4,25 +4,33 @@
   "boardId": "rowbly",
   "name": "Data Root Selection Changes",
   "description": "- When selecting a data root, filter missing roots so they appear at the bottom of the list\n- Currently if you attempt to select a data root that is missing, it will give a notification that it does not exist and tell you to remove it from the list. What I want to have happen instead is a modal comes up and says \"This data root no longer exists\" and then prompt the user to delete the data root.",
-  "stage": "in-progress",
-  "rank": "a9",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:05:36.844Z",
+  "updatedAt": "2026-11-04T01:14:35.515Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:05:36.089Z"
-      }
+    "comments": {
+      "comments": [
+        {
+          "id": "ywLicUj1",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:84b28722-ce2f-401d-aaff-38e87f85da1f (thread mcp:84b28722-ce2f-401d-aaff-38e87f85da1f, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-implementation-launch.json. Branch: factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: b184dff8749123a1b98e790c6e6bd7e109955f28 (verified gh pr view 163).",
+          "createdAt": "2026-11-04T01:14:31.551Z",
+          "updatedAt": "2026-11-04T01:14:31.551Z"
+        },
+        {
+          "id": "zmDGqkRH",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/163 (branch factory/row-82-implementation, head b184dff8749123a1b98e790c6e6bd7e109955f28). Missing Data Roots are listed last in the startup picker and the D switcher. Picking one opens a modal that says the Data Root no longer exists and asks to delete it from the list (removes its ~/.rowblyrc.json entry); a root that vanishes after the list loads gets the same modal. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass; manual agentic-tui run of switcher and picker, including the ROW-83 wheel after merging main. Screenshots: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619803940. No review findings to answer.",
+          "createdAt": "2026-11-04T01:14:34.864Z",
+          "updatedAt": "2026-11-04T01:14:34.864Z"
+        }
+      ]
     }
   }
 }
