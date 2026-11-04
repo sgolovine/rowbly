@@ -1252,6 +1252,7 @@ Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~
 global onboarding, or in the Data Root's committed `rowbly.config.json` for Data Root onboarding.
 Absent or false means incomplete. Data Root completion is shared: once that configuration reaches
 other people, onboarding stays suppressed for them too. Switching to an incomplete Data Root opens
-its onboarding. Reopen either flow with **Settings › Onboarding**; revisiting leaves the flag set and
+its onboarding. Reopen either flow with **Settings › Onboarding**: it closes Settings and opens the full-screen
+flow, which ends where it does at startup. Revisiting leaves the flag set and
 existing records intact. Errors keep the current step available for retry. In registration and skill
 installation forms, **esc** returns to the preceding choice. Demo mode bypasses onboarding.
