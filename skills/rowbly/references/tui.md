@@ -17,14 +17,15 @@ fallback and first-run onboarding/setup remain available. After selection, globa
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Onboarding fills the terminal with no header or sidebars; their keys (`ctrl+b`, `\`, `{`/`}`, `[`/`]`, `1`-`9`, `ctrl+p`, `n`, `,`, `D`, Plugin Actions) do nothing until it ends. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
-existing Data Roots only. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
+existing Data Roots only, in Welcome, Me and Data Roots steps with the same Back, Next (Finish on the
+last step) and Skip onboarding Buttons; saving Me stays on its step. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
 and Summary tabs. Exactly one Board skips its tab, puts it in context and marks it done; no Boards
 offers creation, several offers selection. Plugins is always shown, Stage Prompts only with Software
 Factory on. Agent skills opens directly without an AI question. Click any tab; Back `ctrl+←`, Next
 `ctrl+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
 Stage Prompts offers default prompts, minimal placeholders (all off), or inline editing (`esc`
 returns). Population is explicit, keeps existing Stages/prompts/files and shows added/kept/skipped
-inline; errors allow retry. Skills is done on install or continuing, Stage Prompts on successful
+inline; errors allow retry. Skills is done on install or Next, Stage Prompts on successful
 population or Next. Summary lists this visit's choices, skill folders and prompt outcome; unvisited
 steps read not changed in this visit. Changes and finished `onboardingSteps` save immediately;
 reopening starts at the first incomplete step. Legacy `ai` counts as `skills`, `factory-setup` as
