@@ -8,9 +8,14 @@
 //       [--min-free-gb <n>] [--timeout <seconds>]
 //   node launch-worker.mjs send --thread <threadId> --title <title> --message <file> --project <dir>
 //       [--ssh <host>] [--t3 <path>] [--timeout <seconds>]
+//   node launch-worker.mjs prepare-checkout --project <dir> --rowbly <command> [--ssh <host>]
+//       [--path <dirs>] [--t3 <path>] [--data-root <dir>] [--branch <name>] [--min-free-gb <n>]
+//       [--cleanup <commit message>] [--timeout <seconds>]
 //
-// Prints one JSON line. Exit 0: launched, existing or sent. Exit 1: nothing was started or sent; fix
-// the reason and run it again. Exit 2: conflict, unknown or unverified; look before running it again.
+// Prints one JSON line. Exit 0: launched, existing, sent or ready. Exit 1: nothing was started or
+// sent, or the checkout is not ready; fix the reason and run it again. Exit 2: conflict, unknown,
+// unverified, or a checkout with changes to look at (dirty, policy) or a sync still running
+// (waiting); look before running it again.
 
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
@@ -20,7 +25,20 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const LAUNCHER_FILE = join(dirname(fileURLToPath(import.meta.url)), '..', 'assets', 'launcher.md');
-const EXIT = { launched: 0, existing: 0, sent: 0, error: 1, failed: 1, conflict: 2, unknown: 2, unverified: 2 };
+const EXIT = {
+  launched: 0,
+  existing: 0,
+  sent: 0,
+  ready: 0,
+  error: 1,
+  failed: 1,
+  conflict: 2,
+  unknown: 2,
+  unverified: 2,
+  dirty: 2,
+  policy: 2,
+  waiting: 2,
+};
 const IDLE = new Set(['completed', 'interrupted', 'cancelled', 'failed']);
 const POLL_MS = 3000;
 
@@ -54,7 +72,8 @@ async function main() {
     t3Bin = await absolute(flags.t3 ?? 't3');
     if (command === 'launch') result = await launch();
     else if (command === 'send') result = await send();
-    else stop('error', { reason: 'usage: launch-worker.mjs launch|send --flag value …' });
+    else if (command === 'prepare-checkout') result = await prepareCheckout();
+    else stop('error', { reason: 'usage: launch-worker.mjs launch|send|prepare-checkout --flag value …' });
   } catch (error) {
     result =
       error instanceof Result
@@ -281,6 +300,310 @@ async function send() {
     await sleep(POLL_MS);
   }
   stop('unknown', { ...base, reason: 'message not seen in the thread before the timeout' });
+}
+
+// Update one checkout before it runs workers, in one call: check what it needs, publish Rowbly
+// changes with the Git Plugin only when there are some, report or clean up other changes, then
+// fast-forward. Every command runs in the project, one at a time, never beside `rowbly git sync`.
+async function prepareCheckout() {
+  required('project', 'rowbly');
+  const dataRoot = flags['data-root'] ?? '.rowbly';
+  const branch = flags.branch ?? 'main';
+  const extraPath = flags.path ? (await Promise.all(flags.path.split(':').map(absolute))).join(':') : '';
+  const env = extraPath ? `PATH=${q(extraPath)}:"$PATH" ` : '';
+  const run = (cmd, input) => sh(`cd ${q(project)} && ${env}${cmd}`, input);
+  const rowbly = (args) => run(`${flags.rowbly} --data-root ${q(dataRoot)} --json --no-prompt ${args}`);
+  const out = { project, dataRoot, branch, prerequisites: {}, failures: [] };
+  const fail = (check, reason, fix) => out.failures.push({ check, reason, ...(fix && { fix }) });
+  const finish = (status) => new Result(status, out);
+
+  // 1. Everything the checkout needs, all reported at once.
+  const checks = {
+    node: ['node --version', 'install Node, or pass --path with its bin folder'],
+    rowbly: [`${flags.rowbly} --version`, 'pass the --rowbly command ROWBLY.md records for this machine'],
+    gh: ['gh auth status', 'run `gh auth login` there'],
+    ...(flags.t3 && { t3: [`${q(t3Bin)} --version`, 'check the t3 path (`ls ~/.t3/runtime/versions`)'] }),
+  };
+  for (const [name, [cmd, fix]] of Object.entries(checks)) {
+    const result = await run(cmd);
+    const lines = (result.code === 0 ? result.stdout || result.stderr : result.stderr || result.stdout)
+      .trim()
+      .split('\n');
+    // A failure's error line says more than the first line, such as a stack frame.
+    const text = (result.code === 0 ? lines[0] : lines.find((l) => /error|not found|no such/i.test(l))) ?? lines[0];
+    out.prerequisites[name] = result.code === 0 ? { ok: true, version: text } : { ok: false, reason: text };
+    if (result.code !== 0) fail(name, text || `exit ${result.code}`, fix);
+  }
+  if (flags['min-free-gb']) {
+    const { stdout } = await sh(`awk '/^MemAvailable:/ {print $2}' /proc/meminfo`);
+    const gb = Number(stdout) / 1024 / 1024;
+    out.memory = { availableGb: Number(gb.toFixed(1)), minimumGb: Number(flags['min-free-gb']) };
+    if (!(gb >= Number(flags['min-free-gb'])))
+      fail('memory', `only ${gb.toFixed(1)} GB available, need ${flags['min-free-gb']}`, 'wait or free memory');
+  }
+  const head = await run('git symbolic-ref --short HEAD');
+  out.currentBranch = head.stdout.trim();
+  if (head.code !== 0 || out.currentBranch !== branch)
+    fail('branch', `the checkout is on ${out.currentBranch || 'no branch'}, not ${branch}`, `git switch ${branch}`);
+  if (out.failures.length) return finish('failed');
+
+  // 2. What is uncommitted. Hand edits to the factory's policy are never synced or cleaned up.
+  const changes = async (...paths) => {
+    const result = await run(`git status --porcelain=v1 -z --untracked-files=all -- ${paths.map(q).join(' ')}`);
+    if (result.code !== 0) throw new Error(`git status failed: ${result.stderr.trim()}`);
+    const records = result.stdout.split('\0');
+    const entries = [];
+    for (let i = 0; i < records.length - 1; i++) {
+      const status = records[i].slice(0, 2);
+      const path = records[i].slice(3);
+      const from = /[RC]/.test(status) ? records[++i] : undefined;
+      if (!path || (/[RC]/.test(status) && !from)) throw new Error('Malformed git status record');
+      entries.push({ status, path, ...(from && { from }) });
+    }
+    return entries;
+  };
+  const prefix = await run(`git -C ${q(dataRoot)} rev-parse --show-prefix`);
+  if (prefix.code !== 0) throw new Error(`Cannot locate the Data Root in Git: ${prefix.stderr.trim()}`);
+  const rootPrefix = prefix.stdout.replace(/\n$/, '');
+  out.dataRootChanges = (await changes('.')).filter((entry) =>
+    [entry.path, entry.from].some((path) => path?.startsWith(rootPrefix)),
+  );
+  const policyPath = (path) => /(?:^|\/)ROWBLY\.md$|\/stage-prompts\/[^/]+\.md$/.test(path);
+  out.policyChanges = out.dataRootChanges.filter((entry) =>
+    [entry.path, entry.from].some((path) => path && policyPath(path)),
+  );
+  if (out.policyChanges.length) {
+    // Include both sides of renames, staged content, and whole new files. NUL-delimited status
+    // avoids Git's quoting and directory collapsing, including paths with spaces or newlines.
+    out.policyDiff = [];
+    for (const entry of out.policyChanges) {
+      const paths = [...new Set([entry.path, entry.from].filter(Boolean))];
+      const args = paths.map(q).join(' ');
+      const staged = await run(`git diff --no-ext-diff --no-textconv --cached -- ${args}`);
+      const worktree = await run(`git diff --no-ext-diff --no-textconv -- ${args}`);
+      const untracked = entry.status === '??' ? await run(`git diff --no-index -- /dev/null ${q(entry.path)}`) : null;
+      if (staged.code !== 0 || worktree.code !== 0 || (untracked && ![0, 1].includes(untracked.code)))
+        throw new Error('Could not read the complete policy diff; review the checkout by hand');
+      out.policyDiff.push({
+        paths,
+        staged: staged.stdout,
+        worktree: worktree.stdout,
+        ...(untracked && { untracked: untracked.stdout }),
+      });
+    }
+    fail('policy', 'ROWBLY.md or a Stage Prompt has uncommitted changes', 'ask the user to commit or discard them');
+    return finish('policy');
+  }
+
+  // 3. Establish Plugin status explicitly. An inspection error is never proof that Git is off.
+  const listed = await rowbly('plugins list');
+  const plugins = parseJson(listed.stdout);
+  const git = Array.isArray(plugins) && plugins.find((plugin) => plugin?.id === 'git');
+  if (listed.code !== 0 || typeof git?.enabled !== 'boolean' || typeof git?.loaded !== 'boolean') {
+    fail(
+      'git',
+      rowblyError(listed)?.message ?? 'Could not establish Git Plugin status',
+      'resolve the inspection error before preparing again',
+    );
+    return finish('failed');
+  }
+  out.git = {
+    on: git.enabled && git.loaded,
+    enabled: git.enabled,
+    loaded: git.loaded,
+    ...(git.reason && { reason: git.reason }),
+  };
+  out.sync = { ran: false };
+  if (out.git.on) {
+    const show = await rowbly('git show');
+    const preferences = parseJson(show.stdout);
+    if (
+      show.code !== 0 ||
+      typeof preferences?.automaticCommits !== 'boolean' ||
+      typeof preferences?.frequency !== 'string' ||
+      typeof preferences?.synchronization?.enabled !== 'boolean' ||
+      preferences.synchronizationRun == null
+    ) {
+      out.git.inspection = { code: show.code, error: rowblyError(show), stdout: show.stdout, stderr: show.stderr };
+      fail(
+        'git',
+        rowblyError(show)?.message ?? 'Malformed Git preferences or failed inspection',
+        'resolve inspection or recovery before preparing again',
+      );
+      return finish('failed');
+    }
+    Object.assign(out.git, {
+      automaticCommits: preferences.automaticCommits,
+      frequency: preferences.frequency,
+      automaticMergeResolution: preferences.synchronization.enabled,
+    });
+    out.sync = { ran: false, ...syncState(preferences.synchronizationRun) };
+    if (out.sync.status === 'waiting') return finish('waiting');
+    if (out.sync.status === 'failed') {
+      fail('sync', out.sync.message, SYNC_FIXES[out.sync.reason]);
+      return finish('failed');
+    }
+    if (out.dataRootChanges.length) {
+      out.sync = await syncWithRetries(rowbly);
+      if (out.sync.status === 'waiting') return finish('waiting');
+      if (out.sync.status !== 'synchronized') {
+        fail('sync', out.sync.message, SYNC_FIXES[out.sync.reason] ?? SYNC_FIXES.unexpected);
+        return finish('failed');
+      }
+    }
+  }
+
+  // 4. Anything else uncommitted goes to a cleanup branch and PR, but only after someone read it.
+  out.otherChanges = await changes('.');
+  if (out.otherChanges.length) {
+    if (!flags.cleanup) {
+      out.diffStat = (await run('git diff --stat HEAD')).stdout.slice(0, 20000);
+      fail(
+        'changes',
+        'uncommitted changes outside Rowbly data',
+        'read them, then run again with --cleanup "<summary>"',
+      );
+      return finish('dirty');
+    }
+    const stamp = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
+    const cleanupBranch = `factory-cleanup/${stamp}`;
+    const body = `${flags.cleanup}\n\nThe factory found these changes uncommitted in ${project} on ${flags.ssh ?? 'this computer'} when it updated the checkout.`;
+    const steps = [
+      `git switch -c ${q(cleanupBranch)}`,
+      'git add -A',
+      `git commit -q -m ${q(flags.cleanup)}`,
+      `git push -q -u origin ${q(cleanupBranch)}`,
+      `gh pr create --base ${q(branch)} --head ${q(cleanupBranch)} --title ${q(flags.cleanup)} --body-file -`,
+    ];
+    let pr = '';
+    for (const step of steps) {
+      const result = await run(step, step.startsWith('gh pr') ? body : '');
+      if (result.code !== 0) {
+        await run(`git switch ${q(branch)}`);
+        fail('cleanup', `${step}: ${(result.stderr || result.stdout).trim()}`, 'finish the cleanup by hand');
+        out.cleanup = { branch: cleanupBranch };
+        return finish('failed');
+      }
+      if (step.startsWith('gh pr')) pr = result.stdout.trim();
+    }
+    const back = await run(`git switch ${q(branch)}`);
+    out.cleanup = { branch: cleanupBranch, pr };
+    if (back.code !== 0) {
+      fail('cleanup', `could not switch back to ${branch}: ${back.stderr.trim()}`, `git switch ${branch}`);
+      return finish('failed');
+    }
+  }
+
+  // 5. Fast-forward to the upstream.
+  const before = (await run('git rev-parse HEAD')).stdout.trim();
+  const pull = await run('git pull -q --ff-only');
+  const after = (await run('git rev-parse HEAD')).stdout.trim();
+  out.pulled = { from: before, to: after };
+  if (pull.code !== 0) {
+    fail('pull', (pull.stderr || pull.stdout).trim(), 'the branch diverged or has no upstream; tell the user');
+    return finish('failed');
+  }
+  return finish('ready');
+}
+
+// What to do about a failed `rowbly git sync`, by its `details.reason`.
+const SYNC_FIXES = {
+  'resolution-off':
+    'run `rowbly git configure --automatic-merge-resolution on` there when ROWBLY.md allows it; otherwise ask',
+  'no-upstream': 'check out the branch and set its upstream',
+  conflict: 'stop and report: a Git operation or conflict needs a person',
+  evidence: 'stop and report the evidence paths',
+  'capture-changed': 'someone kept saving Rowbly data; run again later',
+  'index-changed': 'another Git command kept changing the index; run again later',
+  network: 'check the network and Git credentials, then run again',
+  unexpected: 'read the message; report it',
+};
+const RETRY_WAITS_MS = [10_000, 20_000];
+
+// `rowbly git sync`, tried 3 times in all, about 10 then 20 seconds apart, only while it fails for
+// a reason waiting can fix. A run that is still requested or active is waiting, not a failure.
+async function syncWithRetries(rowbly) {
+  for (let attempt = 1; ; attempt++) {
+    const startedAt = Date.now();
+    const result = await rowbly('git sync');
+    const error = rowblyError(result);
+    const run = parseJson(result.stdout) ?? error?.details?.synchronizationRun;
+    const state = syncState(run);
+    const base = { ran: true, attempts: attempt, ...state };
+    if (state.status === 'waiting' || state.status === 'failed') return base;
+    if (
+      result.code === 0 &&
+      run?.last?.kind === 'synchronized' &&
+      run.last.startedAt >= startedAt - 1000 &&
+      run.last.finishedAt >= run.last.startedAt
+    )
+      return { ...base, status: 'synchronized' };
+    const reason = error?.details?.reason ?? 'unexpected';
+    const failed = {
+      ...base,
+      status: 'failed',
+      reason,
+      code: result.code,
+      message: error?.message ?? (result.stderr.trim() || 'sync did not report a fresh completed result'),
+      ...(error?.details?.paths && { paths: error.details.paths }),
+    };
+    if (error?.details?.retryable !== true || attempt > RETRY_WAITS_MS.length) return failed;
+    await sleep(RETRY_WAITS_MS[attempt - 1]);
+  }
+}
+
+// Preserve the complete run identity and evidence even on failure. Waiting and evidence close
+// every later preparation gate, including retries, cleanup and pull.
+function syncState(run) {
+  const identity = run ? { synchronizationRun: run, ...(run.last?.commit && { commit: run.last.commit }) } : {};
+  if (
+    run != null &&
+    (typeof run !== 'object' ||
+      Array.isArray(run) ||
+      (run.requested !== undefined && (typeof run.requested !== 'string' || !run.requested)) ||
+      (run.active !== undefined && (typeof run.active?.id !== 'string' || !run.active.id)) ||
+      (run.last !== undefined &&
+        (!['synchronized', 'failed', 'interrupted'].includes(run.last?.kind) ||
+          !Number.isFinite(run.last.startedAt) ||
+          !Number.isFinite(run.last.finishedAt) ||
+          !Array.isArray(run.last.evidence) ||
+          run.last.evidence.some((path) => typeof path !== 'string'))))
+  )
+    return {
+      ...identity,
+      status: 'failed',
+      reason: 'unexpected',
+      message: 'Malformed synchronization state; reconcile before preparing again',
+    };
+  const evidence = run?.last?.evidence ?? [];
+  const retained = { ...identity, evidence };
+  if (run?.requested || run?.active) return { ...retained, status: 'waiting' };
+  if (evidence.length)
+    return {
+      ...retained,
+      status: 'failed',
+      reason: 'evidence',
+      message: 'Merge Evidence requires reconciliation before preparation can continue',
+    };
+  return retained;
+}
+
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+// The JSON error a Rowbly command prints last on stderr.
+function rowblyError(result) {
+  const line = result.stderr
+    .trim()
+    .split('\n')
+    .reverse()
+    .find((l) => l.startsWith('{"error"'));
+  return line ? parseJson(line)?.error : undefined;
 }
 
 // The launcher thread: the newest with the launcher title, else a new one from assets/launcher.md.

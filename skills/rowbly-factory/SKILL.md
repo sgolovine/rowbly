@@ -29,19 +29,31 @@ belong in `ROWBLY.md` or the user's instructions.
 
 ## Update the checkout
 
-Do this first, in the git repository that holds the Data Root (find it as the reference says). Skip
-it when the Data Root is not in a git repository.
+Update every checkout the factory uses, the one you run in and each one workers run in on another
+machine, before it is used: yours first, at start; another machine's before it runs its first
+worker. Skip a checkout that is not a git repository. Run these steps one at a time, in the git
+repository that holds the Data Root (find it as the reference says).
+[`scripts/launch-worker.mjs prepare-checkout`](references/remote-launch.md#prepare-a-checkout) does
+all of them in one call, here or over SSH, and returns one JSON result; use it for another machine,
+and for yours when you can.
 
-1. **Board changes first.** If `rowbly plugins list` shows `git` enabled **and loaded**, set up
-   [Board persistence](#board-persistence), then run `rowbly git sync`. It commits Rowbly changes
-   that were saved but not yet committed, merges the upstream and pushes, and leaves other staged,
-   changed and untracked files as they are. Confirm publication as [A failed sync](#a-failed-sync)
-   says before proceeding; follow its failure policy and stop only when that says to. It handles
-   only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is still
-   uncommitted after it. If `git` is disabled or not loaded, skip this step and its publication
-   gates as Board persistence says: the factory does not need the Git Plugin.
-2. Run `git status --porcelain`. If it prints nothing, go to step 4.
-3. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
+1. **Look first.** Run `git status --porcelain=v1 -z --untracked-files=all` and read its NUL-delimited paths (both sides of a rename). Tell the user in one line what is uncommitted in the
+   Data Root: that is what step 3 publishes.
+2. **Policy is not cleanup.** Uncommitted changes to `ROWBLY.md` or a Stage Prompt file are the
+   factory's policy. Show the user the staged and working diffs and the content of each new policy file, and ask them to commit it (or commit it as `ROWBLY.md`
+   says changes to it are committed), then start again. Never run on unpublished policy, never let
+   a sync publish it unannounced, and never put it in a cleanup PR.
+3. **Board changes.** Establish enabled and loaded status with `rowbly plugins list`; an inspection error or malformed output is a failure, never evidence that Git is off. When Git is on, read `rowbly git show`; stop on inspection or recovery errors. Retain its synchronization run, request/run identity, commit and evidence. If requested or active is present, report waiting before any further Git operation, even with clean files; reconcile that run as **Confirm publication** says before preparing again. Evidence on either a successful or failed result requires review as **Evidence or a conflict** says before readiness or retry. Run `rowbly git sync` only when the Git Plugin is
+   enabled **and loaded** (`rowbly plugins list`) and `git status --porcelain -- <Data Root>` is not
+   empty; a clean Data Root needs no sync, so its checkout never needs Automatic Merge Conflict
+   Resolution. Set up [Board persistence](#board-persistence) first, and confirm publication as
+   [A failed sync](#a-failed-sync) says, following its failure policy. Sync commits Rowbly changes
+   that were saved but not yet committed, merges the upstream and pushes; it leaves other staged,
+   changed and untracked files, and files edited by hand, as they are. If `git` is disabled or not
+   loaded, skip this step and its publication gates as Board persistence says: the factory does not
+   need the Git Plugin.
+4. Run `git status --porcelain` again. If it prints nothing, go to step 6.
+5. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
    --cached` and each new file). If one must not be committed (a secret, build output, a large
    binary), stop and ask the user. Otherwise:
    - Create a branch `factory-cleanup/<YYYY-MM-DD-HHMM>` at the current commit, commit every change
@@ -50,11 +62,16 @@ it when the Data Root is not in a git repository.
    - Open a **cleanup PR** against the branch you started on. Its description says what each change
      is and that the factory found it uncommitted at start. Do not merge it.
    - Switch back to the branch you started on.
-4. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
+6. Run `git pull --ff-only`. If it fails (diverged history, no upstream), report it.
 
-Tell the user in one line whether the checkout was clean, the cleanup PR if you opened one, and the
-commit you pulled to. When workers use another checkout, `ROWBLY.md` says whether and how to update
-it.
+Tell the user in one line, per checkout, whether it was clean, what the sync published, the cleanup
+PR if you opened one, and the commit you pulled to.
+
+**When an update fails.** Your own checkout is the Board's: if its update fails, stop and tell the
+user. Another machine's checkout only guards that machine: leave the machine out of capacity, tell
+the user what failed and how to fix it, keep starting workers elsewhere, and update it again on each
+pass of [the loop](#the-loop) or when the user says it is fixed. `ROWBLY.md` says which machines
+there are and how to reach Rowbly on each.
 
 ## Board persistence
 
@@ -105,12 +122,24 @@ reference's advice not to retry a failed command unchanged:
    again; after a second failure, wait about 20 seconds and run it a third and last time. Run no
    other git or Board command during sync or backoff, except `rowbly git show` when needed to
    establish settlement as below. Tell the user in one line that you are retrying and why.
-2. **Do not retry what waiting cannot fix.** Go straight to step 3 when the sync reports evidence
-   paths or a Rowbly conflict (follow **Evidence or a conflict** above), when Automatic Merge
-   Conflict Resolution is Off (follow **Push with the Git Plugin** above), or when it exits 2 or 3
-   (a usage error or something not found).
-3. **After the last try,** tell the user its message. At start, stop: the checkout may be missing
-   upstream changes. While the factory runs, keep going, but send no GO, reply or start on another
+2. **Classify by `error.details.reason`,** never by the message text:
+   - **Retryable** (`details.retryable` is `true`: `capture-changed`, `index-changed`, `network`):
+     step 1. `capture-changed` means a person or another program kept saving, such as someone
+     moving Stories in the TUI. People may keep working in the TUI while the factory runs: they are
+     not a second automated writer, so never stop the factory because of their edits.
+   - **Configuration** (`resolution-off`, exit 2): when `ROWBLY.md` or the user allows it, run
+     `rowbly git configure --automatic-merge-resolution on` in that checkout, tell the user, and
+     sync again as the next of the 3 tries; otherwise ask the user. A missing upstream
+     (`no-upstream`) is fixed by hand: tell the user.
+   - **Needs a person** (`conflict`, `evidence`, `unexpected`, or evidence paths in a successful
+     or failed result): go straight to step 3; for evidence or a Rowbly conflict follow **Evidence or a
+     conflict** above, and report the commits involved.
+
+   A Rowbly too old to give `details.reason` is classified as before: no retry for evidence paths,
+   a Rowbly conflict, Automatic Merge Conflict Resolution Off, or exit 2 or 3.
+3. **After the last try,** tell the user its message and reason. At start, stop when it is your own
+   checkout: it may be missing upstream changes. For another machine's checkout, leave that machine
+   out as [Update the checkout](#update-the-checkout) says. While the factory runs, keep going, but send no GO, reply or start on another
    machine that relies on the unpublished change; publish it with the next sync that succeeds.
 
 **Confirm publication for each attempt.** Before invoking sync, retain the attempt's start time
@@ -123,6 +152,8 @@ While `synchronizationRun.requested` or `active` is present, keep dependent gate
 Board commands concurrently. If it remains requested or active at that bound, report waiting and
 keep the dependent gates closed; a wait timeout is neither success nor a failed attempt and does
 not authorize a retry or another status-wait loop. Reconcile the outstanding run before resuming.
+
+Read `runs` and act on the Board only after a sync has settled.
 
 Release dependent gates only when both are absent and a fresh completed `last.kind` is
 `synchronized` for the relevant attempt: its `startedAt` is at or after this attempt began, its
@@ -145,8 +176,20 @@ before an approved removal. `ROWBLY.md` says where this repository keeps its scr
 
 ## Before you start
 
-Check everything below, then report every problem at once. If any check fails, start nothing:
-tell the user what is missing and how to fix it, and stop.
+Check everything below, then report every problem at once, each with how to fix it. A check
+stops only what it guards:
+
+- **The whole factory** stops, starting nothing, when the Board itself cannot be worked: no way to
+  start threads (check 1), no Data Root or Board (2), the Plugin off (3), your own checkout not
+  updated (a failed sync or pull there, [Update the checkout](#update-the-checkout)), or no usable
+  machine and no usable Stage left after the checks below.
+- **One machine** that fails its update, its prerequisites or its memory floor is left out of
+  capacity and reported with its fix; workers start on the others. Check it again on each pass of
+  [the loop](#the-loop), or when the user says it is fixed, except that `waiting` retains the
+  outstanding run identity and requires reconciliation before another preparation or Git command.
+  Policy and dirty results require their own review protocols before another attempt.
+- **One Stage** whose Stage Prompt fails check 4 or 5 is skipped: report it and the Stories waiting
+  in it, and work the other Stages.
 
 1. **Threads.** You must be able to start agent threads that run on their own, read what they write,
    and send them messages. Any way that does this is fine: sub-agents, ordinary top-level threads, a
@@ -168,7 +211,9 @@ tell the user what is missing and how to fix it, and stop.
 5. **What the Stage Prompts need.** Read each Stage Prompt that is on, and `ROWBLY.md` if the Data
    Root has one. List every skill, tool, command, server, credential and permission they name, and
    check that you or the workers you start will have each. Name each one that is missing and the
-   Stage that needs it.
+   Stage that needs it. Check every Stage a Stage Prompt names, such as the one it moves Stories to,
+   against the Board's Stages (`stages` lists their keys and names): a Stage Prompt that names a
+   Stage the Board does not have fails this check, and only its own Stage is skipped.
 6. **Stage Runs already running.** Read `runMetadata` in `runs`. For a current verified identity,
    resolve its `threadId` through its `harness` on its recorded `machine`, then take over the
    verified worker. Never resolve remote IDs through local tools by assumption. An unavailable
@@ -198,7 +243,10 @@ Run until the user stops you. Do not wait for the user between events.
    timeout, or once when a running Stage Run becomes stale. Act on what it returns as on `runs`.
    Worker messages do not reach it: resume on them as well. Stop the wait (a signal) when you stop.
    Never wait on a digest newer than the `runs` you acted on. Re-read `software-factory stages`
-   before each start, so a Stage Prompt the user changed or turned off takes effect.
+   before each start, so a Stage Prompt the user changed or turned off takes effect, and check a
+   changed one again as [Before you start](#before-you-start) check 5 says.
+   On each pass, try again each machine or Stage left out at start or since; bring it back when it
+   passes, and tell the user.
 2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
    `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
 3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
