@@ -44,7 +44,7 @@
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/in-pr.md"
         },
         "in-refinement": {
-          "enabled": false,
+          "enabled": true,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/in-refinement.md"
         }
       }
