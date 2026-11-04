@@ -66,7 +66,9 @@ directory or a parent. Outside one, it asks you to choose from the known Data Ro
 `~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
 registered order, missing ones come after them, and **+ New Data Root** is last. Paths, labels and
 `missing` markers help identify roots. Picking a missing one says that the Data Root no longer exists
-and asks to delete it from the list (its entry in `~/.rowblyrc.json`). Use `↑`/`↓` and `enter`, or click a row; `n` opens the existing setup flow. A failed open
+and asks to delete it from the list (its entry in `~/.rowblyrc.json`). Use `↑`/`↓` and `enter`, or
+click a row; when the list is longer than the window, the mouse wheel moves the highlight three rows
+at a time. `n` opens the existing setup flow. A failed open
 keeps the picker available. Selection comes before incomplete global onboarding, followed by the
 selected Data Root's onboarding. With no known Data Roots, the existing home-folder fallback and
 first-run onboarding/setup apply. An explicit missing `--data-root` still fails before onboarding.
@@ -1072,7 +1074,7 @@ the default scope asks you to select one. The preference is off by default and s
 `storyFinderAllBoards` in `~/.rowblyrc.json` across restarts and Data Roots. The finder stays closed
 while a form or modal is open, preserving its text and keys.
 
-The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
+The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. When it is longer than the screen, the mouse wheel over it scrolls it three lines at a time, the highlight moves along to stay on screen, and `↑ N more` / `↓ N more` count the lines above and below. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
 
 When the TUI starts, Rowbly asks npm for its latest release in the background; commands never do. If a newer release is out, a row above the footer says so, for example `Rowbly 0.12.0 is available, update with npm i -g rowbly` (`Rowbly 0.12.0: npm i -g rowbly` on a narrow terminal), until you quit. Run that command to update. Startup and quitting never wait for the check: offline, a registry error or no answer within 3 seconds shows nothing. When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`, with `HTTPS_PROXY`), Rowbly skips the check, because Node cannot cancel a request waiting on that proxy. Set `ROWBLY_NO_UPDATE_CHECK=1` to turn the check off.
 
