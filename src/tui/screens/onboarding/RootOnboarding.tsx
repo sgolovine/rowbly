@@ -168,12 +168,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           />
         </>
       ) : step === 'skills' ? (
-        <SkillInstall
-          onDone={() => {
-            if (mode !== 'kanban' && !aiAsked) setStep('ai');
-            else afterAi();
-          }}
-        />
+        <SkillInstall onDone={afterAi} />
       ) : step === 'factory' ? (
         <>
           <Text bold>Guide your Software Factory</Text>
