@@ -64,9 +64,11 @@ With none of these a command exits 5 (`NO_DATA_ROOT`). If the Data Root named by
 The TUI uses `--data-root` when given; otherwise it opens the nearest `.rowbly/` in the current
 directory or a parent. Outside one, it asks you to choose from the known Data Roots in
 `~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
-registered order, and **+ New Data Root** is last. Paths, labels and `missing` markers help identify
-roots. Use `↑`/`↓` and `enter`, or click a row; when the list is longer than the window, the mouse
-wheel moves the highlight three rows at a time. `n` opens the existing setup flow. Type to search:
+registered order, missing ones come after them, and **+ New Data Root** is last. Paths, labels and
+`missing` markers help identify roots. Picking a missing one says that the Data Root no longer exists
+and asks to delete it from the list (its entry in `~/.rowblyrc.json`). Use `↑`/`↓` and `enter`, or
+click a row; when the list is longer than the window, the mouse wheel moves the highlight three rows
+at a time. `n` opens the existing setup flow. Type to search:
 `/` or any other key except the shell's (`q`, `?`, `,`, `D`) starts the search line above the list,
 which fuzzy-matches each root's name, full path and `~` path, so `crew` finds a root labelled
 Crewsum and `row-14` a root whose path holds it. Each change highlights the best match; **+ New Data
@@ -185,13 +187,15 @@ rowbly config show [--board <id>]
 - In the TUI, the button at the far left of the header names the Data Root that is open: its label in
   `~/.rowblyrc.json`, else **Global** for `~/.rowbly`, else the folder that holds it. Click it, or press
   `D`, to open the Data Root switcher. It lists the known Data Roots with their paths and marks the
-  `current` one, the `default` one and any that are `missing`. Type to search them, as in the startup
-  picker: `/` or any key except `n`, `e` and `d` starts the search, and `esc` clears it (`esc` again
-  closes the switcher). `enter` (or a click) opens the
+  `current` one, the `default` one and any that are `missing`; missing ones are listed last. Type to
+  search them, as in the startup picker: `/` or any key except `n`, `e` and `d` starts the search, and
+  `esc` clears it (`esc` again closes the switcher). `enter` (or a click) opens the
   highlighted one with its own Boards, Plugins and Me, on the home screen; the screens, filters and
   sidebar picks of the previous one close. Switching changes nothing in `~/.rowblyrc.json`: the labels
-  and the default stay as they are; the next TUI launch follows the startup choice described above. A Data Root that
-  cannot be opened (moved, removed or broken) shows an error and the app stays where it was. The last
+  and the default stay as they are; the next TUI launch follows the startup choice described above. Picking a missing Data
+  Root (moved or removed) says that it no longer exists and asks to delete it from the list, which takes
+  its entry out of `~/.rowblyrc.json`; one that cannot be opened for another reason (broken) shows an
+  error. Either way the app stays where it was. The last
   row, **+ New Data Root** (or `n`), runs the setup form and opens the new Data Root. While a form holds
   unsaved changes, both ask before discarding them; `D` is typed as text while a text field has focus.
   `e` edits the highlighted Data Root's label and whether it is the default (an empty label removes

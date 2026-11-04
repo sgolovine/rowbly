@@ -1,6 +1,6 @@
 # ADR-0042: TUI startup asks for a Data Root outside local discovery
 
-**Status:** Accepted. Amends ADR-0033 §1 for TUI startup and ADR-0041 §2 for startup ordering.
+**Status:** Accepted; §1's order and missing-root picks amended by [ADR-0055](0055-missing-data-roots-are-listed-last.md), which lists missing roots last. Amends ADR-0033 §1 for TUI startup and ADR-0041 §2 for startup ordering.
 
 A default Data Root makes CLI commands convenient, but opening it automatically in the TUI hides
 which Data Root a person can choose when their current directory has none.

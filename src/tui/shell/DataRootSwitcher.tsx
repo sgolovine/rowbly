@@ -1,23 +1,24 @@
 import { homedir } from 'node:os';
 import { Box, Text, useInput } from 'ink';
 import { useContext, useState } from 'react';
-import { type KnownDataRootChoice, knownDataRoots, openKnownDataRoot } from '../../services';
-import { ConfirmDialog, Loading, Modal, SelectListRow } from '../components';
+import { DataRootNotFoundError } from '../../core';
+import { type KnownDataRootChoice, knownDataRoots, missingLast, openKnownDataRoot } from '../../services';
+import { ConfirmDialog, Loading, MissingDataRootModal, Modal, SelectListRow } from '../components';
 import { ServicesContext, ShellContext, useActivate, useAsync, useToast } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { useRouter } from '../router';
 import { theme } from '../theme';
 import { DataRootList } from './DataRootList';
 import { DataRootRow } from './DataRootRow';
-import { dataRootName } from './dataRootName';
+import { dataRootName, tildePath } from './dataRootName';
 import { dataRootSearchHints } from './dataRootSearch';
 import { EditDataRootModal } from './EditDataRootModal';
 import { RemoveDataRootModal } from './RemoveDataRootModal';
 
 /** What a pick does: open a known Data Root, or create a new one. */
 type Target = { kind: 'root'; root: KnownDataRootChoice } | { kind: 'new' };
-/** A known Data Root's entry being edited or removed. */
-type Change = { kind: 'edit' | 'remove'; root: KnownDataRootChoice };
+/** A known Data Root's entry being edited or removed, or a missing one that was picked. */
+type Change = { kind: 'edit' | 'remove' | 'missing'; root: KnownDataRootChoice };
 
 const CLOSE: KeyHint = { key: 'esc', description: 'close' };
 const NEW: KeyHint = { key: 'n', description: 'new Data Root' };
@@ -35,7 +36,8 @@ const ACTION_KEYS = new Set(['n', 'e', 'd']);
  * the default stay as they are. **+ New Data Root** (or `n`) opens setup, which switches to the new one.
  * Either asks first while a form holds unsaved changes. `e` edits the highlighted one's label and
  * default; `d` forgets it or deletes its folder, asking which, except the one that is open. Typing
- * any other key searches them (`DataRootList`).
+ * any other key searches them (`DataRootList`). Missing ones are listed last, and picking one says it
+ * no longer exists and offers to delete it from the list.
  */
 export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   const { ctx } = useContext(ServicesContext);
@@ -45,7 +47,7 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   const toast = useToast();
   const home = ctx?.home ?? homedir();
   const roots = useAsync(() => knownDataRoots(home, ctx?.root ?? null), [home, ctx]);
-  const choices = roots.data ?? [];
+  const choices = missingLast(roots.data ?? []);
   // Picks wait for the list: before it loads, `enter` would land on **+ New Data Root**.
   const loaded = roots.data !== undefined;
   const [confirm, setConfirm] = useState<Target | null>(null);
@@ -76,13 +78,16 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
       // On success the app opens the new Data Root and this modal goes with the old one's screens.
       if (!(await activate(next))) setOpening(null);
     } catch (err) {
-      toast.error(err);
+      // Gone since the list was read.
+      if (err instanceof DataRootNotFoundError) setChange({ kind: 'missing', root: target.root });
+      else toast.error(err);
       setOpening(null);
     }
   };
   const choose = (target: Target) => {
     if (!picking) return;
     if (target.kind === 'root' && target.root.current) onClose();
+    else if (target.kind === 'root' && target.root.missing) setChange({ kind: 'missing', root: target.root });
     else if (shell.isDirty()) setConfirm(target);
     else void go(target);
   };
@@ -111,6 +116,18 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
       setChange(null);
       roots.reload();
     };
+    if (change.kind === 'missing') {
+      return (
+        <MissingDataRootModal
+          root={change.root}
+          name={dataRootName(change.root)}
+          path={tildePath(change.root.path, home)}
+          home={home}
+          onDone={done}
+          onCancel={() => setChange(null)}
+        />
+      );
+    }
     const Change = change.kind === 'edit' ? EditDataRootModal : RemoveDataRootModal;
     return <Change root={change.root} home={home} onDone={done} onCancel={() => setChange(null)} />;
   }
