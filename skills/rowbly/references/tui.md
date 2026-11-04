@@ -17,12 +17,19 @@ fallback and first-run onboarding/setup remain available. After selection, globa
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Onboarding fills the terminal with no header or sidebars; their keys (`ctrl+b`, `\`, `{`/`}`, `[`/`]`, `1`-`9`, `ctrl+p`, `n`, `,`, `D`, Plugin Actions) do nothing until it ends. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
-existing Data Roots only. Data Root onboarding is step tabs (Mode, Board, Plugins, AI and skills,
-Factory setup, Stage Prompts, Finish; the factory steps only with Software Factory on) with Back
-`ctrl+←`, Next `ctrl+→` and Skip onboarding `ctrl+k` Buttons; every step runs inline, and Factory
-setup (also in a Board's settings) adds the factory Stages and default Stage Prompts. Finished steps
-are saved as `onboardingSteps` in `rowbly.config.json` and reopening starts at the first one not done. Official skill
-installs choose a destination folder and harness and never overwrite; custom skill commands are
+existing Data Roots only. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
+and Summary tabs. Exactly one Board skips its tab, puts it in context and marks it done; no Boards
+offers creation, several offers selection. Plugins is always shown, Stage Prompts only with Software
+Factory on. Agent skills opens directly without an AI question. Click any tab; Back `ctrl+←`, Next
+`ctrl+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
+Stage Prompts offers default prompts, minimal placeholders (all off), or inline editing (`esc`
+returns). Population is explicit, keeps existing Stages/prompts/files and shows added/kept/skipped
+inline; errors allow retry. Skills is done on install or continuing, Stage Prompts on successful
+population or Next. Summary lists this visit's choices, skill folders and prompt outcome; unvisited
+steps read not changed in this visit. Changes and finished `onboardingSteps` save immediately;
+reopening starts at the first incomplete step. Legacy `ai` counts as `skills`, `factory-setup` as
+`stage-prompts`, and saved old/unknown ids are kept. Official skill installs choose a destination
+folder and harness and never overwrite; custom skill commands are
 explained. An explicit missing `--data-root` still fails. Without a Data Root, setup can create one. Once
 onboarding is complete, a Board in context opens its Kanban board; otherwise the home menu. It reads the same files as command mode and watches the
 Data Root, so changes made with commands show on their own a moment later, without losing the user's

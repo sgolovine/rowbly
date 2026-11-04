@@ -152,12 +152,14 @@ for everyone sharing that configuration. The Home Config flag is independent and
 See [ADR-0041](../agents/adr/0041-onboarding-completion-has-two-levels.md).
 
 Beside it, an optional `onboardingSteps` list holds the ids of the Data Root onboarding steps
-completed so far (`mode`, `board`, `plugins`, `ai`, `factory-setup`, `stage-prompts`), shared the
+completed so far (`mode`, `board`, `plugins`, `skills`, `stage-prompts`), shared the
 same way. Absent means none; unknown ids are ignored when read and kept when saved.
 `config.updateRootConfig` changes only the keys it is given, so saving progress never clears
 `onboardingComplete`, and saved steps never set it. Opening Data Root onboarding shows the saved
 steps as done and starts at the first incomplete one
-([ADR-0057](../agents/adr/0057-data-root-onboarding-saves-step-progress.md)).
+([ADR-0057](../agents/adr/0057-data-root-onboarding-saves-step-progress.md), amended by
+[ADR-0059](../agents/adr/0059-onboarding-combines-stage-prompt-setup.md)). Legacy `ai` counts as
+`skills` complete and `factory-setup` as `stage-prompts` complete; the old ids remain saved.
 
 ## Software Factory Run metadata
 
