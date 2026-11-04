@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T03:25:57.855Z",
+  "updatedAt": "2026-11-04T03:25:59.078Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
+        "by": "sunny",
+        "startedAt": "2026-11-04T03:13:57.985Z",
+        "finishedAt": "2026-11-04T03:25:57.854Z"
+      }
     },
     "comments": {
       "comments": [
@@ -132,19 +143,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd (thread mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-3-launch.json. Branch: factory/row-85-correction-3, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: ccf53f8bd82cc430de195095eeb04e76ed50e9d5.",
           "createdAt": "2026-11-04T03:25:57.134Z",
           "updatedAt": "2026-11-04T03:25:57.134Z"
+        },
+        {
+          "id": "Y96djrgu",
+          "author": "sunny",
+          "body": "Correction 3 pushed to https://github.com/sgolovine/rowbly/pull/168 at ccf53f8bd82cc430de195095eeb04e76ed50e9d5. 1. P2 mouse clipping fixed: root hit tests intersect the live viewport, including partial rows; footer/search/gaps/count cannot open invisible roots. Reproduced hidden Root04 before, safe footer after, and correct visible partial-row clicks. 2. Main merged; ADR-0056/0057 and amendment statuses retained. Typecheck, lint, unit79 and CLI21 PASS. Prior wrapping120x30 and short100x20/120x30 pinning plus page/wheel/key/search/picker checks pass. Evidence26 images HTTP200: https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621691092. All owned TUI sessions killed and private daemon stopped. CI snapshot pending: CLI tests; Clipboard smoke (windows-latest). Fresh independent review required.",
+          "createdAt": "2026-11-04T03:25:59.077Z",
+          "updatedAt": "2026-11-04T03:25:59.077Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:13:57.985Z",
-        "finishedAt": "2026-11-04T03:25:57.854Z"
-      }
     }
   }
 }
