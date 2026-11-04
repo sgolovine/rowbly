@@ -1,38 +1,44 @@
 {
   "version": 1,
   "run": {
-    "stage": "in-pr",
+    "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T02:44:35.345Z"
+    "startedAt": "2026-11-04T02:50:19.323Z"
   },
   "identity": {
-    "worker": "mcp:418a81af-5db6-4a1b-8635-40982eaee413",
+    "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:418a81af-5db6-4a1b-8635-40982eaee413",
+    "threadId": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
     "verification": {
-      "source": "Verified T3 launch receipt codex/gpt-6-astra reasoningEffort=medium serviceTier=default",
-      "verifiedAt": "2026-11-04T02:44:36.105Z",
+      "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
+      "verifiedAt": "2026-11-04T02:50:20.061Z",
       "by": "sunny"
     }
   },
   "selection": {
-    "provider": "codex",
-    "model": "gpt-6-astra",
+    "provider": "claudeAgent",
+    "model": "claude-opus-5-5",
     "options": [
       {
-        "id": "reasoningEffort",
+        "id": "effort",
         "value": "medium"
       },
       {
-        "id": "serviceTier",
-        "value": "default"
+        "id": "fastMode",
+        "value": false
       }
     ],
-    "rule": "ROWBLY.md independent review: differs from every implementing claude-opus-5-5 worker",
+    "rule": "ROWBLY.md coding uses Claude Opus Medium",
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T02:44:35.345Z"
+    "selectedAt": "2026-11-04T02:50:19.323Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
+    "at": "2026-11-04T02:53:56.865Z",
+    "source": "Verified correction pushed d24d1977, all four checks passed, fresh private TUI state announced for persistence exit/reopen verification",
+    "by": "sunny"
   }
 }
