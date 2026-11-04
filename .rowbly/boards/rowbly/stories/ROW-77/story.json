@@ -29,11 +29,25 @@
     "comments": {
       "comments": [
         {
+          "id": "2wOb9q85",
+          "author": "sunny",
+          "body": "Correction 1 of https://github.com/sgolovine/rowbly/pull/171, head d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d (branch factory/row-77-implementation, origin/main merged). Responses: 1. Fixed in d24d1977: the Factory setup mark is saved as soon as setup succeeds. Onboarding keeps the setup result and passes it back to FactorySetupScreen as params.result, so the remount after the rowbly.config.json Plugin reload shows it and does not run setup again. The pending set and flush are gone, so ctrl+k, the Skip Button, quitting and switching Data Roots keep every mark. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. agentic-tui evidence (5 images, HTTP 200): setup saved while its step is open with the result kept after the reload, ctrl+k then Settings Onboarding reopens at Stage Prompts, and quit then relaunch opens there too, with no second setup run: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621290068. A fresh independent review is needed for the new head.",
+          "createdAt": "2026-11-04T02:57:18.711Z",
+          "updatedAt": "2026-11-04T02:57:18.711Z"
+        },
+        {
           "id": "B1yQ6hc7",
           "author": "sunny",
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/171 (head 47495cf92bcd7730d511e3034b142a81bc2fe8da, branch factory/row-77-implementation). Data Root onboarding is step tabs (Mode, Board, Plugins, AI and skills, Factory setup, Stage Prompts, Finish) with Back ctrl+left, Next ctrl+right and Skip onboarding ctrl+k Buttons. Every step runs inline and keeps its result. Finished steps are saved as onboardingSteps in rowbly.config.json, and reopening opens the first step not done. ADR-0057 amends ADR-0041 section 2. The step reuses OnboardingPluginStep (ROW-78) and the Factory setup auto-run (ROW-75). The Factory setup mark is saved on leaving the step, so a rowbly.config.json Plugin reload does not run setup twice. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run with 11 screenshots in the PR. No review findings to answer yet.",
           "createdAt": "2026-11-04T02:44:03.173Z",
           "updatedAt": "2026-11-04T02:44:03.173Z"
+        },
+        {
+          "id": "HsNYt3bx",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9 (thread mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-77-correction-1-launch.json. Branch: factory/row-77-correction-1, pushed to factory/row-77-implementation. PR: https://github.com/sgolovine/rowbly/pull/171. Head: d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d.",
+          "createdAt": "2026-11-04T02:57:16.723Z",
+          "updatedAt": "2026-11-04T02:57:16.723Z"
         },
         {
           "id": "J8ra1PFW",
@@ -69,20 +83,6 @@
           "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
           "createdAt": "2026-11-04T02:49:02.817Z",
           "updatedAt": "2026-11-04T02:49:02.817Z"
-        },
-        {
-          "id": "HsNYt3bx",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9 (thread mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-77-correction-1-launch.json. Branch: factory/row-77-correction-1, pushed to factory/row-77-implementation. PR: https://github.com/sgolovine/rowbly/pull/171. Head: d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d.",
-          "createdAt": "2026-11-04T02:57:16.723Z",
-          "updatedAt": "2026-11-04T02:57:16.723Z"
-        },
-        {
-          "id": "2wOb9q85",
-          "author": "sunny",
-          "body": "Correction 1 of https://github.com/sgolovine/rowbly/pull/171, head d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d (branch factory/row-77-implementation, origin/main merged). Responses: 1. Fixed in d24d1977: the Factory setup mark is saved as soon as setup succeeds. Onboarding keeps the setup result and passes it back to FactorySetupScreen as params.result, so the remount after the rowbly.config.json Plugin reload shows it and does not run setup again. The pending set and flush are gone, so ctrl+k, the Skip Button, quitting and switching Data Roots keep every mark. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. agentic-tui evidence (5 images, HTTP 200): setup saved while its step is open with the result kept after the reload, ctrl+k then Settings Onboarding reopens at Stage Prompts, and quit then relaunch opens there too, with no second setup run: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621290068. A fresh independent review is needed for the new head.",
-          "createdAt": "2026-11-04T02:57:18.711Z",
-          "updatedAt": "2026-11-04T02:57:18.711Z"
         }
       ]
     }
