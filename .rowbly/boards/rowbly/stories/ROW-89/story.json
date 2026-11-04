@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T02:21:49.511Z",
+  "updatedAt": "2026-11-04T03:27:48.595Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "gMzkrJ4V",
-          "author": "sunny",
-          "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
-          "createdAt": "2026-11-04T02:21:17.622Z",
-          "updatedAt": "2026-11-04T02:21:17.622Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -34,6 +23,38 @@
         "by": "sunny",
         "startedAt": "2026-11-04T02:21:48.748Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "FDce1WBZ",
+          "author": "sunny",
+          "body": "Part 1 of 2 (CLI) is a draft PR: https://github.com/sgolovine/rowbly/pull/172, base main, head factory/row-89-implementation at 03c9588daadd84e217d9f4c976d091bafdc7c42c. It covers F4 (index content check, also in recovery; a Git index.lock after install is tolerated), F3 (quiet wait, capture-changed names Story Keys and is retryable), F5 (details.reason, retryable and paths), F1 CLI (resolution Off exits 2 with the configure hint; no plugins disable hint for a Plugin's own command), ADR-0058 (amends ADR-0034 §5 and ADR-0020 §5) and docs. Validation: typecheck, lint, test:unit 79 and test:cli 21 pass; the suite stays at 100 tests; the storage regression is a block in the kept publication test. Manual checks: 25 of 25 syncs passed under a git status loop; a continuous writer gives capture-changed after 35 s; resolution Off exits 2. Remaining in part 2, after PR 169: skill text for F1, F6, F7 and F8, prepare-checkout (F2) and the skill's use of details.reason (F5). Proposed ROWBLY.md text was sent to the supervisor.",
+          "createdAt": "2026-11-04T03:27:47.006Z",
+          "updatedAt": "2026-11-04T03:27:47.006Z"
+        },
+        {
+          "id": "gMzkrJ4V",
+          "author": "sunny",
+          "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
+          "createdAt": "2026-11-04T02:21:17.622Z",
+          "updatedAt": "2026-11-04T02:21:17.622Z"
+        },
+        {
+          "id": "pzwHgSei",
+          "author": "sunny",
+          "body": "PR 172 head is now a669b58efb62643b2ea6156a8874fd06cb1ec8cb. It adds a fix for main's flaky storage test (CI run 41764595479 at eb400ec0, transaction.test.ts:690, missing publicationHolder). The test's barrier resolved when the reader called readFile on the gate lock, so the holder could release and delete the lock before the read finished, and the reader recorded no holder. I reproduced it deterministically by releasing between the reader's lstat and readFile. The barrier now waits for the reader's second gate read, which can only follow a completed read of the held lock. This is a test-only fix; the trace code is correct. Test count unchanged; typecheck, lint and test:unit pass.",
+          "createdAt": "2026-11-04T03:27:47.745Z",
+          "updatedAt": "2026-11-04T03:27:47.745Z"
+        },
+        {
+          "id": "yLiuX1lQ",
+          "author": "sunny",
+          "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
+          "createdAt": "2026-11-04T03:27:48.594Z",
+          "updatedAt": "2026-11-04T03:27:48.594Z"
+        }
+      ]
     }
   }
 }
