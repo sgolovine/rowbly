@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Remove board label during setup",
   "description": "## Summary: Remove the Label field from Data Root setup. The TUI New Data Root form (startup picker / Data Root switcher \"+ New Data Root\", src/tui/screens/setup/InitForm.tsx) asks for a Label first, which reads like a second Board name. It is actually the optional Data Root label in ~/.rowblyrc.json (dataRoots[].label), used only by the header button and the Data Root switcher. Setup should not ask for it. ## Scope: (1) InitForm.tsx: remove the label field and the intro sentence \"The label names it in ~/.rowblyrc.json...\" (keep the --data-root/default explanation if still useful); stop passing label to createDataRoot. (2) CLI rowbly init: stop prompting for the label in an interactive terminal (askLabel in src/commands/setup/util.ts, called from src/commands/setup/command.ts:109); keep the --label <label> flag so scripts can still name it. (3) docs/user-guide.md: line ~149 (init no longer asks for the label) and lines ~171-172 (TUI setup no longer asks for the label). ## Out of scope: --label flag on init; e (edit label/default) in the Data Root switcher (EditDataRootModal); the optional Label in global onboarding Register an existing Data Root; the dataRoots schema. ## Behavior: a Data Root created through setup gets no label, so the header and switcher show the folder holding .rowbly (or Global for ~/.rowbly) per dataRootName; the label can still be set later with e in the switcher. ## Acceptance: the New Data Root form shows Default Data Root, Board name, Board id, Key prefix and Your handle (Me) only; interactive rowbly init asks no label question; rowbly init --label Work still records the label; typecheck, lint, test:unit and test:cli pass. No new test needed (AGENTS.md: form/prompt changes add no test).",
-  "stage": "in-progress",
-  "rank": "a6",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:01:20.421Z",
-  "updatedAt": "2026-11-04T00:49:39.800Z",
+  "updatedAt": "2026-11-04T00:49:40.463Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:43:41.861Z",
-        "finishedAt": "2026-11-04T00:49:38.547Z"
-      }
     },
     "comments": {
       "comments": [
