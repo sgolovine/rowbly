@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-04T00:41:52.827Z",
+  "updatedAt": "2026-11-04T00:46:56.559Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,17 +26,6 @@
         }
       ]
     },
-    "comments": {
-      "comments": [
-        {
-          "id": "z6rE9G0o",
-          "author": "sunny",
-          "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
-          "createdAt": "2026-11-04T00:23:37.481Z",
-          "updatedAt": "2026-11-04T00:23:37.481Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -46,6 +35,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T00:41:52.076Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "z6rE9G0o",
+          "author": "sunny",
+          "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
+          "createdAt": "2026-11-04T00:23:37.481Z",
+          "updatedAt": "2026-11-04T00:23:37.481Z"
+        },
+        {
+          "id": "kdNM42nu",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7 (thread mcp:d4246e25-95bc-4d1c-aeed-72115912d8a7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 t3_thread_launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-79-implementation-launch.json. Branch: factory/row-79-implementation. PR: https://github.com/sgolovine/rowbly/pull/158. Head: eaf4009472cd173e2746f9e8ab21ed2a16fbec9b (verified gh pr view 158).",
+          "createdAt": "2026-11-04T00:46:56.559Z",
+          "updatedAt": "2026-11-04T00:46:56.559Z"
+        }
+      ]
     }
   }
 }
