@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Scroll up/down with mouse wheel in more places",
   "description": "## Problem: The mouse wheel scrolls a Stage column in board view, but not the board list view (v) or the Choose a Data Root picker shown at startup outside a Data Root (see attachments). ## Requirements: (1) List view: a wheel notch over the list (src/tui/screens/board/BoardList.tsx, wired from BoardScreen.tsx) scrolls it by WHEEL_LINES lines (src/tui/hooks/mouse.ts), clamped to the rows, the same way wheel() scrolls a column: move firstListRow and clamp listCursor so the highlighted line stays on screen; the ↑ N more / ↓ N more markers update. Ignore the wheel when the list fits. (2) Data Root picker: the wheel scrolls the list in src/tui/screens/setup/DataRootPickerScreen.tsx. Implement it in the shared SelectList (src/tui/components/SelectList.tsx): its window follows the cursor, so a notch moves the highlight by WHEEL_LINES, clamped, like StoryFinder. Register onWheel on the list box only while it is active and has more visible items than limit, so a short list does not swallow the wheel from an enclosing ScrollBody or modal. Every SelectList gets this. ## Out of scope: fuzzy search (ROW-81) and the order or handling of missing Data Roots (ROW-82); these touch the same picker, so keep this change to the wheel. ## Docs: docs/user-guide.md (list view and Data Root picker paragraphs) and skills/rowbly/references/tui.md (Board row and picker); refresh skills/rowbly-reference.md and its three copies only if they mention the wheel. ## Tests: none (AGENTS.md: keys and screens need no test). Verify in the TUI with agentic-tui: list view on a long Board, and the picker with more than 10 Data Roots.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0O",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:17:19.754Z",
-  "updatedAt": "2026-11-04T01:09:46.665Z",
+  "updatedAt": "2026-11-04T01:09:47.341Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -33,17 +33,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:8bd10cc7-ff2a-4be7-997d-a55be04d79a8",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:06:20.315Z",
-        "finishedAt": "2026-11-04T01:09:44.652Z"
-      }
     },
     "comments": {
       "comments": [
