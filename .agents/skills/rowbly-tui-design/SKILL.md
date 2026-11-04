@@ -115,7 +115,7 @@ Two kinds, and nothing else:
 - **Screen Modals** — `StoryModal` and `SettingsModal`. A whole screen in a frame: fixed size (the Board panel's area less one cell each side, at most 120 columns), a header band on `overlay-raised`, their own navigation (Tabs, or a section list), a body that scrolls on its own. Only core opens them.
 - **Generic Modal** — `Modal`, for one short task: Forms, pickers (Move Stage), ConfirmDialog, Help, and everything a Plugin opens. Sized to its content, 48–72 columns, no band, no Tabs.
 
-All Modals share the `overlay` fill, the `accent` frame, the breadcrumb title, the `✕` and the `KeyHints` strip. A generic Modal can stack on a screen Modal; the one on top has the focus and the frame below drops to `border`. Never stack two screen Modals: opening Settings from a Story closes the Story.
+All Modals share the `overlay` fill, the `accent` frame, the breadcrumb title, the `✕` and the `KeyHints` strip. An info modal, a generic Modal whose only key is `esc` (Help, a Plugin screen that only shows a result), shows a `Close` Button with the `esc` key cap in place of the strip, on the same line. A generic Modal can stack on a screen Modal; the one on top has the focus and the frame below drops to `border`. Never stack two screen Modals: opening Settings from a Story closes the Story.
 
 A `ContextMenu` is not a Modal: it has no title, no `✕` and no hint strip, and it opens at the pointer rather than centred.
 
