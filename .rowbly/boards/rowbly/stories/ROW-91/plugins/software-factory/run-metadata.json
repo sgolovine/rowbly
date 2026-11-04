@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T17:30:31.449Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:0d554a0f-f81b-4558-8619-8edcf1834867",
+    "at": "2026-11-04T17:39:44.089Z",
+    "source": "worker message: FACTORY-DONE with PR #176 (t3 run ordinal 1 completed 17:38:03Z)",
+    "by": "sunny"
   }
 }
