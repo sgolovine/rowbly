@@ -1252,7 +1252,8 @@ and Both return to factory guidance, which then offers **Finish onboarding**. Th
 Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
 Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
 for the Board right away, without asking again, and lists what it added, kept and skipped; nothing
-is added unless you choose it. Factory setup from a Board's settings still asks first. Use the editor to change and
+is added unless you choose it. Factory setup from a Board's settings still asks first. Both open in the
+onboarding screen itself rather than a modal, and `esc` returns to factory guidance. Use the editor to change and
 enable the instructions you want.
 
 Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for

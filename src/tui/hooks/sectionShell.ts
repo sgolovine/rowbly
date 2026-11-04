@@ -1,5 +1,5 @@
-import { createShellRegistry, type ShellRegistry } from '../../hooks';
-import type { KeyHint } from '../../keymap';
+import type { KeyHint } from '../keymap';
+import { createShellRegistry, type ShellRegistry } from './shell';
 
 /** The shell registry as a settings section sees it, and whether the section holds `esc` itself. */
 export interface SectionShell extends ShellRegistry {
@@ -8,8 +8,9 @@ export interface SectionShell extends ShellRegistry {
 }
 
 /**
- * The shell registry as the section beside the settings sidebar sees it: everything goes to the real
- * one except its key hints, which go to `onHints` so the settings screen can show them with its own.
+ * The shell registry as a screen embedded in another sees it (a settings section, an onboarding step):
+ * everything goes to the real one except its key hints, which go to `onHints` so the embedding screen
+ * can show them with its own.
  */
 export function sectionShell(shell: ShellRegistry, onHints: (hints: readonly KeyHint[]) => void): SectionShell {
   let escapes = 0;
