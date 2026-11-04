@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { rankAfter } from '../../core';
 import { BoardConfigSchema, type CustomFieldDef, DEFAULT_STAGES, RowblyConfigSchema, StorySchema } from '../../schemas';
+import { GitSyncFailure } from '../../storage/gitSyncFailure';
 import { isGitDataPath } from '../../storage/gitSyncFiles';
 import { fieldValueError, validateFieldValues } from '../_customFieldValues';
 import {
@@ -215,7 +216,7 @@ function mergeOnce(
       files[path] = helpers.file(`${entries.filter(Boolean).join('\n')}\n`);
     } else {
       if (/^plugins\/git\/merge-evidence\//.test(path) && l && r && !isDeepStrictEqual(l, r))
-        throw new Error('Content-addressed merge evidence disagrees at the same path');
+        throw new GitSyncFailure('evidence', `Content-addressed merge evidence disagrees at ${path}`, [path]);
       const result = helpers.value(old, l, r, path);
       if (result !== undefined) files[path] = result as MergeFile;
     }

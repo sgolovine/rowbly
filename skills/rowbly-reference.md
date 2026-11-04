@@ -274,6 +274,11 @@ and working content stays intact; Local State/locks/transactions excluded. Succe
 push; errors keep local work. Divergent local merge commits require `git rebase --rebase-merges` in
 Git before retrying. Never force-push. No new CLI command. Do not separately commit Rowbly data when
 Automatic Commits is On.
+`git sync` with Automatic Merge Conflict Resolution Off exits 2 (`USAGE`); fix it with
+`rowbly git configure --automatic-merge-resolution on` only when allowed. Other failures exit 4 with
+`error.details.reason`: retry (`retryable: true`) for `capture-changed` (another writer such as the
+TUI kept saving), `index-changed` and `network`; stop and report `no-upstream`, `conflict`,
+`evidence` and `unexpected`. `error.details.paths` lists the paths concerned.
 
 **Software Factory** (`software-factory`): a Markdown Stage Prompt per Stage (Backlog and Done
 included), off by default, set globally or per Board; a Board's entry for a Stage replaces the global one.

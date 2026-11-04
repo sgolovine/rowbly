@@ -1,6 +1,18 @@
 import { ConflictError, type PluginCommands, ValidationError } from '../../plugin-api';
 import { configure, preferences, resolveSyncOptions } from './model';
 
+/** What to do about a failed Sync, by its `details.reason` (ADR-0058 §2). */
+const HINTS: Record<string, string> = {
+  'capture-changed':
+    'Another writer, such as the TUI, kept saving Rowbly data; wait until it is done, then retry `rowbly git sync`.',
+  'index-changed': 'Another Git command changed the staged files; review them with Git, then retry `rowbly git sync`.',
+  network: 'Check the network and Git credentials, then retry `rowbly git sync`; the local result is kept.',
+  'no-upstream': 'Check out a branch with a configured Git upstream, then retry `rowbly git sync`.',
+  conflict: 'Resolve the reported Git operation or conflict by hand before you retry `rowbly git sync`.',
+  evidence: 'Review the Merge Evidence at the reported paths before you retry `rowbly git sync`.',
+  unexpected: 'Resolve the reported cause, then retry `rowbly git sync`.',
+};
+
 export const commands: PluginCommands = (group, cli) => {
   group
     .command('sync')
@@ -8,11 +20,18 @@ export const commands: PluginCommands = (group, cli) => {
     .action((_opts, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         const result = await plugin.git.requestSync(resolveSyncOptions);
-        if (!result.active && !result.requested && result.last?.kind === 'failed')
+        if (!result.active && !result.requested && result.last?.kind === 'failed') {
+          const reason = result.last.reason ?? 'unexpected';
           throw new ConflictError(result.last.message, {
-            details: { synchronizationRun: result },
-            hint: 'Resolve the reported cause, then retry `rowbly git sync`.',
+            details: {
+              reason,
+              retryable: result.last.retryable ?? false,
+              ...(result.last.paths ? { paths: result.last.paths } : {}),
+              synchronizationRun: result,
+            },
+            hint: HINTS[reason] ?? HINTS.unexpected,
           });
+        }
         print(result, (value) =>
           value.active
             ? `Synchronization ${value.active.phase}`
