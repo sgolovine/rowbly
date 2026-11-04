@@ -5,14 +5,14 @@
   "name": "Stage prompt editing should not open in a modal",
   "description": "## Problem: In Data Root onboarding (Guide your Software Factory step), choosing Open Stage Prompt editing pushes the software-factory stage-prompts Plugin route (src/tui/screens/onboarding/RootOnboarding.tsx, around line 197). The Shell (src/tui/shell/Shell.tsx, around lines 424-470) draws every pushed route other than story, settings and story-form inside a panel-size Modal, so the Stage Prompts list shows as a small modal over the onboarding text (see the attachment). Settings already draws the same StagePromptsScreen inline in its section pane. ## Change: Show Stage Prompt editing in onboarding's main area instead of a modal. Recommended: add an onboarding step (for example prompts) that draws the software-factory stage-prompts screen inline in place of the factory step's text and list, resolving the Plugin screen the way Settings sections do (src/tui/screens/settings/sections.ts sectionScreen, sectionShell.ts for key hints and esc), with esc returning to the factory step. Keep the Board context: the screen resolves the chosen Board as it does today. Opening a Stage Prompt (enter or e) still uses the existing full-screen editor (useFullScreenEditor), which is not a modal. ## Acceptance: 1) Open Stage Prompt editing in onboarding shows the Stage list, its key hints (space, enter, e, d) and its explanation text in the main area, with no Modal border or breadcrumb title. 2) esc returns to the Guide your Software Factory list, and onboarding can still be finished or skipped. 3) Toggling, editing and removing work as they do in Settings. 4) Settings Stage Prompts behavior is unchanged. 5) Update the factory guidance paragraph in docs/user-guide.md (around line 1236) and skills/rowbly/references/tui.md (line 17) only if their wording changes. ## Out of scope: Add factory Stages and default Stage Prompts (factory-setup) also opens as a pushed panel modal. Change it in the same way only if that is trivial; otherwise leave it for a follow-up. Do not change how the Shell draws other pushed Plugin screens. No new test is required (AGENTS.md: screens and layout); verify with agentic-tui screenshots.",
   "stage": "in-progress",
-  "rank": "a2",
+  "rank": "aE",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T01:27:39.727Z",
+  "updatedAt": "2026-11-04T01:44:11.066Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -29,11 +29,39 @@
     "comments": {
       "comments": [
         {
+          "id": "9txYt40O",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at 08f379003dbd57fc207901edc42d7c94f5145e4d by codex/gpt-6-astra: APPROVED. Reviewed all six changed files against ROW-78, the TUI design rules and surrounding Plugin hosting, Board resolution, escape capture, editor and onboarding completion code. The Settings section-shell move preserves behavior; optional Factory setup embedding stays within scope. No actionable code findings. Verified independent worker/model provenance for all three commits. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) passed; all six GitHub checks passed. Inspected all seven existing agentic-tui screenshots and verified every image URL returns HTTP 200; no new TUI session was started. Merge is blocked by a conflict with main in src/tui/screens/onboarding/RootOnboarding.tsx after PR #165 merged: preserve its SkillInstall onDone={afterAi} alongside the new setup/prompts branch. A new head requires a new review.",
+          "createdAt": "2026-11-04T01:42:53.410Z",
+          "updatedAt": "2026-11-04T01:42:53.410Z"
+        },
+        {
+          "id": "Ej9703cR",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-78-implementation, PR https://github.com/sgolovine/rowbly/pull/166, head 08f379003dbd57fc207901edc42d7c94f5145e4d. Independent code review approved this head, but git merge-tree confirms a main conflict in src/tui/screens/onboarding/RootOnboarding.tsx after ROW-80 PR #165 merged at 9efe3aba1c830f9d5003b9f57c56f6a963171b46. Resolve by preserving SkillInstall onDone={afterAi} and the ROW-78 inline setup/prompts branch, then rerun checks and request independent review of the new head. All six current-head CI checks passed; local typecheck, lint, unit (79) and CLI (21) passed; all seven screenshot URLs returned 200. Review: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620230201.",
+          "createdAt": "2026-11-04T01:42:54.041Z",
+          "updatedAt": "2026-11-04T01:42:54.041Z"
+        },
+        {
           "id": "HeQlHcT3",
           "author": "sunny",
           "body": "Refinement: the modal comes from RootOnboarding pushing the stage-prompts Plugin route; the Shell draws pushed non-story/settings routes as a panel Modal. Settings already embeds the same screen inline, so the fix is to draw it inline in onboarding's main area. The description now lists the cause, the change and the acceptance criteria. Ready for development.",
           "createdAt": "2026-11-04T00:24:59.661Z",
           "updatedAt": "2026-11-04T00:24:59.661Z"
+        },
+        {
+          "id": "TdWMdmXQ",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:bd258b2f-c35a-4311-818b-c3b4ad839582 (thread mcp:bd258b2f-c35a-4311-818b-c3b4ad839582, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-implementation-launch.json. Branch: factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: 08f379003dbd57fc207901edc42d7c94f5145e4d (verified gh pr view 166).",
+          "createdAt": "2026-11-04T01:35:14.331Z",
+          "updatedAt": "2026-11-04T01:35:14.331Z"
+        },
+        {
+          "id": "k37Rmwo8",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/166 (branch factory/row-78-implementation, head 08f379003dbd57fc207901edc42d7c94f5145e4d). Onboarding Open Stage Prompt editing, and Add factory Stages and default Stage Prompts, now draw the software-factory screen inline in onboarding's main area (new OnboardingPluginStep, resolved through PluginScreenHost with the Settings section shell, which moved to hooks). esc returns to Guide your Software Factory; Settings is unchanged. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass. Checked by hand with agentic-tui: inline list, hints and explanation; toggle, editor, remove confirm and cancel; esc back; finish onboarding; Settings Stage Prompts. Screenshots are in a PR comment. No review findings to answer.",
+          "createdAt": "2026-11-04T01:35:17.803Z",
+          "updatedAt": "2026-11-04T01:35:17.803Z"
         }
       ]
     },
@@ -42,9 +70,9 @@
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:bd258b2f-c35a-4311-818b-c3b4ad839582",
+        "worker": "mcp:67ebf417-b0c8-4076-86e0-720bc193c88f",
         "by": "sunny",
-        "startedAt": "2026-11-04T01:27:38.987Z"
+        "startedAt": "2026-11-04T01:43:46.637Z"
       }
     }
   }

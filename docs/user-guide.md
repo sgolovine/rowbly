@@ -1242,7 +1242,9 @@ The separate AI usage question offers official agent skills. Choose a skill, des
 harness to install it through the same service as `rowbly skills install`; existing folders are never
 overwritten. Skills already installed below the current folder, or installed on this screen, are
 marked **(installed)** with their skills folders and stay selectable for another harness or folder.
-Choose **Continue** to leave the step, whether or not you installed anything. The screen also explains creating and installing custom skills. Factory guidance opens
+Choose **Continue** to leave the step, whether or not you installed anything. Choosing agent skills
+answers the AI usage question, so onboarding does not ask it after the skills step: Software Factory
+and Both return to factory guidance, which then offers **Finish onboarding**. The screen also explains creating and installing custom skills. Factory guidance opens
 Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
 Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
 for the Board when you confirm; nothing is added unless you choose it. Both open in the onboarding

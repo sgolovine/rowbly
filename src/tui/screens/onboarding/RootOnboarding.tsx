@@ -167,12 +167,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           />
         </>
       ) : step === 'skills' ? (
-        <SkillInstall
-          onDone={() => {
-            if (mode !== 'kanban' && !aiAsked) setStep('ai');
-            else afterAi();
-          }}
-        />
+        <SkillInstall onDone={afterAi} />
       ) : step === 'setup' || step === 'prompts' ? (
         <OnboardingPluginStep
           title={step === 'setup' ? 'Factory setup' : 'Stage Prompts'}

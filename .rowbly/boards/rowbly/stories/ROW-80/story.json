@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "If a user chooses agent skills, skip asking if they will use AI in onboarding",
   "description": "## Problem: In Data Root onboarding (src/tui/screens/onboarding/RootOnboarding.tsx), Software Factory mode goes from Board straight to factory guidance. Choosing \"Choose agent skills\" there opens SkillInstall, and on \"Continue without installing more skills\" its onDone sends the user to the AI step (\"Will you use AI agents with this Data Root?\") because aiAsked is still false (mode !== kanban). Choosing skills already answers that question, so asking it is redundant. Plain Kanban and Both ask the AI question before the skills step and are not affected. ## Acceptance criteria: (1) After the skills step, onboarding never asks the AI usage question: leaving SkillInstall marks AI as answered (aiAsked = true) and returns to factory guidance in Software Factory or Both mode, or to the final step in Plain Kanban mode. (2) Factory guidance then shows \"Finish onboarding\" instead of \"Continue to AI usage\". (3) A user who never opens the skills step is still asked the AI question as today (Kanban and Both after Plugins; Software Factory through \"Continue to AI usage\"). (4) Update docs/user-guide.md ## Onboarding (the paragraph \"The separate AI usage question offers official agent skills\") to say the question is skipped once agent skills have been chosen; check skills/rowbly/references/setup.md and tui.md onboarding lines (no change expected). ## Notes: TUI flow change only; per AGENTS.md no new test. Verify by hand with pnpm dev in a fresh Data Root: choose Software Factory, then Choose agent skills, then Continue, and confirm that factory guidance appears with Finish onboarding.",
-  "stage": "in-progress",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0R",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:10:18.449Z",
-  "updatedAt": "2026-11-04T01:26:47.163Z",
+  "updatedAt": "2026-11-04T01:41:01.777Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,18 +22,36 @@
           "body": "Refinement: the cause is RootOnboarding.tsx. The SkillInstall onDone sends Software Factory mode to the AI step when aiAsked is false. The fix is to treat the skills step as answering yes and return to factory guidance. The description is updated with acceptance criteria. Ready for In Progress.",
           "createdAt": "2026-11-04T00:22:07.512Z",
           "updatedAt": "2026-11-04T00:22:07.512Z"
+        },
+        {
+          "id": "RiXryPlo",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/165 on branch factory/row-80-implementation, head 9ceed8726e7103c847271f1935c1a9b72b0c623a. Change: leaving the onboarding skills step (SkillInstall onDone = afterAi) sets aiAsked and returns to factory guidance (Software Factory, Both), which then offers Finish onboarding, or to the final step (Plain Kanban); the AI usage question is no longer asked after skills. Users who never open the skills step are still asked as before. docs/user-guide.md Onboarding updated; skills/rowbly/references/setup.md and tui.md checked, no change. Validation after merging origin/main: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed) all pass; no new test per AGENTS.md. Checked by hand in a fresh Data Root with agentic-tui: Software Factory, Choose agent skills, Continue shows factory guidance with Finish onboarding; origin/main shows the AI question. Before and after screenshots are in the PR comment (pr-assets/factory/row-80-implementation). No review findings to answer.",
+          "createdAt": "2026-11-04T01:34:22.896Z",
+          "updatedAt": "2026-11-04T01:34:22.896Z"
+        },
+        {
+          "id": "TgovwT1N",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/165 at 9ceed8726e7103c847271f1935c1a9b72b0c623a. Merge commit 9efe3aba1c830f9d5003b9f57c56f6a963171b46. Main CI run 41755528631 is in progress.",
+          "createdAt": "2026-11-04T01:41:01.094Z",
+          "updatedAt": "2026-11-04T01:41:01.094Z"
+        },
+        {
+          "id": "doNP2ghi",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/165 at 9ceed8726e7103c847271f1935c1a9b72b0c623a by codex/gpt-6.1-sol: APPROVED. Verified the implementation and reviewer launch receipts: reviewer mcp:e1083a3b-7369-466f-b9fe-2ededadf6c16 is distinct from implementing worker mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a using claudeAgent/claude-opus-5-5; the two authored commits and main merge are accounted for by its implementation record. Read the full diff, RootOnboarding and SkillInstall, the onboarding guide and both skill reference passages against all acceptance criteria and AGENTS.md. SkillInstall completion calls afterAi, which marks AI answered and returns Factory/Both to factory guidance with Finish onboarding, or Kanban to its final step; paths that never open skills still ask the AI question. The change remains compatible with ROW-78's separate inline Plugin-screen changes; ROW-86's proposed redesign is outside this review. No required findings and no new test required for this flow-only change. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), and pnpm test:cli (21 passed), all successfully. All four screenshot URLs return HTTP 200. All six current-head GitHub checks are completed with SUCCESS.",
+          "createdAt": "2026-11-04T01:41:00.464Z",
+          "updatedAt": "2026-11-04T01:41:00.464Z"
+        },
+        {
+          "id": "z3FoHZBH",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a (thread mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-80-implementation-launch.json. Branch: factory/row-80-implementation. PR: https://github.com/sgolovine/rowbly/pull/165. Head: 9ceed8726e7103c847271f1935c1a9b72b0c623a (verified gh pr view 165).",
+          "createdAt": "2026-11-04T01:34:19.552Z",
+          "updatedAt": "2026-11-04T01:34:19.552Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:12e7ee0e-4ab7-49e1-95dc-2ff947f6390a",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:26:46.269Z"
-      }
     }
   }
 }

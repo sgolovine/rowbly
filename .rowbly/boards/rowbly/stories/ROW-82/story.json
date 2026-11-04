@@ -4,24 +4,55 @@
   "boardId": "rowbly",
   "name": "Data Root Selection Changes",
   "description": "- When selecting a data root, filter missing roots so they appear at the bottom of the list\n- Currently if you attempt to select a data root that is missing, it will give a notification that it does not exist and tell you to remove it from the list. What I want to have happen instead is a modal comes up and says \"This data root no longer exists\" and then prompt the user to delete the data root.",
-  "stage": "in-progress",
-  "rank": "aE",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:21:16.187Z",
+  "updatedAt": "2026-11-04T01:37:26.286Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:290cd831-2221-4638-8d4d-506f702bc2f1",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:33:13.757Z"
+      }
+    },
     "comments": {
       "comments": [
+        {
+          "id": "9safBIpT",
+          "author": "sunny",
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/163, head 19ca37dd0298c32875491ccff05b8d8c1cecc43e. 1. Review finding 1 fixed in 4d263553: ADR-0055 amends ADR-0042 section 1 so that missing Data Roots, including a missing default, are listed after the existing ones in the startup picker and the D switcher, and picking one offers to delete it from the list. ADR-0042 Status and the ADR index are updated, and number 0055 is unused on main and the open PR branches. Merge 19ca37dd brings in origin/main with ROW-81 #162 and ROW-84 #164: missingLast and the missing-root dialog now run on top of the shared DataRootList search, and the docs keep both Stories' text. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass, and all six GitHub checks succeed. agentic-tui evidence of the composed build (search, missing-last including the default, the dialog from search and for a root gone after loading, delete, the wheel ignored under the dialog): https://github.com/sgolovine/rowbly/pull/163#issuecomment-6620065821. Rendered ADRs: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619969908.",
+          "createdAt": "2026-11-04T01:32:16.466Z",
+          "updatedAt": "2026-11-04T01:32:16.466Z"
+        },
         {
           "id": "QeRe28vn",
           "author": "sunny",
           "body": "Review of https://github.com/sgolovine/rowbly/pull/163 at b184dff8749123a1b98e790c6e6bd7e109955f28 by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. docs/agents/adr/0042-tui-startup-asks-for-a-data-root.md:12-14 (implemented at src/tui/screens/setup/DataRootPickerScreen.tsx:49): ADR-0042 §1 still requires the default Data Root first and other roots in registered order. The new missingLast partition intentionally changes that accepted decision when the default is missing or a missing registered root precedes an existing one. AGENTS.md and the ADR index require a new ADR to amend an accepted decision, an update to the old ADR's Status line, and an index entry in the same change. Add that amendment in docs/agents/adr/ documenting missing roots after existing roots, including a missing default; preserve the intended implementation. I verified the implementation and reviewer launch receipts, both authored commits and the two main merges; reviewer worker/thread mcp:afb01914-c84b-4acb-a271-4b9aa2181d13 uses codex/gpt-6.1-sol, distinct from implementing worker mcp:84b28722-ce2f-401d-aaff-38e87f85da1f using claudeAgent/claude-opus-5-5. Reviewed all eight changed files, stable grouping, selection callbacks, missing-on-open handling, confirmation/cancel behavior, list-only removal, current-root protection, shared UI conventions and user/skill documentation. No code blocker found. All seven screenshot URLs return HTTP 200; inspected the missing-root modal image. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests), and pnpm test:cli (21 tests) passed. All six current-head GitHub checks are SUCCESS; mergeability remains UNKNOWN. ROW-81's unmerged shared DataRootList is not part of this diff; no intent conflict was identified.",
           "createdAt": "2026-11-04T01:19:43.499Z",
           "updatedAt": "2026-11-04T01:19:43.499Z"
+        },
+        {
+          "id": "UnLcBGcL",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished (returned-work visit started 2026-11-04T01:20:45.725Z). Worker: mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468 (thread mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 correction launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-82-correction-1-launch.json. Branch: factory/row-82-correction-1, pushed to factory/row-82-implementation. PR: https://github.com/sgolovine/rowbly/pull/163. Head: 19ca37dd0298c32875491ccff05b8d8c1cecc43e (verified gh pr view 163). Changes: ADR-0055 amendment and composed merge of ROW-81/ROW-84.",
+          "createdAt": "2026-11-04T01:32:13.097Z",
+          "updatedAt": "2026-11-04T01:32:13.097Z"
+        },
+        {
+          "id": "XrcYCvDe",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/163 at 19ca37dd0298c32875491ccff05b8d8c1cecc43e by codex/gpt-6-astra: APPROVED. Verified the original and correction authoring receipts (both claudeAgent/claude-opus-5-5) and my distinct reviewer receipt (worker/thread mcp:290cd831-2221-4638-8d4d-506f702bc2f1, codex/gpt-6-astra); all seven branch-only commits are accounted for. Reviewed the full PR diff and all 11 files differing from current main, including ADR-0055, ADR-0042 Status and the ADR index: prior finding 1 is resolved. Checked stable missing-last grouping including a missing default in startup, composed DataRootList search, missing-on-open handling, modal confirmation/cancellation, list-only deletion, current-root protection, input/wheel gating and user/skill documentation. No blocking findings. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) passed. All 19 image URLs across original screenshots, ADR renders and composed TUI evidence return HTTP 200; visually inspected ADR and composed picker/modal captures. All six current-head GitHub checks succeeded on the initial inspection; merge readiness is checked separately.",
+          "createdAt": "2026-11-04T01:37:26.285Z",
+          "updatedAt": "2026-11-04T01:37:26.285Z"
         },
         {
           "id": "klGIzUCm",
@@ -45,16 +76,6 @@
           "updatedAt": "2026-11-04T01:14:34.864Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b8eb6f23-bef9-421b-947c-eefa97bd6468",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:20:45.725Z"
-      }
     }
   }
 }
