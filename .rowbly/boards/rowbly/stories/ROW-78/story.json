@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T02:32:16.200Z",
+  "updatedAt": "2026-11-04T02:32:17.643Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:24:44.373Z",
+        "finishedAt": "2026-11-04T02:32:16.200Z"
+      }
     },
     "comments": {
       "comments": [
@@ -97,19 +108,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7 (thread mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-correction-2-launch.json. Branch: factory/row-78-correction-2, pushed to factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: cfed5c1506ca3fdf67b31199b74ea8093daa9837.",
           "createdAt": "2026-11-04T02:32:15.365Z",
           "updatedAt": "2026-11-04T02:32:15.365Z"
+        },
+        {
+          "id": "d8YGI0iA",
+          "author": "sunny",
+          "body": "Returned work fixed on https://github.com/sgolovine/rowbly/pull/166, head cfed5c1506ca3fdf67b31199b74ea8093daa9837. 1) Main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167: merged origin/main (ba58d2d1), kept ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}; OnboardingPluginStep has an optional params prop and onboarding passes run: true to the inline Factory setup, which runs at once; the user guide combines the immediate-run and Settings-asks-first wording with the inline/esc guidance. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass; CI pending on the new head. agentic-tui: Factory setup runs inline without confirmation, esc returns to factory guidance, Stage Prompts inline with hints and toggle, Finish onboarding works, Settings Stage Prompts unchanged and Settings Factory setup still asks first. Screenshots: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620938388. The new head needs independent review.",
+          "createdAt": "2026-11-04T02:32:17.642Z",
+          "updatedAt": "2026-11-04T02:32:17.642Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:0f80baad-a4e9-4f73-bb5d-deb06edcada7",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:24:44.373Z",
-        "finishedAt": "2026-11-04T02:32:16.200Z"
-      }
     }
   }
 }
