@@ -196,7 +196,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
                   await plugins.reload();
                   const route =
                     item.value === 'setup'
-                      ? pluginRoute('software-factory', 'factory-setup', { title: 'Factory setup' })
+                      ? pluginRoute('software-factory', 'factory-setup', { title: 'Factory setup', run: true })
                       : pluginRoute('software-factory', 'stage-prompts');
                   router.push(route.screen, route.params);
                 } else if (item.value === 'skills') setStep('skills');
