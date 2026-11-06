@@ -1,6 +1,9 @@
 {
   "version": 1,
   "onboardingComplete": true,
+  "onboardingSteps": [
+    "board"
+  ],
   "stages": [
     {
       "key": "todo",
