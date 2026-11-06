@@ -25,7 +25,7 @@
       "enabled": true
     },
     "tasks": {
-      "enabled": false
+      "enabled": true
     },
     "story-linking": {
       "enabled": true
