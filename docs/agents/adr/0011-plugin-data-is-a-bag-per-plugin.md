@@ -1,7 +1,0 @@
-# ADR-0011: Plugin Data is a bag per Plugin, and core keeps it unchanged
-
-**Status:** Accepted. Built. Since [ADR-0022](0022-tasks-are-a-built-in-plugin.md), Tasks are Plugin Data of the Tasks Plugin and carry no bags of their own. Amended narrowly by [ADR-0034](0034-git-synchronization-publishes-recoverably.md).
-
-A Plugin stores its values on Rowbly's records in a bag under its own id, for example `"plugins": { "epics": { "epic": "auth" } }` on a Story. The Data Root (in `rowbly.config.json`), Boards, Stories, Tasks and Assignees can each carry bags. Local State can carry them too, for per-developer values that are never committed. Each Plugin validates its own bag with its own schema. Core does not read the bags, but it keeps every bag unchanged when it writes a record. This includes the bags of Plugins that are off, and of Plugins that this Rowbly version does not know. `--json` output prints records as they are stored, with every bag.
-
-This is a deliberate exception to the rule that schemas drop unknown keys, which ADR-0008 used to remove `epicId`. If Plugins added their own top-level keys, the next core write would delete the data of a Plugin that is off, and the keys of two Plugins, or of a Plugin and a later core version, could clash. We also rejected keeping all Plugin data in the Plugin's own files. A link such as a Story's Epic would then be held in a shared file, where every change can cause a merge conflict (the reason for ADR-0004).
