@@ -13,6 +13,8 @@ export interface ServiceContext {
   home?: string;
   /** The clock. Defaults to the system time. */
   now?: () => Date;
+  /** The folder of the bundled skills. Defaults to `skills/` in the Rowbly package. */
+  skillsDir?: string;
 }
 
 export interface ProjectPaths {

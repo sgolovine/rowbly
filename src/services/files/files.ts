@@ -1,4 +1,4 @@
-import { access, mkdir, readdir, rename, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, readdir, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export async function pathExists(path: string): Promise<boolean> {
@@ -7,6 +7,19 @@ export async function pathExists(path: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Whether something is at `path`. Unlike `pathExists`, a broken symlink counts, and so does a file in place of a parent folder. */
+export async function pathOccupied(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return false;
+    if (code === "ENOTDIR") return true;
+    throw error;
   }
 }
 
