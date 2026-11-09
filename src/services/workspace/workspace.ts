@@ -18,6 +18,7 @@ export interface ProjectPaths {
   root: string;
   dir: string;
   configFile: string;
+  instructionsFile: string;
   storiesDir: string;
   stagesDir: string;
   specsDir: string;
@@ -29,6 +30,7 @@ export function projectPaths(root: string): ProjectPaths {
     root,
     dir,
     configFile: join(dir, "rowbly.config.json"),
+    instructionsFile: join(dir, "ROWBLY.md"),
     storiesDir: join(dir, "stories"),
     stagesDir: join(dir, "stages"),
     specsDir: join(dir, "specs"),

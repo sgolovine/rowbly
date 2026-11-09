@@ -1,0 +1,32 @@
+{
+  "projectName": "rowbly",
+  "projectKey": "ROW",
+  "customFields": [],
+  "stages": [
+    {
+      "key": "BACKLOG",
+      "label": "Backlog",
+      "enabled": true
+    },
+    {
+      "key": "IN_REFINEMENT",
+      "label": "In Refinement",
+      "enabled": true
+    },
+    {
+      "key": "IN_DEVELOPMENT",
+      "label": "In Development",
+      "enabled": true
+    },
+    {
+      "key": "IN_REVIEW",
+      "label": "In Review",
+      "enabled": true
+    },
+    {
+      "key": "DONE",
+      "label": "Done",
+      "enabled": true
+    }
+  ]
+}

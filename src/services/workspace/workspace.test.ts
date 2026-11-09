@@ -11,6 +11,7 @@ describe("projectPaths", () => {
       root: "/repo",
       dir: join("/repo", ".rowbly"),
       configFile: join("/repo", ".rowbly", "rowbly.config.json"),
+      instructionsFile: join("/repo", ".rowbly", "ROWBLY.md"),
       storiesDir: join("/repo", ".rowbly", "stories"),
       stagesDir: join("/repo", ".rowbly", "stages"),
       specsDir: join("/repo", ".rowbly", "specs"),

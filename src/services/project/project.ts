@@ -1,4 +1,4 @@
-import { mkdir, rename } from "node:fs/promises";
+import { mkdir, readFile, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import {
   checkProjectKey,
@@ -19,6 +19,13 @@ import { findProject, projectPaths, type ServiceContext } from "../workspace/wor
 export interface Project extends ProjectConfig {
   /** The directory that contains `.rowbly/`. */
   root: string;
+}
+
+export interface ProjectInstructions {
+  /** The absolute path of `ROWBLY.md`, also when the file does not exist. */
+  path: string;
+  /** Top-level instructions for every agent that works on the project. Empty when there is no `ROWBLY.md`. */
+  instructions: string;
 }
 
 export interface InitProjectInput {
@@ -51,12 +58,17 @@ function checkName(name: string, issues: Issue[]): string {
   return name.trim();
 }
 
+/** The name that `initProject` gives a project in `ctx.cwd` if the input has no name. */
+export function defaultProjectName(ctx: ServiceContext = {}): string {
+  return basename(resolve(ctx.cwd ?? process.cwd()));
+}
+
 /** Creates `.rowbly/` in `ctx.cwd` with a config, the default stages and an empty stories folder. */
 export async function initProject(input: InitProjectInput = {}, ctx: ServiceContext = {}): Promise<Project> {
   const root = resolve(ctx.cwd ?? process.cwd());
   const paths = projectPaths(root);
   const issues: Issue[] = [];
-  const projectName = checkName(input.name ?? basename(root), issues);
+  const projectName = checkName(input.name ?? defaultProjectName(ctx), issues);
   const projectKey = (input.key ?? toProjectKey(projectName)).trim().toUpperCase();
   issues.push(...checkProjectKey(projectKey, ["key"]));
   throwIfIssues("The project is invalid", issues);
@@ -83,6 +95,12 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
 export async function getProject(ctx: ServiceContext = {}): Promise<Project> {
   const paths = await findProject(ctx);
   return { ...(await readConfig(paths)), root: paths.root };
+}
+
+/** Reads `.rowbly/ROWBLY.md`. Rowbly does not parse the text; agents obey it. */
+export async function getInstructions(ctx: ServiceContext = {}): Promise<ProjectInstructions> {
+  const { instructionsFile: path } = await findProject(ctx);
+  return { path, instructions: (await pathExists(path)) ? (await readFile(path, "utf8")).trim() : "" };
 }
 
 export async function updateProject(input: UpdateProjectInput, ctx: ServiceContext = {}): Promise<Project> {
