@@ -39,19 +39,26 @@ and `rank`, `{ "deleted": "<id>" }` for `delete`. Failure prints nothing on stdo
 stderr:
 
 ```json
-{"error":{"code":"VALIDATION","message":"unknown Stage \"nope\"","details":{"validStages":["backlog","todo","in-progress","done"]},"hint":"valid Stages: backlog, todo, in-progress, done"}}
+{
+  "error": {
+    "code": "VALIDATION",
+    "message": "unknown Stage \"nope\"",
+    "details": { "validStages": ["backlog", "todo", "in-progress", "done"] },
+    "hint": "valid Stages: backlog, todo, in-progress, done"
+  }
+}
 ```
 
-| Exit | `error.code` | Meaning | Do |
-| --- | --- | --- | --- |
-| 0 | — | Success | — |
-| 1 | `INTERNAL` | Bug, unreadable file or a Plugin that failed mid-change; nothing was saved | Report it; do not loop |
-| 2 | `USAGE` | Bad flags, missing value, no Board in context, no `--yes`, command of a Plugin that is off | Fix the command line; the `hint` says how |
-| 2 | `VALIDATION` | Unknown Stage, Assignee or Custom Field, bad Label or date | Use a value from `details` |
-| 3 | `NOT_FOUND` | Unknown Board, Story, Task, Comment, Epic or Spec | List the records; check the id |
-| 4 | `CONFLICT` | Id or prefix exists, deletion refused, Plugin refused, lock busy 10 s | Read the message; do not force without the user |
-| 5 | `NO_DATA_ROOT` | No `.rowbly/` found (`details.path`) | Create one only if the user wants it |
-| 6 | `DATA_INTEGRITY` | A file is invalid or has git conflict markers (`details.path`) | `rowbly doctor --fix --json --no-prompt`, see §9 |
+| Exit | `error.code`     | Meaning                                                                                    | Do                                               |
+| ---- | ---------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| 0    | —                | Success                                                                                    | —                                                |
+| 1    | `INTERNAL`       | Bug, unreadable file or a Plugin that failed mid-change; nothing was saved                 | Report it; do not loop                           |
+| 2    | `USAGE`          | Bad flags, missing value, no Board in context, no `--yes`, command of a Plugin that is off | Fix the command line; the `hint` says how        |
+| 2    | `VALIDATION`     | Unknown Stage, Assignee or Custom Field, bad Label or date                                 | Use a value from `details`                       |
+| 3    | `NOT_FOUND`      | Unknown Board, Story, Task, Comment, Epic or Spec                                          | List the records; check the id                   |
+| 4    | `CONFLICT`       | Id or prefix exists, deletion refused, Plugin refused, lock busy 10 s                      | Read the message; do not force without the user  |
+| 5    | `NO_DATA_ROOT`   | No `.rowbly/` found (`details.path`)                                                       | Create one only if the user wants it             |
+| 6    | `DATA_INTEGRITY` | A file is invalid or has git conflict markers (`details.path`)                             | `rowbly doctor --fix --json --no-prompt`, see §9 |
 
 Warnings go to stderr even on success.
 
@@ -59,23 +66,23 @@ Warnings go to stderr even on success.
 
 Use these in commands, commit messages and replies.
 
-| Term | Meaning | Not |
-| --- | --- | --- |
-| Data Root | The `.rowbly/` folder | project, workspace, database |
-| Board | A Kanban board with a key prefix, id `web`, prefix `WEB` | project |
-| Story | The unit of work, keyed `WEB-42` | issue, ticket, card |
-| Stage | A step in a Board's workflow; `backlog` is always first and `done` always last | status, column |
-| Stage Category | `backlog`, `board` or `done`; every Stage has one | — |
-| Rank | A Story's position inside its Stage | order |
-| Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag | severity / tag |
-| Custom Field | A typed per-Board field, set with `--field key=value` | — |
-| Me | The handle the user works as (`rowbly whoami`) | user |
-| Task | A smaller item inside a Story, `WEB-42.1` (Tasks Plugin) | subtask |
-| Assignee | A person in the roster (Assignees Plugin) | owner |
-| Epic | A group of Stories from any Boards (Epics Plugin) | — |
-| Spec | A Markdown document of a Story or a Board (Specs Plugin) | — |
-| Attachment | A PNG image on a Story (Attachments Plugin) | upload, file blob |
-| Comment | A note on a Story (Comments Plugin) | — |
+| Term             | Meaning                                                                        | Not                          |
+| ---------------- | ------------------------------------------------------------------------------ | ---------------------------- |
+| Data Root        | The `.rowbly/` folder                                                          | project, workspace, database |
+| Board            | A Kanban board with a key prefix, id `web`, prefix `WEB`                       | project                      |
+| Story            | The unit of work, keyed `WEB-42`                                               | issue, ticket, card          |
+| Stage            | A step in a Board's workflow; `backlog` is always first and `done` always last | status, column               |
+| Stage Category   | `backlog`, `board` or `done`; every Stage has one                              | —                            |
+| Rank             | A Story's position inside its Stage                                            | order                        |
+| Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag                            | severity / tag               |
+| Custom Field     | A typed per-Board field, set with `--field key=value`                          | —                            |
+| Me               | The handle the user works as (`rowbly whoami`)                                 | user                         |
+| Task             | A smaller item inside a Story, `WEB-42.1` (Tasks Plugin)                       | subtask                      |
+| Assignee         | A person in the roster (Assignees Plugin)                                      | owner                        |
+| Epic             | A group of Stories from any Boards (Epics Plugin)                              | —                            |
+| Spec             | A Markdown document of a Story or a Board (Specs Plugin)                       | —                            |
+| Attachment       | A PNG image on a Story (Attachments Plugin)                                    | upload, file blob            |
+| Comment          | A note on a Story (Comments Plugin)                                            | —                            |
 
 ## 4. Where a command looks
 

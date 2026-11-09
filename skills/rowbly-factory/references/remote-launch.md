@@ -63,13 +63,13 @@ It prints one JSON line with `status`, `prerequisites`, `memory`, `git` (the pre
 one `{check, reason, fix}` for each problem, with `check` one of `node`, `rowbly`, `gh`, `t3`,
 `memory`, `branch`, `policy`, `git`, `sync`, `changes`, `cleanup` or `pull`.
 
-| `status` | Exit | Meaning | Next |
-| --- | --- | --- | --- |
-| `ready` | 0 | Up to date; any Rowbly changes were published | Workers may run there. |
-| `failed` | 1 | A check, the sync (with its `reason`), the cleanup or the pull failed | Apply each `fix`; leave the machine out until it passes. |
-| `policy` | 2 | `ROWBLY.md` or a Stage Prompt has uncommitted changes | Show the user `policyDiff`; never sync or clean them up. |
-| `dirty` | 2 | Changes outside Rowbly data | Read them; run again with `--cleanup` or ask the user. |
-| `waiting` | 2 | The sync is still requested or running | Retain `sync.synchronizationRun`; reconcile it as Confirm publication says before any new preparation or Git operation. |
+| `status`  | Exit | Meaning                                                               | Next                                                                                                                    |
+| --------- | ---- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `ready`   | 0    | Up to date; any Rowbly changes were published                         | Workers may run there.                                                                                                  |
+| `failed`  | 1    | A check, the sync (with its `reason`), the cleanup or the pull failed | Apply each `fix`; leave the machine out until it passes.                                                                |
+| `policy`  | 2    | `ROWBLY.md` or a Stage Prompt has uncommitted changes                 | Show the user `policyDiff`; never sync or clean them up.                                                                |
+| `dirty`   | 2    | Changes outside Rowbly data                                           | Read them; run again with `--cleanup` or ask the user.                                                                  |
+| `waiting` | 2    | The sync is still requested or running                                | Retain `sync.synchronizationRun`; reconcile it as Confirm publication says before any new preparation or Git operation. |
 
 ## Launch
 
@@ -133,14 +133,14 @@ and, once a thread is known, `threadId`, `provider`, `model`, `options`, `runtim
 `launcherId` and `briefPath`, a `reason` when it fails, and a `note` when the launcher answered
 oddly but the checks passed.
 
-| `status` | Exit | Meaning | Next |
-| --- | --- | --- | --- |
-| `launched` | 0 | Started and verified, options included | Use `threadId`. |
-| `existing` | 0 | This request's thread was already there and passes every check | Use it; it is the one an earlier call started. |
-| `failed`, `error` | 1 | Nothing was started | Fix the `reason`, then run the same command again. |
-| `unknown` | 2 | A requested or discovered thread cannot be found or confirmed | Wait, then run the **same** command again. If it stays `unknown`, see Restarting. |
-| `conflict` | 2 | Several threads for the request, a thread that differs from it, an archived thread, or a title used for another request | Start nothing for the Story; look at the threads (`t3 thread show`) and tell the user. |
-| `unverified` | 2 | CLI or CONFIG identity/configuration evidence is missing, empty, whitespace-only or malformed, or the launcher could not confirm options | Do not count it as verified; run the same command again later, or tell the user. |
+| `status`          | Exit | Meaning                                                                                                                                  | Next                                                                                   |
+| ----------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `launched`        | 0    | Started and verified, options included                                                                                                   | Use `threadId`.                                                                        |
+| `existing`        | 0    | This request's thread was already there and passes every check                                                                           | Use it; it is the one an earlier call started.                                         |
+| `failed`, `error` | 1    | Nothing was started                                                                                                                      | Fix the `reason`, then run the same command again.                                     |
+| `unknown`         | 2    | A requested or discovered thread cannot be found or confirmed                                                                            | Wait, then run the **same** command again. If it stays `unknown`, see Restarting.      |
+| `conflict`        | 2    | Several threads for the request, a thread that differs from it, an archived thread, or a title used for another request                  | Start nothing for the Story; look at the threads (`t3 thread show`) and tell the user. |
+| `unverified`      | 2    | CLI or CONFIG identity/configuration evidence is missing, empty, whitespace-only or malformed, or the launcher could not confirm options | Do not count it as verified; run the same command again later, or tell the user.       |
 
 ## Retrying, archiving and restarting
 

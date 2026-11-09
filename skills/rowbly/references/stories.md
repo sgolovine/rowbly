@@ -22,13 +22,13 @@ workflow order, each with its key, name and category. Every Board starts with `b
 use their keys, names and order to understand preparation, development and review. Do not assume
 `todo` or `in-progress` exists.
 
-| When | Stage |
-| --- | --- |
-| A new Story | The `backlog` Stage, unless the user names another Stage |
-| Work starts | The configured Stage for the assigned activity, such as refinement, development (`doing`, `in-progress`) or review |
-| Preparation or refinement finishes | The next Stage for prepared work, such as `ready` or `todo` |
-| Implementation finishes | The next review or approval Stage when the workflow requires it, such as `review` or `ready-for-review` |
-| The Story's workflow is complete, including required review or approval | The `done` Stage |
+| When                                                                    | Stage                                                                                                              |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| A new Story                                                             | The `backlog` Stage, unless the user names another Stage                                                           |
+| Work starts                                                             | The configured Stage for the assigned activity, such as refinement, development (`doing`, `in-progress`) or review |
+| Preparation or refinement finishes                                      | The next Stage for prepared work, such as `ready` or `todo`                                                        |
+| Implementation finishes                                                 | The next review or approval Stage when the workflow requires it, such as `review` or `ready-for-review`            |
+| The Story's workflow is complete, including required review or approval | The `done` Stage                                                                                                   |
 
 For example, on `backlog → refining → ready → doing → review → done`, refinement hands off to `ready`
 and implementation hands off to `review`. On the default `backlog → todo → in-progress → done`,

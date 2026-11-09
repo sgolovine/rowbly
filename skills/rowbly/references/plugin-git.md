@@ -141,16 +141,16 @@ repository's rules allow it. Other failures exit 4 (`CONFLICT`). Act on `error.d
 (also `last.reason`), never on the message text. `error.details.retryable` says whether trying again
 can help, and `error.details.paths` lists the paths concerned when known.
 
-| `reason` | Cause | What to do |
-| --- | --- | --- |
-| `capture-changed` | Another writer, such as the TUI, kept saving; the message names the Stories | Wait, then retry a bounded number of times |
-| `index-changed` | Another Git command changed what is staged during Sync | Check `git status`, then retry |
-| `network` | Fetch or push failed; the local result is kept | Check network and credentials, then retry |
-| `resolution-off` | Automatic Merge Conflict Resolution is Off (exit 2) | Configure it when allowed; otherwise ask |
-| `no-upstream` | No checked-out branch, or no configured upstream | Fix the branch or upstream; do not retry first |
-| `conflict` | A Git operation in progress, a conflict outside Rowbly data, or content Sync would overwrite | Stop and report; resolve by hand |
-| `evidence` | Merge Evidence disagrees at the same path | Stop and report the paths |
-| `unexpected` | Anything else | Report the message |
+| `reason`          | Cause                                                                                        | What to do                                     |
+| ----------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `capture-changed` | Another writer, such as the TUI, kept saving; the message names the Stories                  | Wait, then retry a bounded number of times     |
+| `index-changed`   | Another Git command changed what is staged during Sync                                       | Check `git status`, then retry                 |
+| `network`         | Fetch or push failed; the local result is kept                                               | Check network and credentials, then retry      |
+| `resolution-off`  | Automatic Merge Conflict Resolution is Off (exit 2)                                          | Configure it when allowed; otherwise ask       |
+| `no-upstream`     | No checked-out branch, or no configured upstream                                             | Fix the branch or upstream; do not retry first |
+| `conflict`        | A Git operation in progress, a conflict outside Rowbly data, or content Sync would overwrite | Stop and report; resolve by hand               |
+| `evidence`        | Merge Evidence disagrees at the same path                                                    | Stop and report the paths                      |
+| `unexpected`      | Anything else                                                                                | Report the message                             |
 
 Read-only Git commands such as `git status` may run beside Sync; Sync compares what is staged, not
 the index file's bytes. Still, do not start Rowbly changes in parallel with `git sync` in scripts:
@@ -178,7 +178,6 @@ Git first (`rowbly plugins disable git`), remember that it was on, run the repai
   two preferences are independent; inspect and configure each explicitly.
 - **MEDIUM: enabling it with unrelated edits under `.rowbly/`.** They are swept into the next Automatic
   Commit. Start from a clean baseline.
-
 
 For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4) with `details.reason`
 (see [When `git sync` fails](#when-git-sync-fails)), and the usual

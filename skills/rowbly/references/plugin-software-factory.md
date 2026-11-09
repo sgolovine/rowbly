@@ -87,11 +87,25 @@ rowbly software-factory brief WEB-42 --retry-file ./retry.md --json --no-prompt 
 `stages --json` returns:
 
 ```json
-{ "board": "web", "stagesSource": "global",
-  "stages": [{ "key": "todo", "name": "TODO", "category": "board",
-    "prompt": { "enabled": true, "configured": true, "source": "board",
-      "path": "boards/web/plugins/software-factory/stage-prompts/todo.md", "exists": true,
-      "text": "# TODO\n\n…" } }] }
+{
+  "board": "web",
+  "stagesSource": "global",
+  "stages": [
+    {
+      "key": "todo",
+      "name": "TODO",
+      "category": "board",
+      "prompt": {
+        "enabled": true,
+        "configured": true,
+        "source": "board",
+        "path": "boards/web/plugins/software-factory/stage-prompts/todo.md",
+        "exists": true,
+        "text": "# TODO\n\n…"
+      }
+    }
+  ]
+}
 ```
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.

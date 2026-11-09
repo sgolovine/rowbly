@@ -1,4 +1,5 @@
 ---
+
 name: rowbly-factory
 description: "Run a Rowbly software factory on one Board: act as its supervisor, start a worker thread for each Story that arrives in a Stage whose Stage Prompt is on, record each Stage Run, answer or relay workers' questions, and apply the Board changes they report. Use when the user asks to run, start or supervise the factory, or to keep working a Board's Stories with agents."
 ---
@@ -447,12 +448,12 @@ check result or worker identity. Refused opaque data is a blocker, never permiss
 
 Workers end messages with these markers, as the brief asks:
 
-| Marker | Action |
-| --- | --- |
-| a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
-| `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move. |
+| Marker                          | Action                                                                                                                                                                                                                                                                      |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a fenced `rowbly` block         | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished.                                                                                                                                                                               |
+| `FACTORY-QUESTIONS <KEY>`       | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
+| `FACTORY-DONE <KEY>`            | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end.                                                                                 |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move.                                                                                                                    |
 
 Each message from a worker, and each event its harness reports for it (a turn starting or ending,
 a commit pushed), is verified activity: record it as the Stage Run's heartbeat.
@@ -518,13 +519,13 @@ checks`.
   that current head before any merge. If it changed, discard the old result and process the new
   head. Classify actual check conclusions, not the watch exit code:
 
-  | Outcome | Sign | Do |
-  | --- | --- | --- |
-  | Settled, all passed | nonempty current-head rollup: every CheckRun is `COMPLETED` with conclusion `SUCCESS`, and every StatusContext has state `SUCCESS` | continue the Stage's work, subject to its other gates |
-  | A check failed | a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED`, or a StatusContext state of `FAILURE` or `ERROR` | route it as the Stage Prompt says for failed checks; name the check and its link |
-  | No checks yet | empty current-head rollup soon after a push (the watch may say "no checks reported") | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
-  | Still pending or wait timed out | unfinished checks or pending StatusContexts, including after the watch's timeout (exit 124) | not a failed check: report **waiting** with the head SHA and the pending names, or ask; do not repeat a timed-out watch |
-  | Terminal result needs a decision | `CANCELLED`, `SKIPPED`, `NEUTRAL`, or any unrecognized terminal conclusion or state | does not establish all passed: follow an explicit policy or ask; never infer success from exit 0 |
+  | Outcome                          | Sign                                                                                                                               | Do                                                                                                                       |
+  | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+  | Settled, all passed              | nonempty current-head rollup: every CheckRun is `COMPLETED` with conclusion `SUCCESS`, and every StatusContext has state `SUCCESS` | continue the Stage's work, subject to its other gates                                                                    |
+  | A check failed                   | a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED`, or a StatusContext state of `FAILURE` or `ERROR`                      | route it as the Stage Prompt says for failed checks; name the check and its link                                         |
+  | No checks yet                    | empty current-head rollup soon after a push (the watch may say "no checks reported")                                               | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
+  | Still pending or wait timed out  | unfinished checks or pending StatusContexts, including after the watch's timeout (exit 124)                                        | not a failed check: report **waiting** with the head SHA and the pending names, or ask; do not repeat a timed-out watch  |
+  | Terminal result needs a decision | `CANCELLED`, `SKIPPED`, `NEUTRAL`, or any unrecognized terminal conclusion or state                                                | does not establish all passed: follow an explicit policy or ask; never infer success from exit 0                         |
 
   A pull request that cannot be read or used (no access, wrong repository, closed) is separate:
   report the error and ask. `mergeable` reads `UNKNOWN` for a while after a push to the base

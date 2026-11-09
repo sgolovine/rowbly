@@ -93,6 +93,7 @@ Previous outcome: <completed work, validation results, publication outcome and r
 say which details are unknown, including whether the worker ever started>.
 
 Existing work (previous attempt, not the new worker):
+
 - Branch: <exact recorded branch, or unknown; verification result>.
 - Worktree and machine: <recorded path and machine, each unknown if absent; verification result>.
 - PR: <recorded URL, or unknown; verified open/draft/closed/merged status when available>.
