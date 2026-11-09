@@ -19,6 +19,7 @@ const story = (number: number, title: string, stage = "BACKLOG", description = "
   position: number,
   description,
   fields: {},
+  agentLock: null,
   path: "",
 });
 const stories = [story(1, "Login page"), story(2, "Logout button", "DONE"), story(3, "Docs", "BACKLOG", "about login")];

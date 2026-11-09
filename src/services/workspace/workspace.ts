@@ -11,6 +11,8 @@ export interface ServiceContext {
   cwd?: string;
   /** The home directory of the user. Defaults to `os.homedir()`. */
   home?: string;
+  /** The clock. Defaults to the system time. */
+  now?: () => Date;
 }
 
 export interface ProjectPaths {

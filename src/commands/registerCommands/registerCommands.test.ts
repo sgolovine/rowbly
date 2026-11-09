@@ -16,6 +16,8 @@ describe("registerCommands", () => {
       "update-story",
       "delete-story",
       "get-story",
+      "lock-story",
+      "unlock-story",
       "search-stories",
       "create-stage",
       "update-stage",

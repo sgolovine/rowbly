@@ -15,6 +15,7 @@ const story = (n: number, stage: string): Story => ({
   position: n,
   description: "",
   fields: {},
+  agentLock: null,
   path: "",
 });
 const stories = [story(1, "DONE"), story(2, "BACKLOG"), story(3, "GONE")];

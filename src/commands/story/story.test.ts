@@ -107,4 +107,46 @@ describe("story commands", () => {
       expect((await cli("search-stories", "nothing")).stdout).toBe("No stories found.");
     });
   });
+
+  describe("agent locks", () => {
+    it("locks a story, shows the lock in get-story, and unlocks it", async () => {
+      await cli("create-story", "--title", "First");
+      expect(await cli("lock-story", "ROW-01", "--agent", "claude")).toEqual({
+        stdout: "Locked ROW-01 for claude",
+        stderr: "",
+        exitCode: 0,
+      });
+      expect((await cli("get-story", "ROW-01")).stdout).toMatch(/^Agent lock: claude \(since \d{4}-.*\)$/m);
+      expect((await cli("unlock-story", "ROW-01", "--agent", "claude")).stdout).toBe("Unlocked ROW-01");
+      expect((await cli("get-story", "ROW-01")).stdout).not.toContain("Agent lock");
+    });
+
+    it("gives the lock as JSON", async () => {
+      await cli("create-story", "--title", "First");
+      const result = await cli("lock-story", "ROW-01", "--agent", "claude", "--json");
+      expect(JSON.parse(result.stdout).agentLock).toMatchObject({ agent: "claude", stage: "BACKLOG" });
+    });
+
+    it("requires --agent to lock", async () => {
+      await cli("create-story", "--title", "First");
+      const result = await cli("lock-story", "ROW-01");
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("required option '--agent <name>' not specified");
+    });
+
+    it("refuses a second agent and names the holder", async () => {
+      await cli("create-story", "--title", "First");
+      await cli("lock-story", "ROW-01", "--agent", "claude");
+      const result = await cli("lock-story", "ROW-01", "--agent", "codex");
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("ROW-01 is locked by claude");
+      expect(result.stderr).toContain("rowbly unlock-story ROW-01");
+    });
+
+    it("fails to unlock a story with no lock", async () => {
+      await cli("create-story", "--title", "First");
+      const result = await cli("unlock-story", "ROW-01");
+      expect(result).toEqual({ stdout: "", stderr: "Error: ROW-01 has no agent lock", exitCode: 1 });
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { type DependencyList, useCallback, useEffect, useState } from "react";
+import { type DependencyList, useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./toasts.js";
 
 export interface AsyncState<T> {
@@ -7,6 +7,8 @@ export interface AsyncState<T> {
   data: T | undefined;
   /** Runs `fn` again. */
   reload(): void;
+  /** Runs `fn` again in the background: `loading` stays false, and a failure keeps the data and shows no toast. */
+  refresh(): void;
 }
 
 /**
@@ -17,6 +19,7 @@ export interface AsyncState<T> {
 export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncState<T> {
   const toast = useToast();
   const [run, setRun] = useState(0);
+  const background = useRef(false);
   const [state, setState] = useState<{ loading: boolean; error: unknown; data: T | undefined }>({
     loading: true,
     error: undefined,
@@ -26,7 +29,9 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
   // biome-ignore lint/correctness/useExhaustiveDependencies: the caller's `deps` decide when `fn` runs again.
   useEffect(() => {
     let current = true;
-    setState((prev) => ({ ...prev, loading: true, error: undefined }));
+    const quiet = background.current;
+    background.current = false;
+    if (!quiet) setState((prev) => ({ ...prev, loading: true, error: undefined }));
     // Called through `then`, so a synchronous throw from `fn` is a rejection like any other (RES-18C).
     Promise.resolve()
       .then(fn)
@@ -36,6 +41,13 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
         },
         (error: unknown) => {
           if (!current) return;
+          if (quiet) {
+            // A refresh can replace a load in progress, so it also ends `loading`.
+            setState((prev) =>
+              prev.data === undefined ? { loading: false, error, data: undefined } : { ...prev, loading: false },
+            );
+            return;
+          }
           setState({ loading: false, error, data: undefined });
           toast.error(error);
         },
@@ -46,5 +58,9 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
   }, [...deps, run]);
 
   const reload = useCallback(() => setRun((n) => n + 1), []);
-  return { ...state, reload };
+  const refresh = useCallback(() => {
+    background.current = true;
+    setRun((n) => n + 1);
+  }, []);
+  return { ...state, reload, refresh };
 }

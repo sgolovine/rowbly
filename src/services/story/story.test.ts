@@ -1,10 +1,10 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { addCustomField } from "../customField/customField.js";
-import { NotFoundError, ValidationError } from "../errors/errors.js";
-import { updateStage } from "../stage/stage.js";
+import { addCustomField, updateCustomField } from "../customField/customField.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
+import { deleteStage, updateStage } from "../stage/stage.js";
 import { useTestProject } from "../testProject/testProject.js";
-import { createStory, deleteStory, getStory, searchStories, updateStory } from "./story.js";
+import { createStory, deleteStory, getStory, lockStory, searchStories, unlockStory, updateStory } from "./story.js";
 
 describe("story", () => {
   const project = useTestProject();
@@ -28,6 +28,7 @@ describe("story", () => {
         position: 1,
         description: "Body",
         fields: { points: null, priority: null, owner: null },
+        agentLock: null,
         path: join(project.paths.storiesDir, "ROW-01.md"),
       });
       expect(await project.read("stories/ROW-01.md")).toBe(
@@ -196,6 +197,137 @@ describe("story", () => {
     it("rejects an unknown stage or field", async () => {
       await expect(searchStories({ stage: "NOPE" }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
       await expect(searchStories({ fields: { nope: 1 } }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("agent locks", () => {
+    const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+    const T1 = "2026-11-09T10:00:00.000Z";
+    const T2 = "2026-11-09T11:00:00.000Z";
+
+    /** Adds raw frontmatter lines to ROW-01, the way a hand edit or a git merge can. */
+    async function writeLockLines(lines: string): Promise<void> {
+      await project.write("stories/ROW-01.md", `---\ntitle: T\nstage: BACKLOG\n${lines}\n---\n`);
+    }
+
+    it("records the agent, the stage and the time, and keeps them in the file", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      const story = await lockStory({ id: "ROW-01", agent: " claude " }, at(T1));
+      const agentLock = { agent: "claude", stage: "BACKLOG", lockedAt: T1 };
+      expect(story.agentLock).toEqual(agentLock);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock).toEqual(agentLock);
+    });
+
+    it("needs an agent name", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      const error = await lockStory({ id: "ROW-01", agent: "  " }, project.ctx).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).details.issues).toMatchObject([{ path: ["agent"] }]);
+    });
+
+    it("refuses a lock when a different agent holds one, and names the holder", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, at(T1));
+      const error = await lockStory({ id: "ROW-01", agent: "codex" }, at(T2)).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ConflictError);
+      expect((error as ConflictError).hint).toContain("claude");
+      expect((error as ConflictError).hint).toContain("rowbly unlock-story");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock?.agent).toBe("claude");
+    });
+
+    it("keeps lockedAt when the same agent locks again", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, at(T1));
+      const again = await lockStory({ id: "ROW-01", agent: "claude" }, at(T2));
+      expect(again.agentLock?.lockedAt).toBe(T1);
+    });
+
+    it("removes a lock, and only the holder can remove it when an agent is given", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await expect(unlockStory({ id: "ROW-01", agent: "codex" }, project.ctx)).rejects.toBeInstanceOf(ConflictError);
+      expect((await unlockStory({ id: "ROW-01", agent: "claude" }, project.ctx)).agentLock).toBeNull();
+      expect(await project.read("stories/ROW-01.md")).not.toContain("agentLock");
+    });
+
+    it("removes a lock without an agent, whoever holds it", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      expect((await unlockStory({ id: "ROW-01" }, project.ctx)).agentLock).toBeNull();
+    });
+
+    it("has nothing to unlock on a story with no lock", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await expect(unlockStory({ id: "ROW-01" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it("removes the lock when the story changes stage", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      expect((await updateStory({ id: "ROW-01", stage: "DONE" }, project.ctx)).agentLock).toBeNull();
+      expect(await project.read("stories/ROW-01.md")).not.toContain("agentLock");
+    });
+
+    it("keeps the lock through other updates and reorders", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await createStory({ title: "Other" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await updateStory({ id: "ROW-01", title: "New", stage: "BACKLOG" }, project.ctx);
+      await updateStory({ id: "ROW-02", position: 1 }, project.ctx);
+      await updateStory({ id: "ROW-01", position: 1 }, project.ctx);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock?.agent).toBe("claude");
+    });
+
+    it("ignores a stale lock: a new agent can lock, and unlock finds nothing", async () => {
+      await writeLockLines(`agentLock:\n  agent: claude\n  stage: DONE\n  lockedAt: ${T1}`);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock).toBeNull();
+      await expect(unlockStory({ id: "ROW-01" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+      expect((await lockStory({ id: "ROW-01", agent: "codex" }, at(T2))).agentLock).toEqual({
+        agent: "codex",
+        stage: "BACKLOG",
+        lockedAt: T2,
+      });
+    });
+
+    it.each([
+      ["a string", "agentLock: claude"],
+      ["no agent", `agentLock:\n  stage: BACKLOG\n  lockedAt: ${T1}`],
+      ["a bad time", "agentLock:\n  agent: claude\n  stage: BACKLOG\n  lockedAt: soon"],
+    ])("treats %s as no lock and keeps the story valid", async (_name, lines) => {
+      await writeLockLines(lines);
+      expect((await searchStories({}, project.ctx))[0]?.agentLock).toBeNull();
+      await expect(unlockStory({ id: "ROW-01" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it("leaves a malformed lock alone when the story changes stage", async () => {
+      await writeLockLines("agentLock: claude");
+      await updateStory({ id: "ROW-01", stage: "DONE" }, project.ctx);
+      expect(await project.read("stories/ROW-01.md")).toContain("agentLock: claude");
+    });
+
+    it("carries the lock along when its stage key changes", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await updateStage({ key: "BACKLOG", newKey: "TODO" }, project.ctx);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock).toMatchObject({
+        agent: "claude",
+        stage: "TODO",
+      });
+    });
+
+    it("removes the lock when a deleted stage moves the story", async () => {
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await deleteStage({ key: "BACKLOG", moveStoriesTo: "DONE" }, project.ctx);
+      expect(await project.read("stories/ROW-01.md")).not.toContain("agentLock");
+    });
+
+    it("keeps the lock when a custom field is renamed", async () => {
+      await addCustomField({ label: "Points", type: "number" }, project.ctx);
+      await createStory({ title: "T" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await updateCustomField({ key: "points", newKey: "score" }, project.ctx);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock?.agent).toBe("claude");
     });
   });
 });

@@ -4,8 +4,10 @@ import {
   createStory,
   deleteStory,
   getStory,
+  lockStory,
   type Story,
   searchStories,
+  unlockStory,
   updateStory,
 } from "../../services/story/story.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
@@ -23,6 +25,7 @@ async function formatStory(story: Story, ctx: ServiceContext): Promise<string> {
   const project = await getProject(ctx);
   const stage = project.stages.find((s) => s.key === story.stage);
   const lines = [`${story.id}  ${story.title}`, `Stage: ${stage?.label ?? story.stage} (${story.stage})`];
+  if (story.agentLock) lines.push(`Agent lock: ${story.agentLock.agent} (since ${story.agentLock.lockedAt})`);
   for (const field of project.customFields)
     lines.push(`${field.label}: ${formatValue(story.fields[field.key] ?? null)}`);
   if (story.description) lines.push("", story.description);
@@ -101,6 +104,30 @@ export function registerStoryCommands(program: Command): void {
     .description("Show a story")
     .action((id: string, _opts: unknown, command: Command) =>
       run(command, (ctx) => getStory({ id }, ctx), formatStory),
+    );
+
+  program
+    .command("lock-story <id>")
+    .description("Record that an agent works on a story in its current stage")
+    .requiredOption("--agent <name>", "the name of the agent")
+    .action((id: string, opts: { agent: string }, command: Command) =>
+      run(
+        command,
+        (ctx) => lockStory({ id, agent: opts.agent }, ctx),
+        (story) => `Locked ${story.id} for ${story.agentLock?.agent}`,
+      ),
+    );
+
+  program
+    .command("unlock-story <id>")
+    .description("Remove the agent lock of a story")
+    .option("--agent <name>", "refuse if a different agent holds the lock")
+    .action((id: string, opts: { agent?: string }, command: Command) =>
+      run(
+        command,
+        (ctx) => unlockStory({ id, agent: opts.agent }, ctx),
+        (story) => `Unlocked ${story.id}`,
+      ),
     );
 
   program

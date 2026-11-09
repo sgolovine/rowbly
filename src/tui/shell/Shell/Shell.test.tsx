@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { listKnownProjects, RC_FILE, recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject, initProject } from "../../../services/project/project.js";
 import { createStage, listStages } from "../../../services/stage/stage.js";
-import { createStory, searchStories } from "../../../services/story/story.js";
+import { createStory, lockStory, searchStories, unlockStory } from "../../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../../services/testProject/testProject.js";
 import type { Layout } from "../../hooks/index.js";
 import { LayoutContext } from "../../hooks/index.js";
@@ -36,6 +36,70 @@ async function openSized(ctx: { cwd: string }, layout: Layout) {
 
 describe("Shell", () => {
   const project = useTestProject();
+
+  describe("live refresh", () => {
+    /** Waits until a change from outside the TUI is on the screen. */
+    const showsSoon = async (tui: Awaited<ReturnType<typeof open>>, text: string) => {
+      for (let i = 0; i < 40 && !tui.frame().includes(text); i++) await settle(25);
+      expect(tui.frame()).toContain(text);
+    };
+
+    it("shows and removes the agent lock of a change from another process", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      expect(tui.frame()).not.toContain("▶");
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await showsSoon(tui, "▶ claude");
+      await unlockStory({ id: "ROW-01" }, project.ctx);
+      for (let i = 0; i < 40 && tui.frame().includes("▶"); i++) await settle(25);
+      expect(tui.frame()).not.toContain("▶");
+    });
+
+    it("keeps the cursor on the selected Story", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      await createStory({ title: "Second story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.down);
+      expect(tui.frame()).toMatch(/▌\s*ROW-02/);
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await showsSoon(tui, "▶ claude");
+      expect(tui.frame()).toMatch(/▌\s*ROW-02/);
+    });
+
+    it("keeps an open Modal and what the user typed", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      await tui.type("Draft");
+      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await settle(300);
+      await tui.press();
+      expect(tui.frame()).toContain("New Story");
+      expect(tui.frame()).toContain("Draft");
+    });
+
+    it("keeps the list when a Story file is invalid for a moment", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await writeFile(join(project.paths.storiesDir, "ROW-01.md"), "---\ntitle: [\n---\n");
+      await settle(300);
+      await tui.press();
+      expect(tui.frame()).toContain("First story");
+      expect(tui.frame()).not.toContain("could not read");
+    });
+
+    it("keeps the row on one line in a terminal of 80 columns", async () => {
+      await createStory({ title: "A title that is long enough to reach the Stage in the row" }, project.ctx);
+      await lockStory({ id: "ROW-01", agent: "a-very-long-agent-name" }, project.ctx);
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 80, height: 24 });
+      const row = tui
+        .frame()
+        .split("\n")
+        .find((line) => line.includes("ROW-01"));
+      expect(row).toContain("▶ a-very-long…");
+      expect(row).toContain("Backlog");
+    });
+  });
 
   describe("responsive layout", () => {
     it("keeps the Stage sidebar beside the Story list when the terminal is wide", async () => {
