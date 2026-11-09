@@ -55,29 +55,10 @@ Press `?` in the terminal UI to see all the keys. Run `rowbly --help` to see all
 
 ## Features
 
-**Your board is plain files.** Each story is a Markdown file in `.rowbly/`. You can change a file by hand, merge it with Git and keep its full history.
-
-**A terminal UI that is fast and easy to use.** Each action has a key, and the screen shows the key. You can also click and drag with the mouse. Press `ctrl+p` to find a story, and press `p` to go to a different project.
-
-**A CLI that agents can read.** Each command takes `--json` and gives data that a program can read. An error gives exit code 1 and a clear message.
-
-```sh
-rowbly --json search-stories
-```
-
-**Stages that give instructions.** Each stage can have a prompt. The prompt tells agents what to do with a story while the story is in that stage. Your process becomes part of your board.
-
-**Instructions for the full project.** Put your rules in `.rowbly/ROWBLY.md`. Agents read the text with `rowbly get-instructions`.
-
-**Custom fields.** Add the data that your team wants on each story. The field types are string, number, boolean, URL, date and select.
-
-**Agent locks.** An agent can record that it works on a story, so you can see who does what. If a different agent holds the lock, `rowbly lock-story` stops with an error.
-
-**Specs, when you want them.** A spec is a Markdown document that describes the work of one or more stories. Specs are optional. Run `rowbly update-project --specs on` to start.
-
-**A doctor for your board.** People and agents edit the same files, and merges can go wrong. `rowbly doctor` finds the problems, and `rowbly doctor --fix` repairs the problems that it can repair.
-
-Rowbly tracks its own development with Rowbly. Look in [`.rowbly/`](https://github.com/sgolovine/rowbly/tree/main/.rowbly) to see a real project.
+- **Board in plain files.** Each story is a Markdown file in your repository.
+- **Prompts for each stage.** Tell your agents what to do with a story in each stage.
+- **Custom fields.** Add the data that your project wants on each story.
+- **Skills that are ready for use.** Install the factory, refine, develop and review skills in your project.
 
 ## Skills
 
