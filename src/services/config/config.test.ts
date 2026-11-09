@@ -43,6 +43,7 @@ describe("key checks", () => {
     expect(checkFieldKey("due_date")).toEqual([]);
     expect(checkFieldKey("DueDate")).toHaveLength(1);
     expect(checkFieldKey("title")[0]?.message).toMatch(/reserved/);
+    expect(checkFieldKey("agentLock")).toHaveLength(1);
   });
 });
 

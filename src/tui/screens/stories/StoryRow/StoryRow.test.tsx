@@ -14,6 +14,7 @@ const story: Story = {
   position: 1,
   description: "",
   fields: {},
+  agentLock: null,
   path: "",
 };
 

@@ -51,7 +51,7 @@ const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9]*$/;
 export const STAGE_KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 const FIELD_KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
 /** Story frontmatter keys Rowbly owns; a custom field cannot use them. */
-const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description"];
+const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description", "agentLock"];
 
 export interface Issue {
   path: (string | number)[];

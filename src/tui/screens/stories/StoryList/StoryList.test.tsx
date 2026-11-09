@@ -21,6 +21,7 @@ const stories: Story[] = Array.from({ length: 10 }, (_, i) => ({
   position: 1,
   description: "",
   fields: {},
+  agentLock: null,
   path: "",
 }));
 
