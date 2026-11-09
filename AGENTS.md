@@ -88,7 +88,7 @@ src/
     App.tsx           # root TUI component: TuiProviders around the Shell
     TuiProviders.tsx  # the contexts every shared component reads; wrap the app in it
     shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal
-    screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), settings/ (SettingsModal, sections)
+    screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), projects/ (NewProjectModal), settings/ (SettingsModal, sections)
     terminal.ts       # runFullScreen(): alternate screen, mouse, kitty keys, terminal restore
     theme.ts          # the design tokens as hex values, and date formatting
     keymap.ts         # KeyHint, global keys, form keys, moveDelta (arrows + j/k)

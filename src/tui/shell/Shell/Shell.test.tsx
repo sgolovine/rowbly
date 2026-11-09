@@ -1,9 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it } from "vitest";
 import { listKnownProjects, RC_FILE, recordProject } from "../../../services/knownProject/knownProject.js";
-import { initProject } from "../../../services/project/project.js";
+import { getProject, initProject } from "../../../services/project/project.js";
 import { createStage, listStages } from "../../../services/stage/stage.js";
 import { createStory, searchStories } from "../../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../../services/testProject/testProject.js";
@@ -486,8 +486,31 @@ describe("Shell without a project", () => {
   it("says how to create a project", async () => {
     const tui = await open({ cwd: dir.path });
     expect(tui.frame()).toContain("No Rowbly project in this directory or any parent.");
-    expect(tui.frame()).toContain("rowbly init");
+    expect(tui.frame()).toMatch(/\+ New Project\s+n/);
+    expect(tui.frame()).toContain("n new Project");
     expect(tui.frame()).not.toContain("+ New Story");
     expect(tui.toasts.list()).toEqual([]);
+  });
+
+  it("creates a project with n and opens it", async () => {
+    const ctx = { cwd: dir.path, home: dir.path };
+    const tui = await open(ctx);
+    await tui.press("n");
+    expect(tui.frame()).toContain("New Project");
+    await tui.press(keys.backspace.repeat(basename(dir.path).length));
+    await tui.type("My App");
+    await tui.press(keys.ctrl("s"));
+    await settle(100);
+    await tui.press();
+    expect(await getProject(ctx)).toMatchObject({ projectName: "My App", projectKey: "MA" });
+    expect(tui.frame()).toContain("My App › All Stages");
+    expect(tui.frame()).toContain("╭─Stages");
+    expect((await listKnownProjects(ctx)).map((p) => p.name)).toEqual(["My App"]);
+  });
+
+  it("opens the form from the + New Project Button", async () => {
+    const tui = await open({ cwd: dir.path, home: dir.path } as { cwd: string });
+    await tui.click("+ New Project");
+    expect(tui.frame()).toContain("╭─New Project");
   });
 });

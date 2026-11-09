@@ -5,10 +5,14 @@ import { ConflictError, ValidationError } from "../errors/errors.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../testProject/testProject.js";
 import { projectPaths } from "../workspace/workspace.js";
-import { getProject, initProject, updateProject } from "./project.js";
+import { defaultProjectName, getProject, initProject, updateProject } from "./project.js";
 
 describe("initProject", () => {
   const dir = useTempDir();
+
+  it("names the default after the directory of the context", () => {
+    expect(defaultProjectName({ cwd: join(dir.path, "my-app") })).toBe("my-app");
+  });
 
   it("creates the config, the default stages and the stories folder", async () => {
     const project = await initProject({ name: "My Cool Project" }, { cwd: dir.path });

@@ -51,12 +51,17 @@ function checkName(name: string, issues: Issue[]): string {
   return name.trim();
 }
 
+/** The name that `initProject` gives a project in `ctx.cwd` if the input has no name. */
+export function defaultProjectName(ctx: ServiceContext = {}): string {
+  return basename(resolve(ctx.cwd ?? process.cwd()));
+}
+
 /** Creates `.rowbly/` in `ctx.cwd` with a config, the default stages and an empty stories folder. */
 export async function initProject(input: InitProjectInput = {}, ctx: ServiceContext = {}): Promise<Project> {
   const root = resolve(ctx.cwd ?? process.cwd());
   const paths = projectPaths(root);
   const issues: Issue[] = [];
-  const projectName = checkName(input.name ?? basename(root), issues);
+  const projectName = checkName(input.name ?? defaultProjectName(ctx), issues);
   const projectKey = (input.key ?? toProjectKey(projectName)).trim().toUpperCase();
   issues.push(...checkProjectKey(projectKey, ["key"]));
   throwIfIssues("The project is invalid", issues);
