@@ -5,7 +5,7 @@ export const SIDEBAR_MIN_WIDTH = 16;
 /** The narrowest the main panel can be, including its border. */
 export const MAIN_MIN_WIDTH = 24;
 /** Below this terminal width, the Stage sidebar goes above the Story list. */
-export const STACKED_BELOW_WIDTH = 72;
+export const STACKED_BELOW_WIDTH = 100;
 /** The fewest lines of the main area that fit the Stage sidebar above the Story list. */
 export const STACKED_MIN_HEIGHT = 12;
 /** Lines of a sidebar that are not entries: its top edge, its bottom edge and its button. */

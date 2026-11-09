@@ -39,7 +39,7 @@ describe("Shell", () => {
 
   describe("responsive layout", () => {
     it("keeps the Stage sidebar beside the Story list when the terminal is wide", async () => {
-      const tui = await openSized(project.ctx as { cwd: string }, { width: 90, height: 24 });
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 100, height: 24 });
       expect(tui.locate("╭─Stages").y).toBe(tui.locate("Rowbly › All Stages").y);
     });
 
