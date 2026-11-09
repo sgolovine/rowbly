@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors/errors.js";
+import { updateProject } from "../project/project.js";
+import { createStage } from "../stage/stage.js";
 import { useTestProject } from "../testProject/testProject.js";
 import {
   checkFieldKey,
@@ -8,6 +10,7 @@ import {
   checkStageKey,
   configIssues,
   featureEnabled,
+  isSkillName,
   labelFromKey,
   type ProjectConfig,
   parseConfig,
@@ -151,6 +154,54 @@ describe("configIssues", () => {
   });
 });
 
+describe("skills in the config", () => {
+  const issuesOf = (skills: unknown) => configIssues({ ...VALID, skills });
+
+  it("accepts a config with no skills and a config with valid skills", () => {
+    expect(configIssues(VALID)).toEqual([]);
+    expect(issuesOf([{ name: "develop", harnesses: ["claude-code", "codex"] }])).toEqual([]);
+  });
+
+  it("isSkillName accepts lowercase words that hyphens separate", () => {
+    expect(isSkillName("code-review-2")).toBe(true);
+    for (const name of ["", "A", "a--b", "-a", "a-", "a_b", "a/b", "../x", "a".repeat(65)]) {
+      expect(isSkillName(name)).toBe(false);
+    }
+    expect(isSkillName("a".repeat(64))).toBe(true);
+  });
+
+  it("rejects skills that are not an array, and entries that are not objects", () => {
+    expect(issuesOf({})).toEqual([{ path: ["skills"], message: "skills must be an array" }]);
+    expect(issuesOf(["x"])).toEqual([{ path: ["skills", 0], message: "A skill must be an object" }]);
+  });
+
+  it("rejects a name that is missing, a path or repeated", () => {
+    expect(issuesOf([{ harnesses: ["codex"] }])).toEqual([
+      { path: ["skills", 0, "name"], message: "name is required" },
+    ]);
+    expect(issuesOf([{ name: "../x", harnesses: ["codex"] }])[0]?.path).toEqual(["skills", 0, "name"]);
+    expect(
+      issuesOf([
+        { name: "a", harnesses: ["codex"] },
+        { name: "a", harnesses: ["cursor"] },
+      ]),
+    ).toEqual([{ path: ["skills", 1, "name"], message: 'Duplicate skill "a"' }]);
+  });
+
+  it("rejects harnesses that are not a list, empty, unknown or repeated", () => {
+    expect(issuesOf([{ name: "a" }])).toEqual([
+      { path: ["skills", 0, "harnesses"], message: "harnesses must be an array" },
+    ]);
+    expect(issuesOf([{ name: "a", harnesses: [] }])).toEqual([
+      { path: ["skills", 0, "harnesses"], message: "A skill needs at least one harness" },
+    ]);
+    expect(issuesOf([{ name: "a", harnesses: ["vim", "codex", "codex"] }])).toEqual([
+      { path: ["skills", 0, "harnesses", 0], message: 'Unknown harness "vim"' },
+      { path: ["skills", 0, "harnesses", 2], message: 'Duplicate harness "codex"' },
+    ]);
+  });
+});
+
 describe("parseConfig", () => {
   it("reports invalid JSON as an issue", () => {
     const result = parseConfig("{");
@@ -181,6 +232,19 @@ describe("readConfig and writeConfig", () => {
     await writeConfig(project.paths, VALID);
     expect(await readConfig(project.paths)).toEqual(VALID);
     expect(await project.read("rowbly.config.json")).toBe(`${JSON.stringify(VALID, null, 2)}\n`);
+  });
+
+  it("omits the skills key when a config has no skills", async () => {
+    await writeConfig(project.paths, VALID);
+    expect(await project.read("rowbly.config.json")).not.toContain("skills");
+  });
+
+  it("keeps the skills when other services write the config", async () => {
+    const skills: ProjectConfig["skills"] = [{ name: "develop", harnesses: ["cursor", "codex"] }];
+    await writeConfig(project.paths, { ...(await readConfig(project.paths)), skills });
+    await updateProject({ name: "Renamed" }, project.ctx);
+    await createStage({ label: "Review" }, project.ctx);
+    expect((await readConfig(project.paths)).skills).toEqual(skills);
   });
 
   it("throws a ValidationError for an invalid file", async () => {
