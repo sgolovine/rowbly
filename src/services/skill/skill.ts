@@ -37,7 +37,7 @@ export interface RemoveSkillInput {
   harnesses?: string[];
 }
 
-export interface SkillInstallation {
+interface SkillInstallation {
   harness: SkillHarness;
   path: string;
   /** `shared`: the folder of another tracked harness is the same folder, so Rowbly copied nothing. */
@@ -49,7 +49,7 @@ export interface InstallSkillResult {
   harnesses: SkillInstallation[];
 }
 
-export interface SkillRemoval {
+interface SkillRemoval {
   harness: SkillHarness;
   path: string;
   /** `shared`: another tracked harness still uses the folder, so Rowbly kept it. */
