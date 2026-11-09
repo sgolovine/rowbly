@@ -33,6 +33,9 @@ describe("registerCommands", () => {
       "list-specs",
       "link-spec",
       "unlink-spec",
+      "install-skill",
+      "list-skills",
+      "remove-skill",
     ]);
   });
 

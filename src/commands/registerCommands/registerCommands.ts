@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import { registerCustomFieldCommands } from "../customField/customField.js";
 import { registerDoctor } from "../doctor/doctor.js";
 import { registerProjectCommands } from "../project/project.js";
+import { registerSkillCommands } from "../skill/skill.js";
 import { registerSpecCommands } from "../spec/spec.js";
 import { registerStageCommands } from "../stage/stage.js";
 import { registerStoryCommands } from "../story/story.js";
@@ -20,4 +21,5 @@ export function registerCommands(program: Command): void {
   registerStageCommands(program);
   registerCustomFieldCommands(program);
   registerSpecCommands(program);
+  registerSkillCommands(program);
 }
