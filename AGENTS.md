@@ -174,7 +174,8 @@ at a target, the command stops and changes nothing.
 
 `rowbly doctor` shows an error if a tracked skill is not installed for a harness. `--fix` installs the
 skill again if nothing is at its path and the Rowbly package still has the skill. `--fix` does not change a
-folder that has no `SKILL.md`, because the folder can contain the work of a user.
+folder that has no `SKILL.md`, because the folder can contain the work of a user. If a file or a broken
+symlink prevents the creation of the skills folder, `doctor` shows an error with the path and offers no fix.
 
 Harnesses can read the same folders. For example, Cursor also reads `.claude/skills` and
 `.agents/skills`. A skill can then stay visible to a harness after you remove the skill for that harness.

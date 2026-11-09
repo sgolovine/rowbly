@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { rm, symlink } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../../services/testProject/testProject.js";
@@ -51,6 +51,27 @@ describe("doctor command", () => {
     expect(fixed.exitCode).toBe(0);
     expect(fixed.stdout).toBe(`fixed   ${file}: Skill review for cursor is missing`);
     expect(await runCli(["doctor"], project.ctx.cwd)).toMatchObject({ exitCode: 0, stdout: "No problems found." });
+  });
+
+  it("keeps its report and exit code 1 when a skills folder cannot be created", async () => {
+    await runCli(["install-skill", "review", "--harness", "cursor"], project.ctx.cwd);
+    await rm(join(project.paths.root, ".cursor", "skills"), { recursive: true });
+    await symlink("missing", join(project.paths.root, ".cursor", "skills"));
+    await rm(join(project.paths.stagesDir, "DONE.md"));
+
+    const plain = await runCli(["doctor"], project.ctx.cwd);
+    expect(plain.exitCode).toBe(1);
+    expect(plain.stdout).toContain("Run `rowbly doctor --fix` to fix 1 of them.");
+
+    const fixed = await runCli(["--json", "doctor", "--fix"], project.ctx.cwd);
+    expect(fixed.exitCode).toBe(1);
+    expect(JSON.parse(fixed.stdout)).toMatchObject({
+      ok: false,
+      issues: [
+        { file: join(".rowbly", "stages", "DONE.md"), fixed: true },
+        { file: join(".cursor", "skills", "review"), fixed: false },
+      ],
+    });
   });
 
   it("prints the report as JSON with --json", async () => {

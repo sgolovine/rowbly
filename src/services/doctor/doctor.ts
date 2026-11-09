@@ -1,9 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { labelFromKey, type ProjectConfig, parseConfig, STAGE_KEY_PATTERN, writeConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
-import { listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
+import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
 import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import {
@@ -431,7 +431,13 @@ async function checkSkills(
       if (await pathExists(join(path, SKILL_FILE))) continue;
       const file = rel(path);
       const remove = `\`rowbly remove-skill ${name} --harness ${harness}\``;
-      if (await pathOccupied(path)) {
+      if (!(await canCreateFolder(dirname(path)))) {
+        await report({
+          severity: "error",
+          message: `Skill ${name} for ${harness} is missing, and Rowbly cannot create ${rel(dirname(path))}. Repair that path, or run ${remove}`,
+          file,
+        });
+      } else if (await pathOccupied(path)) {
         await report({
           severity: "error",
           message: `Skill ${name} for ${harness} has no ${SKILL_FILE}. Repair the folder by hand, or delete it with ${remove}`,

@@ -1,8 +1,9 @@
-import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
 import { addCustomField } from "../customField/customField.js";
+import { pathExists } from "../files/files.js";
 import { installSkill } from "../skill/skill.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../testProject/testProject.js";
@@ -283,6 +284,45 @@ describe("doctor skill checks", () => {
     const report = await doctor({ fix: true }, ctx);
     expect(report.issues[0]).toMatchObject({ fixed: false });
     expect(report.ok).toBe(false);
+  });
+
+  describe("when the skills folder cannot be created", () => {
+    const brokenFolder = async () => {
+      await rm(join(project.paths.root, ".claude", "skills"), { recursive: true });
+      await symlink("missing", join(project.paths.root, ".claude", "skills"));
+    };
+    const message = `Skill alpha for claude-code is missing, and Rowbly cannot create ${join(".claude", "skills")}. Repair that path, or run \`rowbly remove-skill alpha --harness claude-code\``;
+
+    it("offers no fix for a broken symlink", async () => {
+      await brokenFolder();
+      const report = await doctor({}, ctx);
+      expect(report.ok).toBe(false);
+      expect(report.issues).toEqual([{ severity: "error", message, file, fixed: false }]);
+    });
+
+    it("offers no fix for a file in place of the folder", async () => {
+      await rm(join(project.paths.root, ".claude", "skills"), { recursive: true });
+      await writeFile(join(project.paths.root, ".claude", "skills"), "");
+      const report = await doctor({}, ctx);
+      expect(report.issues).toEqual([{ severity: "error", message, file, fixed: false }]);
+    });
+
+    it("does not stop --fix, and reports the other fixes", async () => {
+      await installSkill({ name: "alpha", harnesses: ["cursor"] }, ctx);
+      await rm(join(project.paths.root, ".cursor", "skills", "alpha"), { recursive: true });
+      await rm(join(project.paths.stagesDir, "DONE.md"));
+      await brokenFolder();
+
+      const report = await doctor({ fix: true }, ctx);
+      expect(report.ok).toBe(false);
+      expect(report.issues.map((issue) => [issue.file, issue.fixed])).toEqual([
+        [join(".rowbly", "stages", "DONE.md"), true],
+        [file, false],
+        [join(".cursor", "skills", "alpha"), true],
+      ]);
+      expect(await pathExists(join(project.paths.root, ".cursor", "skills", "alpha", "SKILL.md"))).toBe(true);
+      expect((await lstat(join(project.paths.root, ".claude", "skills"))).isSymbolicLink()).toBe(true);
+    });
   });
 
   it("reports a missing skill with no fix when Rowbly no longer bundles it", async () => {

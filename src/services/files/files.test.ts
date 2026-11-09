@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTempDir } from "../testProject/testProject.js";
-import { listMarkdownFiles, pathExists, pathOccupied, writeFileAtomic } from "./files.js";
+import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied, writeFileAtomic } from "./files.js";
 
 describe("files", () => {
   const dir = useTempDir();
@@ -20,6 +20,25 @@ describe("files", () => {
     expect(await pathOccupied(join(dir.path, "link"))).toBe(true);
     await writeFile(join(dir.path, "file"), "");
     expect(await pathOccupied(join(dir.path, "file", "child"))).toBe(true);
+  });
+
+  it("canCreateFolder is true for a folder and for a path below a folder", async () => {
+    expect(await canCreateFolder(dir.path)).toBe(true);
+    expect(await canCreateFolder(join(dir.path, "a", "b"))).toBe(true);
+    await mkdir(join(dir.path, "real"));
+    await symlink("real", join(dir.path, "link"));
+    expect(await canCreateFolder(join(dir.path, "link", "child"))).toBe(true);
+  });
+
+  it("canCreateFolder is false when a file or a broken symlink is in the way", async () => {
+    await writeFile(join(dir.path, "file"), "");
+    expect(await canCreateFolder(join(dir.path, "file"))).toBe(false);
+    expect(await canCreateFolder(join(dir.path, "file", "a", "b"))).toBe(false);
+    await symlink("missing", join(dir.path, "broken"));
+    expect(await canCreateFolder(join(dir.path, "broken"))).toBe(false);
+    expect(await canCreateFolder(join(dir.path, "broken", "a"))).toBe(false);
+    await symlink("file", join(dir.path, "to-file"));
+    expect(await canCreateFolder(join(dir.path, "to-file"))).toBe(false);
   });
 
   it("listMarkdownFiles lists only .md files, sorted", async () => {

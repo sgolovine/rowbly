@@ -1,4 +1,4 @@
-import { access, lstat, mkdir, readdir, rename, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, readdir, rename, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export async function pathExists(path: string): Promise<boolean> {
@@ -21,6 +21,19 @@ export async function pathOccupied(path: string): Promise<boolean> {
     if (code === "ENOTDIR") return true;
     throw error;
   }
+}
+
+/** Whether `path` is a folder, or a recursive `mkdir` can make it: no file or broken symlink is in the way. */
+export async function canCreateFolder(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOTDIR") return false;
+    if (code !== "ENOENT") throw error;
+  }
+  if (await pathOccupied(path)) return false;
+  return canCreateFolder(dirname(path));
 }
 
 /** The names of the `.md` files in `dir`, sorted; none when `dir` does not exist. */
