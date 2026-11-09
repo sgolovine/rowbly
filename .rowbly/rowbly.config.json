@@ -1,7 +1,18 @@
 {
   "projectName": "rowbly",
   "projectKey": "ROW",
-  "customFields": [],
+  "customFields": [
+    {
+      "key": "worktree",
+      "label": "Worktree",
+      "type": "string"
+    },
+    {
+      "key": "pull_request",
+      "label": "Pull request",
+      "type": "url"
+    }
+  ],
   "stages": [
     {
       "key": "BACKLOG",

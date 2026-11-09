@@ -1,4 +1,4 @@
-Use the `review` skill (`skills/review/SKILL.md`) on the pull request in the `## Pull request` section of the story description.
+Use the `review` skill (`skills/review/SKILL.md`) on the pull request in the `pull_request` field of the story.
 
 If the result is `ready`, do these steps:
 
