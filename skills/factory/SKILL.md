@@ -28,7 +28,7 @@ Do not start a test worker. Examine the tools of the harness.
 | 5   | Stage prompt files     | `.rowbly/stages/<KEY>.md` exists for each enabled Stage.                                                       | `FAIL`                |
 | 6   | Stage prompt content   | Read each file. Each file is a `work` prompt or a `hold` prompt (see below).                                   | `FAIL`                |
 | 7   | Start workers          | The harness can start threads or, as a fallback, subagents.                                                    | `FAIL`                |
-| 8   | Models and effort      | The tool that starts workers can set a different model and a different effort level for each worker.          | `FAIL`                |
+| 8   | Models and effort      | The tool that starts workers can set a different model and a different effort level for each worker.          | `WARN`                |
 | 9   | Name a worker          | The tool that starts workers can set the title of a worker.                                                    | `WARN`                |
 
 Do not use `get-stage` for check 5. It gives an empty prompt when the file does not exist.
@@ -132,9 +132,6 @@ Do not change a Stage prompt or the Project config.
 
 When you stop, report the result, the current Stage of the Story and each problem.
 
-## Project instructions
-
-<Project instructions>
 
 ## Stage prompt
 
