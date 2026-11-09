@@ -10,6 +10,7 @@ describe("registerCommands", () => {
     expect(createProgram().commands.map((command) => command.name())).toEqual([
       "init",
       "update-project",
+      "get-instructions",
       "doctor",
       "create-story",
       "update-story",

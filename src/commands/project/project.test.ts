@@ -57,4 +57,30 @@ describe("project commands", () => {
       expect(result.stderr).toMatch(/^Error: /);
     });
   });
+
+  describe("get-instructions", () => {
+    const project = useTestProject();
+    const cli = (...args: string[]) => runCli(args, project.ctx.cwd);
+
+    it("prints the text of ROWBLY.md", async () => {
+      await project.write("ROWBLY.md", "Run the tests first.\n");
+      expect(await cli("get-instructions")).toEqual({ stdout: "Run the tests first.", stderr: "", exitCode: 0 });
+    });
+
+    it("says so when there is no ROWBLY.md", async () => {
+      expect((await cli("get-instructions")).stdout).toBe("(no instructions)");
+    });
+
+    it("prints the path and the text with --json", async () => {
+      await project.write("ROWBLY.md", "Run the tests first.\n");
+      expect(JSON.parse((await cli("get-instructions", "--json")).stdout)).toEqual({
+        path: project.paths.instructionsFile,
+        instructions: "Run the tests first.",
+      });
+    });
+
+    it("fails outside a project", async () => {
+      expect((await runCli(["get-instructions"], "/")).exitCode).toBe(1);
+    });
+  });
 });

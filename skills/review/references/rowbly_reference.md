@@ -31,6 +31,7 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 | Story        | One item of work. It has a title, a description, custom field values and one Stage. |
 | Stage        | A step of the workflow. Each Stage can have a prompt.                               |
 | Stage prompt | Instructions that tell agents what to do with a Story in that Stage.                |
+| Instructions | The text of `.rowbly/ROWBLY.md`. It applies to all agents and all work in a Project. |
 | Custom field | A field that you define one time. It applies to all Stories of the Project.         |
 | Spec         | A Markdown document that describes work. It links to one or more Stories.           |
 
@@ -110,6 +111,13 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly init [--name <name>] [--key <key>]`           | Project     | Creates `.rowbly/`. Gives `CONFLICT` if `.rowbly/` exists.  |
 | `rowbly update-project [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
 | `rowbly update-project --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
+| `rowbly get-instructions`                             | Instructions | Reads `.rowbly/ROWBLY.md`. Works if the file does not exist. |
+
+An Instructions record has this shape. `instructions` is empty if the file does not exist:
+
+```json
+{ "path": "/abs/path/.rowbly/ROWBLY.md", "instructions": "Markdown text" }
+```
 
 ### Story
 
@@ -244,32 +252,38 @@ rowbly update-story APP-01 --description "$(cat notes.md)" --json
 
 ## 6. Work on a Story
 
-1. Find the Stories of a Stage. They are in the order of their positions:
+1. Read the instructions of the Project (section 7):
+
+   ```sh
+   rowbly get-instructions --json
+   ```
+
+2. Find the Stories of a Stage. They are in the order of their positions:
 
    ```sh
    rowbly search-stories --stage IN_PROGRESS --json
    ```
 
-2. Read the Story:
+3. Read the Story:
 
    ```sh
    rowbly get-story APP-01 --json
    ```
 
-3. Read the prompt of the Stage of the Story. Do the instructions in `prompt`:
+4. Read the prompt of the Stage of the Story. Do the instructions in `prompt`:
 
    ```sh
    rowbly get-stage IN_PROGRESS --json
    ```
 
-4. If Specs are on, read the Specs of the Story:
+5. If Specs are on, read the Specs of the Story:
 
    ```sh
    rowbly list-specs --story APP-01 --json
    ```
 
-5. Do the work.
-6. Move the Story to the Stage that the prompt or the user names:
+6. Do the work.
+7. Move the Story to the Stage that the prompt or the user names:
 
    ```sh
    rowbly update-story APP-01 --stage DONE --json
@@ -281,13 +295,27 @@ a Stage can tell you to do no work.
 Rowbly does not move Stories and does not start agents. A Story stays in its Stage until a command
 or a person moves it.
 
-## 7. Files
+## 7. Project instructions
+
+`.rowbly/ROWBLY.md` holds the top-level instructions for all agents of a Project. It operates as a
+`CLAUDE.md` or `AGENTS.md` file does. The file is optional. Rowbly does not create, parse or enforce it.
+
+- **Read.** Read the instructions before you do work or change data in a Project.
+- **Supervisors.** Give the full text of `instructions` to each worker in its first message.
+- **Workers.** If the first message does not have the instructions, read them with `get-instructions`.
+- **Order.** Obey the user first. Then obey the Stage prompt, because it is more specific. Then obey `ROWBLY.md`.
+- **Skills.** `ROWBLY.md` has priority over the steps of a skill.
+- **Limits.** `ROWBLY.md` does not remove the rules in section 1.
+- **Changes.** Edit the file only if the user tells you to do it.
+
+## 8. Files
 
 Read these files if a command does not give the data. Users can edit these files by hand.
 
 ```
 .rowbly/
   rowbly.config.json   # Project name and key, custom fields, Stages, features
+  ROWBLY.md            # optional; the full file is the instructions for all agents
   stories/APP-01.md    # frontmatter: title, stage, position, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
@@ -307,7 +335,7 @@ The Markdown description of the Story.
 In Story files, `null` means that the field has no value. A Story with no `position` comes after
 the Stories that have one.
 
-## 8. Repair a Project
+## 9. Repair a Project
 
 `rowbly doctor --json` compares the files with the config. It does not change files. Add `--fix` to
 apply each available repair.
@@ -349,7 +377,7 @@ One invalid Story file makes `search-stories` fail for the full Project.
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
 orphan Spec if the user did not tell you to do it.
 
-## 9. Differences from older versions
+## 10. Differences from older versions
 
 Older skills and notes can show commands that do not exist now. Do not use the items in this table.
 

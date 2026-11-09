@@ -1,4 +1,4 @@
-import { mkdir, rename } from "node:fs/promises";
+import { mkdir, readFile, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import {
   checkProjectKey,
@@ -19,6 +19,13 @@ import { findProject, projectPaths, type ServiceContext } from "../workspace/wor
 export interface Project extends ProjectConfig {
   /** The directory that contains `.rowbly/`. */
   root: string;
+}
+
+export interface ProjectInstructions {
+  /** The absolute path of `ROWBLY.md`, also when the file does not exist. */
+  path: string;
+  /** Top-level instructions for every agent that works on the project. Empty when there is no `ROWBLY.md`. */
+  instructions: string;
 }
 
 export interface InitProjectInput {
@@ -88,6 +95,12 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
 export async function getProject(ctx: ServiceContext = {}): Promise<Project> {
   const paths = await findProject(ctx);
   return { ...(await readConfig(paths)), root: paths.root };
+}
+
+/** Reads `.rowbly/ROWBLY.md`. Rowbly does not parse the text; agents obey it. */
+export async function getInstructions(ctx: ServiceContext = {}): Promise<ProjectInstructions> {
+  const { instructionsFile: path } = await findProject(ctx);
+  return { path, instructions: (await pathExists(path)) ? (await readFile(path, "utf8")).trim() : "" };
 }
 
 export async function updateProject(input: UpdateProjectInput, ctx: ServiceContext = {}): Promise<Project> {

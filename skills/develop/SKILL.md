@@ -11,7 +11,7 @@ Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
 ## Procedure
 
-1. Read the Story and its Specs.
+1. Read the Project instructions (`rowbly get-instructions --json`), the Story and its Specs.
 2. Stop and report `blocked` if the Story has no acceptance criteria or has open questions.
 3. Read the repository instructions and obey them.
 4. Select the branch:

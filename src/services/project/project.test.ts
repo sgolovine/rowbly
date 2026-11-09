@@ -1,11 +1,11 @@
-import { readdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../testProject/testProject.js";
 import { projectPaths } from "../workspace/workspace.js";
-import { defaultProjectName, getProject, initProject, updateProject } from "./project.js";
+import { defaultProjectName, getInstructions, getProject, initProject, updateProject } from "./project.js";
 
 describe("initProject", () => {
   const dir = useTempDir();
@@ -61,6 +61,17 @@ describe("getProject and updateProject", () => {
 
   it("getProject reads the config", async () => {
     expect(await getProject(project.ctx)).toMatchObject({ projectName: "Rowbly", projectKey: "ROW" });
+  });
+
+  it("getInstructions is empty when the project has no ROWBLY.md", async () => {
+    expect(await getInstructions(project.ctx)).toEqual({ path: project.paths.instructionsFile, instructions: "" });
+  });
+
+  it("getInstructions reads ROWBLY.md from a directory below the project", async () => {
+    await project.write("ROWBLY.md", "\nRun the tests first.\n\n");
+    const below = { cwd: join(project.paths.root, "src") };
+    await mkdir(below.cwd);
+    expect((await getInstructions(below)).instructions).toBe("Run the tests first.");
   });
 
   it("updates the name", async () => {

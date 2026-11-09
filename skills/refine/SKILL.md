@@ -11,7 +11,7 @@ Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
 ## Procedure
 
-1. Read the Story and its Specs.
+1. Read the Project instructions (`rowbly get-instructions --json`), the Story and its Specs.
 2. Read the code and the repository instructions that apply to the Story.
 3. Write the description again with the sections below. Keep all the facts and the intent of the author.
 4. Answer each question that the code can answer.

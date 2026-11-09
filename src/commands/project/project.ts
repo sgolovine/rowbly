@@ -1,5 +1,5 @@
 import { type Command, InvalidArgumentError } from "commander";
-import { initProject, type Project, updateProject } from "../../services/project/project.js";
+import { getInstructions, initProject, type Project, updateProject } from "../../services/project/project.js";
 import { run } from "../output/output.js";
 
 function describe(project: Project): string {
@@ -46,6 +46,17 @@ export function registerProjectCommands(program: Command): void {
             ctx,
           ),
         (project) => `Updated ${describe(project)}`,
+      ),
+    );
+
+  program
+    .command("get-instructions")
+    .description("Show the project's instructions for agents, from .rowbly/ROWBLY.md")
+    .action((_opts: unknown, command: Command) =>
+      run(
+        command,
+        (ctx) => getInstructions(ctx),
+        (result) => result.instructions || "(no instructions)",
       ),
     );
 }

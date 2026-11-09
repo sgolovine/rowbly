@@ -82,7 +82,7 @@ src/
     registerCommands/ # registerCommands(): attaches every subcommand to the program
     output/           # run(): calls a service, prints text or --json, turns RowblyErrors into exit code 1
     testCli/          # runCli(), createProgram(): run commands in tests
-    <area>/           # one folder per area: project (init, update-project), doctor, story, stage, customField, spec
+    <area>/           # one folder per area: project (init, update-project, get-instructions), doctor, story, stage, customField, spec
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
     App.tsx           # root TUI component: TuiProviders around the Shell
@@ -120,6 +120,7 @@ the problems that it can repair.
 ```
 .rowbly/
   rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}
+  ROWBLY.md           # optional; the whole file is the instructions for all agents of the project
   stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, then one key per custom field (null = unset)
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
@@ -138,6 +139,10 @@ The `stories` list of a spec holds the links to its stories. If a service delete
 removes the story from each spec. A spec that loses its last story stays in `specs/`. `rowbly doctor`
 shows a warning for each orphan spec, and for each link to a story that does not exist. `--fix`
 removes a link to a story that does not exist. It does not delete an orphan spec.
+
+`ROWBLY.md` holds the top-level instructions of a project, as a `CLAUDE.md` or `AGENTS.md` file does.
+Rowbly does not create, parse or enforce it. `rowbly get-instructions` shows the text. A supervisor
+gives the text to each worker that it starts.
 
 Rowbly also keeps one file for each user, `~/.rowblyrc.json`. The TUI adds a project to this file when
 the project opens. The Project switcher in the header reads the list.
