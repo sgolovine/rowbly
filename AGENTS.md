@@ -69,6 +69,7 @@ pnpm start            # run the built bundle
 pnpm typecheck        # tsc --noEmit
 pnpm test             # vitest run: run all tests one time
 pnpm test:watch       # vitest: run the tests again when a file changes
+pnpm test:factory     # node --test: run the tests of the factory skill scripts
 pnpm lint             # biome check: lint, formatting and import order
 pnpm lint:fix         # biome check --write: apply safe fixes and format
 pnpm format           # biome format --write
@@ -313,6 +314,9 @@ they test. A component test is in the folder of its component.
 - **Each service has a test.** Use `useTestProject()` or `useTempDir()` from `src/services/testProject/testProject.ts`.
   They give each test a new project in a temporary directory.
 
+The tests of `skills/factory/scripts/` are separate from the Vitest tests. They use `node:test`. Run them with
+`pnpm test:factory`. The lint job of CI also runs them.
+
 ## Screenshots
 
 Use agentic-tui (`pnpm exec agentic-tui`, a devDependency) for all screenshots of Rowbly. Also use
@@ -348,6 +352,7 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
   If Biome has no rule for the problem, repair the problem and tell the user.
 - Write all documentation in STE. See "Documentation language: ASD-STE100".
 - Before you complete a change, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+  If you change a script in `skills/factory/scripts/`, also run `pnpm test:factory`.
 
 ## Documentation language: ASD-STE100
 
