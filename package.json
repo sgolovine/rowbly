@@ -8,7 +8,8 @@
   },
   "files": [
     "dist",
-    "skills"
+    "skills",
+    "!skills/**/*.test.*"
   ],
   "engines": {
     "node": ">=22"
