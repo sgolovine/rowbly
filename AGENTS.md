@@ -36,6 +36,10 @@ Project ── configuration: custom field definitions, stages (each with an opt
   Each story in a project **must** have a stage. Each new project has two default stages, **Backlog**
   and **Done**. Users can add more stages. Each stage can have a prompt. The prompt tells agents what
   to do with a story while the story is in that stage.
+- **Agent lock.** An agent lock records that an agent works on a story. A story has a maximum of one
+  lock. The lock applies only while the story stays in the stage where the agent took the lock. A lock
+  is a record of work and does not give mutual exclusion, because two writers can race and separate
+  checkouts do not share files.
 - **Spec.** A spec is a Markdown document that describes the work of a story. A spec must have a link
   to at least one story, and a story can have many specs. Specs are an optional feature. Each project
   starts with specs off. Turn them on in the Specs section of Settings or with
@@ -105,6 +109,7 @@ src/
     storyFiles/       # raw story file IO shared by the domain services
     specFiles/        # raw spec file IO shared by the domain services
     project/ story/ stage/ customField/ spec/ doctor/   # the domain services
+    storyWatch/       # watchStories(): calls a function when the files of the stories folder change
     knownProject/     # listKnownProjects(), recordProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
@@ -120,7 +125,7 @@ the problems that it can repair.
 ```
 .rowbly/
   rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}
-  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, then one key per custom field (null = unset)
+  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset), agentLock?
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
 ```
@@ -133,6 +138,13 @@ files consistent.
 The `position` of a story sets its order in its stage. A story without a `position` comes after the
 stories that have one, in the order of their numbers. When a story moves, the service writes a new
 `position` to each story of the stage that changes place.
+
+The `agentLock` key of a story holds the lock of an agent: `agent`, `stage` and `lockedAt` (ISO-8601).
+`rowbly lock-story` and `rowbly unlock-story` write the key. If a different agent holds the lock,
+`lock-story` stops with an error. A change of the story's stage removes the key, and a rename of the
+stage key keeps the lock. Rowbly ignores a lock if its `stage` is not the stage of the story.
+`rowbly doctor` shows an error for a malformed lock and a warning for a stale lock, and `--fix` removes
+only the stale lock.
 
 The `stories` list of a spec holds the links to its stories. If a service deletes a story, it also
 removes the story from each spec. A spec that loses its last story stays in `specs/`. `rowbly doctor`
@@ -218,6 +230,9 @@ Put screens and components in `src/tui/`. Call the same service functions from t
 an event handler or in an effect. `useAsync` records the loading, error and data states, and shows a
 toast if a call fails. Keep the loading, error and result states in the component. If a CLI command
 also uses a part of the logic, put that logic in the service, not in the component.
+
+For a change that comes from outside the TUI, use `refresh` from `useAsync`. It does not show a loading
+state or a toast.
 
 ## TUI design system and component library
 
