@@ -14,7 +14,6 @@ import {
   ConfirmDialog,
   FormModal,
   Loading,
-  Modal,
   PANEL_FRAME_HEIGHT,
   PANEL_FRAME_WIDTH,
   Panel,
@@ -275,16 +274,15 @@ export function SpecsTab({
         />
       )}
       {mode.kind === "remove" && (
-        <Modal title={`Remove Spec › ${mode.spec.title}`} size="dialog">
-          <ConfirmDialog
-            message={removeMessage(mode.spec, storyId)}
-            confirmLabel="Remove"
-            cancelLabel="Cancel"
-            destructive
-            onConfirm={() => remove(mode.spec)}
-            onCancel={() => setMode({ kind: "list" })}
-          />
-        </Modal>
+        <ConfirmDialog
+          title={`Remove Spec › ${mode.spec.title}`}
+          message={removeMessage(mode.spec, storyId)}
+          confirmLabel="Remove"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={() => remove(mode.spec)}
+          onCancel={() => setMode({ kind: "list" })}
+        />
       )}
     </Box>
   );

@@ -104,8 +104,39 @@ export function FullScreenEditor({
   ];
   return (
     <Modal title={title} hints={hints} size="screen" maxWidth={outer.width} onClose={confirming ? undefined : close}>
-      {confirming ? (
+      <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
+        <EditorModeTab label="View" selected={mode === "view"} active={keys} onClick={() => setMode("view")} />
+        <EditorModeTab label="Edit" selected={mode === "edit"} active={keys} onClick={() => setMode("edit")} />
+        {saveStatus(save, dirty)}
+      </Box>
+      {mode === "view" ? (
+        // As tall as the text box, so switching modes keeps the editor's size.
+        <Box flexDirection="column" height={rows} flexShrink={0}>
+          <MarkdownView
+            text={value}
+            width={body.width}
+            height={rows}
+            active={keys}
+            emptyText="No text yet. Press e to write some."
+          />
+        </Box>
+      ) : (
+        <TextArea
+          value={value}
+          onChange={(next) => {
+            latest.current = next;
+            setValue(next);
+            onChange?.(next);
+          }}
+          width={body.width}
+          rows={rows}
+          focus={keys}
+          expandable={false}
+        />
+      )}
+      {confirming && (
         <ConfirmDialog
+          title="Discard changes"
           message="Close and discard unsaved changes?"
           confirmLabel="Discard"
           cancelLabel="Keep editing"
@@ -114,39 +145,6 @@ export function FullScreenEditor({
           onConfirm={onClose}
           onCancel={() => setConfirming(false)}
         />
-      ) : (
-        <>
-          <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
-            <EditorModeTab label="View" selected={mode === "view"} active={keys} onClick={() => setMode("view")} />
-            <EditorModeTab label="Edit" selected={mode === "edit"} active={keys} onClick={() => setMode("edit")} />
-            {saveStatus(save, dirty)}
-          </Box>
-          {mode === "view" ? (
-            // As tall as the text box, so switching modes keeps the editor's size.
-            <Box flexDirection="column" height={rows} flexShrink={0}>
-              <MarkdownView
-                text={value}
-                width={body.width}
-                height={rows}
-                active={keys}
-                emptyText="No text yet. Press e to write some."
-              />
-            </Box>
-          ) : (
-            <TextArea
-              value={value}
-              onChange={(next) => {
-                latest.current = next;
-                setValue(next);
-                onChange?.(next);
-              }}
-              width={body.width}
-              rows={rows}
-              focus={keys}
-              expandable={false}
-            />
-          )}
-        </>
       )}
     </Modal>
   );

@@ -64,7 +64,7 @@ export function ModalFrame({
   // Only the top layer, the one in focus, shows its frame in accent, its `✕` and its keys.
   const top = focused && active && !covered;
   // A titled modal without hints still says how to close it. A Form inside adds its keys first, and
-  // there, as in a ConfirmDialog, `esc` cancels.
+  // there `esc` cancels.
   const own = hints?.length ? hints : title ? [{ key: "esc", description: "close" }] : undefined;
   const footer =
     leads.length > 0

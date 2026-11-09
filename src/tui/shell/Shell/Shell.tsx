@@ -14,7 +14,6 @@ import {
   HEADER_HEIGHT,
   Loading,
   MAIN_MIN_WIDTH,
-  Modal,
   Panel,
   SIDEBAR_CHROME_HEIGHT,
   SIDEBAR_MIN_WIDTH,
@@ -495,16 +494,15 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
               />
             )}
             {board && overlay?.kind === "deleteStory" && (
-              <Modal title={`Delete Story › ${overlay.story.id}`} size="dialog">
-                <ConfirmDialog
-                  message={deleteStoryMessage(overlay.story)}
-                  confirmLabel="Delete"
-                  cancelLabel="Cancel"
-                  destructive
-                  onConfirm={() => removeStory(overlay.story)}
-                  onCancel={close}
-                />
-              </Modal>
+              <ConfirmDialog
+                title={`Delete Story › ${overlay.story.id}`}
+                message={deleteStoryMessage(overlay.story)}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                destructive
+                onConfirm={() => removeStory(overlay.story)}
+                onCancel={close}
+              />
             )}
             {board && (overlay?.kind === "newStage" || overlay?.kind === "editStage") && (
               <StageFormModal

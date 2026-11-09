@@ -1,24 +1,31 @@
 import { Box, Text, useInput } from "ink";
-import { useContext, useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useIsActive, useKeyCapture } from "../../hooks/index.js";
-import { theme } from "../../theme.js";
-import { FormKeysContext } from "../modalLayer.js";
+import { Button } from "../Button/index.js";
+import { Modal } from "../Modal/index.js";
 
-const NO_KEYS: readonly [] = [];
+const ESC_CANCEL = [{ key: "esc", description: "cancel" }];
 
 export interface ConfirmDialogProps {
+  /** The title of the popup, for example `Delete Story › ROW-01`. */
+  title: string;
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** Colours the dialog red; use for deletions. */
+  /** Colours the confirm button red; use for deletions. */
   destructive?: boolean;
   onConfirm(): void;
   onCancel(): void;
   isActive?: boolean;
 }
 
-/** Asks before a destructive action. `y` confirms, `n`/`esc` cancel; `enter` picks the focused button (cancel by default). */
+/**
+ * The popup that asks before a destructive action, drawn over the area or Modal it is rendered in.
+ * `y` or a click on the confirm button confirms, `n`, `esc` or a click on the cancel button cancels;
+ * `enter` picks the focused button (cancel by default).
+ */
 export function ConfirmDialog({
+  title,
   message,
   confirmLabel = "Yes",
   cancelLabel = "No",
@@ -29,36 +36,50 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const active = useIsActive() && isActive;
   const [confirmFocused, setConfirmFocused] = useState(false);
+  // The popup stays open while the work runs, so a double click must not start it twice.
+  const confirmed = useRef(false);
+  const confirm = () => {
+    if (confirmed.current) return;
+    confirmed.current = true;
+    onConfirm();
+  };
   useKeyCapture(active, { escape: true });
-  // In a Modal, `esc` reads `cancel`, as it does around a Form.
-  const modal = useContext(FormKeysContext);
-  useEffect(() => (active && modal ? modal(NO_KEYS) : undefined), [active, modal]);
 
   useInput(
     (input, key) => {
-      if (input === "y") onConfirm();
+      if (input === "y") confirm();
       else if (input === "n" || key.escape) onCancel();
       else if (key.leftArrow || key.rightArrow || key.tab || input === "h" || input === "l")
         setConfirmFocused((f) => !f);
-      else if (key.return) (confirmFocused ? onConfirm : onCancel)();
+      else if (key.return) (confirmFocused ? confirm : onCancel)();
     },
     { isActive: active },
   );
 
-  const color = destructive ? theme.danger : theme.stageBoard;
   return (
-    <Box flexDirection="column" alignSelf="flex-start">
-      <Text>{message}</Text>
-      <Box marginTop={1} gap={2}>
-        <Text bold={confirmFocused} color={color} backgroundColor={confirmFocused ? theme.selection : undefined}>
-          {` ${confirmLabel} (y) `}
-        </Text>
-        <Text
-          bold={!confirmFocused}
-          color={theme.ink}
-          backgroundColor={!confirmFocused ? theme.selection : undefined}
-        >{` ${cancelLabel} (n) `}</Text>
+    <Modal title={title} size="dialog" hints={ESC_CANCEL}>
+      <Box flexDirection="column" alignSelf="flex-start">
+        <Text>{message}</Text>
+        <Box marginTop={1} gap={2}>
+          <Button
+            label={confirmLabel}
+            keyName="y"
+            onClick={confirm}
+            clickable={active}
+            compact
+            destructive={destructive}
+            focused={confirmFocused}
+          />
+          <Button
+            label={cancelLabel}
+            keyName="n"
+            onClick={onCancel}
+            clickable={active}
+            compact
+            focused={!confirmFocused}
+          />
+        </Box>
       </Box>
-    </Box>
+    </Modal>
   );
 }

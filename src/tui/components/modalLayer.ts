@@ -49,8 +49,8 @@ export const LayerHostContext = createContext<LayerHost | null>(null);
 export const LayerWrapContext = createContext<(node: ReactNode) => ReactNode>((node) => node);
 
 /**
- * Inside a modal's content, shows a Form's keys (or a ConfirmDialog's, none) first in the modal's hint
- * strip, with `esc cancel`, until the returned call.
+ * Inside a modal's content, shows a Form's keys first in the modal's hint strip, with `esc cancel`,
+ * until the returned call.
  */
 export const FormKeysContext = createContext<((keys: readonly KeyHint[]) => () => void) | null>(null);
 

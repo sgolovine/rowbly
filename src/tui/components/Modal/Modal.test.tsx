@@ -69,23 +69,6 @@ describe("Modal", () => {
     expect(tui.frame()).toContain("esc close");
   });
 
-  it("puts the keys of a ConfirmDialog inside first, with `esc cancel`", async () => {
-    const tui = await renderTui(
-      <Modal
-        title="Delete"
-        hints={[
-          { key: "d", description: "details" },
-          { key: "esc", description: "close" },
-        ]}
-      >
-        <ConfirmDialog message="Delete ROW-1?" onConfirm={() => {}} onCancel={() => {}} />
-      </Modal>,
-    );
-    expect(tui.frame()).toContain("d details");
-    expect(tui.frame()).toContain("esc cancel");
-    expect(tui.frame()).not.toContain("esc close");
-  });
-
   it("goes quiet under a nested modal: only the top one shows its ✕ and hints", async () => {
     const tui = await renderTui(
       <Modal title="Outer" hints={[{ key: "o", description: "outer key" }]} onClose={() => {}}>
@@ -109,15 +92,14 @@ describe("Modal", () => {
         <Box width={100} height={30}>
           <Modal title="New Spec">
             <Text>Title</Text>
-            <Modal title="Discard changes" size="dialog">
-              <ConfirmDialog
-                message="Close and discard unsaved changes?"
-                confirmLabel="Discard"
-                cancelLabel="Keep editing"
-                onConfirm={() => {}}
-                onCancel={() => {}}
-              />
-            </Modal>
+            <ConfirmDialog
+              title="Discard changes"
+              message="Close and discard unsaved changes?"
+              confirmLabel="Discard"
+              cancelLabel="Keep editing"
+              onConfirm={() => {}}
+              onCancel={() => {}}
+            />
           </Modal>
         </Box>
       </LayoutContext.Provider>,
@@ -125,8 +107,8 @@ describe("Modal", () => {
     await settle(100);
     expect(tui.frame()).toContain("Discard changes");
     expect(tui.frame()).toContain("Close and discard unsaved changes?");
-    expect(tui.frame()).toContain("Discard (y)");
-    expect(tui.frame()).toContain("Keep editing (n)");
+    expect(tui.frame()).toMatch(/Discard {2}y /);
+    expect(tui.frame()).toMatch(/Keep editing {2}n /);
     expect(errors.mock.calls.flat().join("\n")).not.toContain("Maximum update depth");
     errors.mockRestore();
   });
@@ -136,15 +118,13 @@ describe("Modal", () => {
     const tui = await renderTui(
       <LayoutContext.Provider value={{ width: 100, height }}>
         <Box width={100} height={height}>
-          <Modal title="Discard changes" size="dialog">
-            <ConfirmDialog message="Discard?" onConfirm={() => {}} onCancel={() => {}} />
-          </Modal>
+          <ConfirmDialog title="Discard changes" message="Discard?" onConfirm={() => {}} onCancel={() => {}} />
         </Box>
       </LayoutContext.Provider>,
     );
     await settle(100);
     expect(errors.mock.calls.flat().join("\n")).not.toContain("Maximum update depth");
-    if (height === 10) expect(tui.frame()).toContain("Yes (y)");
+    if (height === 10) expect(tui.frame()).toMatch(/Yes {2}y /);
     errors.mockRestore();
   });
 

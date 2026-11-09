@@ -76,31 +76,29 @@ export function FormModal({
         </Box>
       )}
       {confirming === "discard" && (
-        <Modal title="Discard changes" size="dialog">
-          <ConfirmDialog
-            message="Close and discard unsaved changes?"
-            confirmLabel="Discard"
-            cancelLabel="Keep editing"
-            destructive
-            onConfirm={onClose}
-            onCancel={() => setConfirming(null)}
-          />
-        </Modal>
+        <ConfirmDialog
+          title="Discard changes"
+          message="Close and discard unsaved changes?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          destructive
+          onConfirm={onClose}
+          onCancel={() => setConfirming(null)}
+        />
       )}
       {confirming === "delete" && onDelete && (
-        <Modal title={onDelete.title} size="dialog">
-          <ConfirmDialog
-            message={onDelete.message}
-            confirmLabel="Delete"
-            cancelLabel="Cancel"
-            destructive
-            onConfirm={() => {
-              setConfirming(null);
-              onDelete.onConfirm();
-            }}
-            onCancel={() => setConfirming(null)}
-          />
-        </Modal>
+        <ConfirmDialog
+          title={onDelete.title}
+          message={onDelete.message}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={() => {
+            setConfirming(null);
+            onDelete.onConfirm();
+          }}
+          onCancel={() => setConfirming(null)}
+        />
       )}
     </Modal>
   );

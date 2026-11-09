@@ -2,7 +2,7 @@ import { Box, Text, useInput } from "ink";
 import { useState } from "react";
 import type { CustomField } from "../../../../services/config/config.js";
 import { listCustomFields, removeCustomField } from "../../../../services/customField/customField.js";
-import { Button, ConfirmDialog, Loading, Modal, SelectionRow } from "../../../components/index.js";
+import { Button, ConfirmDialog, Loading, SelectionRow } from "../../../components/index.js";
 import { useAsync, useCursor, useIsActive, useKeyHints, useToast } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { CustomFieldFormModal } from "../CustomFieldFormModal/index.js";
@@ -112,28 +112,27 @@ export function CustomFieldsSection({ ctx, onChange }: SettingsSectionProps) {
         />
       )}
       {mode.kind === "remove" && (
-        <Modal title={`Remove Custom Field › ${mode.field.label}`} size="dialog">
-          <ConfirmDialog
-            message={`Remove ${mode.field.label}? Rowbly also removes its value from each Story.`}
-            confirmLabel="Remove"
-            cancelLabel="Cancel"
-            destructive
-            onConfirm={() => {
-              const { field } = mode;
-              removeCustomField({ key: field.key }, ctx).then(
-                () => {
-                  toast.push("info", `Removed ${field.label}`);
-                  done();
-                },
-                (err: unknown) => {
-                  toast.error(err);
-                  setMode({ kind: "list" });
-                },
-              );
-            }}
-            onCancel={() => setMode({ kind: "list" })}
-          />
-        </Modal>
+        <ConfirmDialog
+          title={`Remove Custom Field › ${mode.field.label}`}
+          message={`Remove ${mode.field.label}? Rowbly also removes its value from each Story.`}
+          confirmLabel="Remove"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={() => {
+            const { field } = mode;
+            removeCustomField({ key: field.key }, ctx).then(
+              () => {
+                toast.push("info", `Removed ${field.label}`);
+                done();
+              },
+              (err: unknown) => {
+                toast.error(err);
+                setMode({ kind: "list" });
+              },
+            );
+          }}
+          onCancel={() => setMode({ kind: "list" })}
+        />
       )}
     </Box>
   );

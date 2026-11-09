@@ -16,6 +16,8 @@ export interface ButtonProps {
   destructive?: boolean;
   /** Its work is running: the label is muted, and the caller ignores the click and key. */
   busy?: boolean;
+  /** It is the choice that `enter` picks: bold on the `selection` fill. */
+  focused?: boolean;
 }
 
 export function Button({
@@ -27,6 +29,7 @@ export function Button({
   primary = false,
   destructive = false,
   busy = false,
+  focused = false,
 }: ButtonProps) {
   const ref = useRef<DOMElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -34,7 +37,7 @@ export function Button({
   return (
     <Box
       ref={ref}
-      backgroundColor={hovered && clickable ? theme.selection : undefined}
+      backgroundColor={focused || (hovered && clickable) ? theme.selection : undefined}
       width={compact ? undefined : "100%"}
       flexShrink={0}
       justifyContent="center"
@@ -42,7 +45,7 @@ export function Button({
       paddingX={1}
     >
       <Text
-        bold={primary}
+        bold={primary || focused}
         color={busy ? theme.inkMuted : destructive ? theme.danger : primary ? theme.accent : theme.ink}
       >
         {label}

@@ -9,7 +9,6 @@ import {
   type FormModalDelete,
   FormNavigationContext,
   type FormValues,
-  Modal,
   ScrollBody,
   Tabs,
   useCovered,
@@ -161,31 +160,29 @@ export function StoryModalBody({
         </Box>
       </LayoutContext.Provider>
       {confirming === "discard" && (
-        <Modal title="Discard changes" size="dialog">
-          <ConfirmDialog
-            message="Close and discard unsaved changes?"
-            confirmLabel="Discard"
-            cancelLabel="Keep editing"
-            destructive
-            onConfirm={onClose}
-            onCancel={() => onConfirming(null)}
-          />
-        </Modal>
+        <ConfirmDialog
+          title="Discard changes"
+          message="Close and discard unsaved changes?"
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          destructive
+          onConfirm={onClose}
+          onCancel={() => onConfirming(null)}
+        />
       )}
       {confirming === "delete" && (
-        <Modal title={onDelete.title} size="dialog">
-          <ConfirmDialog
-            message={onDelete.message}
-            confirmLabel="Delete"
-            cancelLabel="Cancel"
-            destructive
-            onConfirm={() => {
-              onConfirming(null);
-              onDelete.onConfirm();
-            }}
-            onCancel={() => onConfirming(null)}
-          />
-        </Modal>
+        <ConfirmDialog
+          title={onDelete.title}
+          message={onDelete.message}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={() => {
+            onConfirming(null);
+            onDelete.onConfirm();
+          }}
+          onCancel={() => onConfirming(null)}
+        />
       )}
     </Box>
   );
