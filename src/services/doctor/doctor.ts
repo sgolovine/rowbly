@@ -415,7 +415,6 @@ async function checkSpec(
   if (changed) await writeSpecFile(spec.path, spec.doc);
 }
 
-/** `"login-page"` → `"Login page"`. */
 /** `--fix` copies a skill only into an empty place: a folder that lacks `SKILL.md` can hold the work of a user. */
 async function checkSkills(
   paths: ProjectPaths,
@@ -456,6 +455,7 @@ async function checkSkills(
   }
 }
 
+/** `"login-page"` → `"Login page"`. */
 function labelFromSlug(slug: string): string {
   const text = slug.replace(/-/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
