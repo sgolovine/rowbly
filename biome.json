@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/.agents", "!**/.claude", "!**/skills"]
+    "includes": ["**", "!**/.agents", "!**/.claude", "!**/skills", "!**/rowbly-test"]
   },
   "formatter": {
     "enabled": true,

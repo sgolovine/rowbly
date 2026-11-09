@@ -1,0 +1,43 @@
+{
+  "projectName": "Tic-Tac-Toe",
+  "projectKey": "TTT",
+  "customFields": [
+    {
+      "key": "worktree",
+      "label": "Worktree",
+      "type": "string"
+    },
+    {
+      "key": "pull_request",
+      "label": "Pull request",
+      "type": "url"
+    }
+  ],
+  "stages": [
+    {
+      "key": "BACKLOG",
+      "label": "Backlog",
+      "enabled": true
+    },
+    {
+      "key": "IN_REFINEMENT",
+      "label": "In Refinement",
+      "enabled": true
+    },
+    {
+      "key": "IN_DEVELOPMENT",
+      "label": "In Development",
+      "enabled": true
+    },
+    {
+      "key": "IN_REVIEW",
+      "label": "In Review",
+      "enabled": true
+    },
+    {
+      "key": "DONE",
+      "label": "Done",
+      "enabled": true
+    }
+  ]
+}
