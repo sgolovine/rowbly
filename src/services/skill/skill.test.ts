@@ -98,6 +98,57 @@ describe("skill service", () => {
       expect(await pathExists(at(".agents/skills/alpha/SKILL.md"))).toBe(true);
     });
 
+    it("copies a tracked skill again for one harness and leaves a good copy of another", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex", "cursor"] }, ctx);
+      await removeFolder(at(".agents/skills/alpha"));
+      await writeFile(at(".cursor/skills/alpha/local.md"), "edit");
+      const result = await installSkill({ name: "alpha", harnesses: ["codex", "cursor"] }, ctx);
+      expect(result.harnesses.map((h) => [h.harness, h.status])).toEqual([
+        ["codex", "installed"],
+        ["cursor", "already-installed"],
+      ]);
+      expect(await readFile(at(".cursor/skills/alpha/local.md"), "utf8")).toBe("edit");
+    });
+
+    it("gives a conflict for a tracked folder that lost its SKILL.md, and changes nothing", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      await rm(at(".agents/skills/alpha/SKILL.md"));
+      await writeFile(at(".agents/skills/alpha/mine.md"), "mine");
+      const error = await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx).catch((e) => e);
+      expect(error).toBeInstanceOf(ConflictError);
+      expect(error.message).toContain(join(".agents", "skills", "alpha"));
+      expect(error.hint).toMatch(/install-skill/);
+      expect(await readdir(at(".agents/skills/alpha"))).toEqual(["mine.md", "references"]);
+    });
+
+    it("gives a conflict for a file at the path of a tracked skill, and keeps the file", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      await removeFolder(at(".agents/skills/alpha"));
+      await writeFile(at(".agents/skills/alpha"), "mine");
+      await expect(installSkill({ name: "alpha", harnesses: ["codex"] }, ctx)).rejects.toBeInstanceOf(ConflictError);
+      expect(await readFile(at(".agents/skills/alpha"), "utf8")).toBe("mine");
+    });
+
+    it("writes nothing for any harness when one tracked copy is broken", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      await rm(at(".agents/skills/alpha/SKILL.md"));
+      const before = await project.read("rowbly.config.json");
+      await expect(installSkill({ name: "alpha", harnesses: ["cursor", "codex"] }, ctx)).rejects.toBeInstanceOf(
+        ConflictError,
+      );
+      expect(await pathExists(at(".cursor"))).toBe(false);
+      expect(await project.read("rowbly.config.json")).toBe(before);
+    });
+
+    it("does not call a broken copy of a tracked harness shared", async () => {
+      await installSkill({ name: "alpha", harnesses: ["claude-code"] }, ctx);
+      await rm(at(".claude/skills/alpha/SKILL.md"));
+      await mkdir(at(".agents"));
+      await symlink("../.claude/skills", at(".agents/skills"));
+      await expect(installSkill({ name: "alpha", harnesses: ["codex"] }, ctx)).rejects.toBeInstanceOf(ConflictError);
+      expect(await skills()).toEqual([{ name: "alpha", harnesses: ["claude-code"] }]);
+    });
+
     it("writes nothing when an untracked folder is in the way", async () => {
       await mkdir(at(".claude/skills/alpha"), { recursive: true });
       await writeFile(at(".claude/skills/alpha/mine.md"), "mine");

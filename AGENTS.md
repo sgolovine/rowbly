@@ -169,8 +169,9 @@ from the `skills/` folder of the Rowbly package to the project skills folder of 
 `rowbly list-skills` shows the installed skills. `rowbly remove-skill` deletes only the folders that
 the config tracks. It keeps a folder that a different tracked harness uses through a symlink, at the
 skill or at the skills folder. If the path of the skill is a symlink, it deletes only the link.
-`install-skill` checks each target before it writes. If a folder that the config does not track is
-at a target, the command stops and changes nothing.
+`install-skill` checks each target before it writes. The command uses the same rule as `list-skills` and
+`doctor`: a skill is present if its folder has a `SKILL.md`. If other content is at a target, the
+command stops and changes nothing. If nothing is at the path of a tracked skill, the command copies it again.
 
 `rowbly doctor` shows an error if a tracked skill is not installed for a harness. `--fix` installs the
 skill again if nothing is at its path and the Rowbly package still has the skill. `--fix` does not change a

@@ -273,7 +273,8 @@ A Skill result has this shape. It has `status` in place of `installed`:
 ```
 
 - **Names.** Only a bundled skill can install. Any other name gives `NOT_FOUND`, and `hint` lists the bundled skills.
-- **Conflicts.** A folder at a target that the config does not track gives `CONFLICT`. The command then writes nothing.
+- **Conflicts.** If a target has content that is not an installed copy of the skill, the command gives `CONFLICT` and writes nothing. For example, a folder that the config does not track, or a tracked folder with no `SKILL.md`.
+- **Repairs.** If nothing is at the path of a tracked skill, `install-skill` copies the skill again and gives the status `installed`.
 - **Install status.** The value is `installed`, `shared` or `already-installed`. A `shared` harness uses the same folder as a tracked harness.
 - **Remove status.** The value is `removed`, `missing` or `shared`. Rowbly keeps a `shared` folder because a tracked harness still uses it.
 - **Removes.** With no `--harness`, `remove-skill` removes the skill from all of its harnesses.

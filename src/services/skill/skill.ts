@@ -199,10 +199,12 @@ export async function installSkill(input: InstallSkillInput, ctx: ServiceContext
   for (const harness of harnesses) {
     const path = skillPath(paths, harness, name);
     const dir = await physicalPath(harnessSkillsDir(paths, harness));
-    if (await pathOccupied(path)) {
+    if (await pathExists(join(path, SKILL_FILE))) {
       if (tracked.includes(harness)) results.push({ harness, path, status: "already-installed" });
       else if (trackedDirs.has(dir)) results.push({ harness, path, status: "shared" });
       else conflicts.push(relative(paths.root, path));
+    } else if (await pathOccupied(path)) {
+      conflicts.push(relative(paths.root, path));
     } else if (claimedDirs.has(dir)) {
       results.push({ harness, path, status: "shared" });
     } else {
@@ -212,7 +214,7 @@ export async function installSkill(input: InstallSkillInput, ctx: ServiceContext
     }
   }
   if (conflicts.length > 0) {
-    throw new ConflictError(`Rowbly does not track ${conflicts.join(", ")}, but it already exists`, {
+    throw new ConflictError(`${conflicts.join(", ")} already exists, and it is not an installed copy of the skill`, {
       details: { conflicts },
       hint: "Move or delete it, then run `rowbly install-skill` again.",
     });
