@@ -23,7 +23,7 @@ import {
   STACKED_MIN_HEIGHT,
   ToastArea,
 } from "../../components/index.js";
-import { LayoutContext, useAsync, useIsActive, useLayout, useToast } from "../../hooks/index.js";
+import { LayoutContext, useAsync, useIsActive, useLayout, useStoryChanges, useToast } from "../../hooks/index.js";
 import { groupDelta, type KeyHint, moveDelta, reorderDelta } from "../../keymap.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
@@ -97,6 +97,8 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   const stories = board?.stories ?? [];
   const projectRoot = board?.project.root;
   const projectName = board?.project.projectName;
+  // Agents change Stories from other processes.
+  useStoryChanges(projectRoot, data.refresh);
 
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [pane, setPane] = useState<Pane>("stories");
