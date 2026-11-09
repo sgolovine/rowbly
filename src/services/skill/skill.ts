@@ -91,6 +91,11 @@ async function physicalPath(path: string): Promise<string> {
   }
 }
 
+/** The physical place of the entry of a skill in a skills folder. It follows the links above the entry, but not the entry. */
+async function skillEntry(paths: ProjectPaths, harness: SkillHarness, name: string): Promise<string> {
+  return join(await physicalPath(harnessSkillsDir(paths, harness)), name);
+}
+
 /** The `skills/` folder next to the first `package.json` above this file, in both `src/` and `dist/`. */
 async function defaultSkillsDir(): Promise<string> {
   let dir = dirname(fileURLToPath(import.meta.url));
@@ -254,7 +259,10 @@ async function deleteIfPresent(path: string): Promise<boolean> {
   return true;
 }
 
-/** Removes a skill from tracked harnesses. It keeps a folder that another tracked harness still uses. */
+/**
+ * Removes a skill from tracked harnesses. It keeps a folder that another tracked harness still uses,
+ * through a symlink at the skill or at its skills folder. For a symlink at the skill, it deletes only the link.
+ */
 export async function removeSkill(input: RemoveSkillInput, ctx: ServiceContext = {}): Promise<RemoveSkillResult> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
@@ -274,11 +282,13 @@ export async function removeSkill(input: RemoveSkillInput, ctx: ServiceContext =
   }
 
   const remaining = skill.harnesses.filter((harness) => !targets.includes(harness));
-  const keptDirs = new Set(await Promise.all(remaining.map((h) => physicalPath(harnessSkillsDir(paths, h)))));
+  const kept = new Set(
+    await Promise.all(remaining.flatMap((h) => [skillEntry(paths, h, name), physicalPath(skillPath(paths, h, name))])),
+  );
   const results: SkillRemoval[] = [];
   for (const harness of targets) {
     const path = skillPath(paths, harness, name);
-    if (keptDirs.has(await physicalPath(harnessSkillsDir(paths, harness)))) {
+    if (kept.has(await skillEntry(paths, harness, name))) {
       results.push({ harness, path, status: "shared" });
     } else {
       results.push({ harness, path, status: (await deleteIfPresent(path)) ? "removed" : "missing" });

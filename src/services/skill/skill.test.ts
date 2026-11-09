@@ -290,6 +290,52 @@ describe("skill service", () => {
       expect(await pathOccupied(at(".claude/skills/alpha"))).toBe(false);
     });
 
+    it("keeps a folder that another tracked harness uses through a symlink at the skill", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex", "claude-code"] }, ctx);
+      await removeFolder(at(".claude/skills/alpha"));
+      await symlink("../../.agents/skills/alpha", at(".claude/skills/alpha"));
+
+      const result = await removeSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      expect(result.harnesses).toEqual([{ harness: "codex", path: at(".agents/skills/alpha"), status: "shared" }]);
+      expect(await readFile(at(".claude/skills/alpha/SKILL.md"), "utf8")).toContain("name: alpha");
+      expect(await skills()).toEqual([{ name: "alpha", harnesses: ["claude-code"] }]);
+    });
+
+    it("removes only the link of a harness whose skill is a symlink to the folder of another harness", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex", "claude-code"] }, ctx);
+      await removeFolder(at(".claude/skills/alpha"));
+      await symlink("../../.agents/skills/alpha", at(".claude/skills/alpha"));
+
+      const result = await removeSkill({ name: "alpha", harnesses: ["claude-code"] }, ctx);
+      expect(result.harnesses[0]?.status).toBe("removed");
+      expect(await pathOccupied(at(".claude/skills/alpha"))).toBe(false);
+      expect(await readFile(at(".agents/skills/alpha/SKILL.md"), "utf8")).toContain("name: alpha");
+    });
+
+    it("keeps a symlink at the skill that a remaining harness reaches through a symlinked folder", async () => {
+      await installSkill({ name: "alpha", harnesses: ["claude-code"] }, ctx);
+      await removeFolder(at(".claude/skills/alpha"));
+      await mkdir(at("elsewhere"));
+      await writeFile(at("elsewhere/SKILL.md"), "elsewhere");
+      await symlink("../../elsewhere", at(".claude/skills/alpha"));
+      await mkdir(at(".agents"));
+      await symlink("../.claude/skills", at(".agents/skills"));
+      await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+
+      const result = await removeSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      expect(result.harnesses[0]?.status).toBe("shared");
+      expect((await lstat(at(".claude/skills/alpha"))).isSymbolicLink()).toBe(true);
+    });
+
+    it("deletes the real folder when no remaining harness resolves to it", async () => {
+      await installSkill({ name: "alpha", harnesses: ["codex", "claude-code"] }, ctx);
+      await removeFolder(at(".claude/skills/alpha"));
+      await symlink("../../.agents/skills/alpha", at(".claude/skills/alpha"));
+      await removeSkill({ name: "alpha" }, ctx);
+      expect(await pathOccupied(at(".agents/skills/alpha"))).toBe(false);
+      expect(await pathOccupied(at(".claude/skills/alpha"))).toBe(false);
+    });
+
     it("untracks a skill whose folder is already missing", async () => {
       await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
       await removeFolder(at(".agents"));

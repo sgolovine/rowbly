@@ -167,7 +167,8 @@ from the `skills/` folder of the Rowbly package to the project skills folder of 
 | `cursor`         | `.cursor/skills`      |
 
 `rowbly list-skills` shows the installed skills. `rowbly remove-skill` deletes only the folders that
-the config tracks. It keeps a folder that a different tracked harness uses through a symlink.
+the config tracks. It keeps a folder that a different tracked harness uses through a symlink, at the
+skill or at the skills folder. If the path of the skill is a symlink, it deletes only the link.
 `install-skill` checks each target before it writes. If a folder that the config does not track is
 at a target, the command stops and changes nothing.
 
