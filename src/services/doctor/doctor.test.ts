@@ -1,10 +1,12 @@
-import { mkdir, readdir, rm } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
 import { addCustomField } from "../customField/customField.js";
+import { installSkill } from "../skill/skill.js";
 import { createStory } from "../story/story.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTempDir, useTestProject } from "../testProject/testProject.js";
+import type { ServiceContext } from "../workspace/workspace.js";
 import { doctor } from "./doctor.js";
 
 describe("doctor", () => {
@@ -207,5 +209,109 @@ describe("doctor", () => {
       expect((await doctor({ fix: true }, project.ctx)).issues).toMatchObject([{ fixed: true }]);
       expect(await project.read("stories/ROW-01.md")).not.toContain("agentLock");
     });
+  });
+});
+
+describe("doctor skill checks", () => {
+  const project = useTestProject();
+  const fixture = useTempDir();
+  let ctx: ServiceContext;
+  const skillDir = () => join(project.paths.root, ".claude", "skills", "alpha");
+  const file = join(".claude", "skills", "alpha");
+  const setConfigSkills = async (skills: unknown) => {
+    const config = JSON.parse(await project.read("rowbly.config.json"));
+    await project.write("rowbly.config.json", JSON.stringify({ ...config, skills }));
+  };
+
+  beforeEach(async () => {
+    await mkdir(join(fixture.path, "alpha"));
+    await writeFile(join(fixture.path, "alpha", "SKILL.md"), "alpha");
+    ctx = { ...project.ctx, skillsDir: fixture.path };
+    await installSkill({ name: "alpha", harnesses: ["claude-code"] }, ctx);
+  });
+
+  it("finds no issues when each tracked skill is installed", async () => {
+    expect(await doctor({}, ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
+  it("reports a missing skill as an error, and restores it with --fix", async () => {
+    await rm(skillDir(), { recursive: true });
+    expect(await doctor({}, ctx)).toMatchObject({
+      ok: false,
+      issues: [
+        {
+          severity: "error",
+          message: "Skill alpha for claude-code is missing",
+          file,
+          fix: "Install it again",
+          fixed: false,
+        },
+      ],
+    });
+
+    expect(await doctor({ fix: true }, ctx)).toMatchObject({ ok: true, issues: [{ fixed: true }] });
+    expect(await readFile(join(skillDir(), "SKILL.md"), "utf8")).toBe("alpha");
+    expect(await doctor({}, ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
+  it("restores a skill when its parent folders are missing", async () => {
+    await rm(join(project.paths.root, ".claude"), { recursive: true });
+    expect((await doctor({ fix: true }, ctx)).ok).toBe(true);
+    expect(await readFile(join(skillDir(), "SKILL.md"), "utf8")).toBe("alpha");
+  });
+
+  it("does not overwrite a folder that lacks SKILL.md", async () => {
+    await rm(join(skillDir(), "SKILL.md"));
+    await writeFile(join(skillDir(), "mine.md"), "mine");
+    const report = await doctor({ fix: true }, ctx);
+    expect(report.ok).toBe(false);
+    expect(report.issues).toEqual([
+      {
+        severity: "error",
+        message:
+          "Skill alpha for claude-code has no SKILL.md. Repair the folder by hand, or delete it with `rowbly remove-skill alpha --harness claude-code`",
+        file,
+        fixed: false,
+      },
+    ]);
+    expect(await readdir(skillDir())).toEqual(["mine.md"]);
+  });
+
+  it("does not replace a broken symlink", async () => {
+    await rm(skillDir(), { recursive: true });
+    await symlink("missing", skillDir());
+    const report = await doctor({ fix: true }, ctx);
+    expect(report.issues[0]).toMatchObject({ fixed: false });
+    expect(report.ok).toBe(false);
+  });
+
+  it("reports a missing skill with no fix when Rowbly no longer bundles it", async () => {
+    await rm(skillDir(), { recursive: true });
+    await rm(join(fixture.path, "alpha"), { recursive: true });
+    const report = await doctor({ fix: true }, ctx);
+    expect(report.ok).toBe(false);
+    expect(report.issues[0]?.message).toContain("no longer bundles it");
+    expect(report.issues[0]?.message).toContain("rowbly remove-skill alpha --harness claude-code");
+    expect(report.issues[0]?.fixed).toBe(false);
+  });
+
+  it("restores one copy when two tracked harnesses share a folder", async () => {
+    await mkdir(join(project.paths.root, ".agents"));
+    await symlink("../.claude/skills", join(project.paths.root, ".agents", "skills"));
+    await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+    await rm(skillDir(), { recursive: true });
+    expect((await doctor({ fix: true }, ctx)).issues).toHaveLength(1);
+    expect(await doctor({}, ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
+  it("reports a malformed skill entry through the config check and stops", async () => {
+    await setConfigSkills([{ name: "../x", harnesses: ["vim"] }]);
+    const report = await doctor({}, ctx);
+    expect(report.ok).toBe(false);
+    expect(report.issues.map((issue) => issue.file)).toEqual([
+      join(".rowbly", "rowbly.config.json"),
+      join(".rowbly", "rowbly.config.json"),
+    ]);
+    expect(report.issues[1]?.message).toBe('skills.0.harnesses.0: Unknown harness "vim"');
   });
 });

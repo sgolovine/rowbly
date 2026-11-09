@@ -3,8 +3,9 @@ import { join, relative } from "node:path";
 import { labelFromKey, type ProjectConfig, parseConfig, STAGE_KEY_PATTERN, writeConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
-import { listMarkdownFiles, pathExists } from "../files/files.js";
+import { listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
+import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import {
   canonicalStoryId,
   SPEC_KEYS,
@@ -49,6 +50,7 @@ export interface DoctorInput {
  * Checks that the files in `.rowbly/` line up with its config: every stage has a file and every
  * file a stage, every story has a title, a known stage and exactly the project's custom fields, and
  * every spec has a title and links to Stories that exist. A spec with no Story is an orphan: a warning.
+ * Every skill in the config must be installed for each of its harnesses.
  */
 export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}): Promise<DoctorReport> {
   const paths = await findProject(ctx);
@@ -83,6 +85,7 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
   await checkStages(paths, config, rel, report);
   await checkStories(paths, config, rel, report);
   await checkSpecs(paths, config, rel, report);
+  await checkSkills(paths, config, ctx, rel, report);
 
   return { root: paths.root, issues, ok: !issues.some((issue) => issue.severity === "error" && !issue.fixed) };
 }
@@ -413,6 +416,46 @@ async function checkSpec(
 }
 
 /** `"login-page"` → `"Login page"`. */
+/** `--fix` copies a skill only into an empty place: a folder that lacks `SKILL.md` can hold the work of a user. */
+async function checkSkills(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  ctx: ServiceContext,
+  rel: (path: string) => string,
+  report: Report,
+): Promise<void> {
+  if (!config.skills?.length) return;
+  const bundled = await bundledSkills(ctx);
+  for (const { name, harnesses } of config.skills) {
+    for (const harness of harnesses) {
+      const path = skillPath(paths, harness, name);
+      if (await pathExists(join(path, SKILL_FILE))) continue;
+      const file = rel(path);
+      const remove = `\`rowbly remove-skill ${name} --harness ${harness}\``;
+      if (await pathOccupied(path)) {
+        await report({
+          severity: "error",
+          message: `Skill ${name} for ${harness} has no ${SKILL_FILE}. Repair the folder by hand, or delete it with ${remove}`,
+          file,
+        });
+      } else if (!bundled.names.includes(name)) {
+        await report({
+          severity: "error",
+          message: `Skill ${name} for ${harness} is missing, and Rowbly no longer bundles it. Run ${remove}`,
+          file,
+        });
+      } else {
+        await report(
+          { severity: "error", message: `Skill ${name} for ${harness} is missing`, file, fix: "Install it again" },
+          async () => {
+            await copySkill(join(bundled.dir, name), path);
+          },
+        );
+      }
+    }
+  }
+}
+
 function labelFromSlug(slug: string): string {
   const text = slug.replace(/-/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);

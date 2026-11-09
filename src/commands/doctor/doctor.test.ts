@@ -39,6 +39,20 @@ describe("doctor command", () => {
     expect(await project.read("stages/DONE.md")).toBe("");
   });
 
+  it("reports a tracked skill that is missing, with exit code 1, and restores it with --fix", async () => {
+    await runCli(["install-skill", "review", "--harness", "cursor"], project.ctx.cwd);
+    await rm(join(project.paths.root, ".cursor"), { recursive: true });
+    const file = join(".cursor", "skills", "review");
+    const report = await runCli(["doctor"], project.ctx.cwd);
+    expect(report.exitCode).toBe(1);
+    expect(report.stdout).toContain(`error   ${file}: Skill review for cursor is missing (fix: Install it again)`);
+
+    const fixed = await runCli(["doctor", "--fix"], project.ctx.cwd);
+    expect(fixed.exitCode).toBe(0);
+    expect(fixed.stdout).toBe(`fixed   ${file}: Skill review for cursor is missing`);
+    expect(await runCli(["doctor"], project.ctx.cwd)).toMatchObject({ exitCode: 0, stdout: "No problems found." });
+  });
+
   it("prints the report as JSON with --json", async () => {
     await rm(join(project.paths.stagesDir, "DONE.md"));
     const result = await runCli(["--json", "doctor"], project.ctx.cwd);
