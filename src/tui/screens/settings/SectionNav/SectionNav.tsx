@@ -32,14 +32,7 @@ export function SectionNav({
   onSelect(id: string): void;
 }) {
   return (
-    <Panel
-      title="Sections"
-      focused={focused}
-      onClick={onFocus}
-      flexShrink={0}
-      width={SECTION_NAV_WIDTH}
-      height={height}
-    >
+    <Panel focused={focused} onClick={onFocus} flexShrink={0} width={SECTION_NAV_WIDTH} height={height}>
       <ScrollBody
         height={height === undefined ? undefined : Math.max(1, height - PANEL_FRAME_HEIGHT)}
         active={clickable}

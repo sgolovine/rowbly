@@ -15,7 +15,7 @@ const GROUPS: SettingsGroup[] = [
 describe("SectionNav", () => {
   it("shows the group headings and marks the selected section", async () => {
     const tui = await renderTui(<SectionNav groups={GROUPS} selected="b" clickable onSelect={() => {}} />);
-    expect(tui.frame()).toContain("Sections");
+    expect(tui.frame()).not.toContain("Sections");
     expect(tui.frame()).toMatch(/│ Project\s+│\n│ {3}General/);
     expect(tui.frame()).toContain("Maintenance");
     expect(tui.frame()).toContain("▌ Doctor");

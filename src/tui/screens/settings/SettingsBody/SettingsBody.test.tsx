@@ -40,7 +40,7 @@ describe("SettingsBody", () => {
   it("shows the first section in a Panel with its title, and the list has the focus", async () => {
     const { tui, hints } = await setup();
     expect(tui.frame()).toContain("▌ Alpha");
-    expect(tui.frame()).toMatch(/╭─Sections─+╮\s*╭─Alpha─+╮/);
+    expect(tui.frame()).toMatch(/╭─+╮\s*╭─Alpha─+╮/);
     expect(tui.frame()).toContain("About alpha.");
     expect(tui.frame()).toContain("alpha content");
     expect(hints()).toEqual(["↑/↓ section", "enter open section", "esc close"]);
