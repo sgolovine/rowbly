@@ -32,6 +32,8 @@ export interface ProjectConfig {
   stages: StageConfig[];
   /** The optional features that are on. A feature that is not here is off. */
   features?: FeatureConfig;
+  /** The bundled skills that Rowbly installed in this project. */
+  skills?: InstalledSkill[];
 }
 
 /** The optional features of a project, by name. */
@@ -43,6 +45,16 @@ export interface FeatureConfig {
 const FEATURES = ["specs"] as const;
 export type Feature = (typeof FEATURES)[number];
 
+/** The coding harnesses that Rowbly can install a skill for. */
+export const SKILL_HARNESSES = ["claude-code", "codex", "gemini-cli", "github-copilot", "cursor"] as const;
+export type SkillHarness = (typeof SKILL_HARNESSES)[number];
+
+/** A bundled skill and the harnesses it is installed for. */
+export interface InstalledSkill {
+  name: string;
+  harnesses: SkillHarness[];
+}
+
 export function featureEnabled(config: ProjectConfig, feature: Feature): boolean {
   return config.features?.[feature] === true;
 }
@@ -50,6 +62,8 @@ export function featureEnabled(config: ProjectConfig, feature: Feature): boolean
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9]*$/;
 export const STAGE_KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 const FIELD_KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
+const SKILL_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const SKILL_NAME_MAX_LENGTH = 64;
 /** Story frontmatter keys Rowbly owns; a custom field cannot use them. */
 const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description", "agentLock"];
 
@@ -93,6 +107,11 @@ export function checkFieldOptions(type: CustomFieldType, options: string[] | und
   return [];
 }
 
+/** A skill name is also a folder name, so this check keeps a hand-edited config inside the skills folders. */
+export function isSkillName(name: string): boolean {
+  return name.length <= SKILL_NAME_MAX_LENGTH && SKILL_NAME_PATTERN.test(name);
+}
+
 /** `"In Progress"` → `"IN_PROGRESS"`. */
 export function toStageKey(label: string): string {
   return label
@@ -132,6 +151,48 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
+}
+
+function skillIssues(skills: unknown): Issue[] {
+  if (!Array.isArray(skills)) return [{ path: ["skills"], message: "skills must be an array" }];
+  const issues: Issue[] = [];
+  const seen = new Set<string>();
+  for (const [i, skill] of (skills as unknown[]).entries()) {
+    const path = ["skills", i];
+    if (!isRecord(skill)) {
+      issues.push({ path, message: "A skill must be an object" });
+      continue;
+    }
+    if (typeof skill.name !== "string") issues.push({ path: [...path, "name"], message: "name is required" });
+    else {
+      if (!isSkillName(skill.name)) {
+        issues.push({
+          path: [...path, "name"],
+          message: `Skill name "${skill.name}" must be lowercase letters and digits, separated by single hyphens`,
+        });
+      }
+      if (seen.has(skill.name)) issues.push({ path: [...path, "name"], message: `Duplicate skill "${skill.name}"` });
+      seen.add(skill.name);
+    }
+    issues.push(...harnessIssues(skill.harnesses, [...path, "harnesses"]));
+  }
+  return issues;
+}
+
+function harnessIssues(harnesses: unknown, path: Issue["path"]): Issue[] {
+  if (!Array.isArray(harnesses)) return [{ path, message: "harnesses must be an array" }];
+  if (harnesses.length === 0) return [{ path, message: "A skill needs at least one harness" }];
+  const issues: Issue[] = [];
+  const seen = new Set<unknown>();
+  for (const [i, harness] of (harnesses as unknown[]).entries()) {
+    if (!SKILL_HARNESSES.includes(harness as SkillHarness)) {
+      issues.push({ path: [...path, i], message: `Unknown harness "${harness}"` });
+    } else if (seen.has(harness)) {
+      issues.push({ path: [...path, i], message: `Duplicate harness "${harness}"` });
+    }
+    seen.add(harness);
+  }
+  return issues;
 }
 
 /** Every problem with a parsed config file; none means `raw` is a valid `ProjectConfig`. */
@@ -212,6 +273,7 @@ export function configIssues(raw: unknown): Issue[] {
       }
     }
   }
+  if (raw.skills !== undefined) issues.push(...skillIssues(raw.skills));
   return issues;
 }
 
@@ -243,6 +305,9 @@ function normalizeConfig(config: ProjectConfig): ProjectConfig {
             FEATURES.filter((f) => f in (config.features ?? {})).map((f) => [f, config.features?.[f]]),
           ),
         }),
+    ...(config.skills === undefined
+      ? {}
+      : { skills: config.skills.map(({ name, harnesses }) => ({ name, harnesses: [...harnesses] })) }),
   };
 }
 

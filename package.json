@@ -7,7 +7,9 @@
     "rowbly": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "skills",
+    "!skills/**/*.test.*"
   ],
   "engines": {
     "node": ">=22"
