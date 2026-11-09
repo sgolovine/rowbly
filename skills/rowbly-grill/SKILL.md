@@ -1,4 +1,5 @@
 ---
+
 name: rowbly-grill
 description: "Interview a person about a Rowbly Story through a browser form or numbered chat rounds, resolve its design questions, and save the agreed specification and qualifying decisions as Story Specs. Use with a Story Key or number to sharpen a Story before implementation."
 ---

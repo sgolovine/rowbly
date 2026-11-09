@@ -88,10 +88,12 @@ A short file is enough. One way to lay it out, with a section per Board where Bo
 # How we use Rowbly
 
 ## Every Board
+
 - A Story starts in `backlog`; move it to `todo` only when it has a Priority and an Epic.
 - Add a Comment when work starts and when it is blocked, with the branch name.
 
 ## Board `web`
+
 - `review`: a pull request is open. The reviewer, not the author, moves the Story to `done`.
 - Label UI work `frontend`.
 ```

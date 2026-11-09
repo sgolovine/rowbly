@@ -6,13 +6,13 @@ Resolve `scripts/grill-ui.mjs` in this skill's directory to an absolute path onc
 
 ## Commands
 
-| Command | Effect |
-| --- | --- |
-| `node "$GRILL_UI" start --title "<plan name>"` | Start the server if needed, reset the session, and open the browser. Run once at the beginning. |
-| `node "$GRILL_UI" ask <<'EOF' … EOF` | Post a round (JSON on stdin or a file path) and block until the user submits. Prints the answers. |
-| `node "$GRILL_UI" wait` | Keep waiting for the latest round. |
-| `node "$GRILL_UI" end --summary "<markdown>"` | Show the completion screen. Run after the user confirms shared understanding. |
-| `node "$GRILL_UI" status` / `url` / `stop` | Inspect, print the URL, or shut down. |
+| Command                                        | Effect                                                                                            |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `node "$GRILL_UI" start --title "<plan name>"` | Start the server if needed, reset the session, and open the browser. Run once at the beginning.   |
+| `node "$GRILL_UI" ask <<'EOF' … EOF`           | Post a round (JSON on stdin or a file path) and block until the user submits. Prints the answers. |
+| `node "$GRILL_UI" wait`                        | Keep waiting for the latest round.                                                                |
+| `node "$GRILL_UI" end --summary "<markdown>"`  | Show the completion screen. Run after the user confirms shared understanding.                     |
+| `node "$GRILL_UI" status` / `url` / `stop`     | Inspect, print the URL, or shut down.                                                             |
 
 `ask` and `wait` exit `0` with answers, `2` when they time out still pending (default `--timeout 540` seconds), and `1` on errors. Use a resumable tool execution so you can keep the person informed while waiting; do not block a tool call for ten minutes. On exit `2`, or if the shell kills the command, run `wait` — the round stays open in the browser. Add `--json` for structured output.
 

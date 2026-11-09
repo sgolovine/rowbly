@@ -28,22 +28,22 @@ Success exits 0 and prints `method=2`, the 14 input hashes below, `overall`, and
 array order retained except Comments ordered by `createdAt` then `id`. The helper's contents are
 also an input, so a helper change requires another review.
 
-| Input | What it covers |
-| --- | --- |
-| `helper` | This helper's complete contents. |
-| `repository` | Tracked Git tree entries outside `.rowbly`; uncommitted or untracked review inputs are a gap. Board-only publication commits do not change this input. |
-| `plugins` | Every known Plugin's id, enabled and loaded values. |
-| `configuration` | The Board's complete effective `config show` result, including Stage Categories and Custom Fields. |
-| `story` | The Story and known Plugin bags, excluding rank, Story `updatedAt`, the recognized Stage Run and generated readiness Comments; an emptied Comments bag is removed. |
-| `comments` | All ordinary Comments in full, including edits to older Comments. |
-| `specs` | Full Story Specs and every linked Board Spec, including file byte hashes; checked against the physical Story Spec inventory. |
-| `tasks` | Full Task list. |
-| `links` | Both link directions, availability, and each blocker's current Stage and Stage Category. |
-| `epic` | The linked Epic's id, name, description and closed value; unrelated Epic progress and its Story lists are excluded. |
-| `attachments` | Attachment metadata and each image's bytes. |
-| `assignees` | The Assignee roster; Story assignments are also in `story`. |
-| `prompt` | This Stage's complete effective prompt result, including its text. |
-| `guide` | The Data Root's own `ROWBLY.md` bytes, or a distinct absent marker. |
+| Input           | What it covers                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `helper`        | This helper's complete contents.                                                                                                                                   |
+| `repository`    | Tracked Git tree entries outside `.rowbly`; uncommitted or untracked review inputs are a gap. Board-only publication commits do not change this input.             |
+| `plugins`       | Every known Plugin's id, enabled and loaded values.                                                                                                                |
+| `configuration` | The Board's complete effective `config show` result, including Stage Categories and Custom Fields.                                                                 |
+| `story`         | The Story and known Plugin bags, excluding rank, Story `updatedAt`, the recognized Stage Run and generated readiness Comments; an emptied Comments bag is removed. |
+| `comments`      | All ordinary Comments in full, including edits to older Comments.                                                                                                  |
+| `specs`         | Full Story Specs and every linked Board Spec, including file byte hashes; checked against the physical Story Spec inventory.                                       |
+| `tasks`         | Full Task list.                                                                                                                                                    |
+| `links`         | Both link directions, availability, and each blocker's current Stage and Stage Category.                                                                           |
+| `epic`          | The linked Epic's id, name, description and closed value; unrelated Epic progress and its Story lists are excluded.                                                |
+| `attachments`   | Attachment metadata and each image's bytes.                                                                                                                        |
+| `assignees`     | The Assignee roster; Story assignments are also in `story`.                                                                                                        |
+| `prompt`        | This Stage's complete effective prompt result, including its text.                                                                                                 |
+| `guide`         | The Data Root's own `ROWBLY.md` bytes, or a distinct absent marker.                                                                                                |
 
 Disabled Plugins without stored Story data contribute a hashed `off` marker. No linked Epic
 contributes a hashed `none` marker. Comments and Software Factory must be on. An unknown Plugin,
@@ -90,7 +90,7 @@ cover is a gap: do not skip or call that review complete, even if the helper rep
 
 Put one readiness Comment in the worker's reported block. Its body is one physical line, quoted
 according to the worker brief. Join only the helper's lines from `method=2` through `overall` with
-spaces; do not copy `comparison`. Delimit the fingerprint with ` | ` exactly as below:
+spaces; do not copy `comparison`. Delimit the fingerprint with `|` exactly as below:
 
 ```text
 Readiness review <UTC date>. Verdict: <Needs answers or Ready for a person to decide> | Questions: <concrete questions or none>; Missing: <requirements or evidence>; Changed: <inputs and resolved/open questions, or first/full review> | Reviewed input (method 2): <method/hash lines joined with spaces> | Advisory only; this does not authorize implementation. A person decides when to move the Story.

@@ -1,12 +1,13 @@
 ---
+
 name: rowbly
 description: "Use whenever an agent works with Rowbly, the file-backed Kanban
-  tracker kept in a .rowbly/ folder: running the rowbly command non-interactively
-  (--json, --no-prompt, --yes, exit codes, JSON errors), setting up a Data Root,
-  Boards, Me, Stages and Custom Fields, tracking Stories (keys like WEB-42),
-  turning Plugins on and using them (Assignees, Tasks, Epics, Specs, Comments,
-  PNG Attachments, automatic Git commits and synchronization, Stage Prompts), and checking or repairing a Data Root with rowbly
-  doctor after a git merge or an exit 6. Not for writing a new Plugin."
+tracker kept in a .rowbly/ folder: running the rowbly command non-interactively
+(--json, --no-prompt, --yes, exit codes, JSON errors), setting up a Data Root,
+Boards, Me, Stages and Custom Fields, tracking Stories (keys like WEB-42),
+turning Plugins on and using them (Assignees, Tasks, Epics, Specs, Comments,
+PNG Attachments, automatic Git commits and synchronization, Stage Prompts), and checking or repairing a Data Root with rowbly
+doctor after a git merge or an exit 6. Not for writing a new Plugin."
 ---
 
 # Operate Rowbly as an agent
@@ -17,26 +18,26 @@ and `rowbly <noun> <verb> …` runs one command and exits. **Agents use only com
 
 Follow the rules on this page for every `rowbly` call, then read the reference for the task:
 
-| Task | Read |
-| --- | --- |
-| Create a Data Root, add Boards, set Me, change Stages or Custom Fields, configure Experimental Features | [Setup and configuration](references/setup.md) |
-| Install an official skill or start a new agent skill that uses Rowbly (`rowbly skills install`, `skills create`, `skills list`) | [Setup and configuration](references/setup.md) |
-| Find, create, edit, move, rank or delete Stories; pick up and finish a Story | [Stories](references/stories.md) |
-| See which Plugins are on, turn one on or off, edit Plugin settings, a Plugin that failed to load | [Plugins](references/plugins.md) |
-| Who works on a Story (`rowbly assignees`, `--assignee`) | [Assignees Plugin](references/plugin-assignees.md) |
-| Smaller items inside a Story (`rowbly tasks`, `WEB-42.1`) | [Tasks Plugin](references/plugin-tasks.md) |
-| Group Stories from any Boards (`rowbly epics`, `--epic`) | [Epics Plugin](references/plugin-epics.md) |
-| Markdown documents for Stories and Boards (`rowbly specs`, `--spec`) | [Specs Plugin](references/plugin-specs.md) |
-| PNG images on a Story (`rowbly attachments`) | [Attachments Plugin](references/plugin-attachments.md) |
-| Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
-| Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
-| Link a GitHub PR to a Story or fetch its live status (`--github-pr`, `github status`) | [GitHub Plugin](references/plugin-github.md) |
-| Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
-| Instructions for an agent in each Stage (`rowbly software-factory stages`) | [Software Factory Plugin](references/plugin-software-factory.md) |
-| After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
-| What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
-| Read, follow or update the Data Root's `ROWBLY.md` (how its people use their Boards) | [Data Root layout](references/data-root.md#rowblymd-how-this-data-root-is-used) |
-| The user asks how to do something in the TUI | [The TUI, for the user](references/tui.md) |
+| Task                                                                                                                            | Read                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Create a Data Root, add Boards, set Me, change Stages or Custom Fields, configure Experimental Features                         | [Setup and configuration](references/setup.md)                                  |
+| Install an official skill or start a new agent skill that uses Rowbly (`rowbly skills install`, `skills create`, `skills list`) | [Setup and configuration](references/setup.md)                                  |
+| Find, create, edit, move, rank or delete Stories; pick up and finish a Story                                                    | [Stories](references/stories.md)                                                |
+| See which Plugins are on, turn one on or off, edit Plugin settings, a Plugin that failed to load                                | [Plugins](references/plugins.md)                                                |
+| Who works on a Story (`rowbly assignees`, `--assignee`)                                                                         | [Assignees Plugin](references/plugin-assignees.md)                              |
+| Smaller items inside a Story (`rowbly tasks`, `WEB-42.1`)                                                                       | [Tasks Plugin](references/plugin-tasks.md)                                      |
+| Group Stories from any Boards (`rowbly epics`, `--epic`)                                                                        | [Epics Plugin](references/plugin-epics.md)                                      |
+| Markdown documents for Stories and Boards (`rowbly specs`, `--spec`)                                                            | [Specs Plugin](references/plugin-specs.md)                                      |
+| PNG images on a Story (`rowbly attachments`)                                                                                    | [Attachments Plugin](references/plugin-attachments.md)                          |
+| Notes on a Story (`rowbly comments`)                                                                                            | [Comments Plugin](references/plugin-comments.md)                                |
+| Blocking relationships between Stories (`rowbly story-linking`)                                                                 | [Story Linking Plugin](references/plugin-story-linking.md)                      |
+| Link a GitHub PR to a Story or fetch its live status (`--github-pr`, `github status`)                                           | [GitHub Plugin](references/plugin-github.md)                                    |
+| Commit Rowbly changes to git automatically (`rowbly git`)                                                                       | [Git Plugin](references/plugin-git.md)                                          |
+| Instructions for an agent in each Stage (`rowbly software-factory stages`)                                                      | [Software Factory Plugin](references/plugin-software-factory.md)                |
+| After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit                                            | [Check and repair a Data Root](references/doctor.md)                            |
+| What each file under `.rowbly/` is, what to commit, the Home Config                                                             | [Data Root layout](references/data-root.md)                                     |
+| Read, follow or update the Data Root's `ROWBLY.md` (how its people use their Boards)                                            | [Data Root layout](references/data-root.md#rowblymd-how-this-data-root-is-used) |
+| The user asks how to do something in the TUI                                                                                    | [The TUI, for the user](references/tui.md)                                      |
 
 ## 1. Check that Rowbly can run
 
@@ -85,23 +86,30 @@ With `--json`, a successful command prints JSON on stdout: an array for `list`, 
 prints nothing on stdout and prints this on stderr:
 
 ```json
-{"error":{"code":"VALIDATION","message":"unknown Stage \"nope\"","details":{"validStages":["backlog","todo","in-progress","done"]},"hint":"valid Stages: backlog, todo, in-progress, done"}}
+{
+  "error": {
+    "code": "VALIDATION",
+    "message": "unknown Stage \"nope\"",
+    "details": { "validStages": ["backlog", "todo", "in-progress", "done"] },
+    "hint": "valid Stages: backlog, todo, in-progress, done"
+  }
+}
 ```
 
 Read `details` before you try again: it often lists the valid choices (`validStages`, `validHandles`)
 or the failing fields (`details.issues`). Warnings, such as `Assignee "sam" removed from 1 story`, go to
 stderr even when the command succeeds.
 
-| Exit | `error.code` | Meaning | What to do |
-| --- | --- | --- | --- |
-| 0 | — | Success | — |
-| 1 | `INTERNAL` | A bug, an unreadable file, or a Plugin that failed during a change. Nothing was saved | Report it with the message; if `details.plugin` is set, check `rowbly plugins list --json --no-prompt` |
-| 2 | `USAGE` | Bad flags, a missing value, no Board in context, no `--yes`, or a command of a Plugin that is off | Fix the command line; the `hint` says how |
-| 2 | `VALIDATION` | Input that breaks a rule (unknown Stage, Assignee or Custom Field, bad Label) | Use a valid value from `details` |
-| 3 | `NOT_FOUND` | Unknown Board, Story, Task, Comment, Stage, Custom Field, Assignee, Epic or Spec | List the records and check the id |
-| 4 | `CONFLICT` | The id or key prefix exists, a deletion is refused, a Plugin refused the change, the Data Root lock stayed busy for 10 s, or `git sync` failed (`details.reason`) | Read the message; do not force a refusal without the user's approval. For `git sync`, see [the Git Plugin](references/plugin-git.md) |
-| 5 | `NO_DATA_ROOT` | No `.rowbly/` found, or the Data Root named by `--data-root` or the default is missing (`details.path`) | Check the directory or the path; create one only if the user wants it (`rowbly init`) |
-| 6 | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it | Follow [Check and repair a Data Root](references/doctor.md) |
+| Exit | `error.code`     | Meaning                                                                                                                                                           | What to do                                                                                                                           |
+| ---- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 0    | —                | Success                                                                                                                                                           | —                                                                                                                                    |
+| 1    | `INTERNAL`       | A bug, an unreadable file, or a Plugin that failed during a change. Nothing was saved                                                                             | Report it with the message; if `details.plugin` is set, check `rowbly plugins list --json --no-prompt`                               |
+| 2    | `USAGE`          | Bad flags, a missing value, no Board in context, no `--yes`, or a command of a Plugin that is off                                                                 | Fix the command line; the `hint` says how                                                                                            |
+| 2    | `VALIDATION`     | Input that breaks a rule (unknown Stage, Assignee or Custom Field, bad Label)                                                                                     | Use a valid value from `details`                                                                                                     |
+| 3    | `NOT_FOUND`      | Unknown Board, Story, Task, Comment, Stage, Custom Field, Assignee, Epic or Spec                                                                                  | List the records and check the id                                                                                                    |
+| 4    | `CONFLICT`       | The id or key prefix exists, a deletion is refused, a Plugin refused the change, the Data Root lock stayed busy for 10 s, or `git sync` failed (`details.reason`) | Read the message; do not force a refusal without the user's approval. For `git sync`, see [the Git Plugin](references/plugin-git.md) |
+| 5    | `NO_DATA_ROOT`   | No `.rowbly/` found, or the Data Root named by `--data-root` or the default is missing (`details.path`)                                                           | Check the directory or the path; create one only if the user wants it (`rowbly init`)                                                |
+| 6    | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it                          | Follow [Check and repair a Data Root](references/doctor.md)                                                                          |
 
 ## 4. Know which Data Root and Board a command acts on
 
@@ -187,20 +195,20 @@ an example and how to edit it.
 
 Rowbly's help, errors and files use these names; use them in commands, commit messages and replies.
 
-| Term | Meaning | Not |
-| --- | --- | --- |
-| Data Root | The `.rowbly/` folder | workspace, project, database |
-| Board | A Kanban board with a key prefix such as `WEB` | project |
-| Story | The unit of work on a Board, keyed `WEB-42` | issue, ticket, card |
-| Task | A smaller item inside one Story, `WEB-42.1` (the Tasks Plugin) | subtask, checklist item |
-| Stage | A step of a Board's workflow, in a Stage Category `backlog` (the fixed first Stage), `board` or `done` (the fixed last Stage) | status, column |
-| Rank | A Story's position inside its Stage | order |
-| Me / Assignee | The handle you work as (`rowbly whoami`) / a person in the Assignees Plugin's roster | user, owner |
-| Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag | severity / tag |
-| Epic | A group of Stories from any Boards (the Epics Plugin) | — |
-| Story Spec / Board Spec | A Markdown document of one Story / of a Board that Stories link to (the Specs Plugin) | — |
-| Attachment | A PNG image on a Story (Attachments Plugin) | upload, file blob |
-| Comment | A note on a Story (the Comments Plugin) | — |
+| Term                    | Meaning                                                                                                                       | Not                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Data Root               | The `.rowbly/` folder                                                                                                         | workspace, project, database |
+| Board                   | A Kanban board with a key prefix such as `WEB`                                                                                | project                      |
+| Story                   | The unit of work on a Board, keyed `WEB-42`                                                                                   | issue, ticket, card          |
+| Task                    | A smaller item inside one Story, `WEB-42.1` (the Tasks Plugin)                                                                | subtask, checklist item      |
+| Stage                   | A step of a Board's workflow, in a Stage Category `backlog` (the fixed first Stage), `board` or `done` (the fixed last Stage) | status, column               |
+| Rank                    | A Story's position inside its Stage                                                                                           | order                        |
+| Me / Assignee           | The handle you work as (`rowbly whoami`) / a person in the Assignees Plugin's roster                                          | user, owner                  |
+| Priority / Label        | `P0` (most urgent) to `P4` / a lower-kebab-case tag                                                                           | severity / tag               |
+| Epic                    | A group of Stories from any Boards (the Epics Plugin)                                                                         | —                            |
+| Story Spec / Board Spec | A Markdown document of one Story / of a Board that Stories link to (the Specs Plugin)                                         | —                            |
+| Attachment              | A PNG image on a Story (Attachments Plugin)                                                                                   | upload, file blob            |
+| Comment                 | A note on a Story (the Comments Plugin)                                                                                       | —                            |
 
 ## Common mistakes
 

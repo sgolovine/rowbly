@@ -11,7 +11,7 @@ ADRs are **Story Specs** of the interviewed Story. Never create files in `docs/a
 {1-3 sentences: what's the context, what did we decide, and why.}
 ```
 
-That's it. An ADR can be a single paragraph. The value is in recording *that* a decision was made and *why* — not in filling out sections.
+That's it. An ADR can be a single paragraph. The value is in recording _that_ a decision was made and _why_ — not in filling out sections.
 
 ## Optional sections
 

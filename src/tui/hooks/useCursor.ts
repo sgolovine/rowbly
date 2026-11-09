@@ -1,6 +1,6 @@
-import { useInput } from 'ink';
-import { useEffect, useState } from 'react';
-import { moveDelta } from '../keymap';
+import { useInput } from "ink";
+import { useEffect, useState } from "react";
+import { moveDelta } from "../keymap.js";
 
 /** A cursor over `length` rows, moved with `↑/↓` (or `j/k`) while `active`. */
 export function useCursor(length: number, active: boolean): [number, (index: number) => void] {

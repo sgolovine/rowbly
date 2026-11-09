@@ -1,89 +1,77 @@
 ---
 name: rowbly-screenshots
 description: >
-  Take screenshots of the Rowbly TUI or CLI with agentic-tui: build the CLI, create the demo Data
-  Root, drive the screens with keys and save PNG and text captures. Use for every request for a
-  screenshot, screen capture or picture of Rowbly, including screenshots for a pull request.
+  Take screenshots of the Rowbly TUI or CLI with agentic-tui. Build the CLI, run it in a PTY,
+  operate the screens with keys and save PNG and text captures. Use this skill for each request for
+  a screenshot, screen capture or picture of Rowbly, for screenshots for a pull request, and to
+  examine a TUI layout change in a real terminal.
 ---
 
 # Rowbly screenshots
 
-Screenshots of Rowbly come from the real built CLI running in a PTY driven by
-[agentic-tui](../agentic-tui/SKILL.md). Do not hand-draw screens or present an
+Make each screenshot of Rowbly from the real built CLI. Run the CLI in a PTY and operate it with
+[agentic-tui](../agentic-tui/SKILL.md). Do not draw screens by hand. Do not show an
 `ink-testing-library` frame as a screenshot.
 
 ## Setup
 
-Run from the repository root. Use absolute paths everywhere: the agentic-tui daemon keeps the
-working directory it was first started in, so a relative `dist/cli.js` can run another checkout's
-build.
+Run these commands from the root of the repository. Use absolute paths for all files. The
+agentic-tui daemon keeps the working directory of its first start. If you use a relative
+`dist/cli.js`, the daemon can run the build of a different checkout.
 
 ```bash
 repo="$(pwd)"
-out="$(mktemp -d)"            # captures and the demo Data Root stay outside the repository
-mkdir "$out/agentic-tui-state"
-export AGENTIC_TUI_STATE_DIR="$out/agentic-tui-state"
-# Record this exact canonical directory against the task with the supervisor before daemon start.
-# It is new and task-owned; a session namespace alone would still share a daemon.
+out="$(mktemp -d)"            # captures stay outside the repository
+mkdir "$out/agentic-tui-state" "$out/home"
+export AGENTIC_TUI_STATE_DIR="$out/agentic-tui-state"   # a daemon of its own, never a shared one
 pnpm build
-scripts/demo-data-root.sh "$out/rowbly-demo/.rowbly"   # the header shows `rowbly-demo`
 t() { pnpm -s exec agentic-tui --session-namespace rowbly-screenshots "$@"; }
-mkdir "$out/home"              # a home folder of its own, so ~/.rowblyrc.json is not touched
-t run node "$repo/dist/cli.js" --cwd "$out/rowbly-demo" --cols 140 --rows 38 --env HOME="$out/home"
-t wait "v list view" --timeout 10000
+t run node "$repo/dist/cli.js" --cwd "$out" --cols 140 --rows 38 --env HOME="$out/home"
 ```
 
-`scripts/demo-data-root.sh` creates one Board, `launch` (`ROW`), with two Stories in each Stage,
-the Assignees, Tasks and Comments Plugins turned on, and Me set to `alex`. `ROW-5` is in In Progress
-and has Tasks and a Comment. Use another Data Root only when the user asks for one; never point the
-TUI at the repository's own `.rowbly/`.
+`HOME` points to an empty folder. Because of this, the CLI does not read or change the files in the
+home folder of the user.
+
+In zsh, `t() { … }` fails if an alias with the name `t` exists. In that case, use a different name.
+Or set `A="pnpm -s exec agentic-tui --session-namespace rowbly-screenshots"` and call `$=A`.
 
 ## Capture
 
-For each screen:
+Do these steps for each screen:
 
-1. Send one key with `t press <Key>`, or `t type '<char>'` for a printable key such as `?` or `,`
-   (quote it: zsh expands a bare `?`). Send several keys in one `press` only when no screen change
-   happens between them.
-2. Wait for text that only the destination shows, then for the screen to settle:
-   `t wait "<text>" --timeout 5000` and `t wait --stable --timeout 2000`. Text that was already on
-   screen, or that stays visible behind a modal, matches at once and proves nothing; footer hints
-   such as `v Stages view` or `c add Comment` are good markers.
-3. Read `t screen` to check that the right item is selected, then save both forms:
+1. Send one key with `t press <Key>`, for example `Enter`, `Escape`, `Tab`, an arrow or `Ctrl+S`.
+   For a printable key such as `?` or `,`, use `t type '<char>'`. Put quotes around the key, because
+   zsh expands a `?` without quotes. Send more than one key in one `press` only if the screen does
+   not change between the keys.
+2. Wait for text that only the new screen shows. Then wait until the screen is stable:
+   `t wait "<text>" --timeout 5000` and `t wait --stable --timeout 2000`. Text from the previous
+   screen, or text that stays visible behind a modal, matches immediately and proves nothing. Footer
+   hints are good markers. A screen with a `Spinner` does not become stable, so do not use `--stable`
+   on that screen.
+3. Read `t screen` and make sure that the correct item is selected. Then save the two forms:
 
    ```bash
-   t screenshot --out "$out/01-board.png" --format png
-   t screenshot --out "$out/01-board.txt" --format text
+   t screenshot --out "$out/01-screen.png" --format png
+   t screenshot --out "$out/01-screen.txt" --format text
    ```
 
-Useful routes from the board (it opens with ROW-1 selected):
+For a different terminal size, start a new run with different `--cols` and `--rows` values. Do not
+use `t resize`, because the capture after a resize can keep characters from the old right edge.
 
-| Screen | Keys | Wait for |
-| --- | --- | --- |
-| Board, list view | `v` | `v Stages view` |
-| Story `ROW-5` | `ArrowRight`, `ArrowRight`, `Enter` (one at a time) | `Capture the TUI with agentic-tui` |
-| Story › Tasks, › Comments | `Tab` | `Capture a populated Board`, `c add Comment` |
-| Keys help | `?` | `─Keys─` (the modal title) |
-| Settings | `,` | `Board › Settings` |
-
-For another terminal size, start a new run with other `--cols`/`--rows` rather than `t resize`:
-the resized capture can keep characters from the old right edge.
-
-Finish with `t kill`, then `t daemon stop` with the same recorded `AGENTIC_TUI_STATE_DIR`.
-Never stop an existing/shared/default daemon. Report leftovers and retain the state directory for
-supervisor reconciliation if scoped shutdown fails. Show each PNG to the user as a Markdown image
-with its absolute path.
+At the end, run `t kill`. Then run `t daemon stop` with the same `AGENTIC_TUI_STATE_DIR`. Do not stop
+a daemon that was there before, a shared daemon or the default daemon. Show each PNG to the user as a
+Markdown image with its absolute path.
 
 ## Limits
 
-The PNG is the text grid drawn in one colour: Stage colours, bold and the selection highlight are
-lost, and some glyphs (box-drawing joins, `✓`) render imperfectly. The text capture is exact. Say so
-when the request is about colour or styling.
+The PNG shows the text grid in one colour. It does not show colours, bold text, fills or the caret.
+Some glyphs, for example box-drawing joins and `✓`, do not render correctly. The text capture is
+exact. If the request is about colour or style, tell the user about these limits.
 
 ## In a pull request
 
-Image links in a PR body must point at files GitHub serves. Push the PNGs to a branch that holds
-only assets, never to the PR's branch or `main`, and link the raw files:
+Image links in a PR body must point to files that GitHub serves. Push the PNGs to a branch that
+contains only assets. Do not push them to the branch of the PR or to `main`. Link the raw files:
 
 ```bash
 git worktree add --orphan -b pr-assets/<pr-branch> "$out/assets"
@@ -91,9 +79,8 @@ cp "$out"/*.png "$out/assets/" && git -C "$out/assets" add . &&
   git -C "$out/assets" commit -m "docs: screenshots for <pr-branch>" &&
   git -C "$out/assets" push -u origin pr-assets/<pr-branch>
 git worktree remove "$out/assets"
-# ![Board](https://raw.githubusercontent.com/<owner>/<repo>/pr-assets/<pr-branch>/01-board.png)
+# ![Screen](https://raw.githubusercontent.com/<owner>/<repo>/pr-assets/<pr-branch>/01-screen.png)
 ```
 
-Keep the `pr-assets/<pr-branch>` branch after the PR merges or closes: its comments link these files
-by branch name. Delete it only with the user's approval, after every linked image is hosted elsewhere
-and the links are updated (ADR-0050 §2.3).
+Keep the `pr-assets/<pr-branch>` branch after the PR merges or closes. The comments of the PR link
+to these files by the branch name. Delete the branch only if the user tells you to delete it.

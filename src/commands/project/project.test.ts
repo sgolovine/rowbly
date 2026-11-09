@@ -1,0 +1,60 @@
+import { describe, expect, it } from "vitest";
+import { getProject } from "../../services/project/project.js";
+import { useTempDir, useTestProject } from "../../services/testProject/testProject.js";
+import { runCli } from "../testCli/testCli.js";
+
+describe("project commands", () => {
+  describe("init", () => {
+    const dir = useTempDir();
+
+    it("creates a project and prints its stages", async () => {
+      const result = await runCli(["init", "--name", "Web App", "--key", "web"], dir.path);
+      expect(result).toEqual({
+        stdout: `Created Web App (WEB) in ${dir.path}\nStages: BACKLOG, DONE`,
+        stderr: "",
+        exitCode: 0,
+      });
+      expect(await getProject({ cwd: dir.path })).toMatchObject({ projectName: "Web App", projectKey: "WEB" });
+    });
+
+    it("prints the project as JSON with --json", async () => {
+      const result = await runCli(["--json", "init", "--name", "Web"], dir.path);
+      expect(JSON.parse(result.stdout)).toMatchObject({ projectName: "Web", projectKey: "WEB", root: dir.path });
+    });
+
+    it("fails with a hint when a project exists", async () => {
+      await runCli(["init"], dir.path);
+      const result = await runCli(["init"], dir.path);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/^Error: .*\.rowbly already exists\nHint: Run `rowbly doctor`/);
+    });
+  });
+
+  describe("update-project", () => {
+    const project = useTestProject();
+
+    it("turns specs on and off", async () => {
+      const cwd = project.ctx.cwd;
+      expect((await runCli(["update-project", "--specs", "on"], cwd)).stdout).toBe(
+        `Updated Rowbly (ROW) in ${cwd}\nSpecs: on`,
+      );
+      expect((await getProject(project.ctx)).features).toEqual({ specs: true });
+      await runCli(["update-project", "--specs", "off"], cwd);
+      expect((await getProject(project.ctx)).features).toEqual({ specs: false });
+      expect((await runCli(["update-project", "--specs", "yes"], cwd)).stderr).toContain("Expected on or off.");
+    });
+
+    it("updates the name and key", async () => {
+      const cwd = project.ctx.cwd;
+      const result = await runCli(["update-project", "--name", "Renamed", "--key", "NEW"], cwd);
+      expect(result.stdout).toBe(`Updated Renamed (NEW) in ${cwd}`);
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("fails outside a project", async () => {
+      const result = await runCli(["update-project", "--name", "X"], "/");
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toMatch(/^Error: /);
+    });
+  });
+});

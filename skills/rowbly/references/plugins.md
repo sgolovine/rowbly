@@ -4,18 +4,18 @@ Every command below takes `--json --no-prompt`.
 
 Plugins add optional features. Rowbly ships ten Built-in Plugins, each with its own reference:
 
-| Plugin | Adds | Reference |
-| --- | --- | --- |
-| `assignees` | A roster of Assignees; `--assignee` on Stories | [Assignees](plugin-assignees.md) |
-| `tasks` | Tasks inside a Story (`WEB-42.1`) | [Tasks](plugin-tasks.md) |
-| `epics` | Epics that group Stories from any Boards; `--epic` | [Epics](plugin-epics.md) |
-| `specs` | Story Specs and Board Specs (Markdown); `--spec` | [Specs](plugin-specs.md) |
-| `attachments` | PNG images on Stories | [Attachments](plugin-attachments.md) |
-| `comments` | Comments on a Story | [Comments](plugin-comments.md) |
-| `story-linking` | Blocking relationships between Stories on the same Board | [Story Linking](plugin-story-linking.md) |
-| `github` | One GitHub PR per Story; live inspection with gh | [GitHub](plugin-github.md) |
-| `git` | Automatic Commits of Rowbly changes | [Git](plugin-git.md) |
-| `software-factory` | A Markdown Stage Prompt for each Stage, for agents | [Software Factory](plugin-software-factory.md) |
+| Plugin             | Adds                                                     | Reference                                      |
+| ------------------ | -------------------------------------------------------- | ---------------------------------------------- |
+| `assignees`        | A roster of Assignees; `--assignee` on Stories           | [Assignees](plugin-assignees.md)               |
+| `tasks`            | Tasks inside a Story (`WEB-42.1`)                        | [Tasks](plugin-tasks.md)                       |
+| `epics`            | Epics that group Stories from any Boards; `--epic`       | [Epics](plugin-epics.md)                       |
+| `specs`            | Story Specs and Board Specs (Markdown); `--spec`         | [Specs](plugin-specs.md)                       |
+| `attachments`      | PNG images on Stories                                    | [Attachments](plugin-attachments.md)           |
+| `comments`         | Comments on a Story                                      | [Comments](plugin-comments.md)                 |
+| `story-linking`    | Blocking relationships between Stories on the same Board | [Story Linking](plugin-story-linking.md)       |
+| `github`           | One GitHub PR per Story; live inspection with gh         | [GitHub](plugin-github.md)                     |
+| `git`              | Automatic Commits of Rowbly changes                      | [Git](plugin-git.md)                           |
+| `software-factory` | A Markdown Stage Prompt for each Stage, for agents       | [Software Factory](plugin-software-factory.md) |
 
 Each is off until the Data Root turns it on. Turning a Plugin on applies to everyone who uses that Data
 Root, because the setting is in the committed `rowbly.config.json`.
@@ -61,7 +61,7 @@ hand: this is the only hand edit allowed under `.rowbly/`.
 
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
-  ``fix "plugins.<id>" in rowbly.config.json``. Add the setting, then enable it again.
+  `fix "plugins.<id>" in rowbly.config.json`. Add the setting, then enable it again.
 - Assignees, Tasks, Epics, Specs, Comments, Attachments and Story Linking have no settings today. Git has personal preferences in
   Local State instead; change them with `rowbly git configure` ([Git](plugin-git.md)).
 - Run `rowbly doctor --json --no-prompt` after a hand edit.

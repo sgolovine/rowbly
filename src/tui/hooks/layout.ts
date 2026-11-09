@@ -1,6 +1,4 @@
-import { createContext, useContext } from 'react';
-import type { Slug } from '../../schemas';
-import type { PluginInput } from '../../services';
+import { createContext, useContext } from "react";
 
 /** The room a screen has: the main area, or the inside of the modal it is shown in. */
 export interface Layout {
@@ -13,46 +11,4 @@ export const LayoutContext = createContext<Layout>({ width: 80 });
 
 export function useLayout(): Layout {
   return useContext(LayoutContext);
-}
-
-/** The Board picked in the sidebar. `version` changes on every switch so screens can reload. */
-export interface BoardSelection {
-  version: number;
-  /** Makes `boardId` the Board in context. Errors become toasts. */
-  select(boardId: Slug): Promise<void>;
-}
-
-export const BoardSelectionContext = createContext<BoardSelection>({ version: 0, select: async () => {} });
-
-export function useBoardSelection(): BoardSelection {
-  return useContext(BoardSelectionContext);
-}
-
-/** How the board shows its Stories: its Stages side by side, or one list grouped by Stage name. */
-export type BoardView = 'stages' | 'list';
-
-/** The board view picked in the header; it lasts until Rowbly quits and applies to every Board. */
-export interface BoardViewChoice {
-  view: BoardView;
-  setView(view: BoardView): void;
-}
-
-export const BoardViewContext = createContext<BoardViewChoice>({ view: 'stages', setView: () => {} });
-
-export function useBoardView(): BoardViewChoice {
-  return useContext(BoardViewContext);
-}
-
-/** The board filter picked in the Plugin Sidebars, and its part of the board's filter summary. */
-export interface SidebarFilter {
-  /** Each Plugin's filter (`StoryFilter.plugins`); a Plugin with nothing picked is left out. */
-  plugins: PluginInput;
-  /** Such as `Epics: Login`; `''` for none. */
-  summary: string;
-}
-
-export const SidebarFilterContext = createContext<SidebarFilter>({ plugins: {}, summary: '' });
-
-export function useSidebarFilter(): SidebarFilter {
-  return useContext(SidebarFilterContext);
 }

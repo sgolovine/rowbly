@@ -93,7 +93,14 @@ async function main() {
       return console.log("stopped");
     }
     default:
-      console.error(fs.readFileSync(SCRIPT, "utf8").split("\n").slice(1, 11).join("\n").replace(/^\/\/ ?/gm, ""));
+      console.error(
+        fs
+          .readFileSync(SCRIPT, "utf8")
+          .split("\n")
+          .slice(1, 11)
+          .join("\n")
+          .replace(/^\/\/ ?/gm, ""),
+      );
       process.exit(cmd ? 1 : 0);
   }
 }
@@ -224,7 +231,9 @@ async function maybeOpen(server, force) {
         ? ["cmd", ["/c", "start", "", url]]
         : ["xdg-open", [url]];
   try {
-    spawn(bin, args, { detached: true, stdio: "ignore" }).on("error", () => {}).unref();
+    spawn(bin, args, { detached: true, stdio: "ignore" })
+      .on("error", () => {})
+      .unref();
   } catch {
     // The URL is printed either way.
   }

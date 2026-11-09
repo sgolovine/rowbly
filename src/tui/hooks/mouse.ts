@@ -1,7 +1,7 @@
-import type { EventEmitter } from 'node:events';
-import { type DOMElement, measureElement } from 'ink';
-import { createContext, type RefObject, useContext, useEffect, useRef } from 'react';
-import type { MouseEvent } from '../mouse';
+import type { EventEmitter } from "node:events";
+import { type DOMElement, measureElement } from "ink";
+import { createContext, type RefObject, useContext, useEffect, useRef } from "react";
+import type { MouseEvent } from "../mouse.js";
 
 /** Lines one notch of the mouse wheel scrolls. */
 export const WHEEL_LINES = 3;
@@ -25,15 +25,8 @@ export interface MouseHandlers {
   onDragLeave?(): void;
   /** A press here holds the box: each pointer move until the release reports the pointer's cell, e.g. to resize. */
   onPull?(x: number, y: number): void;
-  /** A right click here, at cell `x`, `y`: open a context menu there. */
-  onContextMenu?(x: number, y: number): void;
   /** A notch of the wheel over this box: `-1` up, `1` down. */
   onWheel?(direction: -1 | 1): void;
-  /**
-   * Boxes on a higher layer hide the ones below them: the pointer reaches only the boxes of the highest
-   * layer under it. The default is 0; an open context menu and the backdrop around it use 1.
-   */
-  layer?: number;
 }
 
 interface Target {
@@ -43,9 +36,8 @@ interface Target {
 }
 
 /**
- * The clickable boxes on screen. A press goes to the smallest box under the pointer, on the highest
- * layer there. A right click (`menu`) goes to the smallest such box with `onContextMenu`, and ends a drag
- * or pull in progress. A wheel notch goes to the smallest such box with `onWheel`.
+ * The clickable boxes on screen. A press goes to the smallest box under the pointer. A right click
+ * (`menu`) ends a drag or pull in progress. A wheel notch goes to the smallest such box with `onWheel`.
  */
 export interface MouseRegistry {
   register(target: Target): () => void;
@@ -67,8 +59,7 @@ export function createMouseRegistry(): MouseRegistry {
   };
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
-    let best: { target: Target; area: number; layer: number } | undefined;
-    let top = Number.NEGATIVE_INFINITY;
+    let best: { target: Target; area: number } | undefined;
     for (const target of targets) {
       const node = target.ref.current;
       if (!node) continue;
@@ -89,12 +80,10 @@ export function createMouseRegistry(): MouseRegistry {
         )
           continue;
       }
-      const layer = target.handlers.current.layer ?? 0;
-      top = Math.max(top, layer);
       if (!wants(target.handlers.current)) continue;
-      if (!best || layer > best.layer || (layer === best.layer && area < best.area)) best = { target, area, layer };
+      if (!best || area < best.area) best = { target, area };
     }
-    return best && best.layer === top ? best.target : undefined;
+    return best?.target;
   };
 
   return {
@@ -110,18 +99,17 @@ export function createMouseRegistry(): MouseRegistry {
       };
     },
     dispatch(event) {
-      if (event.kind === 'wheelUp' || event.kind === 'wheelDown') {
-        hit(event, (h) => Boolean(h.onWheel))?.handlers.current.onWheel?.(event.kind === 'wheelUp' ? -1 : 1);
+      if (event.kind === "wheelUp" || event.kind === "wheelDown") {
+        hit(event, (h) => Boolean(h.onWheel))?.handlers.current.onWheel?.(event.kind === "wheelUp" ? -1 : 1);
         return;
       }
-      if (event.kind === 'menu') {
+      if (event.kind === "menu") {
         pulling = null;
         dragging = null;
         setOver(undefined);
-        hit(event, (h) => Boolean(h.onContextMenu))?.handlers.current.onContextMenu?.(event.x, event.y);
         return;
       }
-      if (event.kind === 'move') {
+      if (event.kind === "move") {
         if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
         if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
         if (dragging?.moved) {
@@ -136,7 +124,7 @@ export function createMouseRegistry(): MouseRegistry {
         }
         return;
       }
-      if (event.kind === 'press') {
+      if (event.kind === "press") {
         const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined || h.onPull));
         pulling = target?.handlers.current.onPull ? target : null;
         if (pulling) return;
@@ -167,16 +155,16 @@ export function createMouseRegistry(): MouseRegistry {
 export const MouseContext = createContext<MouseRegistry | null>(null);
 
 /** Restricts descendant mouse targets to the visible cells of a borderless viewport. */
-export const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null);
+const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null);
 
 /** Feeds the reports from a `MouseStdin` into the registry until unmounted. */
 export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
   useEffect(() => {
     if (!source) return;
     const listener = (event: MouseEvent) => registry.dispatch(event);
-    source.on('mouse', listener);
+    source.on("mouse", listener);
     return () => {
-      source.off('mouse', listener);
+      source.off("mouse", listener);
     };
   }, [registry, source]);
 }

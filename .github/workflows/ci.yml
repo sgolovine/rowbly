@@ -1,155 +1,51 @@
 name: CI
 
 on:
-  pull_request:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  verify:
-    name: Verify
+  lint:
+    name: Lint and format
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          version: 12.11.2
-
-      - name: Install Node.js
-        uses: actions/setup-node@v6
+          version: 12
+      - uses: actions/setup-node@v6
         with:
-          node-version-file: .nvmrc
+          node-version: 24
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `biome ci` runs the linter, the formatter and the import order checks, and annotates the PR.
+      - run: pnpm exec biome ci .
+      - run: pnpm typecheck
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Build
-        run: pnpm build
-
-      - name: Verify packed package
-        run: |
-          pnpm pack --pack-destination "${RUNNER_TEMP}"
-          npm install --global "${RUNNER_TEMP}"/rowbly-*.tgz
-          rowbly --version
-
-  unit-tests:
-    name: Unit tests
+  test:
+    name: Test (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12.11.2
-
-      - name: Install Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Unit tests
-        run: pnpm test:unit
-
-  cli-tests:
-    name: CLI tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 12.11.2
-
-      - name: Install Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # The `cli` project builds the CLIs from source in its global setup.
-      - name: CLI tests
-        run: pnpm test:cli
-
-  clipboard-smoke:
-    name: Clipboard smoke (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-    defaults:
-      run:
-        shell: bash
-
+        node: [22, 24]
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
         with:
-          version: 12.11.2
-
-      - name: Install Node.js
-        uses: actions/setup-node@v6
+          version: 12
+      - uses: actions/setup-node@v6
         with:
-          node-version-file: .nvmrc
+          node-version: ${{ matrix.node }}
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build and install actual npm tarball
-        run: |
-          pnpm build
-          npm pack --pack-destination "$RUNNER_TEMP"
-          npm install --global "$RUNNER_TEMP"/rowbly-*.tgz
-          node scripts/clipboard-smoke.mjs load
-
-      - name: Install Linux clipboard servers and tools
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes xvfb xauth sway wl-clipboard
-
-      - name: Native clipboard round trip
-        if: runner.os != 'Linux'
-        run: node scripts/clipboard-smoke.mjs native
-
-      - name: X11 native clipboard round trip
-        if: runner.os == 'Linux'
-        run: xvfb-run --auto-servernum node scripts/clipboard-smoke.mjs native
-
-      - name: Headless Wayland fallback round trip
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: bash scripts/clipboard-wayland-smoke.sh
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm build

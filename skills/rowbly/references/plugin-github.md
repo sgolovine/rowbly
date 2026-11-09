@@ -31,7 +31,6 @@ The Story bag is strict unversioned v1 `{ "pr": "<url>" }`; unrelated core edits
 The TUI form adds **GitHub PR**. Its Story tab fetches immediately, every 60 seconds while active,
 and with `r`; errors label the last result as stale. It cancels on leaving/teardown and saves no status.
 
-
 ## Board Stats
 
 `rowbly boards stats [id] --json --no-prompt` includes GitHub metrics `linked-prs` and `commits`.

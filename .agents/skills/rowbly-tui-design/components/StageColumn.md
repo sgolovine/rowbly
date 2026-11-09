@@ -1,9 +1,9 @@
 # StageColumn
 
-One Stage on the Board: its name, a rule, then its Stories in Rank order.
+A StageColumn shows one Stage on the Board. It shows the Stage name, a rule and then the Stories of the Stage in Rank order.
 
-- Header: `●` and the Stage name in the Stage Category colour, then the count in `ink-faint` without brackets (`● Done 8`).
-- Rule: `━` in `accent` under the Stage in focus, `─` in `border` under the others.
-- No gap between Stories: their frames stack. `↑ N more` / `↓ N more` in `ink-faint` when the Stage scrolls.
-- Empty: `No Stories` in `ink-faint`.
-- Columns are equal width with `col-2` between them.
+- Header: The `●` and the Stage name are in the Stage Category colour. The count follows in `ink-faint`, without brackets (`● Done 8`).
+- Rule: The rule is `━` in `accent` under the Stage in focus, and `─` in `border` under the other Stages.
+- The Stories have no gap between them. Their frames stack. When the Stage scrolls, `↑ N more` / `↓ N more` shows in `ink-faint`.
+- Empty: An empty Stage shows `No Stories` in `ink-faint`.
+- All StageColumns have the same width, with `col-2` between them.
