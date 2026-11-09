@@ -24,7 +24,8 @@
     "knip": "knip",
     "knip:production": "knip --production",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:factory": "node --test skills/factory/scripts/watch-stages.test.mjs"
   },
   "license": "ISC",
   "dependencies": {
