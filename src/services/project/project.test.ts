@@ -19,7 +19,7 @@ describe("initProject", () => {
     expect(project).toEqual({
       root: dir.path,
       projectName: "My Cool Project",
-      projectKey: "MCP",
+      projectKey: "MYC",
       customFields: [],
       stages: [
         { key: "BACKLOG", label: "Backlog", enabled: true },

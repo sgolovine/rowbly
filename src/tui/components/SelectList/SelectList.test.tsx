@@ -101,4 +101,19 @@ describe("SelectList", () => {
     await t.press(keys.down, keys.enter);
     expect(onSelect).not.toHaveBeenCalled();
   });
+
+  it("does not toggle a locked item", async () => {
+    const onChange = vi.fn();
+    const tui = await renderTui(
+      <SelectList
+        items={[{ value: "a", label: "A", locked: true }]}
+        multi
+        defaultSelected={["a"]}
+        onChange={onChange}
+      />,
+    );
+    await tui.press(keys.space);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("[x] A");
+  });
 });

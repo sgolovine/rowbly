@@ -1,5 +1,5 @@
 import { type Command, InvalidArgumentError } from "commander";
-import { getInstructions, initProject, type Project, updateProject } from "../../services/project/project.js";
+import { getInstructions, type Project, updateProject } from "../../services/project/project.js";
 import { run } from "../output/output.js";
 
 function describe(project: Project): string {
@@ -14,19 +14,6 @@ function parseSwitch(value: string): boolean {
 }
 
 export function registerProjectCommands(program: Command): void {
-  program
-    .command("init")
-    .description("Create a Rowbly project in the current directory")
-    .option("--name <name>", "project name (default: the directory's name)")
-    .option("--key <key>", "story ID prefix, e.g. ROW (default: made from the name)")
-    .action((opts: { name?: string; key?: string }, command: Command) =>
-      run(
-        command,
-        (ctx) => initProject({ name: opts.name, key: opts.key }, ctx),
-        (project) => `Created ${describe(project)}\nStages: ${project.stages.map((stage) => stage.key).join(", ")}`,
-      ),
-    );
-
   program
     .command("update-project")
     .description("Update the project's name, key or features")

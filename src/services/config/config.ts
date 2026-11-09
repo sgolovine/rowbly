@@ -126,14 +126,14 @@ export function toFieldKey(label: string): string {
   return toStageKey(label).toLowerCase();
 }
 
-/** `"My Cool Project"` → `"MCP"`, `"Rowbly"` → `"ROW"`. */
+/** The first three letters of the name: `"Rowbly"` → `"ROW"`, `"my-app"` → `"MYA"`. */
 export function toProjectKey(name: string): string {
-  const words = name
-    .toUpperCase()
-    .split(/[^A-Z0-9]+/)
-    .filter((word) => /^[A-Z]/.test(word));
-  const key = words.length > 1 ? words.map((word) => word[0]).join("") : (words[0] ?? "").slice(0, 3);
-  return key.slice(0, 6) || "ROW";
+  return (
+    name
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "")
+      .slice(0, 3) || "ROW"
+  );
 }
 
 /** `"IN_PROGRESS"` → `"In Progress"`. */

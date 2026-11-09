@@ -16,7 +16,7 @@ import { pathExists, pathOccupied } from "../files/files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 /** Where each harness reads project skills, relative to the project root. */
-const HARNESS_SKILL_DIRS: Record<SkillHarness, string> = {
+export const HARNESS_SKILL_DIRS: Record<SkillHarness, string> = {
   "claude-code": ".claude/skills",
   codex: ".agents/skills",
   "gemini-cli": ".gemini/skills",
@@ -96,20 +96,20 @@ async function skillEntry(paths: ProjectPaths, harness: SkillHarness, name: stri
   return join(await physicalPath(harnessSkillsDir(paths, harness)), name);
 }
 
-/** The `skills/` folder next to the first `package.json` above this file, in both `src/` and `dist/`. */
-async function defaultSkillsDir(): Promise<string> {
+/** The folder of the first `package.json` above this file, in both `src/` and `dist/`. */
+export async function packageDir(): Promise<string> {
   let dir = dirname(fileURLToPath(import.meta.url));
   for (;;) {
-    if (await pathExists(join(dir, "package.json"))) return join(dir, "skills");
+    if (await pathExists(join(dir, "package.json"))) return dir;
     const parent = dirname(dir);
-    if (parent === dir) throw new NotFoundError("Rowbly cannot find its bundled skills");
+    if (parent === dir) throw new NotFoundError("Rowbly cannot find its package folder");
     dir = parent;
   }
 }
 
 /** The folder of the bundled skills, and the skills in it: its subfolders that have a `SKILL.md`. */
 export async function bundledSkills(ctx: ServiceContext = {}): Promise<{ dir: string; names: string[] }> {
-  const dir = ctx.skillsDir ?? (await defaultSkillsDir());
+  const dir = ctx.skillsDir ?? join(await packageDir(), "skills");
   let entries: { name: string; isDirectory(): boolean }[];
   try {
     entries = await readdir(dir, { withFileTypes: true });

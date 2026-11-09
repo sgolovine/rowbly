@@ -547,34 +547,39 @@ describe("Shell with several Projects", () => {
 describe("Shell without a project", () => {
   const dir = useTempDir();
 
-  it("says how to create a project", async () => {
+  it("shows the onboarding steps on the screen, with no Modal", async () => {
     const tui = await open({ cwd: dir.path });
+    expect(tui.frame()).toContain("╭─Set up Rowbly");
     expect(tui.frame()).toContain("No Rowbly project in this directory or any parent.");
-    expect(tui.frame()).toMatch(/\+ New Project\s+n/);
-    expect(tui.frame()).toContain("n new Project");
+    expect(tui.frame()).toContain("Use defaults");
+    expect(tui.frame()).toContain("Customize");
+    expect(tui.frame()).not.toContain("+ New Project");
     expect(tui.frame()).not.toContain("+ New Story");
     expect(tui.toasts.list()).toEqual([]);
   });
 
-  it("creates a project with n and opens it", async () => {
+  it("creates a project from the defaults and opens it", async () => {
     const ctx = { cwd: dir.path, home: dir.path };
     const tui = await open(ctx);
-    await tui.press("n");
-    expect(tui.frame()).toContain("New Project");
-    await tui.press(keys.backspace.repeat(basename(dir.path).length));
-    await tui.type("My App");
-    await tui.press(keys.ctrl("s"));
-    await settle(100);
+    await tui.press(keys.enter);
+    await settle(50);
     await tui.press();
-    expect(await getProject(ctx)).toMatchObject({ projectName: "My App", projectKey: "MA" });
-    expect(tui.frame()).toContain("My App › All Stages");
+    expect(tui.frame()).toContain("Summary");
+    await tui.press(keys.enter);
+    await settle(300);
+    await tui.press();
+    expect(await getProject(ctx)).toMatchObject({ projectName: basename(dir.path) });
     expect(tui.frame()).toContain("╭─Stages");
-    expect((await listKnownProjects(ctx)).map((p) => p.name)).toEqual(["My App"]);
+    expect((await listKnownProjects(ctx)).map((p) => p.name)).toEqual([basename(dir.path)]);
   });
 
-  it("opens the form from the + New Project Button", async () => {
+  it("does not quit or open the switcher when q and p are typed in a text field", async () => {
     const tui = await open({ cwd: dir.path, home: dir.path } as { cwd: string });
-    await tui.click("+ New Project");
-    expect(tui.frame()).toContain("╭─New Project");
+    await tui.press(keys.down, keys.enter);
+    await settle(50);
+    await tui.press();
+    await tui.type("qp");
+    expect(tui.frame()).toContain("Project name and key");
+    expect(tui.frame()).toContain("qp");
   });
 });

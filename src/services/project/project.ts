@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import {
+  type CustomField,
   checkProjectKey,
   type FeatureConfig,
   type Issue,
@@ -31,8 +32,18 @@ export interface ProjectInstructions {
 export interface InitProjectInput {
   /** Defaults to the directory's name. */
   name?: string;
-  /** Defaults to one made from the name: `My Project` → `MP`. */
+  /** Defaults to the first three letters of the name: `Rowbly` → `ROW`. */
   key?: string;
+  /** In board order. Defaults to Backlog and Done. */
+  stages?: InitialStage[];
+  customFields?: CustomField[];
+}
+
+/** A stage of a new project, and the text of its prompt file. */
+interface InitialStage {
+  key: string;
+  label: string;
+  prompt: string;
 }
 
 export interface UpdateProjectInput {
@@ -43,8 +54,8 @@ export interface UpdateProjectInput {
   features?: FeatureConfig;
 }
 
-/** Every new project starts with these stages. */
-const DEFAULT_STAGES = [
+/** The stages of a project when `initProject` gets no list. */
+const DEFAULT_STAGES: InitialStage[] = [
   {
     key: "BACKLOG",
     label: "Backlog",
@@ -63,7 +74,7 @@ export function defaultProjectName(ctx: ServiceContext = {}): string {
   return basename(resolve(ctx.cwd ?? process.cwd()));
 }
 
-/** Creates `.rowbly/` in `ctx.cwd` with a config, the default stages and an empty stories folder. */
+/** Creates `.rowbly/` in `ctx.cwd` with a config, its stages and an empty stories folder. */
 export async function initProject(input: InitProjectInput = {}, ctx: ServiceContext = {}): Promise<Project> {
   const root = resolve(ctx.cwd ?? process.cwd());
   const paths = projectPaths(root);
@@ -78,15 +89,16 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
     });
   }
 
+  const stages = input.stages ?? DEFAULT_STAGES;
   const config: ProjectConfig = {
     projectName,
     projectKey,
-    customFields: [],
-    stages: DEFAULT_STAGES.map(({ key, label }) => ({ key, label, enabled: true })),
+    customFields: input.customFields ?? [],
+    stages: stages.map(({ key, label }) => ({ key, label, enabled: true })),
   };
   await mkdir(paths.storiesDir, { recursive: true });
-  for (const stage of DEFAULT_STAGES) {
-    await writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt}\n`);
+  for (const stage of stages) {
+    await writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`);
   }
   await writeConfig(paths, config);
   return { ...config, root };

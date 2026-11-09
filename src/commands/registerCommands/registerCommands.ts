@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { registerCustomFieldCommands } from "../customField/customField.js";
 import { registerDoctor } from "../doctor/doctor.js";
+import { registerInit } from "../init/init.js";
 import { registerProjectCommands } from "../project/project.js";
 import { registerSkillCommands } from "../skill/skill.js";
 import { registerSpecCommands } from "../spec/spec.js";
@@ -15,6 +16,7 @@ export function registerCommands(program: Command): void {
   program
     .option("--json", "print results and errors as JSON")
     .option("-C, --cwd <dir>", "run as if Rowbly was started in <dir>");
+  registerInit(program);
   registerProjectCommands(program);
   registerDoctor(program);
   registerStoryCommands(program);

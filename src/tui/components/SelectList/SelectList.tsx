@@ -13,6 +13,8 @@ export interface SelectItem<T = string> {
   tag?: ReactNode;
   /** Shown dimmed after the label. */
   description?: string;
+  /** Multi-select mode: `space` does not change this item. */
+  locked?: boolean;
 }
 
 export interface SelectListProps<T> {
@@ -107,8 +109,10 @@ export function SelectList<T>({
         return;
       }
       const item = visible[index];
-      if (multi && input === " " && item) toggle(item.value);
-      else if (key.return) {
+      if (multi && input === " " && item) {
+        if (!item.locked) toggle(item.value);
+      }
+      if (key.return) {
         if (multi) onSubmit?.([...selected]);
         else if (item) onSelect?.(item);
       }

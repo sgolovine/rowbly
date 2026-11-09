@@ -76,9 +76,10 @@ describe("key conversion", () => {
   });
 
   it("toProjectKey", () => {
-    expect(toProjectKey("My Cool Project")).toBe("MCP");
+    expect(toProjectKey("My Cool Project")).toBe("MYC");
     expect(toProjectKey("Rowbly")).toBe("ROW");
-    expect(toProjectKey("a b c d e f g h")).toBe("ABCDEF");
+    expect(toProjectKey("3d-app")).toBe("DAP");
+    expect(toProjectKey("ab")).toBe("AB");
     expect(toProjectKey("123")).toBe("ROW");
   });
 

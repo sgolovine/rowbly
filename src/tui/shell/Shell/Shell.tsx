@@ -1,5 +1,5 @@
 import { Box, type BoxProps, Text, useApp, useInput } from "ink";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { NotFoundError } from "../../../services/errors/errors.js";
 import { recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject } from "../../../services/project/project.js";
@@ -7,7 +7,6 @@ import { listStages, type Stage, updateStage } from "../../../services/stage/sta
 import { deleteStory, type Story, searchStories, updateStory } from "../../../services/story/story.js";
 import { findProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
-  Button,
   ConfirmDialog,
   FOOTER_HEIGHT,
   Footer,
@@ -23,9 +22,18 @@ import {
   STACKED_MIN_HEIGHT,
   ToastArea,
 } from "../../components/index.js";
-import { LayoutContext, useAsync, useIsActive, useLayout, useStoryChanges, useToast } from "../../hooks/index.js";
+import {
+  ActiveContext,
+  LayoutContext,
+  ShellContext,
+  useAsync,
+  useIsActive,
+  useLayout,
+  useStoryChanges,
+  useToast,
+} from "../../hooks/index.js";
 import { groupDelta, type KeyHint, moveDelta, reorderDelta } from "../../keymap.js";
-import { NewProjectModal } from "../../screens/projects/index.js";
+import { Onboarding } from "../../screens/onboarding/index.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
 import {
@@ -53,7 +61,6 @@ type Overlay =
   | { kind: "finder" }
   | { kind: "projects" }
   | { kind: "help" }
-  | { kind: "newProject" }
   | { kind: "settings" }
   | { kind: "newStory" }
   | { kind: "editStory"; story: Story }
@@ -74,13 +81,14 @@ type Pane = "stages" | "stories";
  * to the previous or next Stage. A drag of a Story to another row moves it there. `d` asks before it
  * deletes the selected Story. The Modals that create and edit records open over the Story list. The Project
  * Button and `p` open the Project switcher, and each Project that opens is recorded in `~/.rowblyrc.json`.
- * Without a Project, `n` and the **+ New Project** Button create one in the directory where Rowbly runs.
+ * Without a Project, the Story panel shows the onboarding steps, which create one in the directory where Rowbly runs.
  */
 export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   const { exit } = useApp();
   // The Project switcher changes where the services look.
   const [ctx, setCtx] = useState(initialCtx);
   const active = useIsActive();
+  const registry = useContext(ShellContext);
   const layout = useLayout();
   const [version, setVersion] = useState(0);
   const reload = () => setVersion((v) => v + 1);
@@ -105,6 +113,7 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   useStoryChanges(projectRoot, data.refresh);
 
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const [onboardingHints, setOnboardingHints] = useState<readonly KeyHint[]>([]);
   const [pane, setPane] = useState<Pane>("stories");
   // Dragged with the mouse and toggled with `ctrl+b`; both last until Rowbly quits.
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
@@ -259,6 +268,8 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
 
   useInput(
     (input, key) => {
+      // The onboarding steps have no overlay around their text fields.
+      if (noProject && registry.captured().text) return;
       if (key.ctrl && input === "b") return toggleSidebar();
       if (key.ctrl && input === "p" && board) return setOverlay({ kind: "finder" });
       const group = groupDelta(key);
@@ -267,7 +278,6 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
       if (input === "q") return exit();
       if (input === "?") return setOverlay({ kind: "help" });
       if (input === "p") return setOverlay({ kind: "projects" });
-      if (noProject && input === "n") return setOverlay({ kind: "newProject" });
       if (!board) return;
       if (input === ",") return setOverlay({ kind: "settings" });
       if (key.tab && sidebar) return setPane(sidebarFocused ? "stories" : "stages");
@@ -300,7 +310,7 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   );
 
   const hints: KeyHint[] = !board
-    ? [...(noProject ? [{ key: "n", description: "new Project" }] : []), { key: "p", description: "switch Project" }]
+    ? [...(noProject ? onboardingHints : []), { key: "p", description: "switch Project", secondary: noProject }]
     : sidebarFocused
       ? [
           { key: "↑/↓", description: "select Stage" },
@@ -400,7 +410,9 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
             />
           )}
           <Panel
-            title={projectName ? `${projectName} › ${stage?.label ?? "All Stages"}` : "Stories"}
+            title={
+              projectName ? `${projectName} › ${stage?.label ?? "All Stages"}` : noProject ? "Set up Rowbly" : "Stories"
+            }
             focused={listFocused}
             onClick={idle ? () => setPane("stories") : undefined}
             flexGrow={1}
@@ -429,20 +441,9 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
                   }}
                 />
               ) : noProject ? (
-                <Box flexDirection="column" alignItems="flex-start">
-                  <Text color={theme.ink}>No Rowbly project in this directory or any parent.</Text>
-                  <Text color={theme.inkFaint}>Press n to create one here.</Text>
-                  <Box marginTop={1}>
-                    <Button
-                      label="+ New Project"
-                      keyName="n"
-                      onClick={() => setOverlay({ kind: "newProject" })}
-                      clickable={idle}
-                      compact
-                      primary
-                    />
-                  </Box>
-                </Box>
+                <ActiveContext.Provider value={idle}>
+                  <Onboarding ctx={ctx} onHints={setOnboardingHints} onCreated={reload} />
+                </ActiveContext.Provider>
               ) : (
                 <Text color={theme.danger}>Rowbly could not read the project.</Text>
               )}
@@ -521,16 +522,6 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
             )}
             {overlay?.kind === "projects" && (
               <ProjectSwitcher ctx={ctx} current={projectRoot} onSelect={switchProject} onClose={close} />
-            )}
-            {noProject && overlay?.kind === "newProject" && (
-              <NewProjectModal
-                ctx={ctx}
-                onClose={close}
-                onCreated={() => {
-                  close();
-                  reload();
-                }}
-              />
             )}
             {overlay?.kind === "help" && <HelpModal hints={hints} onClose={close} />}
           </LayoutContext.Provider>

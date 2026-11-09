@@ -13,7 +13,7 @@ export * from "./KeyHints/index.js";
 export * from "./MarkdownView/index.js";
 export * from "./Modal/index.js";
 export * from "./markdown.js";
-export { useCovered } from "./modalLayer.js";
+export { FormKeysContext, useCovered } from "./modalLayer.js";
 export * from "./OverlayHost/index.js";
 export * from "./Panel/index.js";
 export { ScrollBody } from "./ScrollBody/index.js";

@@ -42,7 +42,15 @@ cd my-project
 rowbly init
 ```
 
-Every new project starts with two stages, **Backlog** and **Done**. Add your first story, then open the board:
+`rowbly init` asks you to use the defaults or to choose the name, stages, agent skills and harnesses. Run `rowbly` with no project to do the same setup in the terminal UI. Agents and scripts can use flags or JSON:
+
+```sh
+rowbly init --defaults
+rowbly init --stage Backlog --stage QA --stage Done --skill factory --harness codex
+echo '{"name":"Web","stages":["Backlog","Done"],"skills":[]}' | rowbly init --input -
+```
+
+The default stages are **Backlog**, **In Refinement**, **In Development**, **In Review** and **Done**. Add your first story, then open the board:
 
 ```sh
 rowbly create-story --title "Add a login page"

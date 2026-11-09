@@ -177,7 +177,17 @@ export function Form({
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   // The values `fillFrom` last put in each field, so a field still holding one is filled again.
-  const [filled, setFilled] = useState<Record<string, string>>({});
+  // A starting value that `fillFrom` would give counts as filled, so a change of the source updates it.
+  const [filled, setFilled] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      fields.flatMap((f) => {
+        const text = f.fillFrom ? String(initial[f.fillFrom.field] ?? "").trim() : "";
+        return f.fillFrom && text && initial[f.name] === f.fillFrom.format(text)
+          ? [[f.name, String(initial[f.name])]]
+          : [];
+      }),
+    ),
+  );
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
@@ -342,7 +352,13 @@ export function Form({
   return (
     <Box flexDirection="column" gap={roomy ? 1 : 0} flexShrink={0}>
       <Text color={theme.inkFaint} wrap="truncate-end">
-        {busy ? "Saving…" : searchable ? "type or enter to search" : field ? FIELD_HELP[field.kind] : "ctrl+s save"}
+        {busy
+          ? "Saving…"
+          : searchable
+            ? "type or enter to search"
+            : field
+              ? FIELD_HELP[field.kind]
+              : `ctrl+s ${submitLabel}`}
       </Text>
       {fields.map((f, i) => (
         <FieldRow

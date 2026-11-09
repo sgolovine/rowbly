@@ -33,8 +33,8 @@ Project ── configuration: custom field definitions, stages (each with an opt
   The field then applies to all stories in that project, and each story has its own values for it.
   Each story is in a stage.
 - **Stage.** You define stages at the project level, and they apply to all stories of the project.
-  Each story in a project **must** have a stage. Each new project has two default stages, **Backlog**
-  and **Done**. Users can add more stages. Each stage can have a prompt. The prompt tells agents what
+  Each story in a project **must** have a stage. Each project from `rowbly init` or the TUI starts with the stages that
+  onboarding selects. Users can add more stages. Each stage can have a prompt. The prompt tells agents what
   to do with a story while the story is in that stage.
 - **Agent lock.** An agent lock records that an agent works on a story. A story has a maximum of one
   lock. The lock applies only while the story stays in the stage where the agent took the lock. A lock
@@ -87,13 +87,15 @@ src/
     registerCommands/ # registerCommands(): attaches every subcommand to the program
     output/           # run(): calls a service, prints text or --json, turns RowblyErrors into exit code 1
     testCli/          # runCli(), createProgram(): run commands in tests
-    <area>/           # one folder per area: project (init, update-project, get-instructions), doctor, story, stage, customField, spec, skill
+    init/             # the `rowbly init` command: flags and JSON input
+    initWizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
+    <area>/           # one folder per area: project (update-project, get-instructions), doctor, story, stage, customField, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
     App.tsx           # root TUI component: TuiProviders around the Shell
     TuiProviders.tsx  # the contexts every shared component reads; wrap the app in it
     shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal
-    screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), projects/ (NewProjectModal), settings/ (SettingsModal, sections)
+    screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), onboarding/ (Onboarding and its steps), settings/ (SettingsModal, sections)
     terminal.ts       # runFullScreen(): alternate screen, mouse, kitty keys, terminal restore
     theme.ts          # the design tokens as hex values, and date formatting
     keymap.ts         # KeyHint, global keys, form keys, moveDelta (arrows + j/k)
@@ -110,10 +112,12 @@ src/
     storyFiles/       # raw story file IO shared by the domain services
     specFiles/        # raw spec file IO shared by the domain services
     project/ story/ stage/ customField/ spec/ skill/ doctor/   # the domain services
+    onboarding/       # planOnboarding(), applyOnboarding(): the setup that the TUI and `rowbly init` share
     storyWatch/       # watchStories(): calls a function when the files of the stories folder change
     knownProject/     # listKnownProjects(), recordProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
 skills/               # the bundled skills; `rowbly install-skill` copies them into a project
+stages/               # the default stage prompts; onboarding copies them into a project
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
 ```
 
@@ -197,6 +201,34 @@ the project opens. The Project switcher in the header reads the list.
 
 Rowbly v1 uses the same file for its own keys. Keep all other keys when you write the file. If Rowbly
 cannot read the file, do not write it. A write would remove the data that the user has in the file.
+
+## Onboarding
+
+Onboarding creates a project. `rowbly` with no project shows the steps on the screen, in the Story panel.
+Do not use a Modal for these steps. `rowbly init` asks the same questions through `@clack/prompts`. The
+two front ends call `planOnboarding` and `applyOnboarding` in `src/services/onboarding/onboarding.ts`.
+
+The first question is "defaults" or "customize". The defaults go directly to the summary. The steps are:
+
+| Step         | Default                                                  | Customization                               |
+| ------------ | -------------------------------------------------------- | ------------------------------------------- |
+| Name and key | The name of the directory, and the first 3 letters of it | Any valid name and key                      |
+| Stages       | All files in `stages/`, in the order of `DEFAULT_STAGES` | Remove default stages, or add custom stages |
+| Agent skills | All folders in `skills/`, for all harnesses              | Select the skills and the harnesses         |
+
+The last step is always a summary. It also tells the user where to edit each item.
+
+- A custom stage gets a placeholder prompt. A default stage gets its file from `stages/`.
+- A skill that a selected default stage uses shows `(required)`. The user cannot remove it.
+- The custom fields of the skills (`worktree`, `pull_request`) are added with the skills that use them.
+- If a skill install fails, `applyOnboarding` removes the new project and the skills that it installed.
+
+`rowbly init` asks questions only in a terminal, with no choice flags and no `--json`. Otherwise it
+uses the flags, the `--input` JSON and the defaults, in this priority. The `--input` value is inline JSON,
+a file path, or `-` for stdin. The JSON keys are `name`, `key`, `stages`, `skills` and `harnesses`.
+
+The prompts in `.rowbly/stages/` of this repository are the prompts of the Rowbly project itself. The
+default prompts for new projects are in `stages/`. A change to one does not change the other.
 
 ## Architecture: one service layer, two front ends
 
