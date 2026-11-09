@@ -86,7 +86,7 @@ src/
     registerCommands/ # registerCommands(): attaches every subcommand to the program
     output/           # run(): calls a service, prints text or --json, turns RowblyErrors into exit code 1
     testCli/          # runCli(), createProgram(): run commands in tests
-    <area>/           # one folder per area: project (init, update-project, get-instructions), doctor, story, stage, customField, spec
+    <area>/           # one folder per area: project (init, update-project, get-instructions), doctor, story, stage, customField, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
     App.tsx           # root TUI component: TuiProviders around the Shell
@@ -108,10 +108,11 @@ src/
     markdown/         # YAML frontmatter + body parsing and writing
     storyFiles/       # raw story file IO shared by the domain services
     specFiles/        # raw spec file IO shared by the domain services
-    project/ story/ stage/ customField/ spec/ doctor/   # the domain services
+    project/ story/ stage/ customField/ spec/ skill/ doctor/   # the domain services
     storyWatch/       # watchStories(): calls a function when the files of the stories folder change
     knownProject/     # listKnownProjects(), recordProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
+skills/               # the bundled skills; `rowbly install-skill` copies them into a project
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
 ```
 
@@ -124,7 +125,7 @@ the problems that it can repair.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}]
   ROWBLY.md           # optional; the whole file is the instructions for all agents of the project
   stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset), agentLock?
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
@@ -151,6 +152,33 @@ The `stories` list of a spec holds the links to its stories. If a service delete
 removes the story from each spec. A spec that loses its last story stays in `specs/`. `rowbly doctor`
 shows a warning for each orphan spec, and for each link to a story that does not exist. `--fix`
 removes a link to a story that does not exist. It does not delete an orphan spec.
+
+The `skills` list of the config holds the bundled skills that a project has installed. Each entry
+has the `name` of a skill and the `harnesses` that have a copy. `rowbly install-skill` copies a folder
+from the `skills/` folder of the Rowbly package to the project skills folder of each harness:
+
+| Harness          | Project skills folder |
+| ---------------- | --------------------- |
+| `claude-code`    | `.claude/skills`      |
+| `codex`          | `.agents/skills`      |
+| `gemini-cli`     | `.gemini/skills`      |
+| `github-copilot` | `.github/skills`      |
+| `cursor`         | `.cursor/skills`      |
+
+`rowbly list-skills` shows the installed skills. `rowbly remove-skill` deletes only the folders that
+the config tracks. It keeps a folder that a different tracked harness uses through a symlink.
+`install-skill` checks each target before it writes. If a folder that the config does not track is
+at a target, the command stops and changes nothing.
+
+`rowbly doctor` shows an error if a tracked skill is not installed for a harness. `--fix` installs the
+skill again if nothing is at its path and the Rowbly package still has the skill. `--fix` does not change a
+folder that has no `SKILL.md`, because the folder can contain the work of a user.
+
+Harnesses can read the same folders. For example, Cursor also reads `.claude/skills` and
+`.agents/skills`. A skill can then stay visible to a harness after you remove the skill for that harness.
+
+Keep your changes to a tracked skill in a different place. `rowbly remove-skill` deletes the folder and
+all local changes in it.
 
 `ROWBLY.md` holds the top-level instructions of a project, as a `CLAUDE.md` or `AGENTS.md` file does.
 Rowbly does not create, parse or enforce it. `rowbly get-instructions` shows the text. A supervisor

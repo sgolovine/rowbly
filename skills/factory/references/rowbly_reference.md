@@ -241,6 +241,47 @@ A Spec record has this shape:
 - **Deleted Stories.** `delete-story` removes the Story from each Spec. A Spec with no Stories stays.
   It is an orphan, and its `stories` list is empty.
 
+### Skill
+
+The Rowbly package contains skills for coding agents. These commands copy a bundled skill into the Project and record
+it in `rowbly.config.json`.
+
+| Command                                                  | JSON result    |
+| -------------------------------------------------------- | -------------- |
+| `rowbly install-skill <name> --harness <id> (repeat)`    | Skill result   |
+| `rowbly list-skills`                                     | Array of Skill |
+| `rowbly remove-skill <name> [--harness <id>] (repeat)`   | Skill result   |
+
+| Harness ID       | Project skills folder |
+| ---------------- | --------------------- |
+| `claude-code`    | `.claude/skills`      |
+| `codex`          | `.agents/skills`      |
+| `gemini-cli`     | `.gemini/skills`      |
+| `github-copilot` | `.github/skills`      |
+| `cursor`         | `.cursor/skills`      |
+
+A Skill record has this shape. `installed` is `false` if the copy for that harness is not there:
+
+```json
+{ "name": "review", "harnesses": [{ "harness": "codex", "path": "/abs/path/.agents/skills/review", "installed": true }] }
+```
+
+A Skill result has this shape. It has `status` in place of `installed`:
+
+```json
+{ "name": "review", "harnesses": [{ "harness": "codex", "path": "/abs/path/.agents/skills/review", "status": "installed" }] }
+```
+
+- **Names.** Only a bundled skill can install. Any other name gives `NOT_FOUND`, and `hint` lists the bundled skills.
+- **Conflicts.** A folder at a target that the config does not track gives `CONFLICT`. The command then writes nothing.
+- **Install status.** The value is `installed`, `shared` or `already-installed`. A `shared` harness uses the same folder as a tracked harness.
+- **Remove status.** The value is `removed`, `missing` or `shared`. Rowbly keeps a `shared` folder because a tracked harness still uses it.
+- **Removes.** With no `--harness`, `remove-skill` removes the skill from all of its harnesses.
+- **Shared read locations.** Harnesses can read the same folders. A skill can stay visible after you remove it for one harness.
+
+Get approval from the user before you run `remove-skill`. The command deletes the folder and all local
+changes in it, and does not ask for confirmation.
+
 ### Long text
 
 Only Specs have a file flag. `--description` and `--prompt` take the text as an argument. To send
@@ -314,7 +355,7 @@ Read these files if a command does not give the data. Users can edit these files
 
 ```
 .rowbly/
-  rowbly.config.json   # Project name and key, custom fields, Stages, features
+  rowbly.config.json   # Project name and key, custom fields, Stages, features, installed skills
   ROWBLY.md            # optional; the full file is the instructions for all agents
   stories/APP-01.md    # frontmatter: title, stage, position, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
@@ -331,6 +372,9 @@ priority: null
 
 The Markdown description of the Story.
 ```
+
+The `skills` list of `rowbly.config.json` holds each installed skill and its harnesses. The copies
+are outside `.rowbly/`, in the project skills folder of each harness (section 5, "Skill").
 
 In Story files, `null` means that the field has no value. A Story with no `position` comes after
 the Stories that have one.
@@ -371,11 +415,15 @@ One invalid Story file makes `search-stories` fail for the full Project.
 | Story has no title or has an unknown Stage                                       | No repair      |
 | Story file has a bad name, a wrong Project key or a number that another file has | No repair      |
 | File has invalid frontmatter, or `rowbly.config.json` is invalid                 | No repair      |
+| Installed skill is missing, and the Rowbly package has the skill                 | Repairs it     |
+| Installed skill is missing, and the Rowbly package does not have the skill       | No repair      |
+| Installed skill folder exists but has no `SKILL.md`                              | No repair      |
 | Spec is an orphan (warning)                                                      | No repair      |
 | Story is in a disabled Stage (warning)                                           | No repair      |
 
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
-orphan Spec if the user did not tell you to do it.
+orphan Spec if the user did not tell you to do it. A problem with an installed skill has a
+`message` that names the `remove-skill` command. Get approval from the user before you run it.
 
 ## 10. Differences from older versions
 
