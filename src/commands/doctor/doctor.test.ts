@@ -1,0 +1,48 @@
+import { rm } from "node:fs/promises";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { useTestProject } from "../../services/testProject/testProject.js";
+import { runCli } from "../testCli/testCli.js";
+
+describe("doctor command", () => {
+  const project = useTestProject();
+
+  it("reports a clean project", async () => {
+    expect(await runCli(["doctor"], project.ctx.cwd)).toEqual({
+      stdout: "No problems found.",
+      stderr: "",
+      exitCode: 0,
+    });
+  });
+
+  it("lists each problem, suggests --fix and sets exit code 1", async () => {
+    await rm(join(project.paths.stagesDir, "DONE.md"));
+    await project.write("stories/ROW-01.md", "---\ntitle: One\nstage: NOPE\n---\n");
+    const result = await runCli(["doctor"], project.ctx.cwd);
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout.split("\n")).toEqual([
+      "error   .rowbly/stages/DONE.md: Stage DONE has no file (fix: Create an empty one)",
+      'error   .rowbly/stories/ROW-01.md: Unknown stage "NOPE". Stages: BACKLOG, DONE',
+      "",
+      "Run `rowbly doctor --fix` to fix 1 of them.",
+    ]);
+  });
+
+  it("fixes problems with --fix", async () => {
+    await rm(join(project.paths.stagesDir, "DONE.md"));
+    const result = await runCli(["doctor", "--fix"], project.ctx.cwd);
+    expect(result).toEqual({
+      stdout: "fixed   .rowbly/stages/DONE.md: Stage DONE has no file",
+      stderr: "",
+      exitCode: 0,
+    });
+    expect(await project.read("stages/DONE.md")).toBe("");
+  });
+
+  it("prints the report as JSON with --json", async () => {
+    await rm(join(project.paths.stagesDir, "DONE.md"));
+    const result = await runCli(["--json", "doctor"], project.ctx.cwd);
+    expect(JSON.parse(result.stdout)).toMatchObject({ ok: false, issues: [{ file: ".rowbly/stages/DONE.md" }] });
+    expect(result.exitCode).toBe(1);
+  });
+});

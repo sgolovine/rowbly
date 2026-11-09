@@ -1,5 +1,5 @@
-import { type DependencyList, useCallback, useEffect, useState } from 'react';
-import { useToast } from './toasts';
+import { type DependencyList, useCallback, useEffect, useState } from "react";
+import { useToast } from "./toasts.js";
 
 export interface AsyncState<T> {
   loading: boolean;

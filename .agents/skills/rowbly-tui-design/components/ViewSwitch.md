@@ -1,6 +1,6 @@
 # ViewSwitch
 
-The Board's two views on one line: `Stages / List v`.
+ViewSwitch shows the two views of the Board on one line: `Stages / List v`.
 
-- The current view is `accent` bold; the other is `ink-faint`; the `/` is `border-control`. The key `v` follows in a key cap, as on a Button.
-- It sits among the header Buttons, between `|` separators.
+- The current view is `accent` and bold. The other view is `ink-faint`. The `/` is `border-control`. After them, the key `v` shows in a key cap, as on a Button.
+- It is in the row of header Buttons, between `|` separators.

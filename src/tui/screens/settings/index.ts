@@ -1,6 +1,9 @@
-import type { ScreenRegistry } from '../types';
-import { SettingsScreen } from './SettingsScreen';
-
-export const settingsScreens: ScreenRegistry = {
-  settings: SettingsScreen,
-};
+export * from "./CustomFieldFormModal/index.js";
+export * from "./CustomFieldsSection/index.js";
+export * from "./DoctorSection/index.js";
+export * from "./ProjectSection/index.js";
+export * from "./SectionNav/index.js";
+export * from "./SettingsBody/index.js";
+export * from "./SettingsModal/index.js";
+export * from "./SpecsSection/index.js";
+export * from "./StagesSection/index.js";

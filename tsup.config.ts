@@ -1,12 +1,10 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: { cli: 'src/cli.ts', clipboard: 'src/services/clipboard.ts' },
-  format: ['esm'],
-  platform: 'node',
-  target: 'node22',
-  outDir: 'dist',
+  entry: ["src/cli.ts"],
+  format: ["esm"],
+  target: "node22",
+  platform: "node",
   clean: true,
-  sourcemap: true,
-  banner: { js: '#!/usr/bin/env node' },
+  banner: { js: "#!/usr/bin/env node" },
 });

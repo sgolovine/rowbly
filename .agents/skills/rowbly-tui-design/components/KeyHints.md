@@ -1,7 +1,7 @@
 # KeyHints
 
-The keys of the screen in focus: the footer, and the strip at the bottom of a Modal.
+KeyHints show the keys of the screen that has the focus. They are in the footer and in the strip at the bottom of a Modal.
 
-- Key in `cell-key` (bold `ink`), description in `ink-faint`, `col-2` between hints. No `·` separators: the weight change separates them.
-- Footer: the screen's primary keys left, `? help` and `q quit` pinned right. Secondary keys live in Help.
-- In a Modal the strip sits under a `border` rule, inside the frame.
+- Each key is in `cell-key` (bold `ink`), and its description is in `ink-faint`. There is `col-2` between the hints. Do not use `·` separators. The change from bold text to normal text separates the hints.
+- Footer: the primary keys of the screen are on the left. `? help` and `q quit` are always on the right. Help shows the secondary keys.
+- In a Modal, the strip is below a `border` rule, in the frame.

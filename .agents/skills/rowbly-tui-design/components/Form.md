@@ -1,8 +1,8 @@
 # Form
 
-Labelled fields for creating and editing a record, inside a Modal.
+A Form is a set of fields with labels, in a Modal. Use it to create or edit a record.
 
-- A help line first, in `ink-faint`.
-- Field in focus: `›` marker and label in `accent`, input on `field-focus`. Others: label `ink-muted`, input on `field`. Required labels end in `*`.
-- Placeholders in `ink-faint`. A validation message sits under its field as `!` + text in `danger`.
-- No Save button inside the Form: saving is a key (`ctrl+s`) shown in the Modal's hint strip, so the keys are in one place.
+- The Form starts with a help line in `ink-faint`.
+- Field in focus: the `›` marker and the label are in `accent`, and the input is on `field-focus`. Other fields: the label is in `ink-muted`, and the input is on `field`. The label of a mandatory field ends in `*`.
+- Placeholders are in `ink-faint`. A validation message shows below its field as `!` and text in `danger`.
+- Do not put a Save button in the Form. A key (`ctrl+s`) saves the record, and the hint strip of the Modal shows this key. This keeps all the keys in one place.

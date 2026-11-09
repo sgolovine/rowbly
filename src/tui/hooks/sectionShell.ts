@@ -1,5 +1,5 @@
-import type { KeyHint } from '../keymap';
-import { createShellRegistry, type ShellRegistry } from './shell';
+import type { KeyHint } from "../keymap.js";
+import { createShellRegistry, type ShellRegistry } from "./shell.js";
 
 /** The shell registry as a settings section sees it, and whether the section holds `esc` itself. */
 export interface SectionShell extends ShellRegistry {

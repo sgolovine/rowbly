@@ -1,13 +1,14 @@
 # StoryModal
 
-A screen Modal: one Story, opened with `enter` from the Board or the list view. It is a screen in a frame, not a task.
+StoryModal is a screen Modal that shows one Story. The `enter` key opens it from the Board or the list view. It is a screen in a frame, not a task.
 
-- **Fixed size**: the Board panel's area less one column and one row on each side, at most 120 columns. It never changes size between Tabs, so switching from Details to Comments does not make the frame jump.
-- **Header band** on `overlay-raised`, always visible whatever the Tab:
-  - row 1: the Story Key in `accent`, two columns, the name in `cell-title` (cut with `…`, never wrapped);
-  - row 2: the summary line, `·`-separated: `StageBadge`, Priority and Plugin badges in `ink-muted`, then `updated <relative time>` in `ink-faint`. A missing value is left out, not shown as `—`;
-  - one blank row, then the `Tabs`: Details first, then a Tab per Plugin in Plugin order, each with an optional count.
-- **Body**: the selected Tab's content with `col-2` padding; it scrolls on its own, the band and hints stay put.
-- **Keys**: the `KeyHints` strip for the Tab in focus (`tab switch tab`, `e edit`, `m move Stage`, `d delete`, `esc back`).
-- Title in the frame: `Board › ROW-9`. A generic Modal opened from it (edit, Move Stage, delete) stacks on top and takes the focus.
-- Plugins add Tabs and badges; they do not change the band.
+- **Fixed size**: The size is one column and one row smaller on each side than the area of the Board panel. The maximum width is 120 columns. The size never changes between Tabs, so the frame does not jump when the user goes from Details to Comments.
+- **Header band** on `overlay-raised`: The band is always visible, on all Tabs.
+  - Row 1: The Story Key is in `accent`, then two columns, then the name in `cell-title`. The name is cut with `…` and never wraps.
+  - Row 2: The summary line has `·` between its items. It shows `StageBadge`, Priority and Plugin badges in `ink-muted`, then `updated <relative time>` in `ink-faint`. The line does not show a value that is not set. It does not show `—` in its place.
+  - Then there is one blank row, and then the `Tabs`. Details is first, then one Tab for each Plugin, in Plugin order. Each Tab can have a count.
+- **Body**: The body shows the content of the selected Tab, with `col-2` padding. The body scrolls, but the band and the hints do not move.
+- **Specs Tab**: The Modal uses `flush`, and the Tabs and the General Tab have their own padding. The Specs Tab has two `Panel`s that go to the edges of the Modal frame, with one column between them. The left `Panel` is the list, with the title `Specs`. The right `Panel` is the text of the spec, with the title of the spec. The `Panel` in focus has an `accent` frame, and the other `Panel` has a `border` frame. The `tab` key or a click in a `Panel` moves the focus to the `Panel`. The `shift+tab` key changes the Tab of the Modal.
+- **Keys**: The `KeyHints` strip shows the keys for the Tab in focus (`tab switch tab`, `e edit`, `m move Stage`, `d delete`, `esc back`).
+- The title in the frame is `Board › ROW-9`. A generic Modal that opens from StoryModal (edit, Move Stage, delete) goes on top and takes the focus.
+- Plugins add Tabs and badges. They do not change the band.

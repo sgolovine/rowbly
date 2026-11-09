@@ -1,7 +1,7 @@
-import chalk from 'chalk';
-import type { MarkedExtension } from 'marked';
-import { theme } from '../theme';
-import { markdownToPlain } from './DetailView';
+import chalk from "chalk";
+import type { MarkedExtension } from "marked";
+import { theme } from "../theme.js";
+import { markdownToPlain } from "./DetailView/index.js";
 
 /**
  * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours
@@ -27,7 +27,7 @@ let loading: Promise<MarkdownRenderer> | undefined;
  * first use rather than with the TUI, because its code highlighting takes a moment to load.
  */
 export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
-  loading ??= Promise.all([import('marked'), import('marked-terminal'), import('wrap-ansi')]).then(
+  loading ??= Promise.all([import("marked"), import("marked-terminal"), import("wrap-ansi")]).then(
     ([{ Marked }, { markedTerminal }, { default: wrapAnsi }]) => {
       // One Marked per width, so rendering never touches Marked's global options.
       const renderers = new Map<number, InstanceType<typeof Marked>>();
@@ -57,7 +57,7 @@ export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
                   return `\n${tint(theme.inkMuted)(token.text)}\n`;
                 },
                 text(token) {
-                  return 'tokens' in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
+                  return "tokens" in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
                 },
               },
             },
@@ -71,9 +71,9 @@ export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
         const rendered = renderer(w)
           .parse(text, { async: false })
           // A full reset would also clear the background of the modal the text is shown in.
-          .replaceAll('\u001b[0m', '')
-          .replace(/\s+$/, '');
-        return rendered.split('\n').flatMap((line) => wrapAnsi(line, w, { hard: true, trim: false }).split('\n'));
+          .replaceAll("\u001b[0m", "")
+          .replace(/\s+$/, "");
+        return rendered.split("\n").flatMap((line) => wrapAnsi(line, w, { hard: true, trim: false }).split("\n"));
       };
       return loaded;
     },
@@ -89,12 +89,12 @@ export function markdownRenderer(): MarkdownRenderer | undefined {
 /** The text without markdown syntax, in rows of at most `width` characters: shown until the renderer loads. */
 export function plainMarkdownRows(text: string, width: number): string[] {
   const w = Math.max(1, width);
-  return markdownToPlain(text.replace(/\s+$/, ''))
-    .split('\n')
+  return markdownToPlain(text.replace(/\s+$/, ""))
+    .split("\n")
     .flatMap((line) => {
       const chars = Array.from(line);
       const rows: string[] = [];
-      for (let i = 0; i < chars.length; i += w) rows.push(chars.slice(i, i + w).join(''));
-      return rows.length ? rows : [''];
+      for (let i = 0; i < chars.length; i += w) rows.push(chars.slice(i, i + w).join(""));
+      return rows.length ? rows : [""];
     });
 }

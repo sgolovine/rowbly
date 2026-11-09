@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": [
+    "src/**/*.{ts,tsx}!",
+    "!src/commands/testCli/**!",
+    "!src/services/testProject/**!",
+    "!src/tui/testing/**!"
+  ],
+  "ignoreDependencies": ["@codebolt/agentic-tui"]
+}

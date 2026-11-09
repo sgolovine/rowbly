@@ -1,13 +1,13 @@
 # Modal
 
-The generic Modal: one short task over the screen. New Board, New Story and edit Forms, Move Stage and other pickers, ConfirmDialog, Help, and every Plugin Modal.
+The generic Modal shows one short task over the screen. It is the Modal for the New Board, New Story and edit Forms, Move Stage and other pickers, ConfirmDialog, Help and all Plugin Modals.
 
-- Sized to its content: at least 48 columns, at most 72, centred. Height fits the content up to the screen less the header and footer, then the body scrolls.
-- `overlay` fill, `accent` frame: while open it is the region in focus.
-- Title in the frame as a breadcrumb naming the task (`ROW-9 › Move Stage`), last crumb `accent` bold; `✕` in `ink-faint` at the right of the top edge for the mouse.
-- Body with `col-2` padding; no header band and no Tabs. A task that needs Tabs or a section list is a screen Modal: `StoryModal` or `SettingsModal`, not this.
-- Keys in a `KeyHints` strip inside the frame, under a `border` rule; the confirming key first (`enter move`, `ctrl+s create`), `esc back` last.
-- Opened over a screen Modal (delete from a Story), it takes the focus and the screen Modal below drops to a `border` frame.
-- An info modal (its only key is `esc`: no Form, ConfirmDialog or other key) shows a `Close` Button instead of the strip, on the same line under the rule: label in `ink`, ` esc ` in a key cap, no frame, `selection` on hover. A click closes it, like `esc` and the `✕`. `ModalFrame` decides this for every core and Plugin Modal; any other key brings the strip back.
-- Under another layer or a `ContextMenu` the strip or the Close Button goes blank but keeps its line and width, so the Modal does not resize or move and a menu opened on a row stays next to that row.
-- Plugins open only this kind.
+- The width fits the content, with a minimum of 48 columns and a maximum of 72. The Modal is centred on the screen. The height fits the content, up to the screen height without the header and the footer. If the content is taller, the body scrolls.
+- The Modal has an `overlay` fill and an `accent` frame. When the Modal is open, it is the region in focus.
+- The title in the frame is a breadcrumb that gives the name of the task (`ROW-9 › Move Stage`). The last crumb is `accent` and bold. A `✕` in `ink-faint` is at the right of the top edge, for the mouse.
+- The body has `col-2` padding. The Modal has no header band and no Tabs. A task with Tabs or a section list is a screen Modal (`StoryModal` or `SettingsModal`), not this Modal.
+- The keys show in a `KeyHints` strip in the frame, under a `border` rule. The key that confirms the task is first (`enter move`, `ctrl+s create`). `esc back` is last.
+- When the Modal opens over a screen Modal (for example, delete from a Story), it takes the focus. The screen Modal below it then changes to a `border` frame.
+- An info modal has only the `esc` key, and no Form, ConfirmDialog or other key. An info modal shows a `Close` Button in place of the strip, on the same line under the rule. The Button has its label in `ink`, ` esc ` in a key cap, no frame and `selection` on hover. A click closes the info modal, as `esc` and the `✕` do. `ModalFrame` makes this decision for all core and Plugin Modals. If the Modal has a different key, the strip shows again.
+- Under a different layer or a `ContextMenu`, the strip or the Close Button becomes blank but keeps its line and width. This keeps the Modal at the same size and position. A menu that opens on a row also stays next to that row.
+- Plugins open only this type of Modal.

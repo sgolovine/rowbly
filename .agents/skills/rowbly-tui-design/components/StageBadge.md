@@ -1,6 +1,6 @@
 # StageBadge
 
-A Stage name with its `●`, coloured by Stage Category: `stage-backlog`, `stage-board`, `stage-done`.
+A StageBadge shows a Stage name with its `●`. The colour comes from the Stage Category: `stage-backlog`, `stage-board` or `stage-done`.
 
-- Always the name with the dot. The colour is never the only signal.
-- Use it wherever a Stage is shown: column headers, list rows, the Detail view, Move Stage.
+- Always show the name with the dot. The colour must never be the only signal.
+- Use it in all locations that show a Stage: StageColumn headers, list rows, the Detail view and Move Stage.

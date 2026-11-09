@@ -1,6 +1,6 @@
 # Tabs
 
-The tabs of a Story's Detail view (Details, and a tab per Plugin: Comments, Tasks).
+Tabs shows the tabs of the Detail view of a Story: Details, and one tab for each Plugin (for example, Comments and Tasks).
 
-- Selected tab: `accent` fill, `on-accent` bold text. When the tabs are not in focus, `selection` fill and `ink` text.
-- Other tabs: `ink-muted`. A Plugin may add a count after its label (`Comments 2`, `Tasks 1/3`).
+- Selected tab: The selected tab has the `accent` fill and bold `on-accent` text. When the tabs are not in focus, it has the `selection` fill and `ink` text.
+- Other tabs: The other tabs are `ink-muted`. A Plugin can add a count after its label (`Comments 2`, `Tasks 1/3`).

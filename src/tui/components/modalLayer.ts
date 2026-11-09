@@ -1,5 +1,5 @@
-import { createContext, type ReactNode, useContext } from 'react';
-import type { KeyHint } from '../keymap';
+import { createContext, type ReactNode, useContext } from "react";
+import type { KeyHint } from "../keymap.js";
 
 /** A nested task quiets the frame of the screen or task underneath it. */
 export const ModalLayerContext = createContext<(() => () => void) | null>(null);

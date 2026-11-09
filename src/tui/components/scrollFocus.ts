@@ -1,5 +1,5 @@
-import { type DOMElement, useBoxMetrics } from 'ink';
-import { createContext, type RefObject, useContext, useLayoutEffect } from 'react';
+import { type DOMElement, useBoxMetrics } from "ink";
+import { createContext, type RefObject, useContext, useLayoutEffect } from "react";
 
 export const ScrollFocusContext = createContext<((node: DOMElement) => void) | null>(null);
 

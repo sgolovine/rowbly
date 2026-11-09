@@ -1,6 +1,6 @@
-import { type Key, Text } from 'ink';
-import { useReducer, useRef } from 'react';
-import { theme } from '../theme';
+import { type Key, Text } from "ink";
+import { useReducer, useRef } from "react";
+import { theme } from "../theme.js";
 
 /** Text being edited and its caret, an index into `value` (`value.length` is after the last character). */
 export interface EditState {
@@ -19,7 +19,7 @@ export function wrapRows(value: string, width: number): Row[] {
   const w = Math.max(1, width);
   const rows: Row[] = [];
   let start = 0;
-  for (const line of value.split('\n')) {
+  for (const line of value.split("\n")) {
     const end = start + line.length;
     let at = start;
     do {
@@ -52,11 +52,11 @@ function insert({ value, cursor }: EditState, text: string): EditState {
 }
 
 function lineStart(value: string, cursor: number): number {
-  return value.lastIndexOf('\n', cursor - 1) + 1;
+  return value.lastIndexOf("\n", cursor - 1) + 1;
 }
 
 function lineEnd(value: string, cursor: number): number {
-  const at = value.indexOf('\n', cursor);
+  const at = value.indexOf("\n", cursor);
   return at === -1 ? value.length : at;
 }
 
@@ -68,18 +68,18 @@ function lineEnd(value: string, cursor: number): number {
  */
 export function editKey(state: EditState, input: string, key: Key, multiline: boolean): EditState | null {
   const { value, cursor } = state;
-  if (key.return) return multiline && !key.ctrl && !key.meta ? insert(state, '\n') : null;
+  if (key.return) return multiline && !key.ctrl && !key.meta ? insert(state, "\n") : null;
   if (key.backspace) {
     return cursor === 0 ? state : { value: value.slice(0, cursor - 1) + value.slice(cursor), cursor: cursor - 1 };
   }
   if (key.delete) return { value: value.slice(0, cursor) + value.slice(cursor + 1), cursor };
   if (key.leftArrow) return { value, cursor: Math.max(0, cursor - 1) };
   if (key.rightArrow) return { value, cursor: Math.min(value.length, cursor + 1) };
-  if (key.home || (key.ctrl && input === 'a')) return { value, cursor: lineStart(value, cursor) };
-  if (key.end || (key.ctrl && input === 'e')) return { value, cursor: lineEnd(value, cursor) };
+  if (key.home || (key.ctrl && input === "a")) return { value, cursor: lineStart(value, cursor) };
+  if (key.end || (key.ctrl && input === "e")) return { value, cursor: lineEnd(value, cursor) };
   if (!input || key.ctrl || key.meta || key.escape || key.tab || key.upArrow || key.downArrow) return null;
-  const text = input.replace(/\r\n?/g, '\n');
-  return insert(state, multiline ? text : text.replaceAll('\n', ''));
+  const text = input.replace(/\r\n?/g, "\n");
+  return insert(state, multiline ? text : text.replaceAll("\n", ""));
 }
 
 /** Keeps `cursor` within `size` cells of a sticky scroll offset. */
@@ -93,7 +93,7 @@ export function WithCaret({ text, at }: { text: string; at: number }) {
     <>
       {text.slice(0, at)}
       <Text backgroundColor={theme.accent} color={theme.onAccent}>
-        {text[at] ?? ' '}
+        {text[at] ?? " "}
       </Text>
       {text.slice(at + 1)}
     </>

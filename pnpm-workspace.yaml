@@ -6,3 +6,16 @@ allowBuilds:
 overrides:
   # node-pty 1.1.0 ships no Linux x64 binary; 1.2 ships one for every CI and dev platform.
   node-pty: 1.2.0-beta.15
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - "@biomejs/biome@2.6.5"
+  - "@biomejs/cli-android-arm64@2.6.5"
+  - "@biomejs/cli-android-x64@2.6.5"
+  - "@biomejs/cli-darwin-arm64@2.6.5"
+  - "@biomejs/cli-darwin-x64@2.6.5"
+  - "@biomejs/cli-linux-arm64-musl@2.6.5"
+  - "@biomejs/cli-linux-arm64@2.6.5"
+  - "@biomejs/cli-linux-x64-musl@2.6.5"
+  - "@biomejs/cli-linux-x64@2.6.5"
+  - "@biomejs/cli-win32-arm64@2.6.5"
+  - "@biomejs/cli-win32-x64@2.6.5"

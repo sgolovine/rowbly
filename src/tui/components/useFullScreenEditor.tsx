@@ -1,8 +1,8 @@
-import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useMainOverlay } from '../hooks';
-import { FullScreenEditor, type FullScreenEditorProps } from './FullScreenEditor';
+import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from "react";
+import { useMainOverlay } from "../hooks/index.js";
+import { FullScreenEditor, type FullScreenEditorProps } from "./FullScreenEditor/index.js";
 
-export type FullScreenEditorOptions = Omit<FullScreenEditorProps, 'onClose'> & {
+type FullScreenEditorOptions = Omit<FullScreenEditorProps, "onClose"> & {
   /** Called after the editor has closed. */
   onClose?(): void;
 };

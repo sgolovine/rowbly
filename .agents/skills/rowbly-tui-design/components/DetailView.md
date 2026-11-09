@@ -1,7 +1,7 @@
 # DetailView
 
-Label–value rows for a record, used by the Details tab and by settings screens.
+A DetailView shows the label–value rows of a record. The Details tab and the settings screens use it.
 
-- Labels in `ink-muted`, one column wide enough for the longest label; values in `ink`; no value is `—` in `ink-faint`.
-- Values use their component: a Stage is a `StageBadge`, an Epic its `◆` and name.
-- Dates are human (`20 Oct 2026, 23:03`), with a relative time in `ink-faint` when recent.
+- The labels are in `ink-muted`, in one column. This column has sufficient width for the longest label. The values are in `ink`. If there is no value, the row shows `—` in `ink-faint`.
+- Each value uses its component. A Stage is a `StageBadge`, and an Epic is its `◆` and its name.
+- Dates are in a format that people can read easily (`20 Oct 2026, 23:03`). If a date is near the current time, a relative time in `ink-faint` follows it.

@@ -1,7 +1,7 @@
-import { createContext, useContext, useSyncExternalStore } from 'react';
-import { RowblyError } from '../../core';
+import { createContext, useContext, useSyncExternalStore } from "react";
+import { RowblyError } from "../../services/errors/errors.js";
 
-export type ToastKind = 'info' | 'warning' | 'error';
+type ToastKind = "info" | "warning" | "error";
 
 export interface Toast {
   id: number;
@@ -42,7 +42,7 @@ export function createToastStore(): ToastStore {
     },
     pending(message) {
       const id = nextId++;
-      set([...toasts, { id, kind: 'info', message, pending: true }]);
+      set([...toasts, { id, kind: "info", message, pending: true }]);
       return id;
     },
     update(id, message) {
@@ -50,9 +50,9 @@ export function createToastStore(): ToastStore {
     },
     error(err) {
       if (err instanceof RowblyError) {
-        store.push('error', err.hint ? `${err.message} (${err.hint})` : err.message);
+        store.push("error", err.hint ? `${err.message} (${err.hint})` : err.message);
       } else {
-        store.push('error', `internal error: ${err instanceof Error ? err.message : String(err)}`);
+        store.push("error", `internal error: ${err instanceof Error ? err.message : String(err)}`);
       }
     },
     dismiss(id) {
