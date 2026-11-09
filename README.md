@@ -15,8 +15,6 @@
   <strong>Give your coding agents a board. Keep the board in your repo.</strong>
 </p>
 
-## Intro
-
 Rowbly is a Kanban board for you and your coding agents. It lives in your repository, and it opens in your terminal.
 
 Agents do their best work when they know what to do next. With Rowbly, you write a story and put it in a stage. The stage tells the agent what to do with that story. You watch the work move across the board.
