@@ -22,6 +22,36 @@ Read `references/rowbly_reference.md` before you run a `rowbly` command.
 7. Run the checks of the repository and repair each failure.
 8. Commit the changes.
 
+## Pull request body
+
+Use this format each time that you open a pull request for the Story.
+
+1. Start the body with one short paragraph. Tell the reader what the pull request does and why.
+2. Put all other text in one `<details>` block. This text includes the changes, the evidence for each acceptance criterion and the results of the checks.
+3. Set the `<summary>` text to your model name. Add your effort level if you know it.
+4. Put a blank line after `</summary>`. GitHub does not render the Markdown in the block without this line.
+
+```markdown
+ROW-42 lets users filter the story list by stage, because long boards are slow to scan.
+
+<details>
+<summary>Claude Opus 5.5 Medium</summary>
+
+## Changes
+
+...
+
+## Evidence
+
+...
+
+## Checks
+
+...
+
+</details>
+```
+
 ## Result
 
 Report `complete` with the branch name and the evidence for each acceptance criterion.
