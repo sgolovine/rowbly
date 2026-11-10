@@ -29,7 +29,10 @@ import { projectPaths, type ServiceContext } from "../workspace/workspace.js";
 export interface OnboardingInput {
   name?: string;
   key?: string;
-  /** In board order. Each entry is the key or name of a default stage, or the name of a custom stage. */
+  /**
+   * In board order. Each entry is the key or name of a default stage, or the name of a custom stage.
+   * Backlog and Done are always in the project: if one is left out, it goes at the start or the end.
+   */
   stages?: string[];
   skills?: string[];
   /** Every skill in `skills` is installed for each of these harnesses. */
@@ -96,6 +99,9 @@ const DEFAULT_STAGES = [
   { key: "DONE", skills: [] },
 ] as const;
 
+/** The default stages that onboarding always creates. */
+const ALWAYS_ENABLED_STAGES = ["BACKLOG", "DONE"];
+
 /** The custom fields that the bundled skills read and write. */
 const SKILL_FIELDS: readonly { field: CustomField; skills: readonly string[] }[] = [
   { field: { key: "worktree", label: "Worktree", type: "string" }, skills: ["develop"] },
@@ -139,6 +145,20 @@ export function requiredSkills(stages: readonly string[]): string[] {
   return DEFAULT_STAGES.filter((stage) => keys.includes(stage.key)).flatMap((stage) => [...stage.skills]);
 }
 
+export function isAlwaysEnabledStage(stage: string): boolean {
+  return ALWAYS_ENABLED_STAGES.includes(toStageKey(stage));
+}
+
+/** Adds Backlog at the start and Done at the end of `stages`, if they are not in the list. */
+function withAlwaysEnabledStages(stages: readonly string[]): string[] {
+  const keys = stages.map(toStageKey);
+  return [
+    ...(keys.includes("BACKLOG") ? [] : [labelFromKey("BACKLOG")]),
+    ...stages,
+    ...(keys.includes("DONE") ? [] : [labelFromKey("DONE")]),
+  ];
+}
+
 /** Puts the `custom` stages that are not in `stages` before Done, or at the end if there is no Done. */
 export function withCustomStages(stages: readonly string[], custom: readonly string[]): string[] {
   const keys = new Set(stages.map(toStageKey));
@@ -153,7 +173,6 @@ export function withCustomStages(stages: readonly string[], custom: readonly str
 }
 
 function planStages(names: readonly string[], issues: Issue[]): PlannedStage[] {
-  if (names.length === 0) issues.push({ path: ["stages"], message: "Choose at least one stage" });
   const seen = new Set<string>();
   return names.map((name, index) => {
     const key = toStageKey(name);
@@ -180,7 +199,7 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
   if (name === "") issues.push({ path: ["name"], message: "Name is required" });
   issues.push(...checkProjectKey(key, ["key"]));
 
-  const stages = planStages(input.stages ?? options.stages, issues);
+  const stages = planStages(withAlwaysEnabledStages(input.stages ?? options.stages), issues);
   const required = requiredSkills(stages.map((stage) => stage.key));
   const skills = [...new Set(input.skills ?? options.skills)];
   for (const skill of skills) {

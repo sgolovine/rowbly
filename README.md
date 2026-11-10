@@ -50,7 +50,7 @@ rowbly init --stage Backlog --stage QA --stage Done --skill factory --harness co
 echo '{"name":"Web","stages":["Backlog","Done"],"skills":[]}' | rowbly init --input -
 ```
 
-The default stages are **Backlog**, **In Refinement**, **In Development**, **In Review** and **Done**. Add your first story, then open the board:
+The default stages are **Backlog**, **In Refinement**, **In Development**, **In Review** and **Done**. Backlog and Done are always enabled. Add your first story, then open the board:
 
 ```sh
 rowbly create-story --title "Add a login page"

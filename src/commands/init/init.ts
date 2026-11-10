@@ -81,7 +81,11 @@ export function registerInit(program: Command): void {
     .description("Set up a Rowbly project in the current directory")
     .option("--name <name>", "project name (default: the directory's name)")
     .option("--key <key>", "story ID prefix, e.g. ROW (default: the first 3 letters of the name)")
-    .option("--stage <stage>", "a default stage, or the name of a custom stage, in board order (repeat)", collect)
+    .option(
+      "--stage <stage>",
+      "a default stage, or the name of a custom stage, in board order; Backlog and Done are always added (repeat)",
+      collect,
+    )
     .option("--skill <name>", "a bundled skill to install (repeat; default: all)", collect)
     .option("--no-skills", "install no skills")
     .option("--harness <id>", "a harness for the skills (repeat; default: all)", collect)

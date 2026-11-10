@@ -41,8 +41,10 @@ describe("Onboarding", () => {
 
     await step(tui, keys.enter);
     expect(tui.frame()).toContain("Default Stages have a prompt.");
-    // Drop In Refinement and In Development, and add a custom Stage.
-    await tui.press(keys.down, keys.space, keys.down, keys.space, "n");
+    expect(tui.frame()).toContain("Backlog (always enabled)");
+    expect(tui.frame()).toContain("Done (always enabled)");
+    // Space does not change Backlog. Drop In Refinement and In Development, and add a custom Stage.
+    await tui.press(keys.space, keys.down, keys.space, keys.down, keys.space, "n");
     await tui.type("QA");
     await step(tui, keys.enter);
     expect(tui.frame()).toContain("[x] QA");

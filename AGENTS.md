@@ -210,14 +210,15 @@ two front ends call `planOnboarding` and `applyOnboarding` in `src/services/onbo
 
 The first question is "defaults" or "customize". The defaults go directly to the summary. The steps are:
 
-| Step         | Default                                                  | Customization                               |
-| ------------ | -------------------------------------------------------- | ------------------------------------------- |
-| Name and key | The name of the directory, and the first 3 letters of it | Any valid name and key                      |
-| Stages       | All files in `stages/`, in the order of `DEFAULT_STAGES` | Remove default stages, or add custom stages |
-| Agent skills | All folders in `skills/`, for all harnesses              | Select the skills and the harnesses         |
+| Step         | Default                                                  | Customization                                     |
+| ------------ | -------------------------------------------------------- | ------------------------------------------------- |
+| Name and key | The name of the directory, and the first 3 letters of it | Any valid name and key                            |
+| Stages       | All files in `stages/`, in the order of `DEFAULT_STAGES` | Remove other default stages, or add custom stages |
+| Agent skills | All folders in `skills/`, for all harnesses              | Select the skills and the harnesses               |
 
 The last step is always a summary. It also tells the user where to edit each item.
 
+- Backlog and Done are always enabled. The user cannot remove them. If flags or JSON leave one out, Rowbly adds it.
 - A custom stage gets a placeholder prompt. A default stage gets its file from `stages/`.
 - A skill that a selected default stage uses shows `(required)`. The user cannot remove it.
 - The custom fields of the skills (`worktree`, `pull_request`) are added with the skills that use them.

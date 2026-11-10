@@ -1,6 +1,7 @@
 import { cancel, confirm, intro, isCancel, multiselect, note, select, text } from "@clack/prompts";
 import { checkProjectKey, checkStageKey, toProjectKey, toStageKey } from "../../services/config/config.js";
 import {
+  isAlwaysEnabledStage,
   type OnboardingInput,
   type OnboardingOptions,
   type OnboardingPlan,
@@ -51,22 +52,21 @@ async function askProject(options: OnboardingOptions): Promise<{ name: string; k
 }
 
 async function askStages(options: OnboardingOptions): Promise<string[]> {
-  const selected = answer(
+  const optional = options.stages.filter((stage) => !isAlwaysEnabledStage(stage));
+  const picked = answer(
     await multiselect({
-      message: "Which default stages do you want?",
-      options: options.stages.map((stage) => ({ value: stage, label: stage })),
-      initialValues: options.stages,
+      message: "Which other default stages do you want? Backlog and Done are always enabled.",
+      options: optional.map((stage) => ({ value: stage, label: stage })),
+      initialValues: optional,
       required: false,
     }),
   );
+  const selected = options.stages.filter((stage) => isAlwaysEnabledStage(stage) || picked.includes(stage));
   const custom = answer(
     await text({
       message: "Custom stages, separated by commas (each one gets a placeholder prompt)",
       placeholder: "QA, Staging",
-      validate: (value) => {
-        if (selected.length === 0 && splitNames(value).length === 0) return "Choose at least one stage";
-        return checkCustomStages(value);
-      },
+      validate: checkCustomStages,
     }),
   );
   return withCustomStages(selected, splitNames(custom));

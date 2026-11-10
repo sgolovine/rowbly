@@ -24,7 +24,7 @@ describe("OnboardingSummary", () => {
     );
     await settle(50);
     await tui.press();
-    expect(tui.frame()).toContain("Backlog → QA");
+    expect(tui.frame()).toContain("Backlog → QA → Done");
     expect(tui.frame()).toContain("Where to edit this later");
     expect(tui.frame()).toContain(".rowbly/stages/<KEY>.md");
     await tui.press(keys.enter);

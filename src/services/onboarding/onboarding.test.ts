@@ -6,6 +6,7 @@ import { pathExists } from "../files/files.js";
 import { useTempDir } from "../testProject/testProject.js";
 import {
   applyOnboarding,
+  isAlwaysEnabledStage,
   onboardingOptions,
   parseOnboardingInput,
   planOnboarding,
@@ -43,6 +44,16 @@ describe("onboarding", () => {
     expect(summarizePlan(plan).find((row) => row.label === "Skills")?.value).toContain("develop (required), factory");
   });
 
+  it("always creates Backlog and Done", async () => {
+    const keys = async (stages: string[]) =>
+      (await planOnboarding({ stages, skills: [] }, ctx())).stages.map((stage) => stage.key);
+    expect(await keys([])).toEqual(["BACKLOG", "DONE"]);
+    expect(await keys(["QA"])).toEqual(["BACKLOG", "QA", "DONE"]);
+    expect(await keys(["Backlog", "QA", "Done"])).toEqual(["BACKLOG", "QA", "DONE"]);
+    expect(isAlwaysEnabledStage("done")).toBe(true);
+    expect(isAlwaysEnabledStage("In Review")).toBe(false);
+  });
+
   it("puts custom stages before Done", () => {
     expect(withCustomStages(["Backlog", "Done"], ["QA", "qa", "Backlog"])).toEqual(["Backlog", "QA", "Done"]);
     expect(withCustomStages(["Backlog"], ["QA"])).toEqual(["Backlog", "QA"]);
@@ -66,7 +77,6 @@ describe("onboarding", () => {
   it.each([
     [{ key: "1x" }, "key"],
     [{ name: " " }, "name"],
-    [{ stages: [] }, "stages"],
     [{ stages: ["QA", "qa"], skills: [] }, "stages"],
     [{ stages: ["In Review"], skills: [] }, "skills"],
     [{ skills: ["nope"] }, "skills"],

@@ -38,7 +38,7 @@ describe("askOnboarding", () => {
     prompts.select.mockResolvedValue("customize");
     prompts.text.mockResolvedValueOnce("My App").mockResolvedValueOnce("APP").mockResolvedValueOnce("QA");
     prompts.multiselect
-      .mockResolvedValueOnce(["Backlog", "In Review", "Done"])
+      .mockResolvedValueOnce(["In Review"])
       .mockResolvedValueOnce(["factory"])
       .mockResolvedValueOnce(["codex"]);
     expect(await askOnboarding({ cwd: dir.path })).toEqual({
@@ -48,6 +48,11 @@ describe("askOnboarding", () => {
       skills: ["review", "factory"],
       harnesses: ["codex"],
     });
+    expect(prompts.multiselect.mock.calls[0]?.[0].options.map((option: { value: string }) => option.value)).toEqual([
+      "In Refinement",
+      "In Development",
+      "In Review",
+    ]);
     expect(prompts.multiselect.mock.calls[1]?.[0].options).toContainEqual({
       value: "review",
       label: "review (required)",

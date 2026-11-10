@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { checkStageKey, toStageKey } from "../../../../services/config/config.js";
 import {
+  isAlwaysEnabledStage,
   type OnboardingInput,
   onboardingOptions,
   requiredSkills,
@@ -93,10 +94,14 @@ export function Onboarding({
         items={stageChoices.map((stage) => ({
           value: stage,
           label: stage,
-          description: choices.custom.includes(stage) ? "custom" : undefined,
+          description: isAlwaysEnabledStage(stage)
+            ? "(always enabled)"
+            : choices.custom.includes(stage)
+              ? "custom"
+              : undefined,
+          locked: isAlwaysEnabledStage(stage),
         }))}
         selected={stages}
-        emptyError="Choose at least one Stage"
         add={{
           label: "New Stage",
           onAdd: (text) => {

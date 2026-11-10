@@ -30,7 +30,7 @@ describe("init", () => {
     const args = ["init", "--stage", "Backlog", "--stage", "QA", "--skill", "factory", "--harness", "codex"];
     expect((await runCli(args, dir.path)).exitCode).toBe(0);
     const project = await getProject({ cwd: dir.path });
-    expect(project.stages.map((stage) => stage.key)).toEqual(["BACKLOG", "QA"]);
+    expect(project.stages.map((stage) => stage.key)).toEqual(["BACKLOG", "QA", "DONE"]);
     expect(project.skills).toEqual([{ name: "factory", harnesses: ["codex"] }]);
   });
 
@@ -44,7 +44,7 @@ describe("init", () => {
     await runCli(["init", "--input", input, "--name", "From flag"], dir.path);
     const project = await getProject({ cwd: dir.path });
     expect(project.projectName).toBe("From flag");
-    expect(project.stages.map((stage) => stage.key)).toEqual(["QA"]);
+    expect(project.stages.map((stage) => stage.key)).toEqual(["BACKLOG", "QA", "DONE"]);
     expect(await readFile(join(dir.path, ".rowbly/stages/QA.md"), "utf8")).toContain("placeholder");
   });
 

@@ -108,7 +108,7 @@ A flag with `(repeat)` can occur more than one time.
 
 | Command                                               | JSON result | Notes                                                       |
 | ----------------------------------------------------- | ----------- | ----------------------------------------------------------- |
-| `rowbly init [--defaults] [--name <name>] [--key <key>] [--stage <stage>] [--skill <name>] [--no-skills] [--harness <id>] [--input <json\|file\|->]` | Project, `installed`, `edits` | Creates `.rowbly/`, the Stages and the skills. Gives `CONFLICT` if `.rowbly/` exists. |
+| `rowbly init [--defaults] [--name <name>] [--key <key>] [--stage <stage>] [--skill <name>] [--no-skills] [--harness <id>] [--input <json\|file\|->]` | Project, `installed`, `edits` | Creates `.rowbly/`, the Stages and the skills. Always adds Backlog and Done. Gives `CONFLICT` if `.rowbly/` exists. |
 | `rowbly update-project [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
 | `rowbly update-project --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
 | `rowbly get-instructions`                             | Instructions | Reads `.rowbly/ROWBLY.md`. Works if the file does not exist. |
