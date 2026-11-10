@@ -108,8 +108,85 @@ Worker assignment belongs to the supervisor. The scanner does not assign workers
 | Event | Action |
 | --- | --- |
 | `watching` | Tell the user that the factory runs. |
-| `stories` | Check worker status, then do the steps in "Assign workers" for each Story in the list. |
+| `stories` | Check worker status, assign workers, then do "Commit Project changes", including when no worker starts. |
 | `error` | Tell the user the message. Stop if `.rowbly/` no longer exists. Otherwise, continue to scan. |
+
+## Commit Project changes
+
+The supervisor commits the canonical Project state after each successful scan, including the startup scan.
+Include changes from workers and people, without an author filter.
+Commit only files inside the canonical `<root>/.rowbly/` that Git does not ignore.
+Include new files, changed files and deleted files.
+Do not commit source files, worker records or a worker's separate `.rowbly/` copy through this procedure.
+Do not push these commits.
+
+### Shared write lock
+
+Before the first scan, select one absolute `<write-lock>` path outside the Project files.
+In a Git repository, use `rowbly-project-write.lock` inside the absolute Git common directory.
+Get that directory with `git -C <root> rev-parse --path-format=absolute --git-common-dir`.
+Without Git, use a lock file in the temporary directory that holds the worker records.
+Use an existing shared lock if the caller supplies one.
+Save the path with the worker records for restarts.
+Give the same path to every worker and supervisor for this Project.
+
+Use `flock <write-lock>` for each canonical Project write and each canonical Git mutation.
+Keep the lock from the Git status check through the end of the commit.
+Run dependent commands in one process under the lock, not in separate lock calls.
+Do not hold the lock while a worker does its Story work.
+Ask other writers to use the same lock before they change canonical files.
+The lock coordinates only writers that use it. Rowbly agent locks do not replace this lock.
+
+### Commit procedure
+
+Run this procedure in the canonical checkout, never in a worker's worktree.
+
+1. Check for a Git repository with `git -C <root> rev-parse --show-toplevel`.
+2. If none exists, report that automatic commits are unavailable. Continue the factory without Git commits.
+3. Take the shared write lock.
+4. Find the repository root and the repository-relative path of `<root>/.rowbly/` again under the lock.
+5. Read `git -C <repository> status --porcelain=v1 -z --untracked-files=all` with that path after `--`.
+6. Set `status.renames=false` for this command, so a rename has separate old and new paths.
+7. Parse the NUL-separated records. Keep each complete path, including spaces and newlines.
+8. If the list has an unresolved merge conflict, report it. Release the lock without a Git mutation.
+9. If the list is empty, release the lock. Do not create an empty commit.
+10. Stage only the listed paths with `git --literal-pathspecs -C <repository> add --all -- <paths...>`.
+11. Commit those paths with `git --literal-pathspecs -C <repository> commit --only -m <message> -- <paths...>`.
+12. Report the commit ID and the Project change. Release the lock.
+
+Use an argument array for paths. Do not split paths on whitespace or insert them into shell code.
+Do not use `git add -A` without paths, `git commit -a`, or a commit without `--only` and explicit paths.
+Git status excludes ignored new files. Tracked files remain eligible, as in normal Git status.
+The commit records the current working-tree content of each eligible file.
+Before staging, check for Project index content that differs from both HEAD and the working tree.
+If such content exists, report the paths and stop this attempt before a mutation.
+Ask the writer to resolve the staged version first. Do not overwrite that version.
+Do not use an earlier scan's path list after you acquire the lock.
+
+Use a Conventional Commit message that identifies the Project change.
+For example, use `chore(rowbly): record ROW-06 move to in review` for that change.
+For several changes, use `chore(rowbly): record project changes after scan` and describe the paths in the body.
+
+`--only` keeps unrelated staged changes outside the commit and leaves them staged.
+Never reset the index, discard files, amend a commit, or bypass a failed hook.
+If any Git command fails, report the command, exit status and error text.
+Keep all Project files and any staged changes. Stop this commit attempt and release the lock.
+Retry on the next scan after the failure is repaired; do not repeat an unchanged failure without a report.
+
+### Concurrent commits and worker rules
+
+Workers write canonical Project files through `rowbly -C <root> --json ...` under the shared lock.
+Their source commits stay in their own worktrees.
+Repository instructions that tell workers to commit their own files still apply to those source changes.
+The supervisor owns commits of canonical Project files, including files that workers change.
+Workers must not stage their worktree's `.rowbly/` copy to satisfy a commit instruction.
+
+If an instruction tells a worker to commit canonical Project files, use this same lock and path procedure.
+The supervisor checks Git status again after that worker releases the lock.
+Files that the worker already committed produce no second commit.
+Later edits remain eligible for the next scan.
+A lock release between two scans does not discard or restore any file.
+If a writer ignores the shared lock, report the race; do not reset or overwrite its changes.
 
 ## Assign workers
 
@@ -146,6 +223,7 @@ Start one worker for each eligible Story. Use the type of worker from the checkl
 - Use the model and the effort level that the Stage prompt names. If the prompt names none, use the default of the harness.
 - If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout. For a thread, use the branch name `<story>-<KEY>` in lower case.
 - Give the worker the first message below. Replace each value in angle brackets.
+- Include the absolute shared write lock path selected in "Commit Project changes".
 - Get the Project instructions from the `instructions` value of `rowbly -C <root> --json get-instructions`.
 
 ```markdown
@@ -153,6 +231,12 @@ You are a factory worker. Do the work of Stage <KEY> for Story <story>.
 
 Run each Rowbly command as `rowbly -C <root> --json ...`. Do not use a different Project.
 A Git worktree has its own copy of `.rowbly/`. Do not change that copy.
+
+Serialize canonical Project writes and canonical Git mutations with `flock <write-lock>`.
+The supervisor commits canonical `.rowbly/` changes after each scan.
+Commit your own source changes in your worktree as the repository instructions specify.
+Do not include your worktree's `.rowbly/` copy in those commits.
+For a required canonical Project commit, use the supervisor's lock and explicit path procedure.
 
 Read the Story with `get-story` and read its Specs if Specs are on.
 Do only the work in the Stage prompt. Move the Story only as the Stage prompt tells you.
