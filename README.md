@@ -37,7 +37,14 @@ You can also run it directly with `npx`:
 npx rowbly
 ```
 
-To get started, run either `rowbly` for interactive onboarding or by running `rowbly init`. This will walk you through the process of setting up a software factory for your project. Rowbly ships with sensible defaults so you can get up and running quickly.
+Once started, initialize rowbly in one of two ways:
+
+```sh
+
+rowbly # runs interactive TUI onboarding
+
+rowbly init # same process as above but without the TUI
+```
 
 Press `?` in the terminal UI to see all the keys. Run `rowbly --help` to see all the commands.
 
