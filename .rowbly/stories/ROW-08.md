@@ -1,7 +1,7 @@
 ---
 title: Store factory state in .rowbly/state.json
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 8
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-08-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/187
 ---
