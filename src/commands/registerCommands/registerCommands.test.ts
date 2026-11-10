@@ -8,6 +8,10 @@ describe("registerCommands", () => {
 
   it("registers every subcommand", () => {
     expect(createProgram().commands.map((command) => command.name())).toEqual([
+      "add-attachment",
+      "list-attachments",
+      "open-attachment",
+      "remove-attachment",
       "init",
       "update-project",
       "get-instructions",

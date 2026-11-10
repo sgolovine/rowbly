@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { type FormField, type FormModalDelete, type FormValues, Modal } from "../../../components/index.js";
 import { ShellContext } from "../../../hooks/index.js";
@@ -6,13 +7,13 @@ import type { KeyHint } from "../../../keymap.js";
 import { StoryModalBody, type StoryModalConfirm } from "../StoryModalBody/index.js";
 
 /**
- * Edits one Story in a screen Modal with two tabs, for a project that has Specs on: General has the Story
- * form, and Specs has the specs of the Story. `esc` and the `✕` close the Modal; with unsaved changes, they
- * first ask before the changes are discarded.
+ * Edits one Story with General and Attachments tabs, plus Specs when the Project has Specs on.
+ * `esc` and the `✕` ask before they discard unsaved text or images.
  */
 export function StoryModal({
   ctx,
   storyId,
+  specs = true,
   title,
   fields,
   initialValues,
@@ -22,11 +23,12 @@ export function StoryModal({
 }: {
   ctx: ServiceContext;
   storyId: string;
+  specs?: boolean;
   title: string;
   fields: readonly FormField[];
   initialValues: FormValues;
   /** May throw: a `ValidationError` shows its issues under the fields, any other error becomes a toast. */
-  onSubmit(values: FormValues): void | Promise<void>;
+  onSubmit(values: FormValues, attachments?: readonly PendingImage[]): void | Promise<void>;
   onClose(): void;
   onDelete: FormModalDelete;
 }) {
@@ -40,8 +42,10 @@ export function StoryModal({
   return (
     <Modal title={title} size="screen" flush hints={hints} onClose={confirming === null ? close : undefined}>
       <StoryModalBody
+        key={`${ctx.cwd}:${storyId}`}
         ctx={ctx}
         storyId={storyId}
+        specs={specs}
         fields={fields}
         initialValues={initialValues}
         onSubmit={onSubmit}

@@ -21,6 +21,7 @@ describe("story", () => {
       await updateStage({ key: "BACKLOG", enabled: false }, project.ctx);
       const story = await createStory({ title: " First ", description: "Body" }, project.ctx);
       expect(story).toEqual({
+        attachmentCount: 0,
         id: "ROW-01",
         number: 1,
         title: "First",

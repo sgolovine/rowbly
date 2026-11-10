@@ -78,7 +78,7 @@ describe("StoryModalBody", () => {
     const { tui, submit } = await setup();
     await tui.type("!");
     await tui.press(keys.ctrl("s"));
-    await vi.waitFor(() => expect(submit).toHaveBeenCalledWith({ title: "Login!" }));
+    await vi.waitFor(() => expect(submit).toHaveBeenCalledWith({ title: "Login!" }, []));
   });
 
   it("saves the Story while a spec has text that is not written yet", async () => {
@@ -93,7 +93,7 @@ describe("StoryModalBody", () => {
   it("keeps the text of the form when the tab changes", async () => {
     const { tui } = await setup();
     await tui.type("!");
-    await tui.press(keys.shiftTab, keys.shiftTab);
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab);
     expect(tui.frame()).toContain("Login!");
   });
 
@@ -101,7 +101,7 @@ describe("StoryModalBody", () => {
     const { tui, confirmDelete } = await setup();
     await tui.press(keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).not.toContain("Delete it?");
-    await tui.press(keys.shiftTab, keys.ctrl("d"));
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).toContain("Delete it?");
     await tui.press("y");
     expect(confirmDelete).toHaveBeenCalledOnce();

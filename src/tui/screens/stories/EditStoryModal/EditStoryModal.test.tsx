@@ -81,3 +81,50 @@ describe("EditStoryModal", () => {
     expect(tui.frame()).toContain("Delete ROW-01 Fix login? You cannot undo this.");
   });
 });
+
+describe("EditStoryModal image drafts", () => {
+  const project = useTestProject();
+  it("keeps draft images across tabs, confirms discard, and saves them once", async () => {
+    const reader = vi.spyOn(await import("../../../../services/clipboard/clipboard.js"), "readClipboardImage");
+    reader.mockResolvedValue({ bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), type: "image/png" });
+    const story = await createStory({ title: "Images" }, project.ctx);
+    const onClose = vi.fn();
+    const onSaved = vi.fn();
+    const tui = await renderTui(
+      <EditStoryModal
+        ctx={project.ctx}
+        story={story}
+        stages={await listStages(project.ctx)}
+        customFields={[]}
+        onSaved={onSaved}
+        onDeleted={() => {}}
+        onClose={onClose}
+      />,
+    );
+    await tui.press(keys.ctrl("v"));
+    expect(reader).toHaveBeenCalled();
+    expect(tui.frame()).toContain("1 pending image");
+    const { listAttachments } = await import("../../../../services/attachment/attachment.js");
+    expect(await listAttachments({ story: story.id }, project.ctx)).toEqual([]);
+    await tui.click("Attachments");
+    expect(tui.frame()).toContain("1 pending image");
+    await tui.press(keys.escape);
+    expect(tui.frame()).toContain("Close and discard unsaved changes?");
+    await tui.press("n");
+    const storyModule = await import("../../../../services/story/story.js");
+    const save = vi.spyOn(storyModule, "updateStory").mockRejectedValueOnce(new Error("Save failed"));
+    await tui.press(keys.ctrl("s"));
+    await vi.waitFor(() => expect(tui.toasts.list().some((t) => t.message.includes("Save failed"))).toBe(true));
+    expect(tui.frame()).toContain("1 pending image");
+    expect(await listAttachments({ story: story.id }, project.ctx)).toEqual([]);
+    await tui.press(keys.ctrl("s"));
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+    expect(await listAttachments({ story: story.id }, project.ctx)).toHaveLength(1);
+    expect(tui.frame()).not.toContain("pending image");
+    await tui.press(keys.ctrl("v"), keys.escape, "y");
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(await listAttachments({ story: story.id }, project.ctx)).toHaveLength(1);
+    save.mockRestore();
+    reader.mockRestore();
+  });
+});

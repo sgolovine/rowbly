@@ -1,5 +1,6 @@
-import { Box, useInput } from "ink";
-import { useEffect, useMemo, useState } from "react";
+import { Box, Text, useInput } from "ink";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   Button,
@@ -13,8 +14,18 @@ import {
   Tabs,
   useCovered,
 } from "../../../components/index.js";
-import { LayoutContext, useEscape, useIsActive, useKeyCapture, useLayout } from "../../../hooks/index.js";
+import {
+  IMAGE_PASTE_HINT,
+  LayoutContext,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
+  useLayout,
+  useStoryPaste,
+} from "../../../hooks/index.js";
 import { isSubmitKey, type KeyHint } from "../../../keymap.js";
+import { theme } from "../../../theme.js";
+import { AttachmentsTab } from "../AttachmentsTab/index.js";
 import { SpecsTab } from "../SpecsTab/index.js";
 
 /** Which confirmation is on top of the Modal. */
@@ -30,16 +41,16 @@ const NO_HINTS: readonly KeyHint[] = [];
 /** The Form leaves `shift+tab` and the save key to this body, which changes the tab and asks the Form to save. */
 const NAVIGATION = { extraHints: NO_HINTS, register: () => () => {} };
 const GENERAL = 0;
-const SPECS = 1;
 
 /**
- * The inside of the `StoryModal`. `shift+tab` or a click changes the tab. Both tabs stay mounted, so that a
+ * The inside of the `StoryModal`. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
  * change of tab keeps the text that is not saved. The Delete Button and `ctrl+d` of the General tab ask
  * before they delete the Story.
  */
 export function StoryModalBody({
   ctx,
   storyId,
+  specs = true,
   fields,
   initialValues,
   onSubmit,
@@ -52,9 +63,10 @@ export function StoryModalBody({
 }: {
   ctx: ServiceContext;
   storyId: string;
+  specs?: boolean;
   fields: readonly FormField[];
   initialValues: FormValues;
-  onSubmit(values: FormValues): void | Promise<void>;
+  onSubmit(values: FormValues, attachments?: readonly PendingImage[]): void | Promise<void>;
   /** Closes the Modal now. */
   onClose(): void;
   /** Closes the Modal, or asks first if there are unsaved changes. */
@@ -75,13 +87,19 @@ export function StoryModalBody({
   const [submitRequest, setSubmitRequest] = useState(0);
   const idle = active && !covered && confirming === null;
   const general = tab === GENERAL;
+  const attachmentTab = tab === (specs ? 2 : 1);
+  const [saving, setSaving] = useState(false);
+  const savingNow = useRef(false);
+  const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, idle && !saving);
+  const [attachmentHints, setAttachmentHints] = useState<readonly KeyHint[]>(NO_HINTS);
+  const [attachmentTask, setAttachmentTask] = useState(false);
 
   useKeyCapture(active, { text: false, escape: true });
-  useEscape(idle && !specEditing, onRequestClose);
+  useEscape(idle && !specEditing && !attachmentTask, onRequestClose);
   useInput(
     (input, key) => {
-      if (key.tab && key.shift) setTab(general ? SPECS : GENERAL);
-      else if (general && isSubmitKey(input, key)) setSubmitRequest((n) => n + 1);
+      if (key.tab && key.shift) setTab((n) => (n + 1) % (specs ? 3 : 2));
+      else if (!specEditing && !attachmentTask && isSubmitKey(input, key)) setSubmitRequest((n) => n + 1);
       else if (general && key.ctrl && input === "d") onConfirming("delete");
     },
     { isActive: idle },
@@ -90,7 +108,9 @@ export function StoryModalBody({
   const hints: readonly KeyHint[] = general
     ? [{ key: "ctrl+d", description: "delete" }]
     : [
-        ...specHints,
+        ...(attachmentTab ? attachmentHints : specHints),
+        { key: "ctrl+s", description: "save" },
+        IMAGE_PASTE_HINT,
         { key: "shift+tab", description: "next tab", secondary: true },
         ...(specEditing ? [] : [{ key: "esc", description: "close" }]),
       ];
@@ -98,30 +118,43 @@ export function StoryModalBody({
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
   useEffect(() => onHints(hints), [hintsKey, onHints]);
 
+  const summaryRows = paste.summary ? 1 : 0;
   const generalLayout = useMemo(
     () => ({
       width: Math.max(1, layout.width - 2 * PADDING_X),
-      height: layout.height === undefined ? undefined : Math.max(1, layout.height - TABS_HEIGHT - GENERAL_PADDING_Y),
+      height:
+        layout.height === undefined
+          ? undefined
+          : Math.max(1, layout.height - TABS_HEIGHT - GENERAL_PADDING_Y - summaryRows),
     }),
-    [layout.width, layout.height],
+    [layout.width, layout.height, summaryRows],
   );
   const specsLayout = useMemo(
     () => ({
       width: layout.width,
-      height: layout.height === undefined ? undefined : Math.max(1, layout.height - TABS_HEIGHT),
+      height: layout.height === undefined ? undefined : Math.max(1, layout.height - TABS_HEIGHT - summaryRows),
     }),
-    [layout.width, layout.height],
+    [layout.width, layout.height, summaryRows],
   );
   return (
     <Box flexDirection="column" height={layout.height}>
       <Box paddingX={PADDING_X} paddingTop={1} flexShrink={0}>
         <Tabs
-          tabs={["General", specCount === undefined ? "Specs" : `Specs ${specCount}`]}
+          tabs={[
+            "General",
+            ...(specs ? [specCount === undefined ? "Specs" : `Specs ${specCount}`] : []),
+            "Attachments",
+          ]}
           selected={tab}
           onSelect={setTab}
           active={idle}
         />
       </Box>
+      {paste.summary && (
+        <Box paddingX={PADDING_X}>
+          <Text color={theme.inkMuted}>{paste.summary}</Text>
+        </Box>
+      )}
       <LayoutContext.Provider value={generalLayout}>
         <Box display={general ? "flex" : "none"} flexDirection="column" paddingX={PADDING_X} paddingY={1}>
           <ScrollBody active={idle && general} height={generalLayout.height}>
@@ -129,7 +162,19 @@ export function StoryModalBody({
               <Form
                 fields={fields}
                 initialValues={initialValues}
-                onSubmit={onSubmit}
+                onSubmit={async (values) => {
+                  if (paste.busy || savingNow.current) return;
+                  savingNow.current = true;
+                  setSaving(true);
+                  try {
+                    await onSubmit(values, paste.pending);
+                    paste.saved();
+                  } finally {
+                    savingNow.current = false;
+                    setSaving(false);
+                  }
+                }}
+                extraHints={[IMAGE_PASTE_HINT]}
                 isActive={general && confirming === null}
                 submitRequest={submitRequest}
               />
@@ -148,14 +193,27 @@ export function StoryModalBody({
         </Box>
       </LayoutContext.Provider>
       <LayoutContext.Provider value={specsLayout}>
-        <Box display={general ? "none" : "flex"} flexDirection="column">
-          <SpecsTab
+        <Box display={!general && !attachmentTab ? "flex" : "none"} flexDirection="column">
+          {specs && (
+            <SpecsTab
+              ctx={ctx}
+              storyId={storyId}
+              selected={specs && !general && !attachmentTab && confirming === null}
+              onCount={setSpecCount}
+              onEditing={setSpecEditing}
+              onHints={setSpecHints}
+            />
+          )}
+        </Box>
+      </LayoutContext.Provider>
+      <LayoutContext.Provider value={generalLayout}>
+        <Box display={attachmentTab ? "flex" : "none"} flexDirection="column" paddingX={PADDING_X} paddingY={1}>
+          <AttachmentsTab
             ctx={ctx}
             storyId={storyId}
-            selected={!general && confirming === null}
-            onCount={setSpecCount}
-            onEditing={setSpecEditing}
-            onHints={setSpecHints}
+            selected={attachmentTab && confirming === null}
+            onHints={setAttachmentHints}
+            onTask={setAttachmentTask}
           />
         </Box>
       </LayoutContext.Provider>
