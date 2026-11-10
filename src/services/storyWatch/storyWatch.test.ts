@@ -43,3 +43,22 @@ describe("watchStories", () => {
     await expect(watchStories(() => {}, { cwd: empty.path })).rejects.toBeInstanceOf(NotFoundError);
   });
 });
+
+describe("attachment file watch", () => {
+  const project = useTestProject();
+  it("refreshes saved counts after an attachment add", async () => {
+    const { addAttachment } = await import("../attachment/attachment.js");
+    await createStory({ title: "T" }, project.ctx);
+    const onChange = vi.fn();
+    const stop = await watchStories(onChange, project.ctx);
+    try {
+      await addAttachment(
+        { story: "1", image: { name: "image.png", bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]) } },
+        project.ctx,
+      );
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
+    } finally {
+      stop();
+    }
+  });
+});

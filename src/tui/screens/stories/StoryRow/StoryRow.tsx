@@ -41,6 +41,11 @@ export function StoryRow({
             <Text color={theme.accent}>{story.id}</Text> {story.title}
           </Text>
         </Box>
+        {!!story.attachmentCount && (
+          <Box flexShrink={0} paddingLeft={2}>
+            <Text color={theme.inkMuted}>▧ {story.attachmentCount}</Text>
+          </Box>
+        )}
         {story.agentLock && (
           <Box flexShrink={0} paddingLeft={2}>
             <Text color={theme.inkMuted}>▶ {shortAgentName(story.agentLock.agent)}</Text>

@@ -24,6 +24,10 @@ describe("registerCommands", () => {
   it("registers only the resource groups and standalone commands", async () => {
     const program = createProgram();
     expect(program.commands.map((command) => command.name())).toEqual([
+      "add-attachment",
+      "list-attachments",
+      "open-attachment",
+      "remove-attachment",
       "init",
       "project",
       "doctor",

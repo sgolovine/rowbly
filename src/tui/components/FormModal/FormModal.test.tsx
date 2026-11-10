@@ -105,3 +105,20 @@ describe("FormModal", () => {
     expect(t.frame()).not.toContain("Delete ROW-01?");
   });
 });
+
+it("shows draft content and extra key hints with the form", async () => {
+  const { Text } = await import("ink");
+  const tui = await renderTui(
+    <FormModal
+      title="Draft"
+      fields={fields}
+      onSubmit={() => {}}
+      onClose={() => {}}
+      extraHints={[{ key: "ctrl+v", description: "paste image" }]}
+    >
+      <Text>1 pending image</Text>
+    </FormModal>,
+  );
+  expect(tui.frame()).toContain("1 pending image");
+  expect(tui.frame()).toContain("ctrl+v paste image");
+});

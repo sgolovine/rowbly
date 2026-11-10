@@ -1,5 +1,12 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
+import {
+  attachmentDir,
+  attachmentOwners,
+  noSymlink,
+  readAttachments,
+  writeAttachments,
+} from "../attachmentFiles/attachmentFiles.js";
 import { labelFromKey, type ProjectConfig, parseConfig, STAGE_KEY_PATTERN, writeConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
@@ -86,6 +93,7 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
   await checkStories(paths, config, rel, report);
   await checkSpecs(paths, config, rel, report);
   await checkSkills(paths, config, ctx, rel, report);
+  await checkAttachments(paths, rel, report);
 
   return { root: paths.root, issues, ok: !issues.some((issue) => issue.severity === "error" && !issue.fixed) };
 }
@@ -465,4 +473,67 @@ async function checkSkills(
 function labelFromSlug(slug: string): string {
   const text = slug.replace(/-/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+async function checkAttachments(paths: ProjectPaths, rel: (path: string) => string, report: Report): Promise<void> {
+  let owners: string[];
+  try {
+    owners = await attachmentOwners(paths);
+  } catch (err) {
+    await report({ severity: "error", message: String(err), file: rel(join(paths.dir, "attachments")) });
+    return;
+  }
+  for (const owner of owners) {
+    const file = join(paths.dir, "attachments", owner, "manifest.json");
+    try {
+      const dir = await attachmentDir(paths, owner);
+      const records = await readAttachments(dir);
+      const kept: typeof records = [];
+      const owned = await pathExists(join(paths.storiesDir, `${owner}.md`));
+      for (const a of records) {
+        const png = join(dir, `${a.id}.png`);
+        await noSymlink(png);
+        if (await pathExists(png)) kept.push(a);
+        else
+          await report(
+            {
+              severity: "error",
+              message: `Attachment ${a.name} has no PNG`,
+              file: rel(png),
+              fix: "Remove the missing-file reference",
+            },
+            () =>
+              writeAttachments(
+                dir,
+                records.filter((entry) => entry.id !== a.id),
+              ),
+          );
+      }
+      // Write the combined repair, so multiple missing files are removed together.
+      if (kept.length !== records.length)
+        await report(
+          {
+            severity: "warning",
+            message: "Attachment metadata references missing PNGs",
+            file: rel(file),
+            fix: "Remove missing-file references",
+          },
+          () => writeAttachments(dir, kept),
+        );
+      for (const name of await readdir(dir)) {
+        if (name.endsWith(".png") && (!owned || !records.some((a) => `${a.id}.png` === name)))
+          await report({
+            severity: "warning",
+            message: "Orphan PNG: preserve it for recovery",
+            file: rel(join(dir, name)),
+          });
+      }
+    } catch (err) {
+      await report({
+        severity: "error",
+        message: `Malformed attachment metadata: ${err instanceof Error ? err.message : String(err)}`,
+        file: rel(file),
+      });
+    }
+  }
 }

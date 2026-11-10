@@ -50,3 +50,15 @@ const themes = {
 const background = Number(process.env.COLORFGBG?.split(";").at(-1) ?? 0);
 export const theme = themes[[7, 15].includes(background) ? "light" : "dark"];
 export const stageColors = { backlog: theme.stageBacklog, board: theme.stageBoard, done: theme.stageDone };
+
+/** Local time for saved records. */
+export function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}

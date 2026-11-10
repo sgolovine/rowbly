@@ -1,9 +1,11 @@
+import { useRef, useState } from "react";
 import type { CustomField } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { createStory, type Story } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { FormModal, type FormValues } from "../../../components/index.js";
-import { useToast } from "../../../hooks/index.js";
+import { IMAGE_PASTE_HINT, type useStoryPaste, useToast } from "../../../hooks/index.js";
+import { NewStoryImages } from "../NewStoryImages/index.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../storyForm.js";
 
 /**
@@ -27,18 +29,28 @@ export function NewStoryModal({
   onClose(): void;
 }) {
   const toast = useToast();
+  const [saving, setSaving] = useState(false);
+  const paste = useRef<ReturnType<typeof useStoryPaste> | null>(null);
   const submit = async (values: FormValues) => {
-    const story = await createStory(
-      {
-        title: String(values.title ?? ""),
-        stage: typeof values.stage === "string" ? values.stage : undefined,
-        description: String(values.description ?? ""),
-        fields: customFieldInput(customFields, values),
-      },
-      ctx,
-    );
-    toast.push("info", `Created ${story.id}`);
-    onCreated(story);
+    if (paste.current?.busy) return;
+    setSaving(true);
+    try {
+      const story = await createStory(
+        {
+          attachments: paste.current?.pending,
+          title: String(values.title ?? ""),
+          stage: typeof values.stage === "string" ? values.stage : undefined,
+          description: String(values.description ?? ""),
+          fields: customFieldInput(customFields, values),
+        },
+        ctx,
+      );
+      paste.current?.saved();
+      toast.push("info", `Created ${story.id}`);
+      onCreated(story);
+    } finally {
+      setSaving(false);
+    }
   };
   return (
     <FormModal
@@ -52,6 +64,14 @@ export function NewStoryModal({
       }}
       onSubmit={submit}
       onClose={onClose}
-    />
+      extraHints={[IMAGE_PASTE_HINT]}
+    >
+      <NewStoryImages
+        enabled={!saving}
+        onPaste={(value) => {
+          paste.current = value;
+        }}
+      />
+    </FormModal>
   );
 }

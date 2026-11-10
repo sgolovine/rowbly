@@ -1,4 +1,11 @@
-import { rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import {
+  attachmentDir,
+  type PendingImage,
+  prepareImages,
+  readAttachments,
+  withAttachments,
+} from "../attachmentFiles/attachmentFiles.js";
 import { type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import { coerceFieldValue, type FieldValue, fieldValueError } from "../fields/fields.js";
@@ -36,6 +43,8 @@ export interface Story {
   /** The agent that works on the story in its current stage, `null` when there is none. */
   agentLock: StoryAgentLock | null;
   path: string;
+  /** Saved images only. */
+  attachmentCount?: number;
 }
 
 /**
@@ -45,6 +54,7 @@ export interface Story {
 export type FieldInput = Record<string, unknown>;
 
 export interface CreateStoryInput {
+  attachments?: readonly PendingImage[];
   title: string;
   /** A stage key. Defaults to the first enabled stage. */
   stage?: string;
@@ -53,6 +63,7 @@ export interface CreateStoryInput {
 }
 
 export interface UpdateStoryInput {
+  attachments?: readonly PendingImage[];
   id: string;
   title?: string;
   stage?: string;
@@ -160,6 +171,7 @@ function checkTitle(title: string, issues: Issue[]): string {
 }
 
 export async function createStory(input: CreateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
+  const images = prepareImages(input.attachments ?? [], true);
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const issues: Issue[] = [];
@@ -175,18 +187,63 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   const files = await readStoryFiles(paths);
   const number = Math.max(0, ...files.map((file) => file.number)) + 1;
   const path = storyPath(paths, config.projectKey, number);
-  await writeStoryFile(config, path, { data, body: input.description ?? "" });
-  return getStory({ id: String(number) }, ctx);
+  return withAttachments(
+    await attachmentDir(paths, formatStoryId(config.projectKey, number)),
+    images,
+    ctx.now?.() ?? new Date(),
+    async () => {
+      try {
+        await writeStoryFile(config, path, { data, body: input.description ?? "" });
+        return await getStory({ id: String(number) }, ctx);
+      } catch (err) {
+        await rm(path, { force: true });
+        throw err;
+      }
+    },
+  );
 }
 
 export async function getStory(input: { id: string }, ctx: ServiceContext = {}): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const file = await findStoryFile(paths, config, input.id);
-  return toStory(config, file, positionIn(await readStoryFiles(paths), file));
+  const story = toStory(config, file, positionIn(await readStoryFiles(paths), file));
+  story.attachmentCount = (await readAttachments(await attachmentDir(paths, story.id))).length;
+  return story;
 }
 
 export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
+  const images = prepareImages(input.attachments ?? [], true);
+  if (!images.length) {
+    const story = await updateStoryFields(input, ctx);
+    story.attachmentCount = (await readAttachments(await attachmentDir(await findProject(ctx), story.id))).length;
+    return story;
+  }
+  const paths = await findProject(ctx);
+  const story = await getStory({ id: input.id }, ctx);
+  const destination = (input.stage ?? story.stage).trim().toUpperCase();
+  const reordered = destination !== story.stage || input.position !== undefined;
+  const before = (await readStoryFiles(paths)).filter(
+    (file) => file.id === story.id || (reordered && file.doc.data.stage === destination),
+  );
+  const snapshots = await Promise.all(
+    before.map(async (file) => ({ path: file.path, bytes: await readFile(file.path) })),
+  );
+  return withAttachments(await attachmentDir(paths, story.id), images, ctx.now?.() ?? new Date(), async () => {
+    try {
+      await updateStoryFields(input, ctx);
+      return await getStory({ id: input.id }, ctx);
+    } catch (err) {
+      for (const snapshot of snapshots) {
+        const current = await readFile(snapshot.path);
+        if (!current.equals(snapshot.bytes)) await writeFile(snapshot.path, snapshot.bytes);
+      }
+      throw err;
+    }
+  });
+}
+
+async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const file = await findStoryFile(paths, config, input.id);
@@ -276,14 +333,21 @@ export async function deleteStory(input: { id: string }, ctx: ServiceContext = {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const file = await findStoryFile(paths, config, input.id);
+  await rm(await attachmentDir(paths, file.id), { recursive: true, force: true });
   await rm(file.path);
   // A spec that loses its last Story stays, and `doctor` reports it as an orphan.
   await rewriteSpecLinks(paths, (stories) => stories.filter((id) => id !== file.id));
   return { id: file.id };
 }
 
-function matchesQuery(story: Story, words: string[]): boolean {
-  const text = [story.id, story.title, story.description, ...Object.values(story.fields).filter((v) => v !== null)]
+function matchesQuery(story: Story, words: string[], names: string[]): boolean {
+  const text = [
+    ...names,
+    story.id,
+    story.title,
+    story.description,
+    ...Object.values(story.fields).filter((v) => v !== null),
+  ]
     .join("\n")
     .toLowerCase();
   return words.every((word) => text.includes(word));
@@ -318,10 +382,21 @@ export async function searchStories(input: SearchStoriesInput = {}, ctx: Service
     position.set(key, (position.get(key) ?? 0) + 1);
     return toStory(config, file, position.get(key));
   });
+  const names = new Map<string, string[]>();
+  await Promise.all(
+    stories.map(async (story) => {
+      const attachments = await readAttachments(await attachmentDir(paths, story.id));
+      story.attachmentCount = attachments.length;
+      names.set(
+        story.id,
+        attachments.map((a) => a.name),
+      );
+    }),
+  );
   return stories.filter(
     (story) =>
       (!stage || story.stage === stage.key) &&
       Object.entries(fields).every(([key, value]) => story.fields[key] === value) &&
-      matchesQuery(story, words),
+      matchesQuery(story, words, names.get(story.id) ?? []),
   );
 }

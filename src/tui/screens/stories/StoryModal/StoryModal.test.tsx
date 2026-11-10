@@ -41,6 +41,7 @@ describe("StoryModal", () => {
     const { tui } = await setup();
     expect(tui.frame()).toContain("Edit ROW-01");
     expect(tui.frame()).toContain("General");
+    expect(tui.frame()).toContain("Attachments");
     expect(tui.frame()).toContain("Specs 0");
   });
 

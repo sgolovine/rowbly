@@ -90,3 +90,26 @@ describe("StoryRow", () => {
     });
   });
 });
+
+it("shows only nonzero saved attachment counts", async () => {
+  const tui = await renderTui(
+    <StoryRow
+      story={{ ...story, attachmentCount: 2 }}
+      stage={{ name: "Done", category: "done" }}
+      selected
+      clickable
+      onClick={() => {}}
+    />,
+  );
+  expect(tui.frame()).toContain("▧ 2");
+  await tui.rerender(
+    <StoryRow
+      story={{ ...story, attachmentCount: 0 }}
+      stage={{ name: "Done", category: "done" }}
+      selected
+      clickable
+      onClick={() => {}}
+    />,
+  );
+  expect(tui.frame()).not.toContain("▧");
+});

@@ -5,13 +5,13 @@ import { findProject, type ServiceContext } from "../workspace/workspace.js";
 const QUIET_MS = 100;
 
 /**
- * Calls `onChange` after files in the stories folder change, also from a different process. Returns the
+ * Calls `onChange` after Story files or attachment files change, also from a different process. Returns the
  * function that stops the watch. The watch does not keep the process alive.
  */
 export async function watchStories(onChange: () => void, ctx: ServiceContext = {}): Promise<() => void> {
   const paths = await findProject(ctx);
   let timer: NodeJS.Timeout | undefined;
-  const watcher = watch(paths.storiesDir, { persistent: false }, () => {
+  const watcher = watch(paths.dir, { persistent: false, recursive: true }, () => {
     clearTimeout(timer);
     timer = setTimeout(onChange, QUIET_MS);
   });

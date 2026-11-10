@@ -1,5 +1,6 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as clipboard from "../../../../services/clipboard/clipboard.js";
 import { addCustomField } from "../../../../services/customField/customField.js";
 import { listStages } from "../../../../services/stage/stage.js";
 import { searchStories } from "../../../../services/story/story.js";
@@ -7,7 +8,10 @@ import { useTestProject } from "../../../../services/testProject/testProject.js"
 import { keys, renderTui, settle } from "../../../testing/index.js";
 import { NewStoryModal } from "./NewStoryModal.js";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("NewStoryModal", () => {
   const project = useTestProject();
@@ -38,6 +42,21 @@ describe("NewStoryModal", () => {
     expect(frame).toContain("Points");
   });
 
+  it.each(["unsupported", "no-display"] as const)("shows a save-first fallback for %s", async (reason) => {
+    vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({ reason });
+    const { tui } = await setup();
+    await tui.press(keys.ctrl("v"));
+    const [toast] = tui.toasts.list();
+    expect(toast?.kind).toBe("error");
+    expect(toast?.message).toContain(
+      reason === "unsupported"
+        ? "Clipboard image access is unsupported"
+        : "No display is available for clipboard access",
+    );
+    expect(toast?.message).toContain("Save the Story first, then use its Attachments tab to add a PNG file.");
+    expect(toast?.message).not.toContain("rowbly add-attachment");
+  });
+
   it("creates the Story with the service and reports it", async () => {
     await addCustomField({ label: "Points", type: "number" }, project.ctx);
     const { tui, onCreated } = await setup();
@@ -54,4 +73,25 @@ describe("NewStoryModal", () => {
     expect(onCreated).toHaveBeenCalledWith(story);
     expect(tui.toasts.list().map((t) => t.message)).toEqual(["Created ROW-01"]);
   });
+});
+
+it("keeps a pasted image after invalid save and asks before discard", async () => {
+  const clipboard = await import("../../../../services/clipboard/clipboard.js");
+  const reader = vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({
+    bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+    type: "image/png",
+  });
+  const onClose = vi.fn();
+  const tui = await renderTui(
+    <NewStoryModal ctx={{}} stages={[]} customFields={[]} onCreated={() => {}} onClose={onClose} />,
+  );
+  await tui.press(keys.ctrl("v"), keys.ctrl("s"));
+  expect(tui.frame()).toContain("required");
+  expect(tui.frame()).toContain("1 pending image");
+  await tui.press(keys.escape);
+  expect(tui.frame()).toContain("Close and discard unsaved changes?");
+  expect(onClose).not.toHaveBeenCalled();
+  await tui.press("y");
+  expect(onClose).toHaveBeenCalledOnce();
+  reader.mockRestore();
 });

@@ -6,5 +6,6 @@
     "!src/services/testProject/**!",
     "!src/tui/testing/**!"
   ],
-  "ignoreDependencies": ["@codebolt/agentic-tui"]
+  "ignoreBinaries": ["wl-paste"],
+  "ignoreDependencies": ["@codebolt/agentic-tui", "@mariozechner/clipboard"]
 }
