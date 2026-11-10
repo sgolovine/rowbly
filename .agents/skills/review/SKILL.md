@@ -11,7 +11,7 @@ Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
 ## Procedure
 
-1. Read the Project instructions (`rowbly get-instructions --json`), the Story, its Specs, the repository instructions and the full diff.
+1. Read the Project instructions (`rowbly project get-instructions --json`), the Story, its Specs, the repository instructions and the full diff.
 2. Examine the code for each acceptance criterion. Do not trust the text of the pull request.
 3. Examine the diff for defects, regressions, gaps in the tests and work outside the scope.
 4. Read the status of the CI checks. Run the checks of the repository if CI has no result.

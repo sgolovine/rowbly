@@ -44,7 +44,7 @@ function formatSkills(skills: SkillStatus[]): string {
 
 export function registerSkillCommands(program: Command): void {
   program
-    .command("install-skill")
+    .command("install")
     .description("Install a bundled skill for one or more coding harnesses")
     .argument("<name>", "bundled skill name")
     .requiredOption("--harness <id>", HARNESS_HELP, collect)
@@ -53,12 +53,12 @@ export function registerSkillCommands(program: Command): void {
     );
 
   program
-    .command("list-skills")
+    .command("list")
     .description("List the installed skills")
     .action((_opts: unknown, command: Command) => run(command, (ctx) => listSkills(ctx), formatSkills));
 
   program
-    .command("remove-skill")
+    .command("remove")
     .description("Remove an installed skill from all harnesses, or from the named harnesses")
     .argument("<name>", "installed skill name")
     .option("--harness <id>", HARNESS_HELP, collect)

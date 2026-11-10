@@ -22,7 +22,7 @@ Do not start a test worker. Examine the tools of the harness.
 | #   | Check                  | Method                                                                                                         | Result if not correct |
 | --- | ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- |
 | 1   | Project                | Find the nearest `.rowbly/` at or above the current directory. Its parent is `<root>`.                         | `FAIL`                |
-| 2   | CLI                    | `rowbly -C <root> --json search-stories` gives a list. `rowbly update-story --help` shows `--stage`.           | `FAIL`                |
+| 2   | CLI                    | `rowbly -C <root> --json story search` gives a list. `rowbly story update --help` shows `--stage`.           | `FAIL`                |
 | 3   | Config                 | `.rowbly/rowbly.config.json` is valid JSON. `rowbly -C <root> --json doctor` has no `error` issue for this file. | `FAIL`                |
 | 4   | Enabled Stages         | The config has at least one Stage with `enabled: true`.                                                        | `FAIL`                |
 | 5   | Stage prompt files     | `.rowbly/stages/<KEY>.md` exists for each enabled Stage.                                                       | `FAIL`                |
@@ -31,11 +31,11 @@ Do not start a test worker. Examine the tools of the harness.
 | 8   | Models and effort      | The tool from check 7 can set a different model and a different effort level for each worker.                  | `WARN`                |
 | 9   | Name a worker          | The tool from check 7 can set the title of a worker.                                                           | `WARN`                |
 
-Do not use `get-stage` for check 5. It gives an empty prompt when the file does not exist.
+Do not use `stage get` for check 5. It gives an empty prompt when the file does not exist.
 
 If check 2 fails, do only the JSON part of check 3. A `doctor` error for a different file is not a failure of check 3. Show it to the user as a note.
 
-Rowbly versions before the current CLI do not have `search-stories`. If the user names a different command for Rowbly, use that command in all steps.
+Rowbly versions before the current CLI do not have `story search`. If the user names a different command for Rowbly, use that command in all steps.
 
 ### Stage prompt content
 
@@ -122,7 +122,7 @@ Do not assign a second worker to a Story with an active worker, including a work
 
 Read the files again on each scan. Users can change them at any time.
 
-1. Run `rowbly -C <root> --json get-story <story>`. Skip a Story that no longer exists.
+1. Run `rowbly -C <root> --json story get <story>`. Skip a Story that no longer exists.
 2. Read its current Stage in the config. Skip a Stage that is absent or has `enabled: false`.
 3. Read `.rowbly/stages/<KEY>.md`. Stop the factory if the file does not exist.
 4. Examine the prompt. Stop for an `invalid` prompt. Skip a `hold` prompt.
@@ -164,7 +164,7 @@ Start one worker for each eligible Story. Use the type of worker from the checkl
 - Use the model and the effort level that the Stage prompt names. If the prompt names none, use the default of the harness.
 - If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout. For a thread, use the branch name `<story>-<KEY>` in lower case.
 - Give the worker the first message below. Replace each value in angle brackets.
-- Get the Project instructions from the `instructions` value of `rowbly -C <root> --json get-instructions`.
+- Get the Project instructions from the `instructions` value of `rowbly -C <root> --json project get-instructions`.
 - Before each launch, read the current Story, its Specs if enabled, the Project instructions and the Stage prompt again.
 - If the Stage or its prompt changed, apply the assignment checks again before launch. Give each retry a new worker ID.
 
@@ -174,7 +174,7 @@ You are a factory worker. Do the work of Stage <KEY> for Story <story>.
 Run each Rowbly command as `rowbly -C <root> --json ...`. Do not use a different Project.
 A Git worktree has its own copy of `.rowbly/`. Do not change that copy.
 
-Read the Story with `get-story` and read its Specs if Specs are on.
+Read the Story with `story get` and read its Specs if Specs are on.
 Do only the work in the Stage prompt. Move the Story only as the Stage prompt tells you.
 Do not change a Stage prompt or the Project config.
 

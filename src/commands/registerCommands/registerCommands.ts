@@ -17,11 +17,18 @@ export function registerCommands(program: Command): void {
     .option("--json", "print results and errors as JSON")
     .option("-C, --cwd <dir>", "run as if Rowbly was started in <dir>");
   registerInit(program);
-  registerProjectCommands(program);
+  registerProjectCommands(resource(program, "project", "Manage the project"));
   registerDoctor(program);
-  registerStoryCommands(program);
-  registerStageCommands(program);
-  registerCustomFieldCommands(program);
-  registerSpecCommands(program);
-  registerSkillCommands(program);
+  registerStoryCommands(resource(program, "story", "Manage stories"));
+  registerStageCommands(resource(program, "stage", "Manage stages"));
+  registerCustomFieldCommands(resource(program, "custom-field", "Manage custom fields"));
+  registerSpecCommands(resource(program, "spec", "Manage specs"));
+  registerSkillCommands(resource(program, "skill", "Manage agent skills"));
+}
+
+/** Creates a resource command that prints help when no action is given. */
+function resource(program: Command, name: string, description: string): Command {
+  const command = program.command(name).description(description);
+  command.action(() => command.help());
+  return command;
 }

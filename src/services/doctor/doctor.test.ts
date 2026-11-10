@@ -270,7 +270,7 @@ describe("doctor skill checks", () => {
       {
         severity: "error",
         message:
-          "Skill alpha for claude-code has no SKILL.md. Repair the folder by hand, or delete it with `rowbly remove-skill alpha --harness claude-code`",
+          "Skill alpha for claude-code has no SKILL.md. Repair the folder by hand, or delete it with `rowbly skill remove alpha --harness claude-code`",
         file,
         fixed: false,
       },
@@ -291,7 +291,7 @@ describe("doctor skill checks", () => {
       await rm(join(project.paths.root, ".claude", "skills"), { recursive: true });
       await symlink("missing", join(project.paths.root, ".claude", "skills"));
     };
-    const message = `Skill alpha for claude-code is missing, and Rowbly cannot create ${join(".claude", "skills")}. Repair that path, or run \`rowbly remove-skill alpha --harness claude-code\``;
+    const message = `Skill alpha for claude-code is missing, and Rowbly cannot create ${join(".claude", "skills")}. Repair that path, or run \`rowbly skill remove alpha --harness claude-code\``;
 
     it("offers no fix for a broken symlink", async () => {
       await brokenFolder();
@@ -331,7 +331,7 @@ describe("doctor skill checks", () => {
     const report = await doctor({ fix: true }, ctx);
     expect(report.ok).toBe(false);
     expect(report.issues[0]?.message).toContain("no longer bundles it");
-    expect(report.issues[0]?.message).toContain("rowbly remove-skill alpha --harness claude-code");
+    expect(report.issues[0]?.message).toContain("rowbly skill remove alpha --harness claude-code");
     expect(report.issues[0]?.fixed).toBe(false);
   });
 
