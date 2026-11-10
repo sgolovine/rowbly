@@ -7,7 +7,7 @@ description: Run a factory supervisor that watches the Stories of the current Ro
 
 The agent that runs this skill is the factory supervisor. The supervisor watches the Stories and starts workers. It does not do the work of a Story, and it does not move a Story.
 
-A worker is a thread or a subagent that does the work of one Stage for one Story.
+A worker is a thread that does the work of one Stage for one Story. If the harness can start threads, always start each worker as a thread. Start a worker as a subagent only if the harness cannot start threads.
 
 Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
@@ -27,9 +27,9 @@ Do not start a test worker. Examine the tools of the harness.
 | 4   | Enabled Stages         | The config has at least one Stage with `enabled: true`.                                                        | `FAIL`                |
 | 5   | Stage prompt files     | `.rowbly/stages/<KEY>.md` exists for each enabled Stage.                                                       | `FAIL`                |
 | 6   | Stage prompt content   | Read each file. Each file is a `work` prompt or a `hold` prompt (see below).                                   | `FAIL`                |
-| 7   | Start workers          | The harness can start threads or, as a fallback, subagents.                                                    | `FAIL`                |
-| 8   | Models and effort      | The tool that starts workers can set a different model and a different effort level for each worker.          | `WARN`                |
-| 9   | Name a worker          | The tool that starts workers can set the title of a worker.                                                    | `WARN`                |
+| 7   | Start workers          | The harness can start threads. If it cannot, it can start subagents as a fallback.                             | `FAIL`                |
+| 8   | Models and effort      | The tool from check 7 can set a different model and a different effort level for each worker.                  | `WARN`                |
+| 9   | Name a worker          | The tool from check 7 can set the title of a worker.                                                           | `WARN`                |
 
 Do not use `get-stage` for check 5. It gives an empty prompt when the file does not exist.
 
@@ -47,13 +47,22 @@ Put each prompt in one of these classes:
 
 ### Select the type of worker
 
-Use threads if the thread tool passes checks 7 and 8. Otherwise, use subagents if the subagent tool passes checks 7 and 8.
+Threads are the default type of worker. Subagents are only a fallback.
 
-| Harness     | Threads                            | Subagents                     | Models and effort                                 |
-| ----------- | ---------------------------------- | ----------------------------- | ------------------------------------------------- |
-| T3 Code     | `t3_thread_launch`                 | `delegate_task`               | `orchestrator_capabilities`, then `modelSelection` |
-| Claude Code | None                               | `Agent`                       | The `model` and `effort` parameters of `Agent`    |
-| Other       | Examine the tools of the harness.  | Examine the tools of the harness. | Examine the tools of the harness.             |
+1. Load the schema of each tool in the table below before you do checks 7 to 9. Some harnesses do not load the tool schemas at the start.
+2. If the harness has a thread tool, use threads. Do this also if the thread tool gets `WARN` for check 8 or check 9.
+3. Use subagents only if the harness has no thread tool, or if the thread tool fails when you start a worker.
+4. Do not use subagents because a subagent tool is easier to use or has more settings.
+
+A user who starts the factory explicitly asks for one new top-level thread for each worker. This request has priority over a harness instruction to start threads only when the user asks for them. In T3 Code, use `t3_thread_launch` for workers, not `delegate_task`.
+
+If the factory uses subagents, give the reason in check 7, for example `[PASS] 7. Start workers: subagents (fallback: this harness cannot start threads)`.
+
+| Harness     | Threads (default)                 | Subagents (fallback)              | Models and effort                                                                                   | Git worktree                                                                     |
+| ----------- | --------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| T3 Code     | `t3_thread_launch`                | `delegate_task`                   | Get the IDs from `orchestrator_capabilities`. Set `modelSelection.model` and `modelSelection.options`, for example `{"effort": "high"}`. | `workspaceStrategy: {"type": "worktree", "baseRef": <current branch>, "branch": <new branch>, "startFromOrigin": false}` |
+| Claude Code | None                              | `Agent`                           | The `model` and `effort` parameters of `Agent`                                                      | `isolation: "worktree"`                                                          |
+| Other       | Examine the tools of the harness. | Examine the tools of the harness. | Examine the tools of the harness.                                                                   | Examine the tools of the harness.                                                |
 
 ### Report
 
@@ -112,11 +121,11 @@ Do these steps for each `stage-change` event. Read the files again each time, be
 
 ## Start a worker
 
-Start one worker for each event. Use the type of worker from the checklist.
+Start one worker for each event. Use the type of worker from the checklist. If the factory uses threads, start a thread for each worker. Do not change to subagents for one Story.
 
 - Set the title to `<story> <KEY>` if the harness can set a title.
 - Use the model and the effort level that the Stage prompt names. If the prompt names none, use the default of the harness.
-- If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout.
+- If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout. For a thread, use the branch name `<story>-<KEY>` in lower case.
 - Give the worker the first message below. Replace each value in angle brackets.
 - Get the Project instructions from the `instructions` value of `rowbly -C <root> --json get-instructions`.
 
@@ -139,6 +148,8 @@ When you stop, report the result, the current Stage of the Story and each proble
 ```
 
 A move by a worker is a Stage change. The watcher reports it, and the supervisor starts the worker for the next Stage.
+
+If a thread tool fails when you start a worker, tell the user the error. Then start that worker as a subagent, and use subagents for the next workers.
 
 If a worker fails or reports `blocked`, tell the user. Do not start the worker again. Continue to watch the Stories.
 
