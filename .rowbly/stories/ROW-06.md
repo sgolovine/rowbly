@@ -1,7 +1,7 @@
 ---
 title: Supervisor should auto-commit changes to Rowbly board.
-stage: IN_REFINEMENT
-position: 1
+stage: IN_DEVELOPMENT
+position: 5
 worktree: null
 pull_request: null
 ---
@@ -21,11 +21,13 @@ Do not add automatic Git commits to Rowbly services, CLI commands or the TUI.
 Do not push commits or change Stage prompts or Project configuration.
 Do not commit source changes, worker records or other files outside `.rowbly/` through this behavior.
 
-The decision in Open questions sets the final commit scope and trigger.
+After each scan, commit all pending `.rowbly/` changes, including changes from workers and people.
+Include new files, changed files and deleted files that Git does not ignore.
 
 ## Acceptance criteria
 
-- [ ] The factory instructions state which Project changes the supervisor commits and when it commits them.
+- [ ] After each scan, the supervisor commits all pending `.rowbly/` changes from workers and people.
+- [ ] The commit includes new files, changed files and deleted files that Git does not ignore.
 - [ ] The supervisor commits eligible changes in the canonical Project checkout, including changes from workers in separate worktrees.
 - [ ] Each commit contains only the eligible Project files. Unrelated files and staged changes stay outside the commit.
 - [ ] The supervisor serializes its Git mutations with other writers in the canonical checkout.
@@ -54,15 +56,7 @@ The new supervisor procedure must state how it works with that rule.
 Use explicit paths when a command stages files.
 Do not reset, discard or amend another worker's changes.
 
-Validate the supervisor procedure with cases for changed files, no changes, unrelated staged files and a failed commit.
+Validate the procedure with new files, changed files, deleted files and changes from people.
+Also test no changes, unrelated staged files and a failed commit.
 If scripts change, add behavior tests and run `pnpm test:factory`.
 Run the checks that AGENTS.md specifies.
-
-## Open questions
-
-- Must the supervisor commit all pending `.rowbly/` changes after each scan, including changes from people and workers?
-- Or must it commit only factory worker changes after each worker stops?
-
-The recommended choice is all pending `.rowbly/` changes after each scan.
-This choice records the shared Project state without a separate change record for each writer.
-The user must select the scope before development starts.
