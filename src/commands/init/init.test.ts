@@ -15,6 +15,7 @@ describe("init", () => {
     expect(result.stdout).toContain("Stages: BACKLOG, IN_REFINEMENT, IN_DEVELOPMENT, IN_REVIEW, DONE");
     expect(result.stdout).toContain("Skills: develop, factory, refine, review");
     expect(result.stdout).toContain("Where to edit this later:");
+    expect(result.stdout).not.toContain("Warning:");
     expect((await getProject({ cwd: dir.path })).customFields.map((field) => field.key)).toEqual([
       "worktree",
       "pull_request",
@@ -35,8 +36,9 @@ describe("init", () => {
   });
 
   it("installs no skills with --no-skills when no stage requires one", async () => {
-    await runCli(["init", "--stage", "QA", "--no-skills"], dir.path);
+    const result = await runCli(["init", "--stage", "QA", "--no-skills"], dir.path);
     expect((await getProject({ cwd: dir.path })).skills).toBeUndefined();
+    expect(result.stdout).toContain('Warning: The factory requires the companion skill "factory"');
   });
 
   it("takes inline JSON, and a flag has priority over it", async () => {

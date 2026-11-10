@@ -223,6 +223,8 @@ The last step is always a summary. It also tells the user where to edit each ite
 - Backlog and Done are always enabled. The user cannot remove them. If flags or JSON leave one out, Rowbly adds it.
 - A custom stage gets a placeholder prompt. A default stage gets its file from `stages/`.
 - A skill that a selected default stage uses shows `(required)`. The user cannot remove it.
+- The `factory` skill also shows `(required)`, because the factory cannot run without it. The user can
+  remove it. Then the summary and the output of `rowbly init` show a warning.
 - The custom fields of the skills (`worktree`, `pull_request`) are added with the skills that use them.
 - If a skill install fails, `applyOnboarding` removes the new project and the skills that it installed.
 

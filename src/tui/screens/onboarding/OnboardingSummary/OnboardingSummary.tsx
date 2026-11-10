@@ -71,6 +71,11 @@ export function OnboardingSummary({
           Summary
         </Text>
         <DetailView rows={summarizePlan(plan.data)} />
+        {plan.data.warnings.map((warning) => (
+          <Box key={warning} marginTop={1}>
+            <Text color={theme.danger}>Warning: {warning}</Text>
+          </Box>
+        ))}
         <Box marginTop={1}>
           <Text bold color={theme.ink}>
             Where to edit this later

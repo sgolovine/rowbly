@@ -5,6 +5,7 @@ const prompts = vi.hoisted(() => ({
   cancel: vi.fn(),
   confirm: vi.fn(),
   intro: vi.fn(),
+  log: { warn: vi.fn() },
   isCancel: vi.fn((value: unknown) => typeof value === "symbol"),
   multiselect: vi.fn(),
   note: vi.fn(),
@@ -58,6 +59,20 @@ describe("askOnboarding", () => {
       label: "review (required)",
       hint: "always installed",
     });
+    expect(prompts.multiselect.mock.calls[1]?.[0].options).toContainEqual({
+      value: "factory",
+      label: "factory (required)",
+      hint: "required to use the factory",
+    });
+    expect(prompts.log.warn).not.toHaveBeenCalled();
+  });
+
+  it("warns when the user leaves out the factory skill", async () => {
+    prompts.select.mockResolvedValue("customize");
+    prompts.text.mockResolvedValueOnce("My App").mockResolvedValueOnce("APP").mockResolvedValueOnce("");
+    prompts.multiselect.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    expect(await askOnboarding({ cwd: dir.path })).toMatchObject({ skills: [], harnesses: [] });
+    expect(prompts.log.warn).toHaveBeenCalledWith(expect.stringContaining('companion skill "factory"'));
   });
 
   it("gives null when the user cancels", async () => {

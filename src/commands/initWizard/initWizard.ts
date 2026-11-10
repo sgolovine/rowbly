@@ -1,6 +1,7 @@
-import { cancel, confirm, intro, isCancel, multiselect, note, select, text } from "@clack/prompts";
+import { cancel, confirm, intro, isCancel, log, multiselect, note, select, text } from "@clack/prompts";
 import { checkProjectKey, checkStageKey, toProjectKey, toStageKey } from "../../services/config/config.js";
 import {
+  FACTORY_SKILL,
   isAlwaysEnabledStage,
   type OnboardingInput,
   type OnboardingOptions,
@@ -80,7 +81,9 @@ async function askSkills(options: OnboardingOptions, stages: string[]): Promise<
       options: options.skills.map((skill) =>
         required.includes(skill)
           ? { value: skill, label: `${skill} (required)`, hint: "always installed" }
-          : { value: skill, label: skill },
+          : skill === FACTORY_SKILL
+            ? { value: skill, label: `${skill} (required)`, hint: "required to use the factory" }
+            : { value: skill, label: skill },
       ),
       initialValues: options.skills,
       required: false,
@@ -114,6 +117,7 @@ function rows(items: { label: string; value: string }[]): string {
 
 function showPlan(plan: OnboardingPlan): void {
   note(rows(summarizePlan(plan)), "Summary");
+  for (const warning of plan.warnings) log.warn(warning);
   note(rows(plan.edits.map(({ what, where }) => ({ label: what, value: where }))), "Where to edit this later");
 }
 

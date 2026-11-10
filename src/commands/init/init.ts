@@ -69,6 +69,7 @@ function describe(result: OnboardingResult): string {
           `Harnesses: ${[...new Set(skills.flatMap((skill) => skill.harnesses))].join(", ")}`,
         ]
       : []),
+    ...result.warnings.map((warning) => `Warning: ${warning}`),
     "",
     "Where to edit this later:",
     ...result.edits.map((edit) => `  ${edit.what.padEnd(width)}${edit.where}`),

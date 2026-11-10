@@ -6,6 +6,7 @@ import { pathExists } from "../files/files.js";
 import { useTempDir } from "../testProject/testProject.js";
 import {
   applyOnboarding,
+  FACTORY_SKILL_WARNING,
   isAlwaysEnabledStage,
   onboardingOptions,
   parseOnboardingInput,
@@ -38,10 +39,21 @@ describe("onboarding", () => {
     const plan = await planOnboarding({}, ctx());
     expect(plan.skills.filter((skill) => skill.required).map((skill) => skill.name)).toEqual([
       "develop",
+      "factory",
       "refine",
       "review",
     ]);
-    expect(summarizePlan(plan).find((row) => row.label === "Skills")?.value).toContain("develop (required), factory");
+    expect(summarizePlan(plan).find((row) => row.label === "Skills")?.value).toContain(
+      "develop (required), factory (required)",
+    );
+    expect(plan.warnings).toEqual([]);
+  });
+
+  it("lets the user leave out the factory skill, with a warning", async () => {
+    const plan = await planOnboarding({ stages: [], skills: [] }, ctx());
+    expect(plan.skills).toEqual([]);
+    expect(plan.warnings).toEqual([FACTORY_SKILL_WARNING]);
+    expect(FACTORY_SKILL_WARNING).toContain("rowbly install-skill factory");
   });
 
   it("always creates Backlog and Done", async () => {

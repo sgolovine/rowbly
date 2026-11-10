@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { checkStageKey, toStageKey } from "../../../../services/config/config.js";
 import {
+  FACTORY_SKILL,
   isAlwaysEnabledStage,
   type OnboardingInput,
   onboardingOptions,
@@ -125,11 +126,15 @@ export function Onboarding({
       <OnboardingChecklist
         key="skills"
         heading="Agent skills"
-        description="Your default Stages use the required skills."
+        description={`Your default Stages use the required skills. The factory requires the companion skill "${FACTORY_SKILL}".`}
         items={defaults.skills.map((skill) => ({
           value: skill,
           label: skill,
-          description: required.includes(skill) ? "(required)" : undefined,
+          description: required.includes(skill)
+            ? "(required)"
+            : skill === FACTORY_SKILL
+              ? "(required to use the factory)"
+              : undefined,
           locked: required.includes(skill),
         }))}
         selected={skills}
