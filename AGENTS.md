@@ -105,7 +105,7 @@ src/
     testing/          # renderTui(): renders a component in TuiProviders for tests; keys for stdin
   services/           # one folder per module: <name>/<name>.ts, and <name>/<name>.test.ts when the module has a test
     errors/           # RowblyError, ValidationError, NotFoundError, ConflictError: the typed errors services throw
-    workspace/        # findProject(): the nearest .rowbly/ at or above ctx.cwd; ServiceContext
+    workspace/        # findProject(): the nearest .rowbly/ at or above ctx.cwd; hasProject(): a project in ctx.cwd; ServiceContext
     config/           # ProjectConfig types, validation, key rules, read/write of rowbly.config.json
     fields/           # custom field value checks and parsing text input by field type
     markdown/         # YAML frontmatter + body parsing and writing
@@ -124,7 +124,9 @@ stages/               # the default stage prompts; onboarding copies them into a
 ## Storage
 
 Rowbly keeps a project in `.rowbly/`, in the directory where Rowbly runs. Services find the nearest
-`.rowbly/` at or above `ctx.cwd`. The `-C <dir>` option of the CLI sets this directory. Users can
+`.rowbly/` at or above `ctx.cwd`. The `-C <dir>` option of the CLI sets this directory. The TUI opens
+only a project in the directory where it runs. If that directory has no project, the TUI shows the
+onboarding steps, also when a parent directory has a project. Users can
 edit these files by hand. `rowbly doctor` compares the files with the config, and `--fix` repairs
 the problems that it can repair.
 

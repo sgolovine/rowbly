@@ -21,7 +21,7 @@ export function OnboardingStart({
   return (
     <Box flexDirection="column">
       <Text bold color={theme.ink}>
-        No Rowbly project in this directory or any parent.
+        No Rowbly project in this directory.
       </Text>
       <Text color={theme.inkFaint}>Set up a project here. You can change all of it later.</Text>
       <Box marginTop={1}>

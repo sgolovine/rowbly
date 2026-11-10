@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
 import { useTempDir, useTestProject } from "../testProject/testProject.js";
-import { findProject, projectPaths } from "./workspace.js";
+import { findProject, hasProject, projectPaths } from "./workspace.js";
 
 describe("projectPaths", () => {
   it("puts every path inside .rowbly/", () => {
@@ -40,5 +40,19 @@ describe("findProject without a project", () => {
     const error = await findProject({ cwd: dir.path }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(NotFoundError);
     expect((error as NotFoundError).hint).toMatch(/rowbly init/);
+  });
+});
+
+describe("hasProject", () => {
+  const project = useTestProject();
+
+  it("is true in the directory of the project", async () => {
+    expect(await hasProject(project.ctx)).toBe(true);
+  });
+
+  it("is false in a subfolder of the project", async () => {
+    const sub = join(project.paths.root, "a");
+    await mkdir(sub, { recursive: true });
+    expect(await hasProject({ cwd: sub })).toBe(false);
   });
 });

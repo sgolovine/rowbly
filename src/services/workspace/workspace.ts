@@ -41,6 +41,11 @@ export function projectPaths(root: string): ProjectPaths {
   };
 }
 
+/** Tells if a project is in `ctx.cwd` itself. It does not look in the parent directories, as `findProject` does. */
+export async function hasProject(ctx: ServiceContext = {}): Promise<boolean> {
+  return pathExists(projectPaths(resolve(ctx.cwd ?? process.cwd())).configFile);
+}
+
 /** Finds the nearest project at or above `ctx.cwd`, the way git finds its repository. */
 export async function findProject(ctx: ServiceContext = {}): Promise<ProjectPaths> {
   let dir = resolve(ctx.cwd ?? process.cwd());

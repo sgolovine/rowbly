@@ -550,12 +550,21 @@ describe("Shell without a project", () => {
   it("shows the onboarding steps on the screen, with no Modal", async () => {
     const tui = await open({ cwd: dir.path });
     expect(tui.frame()).toContain("╭─Set up Rowbly");
-    expect(tui.frame()).toContain("No Rowbly project in this directory or any parent.");
+    expect(tui.frame()).toContain("No Rowbly project in this directory.");
     expect(tui.frame()).toContain("Use defaults");
     expect(tui.frame()).toContain("Customize");
     expect(tui.frame()).not.toContain("+ New Project");
     expect(tui.frame()).not.toContain("+ New Story");
     expect(tui.toasts.list()).toEqual([]);
+  });
+
+  it("shows the onboarding steps in a subfolder of a project, not the parent project", async () => {
+    await initProject({ name: "Parent", key: "PAR" }, { cwd: dir.path });
+    const sub = join(dir.path, "child");
+    await mkdir(sub);
+    const tui = await open({ cwd: sub });
+    expect(tui.frame()).toContain("╭─Set up Rowbly");
+    expect(tui.frame()).not.toContain("Parent");
   });
 
   it("creates a project from the defaults and opens it", async () => {

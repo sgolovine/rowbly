@@ -1,11 +1,10 @@
 import { Box, type BoxProps, Text, useApp, useInput } from "ink";
 import { useContext, useEffect, useState } from "react";
-import { NotFoundError } from "../../../services/errors/errors.js";
 import { recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject } from "../../../services/project/project.js";
 import { listStages, type Stage, updateStage } from "../../../services/stage/stage.js";
 import { deleteStory, type Story, searchStories, updateStory } from "../../../services/story/story.js";
-import { findProject, type ServiceContext } from "../../../services/workspace/workspace.js";
+import { hasProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   ConfirmDialog,
   FOOTER_HEIGHT,
@@ -81,7 +80,8 @@ type Pane = "stages" | "stories";
  * to the previous or next Stage. A drag of a Story to another row moves it there. `d` asks before it
  * deletes the selected Story. The Modals that create and edit records open over the Story list. The Project
  * Button and `p` open the Project switcher, and each Project that opens is recorded in `~/.rowblyrc.json`.
- * Without a Project, the Story panel shows the onboarding steps, which create one in the directory where Rowbly runs.
+ * Without a Project in the directory where Rowbly runs, the Story panel shows the onboarding steps, which create one
+ * there. A Project in a parent directory does not open.
  */
 export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   const { exit } = useApp();
@@ -93,13 +93,8 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   const [version, setVersion] = useState(0);
   const reload = () => setVersion((v) => v + 1);
   const data = useAsync(async () => {
-    try {
-      await findProject(ctx);
-    } catch (err) {
-      // No project is a state of the screen, not a failure.
-      if (err instanceof NotFoundError) return null;
-      throw err;
-    }
+    // No project is a state of the screen, not a failure. A project in a parent directory does not open.
+    if (!(await hasProject(ctx))) return null;
     const [project, stages, stories] = await Promise.all([getProject(ctx), listStages(ctx), searchStories({}, ctx)]);
     return { project, stages, stories };
   }, [ctx, version]);
