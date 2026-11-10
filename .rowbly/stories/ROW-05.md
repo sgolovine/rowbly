@@ -1,8 +1,8 @@
 ---
 
 title: Automatically retry failed refinement attempts
-stage: IN_DEVELOPMENT
-position: 1
+stage: DONE
+position: 2
 worktree: null
 pull_request: null
 ---
