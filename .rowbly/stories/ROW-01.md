@@ -1,6 +1,6 @@
 ---
 title: Nested command structure
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 2
 worktree: null
 pull_request: null
@@ -58,6 +58,7 @@ Do not add resource actions that do not exist today.
 `src/cli.ts` selects the TUI only when there are no arguments.
 Keep that selection and keep the file small.
 `src/commands/registerCommands/registerCommands.ts` registers commands and defines the global options.
+The current command inventory contains 26 resource actions across the six groups in the table.
 Register a Commander parent for each resource and register its actions under that parent.
 Use Commander help for each parent and action.
 
