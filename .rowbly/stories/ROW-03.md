@@ -1,6 +1,7 @@
 ---
 title: Manage skills via TUI
 stage: BACKLOG
+position: 3
 worktree: null
 pull_request: null
 ---

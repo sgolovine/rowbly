@@ -1,6 +1,7 @@
 ---
 title: Attach items to stories
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 2
 worktree: null
 pull_request: null
 ---

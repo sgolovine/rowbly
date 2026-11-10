@@ -1,17 +1,81 @@
 ---
 title: Nested command structure
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 3
 worktree: null
 pull_request: null
 ---
 
-Currently the rowbly command structure is "flat". We have commands like so:
+## Goal
 
-```
-rowbly create-story
-rowbly create-stage
-```
+Replace the flat CLI command names with commands under a resource name.
+For example, `rowbly story create` replaces `rowbly create-story`.
+Users can see the help for one resource with `rowbly story` or `rowbly story --help`.
 
-Update this so they are "nested". Rather than `rowbly create-story` it should be `rowbly story create`.
+## Scope
 
-As part of this work, make sure we have an optional `--help` flag that can be triggered at those stages. So running `rowbly story --help` or just `rowbly story` should show the help page for just stories.
+Convert all current resource commands in one pull request.
+Use singular resource names and keep each current action name, arguments and options.
+
+| Resource | Actions | Current commands |
+| --- | --- | --- |
+| `story` | `create`, `update`, `delete`, `get`, `lock`, `unlock`, `search` | `create-story`, `update-story`, `delete-story`, `get-story`, `lock-story`, `unlock-story`, `search-stories` |
+| `stage` | `create`, `update`, `delete`, `get` | `create-stage`, `update-stage`, `delete-stage`, `get-stage` |
+| `custom-field` | `add`, `update`, `remove` | `add-custom-field`, `update-custom-field`, `remove-custom-field` |
+| `spec` | `create`, `update`, `delete`, `get`, `list`, `link`, `unlink` | `create-spec`, `update-spec`, `delete-spec`, `get-spec`, `list-specs`, `link-spec`, `unlink-spec` |
+| `skill` | `install`, `list`, `remove` | `install-skill`, `list-skills`, `remove-skill` |
+| `project` | `update`, `get-instructions` | `update-project`, `get-instructions` |
+
+For example, use `rowbly project get-instructions` for the Project instructions.
+Keep `init` and `doctor` at the root because they are standalone commands.
+Keep the root help, version options and no-argument TUI entry point.
+Replace the old flat resource commands; compatibility aliases are outside this Story.
+
+Update the command examples, error hints, bundled skills, Rowbly references and factory scripts with the new syntax.
+Do not change the service operations, storage format, Project config or Stage prompts.
+Do not add resource actions that do not exist today.
+
+## Acceptance criteria
+
+- [ ] Each command in the table runs under its resource with the same arguments, options and service behavior.
+- [ ] `rowbly story create --title Example` creates a Story through the existing `createStory` service.
+- [ ] Each bare resource command prints its resource help to stdout and exits with code 0.
+- [ ] Each resource accepts `-h` and `--help`, prints its actions and exits with code 0.
+- [ ] Each action accepts `--help` and prints its arguments and options without a service call.
+- [ ] Resource help works outside a Project and does not start the TUI, ask questions or write files.
+- [ ] Root help lists the six resource groups, `init` and `doctor`; it does not list the old flat resource commands.
+- [ ] An old flat resource command or an unknown resource action exits with a nonzero code and a useful error.
+- [ ] Global `--json` and `-C` options work before the resource, between the resource and action, and after the action.
+- [ ] Nested actions preserve JSON result shapes, text results, validation, repeatable flags and error exit codes.
+- [ ] `rowbly` still starts the TUI; `rowbly init`, `rowbly doctor`, root help and version options still work.
+- [ ] Factory scripts and their tests use nested commands, including `story search`, `story create` and `story update`.
+- [ ] Repository command examples and command hints use the nested syntax, except explicit migration examples and unchanged Stage prompts.
+- [ ] CLI tests cover every mapped action, resource help, action help, invalid commands and global option placement.
+- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:factory` and `pnpm build` pass.
+
+## Technical notes
+
+`src/cli.ts` selects the TUI only when there are no arguments.
+Keep that selection and keep the file small.
+`src/commands/registerCommands/registerCommands.ts` registers commands and defines the global options.
+Register a Commander parent for each resource and register its actions under that parent.
+Use Commander help for each parent and action.
+
+The resource modules are in `src/commands/{story,stage,customField,spec,skill,project}/`.
+Keep these modules as thin service callers.
+`src/commands/output/output.ts` reads inherited options with `optsWithGlobals`.
+`src/commands/testCli/testCli.ts` provides `createProgram` and `runCli` for tests.
+Update the command inventory test and the tests of each affected command module.
+
+`skills/factory/scripts/watch-stages.mjs` calls `search-stories` today.
+Its tests also call `create-story` and `update-story`.
+Update these calls and the expected argument arrays.
+Run `pnpm test:factory` after changes to these scripts.
+
+Check command text in `README.md`, `AGENTS.md`, `skills/`, `.agents/skills/` and service hints.
+The shared reference is `skills/rowbly_reference.md`; the bundled skills also have reference copies.
+Keep these references consistent and account for symlinks before changes to installed skills.
+Leave the upstream agentic-tui skill unchanged.
+Do not edit `.rowbly/stages/`, `stages/` or `.rowbly/rowbly.config.json` for this Story.
+
+Specs are on, but this Story has no linked Specs at refinement.
