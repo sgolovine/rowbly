@@ -1,7 +1,7 @@
 ---
 title: Supervisor should auto-commit changes to Rowbly board.
 stage: IN_DEVELOPMENT
-position: 5
+position: 1
 worktree: null
 pull_request: null
 ---
