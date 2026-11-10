@@ -27,7 +27,7 @@
     "knip:production": "knip --production",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:factory": "node --test skills/factory/scripts/watch-stages.test.mjs"
+    "test:factory": "node --test skills/factory/scripts/*.test.mjs"
   },
   "license": "MIT",
   "dependencies": {
