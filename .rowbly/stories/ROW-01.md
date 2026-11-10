@@ -1,6 +1,6 @@
 ---
 title: Nested command structure
-stage: IN_DEVELOPMENT
+stage: DONE
 position: 2
 worktree: null
 pull_request: null
