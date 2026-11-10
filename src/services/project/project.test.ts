@@ -1,4 +1,4 @@
-import { mkdir, readdir } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
@@ -29,6 +29,8 @@ describe("initProject", () => {
     const paths = projectPaths(dir.path);
     expect(await readdir(paths.stagesDir)).toEqual(["BACKLOG.md", "DONE.md"]);
     expect(await readdir(paths.storiesDir)).toEqual([]);
+    expect(await readFile(paths.instructionsFile, "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
+    expect((await getInstructions({ cwd: dir.path })).instructions).toBe("# ROWBLY INSTRUCTIONS");
   });
 
   it("defaults the name to the folder name", async () => {
@@ -36,6 +38,7 @@ describe("initProject", () => {
     const project = await initProject({}, { cwd });
     expect(project.projectName).toBe("widgets");
     expect(project.projectKey).toBe("WID");
+    expect(await readFile(projectPaths(cwd).instructionsFile, "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
   });
 
   it("uppercases and trims the key and the name", async () => {
@@ -52,7 +55,10 @@ describe("initProject", () => {
 
   it("refuses to run twice", async () => {
     await initProject({ name: "A" }, { cwd: dir.path });
+    const instructions = projectPaths(dir.path).instructionsFile;
+    await writeFile(instructions, "Keep my instructions.\n");
     await expect(initProject({ name: "A" }, { cwd: dir.path })).rejects.toBeInstanceOf(ConflictError);
+    expect(await readFile(instructions, "utf8")).toBe("Keep my instructions.\n");
   });
 });
 
@@ -64,6 +70,7 @@ describe("getProject and updateProject", () => {
   });
 
   it("getInstructions is empty when the project has no ROWBLY.md", async () => {
+    await rm(project.paths.instructionsFile);
     expect(await getInstructions(project.ctx)).toEqual({ path: project.paths.instructionsFile, instructions: "" });
   });
 

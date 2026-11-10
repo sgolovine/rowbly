@@ -16,7 +16,7 @@ describe("SettingsModal", () => {
     await settle(50);
     const frame = tui.frame();
     expect(frame).toContain("Rowbly › Settings");
-    for (const label of ["Project", "General", "Stages", "Custom Fields", "Maintenance", "Doctor"]) {
+    for (const label of ["Project", "General", "Stages", "Custom Fields", "Skills", "Maintenance", "Doctor"]) {
       expect(frame).toContain(label);
     }
     expect(frame).toContain("enter open section");
@@ -33,5 +33,15 @@ describe("SettingsModal", () => {
     expect(tui.frame()).toContain("esc back to sections");
     await tui.press(keys.escape, keys.escape);
     expect(onClose).toHaveBeenCalledOnce();
+  });
+  it.each(["keyboard", "mouse"])("opens Skills with the %s", async (input) => {
+    const tui = await renderTui(<SettingsModal ctx={project.ctx} onChange={() => {}} onClose={() => {}} />);
+    if (input === "keyboard") await tui.press(keys.down, keys.down, keys.down, keys.enter);
+    else await tui.click("Skills");
+    await vi.waitFor(() => expect(tui.frame()).toContain("not installed"));
+    await tui.press("i");
+    expect(tui.frame()).toContain("Install skill ›");
+    await tui.press(keys.escape);
+    expect(tui.frame()).toContain("esc back to sections");
   });
 });

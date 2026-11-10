@@ -36,7 +36,7 @@ Install and set up Rowbly (https://github.com/sgolovine/rowbly) in this reposito
 4. If `.rowbly/` already exists in this directory, skip to step 6.
 5. Run `rowbly init --defaults --harness <id>`, where `<id>` is the harness that you are: `claude-code`, `codex`, `gemini-cli`, `github-copilot` or `cursor`. Do not run `rowbly` with no arguments, because that starts the interactive TUI.
 6. Run `rowbly doctor`. If it reports problems, run `rowbly doctor --fix` and then run `rowbly doctor` again.
-7. Run `rowbly get-instructions` and `rowbly --help`, and read the installed Rowbly skills, so that you know how to use Rowbly.
+7. Run `rowbly project get-instructions` and `rowbly --help`, and read the installed Rowbly skills, so that you know how to use Rowbly.
 8. Tell me what you installed: the project name and key, the stages, the skills and the folders that they are in. Then tell me to run `rowbly` to open the board.
 ```
 
@@ -88,7 +88,7 @@ Use one skill by itself, or use all four as a software factory. Put stories on t
 Install a skill for one or more harnesses:
 
 ```sh
-rowbly install-skill factory --harness claude-code --harness codex
+rowbly skill install factory --harness claude-code --harness codex
 ```
 
 | Harness          | Project skills folder |
@@ -99,9 +99,9 @@ rowbly install-skill factory --harness claude-code --harness codex
 | `github-copilot` | `.github/skills`      |
 | `cursor`         | `.cursor/skills`      |
 
-Run `rowbly list-skills` to see the installed skills. Run `rowbly remove-skill` to remove a skill.
+Run `rowbly skill list` to see the installed skills. Run `rowbly skill remove` to remove a skill.
 
-Keep your changes to an installed skill in a different place. `rowbly remove-skill` deletes the folder and all local changes in it.
+Keep your changes to an installed skill in a different place. `rowbly skill remove` deletes the folder and all local changes in it.
 
 ## Development
 

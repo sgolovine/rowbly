@@ -53,7 +53,7 @@ describe("onboarding", () => {
     const plan = await planOnboarding({ stages: [], skills: [] }, ctx());
     expect(plan.skills).toEqual([]);
     expect(plan.warnings).toEqual([FACTORY_SKILL_WARNING]);
-    expect(FACTORY_SKILL_WARNING).toContain("rowbly install-skill factory");
+    expect(FACTORY_SKILL_WARNING).toContain("rowbly skill install factory");
   });
 
   it("always creates Backlog and Done", async () => {
@@ -74,6 +74,7 @@ describe("onboarding", () => {
   it("creates the default stages from the top-level folder and installs the skills", async () => {
     const project = await applyOnboarding({ name: "App", harnesses: ["codex"] }, ctx());
     expect(project.stages).toHaveLength(5);
+    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
     expect(await readFile(join(dir.path, ".rowbly/stages/IN_DEVELOPMENT.md"), "utf8")).toContain("`develop` skill");
     expect(await pathExists(join(dir.path, ".agents/skills/develop/SKILL.md"))).toBe(true);
     expect(project.skills).toContainEqual({ name: "factory", harnesses: ["codex"] });
@@ -110,6 +111,7 @@ describe("onboarding", () => {
     await writeFile(join(dir.path, ".agents/skills/review/notes.md"), "mine");
     await expect(applyOnboarding({ harnesses: ["codex"] }, ctx())).rejects.toBeInstanceOf(ConflictError);
     expect(await pathExists(join(dir.path, ".rowbly"))).toBe(false);
+    expect(await pathExists(join(dir.path, ".rowbly/ROWBLY.md"))).toBe(false);
     expect(await pathExists(join(dir.path, ".agents/skills/develop"))).toBe(false);
     expect(await readFile(join(dir.path, ".agents/skills/review/notes.md"), "utf8")).toBe("mine");
   });

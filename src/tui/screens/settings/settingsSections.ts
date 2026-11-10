@@ -3,6 +3,7 @@ import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { CustomFieldsSection } from "./CustomFieldsSection/index.js";
 import { DoctorSection } from "./DoctorSection/index.js";
 import { ProjectSection } from "./ProjectSection/index.js";
+import { SkillsSection } from "./SkillsSection/index.js";
 import { SpecsSection } from "./SpecsSection/index.js";
 import { StagesSection } from "./StagesSection/index.js";
 
@@ -53,6 +54,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Custom Fields",
         description: "The fields that every Story has.",
         Component: CustomFieldsSection,
+      },
+      {
+        id: "skills",
+        label: "Skills",
+        description: "Manage bundled skills and the harnesses that use them.",
+        Component: SkillsSection,
       },
       {
         id: "specs",

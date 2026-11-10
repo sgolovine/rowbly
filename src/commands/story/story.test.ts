@@ -8,37 +8,47 @@ describe("story commands", () => {
   const project = useTestProject();
   const cli = (...args: string[]) => runCli(args, project.ctx.cwd);
 
-  describe("create-story", () => {
+  describe("story create", () => {
     it("creates a story with fields", async () => {
       await addCustomField({ label: "Points", type: "number" }, project.ctx);
-      const result = await cli("create-story", "--title", "First", "--stage", "done", "--field", "points=3");
+      const result = await cli("story", "create", "--title", "First", "--stage", "done", "--field", "points=3");
       expect(result).toEqual({ stdout: "Created ROW-01 in DONE", stderr: "", exitCode: 0 });
       expect(await getStory({ id: "ROW-01" }, project.ctx)).toMatchObject({ stage: "DONE", fields: { points: 3 } });
     });
 
     it("requires --title", async () => {
-      const result = await cli("create-story");
+      const result = await cli("story", "create");
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("required option '--title <title>' not specified");
     });
 
     it("rejects a --field without a key", async () => {
-      const result = await cli("create-story", "--title", "T", "--field", "points");
+      const result = await cli("story", "create", "--title", "T", "--field", "points");
       expect(result).toEqual({ stdout: "", stderr: 'Error: --field expects key=value, got "points"', exitCode: 1 });
     });
 
     it("prints every issue of an invalid story", async () => {
-      const result = await cli("create-story", "--title", " ", "--stage", "NOPE");
+      const result = await cli("story", "create", "--title", " ", "--stage", "NOPE");
       expect(result.exitCode).toBe(1);
       expect(result.stderr.split("\n").filter((line) => line.startsWith("  - "))).toHaveLength(2);
     });
   });
 
-  describe("update-story", () => {
+  describe("story update", () => {
     it("updates a story and clears a field with an empty value", async () => {
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
-      await cli("create-story", "--title", "First", "--field", "owner=sam");
-      const result = await cli("update-story", "ROW-01", "--title", "Renamed", "--stage", "DONE", "--field", "owner=");
+      await cli("story", "create", "--title", "First", "--field", "owner=sam");
+      const result = await cli(
+        "story",
+        "update",
+        "ROW-01",
+        "--title",
+        "Renamed",
+        "--stage",
+        "DONE",
+        "--field",
+        "owner=",
+      );
       expect(result.stdout).toBe("Updated ROW-01");
       expect(await getStory({ id: "ROW-01" }, project.ctx)).toMatchObject({
         title: "Renamed",
@@ -48,104 +58,104 @@ describe("story commands", () => {
     });
 
     it("moves a story to a position in its stage", async () => {
-      await cli("create-story", "--title", "First");
-      await cli("create-story", "--title", "Second");
-      expect((await cli("update-story", "ROW-02", "--position", "1")).stdout).toBe("Updated ROW-02");
+      await cli("story", "create", "--title", "First");
+      await cli("story", "create", "--title", "Second");
+      expect((await cli("story", "update", "ROW-02", "--position", "1")).stdout).toBe("Updated ROW-02");
       expect((await getStory({ id: "ROW-01" }, project.ctx)).position).toBe(2);
-      expect((await cli("update-story", "ROW-02", "--position", "0")).exitCode).not.toBe(0);
+      expect((await cli("story", "update", "ROW-02", "--position", "0")).exitCode).not.toBe(0);
     });
 
     it("fails for an unknown story", async () => {
-      const result = await cli("update-story", "ROW-09", "--title", "X");
+      const result = await cli("story", "update", "ROW-09", "--title", "X");
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toMatch(/^Error: /);
     });
   });
 
-  it("delete-story deletes a story", async () => {
-    await cli("create-story", "--title", "First");
-    expect((await cli("delete-story", "ROW-01")).stdout).toBe("Deleted ROW-01");
-    expect((await cli("get-story", "ROW-01")).exitCode).toBe(1);
+  it("story delete deletes a story", async () => {
+    await cli("story", "create", "--title", "First");
+    expect((await cli("story", "delete", "ROW-01")).stdout).toBe("Deleted ROW-01");
+    expect((await cli("story", "get", "ROW-01")).exitCode).toBe(1);
   });
 
-  describe("get-story", () => {
+  describe("story get", () => {
     it("shows the stage label, every field and the description", async () => {
       await addCustomField({ label: "Points", type: "number" }, project.ctx);
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
-      await cli("create-story", "--title", "First", "--description", "Some *text*", "--field", "points=5");
-      expect((await cli("get-story", "ROW-01")).stdout).toBe(
+      await cli("story", "create", "--title", "First", "--description", "Some *text*", "--field", "points=5");
+      expect((await cli("story", "get", "ROW-01")).stdout).toBe(
         "ROW-01  First\nStage: Backlog (BACKLOG)\nPoints: 5\nOwner: —\n\nSome *text*",
       );
     });
 
     it("prints the story as JSON with --json", async () => {
-      await cli("create-story", "--title", "First");
-      const result = await cli("--json", "get-story", "ROW-01");
+      await cli("story", "create", "--title", "First");
+      const result = await cli("--json", "story", "get", "ROW-01");
       expect(JSON.parse(result.stdout)).toMatchObject({ id: "ROW-01", title: "First", stage: "BACKLOG" });
     });
   });
 
-  describe("search-stories", () => {
+  describe("story search", () => {
     it("lists the stories that match", async () => {
-      await cli("create-story", "--title", "Login page");
-      await cli("create-story", "--title", "Logout", "--stage", "DONE");
-      await cli("create-story", "--title", "Settings");
-      expect((await cli("search-stories", "log")).stdout).toBe(
+      await cli("story", "create", "--title", "Login page");
+      await cli("story", "create", "--title", "Logout", "--stage", "DONE");
+      await cli("story", "create", "--title", "Settings");
+      expect((await cli("story", "search", "log")).stdout).toBe(
         "ROW-01   BACKLOG        Login page\nROW-02   DONE           Logout",
       );
-      expect((await cli("search-stories", "--stage", "DONE")).stdout).toBe("ROW-02   DONE           Logout");
+      expect((await cli("story", "search", "--stage", "DONE")).stdout).toBe("ROW-02   DONE           Logout");
     });
 
     it("filters by field value", async () => {
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
-      await cli("create-story", "--title", "A", "--field", "owner=sam");
-      await cli("create-story", "--title", "B", "--field", "owner=kim");
-      expect((await cli("search-stories", "--field", "owner=kim")).stdout).toBe("ROW-02   BACKLOG        B");
+      await cli("story", "create", "--title", "A", "--field", "owner=sam");
+      await cli("story", "create", "--title", "B", "--field", "owner=kim");
+      expect((await cli("story", "search", "--field", "owner=kim")).stdout).toBe("ROW-02   BACKLOG        B");
     });
 
     it("says when nothing matches", async () => {
-      expect((await cli("search-stories", "nothing")).stdout).toBe("No stories found.");
+      expect((await cli("story", "search", "nothing")).stdout).toBe("No stories found.");
     });
   });
 
   describe("agent locks", () => {
-    it("locks a story, shows the lock in get-story, and unlocks it", async () => {
-      await cli("create-story", "--title", "First");
-      expect(await cli("lock-story", "ROW-01", "--agent", "claude")).toEqual({
+    it("locks a story, shows the lock in story get, and unlocks it", async () => {
+      await cli("story", "create", "--title", "First");
+      expect(await cli("story", "lock", "ROW-01", "--agent", "claude")).toEqual({
         stdout: "Locked ROW-01 for claude",
         stderr: "",
         exitCode: 0,
       });
-      expect((await cli("get-story", "ROW-01")).stdout).toMatch(/^Agent lock: claude \(since \d{4}-.*\)$/m);
-      expect((await cli("unlock-story", "ROW-01", "--agent", "claude")).stdout).toBe("Unlocked ROW-01");
-      expect((await cli("get-story", "ROW-01")).stdout).not.toContain("Agent lock");
+      expect((await cli("story", "get", "ROW-01")).stdout).toMatch(/^Agent lock: claude \(since \d{4}-.*\)$/m);
+      expect((await cli("story", "unlock", "ROW-01", "--agent", "claude")).stdout).toBe("Unlocked ROW-01");
+      expect((await cli("story", "get", "ROW-01")).stdout).not.toContain("Agent lock");
     });
 
     it("gives the lock as JSON", async () => {
-      await cli("create-story", "--title", "First");
-      const result = await cli("lock-story", "ROW-01", "--agent", "claude", "--json");
+      await cli("story", "create", "--title", "First");
+      const result = await cli("story", "lock", "ROW-01", "--agent", "claude", "--json");
       expect(JSON.parse(result.stdout).agentLock).toMatchObject({ agent: "claude", stage: "BACKLOG" });
     });
 
     it("requires --agent to lock", async () => {
-      await cli("create-story", "--title", "First");
-      const result = await cli("lock-story", "ROW-01");
+      await cli("story", "create", "--title", "First");
+      const result = await cli("story", "lock", "ROW-01");
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("required option '--agent <name>' not specified");
     });
 
     it("refuses a second agent and names the holder", async () => {
-      await cli("create-story", "--title", "First");
-      await cli("lock-story", "ROW-01", "--agent", "claude");
-      const result = await cli("lock-story", "ROW-01", "--agent", "codex");
+      await cli("story", "create", "--title", "First");
+      await cli("story", "lock", "ROW-01", "--agent", "claude");
+      const result = await cli("story", "lock", "ROW-01", "--agent", "codex");
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain("ROW-01 is locked by claude");
-      expect(result.stderr).toContain("rowbly unlock-story ROW-01");
+      expect(result.stderr).toContain("rowbly story unlock ROW-01");
     });
 
     it("fails to unlock a story with no lock", async () => {
-      await cli("create-story", "--title", "First");
-      const result = await cli("unlock-story", "ROW-01");
+      await cli("story", "create", "--title", "First");
+      const result = await cli("story", "unlock", "ROW-01");
       expect(result).toEqual({ stdout: "", stderr: "Error: ROW-01 has no agent lock", exitCode: 1 });
     });
   });

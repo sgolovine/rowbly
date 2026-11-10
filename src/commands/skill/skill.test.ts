@@ -15,7 +15,7 @@ describe("skill commands", () => {
   });
 
   it("installs a bundled skill for each harness", async () => {
-    const result = await cli("install-skill", "develop", "--harness", "claude-code", "--harness", "cursor");
+    const result = await cli("skill", "install", "develop", "--harness", "claude-code", "--harness", "cursor");
     expect(result).toEqual({
       stdout: [
         `Installed develop for claude-code: ${at(".claude/skills/develop")}`,
@@ -32,25 +32,25 @@ describe("skill commands", () => {
   });
 
   it("copies the scripts of a skill", async () => {
-    expect((await cli("install-skill", "factory", "--harness", "codex")).exitCode).toBe(0);
+    expect((await cli("skill", "install", "factory", "--harness", "codex")).exitCode).toBe(0);
     expect(await pathExists(at(".agents/skills/factory/scripts/watch-stages.mjs"))).toBe(true);
   });
 
   it("says when a skill is already installed", async () => {
-    await cli("install-skill", "review", "--harness", "codex");
-    expect((await cli("install-skill", "review", "--harness", "codex")).stdout).toBe(
+    await cli("skill", "install", "review", "--harness", "codex");
+    expect((await cli("skill", "install", "review", "--harness", "codex")).stdout).toBe(
       `review is already installed for codex: ${at(".agents/skills/review")}`,
     );
   });
 
-  it("requires --harness on install-skill", async () => {
-    const result = await cli("install-skill", "review");
+  it("requires --harness on skill install", async () => {
+    const result = await cli("skill", "install", "review");
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("--harness <id>");
   });
 
   it("gives the bundled names for an unknown skill", async () => {
-    expect(await cli("install-skill", "../x", "--harness", "codex")).toEqual({
+    expect(await cli("skill", "install", "../x", "--harness", "codex")).toEqual({
       stdout: "",
       stderr: 'Error: Unknown skill "../x"\nHint: Bundled skills: develop, factory, refine, review',
       exitCode: 1,
@@ -58,12 +58,12 @@ describe("skill commands", () => {
   });
 
   it("rejects the shared reference file", async () => {
-    expect((await cli("install-skill", "rowbly_reference.md", "--harness", "codex")).exitCode).toBe(1);
+    expect((await cli("skill", "install", "rowbly_reference.md", "--harness", "codex")).exitCode).toBe(1);
     expect(await pathExists(at(".agents"))).toBe(false);
   });
 
   it("prints a typed error as JSON for a bad harness", async () => {
-    const result = await cli("--json", "install-skill", "review", "--harness", "vim");
+    const result = await cli("--json", "skill", "install", "review", "--harness", "vim");
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toBe("");
     expect(JSON.parse(result.stderr)).toMatchObject({
@@ -72,12 +72,12 @@ describe("skill commands", () => {
   });
 
   it("lists the installed skills, as text and as JSON", async () => {
-    expect((await cli("list-skills")).stdout).toBe("No skills installed.");
-    await cli("install-skill", "review", "--harness", "codex", "--harness", "cursor");
-    await cli("remove-skill", "review", "--harness", "cursor");
-    expect((await cli("list-skills")).stdout).toBe("review  codex");
+    expect((await cli("skill", "list")).stdout).toBe("No skills installed.");
+    await cli("skill", "install", "review", "--harness", "codex", "--harness", "cursor");
+    await cli("skill", "remove", "review", "--harness", "cursor");
+    expect((await cli("skill", "list")).stdout).toBe("review  codex");
 
-    const json = await cli("--json", "list-skills");
+    const json = await cli("--json", "skill", "list");
     expect(JSON.parse(json.stdout)).toEqual([
       {
         name: "review",
@@ -87,14 +87,14 @@ describe("skill commands", () => {
   });
 
   it("marks a harness whose copy is missing", async () => {
-    await cli("install-skill", "review", "--harness", "codex");
+    await cli("skill", "install", "review", "--harness", "codex");
     await rm(at(".agents/skills/review"), { recursive: true });
-    expect((await cli("list-skills")).stdout).toBe("review  codex (missing)");
+    expect((await cli("skill", "list")).stdout).toBe("review  codex (missing)");
   });
 
   it("removes a skill", async () => {
-    await cli("install-skill", "review", "--harness", "codex");
-    expect((await cli("remove-skill", "review")).stdout).toBe(
+    await cli("skill", "install", "review", "--harness", "codex");
+    expect((await cli("skill", "remove", "review")).stdout).toBe(
       `Removed review from codex: ${at(".agents/skills/review")}`,
     );
     expect(await pathExists(at(".agents/skills/review"))).toBe(false);
@@ -102,14 +102,14 @@ describe("skill commands", () => {
   });
 
   it("gives exit code 1 and a JSON error for a skill that is not installed", async () => {
-    const result = await cli("--json", "remove-skill", "review");
+    const result = await cli("--json", "skill", "remove", "review");
     expect(result.exitCode).toBe(1);
     expect(JSON.parse(result.stderr)).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
 
   it("gives exit code 1 for a conflict", async () => {
     await mkdir(at(".cursor/skills/review"), { recursive: true });
-    const result = await cli("install-skill", "review", "--harness", "cursor");
+    const result = await cli("skill", "install", "review", "--harness", "cursor");
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("Hint: Move or delete it");
   });

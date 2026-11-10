@@ -101,6 +101,7 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
   for (const stage of stages) {
     await writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`);
   }
+  await writeFileAtomic(paths.instructionsFile, "# ROWBLY INSTRUCTIONS\n");
   await writeConfig(paths, config);
   return { ...config, root };
 }

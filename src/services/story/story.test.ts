@@ -232,7 +232,7 @@ describe("story", () => {
       const error = await lockStory({ id: "ROW-01", agent: "codex" }, at(T2)).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ConflictError);
       expect((error as ConflictError).hint).toContain("claude");
-      expect((error as ConflictError).hint).toContain("rowbly unlock-story");
+      expect((error as ConflictError).hint).toContain("rowbly story unlock");
       expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock?.agent).toBe("claude");
     });
 

@@ -60,7 +60,7 @@ const INVALID_SPEC_HINT = "Run `rowbly doctor` to find and fix problems in spec 
 function requireSpecs(config: ProjectConfig): void {
   if (!featureEnabled(config, "specs")) {
     throw new ConflictError("Specs are turned off in this project", {
-      hint: "Run `rowbly update-project --specs on`, or turn Specs on in the TUI Settings.",
+      hint: "Run `rowbly project update --specs on`, or turn Specs on in the TUI Settings.",
     });
   }
 }
@@ -98,7 +98,7 @@ function toSpec(config: ProjectConfig, file: SpecFile): Spec {
 async function findSpecFile(paths: ProjectPaths, slug: string): Promise<SpecFile> {
   const key = slug.trim().toLowerCase();
   if (!SPEC_SLUG_PATTERN.test(key) || !(await pathExists(specPath(paths, key)))) {
-    throw new NotFoundError(`Spec ${slug} not found`, { hint: "Run `rowbly list-specs` to see the specs." });
+    throw new NotFoundError(`Spec ${slug} not found`, { hint: "Run `rowbly spec list` to see the specs." });
   }
   return readSpecFile(paths, key);
 }
@@ -141,7 +141,7 @@ export async function createSpec(input: CreateSpecInput, ctx: ServiceContext = {
         message: `Slug "${input.slug}" must be lowercase letters and digits, with - between words`,
       });
     } else if (await pathExists(specPath(paths, slug))) {
-      throw new ConflictError(`Spec ${slug} already exists`, { hint: "Use another --slug, or `rowbly update-spec`." });
+      throw new ConflictError(`Spec ${slug} already exists`, { hint: "Use another --slug, or `rowbly spec update`." });
     }
   } else {
     const base = toSpecSlug(title) || "spec";
@@ -209,7 +209,7 @@ export async function unlinkSpec(input: SpecLinkInput, ctx: ServiceContext = {})
   if (stories.length === 0) {
     throw new ValidationError(`${id} is the only Story of spec ${spec.slug}`, {
       details: { issues: [{ path: ["stories"], message: "A spec must be linked to at least one Story" }] },
-      hint: `Link it to another Story first, or run \`rowbly delete-spec ${spec.slug}\`.`,
+      hint: `Link it to another Story first, or run \`rowbly spec delete ${spec.slug}\`.`,
     });
   }
   return updateSpec({ slug: spec.slug, stories }, ctx);

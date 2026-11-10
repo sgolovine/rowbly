@@ -15,7 +15,7 @@ function parseSwitch(value: string): boolean {
 
 export function registerProjectCommands(program: Command): void {
   program
-    .command("update-project")
+    .command("update")
     .description("Update the project's name, key or features")
     .option("--name <name>", "new project name")
     .option("--key <key>", "new story ID prefix; renames every story file")
