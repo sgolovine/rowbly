@@ -1,6 +1,6 @@
 ---
 title: Init should add ROWBLY.md to .rowbly folder.
-stage: IN_DEVELOPMENT
+stage: DONE
 position: 1
 worktree: null
 pull_request: null
