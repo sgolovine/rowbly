@@ -46,6 +46,12 @@ The Project must have these custom fields:
 
 ## Pull request
 
+Set the title of each new Story pull request to `<Story ID>: <summary>`.
+Use the full `id` from `story get`, then a colon, a space and a short summary.
+Use the current Story ID for each pull request.
+
+Example: `ROW-07: Include Story IDs in pull request titles`.
+
 Write the URL to the Story immediately after you open a pull request: `story update <story-id> --field pull_request=<url>`.
 
 If the branch has a pull request and the `pull_request` field is empty, write the URL to the Story.
