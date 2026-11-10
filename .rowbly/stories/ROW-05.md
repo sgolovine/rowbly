@@ -36,7 +36,14 @@ A refinement result of `blocked` with questions for the user remains distinct fr
 
 ## Technical notes
 
-The current rules are in `skills/factory/SKILL.md` and `.agents/skills/factory/SKILL.md`.
+The current rules have three separate copies:
+
+- `skills/factory/SKILL.md`
+- `.agents/skills/factory/SKILL.md`
+- `.claude/skills/factory/SKILL.md`
+
+All three files currently have the same content and different inodes.
+Update all installed copies with the bundled copy.
 Check for shared paths or symlinks before an edit.
 The Assign workers section skips earlier attempts during the same stay in a Stage.
 It clears them only after a Stage change or an explicit user request.
@@ -45,13 +52,28 @@ Replace this rule for failed and interrupted refinement attempts.
 The supervisor owns worker assignment and retry decisions.
 `skills/factory/scripts/watch-stages.mjs` reports Stories; it does not assign workers.
 Do not move retry decisions into the scanner only to add tests.
-Use the existing factory tests where applicable, and add a test method for supervisor rules if necessary.
+The current factory tests cover scanner events, not supervisor decisions.
+Add supervisor test cases for retry decisions without a live worker or a running factory.
+Cover blocked results, active workers, current Stage locks and disabled or hold Stages.
+Cover the retry delay and limit after the user selects the policy.
+Keep the current rules for invalid or absent Stage prompts.
+Run `pnpm test:factory` if scripts change, and add new test files to that command if necessary.
 
 ROW-01 and ROW-02 demonstrate the problem.
 Their interrupted refinement attempts remain in `/tmp/rowbly-factory.wm67AK/workers.json` after a supervisor restart.
+Both records have `status: interrupted`, `result: interrupted` and `reported: true`.
 The current supervisor treats these records as a reason to skip both Stories.
+Use this record shape as a restart test case.
+Do not depend on this temporary directory at runtime.
+
+The skill specifies scans about every 30 seconds, or the minimum interval of the harness.
+The scanner defaults to five seconds when no interval is supplied.
+Neither value defines a retry delay or a retry limit.
 
 ## Open questions
 
 - What delay must apply between repeated refinement failures?
 - Must a retry limit exist, and what automatic recovery follows that limit?
+
+The proposed policy retries on the next later scan, with no attempt limit.
+The user must select the policy before this Story is ready.
