@@ -48,12 +48,12 @@ describe("output", () => {
       await run(
         command(),
         async () => {
-          throw new NotFoundError("Story ROW-09 not found", { hint: "Run `rowbly search-stories`." });
+          throw new NotFoundError("Story ROW-09 not found", { hint: "Run `rowbly story search`." });
         },
         () => "text",
       );
       expect(out).toEqual([]);
-      expect(err).toEqual(["Error: Story ROW-09 not found", "Hint: Run `rowbly search-stories`."]);
+      expect(err).toEqual(["Error: Story ROW-09 not found", "Hint: Run `rowbly story search`."]);
       expect(process.exitCode).toBe(1);
     });
 

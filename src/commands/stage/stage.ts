@@ -28,7 +28,7 @@ function formatStage(stage: Stage): string {
 
 export function registerStageCommands(program: Command): void {
   program
-    .command("create-stage")
+    .command("create")
     .description("Create a stage")
     .requiredOption("--label <label>", "stage name, e.g. In Progress")
     .option("--key <key>", "stage key and file name (default: the label in UPPER_SNAKE_CASE)")
@@ -54,7 +54,7 @@ export function registerStageCommands(program: Command): void {
     );
 
   program
-    .command("update-stage <key>")
+    .command("update <key>")
     .description("Update a stage")
     .option("--rename <key>", "new key; renames the stage file and moves its stories")
     .option("--label <label>", "new name")
@@ -82,7 +82,7 @@ export function registerStageCommands(program: Command): void {
     );
 
   program
-    .command("delete-stage <key>")
+    .command("delete <key>")
     .description("Delete a stage")
     .option("--move-to <stage>", "move the stage's stories to this stage first")
     .action((key: string, opts: { moveTo?: string }, command: Command) =>
@@ -95,7 +95,7 @@ export function registerStageCommands(program: Command): void {
     );
 
   program
-    .command("get-stage <key>")
+    .command("get <key>")
     .description("Show a stage and its prompt")
     .action((key: string, _opts: unknown, command: Command) =>
       run(command, (ctx) => getStage({ key }, ctx), formatStage),

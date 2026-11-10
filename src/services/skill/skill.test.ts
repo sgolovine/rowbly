@@ -117,7 +117,7 @@ describe("skill service", () => {
       const error = await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx).catch((e) => e);
       expect(error).toBeInstanceOf(ConflictError);
       expect(error.message).toContain(join(".agents", "skills", "alpha"));
-      expect(error.hint).toMatch(/install-skill/);
+      expect(error.hint).toMatch(/skill install/);
       expect(await readdir(at(".agents/skills/alpha"))).toEqual(["mine.md", "references"]);
     });
 
@@ -155,7 +155,7 @@ describe("skill service", () => {
       const before = await project.read("rowbly.config.json");
       const error = await installSkill({ name: "alpha", harnesses: ["claude-code"] }, ctx).catch((e) => e);
       expect(error).toBeInstanceOf(ConflictError);
-      expect(error.hint).toMatch(/install-skill/);
+      expect(error.hint).toMatch(/skill install/);
       expect(await readdir(at(".claude/skills/alpha"))).toEqual(["mine.md"]);
       expect(await project.read("rowbly.config.json")).toBe(before);
     });

@@ -53,7 +53,7 @@ describe("onboarding", () => {
     const plan = await planOnboarding({ stages: [], skills: [] }, ctx());
     expect(plan.skills).toEqual([]);
     expect(plan.warnings).toEqual([FACTORY_SKILL_WARNING]);
-    expect(FACTORY_SKILL_WARNING).toContain("rowbly install-skill factory");
+    expect(FACTORY_SKILL_WARNING).toContain("rowbly skill install factory");
   });
 
   it("always creates Backlog and Done", async () => {

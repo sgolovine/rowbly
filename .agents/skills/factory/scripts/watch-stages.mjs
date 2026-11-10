@@ -31,12 +31,12 @@ if (!values.root || !command || !(intervalMs > 0)) {
 const emit = (line) => console.log(JSON.stringify(line));
 
 async function readStories() {
-  const { stdout } = await run(command, [...commandArgs, "-C", values.root, "--json", "search-stories"], {
+  const { stdout } = await run(command, [...commandArgs, "-C", values.root, "--json", "story search"], {
     maxBuffer: 64 * 1024 * 1024,
     timeout: 30_000,
   });
   const stories = JSON.parse(stdout);
-  if (!Array.isArray(stories)) throw new Error("search-stories did not return a list");
+  if (!Array.isArray(stories)) throw new Error("story search did not return a list");
   return stories;
 }
 

@@ -40,7 +40,7 @@ describe("doctor command", () => {
   });
 
   it("reports a tracked skill that is missing, with exit code 1, and restores it with --fix", async () => {
-    await runCli(["install-skill", "review", "--harness", "cursor"], project.ctx.cwd);
+    await runCli(["skill", "install", "review", "--harness", "cursor"], project.ctx.cwd);
     await rm(join(project.paths.root, ".cursor"), { recursive: true });
     const file = join(".cursor", "skills", "review");
     const report = await runCli(["doctor"], project.ctx.cwd);
@@ -54,7 +54,7 @@ describe("doctor command", () => {
   });
 
   it("keeps its report and exit code 1 when a skills folder cannot be created", async () => {
-    await runCli(["install-skill", "review", "--harness", "cursor"], project.ctx.cwd);
+    await runCli(["skill", "install", "review", "--harness", "cursor"], project.ctx.cwd);
     await rm(join(project.paths.root, ".cursor", "skills"), { recursive: true });
     await symlink("missing", join(project.paths.root, ".cursor", "skills"));
     await rm(join(project.paths.stagesDir, "DONE.md"));

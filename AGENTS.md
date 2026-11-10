@@ -43,7 +43,7 @@ Project ── configuration: custom field definitions, stages (each with an opt
 - **Spec.** A spec is a Markdown document that describes the work of a story. A spec must have a link
   to at least one story, and a story can have many specs. Specs are an optional feature. Each project
   starts with specs off. Turn them on in the Specs section of Settings or with
-  `rowbly update-project --specs on`. When specs are on, an open story has a General tab and a Specs tab.
+  `rowbly project update --specs on`. When specs are on, an open story has a General tab and a Specs tab.
 
 ## Stack
 
@@ -89,7 +89,7 @@ src/
     testCli/          # runCli(), createProgram(): run commands in tests
     init/             # the `rowbly init` command: flags and JSON input
     initWizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
-    <area>/           # one folder per area: project (update-project, get-instructions), doctor, story, stage, customField, spec, skill
+    <area>/           # one folder per area: project (project update, project get-instructions), doctor, story, stage, customField, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
     App.tsx           # root TUI component: TuiProviders around the Shell
@@ -116,7 +116,7 @@ src/
     storyWatch/       # watchStories(): calls a function when the files of the stories folder change
     knownProject/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
-skills/               # the bundled skills; `rowbly install-skill` copies them into a project
+skills/               # the bundled skills; `rowbly skill install` copies them into a project
 stages/               # the default stage prompts; onboarding copies them into a project
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
 ```
@@ -149,8 +149,8 @@ stories that have one, in the order of their numbers. When a story moves, the se
 `position` to each story of the stage that changes place.
 
 The `agentLock` key of a story holds the lock of an agent: `agent`, `stage` and `lockedAt` (ISO-8601).
-`rowbly lock-story` and `rowbly unlock-story` write the key. If a different agent holds the lock,
-`lock-story` stops with an error. A change of the story's stage removes the key, and a rename of the
+`rowbly story lock` and `rowbly story unlock` write the key. If a different agent holds the lock,
+`story lock` stops with an error. A change of the story's stage removes the key, and a rename of the
 stage key keeps the lock. Rowbly ignores a lock if its `stage` is not the stage of the story.
 `rowbly doctor` shows an error for a malformed lock and a warning for a stale lock, and `--fix` removes
 only the stale lock.
@@ -161,7 +161,7 @@ shows a warning for each orphan spec, and for each link to a story that does not
 removes a link to a story that does not exist. It does not delete an orphan spec.
 
 The `skills` list of the config holds the bundled skills that a project has installed. Each entry
-has the `name` of a skill and the `harnesses` that have a copy. `rowbly install-skill` copies a folder
+has the `name` of a skill and the `harnesses` that have a copy. `rowbly skill install` copies a folder
 from the `skills/` folder of the Rowbly package to the project skills folder of each harness:
 
 | Harness          | Project skills folder |
@@ -172,10 +172,10 @@ from the `skills/` folder of the Rowbly package to the project skills folder of 
 | `github-copilot` | `.github/skills`      |
 | `cursor`         | `.cursor/skills`      |
 
-`rowbly list-skills` shows the installed skills. `rowbly remove-skill` deletes only the folders that
+`rowbly skill list` shows the installed skills. `rowbly skill remove` deletes only the folders that
 the config tracks. It keeps a folder that a different tracked harness uses through a symlink, at the
 skill or at the skills folder. If the path of the skill is a symlink, it deletes only the link.
-`install-skill` checks each target before it writes. The command uses the same rule as `list-skills` and
+`skill install` checks each target before it writes. The command uses the same rule as `skill list` and
 `doctor`: a skill is present if its folder has a `SKILL.md`. If other content is at a target, the
 command stops and changes nothing. If nothing is at the path of a tracked skill, the command copies it again.
 
@@ -187,11 +187,11 @@ symlink prevents the creation of the skills folder, `doctor` shows an error with
 Harnesses can read the same folders. For example, Cursor also reads `.claude/skills` and
 `.agents/skills`. A skill can then stay visible to a harness after you remove the skill for that harness.
 
-Keep your changes to a tracked skill in a different place. `rowbly remove-skill` deletes the folder and
+Keep your changes to a tracked skill in a different place. `rowbly skill remove` deletes the folder and
 all local changes in it.
 
 `ROWBLY.md` holds the top-level instructions of a project, as a `CLAUDE.md` or `AGENTS.md` file does.
-Rowbly does not create, parse or enforce it. `rowbly get-instructions` shows the text. A supervisor
+Rowbly does not create, parse or enforce it. `rowbly project get-instructions` shows the text. A supervisor
 gives the text to each worker that it starts.
 
 Rowbly also keeps one file for each user, `~/.rowblyrc.json`. The TUI adds a project to this file when
@@ -241,7 +241,7 @@ The CLI and the TUI are **thin front ends**. The services in `src/services/` do 
 The two front ends call the same service functions.
 
 ```
- rowbly create-story --name foobar          TUI "Create story" screen
+ rowbly story create --name foobar          TUI "Create story" screen
               │                                       │
    src/commands/story/story.ts             src/tui/screens/CreateStory.tsx
               │                                       │
@@ -249,7 +249,7 @@ The two front ends call the same service functions.
                                 createStory({ name })
 ```
 
-For example, a user can run `rowbly create-story --name foobar`, or create the same story in the TUI.
+For example, a user can run `rowbly story create --name foobar`, or create the same story in the TUI.
 The two paths must both call the same `createStory` service. A front end must not contain logic of
 its own to create a story.
 
@@ -275,25 +275,25 @@ its own to create a story.
 ### Add a CLI command
 
 1. Write or extend the service in `src/services/`.
-2. Create `src/commands/<command>/<command>.ts`. Export a function from it that registers the subcommand:
+2. Create `src/commands/<command>/<command>.ts`. Export a function that registers the action on its resource command:
 
    ```ts
    import type { Command } from "commander";
    import { createStory } from "../../services/story/story.js";
 
-   export function registerCreateStory(program: Command): void {
-     program
-       .command("create-story")
+   export function registerCreateStory(story: Command): void {
+     story
+       .command("create")
        .description("Create a new story")
-       .requiredOption("--name <name>", "story name")
-       .action(async (opts: { name: string }) => {
-         const story = await createStory({ name: opts.name });
-         console.log(`Created ${story.name}`);
+       .requiredOption("--title <title>", "story title")
+       .action(async (opts: { title: string }) => {
+         const story = await createStory({ title: opts.title });
+         console.log(`Created ${story.id}`);
        });
    }
    ```
 
-3. Call the function from `registerCommands` in `src/commands/registerCommands/registerCommands.ts`.
+3. Pass the resource command to this function from `registerCommands` in `src/commands/registerCommands/registerCommands.ts`.
 
 The command file only changes flags into service input and formats the service output. Commander
 gives `--help` for each subcommand automatically.
@@ -480,7 +480,7 @@ Exception: `.agents/skills/agentic-tui/SKILL.md` is a copy of an upstream file. 
 When a turn changes files, commit the changes before you give control back to the user.
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<optional scope>): <summary>`.
-  For example, `feat(story): add create-story command` or `fix(tui): keep focus after closing a modal`.
+  For example, `feat(story): add story create command` or `fix(tui): keep focus after closing a modal`.
   The usual types are `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `build` and `ci`. Mark a
   breaking change with `!` (`feat!: …`) or with a `BREAKING CHANGE:` footer.
 - Keep the summary short. Write it in the imperative and in lower case, with no period at the end.

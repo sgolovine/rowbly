@@ -242,7 +242,7 @@ export async function lockStory(input: LockStoryInput, ctx: ServiceContext = {})
   if (story.agentLock?.agent === agent) return story;
   if (story.agentLock) {
     throw new ConflictError(`${story.id} is locked by ${story.agentLock.agent}`, {
-      hint: `Wait for ${story.agentLock.agent}, or run \`rowbly unlock-story ${story.id}\` to remove the lock.`,
+      hint: `Wait for ${story.agentLock.agent}, or run \`rowbly story unlock ${story.id}\` to remove the lock.`,
       details: { agentLock: story.agentLock },
     });
   }
@@ -262,7 +262,7 @@ export async function unlockStory(input: UnlockStoryInput, ctx: ServiceContext =
   if (!story.agentLock) throw new NotFoundError(`${story.id} has no agent lock`);
   if (agent !== undefined && story.agentLock.agent !== agent) {
     throw new ConflictError(`${story.id} is locked by ${story.agentLock.agent}, not ${agent}`, {
-      hint: `Run \`rowbly unlock-story ${story.id}\` without --agent to remove the lock.`,
+      hint: `Run \`rowbly story unlock ${story.id}\` without --agent to remove the lock.`,
       details: { agentLock: story.agentLock },
     });
   }

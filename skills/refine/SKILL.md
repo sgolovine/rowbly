@@ -11,13 +11,13 @@ Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
 ## Procedure
 
-1. Read the Project instructions (`rowbly get-instructions --json`), the Story and its Specs.
+1. Read the Project instructions (`rowbly project get-instructions --json`), the Story and its Specs.
 2. Read the code and the repository instructions that apply to the Story.
 3. Write the description again with the sections below. Keep all the facts and the intent of the author.
 4. Answer each question that the code can answer.
 5. Ask the user each question that only the user can answer.
 6. Write each question that has no answer in `## Open questions`.
-7. Save the description with `update-story`.
+7. Save the description with `story update`.
 
 ## Description
 

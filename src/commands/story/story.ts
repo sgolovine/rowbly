@@ -34,7 +34,7 @@ async function formatStory(story: Story, ctx: ServiceContext): Promise<string> {
 
 export function registerStoryCommands(program: Command): void {
   program
-    .command("create-story")
+    .command("create")
     .description("Create a story")
     .requiredOption("--title <title>", "story title")
     .option("--stage <stage>", "stage key (default: the first enabled stage)")
@@ -58,7 +58,7 @@ export function registerStoryCommands(program: Command): void {
     );
 
   program
-    .command("update-story <id>")
+    .command("update <id>")
     .description("Update a story")
     .option("--title <title>", "new title")
     .option("--stage <stage>", "move to this stage")
@@ -89,7 +89,7 @@ export function registerStoryCommands(program: Command): void {
     );
 
   program
-    .command("delete-story <id>")
+    .command("delete <id>")
     .description("Delete a story")
     .action((id: string, _opts: unknown, command: Command) =>
       run(
@@ -100,14 +100,14 @@ export function registerStoryCommands(program: Command): void {
     );
 
   program
-    .command("get-story <id>")
+    .command("get <id>")
     .description("Show a story")
     .action((id: string, _opts: unknown, command: Command) =>
       run(command, (ctx) => getStory({ id }, ctx), formatStory),
     );
 
   program
-    .command("lock-story <id>")
+    .command("lock <id>")
     .description("Record that an agent works on a story in its current stage")
     .requiredOption("--agent <name>", "the name of the agent")
     .action((id: string, opts: { agent: string }, command: Command) =>
@@ -119,7 +119,7 @@ export function registerStoryCommands(program: Command): void {
     );
 
   program
-    .command("unlock-story <id>")
+    .command("unlock <id>")
     .description("Remove the agent lock of a story")
     .option("--agent <name>", "refuse if a different agent holds the lock")
     .action((id: string, opts: { agent?: string }, command: Command) =>
@@ -131,7 +131,7 @@ export function registerStoryCommands(program: Command): void {
     );
 
   program
-    .command("search-stories [query]")
+    .command("search [query]")
     .description("Find stories by text, stage or custom field values")
     .option("--stage <stage>", "only stories in this stage")
     .option("--field <key=value>", "only stories with this field value (repeatable)", collect)
