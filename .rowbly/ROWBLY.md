@@ -14,3 +14,5 @@
 ## Custom Startup
 
 - In addition to existing checks, make sure we have a good connection to `rook` and that threads can be spawned on `rook`. If not this is considered a WARN
+
+- Make sure both `rook` and `thinkpad` pull the latest from git.
