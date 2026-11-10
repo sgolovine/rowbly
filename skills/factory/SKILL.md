@@ -30,6 +30,7 @@ Do not start a test worker. Examine the tools of the harness.
 | 7   | Start workers          | The harness can start threads. If it cannot, it can start subagents as a fallback.                             | `FAIL`                |
 | 8   | Models and effort      | The tool from check 7 can set a different model and a different effort level for each worker.                  | `WARN`                |
 | 9   | Name a worker          | The tool from check 7 can set the title of a worker.                                                           | `WARN`                |
+| 10 | State file | Run `factory-state.mjs read --root <root>`. In Git, run `git -C <root> check-ignore -q .rowbly/state.json`. | Read failure: `FAIL`. Not ignored: `WARN`; add `.rowbly/state.json` to `.gitignore`. |
 
 Do not use `stage get` for check 5. It gives an empty prompt when the file does not exist.
 
@@ -79,6 +80,7 @@ Factory start checklist
 [PASS] 7. Start workers: threads
 [PASS] 8. Models and effort
 [WARN] 9. Name a worker: this harness cannot set a title
+[PASS] 10. State file
 Result: not started. Repair check 5, then start the factory again.
 ```
 
@@ -90,7 +92,15 @@ If the only problem is a `WARN`, tell the user and continue. Workers have the de
 
 Scan all Stories at startup and on each later scan. A Story does not have to change Stage to receive a worker.
 
-1. Use the existing worker records after a restart. For a new factory, make a temporary directory outside the Project.
+1. Read `<root>/.rowbly/state.json` with the helper:
+
+   ```sh
+   node <skill directory>/scripts/factory-state.mjs read --root <root>
+   ```
+
+   A Project without this file starts with an empty version 1 state. The helper does not create the file.
+   If the read fails, report the path and the repair hint. Stop the factory before any assignment.
+   Do not import earlier temporary records. A new supervisor uses only this state file.
 2. Start the scanner:
 
    ```sh
@@ -101,6 +111,12 @@ Scan all Stories at startup and on each later scan. A Story does not have to cha
 4. If the harness cannot stream output, add `--once` and run it on a schedule.
 5. Use an interval of about 30 seconds, or the minimum interval of the harness.
 6. If the stream ends, start the scanner again. Keep the worker records.
+
+Save all persistent state through `factory-state.mjs write --root <root>` with the full JSON document on stdin.
+The helper validates the state, sets `updatedAt`, flushes a temporary file, then replaces `state.json` atomically.
+If a read or write fails, report the path and hint. Stop before another assignment.
+Do not write the state file in another way. Keep transient scanner events in memory.
+Do not stage or commit `.rowbly/state.json` or `.rowbly/state.json.tmp-*`, as a supervisor or worker.
 
 The scanner reports the current Stories on each scan, including new Stories and Stories with no Stage change.
 Worker assignment belongs to the supervisor. The scanner does not assign workers or compare Stage snapshots.
@@ -116,6 +132,7 @@ Worker assignment belongs to the supervisor. The scanner does not assign workers
 The supervisor commits the canonical Project state after each successful scan, including the startup scan.
 Include changes from workers and people, without an author filter.
 Commit only files inside the canonical `<root>/.rowbly/` that Git does not ignore.
+Always exclude `.rowbly/state.json` and `.rowbly/state.json.tmp-*`, even if Git tracks them.
 Include new files, changed files and deleted files.
 Do not commit source files, worker records or a worker's separate `.rowbly/` copy through this procedure.
 Do not push these commits.
@@ -125,9 +142,9 @@ Do not push these commits.
 Before the first scan, select one absolute `<write-lock>` path outside the Project files.
 In a Git repository, use `rowbly-project-write.lock` inside the absolute Git common directory.
 Get that directory with `git -C <root> rev-parse --path-format=absolute --git-common-dir`.
-Without Git, use a lock file in the temporary directory that holds the worker records.
+Without Git, use `<root>/.rowbly-factory-write.lock`.
 Use an existing shared lock if the caller supplies one.
-Save the path with the worker records for restarts.
+Save the path in the state file for restarts.
 Give the same path to every worker and supervisor for this Project.
 
 Use `flock <write-lock>` for each canonical Project write and each canonical Git mutation.
@@ -147,7 +164,7 @@ Run this procedure in the canonical checkout, never in a worker's worktree.
 4. Find the repository root and the repository-relative path of `<root>/.rowbly/` again under the lock.
 5. Read `git -C <repository> status --porcelain=v1 -z --untracked-files=all` with that path after `--`.
 6. Set `status.renames=false` for this command, so a rename has separate old and new paths.
-7. Parse the NUL-separated records. Keep each complete path, including spaces and newlines.
+7. Parse the NUL-separated records. Exclude `state.json` and its temporary files. Keep each complete path, including spaces and newlines.
 8. If the list has an unresolved merge conflict, report it. Release the lock without a Git mutation.
 9. If the list is empty, release the lock. Do not create an empty commit.
 10. Stage only the listed paths with `git --literal-pathspecs -C <repository> add --all -- <paths...>`.
@@ -190,7 +207,11 @@ If a writer ignores the shared lock, report the race; do not reset or overwrite 
 
 ## Assign workers
 
-Keep worker records with the Story, Stage, worker ID and result. Save each record immediately after a worker starts or stops.
+Keep worker records in `attempts`, with the Story, Stage, `workerId`, `workerType`, model, status, result and report flags.
+Active statuses are `preparing` and `running`. Terminal statuses are `completed`, `failed`, `blocked` and `interrupted`.
+Keep extra attempt fields, such as model options and retry authorization.
+Keep the last Stage of each Story in `scan.stages`. Keep the scan counter in `scan.count`.
+Save through `factory-state.mjs write` immediately after a worker starts or stops and after each change to `scan.stages`.
 Use these records on later scans and after a supervisor restart.
 Use `scripts/supervisor-policy.mjs` for assignment decisions and report flags. Read [Supervisor policy](references/supervisor-policy.md) for its inputs and record format.
 The supervisor supplies the current facts, saves the records and starts the workers. The scanner does none of these actions.
@@ -207,7 +228,7 @@ Read the files again on each scan. Users can change them at any time.
 6. Skip the Story if its `agentLock.stage` equals its current Stage. Report the lock owner once.
 7. Apply the attempt rules below through `evaluateScan`. Save its state before you start a worker.
 8. Start a worker for each `start` or `retry` decision. See "Start a worker".
-9. Save each new worker through `recordStart`. Preserve the earlier attempt in `history`.
+9. Save each new worker through `recordStart`. Preserve every earlier attempt in `attempts`.
 10. Tell the user the Story, the Stage and the worker once per new attempt.
 
 Check the status of recorded workers on each scan. An absent worker is not proof that it stopped.
@@ -227,7 +248,7 @@ Apply these attempt rules:
 - Keep completed attempts and all failed, interrupted or blocked development and review attempts ineligible during the same Stage stay.
 
 After a scan observes a Stage departure, the earlier attempt does not prevent assignment in the new Stage.
-An explicit user request can also make the Story eligible again. Keep each earlier attempt and its report flags in `history`.
+An explicit user request can also make the Story eligible again. Keep each earlier attempt and its report flags in `attempts`.
 Do not delete an attempt to clear its assignment restriction.
 If a worker still runs after its Story moves, wait for it to stop before assignment in the new Stage.
 An external lock can clear between scans. Reconsider the Story on the next scan without a Stage change.
@@ -254,6 +275,7 @@ A Git worktree has its own copy of `.rowbly/`. Do not change that copy.
 
 Serialize canonical Project writes and canonical Git mutations with `flock <write-lock>`.
 The supervisor commits canonical `.rowbly/` changes after each scan.
+Do not stage or commit `.rowbly/state.json` or `.rowbly/state.json.tmp-*`.
 Commit your own source changes in your worktree as the repository instructions specify.
 Do not include your worktree's `.rowbly/` copy in those commits.
 For a required canonical Project commit, use the supervisor's lock and explicit path procedure.
@@ -286,7 +308,7 @@ Retry only failed and interrupted refinement attempts, as specified in "Assign w
 Stop the factory if the user tells you to stop, or if a step of this skill tells you to stop.
 
 1. Stop the scanner and its schedule.
-2. Keep the worker records for a later restart. Delete only temporary scanner files.
+2. Save the current state through `factory-state.mjs write`. Keep `.rowbly/state.json` for a later restart.
 3. Tell the user the reason, and each worker that still runs.
 
 Do not stop a worker that runs if the user does not tell you to stop it.
