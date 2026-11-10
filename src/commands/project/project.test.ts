@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { getProject } from "../../services/project/project.js";
 import { useTestProject } from "../../services/testProject/testProject.js";
@@ -46,6 +47,7 @@ describe("project commands", () => {
     });
 
     it("says so when there is no ROWBLY.md", async () => {
+      await rm(project.paths.instructionsFile);
       expect((await cli("project", "get-instructions")).stdout).toBe("(no instructions)");
     });
 

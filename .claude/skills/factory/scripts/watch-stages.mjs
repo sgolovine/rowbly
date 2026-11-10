@@ -31,7 +31,7 @@ if (!values.root || !command || !(intervalMs > 0)) {
 const emit = (line) => console.log(JSON.stringify(line));
 
 async function readStories() {
-  const { stdout } = await run(command, [...commandArgs, "-C", values.root, "--json", "story search"], {
+  const { stdout } = await run(command, [...commandArgs, "-C", values.root, "--json", "story", "search"], {
     maxBuffer: 64 * 1024 * 1024,
     timeout: 30_000,
   });
