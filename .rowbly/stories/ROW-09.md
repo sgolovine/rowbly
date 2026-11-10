@@ -2,7 +2,7 @@
 title: Replace story agent locks with factory state activity
 stage: IN_DEVELOPMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-09-in_development
 pull_request: null
 ---
 
