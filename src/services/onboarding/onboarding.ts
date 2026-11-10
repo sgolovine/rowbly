@@ -105,7 +105,7 @@ const DEFAULT_STAGES = [
 /** The companion skill that runs the factory supervisor. Onboarding marks it as required, but the user can leave it out. */
 export const FACTORY_SKILL = "factory";
 
-export const FACTORY_SKILL_WARNING = `The factory requires the companion skill "${FACTORY_SKILL}". Without it, you cannot run the factory. To install it later, run \`rowbly install-skill ${FACTORY_SKILL} --harness <id>\`.`;
+export const FACTORY_SKILL_WARNING = `The factory requires the companion skill "${FACTORY_SKILL}". Without it, you cannot run the factory. To install it later, run \`rowbly skill install ${FACTORY_SKILL} --harness <id>\`.`;
 
 /** The default stages that onboarding always creates. */
 const ALWAYS_ENABLED_STAGES = ["BACKLOG", "DONE"];
@@ -117,11 +117,11 @@ const SKILL_FIELDS: readonly { field: CustomField; skills: readonly string[] }[]
 ];
 
 const EDIT_LOCATIONS: readonly EditLocation[] = [
-  { what: "Name and key", where: "Settings › Project, or rowbly update-project" },
-  { what: "Stages", where: "Settings › Stages, or rowbly create-stage, update-stage and delete-stage" },
+  { what: "Name and key", where: "Settings › Project, or rowbly project update" },
+  { what: "Stages", where: "Settings › Stages, or rowbly stage create, stage update and stage delete" },
   { what: "Stage prompts", where: ".rowbly/stages/<KEY>.md, or Settings › Stages" },
-  { what: "Custom fields", where: "Settings › Custom fields, or rowbly add-custom-field" },
-  { what: "Skills", where: "rowbly install-skill and rowbly remove-skill" },
+  { what: "Custom fields", where: "Settings › Custom fields, or rowbly custom-field add" },
+  { what: "Skills", where: "rowbly skill install and rowbly skill remove" },
 ];
 
 const INPUT_KEYS = ["name", "key", "stages", "skills", "harnesses"];

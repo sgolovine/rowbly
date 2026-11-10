@@ -30,7 +30,7 @@ describe("askOnboarding", () => {
     expect(prompts.text).not.toHaveBeenCalled();
     expect(prompts.note).toHaveBeenCalledWith(expect.stringContaining("develop (required)"), "Summary");
     expect(prompts.note).toHaveBeenCalledWith(
-      expect.stringContaining("rowbly install-skill"),
+      expect.stringContaining("rowbly skill install"),
       "Where to edit this later",
     );
   });

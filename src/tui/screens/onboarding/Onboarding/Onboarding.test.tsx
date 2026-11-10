@@ -12,7 +12,8 @@ describe("Onboarding", () => {
 
   async function open(onCreated = vi.fn()) {
     const tui = await renderTui(<Onboarding ctx={{ cwd: dir.path }} onCreated={onCreated} onHints={() => {}} />);
-    await settle(50);
+    // The options load from disk. The first step takes no keys before they load.
+    await vi.waitFor(() => expect(tui.frame()).toContain("Use defaults"));
     await tui.press();
     return tui;
   }

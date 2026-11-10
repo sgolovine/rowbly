@@ -21,6 +21,7 @@ describe("story", () => {
       await updateStage({ key: "BACKLOG", enabled: false }, project.ctx);
       const story = await createStory({ title: " First ", description: "Body" }, project.ctx);
       expect(story).toEqual({
+        attachmentCount: 0,
         id: "ROW-01",
         number: 1,
         title: "First",
@@ -231,7 +232,7 @@ describe("story", () => {
       const error = await lockStory({ id: "ROW-01", agent: "codex" }, at(T2)).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ConflictError);
       expect((error as ConflictError).hint).toContain("claude");
-      expect((error as ConflictError).hint).toContain("rowbly unlock-story");
+      expect((error as ConflictError).hint).toContain("rowbly story unlock");
       expect((await getStory({ id: "ROW-01" }, project.ctx)).agentLock?.agent).toBe("claude");
     });
 

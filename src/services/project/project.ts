@@ -1,5 +1,6 @@
 import { mkdir, readFile, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
+import { moveAttachmentDirs } from "../attachmentFiles/attachmentFiles.js";
 import {
   type CustomField,
   checkProjectKey,
@@ -100,6 +101,7 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
   for (const stage of stages) {
     await writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`);
   }
+  await writeFileAtomic(paths.instructionsFile, "# ROWBLY INSTRUCTIONS\n");
   await writeConfig(paths, config);
   return { ...config, root };
 }
@@ -133,6 +135,15 @@ export async function updateProject(input: UpdateProjectInput, ctx: ServiceConte
     if (taken.length > 0) {
       throw new ConflictError(`Stories with the key ${projectKey} already exist: ${taken.join(", ")}`);
     }
+    await moveAttachmentDirs(
+      paths,
+      files
+        .filter((f) => f.projectKey === config.projectKey)
+        .map((f) => ({
+          from: f.id,
+          to: formatStoryId(projectKey, f.number),
+        })),
+    );
     for (const move of moves) await rename(move.from, move.to);
     const old = config.projectKey;
     await rewriteSpecLinks(paths, (stories) =>

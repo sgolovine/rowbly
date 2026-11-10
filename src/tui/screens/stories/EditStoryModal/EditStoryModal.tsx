@@ -1,18 +1,18 @@
+import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { CustomField } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { deleteStory, type Story, updateStory } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { FormModal, type FormValues } from "../../../components/index.js";
+import type { FormValues } from "../../../components/index.js";
 import { useToast } from "../../../hooks/index.js";
 import { deleteStoryMessage } from "../deleteStoryMessage.js";
 import { StoryModal } from "../StoryModal/index.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../storyForm.js";
 
 /**
- * Edits the Story `story` in a generic Modal, with the same fields as `NewStoryModal`: its title, its
- * Stage, its description and the custom fields of the project. The form starts with the current values.
- * Its Delete Button and `ctrl+d` ask before they delete the Story. With `specs`, the form is the General
- * tab of a `StoryModal`, next to a Specs tab.
+ * Edits the Story in a screen Modal. General has the Story fields, and Attachments has the saved PNG images.
+ * Specs appears between these tabs when the Project has Specs on. The form keeps pasted images until save.
+ * The Delete Button and `ctrl+d` ask before they delete the Story.
  */
 export function EditStoryModal({
   ctx,
@@ -35,9 +35,10 @@ export function EditStoryModal({
   onClose(): void;
 }) {
   const toast = useToast();
-  const submit = async (values: FormValues) => {
+  const submit = async (values: FormValues, attachments?: readonly PendingImage[]) => {
     const saved = await updateStory(
       {
+        attachments,
         id: story.id,
         title: String(values.title ?? ""),
         stage: typeof values.stage === "string" ? values.stage : undefined,
@@ -74,5 +75,5 @@ export function EditStoryModal({
       onConfirm: remove,
     },
   };
-  return specs ? <StoryModal ctx={ctx} storyId={story.id} {...form} /> : <FormModal {...form} />;
+  return <StoryModal ctx={ctx} storyId={story.id} specs={specs} {...form} />;
 }

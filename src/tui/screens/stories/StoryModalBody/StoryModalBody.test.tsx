@@ -1,6 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as clipboard from "../../../../services/clipboard/clipboard.js";
 import { updateProject } from "../../../../services/project/project.js";
 import { createSpec } from "../../../../services/spec/spec.js";
 import { createStory } from "../../../../services/story/story.js";
@@ -8,7 +9,10 @@ import { useTestProject } from "../../../../services/testProject/testProject.js"
 import { keys, renderTui } from "../../../testing/index.js";
 import { StoryModalBody, type StoryModalConfirm } from "./StoryModalBody.js";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 interface Calls {
   submit(): void;
@@ -64,6 +68,18 @@ describe("StoryModalBody", () => {
     expect(tui.frame()).not.toContain("The API text");
   });
 
+  it("keeps a valid clipboard fallback across the Story tabs", async () => {
+    vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({ reason: "no-display" });
+    const { tui } = await setup();
+    for (const tab of ["General", "Specs 1", "Attachments"]) {
+      await tui.click(tab);
+      await tui.press(keys.ctrl("v"));
+      const toast = tui.toasts.list().at(-1);
+      expect(toast?.message).toContain("rowbly add-attachment ROW-01 <file.png>");
+      expect(toast?.message).not.toContain(project.ctx.cwd);
+    }
+  });
+
   it("changes the tab with shift+tab and with a click", async () => {
     const { tui } = await setup();
     await tui.press(keys.shiftTab);
@@ -78,7 +94,7 @@ describe("StoryModalBody", () => {
     const { tui, submit } = await setup();
     await tui.type("!");
     await tui.press(keys.ctrl("s"));
-    await vi.waitFor(() => expect(submit).toHaveBeenCalledWith({ title: "Login!" }));
+    await vi.waitFor(() => expect(submit).toHaveBeenCalledWith({ title: "Login!" }, []));
   });
 
   it("saves the Story while a spec has text that is not written yet", async () => {
@@ -93,7 +109,7 @@ describe("StoryModalBody", () => {
   it("keeps the text of the form when the tab changes", async () => {
     const { tui } = await setup();
     await tui.type("!");
-    await tui.press(keys.shiftTab, keys.shiftTab);
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab);
     expect(tui.frame()).toContain("Login!");
   });
 
@@ -101,7 +117,7 @@ describe("StoryModalBody", () => {
     const { tui, confirmDelete } = await setup();
     await tui.press(keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).not.toContain("Delete it?");
-    await tui.press(keys.shiftTab, keys.ctrl("d"));
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).toContain("Delete it?");
     await tui.press("y");
     expect(confirmDelete).toHaveBeenCalledOnce();

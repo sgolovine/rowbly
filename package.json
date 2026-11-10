@@ -27,11 +27,12 @@
     "knip:production": "knip --production",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:factory": "node --test skills/factory/scripts/watch-stages.test.mjs"
+    "test:factory": "node --test skills/factory/scripts/*.test.mjs"
   },
   "license": "MIT",
   "dependencies": {
     "@clack/prompts": "^1.8.1",
+    "@mariozechner/clipboard": "0.3.9",
     "chalk": "^6.0.1",
     "commander": "^15.0.0",
     "gray-matter": "^4.0.3",

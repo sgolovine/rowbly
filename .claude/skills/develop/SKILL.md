@@ -27,7 +27,7 @@ The Project must have these custom fields:
 
 ## Procedure
 
-1. Read the Project instructions (`rowbly -C <root> --json get-instructions`), the Story and its Specs.
+1. Read the Project instructions (`rowbly -C <root> --json project get-instructions`), the Story and its Specs.
 2. Stop and report `blocked` if the Story has no acceptance criteria or has open questions.
 3. Stop and report `blocked` if the config does not have the two custom fields.
 4. Read the repository instructions and obey them.
@@ -38,7 +38,7 @@ The Project must have these custom fields:
    - If the `worktree` field has the path of a linked worktree that exists, use that worktree.
    - If the harness started you in a linked worktree, use that worktree. Switch it to the branch.
    - Otherwise, run `git worktree add` for the branch. Use the path `<main checkout>-worktrees/<story-id>`.
-7. Write the absolute path of the worktree to the Story: `update-story <story-id> --field worktree=<path>`.
+7. Write the absolute path of the worktree to the Story: `story update <story-id> --field worktree=<path>`.
 8. Make only the changes that the Story describes. If the Story has `## Review findings`, repair each finding.
 9. Add or update the tests for each acceptance criterion.
 10. Run the checks of the repository in the worktree and repair each failure.
@@ -46,7 +46,13 @@ The Project must have these custom fields:
 
 ## Pull request
 
-Write the URL to the Story immediately after you open a pull request: `update-story <story-id> --field pull_request=<url>`.
+Set the title of each new Story pull request to `<Story ID>: <summary>`.
+Use the full `id` from `story get`, then a colon, a space and a short summary.
+Use the current Story ID for each pull request.
+
+Example: `ROW-07: Include Story IDs in pull request titles`.
+
+Write the URL to the Story immediately after you open a pull request: `story update <story-id> --field pull_request=<url>`.
 
 If the branch has a pull request and the `pull_request` field is empty, write the URL to the Story.
 

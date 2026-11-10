@@ -1,5 +1,5 @@
 import { Box, useInput } from "ink";
-import { useContext, useState } from "react";
+import { type ReactNode, useContext, useState } from "react";
 import { ShellContext, useEscape, useIsActive, useKeyCapture } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import { Button } from "../Button/index.js";
@@ -18,6 +18,8 @@ export interface FormModalDelete {
 
 export interface FormModalProps {
   title: string;
+  children?: ReactNode;
+  extraHints?: readonly KeyHint[];
   fields: readonly FormField[];
   initialValues?: FormValues;
   /** May throw: a `ValidationError` shows its issues under the fields, any other error becomes a toast. */
@@ -43,6 +45,8 @@ export function FormModal({
   onClose,
   submitOnEnter,
   onDelete,
+  children,
+  extraHints,
 }: FormModalProps) {
   const active = useIsActive();
   const shell = useContext(ShellContext);
@@ -62,7 +66,14 @@ export function FormModal({
   );
   return (
     <Modal title={title} hints={onDelete ? DELETE_HINTS : undefined} onClose={idle ? close : undefined}>
-      <Form fields={fields} initialValues={initialValues} onSubmit={onSubmit} submitOnEnter={submitOnEnter} />
+      {children}
+      <Form
+        extraHints={extraHints}
+        fields={fields}
+        initialValues={initialValues}
+        onSubmit={onSubmit}
+        submitOnEnter={submitOnEnter}
+      />
       {onDelete && (
         <Box marginTop={1}>
           <Button

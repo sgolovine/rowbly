@@ -113,10 +113,10 @@ describe("watch-stages --once", () => {
     assert.deepEqual(lines, [{ event: "watching", stories: 3 }, { event: "stories", stories: current }]);
   });
 
-  it("calls the command with the root, --json and search-stories", async () => {
+  it("calls the command with the root, --json and story search", async () => {
     await respond(stories({}));
     await once(...fakeCommand());
-    assert.deepEqual(await recordedCalls(), [["-C", rootDir, "--json", "search-stories"]]);
+    assert.deepEqual(await recordedCalls(), [["-C", rootDir, "--json", "story", "search"]]);
   });
 
   it("reports unchanged stories again on a later run", async () => {
@@ -154,7 +154,7 @@ describe("watch-stages --once", () => {
     await respond({ raw: '{"error":"nope"}' });
     const { code, lines } = await once(...fakeCommand());
     assert.equal(code, 1);
-    assert.deepEqual(lines, [{ event: "error", message: "search-stories did not return a list" }]);
+    assert.deepEqual(lines, [{ event: "error", message: "story search did not return a list" }]);
   });
 });
 
@@ -234,13 +234,13 @@ describe("watch-stages with the real CLI", () => {
 
   it("reports a story that moves to a different stage", async () => {
     await rowbly("init", "--name", "Watch", "--key", "ROW");
-    await rowbly("create-story", "--title", "A story", "--stage", "BACKLOG");
+    await rowbly("story", "create", "--title", "A story", "--stage", "BACKLOG");
 
     const first = await watch();
     assert.equal(first.lines[1].event, "stories");
     assert.equal(first.lines[1].stories[0].stage, "BACKLOG");
 
-    await rowbly("update-story", "ROW-01", "--stage", "DONE");
+    await rowbly("story", "update", "ROW-01", "--stage", "DONE");
 
     const second = await watch();
     assert.equal(second.code, 0);

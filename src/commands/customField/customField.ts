@@ -19,7 +19,7 @@ export function registerCustomFieldCommands(program: Command): void {
   const types = CUSTOM_FIELD_TYPES.join(", ");
 
   program
-    .command("add-custom-field")
+    .command("add")
     .description("Add a custom field to every story")
     .requiredOption("--label <label>", "field name, e.g. Story Points")
     .requiredOption("--type <type>", `one of ${types}`, parseType)
@@ -34,7 +34,7 @@ export function registerCustomFieldCommands(program: Command): void {
     );
 
   program
-    .command("update-custom-field <key>")
+    .command("update <key>")
     .description("Update a custom field")
     .option("--rename <key>", "new frontmatter key; renames it in every story")
     .option("--label <label>", "new name")
@@ -58,7 +58,7 @@ export function registerCustomFieldCommands(program: Command): void {
     );
 
   program
-    .command("remove-custom-field <key>")
+    .command("remove <key>")
     .description("Remove a custom field and its value from every story")
     .action((key: string, _opts: unknown, command: Command) =>
       run(
