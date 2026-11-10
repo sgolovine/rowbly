@@ -23,7 +23,24 @@ Rowbly eliminates that complexity with an intuitive Kanban board and a companion
   <img src="https://raw.githubusercontent.com/sgolovine/rowbly/main/assets/screenshot.png" alt="The Rowbly terminal UI shows the stories of a project, grouped by stage, with the name of the agent that works on each story" width="100%">
 </p>
 
-## Installation
+## Agent Installation
+
+Paste this prompt into your agent harness (Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor). Run the agent in the root of your repository.
+
+```text
+Install and set up Rowbly (https://github.com/sgolovine/rowbly) in this repository. Do these steps:
+
+1. Run `node --version`. Rowbly needs Node 24 or later. If the version is older, stop and tell me.
+2. Run `npm install -g rowbly`. If the global install fails because of permissions, use `npx rowbly` in place of `rowbly` for the steps that follow.
+3. Run `rowbly --version` to confirm the install.
+4. If `.rowbly/` already exists in this directory, skip to step 6.
+5. Run `rowbly init --defaults --harness <id>`, where `<id>` is the harness that you are: `claude-code`, `codex`, `gemini-cli`, `github-copilot` or `cursor`. Do not run `rowbly` with no arguments, because that starts the interactive TUI.
+6. Run `rowbly doctor`. If it reports problems, run `rowbly doctor --fix` and then run `rowbly doctor` again.
+7. Run `rowbly get-instructions` and `rowbly --help`, and read the installed Rowbly skills, so that you know how to use Rowbly.
+8. Tell me what you installed: the project name and key, the stages, the skills and the folders that they are in. Then tell me to run `rowbly` to open the board.
+```
+
+## Manual Installation
 
 Rowbly runs on Node 24 or later. Install it from npm:
 
