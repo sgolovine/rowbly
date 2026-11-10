@@ -1,7 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 import { evaluateScan, markReported, pendingReports, recordStart } from "./supervisor-policy.mjs";
 
@@ -12,9 +10,8 @@ const stages = [
   { key: "IN_REVIEW", enabled: true, promptClass: "work" },
 ];
 const running = () => ({
-  workers: {
-    "ROW-01": { stage: "IN_REFINEMENT", threadId: "worker-1", status: "running", result: null, reported: false },
-  },
+  version: 1, scan: { stages: {} },
+  attempts: [{ story: "ROW-01", stage: "IN_REFINEMENT", workerId: "worker-1", status: "running", result: null, reported: false }],
 });
 const facts = (workers = [], stories = [story]) => ({ stories, stages, harnessWorkers: workers });
 const stopped = (status, result = status) => ({ story: story.id, threadId: "worker-1", status, result });
@@ -26,10 +23,10 @@ for (const status of ["failed", "interrupted"]) {
     it("records the stop first, then retries on the next scan without a Stage change", () => {
       const first = evaluateScan(running(), facts([stopped(status)]));
       assert.equal(action(first), "skip");
-      assert.equal(first.state.workers[story.id].stoppedScan, 1);
+      assert.equal(first.state.attempts.at(-1).stoppedScan, 1);
       const second = evaluateScan(first.state, facts([stopped(status)]));
       assert.equal(action(second), "retry");
-      assert.equal(second.state.workers[story.id].stoppedScan, 1);
+      assert.equal(second.state.attempts.at(-1).stoppedScan, 1);
     });
 
     it("keeps the next-scan boundary after a restart", () => {
@@ -48,51 +45,17 @@ for (const status of ["failed", "interrupted"]) {
         assert.equal(action(next), "retry");
         state = recordStart(next.state, story.id, story.stage, { threadId: `worker-${index + 1}` });
       }
-      assert.equal(state.history.length, 100);
-      assert.ok(state.history.every((attempt) => attempt.result === status));
-      assert.equal(state.history[0].threadId, "worker-1");
-      assert.equal(state.workers[story.id].threadId, "worker-101");
+      assert.equal(state.attempts.length, 101);
+      assert.ok(state.attempts.slice(0, -1).every((attempt) => attempt.result === status));
+      assert.equal(state.attempts[0].workerId, "worker-1");
+      assert.equal(state.attempts.at(-1).workerId, "worker-101");
     });
   });
 }
 
-describe("supervisor restart records", () => {
-  it("recovers the legacy interrupted shape for ROW-01 and ROW-02 from a saved file", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "rowbly-policy-"));
-    try {
-      const state = { workers: {} };
-      for (const id of ["ROW-01", "ROW-02"]) {
-        state.workers[id] = {
-          stage: story.stage,
-          taskId: `task-${id}`,
-          childThreadId: `child-${id}`,
-          status: "interrupted",
-          result: "interrupted",
-          reported: true,
-        };
-      }
-      const file = join(dir, "workers.json");
-      await writeFile(file, JSON.stringify(state));
-      const restored = JSON.parse(await readFile(file, "utf8"));
-      const plan = evaluateScan(restored, facts([], [story, { ...story, id: "ROW-02" }]));
-      assert.deepEqual(
-        plan.decisions.map(({ action }) => action),
-        ["retry", "retry"],
-      );
-      assert.deepEqual(pendingReports(plan.state), []);
-      const next = recordStart(plan.state, story.id, story.stage, { threadId: "retry-1" });
-      await writeFile(file, JSON.stringify(next));
-      const saved = JSON.parse(await readFile(file, "utf8"));
-      assert.deepEqual(saved.history[0], { ...state.workers[story.id], story: story.id });
-      assert.equal(saved.workers[story.id].threadId, "retry-1");
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
-  });
-});
-
 const failed = () => ({
-  workers: { [story.id]: { ...running().workers[story.id], status: "failed", result: "failed", reported: true } },
+  version: 1, scan: { stages: {} },
+  attempts: [{ ...running().attempts[0], status: "failed", result: "failed", reported: true }],
 });
 
 describe("assignment guards", () => {
@@ -102,7 +65,7 @@ describe("assignment guards", () => {
     assert.equal(action(next), "skip");
     assert.equal(next.decisions[0].reason, "blocked result");
     const failure = failed();
-    failure.workers[story.id].result = "blocked";
+    failure.attempts.at(-1).result = "blocked";
     assert.equal(action(evaluateScan(failure, facts())), "skip");
   });
 
@@ -117,7 +80,7 @@ describe("assignment guards", () => {
     for (const status of ["failed", "interrupted"]) {
       it(`keeps ${status} ${stage} attempts ineligible`, () => {
         const state = failed();
-        Object.assign(state.workers[story.id], { stage, status, result: status });
+        Object.assign(state.attempts.at(-1), { stage, status, result: status });
         assert.equal(action(evaluateScan(state, facts([], [{ ...story, stage }]))), "skip");
       });
     }
@@ -139,13 +102,13 @@ describe("assignment guards", () => {
 
   it("waits for a later scan after a previously stopped worker resumes and stops again", () => {
     const state = failed();
-    state.scan = 3;
-    state.workers[story.id].stoppedScan = 1;
+    state.scan.count = 3;
+    state.attempts.at(-1).stoppedScan = 1;
     const resumed = evaluateScan(state, facts([{ story: story.id, threadId: "worker-1", status: "running" }]));
     assert.equal(action(resumed), "skip");
     const stoppedAgain = evaluateScan(resumed.state, facts([stopped("failed")]));
     assert.equal(action(stoppedAgain), "skip");
-    assert.equal(stoppedAgain.state.workers[story.id].stoppedScan, 5);
+    assert.equal(stoppedAgain.state.attempts.at(-1).stoppedScan, 5);
     assert.equal(action(evaluateScan(stoppedAgain.state, facts())), "retry");
     assert.equal(pendingReports(stoppedAgain.state).length, 1);
   });
@@ -185,13 +148,37 @@ describe("assignment guards", () => {
     assert.equal(next.decisions[0].stage, "IN_DEVELOPMENT");
     const returned = evaluateScan(next.state, facts());
     assert.equal(action(returned), "start");
-    assert.equal(returned.state.workers[story.id].result, "failed");
+    assert.equal(returned.state.attempts.at(-1).result, "failed");
   });
 
   it("waits for a worker that still runs after a Stage change", () => {
     const next = evaluateScan(running(), facts([], [{ ...story, stage: "IN_DEVELOPMENT" }]));
     assert.equal(action(next), "skip");
     assert.throws(() => recordStart(next.state, story.id, "IN_DEVELOPMENT", { threadId: "second" }));
+  });
+});
+
+describe("version 1 state", () => {
+  it("retains the last scan stages and recognizes a departure across a restart", () => {
+    const state = failed();
+    state.scan.stages = { [story.id]: "IN_DEVELOPMENT" };
+    const plan = evaluateScan(restart(state), facts());
+    assert.equal(action(plan), "start");
+    assert.deepEqual(plan.state.scan.stages, { [story.id]: story.stage });
+    assert.equal(plan.state.attempts[0].observedStageDeparture, true);
+  });
+
+  it("treats a blocked status as terminal and does not retry it", () => {
+    const state = running();
+    state.attempts[0].status = "blocked";
+    assert.equal(action(evaluateScan(state, facts())), "skip");
+    assert.equal(pendingReports(state)[0].event, "stopped");
+  });
+
+  it("keeps a preparing worker active after a restart", () => {
+    const state = running();
+    state.attempts[0].status = "preparing";
+    assert.equal(action(evaluateScan(restart(state), facts())), "skip");
   });
 });
 
@@ -211,7 +198,7 @@ describe("reports per attempt", () => {
     assert.deepEqual(pendingReports(state), [
       { story: story.id, workerId: "retry-1", event: "stopped", result: "interrupted" },
     ]);
-    assert.equal(state.history[0].reported, true);
+    assert.equal(state.attempts[0].reported, true);
   });
 
   it("preserves an unsent result report when it archives an attempt", () => {
@@ -232,6 +219,8 @@ describe("installed factory copies", () => {
       "references/supervisor-policy.md",
       "scripts/supervisor-policy.mjs",
       "scripts/supervisor-policy.test.mjs",
+      "scripts/factory-state.mjs",
+      "scripts/factory-state.test.mjs",
     ]) {
       const bundled = await readFile(new URL(`skills/factory/${file}`, root), "utf8");
       for (const harness of [".agents", ".claude"]) {

@@ -347,7 +347,8 @@ or a person moves it.
 ## 7. Project instructions
 
 `.rowbly/ROWBLY.md` holds the top-level instructions for all agents of a Project. It operates as a
-`CLAUDE.md` or `AGENTS.md` file does. The file is optional. Rowbly does not create, parse or enforce it.
+`CLAUDE.md` or `AGENTS.md` file does. Initialization creates the file with only `# ROWBLY INSTRUCTIONS` and a final newline.
+Existing Projects can omit the file. Rowbly does not parse or enforce its text.
 
 - **Read.** Read the instructions before you do work or change data in a Project.
 - **Supervisors.** Give the full text of `instructions` to each worker in its first message.
