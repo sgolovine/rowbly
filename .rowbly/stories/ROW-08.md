@@ -2,7 +2,7 @@
 title: Store factory state in .rowbly/state.json
 stage: IN_DEVELOPMENT
 position: 2
-worktree: null
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-08-in_development
 pull_request: null
 ---
 

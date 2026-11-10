@@ -2,8 +2,8 @@
 title: PR title must include the ticket number
 stage: DONE
 position: 3
-worktree: null
-pull_request: null
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-07-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/183
 ---
 
 ## Goal

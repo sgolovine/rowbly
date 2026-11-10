@@ -1,10 +1,9 @@
 ---
-
 title: Automatically retry failed refinement attempts
 stage: DONE
 position: 2
-worktree: null
-pull_request: null
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-05-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/182
 ---
 
 ## Goal

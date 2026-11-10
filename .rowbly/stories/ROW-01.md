@@ -1,9 +1,9 @@
 ---
 title: Nested command structure
 stage: DONE
-position: 2
-worktree: null
-pull_request: null
+position: 5
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-01-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/181
 ---
 
 ## Goal
@@ -80,3 +80,21 @@ Leave the upstream agentic-tui skill unchanged.
 Do not edit `.rowbly/stages/`, `stages/` or `.rowbly/rowbly.config.json` for this Story.
 
 Specs are on, but this Story has no linked Specs at refinement.
+
+## Development response
+
+Result: complete. Commit: `2981b99570fce09fb022bfcefd42b6187aa88bed`.
+
+- Both installed scanners now pass `story` and `search` as separate arguments. All three scanner files match.
+- The branch includes main. The merge keeps ROWBLY.md initialization, factory policy changes and nested command syntax.
+- Lint, typecheck and build pass. The factory suite passes all 47 tests.
+- The full suite passes all 847 tests in 109 files with `pnpm test --maxWorkers=2`.
+- Both installed scanner argument tests pass. Focused CLI tests pass all 65 tests.
+- The four TUI test files from the review match main. Their 59 tests pass in a separate main source snapshot with two workers.
+
+Problems found during checks:
+
+- The default full run has nine asynchronous TUI assertion failures under high concurrency. The complete two-worker run passes.
+- Extra complete installed test suites fail because their CLI integration tests look for `.agents/src/cli.ts` and `.claude/src/cli.ts`. The bundled suite passes.
+
+PR: https://github.com/sgolovine/rowbly/pull/181

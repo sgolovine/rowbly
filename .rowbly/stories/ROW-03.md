@@ -2,8 +2,8 @@
 title: Manage skills via TUI
 stage: DONE
 position: 4
-worktree: null
-pull_request: null
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-03-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/184
 ---
 
 ## Goal

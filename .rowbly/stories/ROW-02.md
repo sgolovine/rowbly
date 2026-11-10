@@ -1,9 +1,9 @@
 ---
 title: Attach items to stories
 stage: IN_DEVELOPMENT
-position: 2
-worktree: null
-pull_request: null
+position: 1
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-02-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/185
 ---
 
 ## Goal

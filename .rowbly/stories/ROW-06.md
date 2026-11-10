@@ -1,9 +1,9 @@
 ---
 title: Supervisor should auto-commit changes to Rowbly board.
-stage: IN_DEVELOPMENT
-position: 1
-worktree: null
-pull_request: null
+stage: DONE
+position: 6
+worktree: /home/sgolovine/.t3/worktrees/rowbly/row-06-in_development
+pull_request: https://github.com/sgolovine/rowbly/pull/186
 ---
 
 ## Goal
