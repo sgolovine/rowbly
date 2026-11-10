@@ -1,6 +1,6 @@
 ---
 name: factory
-description: Run a factory supervisor that watches the Stories of the current Rowbly Project and starts a worker when a Story changes Stage. Use when the user asks to start, run or supervise the factory of a Rowbly Project.
+description: Run a factory supervisor that watches the Stories of the current Rowbly Project and assigns workers to unassigned Stories in active work Stages. Use when the user asks to start, run or supervise the factory of a Rowbly Project.
 ---
 
 # Factory
@@ -86,42 +86,61 @@ If one or more checks have the result `FAIL`, stop. Do not watch the Stories.
 
 If the only problem is a `WARN`, tell the user and continue. Workers have the default title of the harness.
 
-## Watch the Stories
+## Scan the Stories
 
-1. Make a new temporary directory outside the Project. The state file is `<temporary directory>/stages.json`.
-2. Start the watcher:
+Scan all Stories at startup and on each later scan. A Story does not have to change Stage to receive a worker.
+
+1. Use the existing worker records after a restart. For a new factory, make a temporary directory outside the Project.
+2. Start the scanner:
 
    ```sh
-   node <skill directory>/scripts/watch-stages.mjs --root <root> --state <state file>
+   node <skill directory>/scripts/watch-stages.mjs --root <root>
    ```
 
-3. Read each line of its stdout as one event. Use the tool of the harness that streams output, for example `Monitor` in Claude Code.
-4. If the harness cannot stream output, add `--once`. Then run the command again on a schedule of about 30 seconds.
-5. If the stream ends because of a time limit, start the watcher again with the same state file. The new run reports the changes that it did not see.
+3. Read each line of stdout as one event.
+4. If the harness cannot stream output, add `--once` and run it on a schedule.
+5. Use an interval of about 30 seconds, or the minimum interval of the harness.
+6. If the stream ends, start the scanner again. Keep the worker records.
 
-Rowbly has no command that watches Stories. The watcher compares the Stage of each Story with its last snapshot. A new Story is not a Stage change.
+The scanner reports the current Stories on each scan, including new Stories and Stories with no Stage change.
+Worker assignment belongs to the supervisor. The scanner does not assign workers or compare Stage snapshots.
 
-| Event          | Action                                                                                                |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| `watching`     | Tell the user that the factory runs.                                                                  |
-| `stage-change` | Do the steps in "Handle a Stage change".                                                              |
-| `error`        | Tell the user the message. If `.rowbly/` no longer exists, stop the factory. Otherwise, continue to watch. |
+| Event | Action |
+| --- | --- |
+| `watching` | Tell the user that the factory runs. |
+| `stories` | Check worker status, then do the steps in "Assign workers" for each Story in the list. |
+| `error` | Tell the user the message. Stop if `.rowbly/` no longer exists. Otherwise, continue to scan. |
 
-## Handle a Stage change
+## Assign workers
 
-Do these steps for each `stage-change` event. Read the files again each time, because users can change them at any time.
+Keep worker records with the Story, Stage, worker ID and result. Save each record immediately after a worker starts or stops.
+Use these records on later scans and after a supervisor restart.
+Examine existing harness workers for this Project before each assignment.
+Do not assign a second worker to a Story with an active worker, including a worker from another supervisor.
 
-1. Run `rowbly -C <root> --json get-story <story>`. If its `stage` is not the `to` value of the event, ignore the event. A different event reports the new Stage.
-2. Read the Stage in the config. If the Stage is not in the config or has `enabled: false`, the prompt is not active. Take no action.
-3. Read `.rowbly/stages/<KEY>.md`. If the file does not exist, stop the factory.
-4. Examine the prompt. If it is `invalid`, stop the factory. If it is `hold`, take no action.
-5. If a worker for this Story still runs, hold the event. When the worker stops, do these steps again from step 1.
-6. Start the worker. See "Start a worker".
-7. Tell the user the Story, the Stage and the worker.
+Read the files again on each scan. Users can change them at any time.
+
+1. Run `rowbly -C <root> --json get-story <story>`. Skip a Story that no longer exists.
+2. Read its current Stage in the config. Skip a Stage that is absent or has `enabled: false`.
+3. Read `.rowbly/stages/<KEY>.md`. Stop the factory if the file does not exist.
+4. Examine the prompt. Stop for an `invalid` prompt. Skip a `hold` prompt.
+5. Skip the Story if a worker for it still runs, even if the Story changed Stage.
+6. Skip the Story if its `agentLock.stage` equals its current Stage. Report the lock owner once.
+7. Skip a completed, failed or blocked attempt for this Story's current stay in this Stage.
+8. Start a worker for each remaining Story. See "Start a worker".
+9. Tell the user the Story, the Stage and the worker.
+
+Check the status of recorded workers on each scan. Report each result once.
+A worker that stops does not automatically make its Story eligible for another attempt in the same Stage.
+Clear the earlier attempt after a scan observes that the Story left that Stage.
+Also clear it if the user explicitly requests another attempt.
+If a worker still runs after its Story moves, wait for it to stop before assignment in the new Stage.
+An external lock can clear between scans. Reconsider the Story on the next scan without a Stage change.
+Rowbly locks do not give mutual exclusion. Do not claim that two supervisors cannot race.
 
 ## Start a worker
 
-Start one worker for each event. Use the type of worker from the checklist. If the factory uses threads, start a thread for each worker. Do not change to subagents for one Story.
+Start one worker for each eligible Story. Use the type of worker from the checklist. If the factory uses threads, start a thread for each worker. Do not change to subagents for one Story.
 
 - Set the title to `<story> <KEY>` if the harness can set a title.
 - Use the model and the effort level that the Stage prompt names. If the prompt names none, use the default of the harness.
@@ -147,17 +166,17 @@ When you stop, report the result, the current Stage of the Story and each proble
 <full text of .rowbly/stages/<KEY>.md>
 ```
 
-A move by a worker is a Stage change. The watcher reports it, and the supervisor starts the worker for the next Stage.
+Each scan checks the current Stage. After a worker stops, the supervisor can assign its Story in the next work Stage.
 
 If a thread tool fails when you start a worker, tell the user the error. Then start that worker as a subagent, and use subagents for the next workers.
 
-If a worker fails or reports `blocked`, tell the user. Do not start the worker again. Continue to watch the Stories.
+If a worker fails or reports `blocked`, tell the user. Do not start the worker again. Continue to scan the Stories.
 
 ## Stop the factory
 
 Stop the factory if the user tells you to stop, or if a step of this skill tells you to stop.
 
-1. Stop the watcher.
+1. Stop the scanner and its schedule.
 2. Delete the temporary directory.
 3. Tell the user the reason, and each worker that still runs.
 

@@ -38,7 +38,6 @@ const parseLines = (text) => text.split("\n").filter(Boolean).map((line) => JSON
 
 let dir;
 let rootDir;
-let state;
 let fake;
 let responsesFile;
 let callsFile;
@@ -46,7 +45,6 @@ let callsFile;
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "rowbly-watch-stages-"));
   rootDir = join(dir, "project");
-  state = join(dir, "state.json");
   fake = join(dir, "fake-rowbly.mjs");
   responsesFile = join(dir, "responses.json");
   callsFile = join(dir, "calls.jsonl");
@@ -59,7 +57,6 @@ afterEach(async () => {
 
 const respond = (...responses) => writeFile(responsesFile, JSON.stringify(responses));
 const fakeCommand = () => ["--", process.execPath, fake, responsesFile, callsFile];
-const stateFile = async () => JSON.parse(await readFile(state, "utf8"));
 const recordedCalls = async () => parseLines(await readFile(callsFile, "utf8").catch(() => ""));
 
 /** Runs the script to its exit and gives the exit code, the JSON lines of stdout and the text of stderr. */
@@ -73,7 +70,7 @@ async function runScript(args, options) {
   }
 }
 
-const once = (...command) => runScript(["--root", rootDir, "--state", state, "--once", ...command]);
+const once = (...command) => runScript(["--root", rootDir, "--once", ...command]);
 
 /** Starts the script in its polling mode. The function gives the output so far, and stops the process at the end. */
 async function whilePolling(test) {
@@ -81,8 +78,6 @@ async function whilePolling(test) {
     script,
     "--root",
     rootDir,
-    "--state",
-    state,
     "--interval",
     "0.02",
     ...fakeCommand(),
@@ -107,75 +102,49 @@ async function waitFor(condition) {
 }
 
 describe("watch-stages --once", () => {
-  it("records a baseline and reports no change when the state file is missing", async () => {
-    await respond(stories({ "ROW-01": "BACKLOG", "ROW-02": "DONE" }));
+  it("reports every existing story on startup with its lock", async () => {
+    const current = stories({ "ROW-01": "DOING", "ROW-02": "DOING", "ROW-03": "DOING" }).stories;
+    current[1].agentLock = { agent: "other-worker", stage: "DOING", lockedAt: "2026-11-10T20:00:00Z" };
+    await respond({ stories: current });
 
     const { code, lines } = await once(...fakeCommand());
 
     assert.equal(code, 0);
-    assert.deepEqual(lines, [{ event: "watching", stories: 2 }]);
-    assert.deepEqual(await stateFile(), { "ROW-01": "BACKLOG", "ROW-02": "DONE" });
+    assert.deepEqual(lines, [{ event: "watching", stories: 3 }, { event: "stories", stories: current }]);
   });
 
   it("calls the command with the root, --json and search-stories", async () => {
     await respond(stories({}));
-
     await once(...fakeCommand());
-
     assert.deepEqual(await recordedCalls(), [["-C", rootDir, "--json", "search-stories"]]);
   });
 
-  it("reports the changes that occurred between two runs and saves the new stages", async () => {
-    await writeFile(state, JSON.stringify({ "ROW-01": "BACKLOG", "ROW-02": "BACKLOG", "ROW-03": "DONE" }));
-    await respond(stories({ "ROW-01": "DOING", "ROW-02": "DONE", "ROW-03": "DONE" }));
-
-    const { code, lines } = await once(...fakeCommand());
-
-    assert.equal(code, 0);
-    assert.deepEqual(lines, [
-      { event: "watching", stories: 3 },
-      { event: "stage-change", story: "ROW-01", from: "BACKLOG", to: "DOING" },
-      { event: "stage-change", story: "ROW-02", from: "BACKLOG", to: "DONE" },
-    ]);
-    assert.deepEqual(await stateFile(), { "ROW-01": "DOING", "ROW-02": "DONE", "ROW-03": "DONE" });
+  it("reports unchanged stories again on a later run", async () => {
+    const current = stories({ "ROW-01": "DOING" });
+    await respond(current);
+    const first = await once(...fakeCommand());
+    const second = await once(...fakeCommand());
+    assert.deepEqual(first.lines, [{ event: "watching", stories: 1 }, { event: "stories", ...current }]);
+    assert.deepEqual(second.lines, first.lines);
   });
 
-  it("does not report a change a second time", async () => {
-    await writeFile(state, JSON.stringify({ "ROW-01": "BACKLOG" }));
-    await respond(stories({ "ROW-01": "DONE" }));
-
+  it("reports new stories and omits deleted stories", async () => {
+    await respond(stories({ "ROW-01": "DOING" }), stories({ "ROW-02": "DOING" }));
     await once(...fakeCommand());
     const { lines } = await once(...fakeCommand());
-
-    assert.deepEqual(lines, [{ event: "watching", stories: 1 }]);
+    assert.deepEqual(lines[1], { event: "stories", ...stories({ "ROW-02": "DOING" }) });
   });
 
-  it("does not report a story that is new or deleted, and forgets the deleted story", async () => {
-    await writeFile(state, JSON.stringify({ "ROW-01": "BACKLOG" }));
-    await respond(stories({ "ROW-02": "DONE" }));
-
-    const { lines } = await once(...fakeCommand());
-
-    assert.deepEqual(lines, [{ event: "watching", stories: 1 }]);
-    assert.deepEqual(await stateFile(), { "ROW-02": "DONE" });
-  });
-
-  it("reports a command failure with its output, exits 1 and keeps the state file", async () => {
-    await writeFile(state, JSON.stringify({ "ROW-01": "BACKLOG" }));
+  it("reports a command failure with its output and exits 1", async () => {
     await respond({ fail: "no project" });
-
     const { code, lines } = await once(...fakeCommand());
-
     assert.equal(code, 1);
     assert.deepEqual(lines, [{ event: "error", message: "no project on call 1" }]);
-    assert.deepEqual(await stateFile(), { "ROW-01": "BACKLOG" });
   });
 
   it("reports an error when the command does not print JSON", async () => {
     await respond({ raw: "not json" });
-
     const { code, lines } = await once(...fakeCommand());
-
     assert.equal(code, 1);
     assert.equal(lines.length, 1);
     assert.equal(lines[0].event, "error");
@@ -183,33 +152,18 @@ describe("watch-stages --once", () => {
 
   it("reports an error when the command does not print a list", async () => {
     await respond({ raw: '{"error":"nope"}' });
-
     const { code, lines } = await once(...fakeCommand());
-
     assert.equal(code, 1);
     assert.deepEqual(lines, [{ event: "error", message: "search-stories did not return a list" }]);
-  });
-
-  it("stops without a call to the command when the state file is corrupt", async () => {
-    await writeFile(state, "{ corrupt");
-    await respond(stories({}));
-
-    const { code, lines } = await once(...fakeCommand());
-
-    assert.equal(code, 1);
-    assert.equal(lines.length, 1);
-    assert.match(lines[0].message, /^Cannot read the state file: /);
-    assert.deepEqual(await recordedCalls(), []);
   });
 });
 
 describe("watch-stages usage", () => {
   const usageCases = {
-    "no --root": ["--state", "state.json"],
-    "no --state": ["--root", "project"],
-    "a command separator with no command": ["--root", "project", "--state", "state.json", "--"],
-    "an interval that is not a number": ["--root", "project", "--state", "state.json", "--interval", "soon"],
-    "an interval of zero": ["--root", "project", "--state", "state.json", "--interval", "0"],
+    "no --root": [],
+    "a command separator with no command": ["--root", "project", "--"],
+    "an interval that is not a number": ["--root", "project", "--interval", "soon"],
+    "an interval of zero": ["--root", "project", "--interval", "0"],
   };
 
   for (const [name, args] of Object.entries(usageCases)) {
@@ -224,49 +178,48 @@ describe("watch-stages usage", () => {
 });
 
 describe("watch-stages polling", () => {
-  it("announces once and reports a change on a later poll", async () => {
-    await respond(stories({ "ROW-01": "BACKLOG" }), stories({ "ROW-01": "DOING" }));
-
+  it("announces once and reports all stories on every poll", async () => {
+    const current = stories({ "ROW-01": "DOING" });
+    await respond(current);
     await whilePolling(async (output) => {
-      await waitFor(() => output().length >= 2);
-      await waitFor(async () => (await recordedCalls()).length >= 5);
-
-      assert.deepEqual(output(), [
-        { event: "watching", stories: 1 },
-        { event: "stage-change", story: "ROW-01", from: "BACKLOG", to: "DOING" },
-      ]);
+      await waitFor(() => output().length >= 4);
+      assert.deepEqual(output()[0], { event: "watching", stories: 1 });
+      assert.ok(output().slice(1).every((event) => {
+        assert.deepEqual(event, { event: "stories", ...current });
+        return true;
+      }));
     });
   });
 
   it("reports repeated failures one time, on the third failure", async () => {
     await respond({ fail: "down" });
-
     await whilePolling(async (output) => {
       await waitFor(async () => (await recordedCalls()).length >= 6);
-
       assert.deepEqual(output(), [{ event: "error", message: "down on call 3" }]);
     });
   });
 
-  it("does not report failures that a success interrupts", async () => {
-    const ok = stories({ "ROW-01": "BACKLOG" });
-    await respond({ fail: "blip" }, { fail: "blip" }, ok, { fail: "blip" }, { fail: "blip" }, ok);
-
+  it("reports the current stories after recovery without a stage change", async () => {
+    const current = stories({ "ROW-01": "DOING" });
+    await respond(current, { fail: "blip" }, current);
     await whilePolling(async (output) => {
-      await waitFor(async () => (await recordedCalls()).length >= 8);
-
-      assert.deepEqual(output(), [{ event: "watching", stories: 1 }]);
+      await waitFor(() => output().length >= 3);
+      assert.deepEqual(output().slice(0, 3), [
+        { event: "watching", stories: 1 },
+        { event: "stories", ...current },
+        { event: "stories", ...current },
+      ]);
     });
   });
 
-  it("keeps the changes that a run of failures hides", async () => {
-    const down = { fail: "down" };
-    await respond(stories({ "ROW-01": "BACKLOG" }), down, stories({ "ROW-01": "DONE" }));
-
+  it("reports a released lock while the story stays in the same stage", async () => {
+    const current = stories({ "ROW-01": "DOING" });
+    const locked = { ...current.stories[0], agentLock: { agent: "other", stage: "DOING" } };
+    await respond({ stories: [locked] }, current);
     await whilePolling(async (output) => {
-      await waitFor(() => output().length >= 2);
-
-      assert.deepEqual(output()[1], { event: "stage-change", story: "ROW-01", from: "BACKLOG", to: "DONE" });
+      await waitFor(() => output().length >= 3);
+      assert.deepEqual(output()[1], { event: "stories", stories: [locked] });
+      assert.deepEqual(output()[2], { event: "stories", ...current });
     });
   });
 });
@@ -276,7 +229,7 @@ describe("watch-stages with the real CLI", () => {
 
   // The working directory lets the child processes resolve the `tsx` loader.
   const options = () => ({ cwd: repoRoot, env: { ...process.env, HOME: dir, USERPROFILE: dir } });
-  const watch = () => runScript(["--root", dir, "--state", state, "--once", "--", ...cliCommand], options());
+  const watch = () => runScript(["--root", dir, "--once", "--", ...cliCommand], options());
   const rowbly = (...args) => execFileAsync(cliCommand[0], [...cliCommand.slice(1), "-C", dir, ...args], options());
 
   it("reports a story that moves to a different stage", async () => {
@@ -284,15 +237,16 @@ describe("watch-stages with the real CLI", () => {
     await rowbly("create-story", "--title", "A story", "--stage", "BACKLOG");
 
     const first = await watch();
-    assert.deepEqual(first.lines, [{ event: "watching", stories: 1 }]);
+    assert.equal(first.lines[1].event, "stories");
+    assert.equal(first.lines[1].stories[0].stage, "BACKLOG");
 
     await rowbly("update-story", "ROW-01", "--stage", "DONE");
 
     const second = await watch();
     assert.equal(second.code, 0);
-    assert.deepEqual(second.lines, [
-      { event: "watching", stories: 1 },
-      { event: "stage-change", story: "ROW-01", from: "BACKLOG", to: "DONE" },
-    ]);
+    assert.deepEqual(second.lines[0], { event: "watching", stories: 1 });
+    assert.equal(second.lines[1].event, "stories");
+    assert.equal(second.lines[1].stories[0].id, "ROW-01");
+    assert.equal(second.lines[1].stories[0].stage, "DONE");
   });
 });
