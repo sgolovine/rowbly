@@ -10,3 +10,7 @@
 - First try to start work on the remote development machine `rook`, if you can connect to it.
 - Run a maximum of five threads at one time on `rook`.
 - Run a maximum of three threads at one time on `thinkpad`, this computer.
+
+## Custom Startup
+
+- In addition to existing checks, make sure we have a good connection to `rook` and that threads can be spawned on `rook`. If not this is considered a WARN
