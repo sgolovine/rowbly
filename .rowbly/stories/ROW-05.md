@@ -1,7 +1,8 @@
 ---
 
 title: Automatically retry failed refinement attempts
-stage: BACKLOG
+stage: IN_DEVELOPMENT
+position: 1
 worktree: null
 pull_request: null
 ---
@@ -22,14 +23,14 @@ A refinement result of `blocked` with questions for the user remains distinct fr
 
 - [ ] A failed refinement worker becomes eligible for another attempt without a user request or a Stage change.
 - [ ] An interrupted refinement worker follows the same retry rule.
-- [ ] The supervisor starts the retry on a later scan after it confirms that the earlier worker stopped.
+- [ ] The supervisor starts the retry on the next later scan after it confirms that the earlier worker stopped.
 - [ ] The supervisor checks existing harness workers and does not start a second active worker for the Story.
 - [ ] The retry reads the current Story, Specs, Project instructions and Stage prompt.
 - [ ] Worker records preserve each attempt, its worker ID and its result across supervisor restarts.
 - [ ] A restart does not leave a failed or interrupted refinement attempt permanently ineligible.
 - [ ] A retry does not run when the Stage is disabled, absent or a hold Stage.
 - [ ] The supervisor reports failures and retries once per attempt.
-- [ ] The skill states the retry interval and any delay rule. A retry limit must not silently leave the Story ineligible.
+- [ ] Failed and interrupted refinement attempts have no attempt limit, backoff or extra delay beyond the next later scan.
 - [ ] The skill distinguishes worker failures from a `blocked` refinement result that asks the user for missing information.
 - [ ] The bundled and installed factory instructions agree on this behavior.
 - [ ] Tests cover failure, interruption, restart recovery, duplicate prevention and a Stage change before a retry.
@@ -55,7 +56,7 @@ Do not move retry decisions into the scanner only to add tests.
 The current factory tests cover scanner events, not supervisor decisions.
 Add supervisor test cases for retry decisions without a live worker or a running factory.
 Cover blocked results, active workers, current Stage locks and disabled or hold Stages.
-Cover the retry delay and limit after the user selects the policy.
+Cover the next-scan retry policy and repeated failures without an attempt limit.
 Keep the current rules for invalid or absent Stage prompts.
 Run `pnpm test:factory` if scripts change, and add new test files to that command if necessary.
 
@@ -70,10 +71,8 @@ The skill specifies scans about every 30 seconds, or the minimum interval of the
 The scanner defaults to five seconds when no interval is supplied.
 Neither value defines a retry delay or a retry limit.
 
-## Open questions
-
-- What delay must apply between repeated refinement failures?
-- Must a retry limit exist, and what automatic recovery follows that limit?
-
-The proposed policy retries on the next later scan, with no attempt limit.
-The user must select the policy before this Story is ready.
+The selected policy retries on the next later scan, with no attempt limit.
+Do not add backoff or another delay beyond the scan interval.
+A scan that first confirms a worker stopped records the result.
+The next scan can start the retry after all assignment checks pass.
+A `blocked` refinement result does not trigger an automatic retry.
