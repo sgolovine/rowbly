@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors/errors.js";
 import { initProject } from "../project/project.js";
 import { useTempDir } from "../testProject/testProject.js";
-import { listKnownProjects, RC_FILE, recordProject } from "./knownProject.js";
+import { forgetProject, listKnownProjects, RC_FILE, recordProject } from "./knownProject.js";
 
 describe("known projects", () => {
   const dir = useTempDir();
@@ -62,6 +62,19 @@ describe("known projects", () => {
     expect(JSON.parse(await readFile(real, "utf8")).projects).toHaveLength(1);
   });
 
+  it("forgets a project and keeps the other projects and keys", async () => {
+    await writeFile(rcFile(), JSON.stringify({ version: 1 }));
+    await recordProject({ path: "/a", name: "A" }, ctx());
+    await recordProject({ path: "/b", name: "B" }, ctx());
+    await forgetProject("/a", ctx());
+    expect(await stored()).toEqual({ version: 1, projects: [{ path: "/b", name: "B" }] });
+  });
+
+  it("writes nothing when it forgets a project that is not in the list", async () => {
+    await forgetProject("/a", ctx());
+    await expect(lstat(rcFile())).rejects.toThrow();
+  });
+
   it.each([
     ["not JSON", "{ nope"],
     ["not an object", "[]"],
@@ -71,6 +84,7 @@ describe("known projects", () => {
     await writeFile(rcFile(), content);
     await expect(listKnownProjects(ctx())).rejects.toBeInstanceOf(ValidationError);
     await expect(recordProject({ path: "/a", name: "A" }, ctx())).rejects.toBeInstanceOf(ValidationError);
+    await expect(forgetProject("/a", ctx())).rejects.toBeInstanceOf(ValidationError);
     expect(await readFile(rcFile(), "utf8")).toBe(content);
   });
 });

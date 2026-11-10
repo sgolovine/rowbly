@@ -114,7 +114,7 @@ src/
     project/ story/ stage/ customField/ spec/ skill/ doctor/   # the domain services
     onboarding/       # planOnboarding(), applyOnboarding(): the setup that the TUI and `rowbly init` share
     storyWatch/       # watchStories(): calls a function when the files of the stories folder change
-    knownProject/     # listKnownProjects(), recordProject(): the projects in ~/.rowblyrc.json
+    knownProject/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
 skills/               # the bundled skills; `rowbly install-skill` copies them into a project
 stages/               # the default stage prompts; onboarding copies them into a project

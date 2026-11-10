@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { recordProject } from "../../../services/knownProject/knownProject.js";
+import { listKnownProjects, recordProject } from "../../../services/knownProject/knownProject.js";
 import { initProject } from "../../../services/project/project.js";
 import { useTempDir } from "../../../services/testProject/testProject.js";
 import { keys, renderTui, settle } from "../../testing/index.js";
@@ -65,6 +65,29 @@ describe("ProjectSwitcher", () => {
     expect(tui.frame()).toMatch(/gone · missing/);
     await tui.press(keys.enter);
     expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("removes the selected Project from the list after a confirmation", async () => {
+    const [, newer] = await seed("older", "newer");
+    const { tui, onClose } = await open(newer);
+    await tui.press("d");
+    expect(tui.frame()).toContain("Remove older from the list?");
+    await tui.press("y");
+    await settle(50);
+    expect((await listKnownProjects(ctx())).map((p) => p.path)).toEqual([newer]);
+    expect(tui.frame()).not.toMatch(/older/);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("keeps the Project when the confirmation is cancelled", async () => {
+    await seed("older", "newer");
+    const { tui, onClose } = await open();
+    await tui.press("d");
+    await tui.press(keys.escape);
+    await settle(50);
+    expect(tui.frame()).not.toContain("from the list?");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(await listKnownProjects(ctx())).toHaveLength(2);
   });
 
   it("closes on esc", async () => {

@@ -84,7 +84,20 @@ export async function recordProject(input: RecordProjectInput, ctx: ServiceConte
   const entries = rcEntries(rc, file);
   if (entries[0]?.path === input.path && entries[0].name === input.name) return;
   const known = entries.find((entry) => entry.path === input.path);
-  const projects = [{ ...known, ...input }, ...entries.filter((entry) => entry !== known)];
+  await writeRc(file, rc, [{ ...known, ...input }, ...entries.filter((entry) => entry !== known)]);
+}
+
+/** Takes the project at `path` out of the list. It does not touch the project, and writes nothing when it is not in the list. */
+export async function forgetProject(path: string, ctx: ServiceContext = {}): Promise<void> {
+  const file = rcPath(ctx);
+  const rc = await readRc(file);
+  const entries = rcEntries(rc, file);
+  const projects = entries.filter((entry) => entry.path !== path);
+  if (projects.length === entries.length) return;
+  await writeRc(file, rc, projects);
+}
+
+async function writeRc(file: string, rc: Record<string, unknown>, projects: RcEntry[]): Promise<void> {
   // A dotfile manager often makes this file a link: write through the link and keep it.
   const target = await realpath(file).catch(() => file);
   await writeFileAtomic(target, `${JSON.stringify({ ...rc, projects }, null, 2)}\n`);
