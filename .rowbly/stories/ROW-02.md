@@ -1,7 +1,7 @@
 ---
 title: Attach items to stories
 stage: IN_REFINEMENT
-position: 2
+position: 1
 worktree: null
 pull_request: null
 ---

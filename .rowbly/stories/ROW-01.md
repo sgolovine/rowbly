@@ -1,7 +1,7 @@
 ---
 title: Nested command structure
 stage: IN_REFINEMENT
-position: 3
+position: 2
 worktree: null
 pull_request: null
 ---
