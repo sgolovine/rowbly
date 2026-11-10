@@ -5,23 +5,19 @@
 <p align="center">
   <a href="https://github.com/sgolovine/rowbly/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/sgolovine/rowbly/ci.yml?branch=main&label=build" alt="Build status"></a>
   <a href="https://www.npmjs.com/package/rowbly"><img src="https://img.shields.io/npm/v/rowbly?color=f5b841" alt="npm version"></a>
-  <a href="https://github.com/sgolovine/rowbly/releases/latest"><img src="https://img.shields.io/github/v/release/sgolovine/rowbly?label=release" alt="Latest release"></a>
   <a href="https://www.npmjs.com/package/rowbly"><img src="https://img.shields.io/npm/dm/rowbly?color=blue" alt="npm downloads"></a>
-  <img src="https://img.shields.io/node/v/rowbly" alt="Node version">
   <a href="https://github.com/sgolovine/rowbly/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/rowbly" alt="License"></a>
 </p>
 
 <p align="center">
-  <strong>Give your coding agents a board. Keep the board in your repo.</strong>
+  <strong>The Easiest Way to Run an AI Software Factory</strong>
 </p>
 
-Rowbly is a Kanban board for you and your coding agents. It lives in your repository, and it opens in your terminal.
+Rowbly is the simplest way to set up and manage an AI-powered software factory. Create stories, organize them into predefined stages, and let your AI agents automatically pick up and execute the work.
 
-Agents do their best work when they know what to do next. With Rowbly, you write a story and put it in a stage. The stage tells the agent what to do with that story. You watch the work move across the board.
+The biggest challenge with AI software factories isn't writing code, it's orchestrating the agents. Coordinating supervisors, delegating tasks, and tracking progress can quickly become a project of its own.
 
-Rowbly has no server, no account and no database. Your board is a folder of Markdown files, so it stays with your code in Git. You can read each file, change each file and examine each change in a pull request.
-
-You use the terminal UI. Your agents use the CLI. Both change the same files, so you always see the same board.
+Rowbly eliminates that complexity with an intuitive Kanban board and a companion agent skill that runs a supervisor to monitor your workflow, assign work to agents, and keep development moving automatically.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/sgolovine/rowbly/main/assets/screenshot.png" alt="The Rowbly terminal UI shows the stories of a project, grouped by stage, with the name of the agent that works on each story" width="100%">
@@ -29,33 +25,19 @@ You use the terminal UI. Your agents use the CLI. Both change the same files, so
 
 ## Installation
 
-Rowbly runs on Node 22 or later. Install it from npm:
+Rowbly runs on Node 24 or later. Install it from npm:
 
 ```sh
 npm install -g rowbly
 ```
 
-Go to your project and create a board:
+You can also run it directly with `npx`:
 
 ```sh
-cd my-project
-rowbly init
+npx rowbly
 ```
 
-`rowbly init` asks you to use the defaults or to choose the name, stages, agent skills and harnesses. Run `rowbly` with no project to do the same setup in the terminal UI. Agents and scripts can use flags or JSON:
-
-```sh
-rowbly init --defaults
-rowbly init --stage Backlog --stage QA --stage Done --skill factory --harness codex
-echo '{"name":"Web","stages":["Backlog","Done"],"skills":[]}' | rowbly init --input -
-```
-
-The default stages are **Backlog**, **In Refinement**, **In Development**, **In Review** and **Done**. Backlog and Done are always enabled. Add your first story, then open the board:
-
-```sh
-rowbly create-story --title "Add a login page"
-rowbly
-```
+To get started, run either `rowbly` for interactive onboarding or by running `rowbly init`. This will walk you through the process of setting up a software factory for your project. Rowbly ships with sensible defaults so you can get up and running quickly.
 
 Press `?` in the terminal UI to see all the keys. Run `rowbly --help` to see all the commands.
 
@@ -107,7 +89,7 @@ cd rowbly
 pnpm install
 pnpm dev              # run the terminal UI from source
 pnpm dev --help       # run the CLI from source
-pnpm link --global    # put your local build on your PATH
+pnpm add -g "path:$PWD" # install rowbly to your PATH
 ```
 
 Run these checks before you send a change:
