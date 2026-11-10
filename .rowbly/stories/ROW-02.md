@@ -1,7 +1,7 @@
 ---
 title: Attach items to stories
-stage: IN_DEVELOPMENT
-position: 1
+stage: DONE
+position: 7
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-02-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/185
 ---
@@ -57,9 +57,3 @@ Integrate lifecycle changes with `src/services/story/story.ts`, Project key chan
 Adapt `NewStoryModal`, `EditStoryModal`, `StoryModal`, `StoryModalBody`, and `StoryRow` under `src/tui/screens/stories/`. The current Story modal is an edit form; keep its unsaved text and images together. General stays first. Specs appears only when enabled. Attachments appears last in both configurations. Extend the shared components and follow `.agents/skills/rowbly-tui-design/SKILL.md`.
 
 No Specs are linked to ROW-02 at refinement. The legacy reference resolves the original request; no open product questions remain.
-
-## Review findings
-
-1. **P2: Use a valid Story ID in the clipboard fallback.** `src/tui/hooks/useStoryPaste.ts:47` passes `owner` to `clipboardFailure`. The edit form supplies `${ctx.cwd}:${storyId}` at `src/tui/screens/stories/StoryModalBody/StoryModalBody.tsx:93`. The create form supplies `new Story` at `src/tui/screens/stories/NewStoryImages/NewStoryImages.tsx:14`. A reproduced `no-display` toast recommends `rowbly add-attachment /example/project:ROW-01 <file.png>`. That ownership token cannot select the Story. This fails the acceptance criterion for a file command when clipboard access is unavailable. Keep the ownership token for read guards. Pass the real Story ID to the error helper. For a new Story, tell the user to save first or use a valid create flow. Add component tests for the displayed `unsupported` and `no-display` hints in both forms.
-
-Validation: The native Linux clipboard read returned `no-image` in 123 ms. Process tests cover crashes, output limits, the deadline, and Wayland fallback. Live macOS and Windows checks were not available. The first full suite had three failures in existing tests with fixed waits. All 44 tests in those files passed in an isolated run without retries. The final full suite passed all 903 tests with one worker and no retries. The factory suite passed all 47 tests. Lint, typecheck, build, and Knip passed. The command registration conflict was resolved with the resource groups from main and the four attachment commands.
