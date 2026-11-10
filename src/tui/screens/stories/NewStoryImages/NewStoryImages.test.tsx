@@ -8,7 +8,15 @@ vi.mock("../../../../services/clipboard/clipboard.js", async (original) => ({
   ...(await original<object>()),
   readClipboardImage: vi.fn(),
 }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+it("does not read the clipboard while disabled", async () => {
+  const tui = await renderTui(<NewStoryImages onPaste={() => {}} enabled={false} />);
+  await tui.press(keys.ctrl("v"));
+  expect(readClipboardImage).not.toHaveBeenCalled();
+});
 it("shows the pending image count and byte size", async () => {
   vi.mocked(readClipboardImage).mockResolvedValue({
     bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),

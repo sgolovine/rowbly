@@ -90,7 +90,7 @@ export function StoryModalBody({
   const attachmentTab = tab === (specs ? 2 : 1);
   const [saving, setSaving] = useState(false);
   const savingNow = useRef(false);
-  const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, idle && !saving);
+  const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, storyId, idle && !saving);
   const [attachmentHints, setAttachmentHints] = useState<readonly KeyHint[]>(NO_HINTS);
   const [attachmentTask, setAttachmentTask] = useState(false);
 

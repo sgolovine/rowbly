@@ -10,7 +10,7 @@ import { useToast } from "./toasts.js";
 // A read stays busy after its original screen closes.
 let reading = false;
 export const IMAGE_PASTE_HINT = { key: process.platform === "win32" ? "alt+v" : "ctrl+v", description: "paste image" };
-export function useStoryPaste(owner: string, enabled = true) {
+export function useStoryPaste(owner: string, storyId?: string, enabled = true) {
   const active = useIsActive();
   const covered = useCovered();
   const toast = useToast();
@@ -44,7 +44,7 @@ export function useStoryPaste(owner: string, enabled = true) {
     try {
       const result = await readClipboardImage();
       if (!current()) return;
-      if ("reason" in result) throw clipboardFailure(result.reason, owner);
+      if ("reason" in result) throw clipboardFailure(result.reason, storyId);
       const size = images.current.reduce((n, image) => n + image.bytes.length, 0) + result.bytes.length;
       if (size > MAX_ATTACHMENT_BYTES) throw new ValidationError("Pending images exceed 10 MiB in total");
       setPending([...images.current, { name: clipboardName(new Date()), bytes: result.bytes }]);

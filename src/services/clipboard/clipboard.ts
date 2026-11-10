@@ -134,7 +134,7 @@ export async function readClipboardImage(): Promise<ClipboardImageResult> {
 
 export function clipboardFailure(
   reason: "unsupported" | "no-display" | "no-image" | "too-large" | "timeout",
-  story: string,
+  story?: string,
 ): ValidationError {
   const messages = {
     unsupported: "Clipboard image access is unsupported",
@@ -143,8 +143,11 @@ export function clipboardFailure(
     "too-large": "Clipboard image exceeds 10 MiB",
     timeout: "Clipboard image read timed out",
   };
+  const fallback = story
+    ? `Use \`rowbly add-attachment ${story} <file.png>\` to attach a file.`
+    : "Save the Story first, then use its Attachments tab to add a PNG file.";
   return new ValidationError(messages[reason], {
     details: { reason },
-    hint: `${process.env.WAYLAND_DISPLAY ? "Install wl-clipboard for Wayland. " : ""}Use \`rowbly add-attachment ${story} <file.png>\` to attach a file.`,
+    hint: `${process.env.WAYLAND_DISPLAY ? "Install wl-clipboard for Wayland. " : ""}${fallback}`,
   });
 }

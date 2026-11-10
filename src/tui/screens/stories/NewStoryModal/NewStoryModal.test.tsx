@@ -1,5 +1,6 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as clipboard from "../../../../services/clipboard/clipboard.js";
 import { addCustomField } from "../../../../services/customField/customField.js";
 import { listStages } from "../../../../services/stage/stage.js";
 import { searchStories } from "../../../../services/story/story.js";
@@ -7,7 +8,10 @@ import { useTestProject } from "../../../../services/testProject/testProject.js"
 import { keys, renderTui, settle } from "../../../testing/index.js";
 import { NewStoryModal } from "./NewStoryModal.js";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("NewStoryModal", () => {
   const project = useTestProject();
@@ -36,6 +40,21 @@ describe("NewStoryModal", () => {
     expect(frame).toContain("Description");
     expect(frame).toContain("[Full screen]");
     expect(frame).toContain("Points");
+  });
+
+  it.each(["unsupported", "no-display"] as const)("shows a save-first fallback for %s", async (reason) => {
+    vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({ reason });
+    const { tui } = await setup();
+    await tui.press(keys.ctrl("v"));
+    const [toast] = tui.toasts.list();
+    expect(toast?.kind).toBe("error");
+    expect(toast?.message).toContain(
+      reason === "unsupported"
+        ? "Clipboard image access is unsupported"
+        : "No display is available for clipboard access",
+    );
+    expect(toast?.message).toContain("Save the Story first, then use its Attachments tab to add a PNG file.");
+    expect(toast?.message).not.toContain("rowbly add-attachment");
   });
 
   it("creates the Story with the service and reports it", async () => {

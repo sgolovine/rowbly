@@ -1,6 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as clipboard from "../../../../services/clipboard/clipboard.js";
 import { updateProject } from "../../../../services/project/project.js";
 import { createSpec } from "../../../../services/spec/spec.js";
 import { createStory } from "../../../../services/story/story.js";
@@ -8,7 +9,10 @@ import { useTestProject } from "../../../../services/testProject/testProject.js"
 import { keys, renderTui } from "../../../testing/index.js";
 import { StoryModalBody, type StoryModalConfirm } from "./StoryModalBody.js";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 interface Calls {
   submit(): void;
@@ -62,6 +66,18 @@ describe("StoryModalBody", () => {
     expect(tui.frame()).toContain("Specs 1");
     expect(tui.frame()).toContain("Title");
     expect(tui.frame()).not.toContain("The API text");
+  });
+
+  it("keeps a valid clipboard fallback across the Story tabs", async () => {
+    vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({ reason: "no-display" });
+    const { tui } = await setup();
+    for (const tab of ["General", "Specs 1", "Attachments"]) {
+      await tui.click(tab);
+      await tui.press(keys.ctrl("v"));
+      const toast = tui.toasts.list().at(-1);
+      expect(toast?.message).toContain("rowbly add-attachment ROW-01 <file.png>");
+      expect(toast?.message).not.toContain(project.ctx.cwd);
+    }
   });
 
   it("changes the tab with shift+tab and with a click", async () => {

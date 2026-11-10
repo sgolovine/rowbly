@@ -11,7 +11,7 @@ export function NewStoryImages({
   enabled?: boolean;
   onPaste(value: ReturnType<typeof useStoryPaste>): void;
 }) {
-  const paste = useStoryPaste("new Story", enabled);
+  const paste = useStoryPaste("new Story", undefined, enabled);
   useEffect(() => {
     onPaste(paste);
   });
