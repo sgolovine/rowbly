@@ -191,8 +191,9 @@ Keep your changes to a tracked skill in a different place. `rowbly remove-skill`
 all local changes in it.
 
 `ROWBLY.md` holds the top-level instructions of a project, as a `CLAUDE.md` or `AGENTS.md` file does.
-Rowbly does not create, parse or enforce it. `rowbly get-instructions` shows the text. A supervisor
-gives the text to each worker that it starts.
+Initialization creates the file with only `# ROWBLY INSTRUCTIONS` and a final newline.
+Existing Projects can omit the file. Rowbly does not parse or enforce its text.
+`rowbly get-instructions` shows the text. A supervisor gives the text to each worker that it starts.
 
 Rowbly also keeps one file for each user, `~/.rowblyrc.json`. The TUI adds a project to this file when
 the project opens. The Project switcher in the header reads the list.
