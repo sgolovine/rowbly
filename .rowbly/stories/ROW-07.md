@@ -1,7 +1,7 @@
 ---
 title: PR title must include the ticket number
-stage: IN_DEVELOPMENT
-position: 4
+stage: DONE
+position: 3
 worktree: null
 pull_request: null
 ---

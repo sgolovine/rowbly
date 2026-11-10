@@ -1,6 +1,6 @@
 ---
 title: Manage skills via TUI
-stage: IN_DEVELOPMENT
+stage: DONE
 position: 4
 worktree: null
 pull_request: null

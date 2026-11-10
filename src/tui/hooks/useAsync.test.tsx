@@ -16,7 +16,8 @@ function Probe({ fn, states }: { fn: () => Promise<string>; states: AsyncState<s
 async function probe(fn: () => Promise<string>) {
   const states: AsyncState<string>[] = [];
   const tui = await renderTui(<Probe fn={fn} states={states} />);
-  await settle(20);
+  // The first load must end before a test starts a reload or a refresh.
+  await vi.waitFor(() => expect(states.at(-1)?.loading).toBe(false));
   const { reload, refresh } = states.at(-1) as AsyncState<string>;
   return { tui, states, reload, refresh, latest: () => states.at(-1) as AsyncState<string> };
 }
@@ -57,7 +58,6 @@ describe("useAsync", () => {
     const { tui, refresh, latest } = await probe(fn);
     expect(latest().data).toBeUndefined();
     refresh();
-    await settle(20);
-    expect(tui.frame()).toContain("fixed");
+    await vi.waitFor(() => expect(tui.frame()).toContain("fixed"));
   });
 });
