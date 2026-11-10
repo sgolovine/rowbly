@@ -45,7 +45,7 @@ async function readBody(opts: SpecOptions, ctx: ServiceContext): Promise<string 
 
 export function registerSpecCommands(program: Command): void {
   program
-    .command("create-spec")
+    .command("create")
     .description("Create a spec and link it to one or more stories")
     .requiredOption("--title <title>", "spec title")
     .requiredOption("--story <id>", "link to this story (repeatable)", collect)
@@ -62,7 +62,7 @@ export function registerSpecCommands(program: Command): void {
     );
 
   program
-    .command("update-spec <slug>")
+    .command("update <slug>")
     .description("Update a spec")
     .option("--title <title>", "new title")
     .option("--story <id>", "replace the linked stories (repeatable)", collect)
@@ -78,7 +78,7 @@ export function registerSpecCommands(program: Command): void {
     );
 
   program
-    .command("delete-spec <slug>")
+    .command("delete <slug>")
     .description("Delete a spec")
     .action((slug: string, _opts: unknown, command: Command) =>
       run(
@@ -89,14 +89,14 @@ export function registerSpecCommands(program: Command): void {
     );
 
   program
-    .command("get-spec <slug>")
+    .command("get <slug>")
     .description("Show a spec")
     .action((slug: string, _opts: unknown, command: Command) =>
       run(command, (ctx) => getSpec({ slug }, ctx), formatSpec),
     );
 
   program
-    .command("list-specs")
+    .command("list")
     .description("List the specs")
     .option("--story <id>", "only the specs linked to this story")
     .action((opts: { story?: string }, command: Command) =>
@@ -113,7 +113,7 @@ export function registerSpecCommands(program: Command): void {
     );
 
   program
-    .command("link-spec <slug> <story>")
+    .command("link <slug> <story>")
     .description("Link a spec to one more story")
     .action((slug: string, story: string, _opts: unknown, command: Command) =>
       run(
@@ -124,7 +124,7 @@ export function registerSpecCommands(program: Command): void {
     );
 
   program
-    .command("unlink-spec <slug> <story>")
+    .command("unlink <slug> <story>")
     .description("Remove the link from a spec to a story; a spec keeps at least one story")
     .action((slug: string, story: string, _opts: unknown, command: Command) =>
       run(

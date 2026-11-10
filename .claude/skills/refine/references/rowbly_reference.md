@@ -18,9 +18,9 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 - Do not assume the keys of the Stages or the custom fields. Read them from the config (section 3).
 - Change data only with commands. A command examines the data before it writes the data.
 - Run only one command that writes at a time for each Project. Rowbly does not lock its files. In a
-  test, six parallel `create-story` commands all reported success, but only four Stories were written.
-- Get approval from the user before you run `delete-story`, `delete-stage`, `delete-spec` or
-  `remove-custom-field`. These commands do not ask for confirmation.
+  test, six parallel `story create` commands all reported success, but only four Stories were written.
+- Get approval from the user before you run `story delete`, `stage delete`, `spec delete` or
+  `custom-field remove`. These commands do not ask for confirmation.
 - Do not run a failed command again with the same input. Read the error and change the input.
 
 ## 2. Concepts
@@ -102,6 +102,13 @@ Each command has `--help`. These options apply to all commands:
 | `-h, --help`      | Shows the usage text.                                  |
 | `-v, --version`   | Shows the version.                                     |
 
+Resource commands use `<resource> <action>`.
+The resources are `project`, `story`, `stage`, `custom-field`, `spec` and `skill`.
+Run `rowbly <resource>` or `rowbly <resource> --help` to see its actions.
+Run `rowbly <resource> <action> --help` to see its arguments and options.
+The old flat resource commands do not work.
+The commands `init` and `doctor` stay at the root.
+
 A flag with `(repeat)` can occur more than one time.
 
 ### Project
@@ -109,9 +116,9 @@ A flag with `(repeat)` can occur more than one time.
 | Command                                               | JSON result | Notes                                                       |
 | ----------------------------------------------------- | ----------- | ----------------------------------------------------------- |
 | `rowbly init [--defaults] [--name <name>] [--key <key>] [--stage <stage>] [--skill <name>] [--no-skills] [--harness <id>] [--input <json\|file\|->]` | Project, `installed`, `edits` | Creates `.rowbly/`, the Stages and the skills. Always adds Backlog and Done. Gives `CONFLICT` if `.rowbly/` exists. |
-| `rowbly update-project [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
-| `rowbly update-project --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
-| `rowbly get-instructions`                             | Instructions | Reads `.rowbly/ROWBLY.md`. Works if the file does not exist. |
+| `rowbly project update [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
+| `rowbly project update --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
+| `rowbly project get-instructions`                             | Instructions | Reads `.rowbly/ROWBLY.md`. Works if the file does not exist. |
 
 An Instructions record has this shape. `instructions` is empty if the file does not exist:
 
@@ -123,11 +130,11 @@ An Instructions record has this shape. `instructions` is empty if the file does 
 
 | Command                                                                                             | JSON result     |
 | --------------------------------------------------------------------------------------------------- | --------------- |
-| `rowbly create-story --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat)` | Story           |
-| `rowbly get-story <id>`                                                                             | Story           |
-| `rowbly search-stories [query] [--stage <key>] [--field <k=v>] (repeat)`                            | Array of Story  |
-| `rowbly update-story <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat)` | Story |
-| `rowbly delete-story <id>`                                                                          | `{ "id": … }`   |
+| `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat)` | Story           |
+| `rowbly story get <id>`                                                                             | Story           |
+| `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat)`                            | Array of Story  |
+| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat)` | Story |
+| `rowbly story delete <id>`                                                                          | `{ "id": … }`   |
 
 A Story record has this shape:
 
@@ -150,7 +157,7 @@ A Story record has this shape:
 - **Positions.** `--position` starts at 1. A value that is too large puts the Story in the last place.
 - **Descriptions.** `--description` replaces the full description. An empty value clears it.
 - **Fields.** `--field` changes only the fields that you name.
-- **Search.** With no filters, `search-stories` shows all Stories. A Story must agree with all filters.
+- **Search.** With no filters, `story search` shows all Stories. A Story must agree with all filters.
 - **Search text.** Each word of `query` must occur in the ID, title, description or a field value. Case has no effect.
 - **Search order.** The results are in the order of the Stages, then in the order of the positions.
 
@@ -161,10 +168,10 @@ so Rowbly can give the deleted ID to a new Story.
 
 | Command                                                                                      | JSON result                     |
 | -------------------------------------------------------------------------------------------- | ------------------------------- |
-| `rowbly create-stage --label <label> [--key <key>] [--prompt <md>] [--position <n>] [--disable]` | Stage                       |
-| `rowbly get-stage <key>`                                                                     | Stage                           |
-| `rowbly update-stage <key> [--rename <key>] [--label <l>] [--prompt <md>] [--position <n>] [--enable] [--disable]` | Stage     |
-| `rowbly delete-stage <key> [--move-to <key>]`                                                | `{ "key": …, "movedStories": n }` |
+| `rowbly stage create --label <label> [--key <key>] [--prompt <md>] [--position <n>] [--disable]` | Stage                       |
+| `rowbly stage get <key>`                                                                     | Stage                           |
+| `rowbly stage update <key> [--rename <key>] [--label <l>] [--prompt <md>] [--position <n>] [--enable] [--disable]` | Stage     |
+| `rowbly stage delete <key> [--move-to <key>]`                                                | `{ "key": …, "movedStories": n }` |
 
 A Stage record has this shape:
 
@@ -177,16 +184,16 @@ A Stage record has this shape:
 - **Renames.** `--rename` changes the Stage file and all Stories in the Stage.
 - **Deletes.** A Stage with Stories gives `CONFLICT` without `--move-to`. `details.stories` lists the Stories.
 - **Last Stage.** A Project must have at least one Stage. The last Stage cannot be deleted.
-- **Disabled Stages.** `create-story` does not use a disabled Stage as its default. `--stage` can select
+- **Disabled Stages.** `story create` does not use a disabled Stage as its default. `--stage` can select
   a disabled Stage, and `doctor` then shows a warning.
 
 ### Custom field
 
 | Command                                                                                   | JSON result  |
 | ----------------------------------------------------------------------------------------- | ------------ |
-| `rowbly add-custom-field --label <label> --type <type> [--key <key>] [--option <v>] (repeat)` | Custom field |
-| `rowbly update-custom-field <key> [--rename <key>] [--label <l>] [--type <type>] [--option <v>] (repeat)` | Custom field |
-| `rowbly remove-custom-field <key>`                                                        | Custom field |
+| `rowbly custom-field add --label <label> --type <type> [--key <key>] [--option <v>] (repeat)` | Custom field |
+| `rowbly custom-field update <key> [--rename <key>] [--label <l>] [--type <type>] [--option <v>] (repeat)` | Custom field |
+| `rowbly custom-field remove <key>`                                                        | Custom field |
 
 Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `position`, `id` and
 `description` are reserved.
@@ -200,8 +207,8 @@ Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `pos
 | `date`    | `YYYY-MM-DD`                                            |
 | `select`  | One of the options of the field                         |
 
-- **Clear a value.** `--field <key>=` clears the value in `create-story` and `update-story`.
-- **Find empty values.** `--field <key>=` in `search-stories` finds the Stories with no value.
+- **Clear a value.** `--field <key>=` clears the value in `story create` and `story update`.
+- **Find empty values.** `--field <key>=` in `story search` finds the Stories with no value.
 - **Select options.** A `select` field must have at least one `--option`. In an update, `--option`
   replaces all options.
 - **Type changes.** `--type` converts the values in all Stories. If one value cannot change, the
@@ -213,13 +220,13 @@ Turn Specs on before you use these commands. If Specs are off, each command give
 
 | Command                                                                                     | JSON result     |
 | ------------------------------------------------------------------------------------------- | --------------- |
-| `rowbly create-spec --title <t> --story <id> (repeat) [--slug <s>] [--body <md>] [--body-file <path>]` | Spec |
-| `rowbly get-spec <slug>`                                                                    | Spec            |
-| `rowbly list-specs [--story <id>]`                                                          | Array of Spec   |
-| `rowbly update-spec <slug> [--title <t>] [--story <id>] (repeat) [--body <md>] [--body-file <path>]` | Spec   |
-| `rowbly link-spec <slug> <story>`                                                           | Spec            |
-| `rowbly unlink-spec <slug> <story>`                                                         | Spec            |
-| `rowbly delete-spec <slug>`                                                                 | `{ "slug": … }` |
+| `rowbly spec create --title <t> --story <id> (repeat) [--slug <s>] [--body <md>] [--body-file <path>]` | Spec |
+| `rowbly spec get <slug>`                                                                    | Spec            |
+| `rowbly spec list [--story <id>]`                                                          | Array of Spec   |
+| `rowbly spec update <slug> [--title <t>] [--story <id>] (repeat) [--body <md>] [--body-file <path>]` | Spec   |
+| `rowbly spec link <slug> <story>`                                                           | Spec            |
+| `rowbly spec unlink <slug> <story>`                                                         | Spec            |
+| `rowbly spec delete <slug>`                                                                 | `{ "slug": … }` |
 
 A Spec record has this shape:
 
@@ -236,9 +243,9 @@ A Spec record has this shape:
 - **Body.** `--body-file -` reads the body from stdin. Do not use `--body` and `--body-file` together.
 - **Slugs.** The default slug comes from the title. If the slug exists, Rowbly adds a number, for
   example `login-page-2`.
-- **Links.** `update-spec --story` replaces all links. Use `link-spec` to add one link.
-- **Last link.** `unlink-spec` cannot remove the last link. Link a different Story or delete the Spec.
-- **Deleted Stories.** `delete-story` removes the Story from each Spec. A Spec with no Stories stays.
+- **Links.** `spec update --story` replaces all links. Use `spec link` to add one link.
+- **Last link.** `spec unlink` cannot remove the last link. Link a different Story or delete the Spec.
+- **Deleted Stories.** `story delete` removes the Story from each Spec. A Spec with no Stories stays.
   It is an orphan, and its `stories` list is empty.
 
 ### Skill
@@ -248,9 +255,9 @@ it in `rowbly.config.json`.
 
 | Command                                                  | JSON result    |
 | -------------------------------------------------------- | -------------- |
-| `rowbly install-skill <name> --harness <id> (repeat)`    | Skill result   |
-| `rowbly list-skills`                                     | Array of Skill |
-| `rowbly remove-skill <name> [--harness <id>] (repeat)`   | Skill result   |
+| `rowbly skill install <name> --harness <id> (repeat)`    | Skill result   |
+| `rowbly skill list`                                     | Array of Skill |
+| `rowbly skill remove <name> [--harness <id>] (repeat)`   | Skill result   |
 
 | Harness ID       | Project skills folder |
 | ---------------- | --------------------- |
@@ -274,13 +281,13 @@ A Skill result has this shape. It has `status` in place of `installed`:
 
 - **Names.** Only a bundled skill can install. Any other name gives `NOT_FOUND`, and `hint` lists the bundled skills.
 - **Conflicts.** If a target has content that is not an installed copy of the skill, the command gives `CONFLICT` and writes nothing. For example, a folder that the config does not track, or a tracked folder with no `SKILL.md`.
-- **Repairs.** If nothing is at the path of a tracked skill, `install-skill` copies the skill again and gives the status `installed`.
+- **Repairs.** If nothing is at the path of a tracked skill, `skill install` copies the skill again and gives the status `installed`.
 - **Install status.** The value is `installed`, `shared` or `already-installed`. A `shared` harness uses the same folder as a tracked harness.
 - **Remove status.** The value is `removed`, `missing` or `shared`. Rowbly keeps a `shared` folder because a tracked harness still uses it.
-- **Removes.** With no `--harness`, `remove-skill` removes the skill from all of its harnesses.
+- **Removes.** With no `--harness`, `skill remove` removes the skill from all of its harnesses.
 - **Shared read locations.** Harnesses can read the same folders. A skill can stay visible after you remove it for one harness.
 
-Get approval from the user before you run `remove-skill`. The command deletes the folder and all local
+Get approval from the user before you run `skill remove`. The command deletes the folder and all local
 changes in it, and does not ask for confirmation.
 
 ### Long text
@@ -289,7 +296,7 @@ Only Specs have a file flag. `--description` and `--prompt` take the text as an 
 the contents of a file, use command substitution:
 
 ```sh
-rowbly update-story APP-01 --description "$(cat notes.md)" --json
+rowbly story update APP-01 --description "$(cat notes.md)" --json
 ```
 
 ## 6. Work on a Story
@@ -297,38 +304,38 @@ rowbly update-story APP-01 --description "$(cat notes.md)" --json
 1. Read the instructions of the Project (section 7):
 
    ```sh
-   rowbly get-instructions --json
+   rowbly project get-instructions --json
    ```
 
 2. Find the Stories of a Stage. They are in the order of their positions:
 
    ```sh
-   rowbly search-stories --stage IN_PROGRESS --json
+   rowbly story search --stage IN_PROGRESS --json
    ```
 
 3. Read the Story:
 
    ```sh
-   rowbly get-story APP-01 --json
+   rowbly story get APP-01 --json
    ```
 
 4. Read the prompt of the Stage of the Story. Do the instructions in `prompt`:
 
    ```sh
-   rowbly get-stage IN_PROGRESS --json
+   rowbly stage get IN_PROGRESS --json
    ```
 
 5. If Specs are on, read the Specs of the Story:
 
    ```sh
-   rowbly list-specs --story APP-01 --json
+   rowbly spec list --story APP-01 --json
    ```
 
 6. Do the work.
 7. Move the Story to the Stage that the prompt or the user names:
 
    ```sh
-   rowbly update-story APP-01 --stage DONE --json
+   rowbly story update APP-01 --stage DONE --json
    ```
 
 Read the prompt each time that you start work on a Story. Users can change prompts at any time, and
@@ -344,7 +351,7 @@ or a person moves it.
 
 - **Read.** Read the instructions before you do work or change data in a Project.
 - **Supervisors.** Give the full text of `instructions` to each worker in its first message.
-- **Workers.** If the first message does not have the instructions, read them with `get-instructions`.
+- **Workers.** If the first message does not have the instructions, read them with `project get-instructions`.
 - **Order.** Obey the user first. Then obey the Stage prompt, because it is more specific. Then obey `ROWBLY.md`.
 - **Skills.** `ROWBLY.md` has priority over the steps of a skill.
 - **Limits.** `ROWBLY.md` does not remove the rules in section 1.
@@ -402,7 +409,7 @@ apply each available repair.
 ```
 
 Run `doctor` if an error has a hint about `rowbly doctor`, or after a Git merge changes `.rowbly/`.
-One invalid Story file makes `search-stories` fail for the full Project.
+One invalid Story file makes `story search` fail for the full Project.
 
 `doctor` exits with 1 if an `error` issue is not fixed. Warnings do not change the exit code.
 
@@ -424,7 +431,7 @@ One invalid Story file makes `search-stories` fail for the full Project.
 
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
 orphan Spec if the user did not tell you to do it. A problem with an installed skill has a
-`message` that names the `remove-skill` command. Get approval from the user before you run it.
+`message` that names the `skill remove` command. Get approval from the user before you run it.
 
 ## 10. Differences from older versions
 
@@ -432,12 +439,12 @@ Older skills and notes can show commands that do not exist now. Do not use the i
 
 | Old item                                                  | Current replacement                                           |
 | --------------------------------------------------------- | ------------------------------------------------------------- |
-| `rowbly stories list`                                     | `rowbly search-stories`                                       |
-| `rowbly stories show`                                     | `rowbly get-story`                                            |
-| `rowbly stories create --name`                            | `rowbly create-story --title`                                 |
-| `rowbly stories edit`                                     | `rowbly update-story`                                         |
-| `rowbly stories move`, `rowbly stories rank`              | `rowbly update-story --stage`, `--position`                   |
-| `rowbly stories delete --yes`                             | `rowbly delete-story`                                         |
+| `rowbly stories list`                                     | `rowbly story search`                                       |
+| `rowbly stories show`                                     | `rowbly story get`                                            |
+| `rowbly stories create --name`                            | `rowbly story create --title`                                 |
+| `rowbly stories edit`                                     | `rowbly story update`                                         |
+| `rowbly stories move`, `rowbly stories rank`              | `rowbly story update --stage`, `--position`                   |
+| `rowbly stories delete --yes`                             | `rowbly story delete`                                         |
 | `rowbly config show`                                      | Read `.rowbly/rowbly.config.json`                             |
 | Data Root                                                 | Project                                                       |
 | Boards, `--board`, `rowbly use`, `rowbly boards`          | One Project in each `.rowbly/`, with no Boards                |
@@ -445,7 +452,7 @@ Older skills and notes can show commands that do not exist now. Do not use the i
 | `--no-prompt`, `--yes`, `--edit`                          | No replacement. The CLI does not ask questions.               |
 | `--description-file`                                      | Command substitution (section 5, "Long text")                 |
 | Labels, priority, due date                                | Custom fields                                                 |
-| Specs Plugin                                              | The Specs feature (`rowbly update-project --specs on`)        |
+| Specs Plugin                                              | The Specs feature (`rowbly project update --specs on`)        |
 | `rowbly plugins`, and all other Plugins                   | No replacement                                                |
 | Tasks, Epics, Comments, Assignees, Attachments            | No replacement                                                |
 | Automatic Git commits, GitHub integration                 | No replacement. Rowbly does not run Git.                      |

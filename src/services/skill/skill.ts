@@ -216,7 +216,7 @@ export async function installSkill(input: InstallSkillInput, ctx: ServiceContext
   if (conflicts.length > 0) {
     throw new ConflictError(`${conflicts.join(", ")} already exists, and it is not an installed copy of the skill`, {
       details: { conflicts },
-      hint: "Move or delete it, then run `rowbly install-skill` again.",
+      hint: "Move or delete it, then run `rowbly skill install` again.",
     });
   }
 
@@ -272,7 +272,7 @@ export async function removeSkill(input: RemoveSkillInput, ctx: ServiceContext =
   const skill = findSkill(config, name);
   if (!skill) {
     throw new NotFoundError(`Skill "${name}" is not installed`, {
-      hint: "Run `rowbly list-skills` to see the installed skills.",
+      hint: "Run `rowbly skill list` to see the installed skills.",
     });
   }
   const targets = input.harnesses === undefined ? skill.harnesses : parseHarnesses(input.harnesses);

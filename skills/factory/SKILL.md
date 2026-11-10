@@ -22,7 +22,7 @@ Do not start a test worker. Examine the tools of the harness.
 | #   | Check                  | Method                                                                                                         | Result if not correct |
 | --- | ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- |
 | 1   | Project                | Find the nearest `.rowbly/` at or above the current directory. Its parent is `<root>`.                         | `FAIL`                |
-| 2   | CLI                    | `rowbly -C <root> --json search-stories` gives a list. `rowbly update-story --help` shows `--stage`.           | `FAIL`                |
+| 2   | CLI                    | `rowbly -C <root> --json story search` gives a list. `rowbly story update --help` shows `--stage`.           | `FAIL`                |
 | 3   | Config                 | `.rowbly/rowbly.config.json` is valid JSON. `rowbly -C <root> --json doctor` has no `error` issue for this file. | `FAIL`                |
 | 4   | Enabled Stages         | The config has at least one Stage with `enabled: true`.                                                        | `FAIL`                |
 | 5   | Stage prompt files     | `.rowbly/stages/<KEY>.md` exists for each enabled Stage.                                                       | `FAIL`                |
@@ -31,11 +31,11 @@ Do not start a test worker. Examine the tools of the harness.
 | 8   | Models and effort      | The tool from check 7 can set a different model and a different effort level for each worker.                  | `WARN`                |
 | 9   | Name a worker          | The tool from check 7 can set the title of a worker.                                                           | `WARN`                |
 
-Do not use `get-stage` for check 5. It gives an empty prompt when the file does not exist.
+Do not use `stage get` for check 5. It gives an empty prompt when the file does not exist.
 
 If check 2 fails, do only the JSON part of check 3. A `doctor` error for a different file is not a failure of check 3. Show it to the user as a note.
 
-Rowbly versions before the current CLI do not have `search-stories`. If the user names a different command for Rowbly, use that command in all steps.
+Rowbly versions before the current CLI do not have `story search`. If the user names a different command for Rowbly, use that command in all steps.
 
 ### Stage prompt content
 
@@ -192,25 +192,43 @@ If a writer ignores the shared lock, report the race; do not reset or overwrite 
 
 Keep worker records with the Story, Stage, worker ID and result. Save each record immediately after a worker starts or stops.
 Use these records on later scans and after a supervisor restart.
+Use `scripts/supervisor-policy.mjs` for assignment decisions and report flags. Read [Supervisor policy](references/supervisor-policy.md) for its inputs and record format.
+The supervisor supplies the current facts, saves the records and starts the workers. The scanner does none of these actions.
 Examine existing harness workers for this Project before each assignment.
 Do not assign a second worker to a Story with an active worker, including a worker from another supervisor.
 
 Read the files again on each scan. Users can change them at any time.
 
-1. Run `rowbly -C <root> --json get-story <story>`. Skip a Story that no longer exists.
+1. Run `rowbly -C <root> --json story get <story>`. Skip a Story that no longer exists.
 2. Read its current Stage in the config. Skip a Stage that is absent or has `enabled: false`.
 3. Read `.rowbly/stages/<KEY>.md`. Stop the factory if the file does not exist.
 4. Examine the prompt. Stop for an `invalid` prompt. Skip a `hold` prompt.
 5. Skip the Story if a worker for it still runs, even if the Story changed Stage.
 6. Skip the Story if its `agentLock.stage` equals its current Stage. Report the lock owner once.
-7. Skip a completed, failed or blocked attempt for this Story's current stay in this Stage.
-8. Start a worker for each remaining Story. See "Start a worker".
-9. Tell the user the Story, the Stage and the worker.
+7. Apply the attempt rules below through `evaluateScan`. Save its state before you start a worker.
+8. Start a worker for each `start` or `retry` decision. See "Start a worker".
+9. Save each new worker through `recordStart`. Preserve the earlier attempt in `history`.
+10. Tell the user the Story, the Stage and the worker once per new attempt.
 
-Check the status of recorded workers on each scan. Report each result once.
-A worker that stops does not automatically make its Story eligible for another attempt in the same Stage.
-Clear the earlier attempt after a scan observes that the Story left that Stage.
-Also clear it if the user explicitly requests another attempt.
+Check the status of recorded workers on each scan. An absent worker is not proof that it stopped.
+Record a failure or interruption only after the harness confirms that the worker stopped.
+Report each result once. Keep `reported` for results and `startReported` for new attempts.
+Save each report flag after you tell the user. Do not use a report flag to decide retry eligibility.
+
+Apply these attempt rules:
+
+- Retry a failed or interrupted `IN_REFINEMENT` attempt on the next later scan after its confirmed stop.
+- The scan that first confirms the stop records the result. It does not retry that attempt.
+- Use the saved scan counter across supervisor restarts. Do not reset a saved `stoppedScan` on each scan.
+- A saved terminal record without `stoppedScan` already confirms an earlier stop. It can retry on the first restart scan.
+- Retry without a user request or a Stage change. There is no attempt limit, backoff or extra delay.
+- Apply all assignment checks again before each retry. Check existing harness workers from all supervisors of this Project.
+- Do not retry a refinement result of `blocked`. This result asks the user for missing information; it is not a worker failure.
+- Keep completed attempts and all failed, interrupted or blocked development and review attempts ineligible during the same Stage stay.
+
+After a scan observes a Stage departure, the earlier attempt does not prevent assignment in the new Stage.
+An explicit user request can also make the Story eligible again. Keep each earlier attempt and its report flags in `history`.
+Do not delete an attempt to clear its assignment restriction.
 If a worker still runs after its Story moves, wait for it to stop before assignment in the new Stage.
 An external lock can clear between scans. Reconsider the Story on the next scan without a Stage change.
 Rowbly locks do not give mutual exclusion. Do not claim that two supervisors cannot race.
@@ -224,7 +242,9 @@ Start one worker for each eligible Story. Use the type of worker from the checkl
 - If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout. For a thread, use the branch name `<story>-<KEY>` in lower case.
 - Give the worker the first message below. Replace each value in angle brackets.
 - Include the absolute shared write lock path selected in "Commit Project changes".
-- Get the Project instructions from the `instructions` value of `rowbly -C <root> --json get-instructions`.
+- Get the Project instructions from the `instructions` value of `rowbly -C <root> --json project get-instructions`.
+- Before each launch, read the current Story, its Specs if enabled, the Project instructions and the Stage prompt again.
+- If the Stage or its prompt changed, apply the assignment checks again before launch. Give each retry a new worker ID.
 
 ```markdown
 You are a factory worker. Do the work of Stage <KEY> for Story <story>.
@@ -238,12 +258,16 @@ Commit your own source changes in your worktree as the repository instructions s
 Do not include your worktree's `.rowbly/` copy in those commits.
 For a required canonical Project commit, use the supervisor's lock and explicit path procedure.
 
-Read the Story with `get-story` and read its Specs if Specs are on.
+Read the Story with `story get` and read its Specs if Specs are on.
 Do only the work in the Stage prompt. Move the Story only as the Stage prompt tells you.
 Do not change a Stage prompt or the Project config.
 
 When you stop, report the result, the current Stage of the Story and each problem.
 
+
+## Project instructions
+
+<full text of the current Project instructions>
 
 ## Stage prompt
 
@@ -254,14 +278,15 @@ Each scan checks the current Stage. After a worker stops, the supervisor can ass
 
 If a thread tool fails when you start a worker, tell the user the error. Then start that worker as a subagent, and use subagents for the next workers.
 
-If a worker fails or reports `blocked`, tell the user. Do not start the worker again. Continue to scan the Stories.
+If a worker fails, is interrupted or reports `blocked`, tell the user once for that attempt. Continue to scan the Stories.
+Retry only failed and interrupted refinement attempts, as specified in "Assign workers".
 
 ## Stop the factory
 
 Stop the factory if the user tells you to stop, or if a step of this skill tells you to stop.
 
 1. Stop the scanner and its schedule.
-2. Delete the temporary directory.
+2. Keep the worker records for a later restart. Delete only temporary scanner files.
 3. Tell the user the reason, and each worker that still runs.
 
 Do not stop a worker that runs if the user does not tell you to stop it.

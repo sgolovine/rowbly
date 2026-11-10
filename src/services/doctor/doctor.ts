@@ -430,7 +430,7 @@ async function checkSkills(
       const path = skillPath(paths, harness, name);
       if (await pathExists(join(path, SKILL_FILE))) continue;
       const file = rel(path);
-      const remove = `\`rowbly remove-skill ${name} --harness ${harness}\``;
+      const remove = `\`rowbly skill remove ${name} --harness ${harness}\``;
       if (!(await canCreateFolder(dirname(path)))) {
         await report({
           severity: "error",
