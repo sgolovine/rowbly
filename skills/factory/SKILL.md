@@ -152,7 +152,7 @@ Keep the lock from the Git status check through the end of the commit.
 Run dependent commands in one process under the lock, not in separate lock calls.
 Do not hold the lock while a worker does its Story work.
 Ask other writers to use the same lock before they change canonical files.
-The lock coordinates only writers that use it. Rowbly agent locks do not replace this lock.
+The lock coordinates only writers that use it.
 
 ### Commit procedure
 
@@ -217,6 +217,9 @@ Use `scripts/supervisor-policy.mjs` for assignment decisions and report flags. R
 The supervisor supplies the current facts, saves the records and starts the workers. The scanner does none of these actions.
 Examine existing harness workers for this Project before each assignment.
 Do not assign a second worker to a Story with an active worker, including a worker from another supervisor.
+Use only the state records and the harness worker list to find active workers.
+Supervisors in separate checkouts or on separate machines do not share `state.json`.
+Only the harness worker list can find the workers of those supervisors.
 
 Read the files again on each scan. Users can change them at any time.
 
@@ -225,11 +228,10 @@ Read the files again on each scan. Users can change them at any time.
 3. Read `.rowbly/stages/<KEY>.md`. Stop the factory if the file does not exist.
 4. Examine the prompt. Stop for an `invalid` prompt. Skip a `hold` prompt.
 5. Skip the Story if a worker for it still runs, even if the Story changed Stage.
-6. Skip the Story if its `agentLock.stage` equals its current Stage. Report the lock owner once.
-7. Apply the attempt rules below through `evaluateScan`. Save its state before you start a worker.
-8. Start a worker for each `start` or `retry` decision. See "Start a worker".
-9. Save each new worker through `recordStart`. Preserve every earlier attempt in `attempts`.
-10. Tell the user the Story, the Stage and the worker once per new attempt.
+6. Apply the attempt rules below through `evaluateScan`. Save its state before you start a worker.
+7. Start a worker for each `start` or `retry` decision. See "Start a worker".
+8. Save each new worker through `recordStart`. Preserve every earlier attempt in `attempts`.
+9. Tell the user the Story, the Stage and the worker once per new attempt.
 
 Check the status of recorded workers on each scan. An absent worker is not proof that it stopped.
 Record a failure or interruption only after the harness confirms that the worker stopped.
@@ -251,8 +253,7 @@ After a scan observes a Stage departure, the earlier attempt does not prevent as
 An explicit user request can also make the Story eligible again. Keep each earlier attempt and its report flags in `attempts`.
 Do not delete an attempt to clear its assignment restriction.
 If a worker still runs after its Story moves, wait for it to stop before assignment in the new Stage.
-An external lock can clear between scans. Reconsider the Story on the next scan without a Stage change.
-Rowbly locks do not give mutual exclusion. Do not claim that two supervisors cannot race.
+The state records and the harness worker list do not give mutual exclusion. Do not claim that two supervisors cannot race.
 
 ## Start a worker
 

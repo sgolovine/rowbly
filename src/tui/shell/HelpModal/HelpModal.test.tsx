@@ -13,6 +13,12 @@ describe("HelpModal", () => {
     expect(frame.indexOf("new Stage")).toBeLessThan(frame.indexOf("find Stories"));
   });
 
+  it("explains the factory activity indicator", async () => {
+    const frame = (await renderTui(<HelpModal hints={[]} onClose={() => {}} />)).frame().replace(/[\s│]+/g, " ");
+    expect(frame).toContain("▶ shows a worker that the factory state");
+    expect(frame).toContain("Rowbly does not check that the worker is alive.");
+  });
+
   it.each([
     ["esc", keys.escape],
     ["?", "?"],

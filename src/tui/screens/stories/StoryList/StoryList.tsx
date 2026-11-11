@@ -1,5 +1,6 @@
 import { Box, type DOMElement, Text } from "ink";
 import { useRef, useState } from "react";
+import type { StoryActivity } from "../../../../services/factoryActivity/factoryActivity.js";
 import type { RowDragProps } from "../../../components/index.js";
 import { useMouse, WHEEL_LINES } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
@@ -26,6 +27,7 @@ interface DraggedStory {
  */
 export function StoryList({
   rows,
+  activity = {},
   cursor,
   clickable,
   height,
@@ -35,6 +37,8 @@ export function StoryList({
   onMove,
 }: {
   rows: readonly StoryListRow[];
+  /** The factory activity by Story ID. */
+  activity?: Readonly<Record<string, StoryActivity>>;
   cursor: number;
   clickable: boolean;
   /** Rows available; `undefined` shows every row. */
@@ -119,6 +123,7 @@ export function StoryList({
             <StoryRow
               key={row.id}
               story={row.story}
+              activity={activity[row.story.id]}
               stage={row.stage}
               selected={index === cursor}
               clickable={clickable}

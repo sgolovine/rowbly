@@ -182,33 +182,30 @@ describe("doctor", () => {
     });
   });
 
-  describe("agent locks", () => {
-    const LOCK = "agent: claude\n  stage: BACKLOG\n  lockedAt: 2026-11-09T10:00:00.000Z";
-    const write = (stage: string, lock: string) =>
-      project.write("stories/ROW-01.md", `---\ntitle: T\nstage: ${stage}\n${lock}\n---\n`);
+  describe("old agent locks", () => {
+    const BODY = "\nThe description.\n";
+    const write = (lock: string) =>
+      project.write("stories/ROW-01.md", `---\ntitle: T\nstage: BACKLOG\nposition: 1\n${lock}\n---\n${BODY}`);
 
-    it("accepts a current lock", async () => {
-      await write("BACKLOG", `agentLock:\n  ${LOCK}`);
-      expect((await doctor({}, project.ctx)).issues).toEqual([]);
-    });
-
-    it("reports a malformed lock and leaves it alone with --fix", async () => {
-      await write("BACKLOG", "agentLock: claude");
-      const report = await doctor({ fix: true }, project.ctx);
-      expect(report.ok).toBe(false);
-      expect(report.issues).toMatchObject([{ severity: "error", fixed: false }]);
-      expect(await project.read("stories/ROW-01.md")).toContain("agentLock: claude");
-    });
-
-    it("warns about a stale lock, and --fix removes it", async () => {
-      await write("DONE", `agentLock:\n  ${LOCK}`);
+    it.each([
+      ["a well-formed lock", "agentLock:\n  agent: claude\n  stage: BACKLOG\n  lockedAt: 2026-11-09T10:00:00.000Z"],
+      ["a malformed lock", "agentLock: claude"],
+    ])("warns about %s, and --fix removes only the key", async (_name, lock) => {
+      await write(lock);
       const found = await doctor({}, project.ctx);
       expect(found.ok).toBe(true);
-      expect(found.issues).toMatchObject([
-        { severity: "warning", fixed: false, message: expect.stringContaining("BACKLOG") },
+      expect(found.issues).toEqual([
+        {
+          severity: "warning",
+          message: "agentLock is no longer used",
+          file: join(".rowbly", "stories", "ROW-01.md"),
+          fix: "Remove it",
+          fixed: false,
+        },
       ]);
       expect((await doctor({ fix: true }, project.ctx)).issues).toMatchObject([{ fixed: true }]);
-      expect(await project.read("stories/ROW-01.md")).not.toContain("agentLock");
+      expect(await project.read("stories/ROW-01.md")).toBe(`---\ntitle: T\nstage: BACKLOG\nposition: 1\n---\n${BODY}`);
+      expect((await doctor({}, project.ctx)).issues).toEqual([]);
     });
   });
 });

@@ -52,7 +52,6 @@ export function evaluateScan(previous, { stories, stages, harnessWorkers }) {
     const attempts = state.attempts.filter((attempt) => attempt.story === story.id);
     const attempt = attempts.at(-1);
     if (attempts.some((attempt) => !stoppedStatuses.has(attempt.status))) return decision("skip", "worker stop unconfirmed");
-    if (story.agentLock?.stage === story.stage) return decision("skip", "current stage lock");
     if (!attempt || attempt.observedStageDeparture) return decision("start", "new stage stay");
     if (attempt.status === "blocked" || attempt.result === "blocked") return decision("skip", "blocked result");
     if (attempt.stage !== "IN_REFINEMENT" || !["failed", "interrupted"].includes(attempt.result)) {

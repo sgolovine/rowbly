@@ -15,7 +15,7 @@ Do not call it from `watch-stages.mjs`.
 8. Report pending results and save their flags as specified below.
 9. Stop the factory if a decision has `action: "stop"`.
 10. For each `start` or `retry`, read the current launch inputs again.
-11. Check active harness workers and current Stage locks again before launch.
+11. Check active harness workers and the state records again before launch.
 12. Start the worker with the current Project instructions and Stage prompt.
 13. Call `recordStart(state, storyId, stageKey, worker)` immediately after a successful launch.
 14. Save its returned state before the next assignment.
@@ -46,12 +46,15 @@ const { state: nextState, decisions } = evaluateScan(state, {
 });
 ```
 
-`stories` contains the current Story records from `get-story`, including `agentLock`.
+`stories` contains the current Story records from `get-story`.
 `stages` contains `{ key, enabled, promptClass }` records from the current config and prompt files.
 Classify `promptClass` as `work`, `hold`, `invalid` or `missing`. Use the skill's prompt rules.
 Do not invent a prompt class or treat an invalid prompt as a hold prompt.
 
 `harnessWorkers` contains `{ story, workerId, status, result? }` for each relevant worker in this Project.
+The duplicate checks use only the state records and this list.
+Supervisors in separate checkouts or on separate machines do not share `state.json`.
+Only this list can find the workers of those supervisors.
 The helper also accepts `threadId` or `taskId` from the harness. It saves the ID as `workerId`.
 Keep `childThreadId` as additional metadata if present.
 Normalize active statuses to `preparing` or `running`. Normalize terminal statuses to `completed`, `failed`, `blocked` or `interrupted`.

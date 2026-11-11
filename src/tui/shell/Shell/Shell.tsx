@@ -1,5 +1,6 @@
 import { Box, type BoxProps, Text, useApp, useInput } from "ink";
 import { useContext, useEffect, useState } from "react";
+import { getFactoryActivity } from "../../../services/factoryActivity/factoryActivity.js";
 import { recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject } from "../../../services/project/project.js";
 import { listStages, type Stage, updateStage } from "../../../services/stage/stage.js";
@@ -38,6 +39,7 @@ import { StageFormModal } from "../../screens/stages/index.js";
 import {
   deleteStoryMessage,
   EditStoryModal,
+  FactoryStatusLine,
   NewStoryModal,
   rowStage,
   StoryList,
@@ -96,7 +98,9 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
     // No project is a state of the screen, not a failure. A project in a parent directory does not open.
     if (!(await hasProject(ctx))) return null;
     const [project, stages, stories] = await Promise.all([getProject(ctx), listStages(ctx), searchStories({}, ctx)]);
-    return { project, stages, stories };
+    // A problem with the factory state file is a status, not a failure, so the Stories still load.
+    const activity = await getFactoryActivity({ stories }, ctx);
+    return { project, stages, stories, activity };
   }, [ctx, version]);
   const board = data.data ?? undefined;
   const noProject = !data.loading && data.data === null;
@@ -357,7 +361,9 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   // The border and the padding of the Panel take two columns on each side.
   const mainWidth = Math.max(20, layout.width - shownWidth - gap - 4);
   const listHeight = mainHeight === undefined ? undefined : mainHeight - stackedHeight;
-  const listInnerHeight = listHeight === undefined ? undefined : listHeight - 2;
+  // A problem with the factory state file takes one line below the list.
+  const statusLine = board && board.activity.status !== "ok" ? 1 : 0;
+  const listInnerHeight = listHeight === undefined ? undefined : listHeight - 2 - statusLine;
   // Modals are centred over this area: the inside of the Story panel, and also the sidebar above it when stacked.
   const overlayHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const overlayBox: BoxProps =
@@ -419,22 +425,30 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
               {data.loading && !data.data ? (
                 <Loading label="Loading Stories…" />
               ) : board ? (
-                <StoryList
-                  rows={rows}
-                  cursor={cursor}
-                  clickable={idle}
-                  height={listInnerHeight}
-                  emptyText={stage ? `No Stories in ${stage.label}.` : "No Stories yet. Press n to create one."}
-                  onCursor={(index) => {
-                    setPane("stories");
-                    selectStory(index);
-                  }}
-                  onMove={dropStory}
-                  onActivate={(index) => {
-                    setPane("stories");
-                    activateRow(index);
-                  }}
-                />
+                <>
+                  <StoryList
+                    rows={rows}
+                    activity={board.activity.stories}
+                    cursor={cursor}
+                    clickable={idle}
+                    height={listInnerHeight}
+                    emptyText={stage ? `No Stories in ${stage.label}.` : "No Stories yet. Press n to create one."}
+                    onCursor={(index) => {
+                      setPane("stories");
+                      selectStory(index);
+                    }}
+                    onMove={dropStory}
+                    onActivate={(index) => {
+                      setPane("stories");
+                      activateRow(index);
+                    }}
+                  />
+                  {statusLine > 0 && (
+                    <Box flexGrow={1} alignItems="flex-end">
+                      <FactoryStatusLine activity={board.activity} />
+                    </Box>
+                  )}
+                </>
               ) : noProject ? (
                 <ActiveContext.Provider value={idle}>
                   <Onboarding ctx={ctx} onHints={setOnboardingHints} onCreated={reload} />

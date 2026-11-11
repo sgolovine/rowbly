@@ -113,13 +113,11 @@ describe("assignment guards", () => {
     assert.equal(pendingReports(stoppedAgain.state).length, 1);
   });
 
-  it("checks current Stage locks again without a Stage change", () => {
+  it("ignores an agentLock on a Story record", () => {
     const locked = { ...story, agentLock: { stage: story.stage, agent: "other" } };
-    const first = evaluateScan(failed(), facts([], [locked]));
-    assert.equal(action(first), "skip");
-    assert.equal(action(evaluateScan(first.state, facts())), "retry");
-    const stale = { ...locked, agentLock: { ...locked.agentLock, stage: "IN_REVIEW" } };
-    assert.equal(action(evaluateScan(failed(), facts([], [stale]))), "retry");
+    assert.equal(action(evaluateScan(failed(), facts([], [locked]))), "retry");
+    const empty = { version: 1, scan: { stages: {} }, attempts: [] };
+    assert.equal(action(evaluateScan(empty, facts([], [locked]))), "start");
   });
 
   for (const stage of [null, { ...stages[0], enabled: false }, { ...stages[0], promptClass: "hold" }]) {
