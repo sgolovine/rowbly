@@ -1,79 +1,104 @@
 # Supervisor policy
 
-`scripts/supervisor-policy.mjs` is the supervisor's assignment helper. It does not start workers or read Project files.
-Do not call it from `watch-stages.mjs`.
+`scripts/supervisor-policy.mjs` holds the assignment rules of the factory. It does no I/O.
+`scripts/factory.mjs scan` supplies the facts, calls the policy, saves the state and prints the decisions.
+The supervisor uses `factory.mjs`. It does not call the policy directly.
 
-## Scan procedure
+## Facts
 
-1. Read `<root>/.rowbly/state.json` through `factory-state.mjs read --root <root>`.
-2. If the read fails, report the path and hint. Stop before any assignment.
-3. Get current Stories, the config and the Stage prompts through the skill's assignment checks.
-4. Get the status of each recorded worker from the harness.
-5. Find existing harness workers for this Project, including workers from other supervisors.
-6. Call `evaluateScan(state, facts)` one time for each scanner `stories` event.
-7. Save the returned `state` before you start a worker or process another scan.
-8. Report pending results and save their flags as specified below.
-9. Stop the factory if a decision has `action: "stop"`.
-10. For each `start` or `retry`, read the current launch inputs again.
-11. Check active harness workers and the state records again before launch.
-12. Start the worker with the current Project instructions and Stage prompt.
-13. Call `recordStart(state, storyId, stageKey, worker)` immediately after a successful launch.
-14. Save its returned state before the next assignment.
-15. Report the new attempt and save its report flag.
+`evaluateScan(state, facts)` plans one scan. `factory.mjs scan` collects these facts:
 
-Use the same state file after a supervisor restart. Save only through `factory-state.mjs write --root <root>`.
-Give the full JSON document on stdin. Stop before another assignment if the write fails.
-Keep `scan.count`, `scan.stages` and all `attempts`. Use `recordStart` to add each new attempt.
-If a launch fails without a worker ID, report the harness error. Check existing harness workers before another launch.
-If the harness cannot confirm a worker's status, keep it active or unknown. Do not infer interruption from absence.
+| Fact             | Source                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `stories`        | `rowbly -C <root> --json story search`                                                   |
+| `stages`         | The config, in board order, with `{ key, enabled, promptClass }` for each Stage          |
+| `harnessWorkers` | The `--worker <id>=<status>=<result>` and `--busy <story>` options of the supervisor     |
+| `maxActive`      | The last `--max-active <n>` option, which the state keeps. Without it, the number of workers has no limit. |
+| `now`            | The clock                                                                                |
 
-## Inputs and decisions
+A `promptClass` is `work`, `hold`, `invalid`, `missing` or `unclassified`.
 
-Import the functions from the installed skill path:
+- `missing`: `.rowbly/stages/<KEY>.md` does not exist.
+- `invalid`: the file is empty, or the supervisor gave it the class `invalid`.
+- `unclassified`: the supervisor did not classify the current text of the file.
+- `work` or `hold`: the class that the supervisor saved with `factory.mjs classify`.
 
-```js
-import {
-  evaluateScan,
-  recordStart,
-  pendingReports,
-  markReported,
-} from "./scripts/supervisor-policy.mjs";
+The state keeps a hash of each prompt with its class. A prompt that changes becomes `unclassified` again.
 
-const { state: nextState, decisions } = evaluateScan(state, {
-  stories,
-  stages,
-  harnessWorkers,
-});
-```
+`normalizeStatus` changes a status name of the harness to a status of the state file.
+An unknown name counts as `running`. A worker with no status also counts as a worker that runs.
+`factory.mjs scan` thus asks for the status of each active worker before it calls the policy.
 
-`stories` contains the current Story records from `get-story`.
-`stages` contains `{ key, enabled, promptClass }` records from the current config and prompt files.
-Classify `promptClass` as `work`, `hold`, `invalid` or `missing`. Use the skill's prompt rules.
-Do not invent a prompt class or treat an invalid prompt as a hold prompt.
+One Story file that Rowbly cannot read makes `story search` fail. `scan` then reads each Story with `story get`.
+A Story that fails gets no worker, and `scan` reports it one time. All other Stories continue.
 
-`harnessWorkers` contains `{ story, workerId, status, result? }` for each relevant worker in this Project.
-The duplicate checks use only the state records and this list.
-Supervisors in separate checkouts or on separate machines do not share `state.json`.
-Only this list can find the workers of those supervisors.
-The helper also accepts `threadId` or `taskId` from the harness. It saves the ID as `workerId`.
-Keep `childThreadId` as additional metadata if present.
-Normalize active statuses to `preparing` or `running`. Normalize terminal statuses to `completed`, `failed`, `blocked` or `interrupted`.
-Unknown harness statuses prevent assignment. Confirm their status before you save the state.
-A successful `blocked` result can use `status: "blocked", result: "blocked"`.
-A failure or interruption without a result gets the result `failed` or `interrupted`.
+## Decisions
 
-Decisions contain the Story, Stage, action and reason. Actions are `start`, `retry`, `skip` and `stop`.
-A `retry` decision has no delay or attempt limit. It applies only to `IN_REFINEMENT`.
-Do not start workers if any decision stops the factory.
-An observed Stage departure removes the restriction from the earlier Stage stay. It does not delete the attempt.
-For an explicit user request, set `observedStageDeparture: true` on the earlier terminal attempt and save the state.
-This flag removes only the earlier attempt restriction. All other assignment checks still apply.
+Each Story gets one decision, with an `action` and a `reason`. The actions are `start`, `retry` and `skip`.
+The policy examines these conditions in order and uses the first one that applies:
+
+| #   | Condition                                                               | Decision                                         |
+| --- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | The Stage is absent from the config or has `enabled: false`.            | `skip`: stage unavailable                        |
+| 2   | The prompt is `missing` or `invalid`.                                   | `skip`: stage prompt missing or invalid          |
+| 3   | The prompt is `unclassified`.                                           | `skip`: stage prompt not classified              |
+| 4   | The prompt is `hold`.                                                   | `skip`: hold stage                               |
+| 5   | A `--busy` Story, or a harness worker of the Story still runs.          | `skip`: active or unknown harness worker         |
+| 6   | An attempt of the Story has an active status.                           | `skip`: worker stop unconfirmed                  |
+| 7   | The Story is parked.                                                    | `skip`: parked                                   |
+| 8   | This scan first confirmed the stop of the last worker in this Stage stay. | `skip`: stop confirmed this scan               |
+| 9   | 4 workers stopped normally for this Story in this Stage.                | `skip`: parked. The policy parks the Story.      |
+| 10  | The Story has no attempt, or it entered the Stage after its last attempt. | `start`: new stage stay                        |
+| 11  | The last worker stopped normally and the Story did not move.            | `retry`: worker stopped without a stage move     |
+| 12  | The last worker failed or was interrupted, and its delay is not complete. | `skip`: retry delay, with `retryAt`            |
+| 13  | The last worker failed or was interrupted.                              | `retry`: worker failed                           |
+
+A launch that gave no worker (`factory.mjs launch-failed`) changes the `start` or `retry` decision of its Story to `skip`: launch delay.
+The delay is 2 minutes, then twice as long after each failed launch in a row, to a maximum of 60 minutes. A worker that starts removes it.
+
+After these decisions, `maxActive` changes the `start` and `retry` decisions above the limit to `skip`: worker limit.
+The Stories nearest to the last Stage keep their decision first, then the Stories in board order.
+
+A `start` or `retry` decision has the number of the `attempt`. A `retry` decision also has the `previous` worker.
+
+### Stops, failures and delays
+
+A worker "stops normally" when its status is `completed` or `blocked`. The result text does not change the decision.
+Only the Stage of the Story shows progress. A Story that moved gets a worker for its new Stage in the same scan.
+
+A worker "fails" when its status is `failed` or `interrupted`. The first failure gets a new worker on the next scan.
+Each later failure in a row doubles the delay: 2, 4, 8, 16 and 32 minutes, then 60 minutes each time.
+Failures have no limit, because their cause is frequently temporary. An example is a usage limit that resets.
+
+### Parked Stories
+
+The limit of 4 workers counts the workers that stopped normally for one Story in one Stage.
+It counts all stays in that Stage. Thus it also stops a Story that moves between two Stages without an end.
+Failed and interrupted workers do not count.
+
+A parked Story gets no worker. The policy removes the Story from `parked` and starts the count from zero in these conditions:
+
+- The title, the description or a field of the Story changed.
+- The Story moved to a different Stage.
+- The supervisor ran `factory.mjs release` after a request from the user.
+
+The count of a Story also starts from zero when a scan sees the Story in a `hold` Stage.
+
+### Workers that run for a long time
+
+`evaluateScan` also gives `stalled`: the active workers that started 90 minutes or more before the scan.
+`factory.mjs scan` then tells the supervisor to examine the worker. It repeats this action each 30 minutes.
+
+`DEFAULT_LIMITS` in the policy holds the limits: `attempts`, `retryMinutes`, `retryCapMinutes` and `stallMinutes`.
 
 ## Saved records
 
-Use version 1 of the state format. Keep additional fields of the state and attempt records.
-`attempts` contains all attempts in launch order. The last attempt for a Story controls its Stage stay.
-Do not remove earlier attempts or their report flags.
+`factory.mjs` saves all persistent state through `factory-state.mjs`. That module validates the state, sets `updatedAt`,
+flushes a temporary file, then replaces `state.json` atomically. Do not write the file in another way.
+
+Use version 1 of the state format. Keep additional fields of the state and of the attempt records.
+`attempts` contains all attempts in launch order. Do not remove an attempt.
+Rowbly reads `version`, `scan` and `attempts` to show the factory activity in the TUI.
 
 ```json
 {
@@ -81,6 +106,7 @@ Do not remove earlier attempts or their report flags.
   "updatedAt": "2026-11-10T12:00:00.000Z",
   "scan": {
     "count": 12,
+    "idle": 0,
     "stages": { "ROW-01": "IN_REFINEMENT" }
   },
   "attempts": [
@@ -98,23 +124,66 @@ Do not remove earlier attempts or their report flags.
       "reported": true,
       "startReported": true
     }
-  ]
+  ],
+  "parked": {
+    "ROW-02": {
+      "stage": "IN_REVIEW",
+      "reason": "4 workers stopped and the Story did not move",
+      "hash": "0f3a9c1d2b4e5f60",
+      "since": "2026-11-10T11:30:00.000Z",
+      "reported": true
+    }
+  },
+  "prompts": { "IN_REFINEMENT": { "hash": "6b1d0c9e8f7a2b3c", "class": "work" } },
+  "notes": ["rook does not answer; workers run on thinkpad"],
+  "maxActive": 3,
+  "launchFailures": { "ROW-03": { "count": 2, "at": "2026-11-10T11:50:00.000Z", "error": "usage limit reached" } },
+  "writeLock": "/path/to/project/.git/rowbly-project-write.lock"
 }
 ```
 
-`scan.count` increases once per scan and persists across restarts. `scan.stages` records the Stage of each Story at that scan.
-`stoppedScan` records the first scan that confirmed a stop. A failure first confirmed on scan 11 can retry on scan 12.
-A restart does not add another delay. Terminal records without `stoppedScan` count as earlier confirmed stops.
-Their `reported: true` does not prevent a retry. Records without `startReported` count as already reported launches.
-Supply `workerType`, model and options from the launch result to `recordStart`. It records the ID and start time.
-Save the returned state after each scan, launch, confirmed stop and report flag change.
-Do not import earlier temporary state. Do not stage or commit the state file or its temporary files.
+- The attempt statuses are `preparing`, `running`, `completed`, `failed`, `blocked` and `interrupted`.
+- `scan.count` increases once per scan and persists across restarts. `scan.stages` records the Stage of each Story at that scan.
+- `scan.idle` counts the scans in a row without a worker, a start or a Story that waits.
+- `stoppedScan` records the first scan that confirmed a stop. A terminal record without `stoppedScan` counts as an earlier stop.
+- `observedStageDeparture` on an attempt shows that a scan saw the Story in a different Stage after the attempt.
+- `budgetReset` on an attempt shows that the attempt no longer counts against the limit of 4 workers.
+- `reported` and `startReported` prevent a second report of the same event. `scan` sets them when it prints the report.
+- `rowbly` holds a different Rowbly command, if the supervisor gave one to `check`.
+- `problems` and `commitProblem` hold the problems that `scan` reported, so that it reports each one only one time.
+- `rowblyFailures` counts the scans in a row on which the Rowbly command failed.
 
-## Reports
+Each command that changes the state holds the lock file `state.json.lock` from its read to its write.
+Thus a scan cannot replace the record of a worker that started during the scan.
 
-Call `pendingReports(state)` to get each unsent launch or result report, including reports from earlier attempts.
-For a `started` event, tell the user the Story, Stage and new worker. Identify a retry from its earlier attempt.
-For a `stopped` event, tell the user the result and each problem.
-After each report, call `markReported(state, report)` and save the returned state immediately.
-These flags prevent repeat reports on later scans and restarts. Each attempt has separate flags.
-A crash between the message and the saved flag can repeat that message. The harness has no atomic message-and-file operation.
+`factory.mjs reset-state` moves a file that is not valid to `state.json.invalid-<time>`. It starts a new state with each valid part
+of the old file: the valid attempts, the scan count, the prompt classes, the notes and the limit of workers.
+
+A crash between the report of `scan` and the message of the supervisor can lose that message. The state keeps the result.
+
+## Commits of the Project files
+
+`scripts/commit-project.mjs` commits the canonical Project state. `scan` calls it after each scan.
+
+- It commits only files inside `<root>/.rowbly/` that Git does not ignore. It includes new, changed and deleted files.
+- It always excludes `.rowbly/state.json` and each file with a name that starts with `state.json.`.
+- It holds the shared write lock from the Git status check through the end of the commit.
+- It uses explicit, literal paths with `git add --all -- <paths>` and `git commit --only -- <paths>`.
+- It does not commit source files, and it keeps unrelated staged changes as they are.
+- It does not push, reset, amend or bypass a hook.
+
+The lock is `rowbly-project-write.lock` in the common Git directory, or `<root>/.rowbly-factory-write.lock` without Git.
+`check` saves the path in `writeLock`. Workers get the same path in their first message.
+The lock coordinates only the writers that use it.
+
+| `status`    | Meaning                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| `committed` | A new commit holds the `paths`.                                                                  |
+| `clean`     | No Project file changed.                                                                         |
+| `held`      | Each changed file has a staged version and a later edit. The command does not overwrite a staged version. |
+| `conflict`  | A Project file has a merge conflict. The command changes nothing.                                |
+| `no-git`    | The Project is not in a Git repository. The factory continues without commits.                   |
+| `failed`    | A Git command failed or the lock stayed busy for 60 seconds. `detail` has the error text.        |
+
+A commit problem does not stop the factory. `scan` tries again on the next scan.
+The commit message names the Story when exactly one Story moved, for example `chore(rowbly): record ROW-06 move to in review`.

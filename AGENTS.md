@@ -248,6 +248,32 @@ a file path, or `-` for stdin. The JSON keys are `name`, `key`, `stages`, `skill
 The prompts in `.rowbly/stages/` of this repository are the prompts of the Rowbly project itself. The
 default prompts for new projects are in `stages/`. A change to one does not change the other.
 
+## Bundled skills
+
+The skills in `skills/` are a part of the product: `factory`, `refine`, `develop` and `review`.
+`rowbly skill install` copies them into a project. The default stage prompts in `stages/` use them.
+
+The folders `.agents/skills/<name>` and `.claude/skills/<name>` of this repository are installed copies.
+After a change in `skills/<name>/`, copy the folder to the two installed copies.
+A test in `pnpm test:factory` compares the `factory` copies with the bundled files.
+
+The factory runs with no person present, and agents with small models can run it.
+Obey these rules when you change a bundled skill or a file in `stages/`:
+
+- Do not add a step that asks a person a question or that waits for a person.
+- Do not add a condition that stops the factory because of one story, one stage, one worker or one check.
+- Give each problem an action that lets the work continue: a fallback, a new worker or a record in the story.
+- Put each rule that has no judgement in a script of `skills/factory/scripts/`, not in the text of a skill.
+- Give the exact command line for each step of a skill.
+
+| File in `skills/factory/`       | Function                                                                            |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `scripts/factory.mjs`           | The tool of the supervisor. Each command prints the next actions as JSON.           |
+| `scripts/supervisor-policy.mjs` | The assignment rules: new workers, delays, the limit of workers and parked stories. |
+| `scripts/factory-state.mjs`     | Reads and replaces `.rowbly/state.json`.                                            |
+| `scripts/commit-project.mjs`    | Commits the changed files of `.rowbly/` under the shared write lock.                |
+| `references/worker-message.md`  | The template of the first message that each worker gets.                            |
+
 ## Architecture: one service layer, two front ends
 
 The CLI and the TUI are **thin front ends**. The services in `src/services/` do all of the real work.

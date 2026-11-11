@@ -7,6 +7,7 @@
 - Always run the factory through T3 Code.
 - Check the remaining usage through T3 Code before you start each new thread.
 - Prefer Claude Opus unless its remaining usage is low. Then use GPT Sol.
+- If T3 Code does not show the remaining usage, do not stop and do not ask. Use Claude Opus. If a Claude Opus thread fails, use GPT Sol.
 - First try to start work on the remote development machine `rook`, if you can connect to it.
 - Run a maximum of five threads at one time on `rook`.
 - Run a maximum of three threads at one time on `thinkpad`, this computer.

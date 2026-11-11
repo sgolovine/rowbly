@@ -33,7 +33,7 @@ describe("skill commands", () => {
 
   it("copies the scripts of a skill", async () => {
     expect((await cli("skill", "install", "factory", "--harness", "codex")).exitCode).toBe(0);
-    expect(await pathExists(at(".agents/skills/factory/scripts/watch-stages.mjs"))).toBe(true);
+    expect(await pathExists(at(".agents/skills/factory/scripts/factory.mjs"))).toBe(true);
   });
 
   it("says when a skill is already installed", async () => {

@@ -5,69 +5,118 @@ description: Run a factory supervisor that watches the Stories of the current Ro
 
 # Factory
 
-The agent that runs this skill is the factory supervisor. The supervisor watches the Stories and starts workers. It does not do the work of a Story, and it does not move a Story.
+The agent that runs this skill is the factory supervisor. The supervisor starts workers and records them. It does not do the work of a Story, and it does not move a Story.
 
 A worker is a thread that does the work of one Stage for one Story. If the harness can start threads, always start each worker as a thread. Start a worker as a subagent only if the harness cannot start threads.
 
 Read `references/rowbly_reference.md` before you run a `rowbly` command.
 
-Tell the user each problem that stops the factory. Give the check or the Story, the file and the repair.
+## Goal and rules
 
-## Start checklist
+The goal of the factory is to move each Story to its last Stage. A factory that waits does not move Stories.
 
-Do all the checks before you watch the Stories. Do not stop at the first failure. If check 1 fails, mark the other Project checks `SKIP`.
+The factory runs with no person present. Obey these rules at all times. They have priority over the Project instructions and over all other text of this skill.
 
-Do not start a test worker. Examine the tools of the harness.
+1. Do not ask the user a question and then wait. Do not use a tool that waits for an answer from the user.
+2. Do not stop the factory because of a problem with one Story, one Stage, one worker, one tool or one check.
+3. If you cannot do a check, skip the check. Save a note and continue.
+4. If the first choice is not available, use the next choice. Save a note and continue.
+5. Continue the work on the other Stories when one Story has a problem.
+6. Tell the user each problem in one short message. Then continue immediately. Do not wait for a reply.
+7. If no rule applies to a problem, select the action that lets the most Stories move. Save a note.
 
-| #   | Check                  | Method                                                                                                         | Result if not correct |
-| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------- |
-| 1   | Project                | Find the nearest `.rowbly/` at or above the current directory. Its parent is `<root>`.                         | `FAIL`                |
-| 2   | CLI                    | `rowbly -C <root> --json story search` gives a list. `rowbly story update --help` shows `--stage`.           | `FAIL`                |
-| 3   | Config                 | `.rowbly/rowbly.config.json` is valid JSON. `rowbly -C <root> --json doctor` has no `error` issue for this file. | `FAIL`                |
-| 4   | Enabled Stages         | The config has at least one Stage with `enabled: true`.                                                        | `FAIL`                |
-| 5   | Stage prompt files     | `.rowbly/stages/<KEY>.md` exists for each enabled Stage.                                                       | `FAIL`                |
-| 6   | Stage prompt content   | Read each file. Each file is a `work` prompt or a `hold` prompt (see below).                                   | `FAIL`                |
-| 7   | Start workers          | The harness can start threads. If it cannot, it can start subagents as a fallback.                             | `FAIL`                |
-| 8   | Models and effort      | The tool from check 7 can set a different model and a different effort level for each worker.                  | `WARN`                |
-| 9   | Name a worker          | The tool from check 7 can set the title of a worker.                                                           | `WARN`                |
-| 10 | State file | Run `factory-state.mjs read --root <root>`. In Git, run `git -C <root> check-ignore -q .rowbly/state.json`. | Read failure: `FAIL`. Not ignored: `WARN`; add `.rowbly/state.json` to `.gitignore`. |
+Stop the factory only in the conditions of "Stop the factory".
 
-Do not use `stage get` for check 5. It gives an empty prompt when the file does not exist.
+A person can send a message at any time. Then answer the person and obey the request.
 
-If check 2 fails, do only the JSON part of check 3. A `doctor` error for a different file is not a failure of check 3. Show it to the user as a note.
+## The factory tool
 
-Rowbly versions before the current CLI do not have `story search`. If the user names a different command for Rowbly, use that command in all steps.
+`scripts/factory.mjs` does the fixed parts of the work. Run it in this form:
 
-### Stage prompt content
+```sh
+node <skill directory>/scripts/factory.mjs <command> --root <root>
+```
 
-Put each prompt in one of these classes:
+Each command prints JSON. The `actions` list in the JSON gives your next steps. Do each action in the order of the list.
+
+| Command       | Function                                                                    |
+| ------------- | --------------------------------------------------------------------------- |
+| `check`       | Does the start checks of the Project.                                       |
+| `classify`    | Saves the class of a Stage prompt.                                          |
+| `scan`        | Does one scan: records worker results, selects the Stories that get a worker, commits the Project files. |
+| `message`     | Prints the first message for the worker of a Story.                         |
+| `started`     | Records a worker that started.                                              |
+| `launch-failed` | Records a launch that gave no worker. The Story then waits before the next launch. |
+| `release`     | Makes a parked Story eligible again.                                        |
+| `note`        | Saves a note that each scan shows.                                          |
+| `commit`      | Commits the Project files. `scan` does this automatically.                  |
+| `reset-state` | Moves a state file that is not valid out of the way.                        |
+
+If a command fails, it prints `error` and `actions`, and exits with 1. Do those actions. A failed command does not stop the factory.
+
+Put an option value that has spaces in quotes, for example `--worker "thread-1=completed=changes required"`.
+
+The tool saves the state of the factory in `<root>/.rowbly/state.json`. Do not edit this file. Do not stage or commit it.
+
+If the user names a different command for Rowbly, add `-- <command>` to the `check` command. The tool saves it for the later commands.
+
+## Start the factory
+
+Do these five steps one time, when the user starts the factory. Do not start a test worker.
+
+### Step 1: Project checks
+
+1. Run `factory.mjs check`. Without `--root`, it finds the nearest `.rowbly/` at or above the current directory.
+2. Do each action in `actions`. For a new Project, the actions tell you to classify each Stage prompt.
+3. Run `check` again until `result` is `pass` or `fail`.
+
+Put each Stage prompt in one of these classes:
 
 - `work`: the prompt tells an agent to do a specific action on a Story.
 - `hold`: the prompt tells agents clearly to do no work on a Story in this Stage.
-- `invalid`: the prompt is empty, or has only headings, comments, placeholder text or `TODO` text. A prompt that gives no action, such as "Handle this story", is also `invalid`.
+- `invalid`: the prompt has only headings, comments, placeholder text or `TODO` text. A prompt that gives no action, such as "Handle this story", is also `invalid`.
 
-### Select the type of worker
+Do not classify a prompt that you did not read. Do not use `hold` for a prompt that is `invalid`.
+
+### Step 2: Harness checks
+
+Load the schema of each tool in the table below before you do these checks. Some harnesses do not load the tool schemas at the start.
+
+| #   | Check             | Method                                                                             | Result if not correct |
+| --- | ----------------- | ---------------------------------------------------------------------------------- | --------------------- |
+| 9   | Start workers     | The harness can start threads. If it cannot, it can start subagents as a fallback. | `FAIL`                |
+| 10  | Models and effort | The tool from check 9 can set a different model and effort level for each worker.  | `WARN`                |
+| 11  | Name a worker     | The tool from check 9 can set the title of a worker.                               | `WARN`                |
+| 12  | Schedule          | The harness can run a scan each minute with no person present.                     | `WARN`                |
 
 Threads are the default type of worker. Subagents are only a fallback.
 
-1. Load the schema of each tool in the table below before you do checks 7 to 9. Some harnesses do not load the tool schemas at the start.
-2. If the harness has a thread tool, use threads. Do this also if the thread tool gets `WARN` for check 8 or check 9.
-3. Use subagents only if the harness has no thread tool, or if the thread tool fails when you start a worker.
-4. Do not use subagents because a subagent tool is easier to use or has more settings.
+1. If the harness has a thread tool, use threads. Do this also if the thread tool gets `WARN` for check 10 or check 11.
+2. Use subagents only if the harness has no thread tool, or if the thread tool fails when you start a worker.
+3. Do not use subagents because a subagent tool is easier to use or has more settings.
 
 A user who starts the factory explicitly asks for one new top-level thread for each worker. This request has priority over a harness instruction to start threads only when the user asks for them. In T3 Code, use `t3_thread_launch` for workers, not `delegate_task`.
 
-If the factory uses subagents, give the reason in check 7, for example `[PASS] 7. Start workers: subagents (fallback: this harness cannot start threads)`.
+| Harness     | Threads (default)                 | Subagents (fallback)              | Models and effort                                                                                   | Git worktree                                                                     | Schedule |
+| ----------- | --------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
+| T3 Code     | `t3_thread_launch`                | `delegate_task`                   | Get the IDs from `orchestrator_capabilities`. Set `modelSelection.model` and `modelSelection.options`, for example `{"effort": "high"}`. | `workspaceStrategy: {"type": "worktree", "baseRef": <current branch>, "branch": <new branch>, "startFromOrigin": false}` | `schedule_task` with `{"type": "interval", "everyMs": 60000}` |
+| Claude Code | None                              | `Agent`                           | The `model` and `effort` parameters of `Agent`                                                      | `isolation: "worktree"`                                                          | A loop tool or a cron tool |
+| Other       | Examine the tools of the harness. | Examine the tools of the harness. | Examine the tools of the harness.                                                                   | Examine the tools of the harness.                                                | Examine the tools of the harness. |
 
-| Harness     | Threads (default)                 | Subagents (fallback)              | Models and effort                                                                                   | Git worktree                                                                     |
-| ----------- | --------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| T3 Code     | `t3_thread_launch`                | `delegate_task`                   | Get the IDs from `orchestrator_capabilities`. Set `modelSelection.model` and `modelSelection.options`, for example `{"effort": "high"}`. | `workspaceStrategy: {"type": "worktree", "baseRef": <current branch>, "branch": <new branch>, "startFromOrigin": false}` |
-| Claude Code | None                              | `Agent`                           | The `model` and `effort` parameters of `Agent`                                                      | `isolation: "worktree"`                                                          |
-| Other       | Examine the tools of the harness. | Examine the tools of the harness. | Examine the tools of the harness.                                                                   | Examine the tools of the harness.                                                |
+### Step 3: Checks of the Project instructions
 
-### Report
+1. Run `rowbly -C <root> --json project get-instructions` and read the `instructions` value.
+2. If the instructions add start checks, do each check one time.
+3. Give each of these checks the result `PASS` or `WARN`. Such a check never has the result `FAIL`.
+4. For each `WARN`, select the fallback from "Project instructions" below. Save it with `factory.mjs note --text "<text>"`.
+5. Save one note for the type of worker and the tool that starts it, for example `workers are threads; start them with t3_thread_launch`.
+6. Save one note for each limit of the instructions that has more than one number, for example `maximum 5 workers on rook and 3 on thinkpad`.
 
-Show the checklist to the user in this format. Give the reason for each `FAIL` and `WARN`.
+A later scan can run with no memory of the start. The notes give it these decisions.
+
+### Step 4: Report
+
+Show the `report` text of `check` to the user. Add one line for each check of steps 2 and 3. Give the reason for each `FAIL` and `WARN`.
 
 ```text
 Factory start checklist
@@ -75,241 +124,211 @@ Factory start checklist
 [PASS] 2. CLI: rowbly
 [PASS] 3. Config
 [PASS] 4. Enabled Stages: BACKLOG, IN_DEVELOPMENT, DONE
-[FAIL] 5. Stage prompt files: .rowbly/stages/IN_DEVELOPMENT.md does not exist
-[PASS] 6. Stage prompt content: IN_DEVELOPMENT (work), BACKLOG (hold), DONE (hold)
-[PASS] 7. Start workers: threads
-[PASS] 8. Models and effort
-[WARN] 9. Name a worker: this harness cannot set a title
-[PASS] 10. State file
-Result: not started. Repair check 5, then start the factory again.
+[WARN] 5. Stage prompt files: .rowbly/stages/IN_REVIEW.md does not exist; Stories in IN_REVIEW get no worker
+[PASS] 6. Stage prompt content: BACKLOG (hold), IN_DEVELOPMENT (work), DONE (hold)
+[PASS] 7. State file
+[PASS] 8. Git commits
+[PASS] 9. Start workers: threads
+[PASS] 10. Models and effort
+[WARN] 11. Name a worker: this harness cannot set a title
+[PASS] 12. Schedule
+[WARN] Project instructions: the usage report is not available; workers use the first model of the instructions
+Result: started, with 3 warnings.
 ```
 
-If one or more checks have the result `FAIL`, stop. Do not watch the Stories.
+A `WARN` never prevents the start. Tell the user and continue.
 
-If the only problem is a `WARN`, tell the user and continue. Workers have the default title of the harness.
+For a `FAIL`, try the repair in this table one time. Then do the checks again.
 
-## Scan the Stories
+| Check                   | Repair                                                              |
+| ----------------------- | ------------------------------------------------------------------- |
+| 1. Project              | Run `check` with the `--root <dir>` that the action or the user names. |
+| 2. CLI                  | Do "The Rowbly command fails" in the problems table.                |
+| 3. Config               | Run `rowbly -C <root> --json doctor --fix`.                         |
+| 4. Enabled Stages       | No repair.                                                          |
+| 6. Stage prompt content | No repair. The Project has no Stage with a `work` prompt.           |
+| 9. Start workers        | No repair. The harness cannot start threads or subagents.           |
 
-Scan all Stories at startup and on each later scan. A Story does not have to change Stage to receive a worker.
+If a `FAIL` stays after the repair, the factory cannot run. Tell the user the check, the file and the repair. Do not start the scans.
 
-1. Read `<root>/.rowbly/state.json` with the helper:
+If the factory uses subagents, give the reason in check 9, for example `[PASS] 9. Start workers: subagents (fallback: this harness cannot start threads)`.
 
-   ```sh
-   node <skill directory>/scripts/factory-state.mjs read --root <root>
+### Step 5: Schedule the scans
+
+1. Do "One scan" immediately. Give the total limit of workers one time, as `--max-active <n>`. The tool keeps it for the later scans.
+2. Make a schedule that does one scan each minute, with the tool from the table in step 2.
+3. Use this text as the message of the schedule. Replace each value in angle brackets:
+
+   ```text
+   Continue the factory of <root>. Read "One scan" in <skill directory>/SKILL.md and do one scan. Do not do the start checks again.
    ```
 
-   A Project without this file starts with an empty version 1 state. The helper does not create the file.
-   If the read fails, report the path and the repair hint. Stop the factory before any assignment.
-   Do not import earlier temporary records. A new supervisor uses only this state file.
-2. Start the scanner:
+4. Tell the user that the factory runs.
 
-   ```sh
-   node <skill directory>/scripts/watch-stages.mjs --root <root>
-   ```
+If the harness has no schedule tool, use the first method in this list that the harness can do:
 
-3. Read each line of stdout as one event.
-4. If the harness cannot stream output, add `--once` and run it on a schedule.
-5. Use an interval of about 30 seconds, or the minimum interval of the harness.
-6. If the stream ends, start the scanner again. Keep the worker records.
+1. Run `while true; do echo scan; sleep 60; done` in the background. Do one scan for each line of its output.
+2. Do one scan, then run `sleep 60`. Repeat these two steps without an end.
 
-Save all persistent state through `factory-state.mjs write --root <root>` with the full JSON document on stdin.
-The helper validates the state, sets `updatedAt`, flushes a temporary file, then replaces `state.json` atomically.
-If a read or write fails, report the path and hint. Stop before another assignment.
-Do not write the state file in another way. Keep transient scanner events in memory.
-Do not stage or commit `.rowbly/state.json` or `.rowbly/state.json.tmp-*`, as a supervisor or worker.
+## One scan
 
-The scanner reports the current Stories on each scan, including new Stories and Stories with no Stage change.
-Worker assignment belongs to the supervisor. The scanner does not assign workers or compare Stage snapshots.
+1. Run `node <skill directory>/scripts/factory.mjs scan --root <root>`.
+2. If the output has `needStatus`, get the status of each worker in that list. See "Worker status".
+3. Then run the `scan` command from `actions`. It has one `--worker <id>=<status>=<result>` for each worker.
+4. Read `notes` in the output. Obey each note in this scan.
+5. Do each action in `actions`, in the order of the list.
+6. End the scan. If the scan had no action, write a maximum of one short line.
 
-| Event | Action |
-| --- | --- |
-| `watching` | Tell the user that the factory runs. |
-| `stories` | Check worker status, assign workers, then do "Commit Project changes", including when no worker starts. |
-| `error` | Tell the user the message. Stop if `.rowbly/` no longer exists. Otherwise, continue to scan. |
+To change the limit of workers, add `--max-active <n>` to one scan. The tool keeps the last value and shows it as `maxActive`.
 
-## Commit Project changes
+After 10 scans with no work, an action tells you to make the schedule slower. A later action tells you to make it fast again. If the harness cannot change the schedule, do nothing for these two actions.
 
-The supervisor commits the canonical Project state after each successful scan, including the startup scan.
-Include changes from workers and people, without an author filter.
-Commit only files inside the canonical `<root>/.rowbly/` that Git does not ignore.
-Always exclude `.rowbly/state.json` and `.rowbly/state.json.tmp-*`, even if Git tracks them.
-Include new files, changed files and deleted files.
-Do not commit source files, worker records or a worker's separate `.rowbly/` copy through this procedure.
-Do not push these commits.
+Do not read the Stories, the config or the state file yourself for a scan. The `scan` command reads them.
 
-### Shared write lock
+The output of `scan` has these values:
 
-Before the first scan, select one absolute `<write-lock>` path outside the Project files.
-In a Git repository, use `rowbly-project-write.lock` inside the absolute Git common directory.
-Get that directory with `git -C <root> rev-parse --path-format=absolute --git-common-dir`.
-Without Git, use `<root>/.rowbly-factory-write.lock`.
-Use an existing shared lock if the caller supplies one.
-Save the path in the state file for restarts.
-Give the same path to every worker and supervisor for this Project.
+| Value     | Contents                                                                                     |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `actions` | Your next steps, in order.                                                                   |
+| `start`   | The Stories that get a worker now, with the `branch` for a worktree. `previous` shows the earlier worker of a Story that did not move. |
+| `waiting` | The Stories that get a worker later, each with the reason.                                   |
+| `active`  | The workers that run.                                                                        |
+| `parked`  | The Stories that get no worker until a person does an action. See "Rules of the scan".       |
+| `notes`   | The notes that you saved.                                                                    |
+| `commit`  | The result of the commit of the Project files.                                               |
 
-Use `flock <write-lock>` for each canonical Project write and each canonical Git mutation.
-Keep the lock from the Git status check through the end of the commit.
-Run dependent commands in one process under the lock, not in separate lock calls.
-Do not hold the lock while a worker does its Story work.
-Ask other writers to use the same lock before they change canonical files.
-The lock coordinates only writers that use it.
+### Worker status
 
-### Commit procedure
+Get the status of a worker from the harness. Give the status name of the harness to `--worker`. The tool knows these names:
 
-Run this procedure in the canonical checkout, never in a worker's worktree.
+| Status of the harness                                      | Meaning for the factory             |
+| ---------------------------------------------------------- | ----------------------------------- |
+| `running`, `starting`, `queued`, `preparing`, `waiting`, `idle` | The worker runs.               |
+| `completed`, `done`                                        | The worker stopped normally.        |
+| `failed`, `error`                                          | The worker stopped with an error.   |
+| `interrupted`, `cancelled`, `rolled_back`                  | A person or the harness stopped the worker. |
 
-1. Check for a Git repository with `git -C <root> rev-parse --show-toplevel`.
-2. If none exists, report that automatic commits are unavailable. Continue the factory without Git commits.
-3. Take the shared write lock.
-4. Find the repository root and the repository-relative path of `<root>/.rowbly/` again under the lock.
-5. Read `git -C <repository> status --porcelain=v1 -z --untracked-files=all` with that path after `--`.
-6. Set `status.renames=false` for this command, so a rename has separate old and new paths.
-7. Parse the NUL-separated records. Exclude `state.json` and its temporary files. Keep each complete path, including spaces and newlines.
-8. If the list has an unresolved merge conflict, report it. Release the lock without a Git mutation.
-9. If the list is empty, release the lock. Do not create an empty commit.
-10. Stage only the listed paths with `git --literal-pathspecs -C <repository> add --all -- <paths...>`.
-11. Commit those paths with `git --literal-pathspecs -C <repository> commit --only -m <message> -- <paths...>`.
-12. Report the commit ID and the Project change. Release the lock.
+Use these rules for special conditions:
 
-Use an argument array for paths. Do not split paths on whitespace or insert them into shell code.
-Do not use `git add -A` without paths, `git commit -a`, or a commit without `--only` and explicit paths.
-Git status excludes ignored new files. Tracked files remain eligible, as in normal Git status.
-The commit records the current working-tree content of each eligible file.
-Before staging, check for Project index content that differs from both HEAD and the working tree.
-If such content exists, report the paths and stop this attempt before a mutation.
-Ask the writer to resolve the staged version first. Do not overwrite that version.
-Do not use an earlier scan's path list after you acquire the lock.
+- A status has no result. `--worker thread-1=running` is correct.
+- If `needStatus` shows a `machine` for the worker, ask the harness of that machine.
+- If the harness of the correct machine says that the worker does not exist, give the status `not_found`.
+- If the call to the harness fails, give the status `unknown`. The worker then counts as a worker that runs.
+- If the worker waits for an answer or an approval, do "A worker waits for an answer" in the problems table.
 
-Use a Conventional Commit message that identifies the Project change.
-For example, use `chore(rowbly): record ROW-06 move to in review` for that change.
-For several changes, use `chore(rowbly): record project changes after scan` and describe the paths in the body.
+For a worker that stopped normally, read its last message. The last line has the form `RESULT: <result>`. Give that result, for example `--worker "mcp:1234=completed=changes required"`. If the message has no such line, give no result.
 
-`--only` keeps unrelated staged changes outside the commit and leaves them staged.
-Never reset the index, discard files, amend a commit, or bypass a failed hook.
-If any Git command fails, report the command, exit status and error text.
-Keep all Project files and any staged changes. Stop this commit attempt and release the lock.
-Retry on the next scan after the failure is repaired; do not repeat an unchanged failure without a report.
-
-### Concurrent commits and worker rules
-
-Workers write canonical Project files through `rowbly -C <root> --json ...` under the shared lock.
-Their source commits stay in their own worktrees.
-Repository instructions that tell workers to commit their own files still apply to those source changes.
-The supervisor owns commits of canonical Project files, including files that workers change.
-Workers must not stage their worktree's `.rowbly/` copy to satisfy a commit instruction.
-
-If an instruction tells a worker to commit canonical Project files, use this same lock and path procedure.
-The supervisor checks Git status again after that worker releases the lock.
-Files that the worker already committed produce no second commit.
-Later edits remain eligible for the next scan.
-A lock release between two scans does not discard or restore any file.
-If a writer ignores the shared lock, report the race; do not reset or overwrite its changes.
-
-## Assign workers
-
-Keep worker records in `attempts`, with the Story, Stage, `workerId`, `workerType`, model, status, result and report flags.
-Active statuses are `preparing` and `running`. Terminal statuses are `completed`, `failed`, `blocked` and `interrupted`.
-Keep extra attempt fields, such as model options and retry authorization.
-Keep the last Stage of each Story in `scan.stages`. Keep the scan counter in `scan.count`.
-Save through `factory-state.mjs write` immediately after a worker starts or stops and after each change to `scan.stages`.
-Use these records on later scans and after a supervisor restart.
-Use `scripts/supervisor-policy.mjs` for assignment decisions and report flags. Read [Supervisor policy](references/supervisor-policy.md) for its inputs and record format.
-The supervisor supplies the current facts, saves the records and starts the workers. The scanner does none of these actions.
-Examine existing harness workers for this Project before each assignment.
-Do not assign a second worker to a Story with an active worker, including a worker from another supervisor.
-Use only the state records and the harness worker list to find active workers.
-Supervisors in separate checkouts or on separate machines do not share `state.json`.
-Only the harness worker list can find the workers of those supervisors.
-
-Read the files again on each scan. Users can change them at any time.
-
-1. Run `rowbly -C <root> --json story get <story>`. Skip a Story that no longer exists.
-2. Read its current Stage in the config. Skip a Stage that is absent or has `enabled: false`.
-3. Read `.rowbly/stages/<KEY>.md`. Stop the factory if the file does not exist.
-4. Examine the prompt. Stop for an `invalid` prompt. Skip a `hold` prompt.
-5. Skip the Story if a worker for it still runs, even if the Story changed Stage.
-6. Apply the attempt rules below through `evaluateScan`. Save its state before you start a worker.
-7. Start a worker for each `start` or `retry` decision. See "Start a worker".
-8. Save each new worker through `recordStart`. Preserve every earlier attempt in `attempts`.
-9. Tell the user the Story, the Stage and the worker once per new attempt.
-
-Check the status of recorded workers on each scan. An absent worker is not proof that it stopped.
-Record a failure or interruption only after the harness confirms that the worker stopped.
-Report each result once. Keep `reported` for results and `startReported` for new attempts.
-Save each report flag after you tell the user. Do not use a report flag to decide retry eligibility.
-
-Apply these attempt rules:
-
-- Retry a failed or interrupted `IN_REFINEMENT` attempt on the next later scan after its confirmed stop.
-- The scan that first confirms the stop records the result. It does not retry that attempt.
-- Use the saved scan counter across supervisor restarts. Do not reset a saved `stoppedScan` on each scan.
-- A saved terminal record without `stoppedScan` already confirms an earlier stop. It can retry on the first restart scan.
-- Retry without a user request or a Stage change. There is no attempt limit, backoff or extra delay.
-- Apply all assignment checks again before each retry. Check existing harness workers from all supervisors of this Project.
-- Do not retry a refinement result of `blocked`. This result asks the user for missing information; it is not a worker failure.
-- Keep completed attempts and all failed, interrupted or blocked development and review attempts ineligible during the same Stage stay.
-
-After a scan observes a Stage departure, the earlier attempt does not prevent assignment in the new Stage.
-An explicit user request can also make the Story eligible again. Keep each earlier attempt and its report flags in `attempts`.
-Do not delete an attempt to clear its assignment restriction.
-If a worker still runs after its Story moves, wait for it to stop before assignment in the new Stage.
-The state records and the harness worker list do not give mutual exclusion. Do not claim that two supervisors cannot race.
+In T3 Code, `t3_thread_read` gives the `status` of a thread and its last messages. A `pendingRequestCount` above 0 shows a worker that waits for an answer.
 
 ## Start a worker
 
-Start one worker for each eligible Story. Use the type of worker from the checklist. If the factory uses threads, start a thread for each worker. Do not change to subagents for one Story.
+Do these steps for each `Start a worker` action. Start all workers of one scan before you end the scan.
 
-- Set the title to `<story> <KEY>` if the harness can set a title.
-- Use the model and the effort level that the Stage prompt names. If the prompt names none, use the default of the harness.
-- If a Stage prompt changes code, give the worker its own Git worktree if the harness can do this. Then Stories in parallel do not change the same checkout. For a thread, use the branch name `<story>-<KEY>` in lower case.
-- Give the worker the first message below. Replace each value in angle brackets.
-- Include the absolute shared write lock path selected in "Commit Project changes".
-- Get the Project instructions from the `instructions` value of `rowbly -C <root> --json project get-instructions`.
-- Before each launch, read the current Story, its Specs if enabled, the Project instructions and the Stage prompt again.
-- If the Stage or its prompt changed, apply the assignment checks again before launch. Give each retry a new worker ID.
+1. Select the model, the effort level and the machine. Use the Stage prompt first, then the Project instructions and the notes, then the default of the harness.
+2. Run `factory.mjs message --root <root> --story <story>`. Its output is the first message of the worker.
+3. If the command fails, do not start this worker. Continue with the next action.
+4. Start the worker with the type of worker from the notes. Give it the message with no changes.
+5. Set the title to the Story ID, a space and the key of the Stage, for example `ROW-07 IN_REVIEW`.
+6. If the Stage prompt changes code, give the worker its own Git worktree if the harness can do this.
+7. For that worktree, use the `branch` value of the Story in `start`. This branch is new for each worker.
+8. Run `factory.mjs started --root <root> --story <story> --worker-id <id> --model <model>` immediately after the launch.
+9. Add `--machine <name>` if the Project uses more than one machine. Add `--type subagent` for a subagent.
+10. Tell the user the Story, the Stage and the worker.
 
-```markdown
-You are a factory worker. Do the work of Stage <KEY> for Story <story>.
+The `branch` only gives the worker a worktree of its own. The skill of the Stage selects the branch for the work of the Story.
 
-Run each Rowbly command as `rowbly -C <root> --json ...`. Do not use a different Project.
-A Git worktree has its own copy of `.rowbly/`. Do not change that copy.
+If `previous` shows a worker that failed, use a different model for the new worker when the Project instructions let you.
 
-Serialize canonical Project writes and canonical Git mutations with `flock <write-lock>`.
-The supervisor commits canonical `.rowbly/` changes after each scan.
-Do not stage or commit `.rowbly/state.json` or `.rowbly/state.json.tmp-*`.
-Commit your own source changes in your worktree as the repository instructions specify.
-Do not include your worktree's `.rowbly/` copy in those commits.
-For a required canonical Project commit, use the supervisor's lock and explicit path procedure.
+If the launch fails, do these steps in order. Stop at the first step that starts the worker.
 
-Read the Story with `story get` and read its Specs if Specs are on.
-Do only the work in the Stage prompt. Move the Story only as the Stage prompt tells you.
-Do not change a Stage prompt or the Project config.
+1. Start the worker again one time with the same values.
+2. Start the worker with the next model that the Project instructions name, or the default model of the harness.
+3. Start the worker on a different machine, if the Project uses more than one machine.
+4. Start the worker as a subagent. Then use subagents for the next workers, and save a note.
+5. Run `factory.mjs launch-failed --root <root> --story <story> --error "<error text>"`. Do its actions.
 
-When you stop, report the result, the current Stage of the Story and each problem.
+After `launch-failed`, the Story waits before its next launch: 2 minutes, then 4, to a maximum of 60. A later scan gives the start action again.
 
+When a fallback of steps 2 to 4 starts the worker, save a note. Use the same fallback first for the next workers.
+Do not try the first choice again for each worker. The action `Try the first choice of each note again` tells you when to try it.
+
+Do not start a second worker for a Story. If `started` fails because the Story has a different active worker, stop the new worker in the harness.
 
 ## Project instructions
 
-<full text of the current Project instructions>
+The Project instructions can name models, machines, limits and checks. Follow them when you can. They do not stop the factory and they do not make the factory wait for a person.
 
-## Stage prompt
+| Condition                                                                              | Action                                                                                  |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| An instruction tells you to do a check, and the tool or the data is not available.     | Skip the check. Use the first choice of the instructions. Save a note.                  |
+| The first choice does not work, for example a model, a machine or a type of worker.    | Use the next choice of the instructions, then the default of the harness. Save a note.  |
+| An instruction sets a limit, for example a maximum number of workers.                  | Obey the limit. Give it to `scan` as `--max-active`. Stories that wait are not a problem. |
+| An instruction tells you to ask the user or to wait for the user.                      | Do not ask and do not wait. Make the decision, save a note and tell the user.           |
 
-<full text of .rowbly/stages/<KEY>.md>
-```
+Example: the instructions tell you to read the remaining usage before each new worker, and the harness does not show the usage. Do not stop and do not ask. Use the first model of the instructions. Save the note `usage report not available; workers use <model>`. If a worker then fails, the launch steps select the next model.
 
-Each scan checks the current Stage. After a worker stops, the supervisor can assign its Story in the next work Stage.
+### Notes
 
-If a thread tool fails when you start a worker, tell the user the error. Then start that worker as a subagent, and use subagents for the next workers.
+A note keeps a decision across scans and across a restart of the supervisor. Save a note with `factory.mjs note --root <root> --text "<text>"`. Each `scan` shows all notes in `notes`. Obey them.
 
-If a worker fails, is interrupted or reports `blocked`, tell the user once for that attempt. Continue to scan the Stories.
-Retry only failed and interrupted refinement attempts, as specified in "Assign workers".
+When `scan` gives the action `Try the first choice of each note again`, do these steps:
+
+1. Try each first choice one time, for example connect to the machine or read the usage report.
+2. Run `factory.mjs note --root <root> --clear`.
+3. Save a note again for each fallback that is still necessary.
+
+## Problems
+
+Do the action for the problem. Then continue the scan. None of these problems stops the factory.
+
+| Problem | Action |
+| ------- | ------ |
+| A worker waits for an answer | Answer through the harness: `No person is available. Make the decision yourself, write it in the Assumptions section of the Story, and continue.` Give the worker the status `running`. If the same worker asks a second time, interrupt it through the harness. |
+| A worker waits for an approval | Approve the action if it is a part of the work of the Story and it does not destroy data. If not, refuse it and tell the worker to continue in a different way. |
+| A worker that does not stop | `scan` names a worker that ran for 90 minutes. Read its last activity in the harness. If it had activity in the last 30 minutes, do nothing. If not, interrupt the worker through the harness. A later scan starts a new worker. |
+| The Rowbly command fails | Try the command that the Project instructions or the repository instructions name. If the repository builds Rowbly, build it again as its instructions specify. Run `check` with `-- <command>` for a command that works. If none works, tell the user one time. Continue the scans. The tool tells you when to try again. |
+| A Story file is not valid | Run `rowbly -C <root> --json doctor --fix` one time. If Rowbly still cannot read the file, tell the user one time. The other Stories continue. |
+| A parked Story | Tell the user one time, as the action tells you. Do not start a worker for it. Continue with the other Stories. |
+| A Stage prompt is missing or `invalid` | Tell the user one time, as the action tells you. Do not write a Stage prompt. The Stories of the other Stages continue. |
+| The commit of the Project files did not complete | Tell the user one time, as the action tells you. `scan` tries again on each scan. Do not reset, discard or amend in Git. |
+| The state file is not valid | Run `factory.mjs reset-state --root <root>`. It keeps the valid records. Do its actions, so that no Story gets a second worker. |
+| A different supervisor works on the same Project | Add `--busy <story>` to `scan` for each Story that has a worker of the other supervisor. |
+| A user tells you to try a parked Story again | Run `factory.mjs release --root <root> --story <story>`. |
+| A problem that this table does not show | Obey rule 7 of "Goal and rules". |
+
+## Rules of the scan
+
+The `scan` command applies these rules. You do not apply them yourself. Use them to answer the user. [Supervisor policy](references/supervisor-policy.md) has the full rules and the format of the state file.
+
+- A Story in a Stage with a `work` prompt gets one worker. A Story does not have to change Stage to get a worker.
+- A Story with a worker that runs gets no second worker, also if the Story changed Stage.
+- When a worker stops and its Story moved, the Story gets a worker for its new Stage in the same scan.
+- When a worker stops and its Story did not move, the Story gets a new worker on the next scan. The first message tells the new worker about the earlier worker.
+- When a worker fails or is interrupted, the Story gets a new worker on the next scan. Each later failure in a row doubles the delay, from 2 minutes to a maximum of 60 minutes. Failures have no limit.
+- A maximum of 4 workers can stop normally for one Story in one Stage. Then `scan` parks the Story.
+- A parked Story gets a worker again after a person changes the Story, moves the Story or asks for a release.
+- A Story that reaches a Stage with a `hold` prompt starts from zero if it comes back.
+- With `--max-active`, the Stories nearest to the last Stage get a worker first.
+- The Stories of a Stage with a missing, `invalid` or changed prompt wait. All other Stories continue.
+- A Story with a file that Rowbly cannot read waits. All other Stories continue.
+- After a launch that failed, the Story waits 2 minutes, then twice as long each time, to a maximum of 60 minutes.
+- After each scan, the command commits the changed files of `<root>/.rowbly/`, but not `state.json`. It does not push.
+
+Workers write the Project files through `rowbly -C <root>` under the shared write lock. The first message gives them the lock path. Their source commits stay in their own worktrees.
 
 ## Stop the factory
 
-Stop the factory if the user tells you to stop, or if a step of this skill tells you to stop.
+Stop the factory only in these conditions:
 
-1. Stop the scanner and its schedule.
-2. Save the current state through `factory-state.mjs write`. Keep `.rowbly/state.json` for a later restart.
-3. Tell the user the reason, and each worker that still runs.
+- The user tells you to stop.
+- `<root>/.rowbly/` no longer exists.
+- A `FAIL` of the start checks stays after its repair. This condition applies only before the first scan.
 
-Do not stop a worker that runs if the user does not tell you to stop it.
+To stop the factory, do these steps:
+
+1. Stop the schedule or the loop.
+2. Tell the user the reason, and each worker that still runs.
+
+Do not stop a worker that runs if the user does not tell you to stop it. The exception is a worker without activity, in the problems table.
+
+Keep `.rowbly/state.json`. The next start of the factory continues from it.

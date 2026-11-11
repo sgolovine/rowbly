@@ -81,7 +81,7 @@ Rowbly comes with four skills that teach your agent a full development process:
 | `refine`  | Makes a story ready for development. It writes no code.                         |
 | `develop` | Builds a refined story in a Git worktree, or fixes the findings of a review.    |
 | `review`  | Examines the pull request of a story and reports if the work is ready to merge. |
-| `factory` | Watches your stories and starts a worker when a story changes stage.            |
+| `factory` | Watches your stories and starts a worker for each story in a work stage.        |
 
 Use one skill by itself, or use all four as a software factory. Put stories on the board, and the factory starts the correct worker for each stage.
 
