@@ -2,7 +2,7 @@ import { rm } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
-import { createStory, lockStory } from "../story/story.js";
+import { createStory, updateStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../testProject/testProject.js";
 import { watchStories } from "./storyWatch.js";
 
@@ -14,7 +14,7 @@ describe("watchStories", () => {
     await createStory({ title: "T" }, project.ctx);
     const onChange = vi.fn();
     const stop = await watchStories(onChange, project.ctx);
-    await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+    await updateStory({ id: "ROW-01", title: "U" }, project.ctx);
     await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
     await sleep(200);
     expect(onChange).toHaveBeenCalledOnce();
@@ -25,7 +25,7 @@ describe("watchStories", () => {
     await createStory({ title: "T" }, project.ctx);
     const onChange = vi.fn();
     const stop = await watchStories(onChange, project.ctx);
-    await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+    await updateStory({ id: "ROW-01", title: "U" }, project.ctx);
     await sleep(20);
     stop();
     await sleep(200);

@@ -18,7 +18,7 @@ Commander parses them.
 
 ## Domain concepts
 
-Rowbly has four concepts. Use these names in code, services, commands and UI text.
+Rowbly has five concepts. Use these names in code, services, commands and UI text.
 
 ```
 Project ── configuration: custom field definitions, stages (each with an optional prompt)
@@ -36,10 +36,9 @@ Project ── configuration: custom field definitions, stages (each with an opt
   Each story in a project **must** have a stage. Each project from `rowbly init` or the TUI starts with the stages that
   onboarding selects. Users can add more stages. Each stage can have a prompt. The prompt tells agents what
   to do with a story while the story is in that stage.
-- **Agent lock.** An agent lock records that an agent works on a story. A story has a maximum of one
-  lock. The lock applies only while the story stays in the stage where the agent took the lock. A lock
-  is a record of work and does not give mutual exclusion, because two writers can race and separate
-  checkouts do not share files.
+- **Factory activity.** The factory activity shows the workers that the factory state records for a
+  story in its current stage. The factory supervisor writes the state to `.rowbly/state.json`. Rowbly
+  only reads this file. It does not check that a worker is alive.
 - **Spec.** A spec is a Markdown document that describes the work of a story. A spec must have a link
   to at least one story, and a story can have many specs. Specs are an optional feature. Each project
   starts with specs off. Turn them on in the Specs section of Settings or with
@@ -134,9 +133,10 @@ the problems that it can repair.
 .rowbly/
   rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}]
   ROWBLY.md           # optional; the whole file is the instructions for all agents of the project
-  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset), agentLock?
+  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset)
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
+  state.json          # optional; the factory supervisor writes it; Rowbly only reads it
 ```
 
 The order of `stages` in the config is the order of the board. The custom field types are `string`,
@@ -148,12 +148,24 @@ The `position` of a story sets its order in its stage. A story without a `positi
 stories that have one, in the order of their numbers. When a story moves, the service writes a new
 `position` to each story of the stage that changes place.
 
-The `agentLock` key of a story holds the lock of an agent: `agent`, `stage` and `lockedAt` (ISO-8601).
-`rowbly story lock` and `rowbly story unlock` write the key. If a different agent holds the lock,
-`story lock` stops with an error. A change of the story's stage removes the key, and a rename of the
-stage key keeps the lock. Rowbly ignores a lock if its `stage` is not the stage of the story.
-`rowbly doctor` shows an error for a malformed lock and a warning for a stale lock, and `--fix` removes
-only the stale lock.
+`src/services/factoryActivity/factoryActivity.ts` reads `.rowbly/state.json` and gives the factory
+activity of each story. The format is version 1 of the factory skill
+(`skills/factory/references/supervisor-policy.md`). The service uses only the attempts of a story in
+its current stage:
+
+- No `preparing` or `running` attempt gives no activity.
+- One active attempt that is also the last attempt gives the `model` of the attempt, or its `workerId`.
+- Two active attempts, or an active attempt before a later attempt, give `conflict`.
+- An attempt without `stage`, `workerId` or `status` gives `unknown`.
+
+A problem with the file never stops the load of the project. The service gives a status in place of an
+error: `ok`, `missing`, `unavailable` or `incomplete`. An `unavailable` file gives no activity. The TUI
+shows the activity as `▶` in the story row, and shows each file problem in one line below the story
+list. The service and the TUI never write `state.json`.
+
+Older versions of Rowbly wrote an agent lock to the `agentLock` key of a story. Rowbly does not use
+this key now. `rowbly doctor` shows a warning for each story file with an `agentLock` key. To remove
+the keys, run `rowbly doctor --fix`. The command keeps all other frontmatter and the description.
 
 The `stories` list of a spec holds the links to its stories. If a service deletes a story, it also
 removes the story from each spec. A spec that loses its last story stays in `specs/`. `rowbly doctor`

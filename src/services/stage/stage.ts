@@ -12,7 +12,7 @@ import {
 } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
-import { dropAgentLock, parseAgentLock, readStoryFiles, rewriteStories } from "../storyFiles/storyFiles.js";
+import { readStoryFiles, rewriteStories } from "../storyFiles/storyFiles.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Stage extends StageConfig {
@@ -154,9 +154,6 @@ export async function updateStage(input: UpdateStageInput, ctx: ServiceContext =
     await rewriteStories(paths, config, (data) => {
       if (data.stage !== oldKey) return false;
       data.stage = newKey;
-      // The story stays in the same stage under a new key, so its agent lock stays current.
-      const lock = parseAgentLock(data.agentLock);
-      if (lock?.stage === oldKey) data.agentLock = { ...lock, stage: newKey };
       return true;
     });
   }
@@ -195,7 +192,6 @@ export async function deleteStage(
     movedStories = await rewriteStories(paths, config, (data) => {
       if (data.stage !== stage.key) return false;
       data.stage = target.key;
-      dropAgentLock(data);
       return true;
     });
   }

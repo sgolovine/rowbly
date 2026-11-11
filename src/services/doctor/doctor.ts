@@ -20,13 +20,7 @@ import {
   type SpecFile,
   writeSpecFile,
 } from "../specFiles/specFiles.js";
-import {
-  formatStoryId,
-  parseAgentLock,
-  parseStoryFileName,
-  type StoryFile,
-  writeStoryFile,
-} from "../storyFiles/storyFiles.js";
+import { formatStoryId, parseStoryFileName, type StoryFile, writeStoryFile } from "../storyFiles/storyFiles.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface DoctorIssue {
@@ -254,23 +248,14 @@ async function checkStory(config: ProjectConfig, story: StoryFile, file: string,
     }
   }
 
+  // Rowbly once wrote agent locks to Story files. The factory state file now records agent activity.
   if ("agentLock" in data) {
-    const lock = parseAgentLock(data.agentLock);
-    if (!lock) {
-      await report({ severity: "error", message: "agentLock must have agent, stage and an ISO-8601 lockedAt", file });
-    } else if (
-      lock.stage !==
-      String(data.stage ?? "")
-        .trim()
-        .toUpperCase()
-    ) {
-      await report(
-        { severity: "warning", message: `Stale agent lock from Stage ${lock.stage}`, file, fix: "Remove it" },
-        change(() => {
-          delete data.agentLock;
-        }),
-      );
-    }
+    await report(
+      { severity: "warning", message: "agentLock is no longer used", file, fix: "Remove it" },
+      change(() => {
+        delete data.agentLock;
+      }),
+    );
   }
 
   const known = new Set(["title", "stage", "position", "agentLock", ...config.customFields.map((field) => field.key)]);

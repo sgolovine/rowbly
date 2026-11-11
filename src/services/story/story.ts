@@ -7,25 +7,19 @@ import {
   withAttachments,
 } from "../attachmentFiles/attachmentFiles.js";
 import { type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
-import { ConflictError, NotFoundError } from "../errors/errors.js";
+import { NotFoundError } from "../errors/errors.js";
 import { coerceFieldValue, type FieldValue, fieldValueError } from "../fields/fields.js";
 import { rewriteSpecLinks } from "../specFiles/specFiles.js";
 import { findStage } from "../stage/stage.js";
 import {
-  dropAgentLock,
   formatStoryId,
-  parseAgentLock,
   readStoryFiles,
-  type StoryAgentLock,
   type StoryFile,
   sortStoryFiles,
   storyPath,
   writeStoryFile,
 } from "../storyFiles/storyFiles.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
-
-/** @public */
-export type { StoryAgentLock };
 
 export interface Story {
   /** `ROW-01`. */
@@ -40,8 +34,6 @@ export interface Story {
   description: string;
   /** A value for every custom field in the project, `null` when unset. */
   fields: Record<string, FieldValue>;
-  /** The agent that works on the story in its current stage, `null` when there is none. */
-  agentLock: StoryAgentLock | null;
   path: string;
   /** Saved images only. */
   attachmentCount?: number;
@@ -72,18 +64,6 @@ export interface UpdateStoryInput {
   description?: string;
   /** Only the fields to change; `null` or `""` clears one. */
   fields?: FieldInput;
-}
-
-export interface LockStoryInput {
-  id: string;
-  /** The name of the agent that takes the lock. */
-  agent: string;
-}
-
-export interface UnlockStoryInput {
-  id: string;
-  /** When given, only this agent can remove the lock. */
-  agent?: string;
 }
 
 export interface SearchStoriesInput {
@@ -118,8 +98,6 @@ function toStory(config: ProjectConfig, file: StoryFile, position = 1): Story {
     issues,
     INVALID_STORY_HINT,
   );
-  // A lock from an earlier stage is stale: hand edits and git merges can leave one behind.
-  const lock = parseAgentLock(data.agentLock);
   return {
     id: file.id,
     number: file.number,
@@ -128,7 +106,6 @@ function toStory(config: ProjectConfig, file: StoryFile, position = 1): Story {
     position,
     description: body,
     fields,
-    agentLock: lock?.stage === data.stage ? lock : null,
     path: file.path,
   };
 }
@@ -258,8 +235,6 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
   throwIfIssues("The story is invalid", issues);
 
   const moved = data.stage !== file.doc.data.stage;
-  // A lock counts only for the visit to its stage.
-  if (moved) dropAgentLock(data);
   const doc = { data, body: input.description ?? file.doc.body };
   const files = await readStoryFiles(paths);
   // Checked before writing, so an update never leaves a story invalid.
@@ -278,55 +253,6 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
     await writeStoryFile(config, f.path, f.doc);
   }
   return toStory(config, { ...file, doc }, at + 1);
-}
-
-function checkAgent(agent: string): string {
-  const name = agent.trim();
-  throwIfIssues("The agent lock is invalid", name === "" ? [{ path: ["agent"], message: "Agent is required" }] : []);
-  return name;
-}
-
-/**
- * Records that `agent` works on the story, in its current stage. The same agent can lock again: the lock keeps
- * its `lockedAt`. This is a record of work, not mutual exclusion: two processes can race on the file.
- */
-export async function lockStory(input: LockStoryInput, ctx: ServiceContext = {}): Promise<Story> {
-  const agent = checkAgent(input.agent);
-  const paths = await findProject(ctx);
-  const config = await readConfig(paths);
-  const file = await findStoryFile(paths, config, input.id);
-  const story = toStory(config, file, positionIn(await readStoryFiles(paths), file));
-  if (story.agentLock?.agent === agent) return story;
-  if (story.agentLock) {
-    throw new ConflictError(`${story.id} is locked by ${story.agentLock.agent}`, {
-      hint: `Wait for ${story.agentLock.agent}, or run \`rowbly story unlock ${story.id}\` to remove the lock.`,
-      details: { agentLock: story.agentLock },
-    });
-  }
-  const lockedAt = (ctx.now?.() ?? new Date()).toISOString();
-  const doc = { data: { ...file.doc.data, agentLock: { agent, stage: story.stage, lockedAt } }, body: file.doc.body };
-  await writeStoryFile(config, file.path, doc);
-  return toStory(config, { ...file, doc }, story.position);
-}
-
-/** Removes the agent lock of the story. With `agent`, a lock that a different agent holds is refused. */
-export async function unlockStory(input: UnlockStoryInput, ctx: ServiceContext = {}): Promise<Story> {
-  const agent = input.agent === undefined ? undefined : checkAgent(input.agent);
-  const paths = await findProject(ctx);
-  const config = await readConfig(paths);
-  const file = await findStoryFile(paths, config, input.id);
-  const story = toStory(config, file, positionIn(await readStoryFiles(paths), file));
-  if (!story.agentLock) throw new NotFoundError(`${story.id} has no agent lock`);
-  if (agent !== undefined && story.agentLock.agent !== agent) {
-    throw new ConflictError(`${story.id} is locked by ${story.agentLock.agent}, not ${agent}`, {
-      hint: `Run \`rowbly story unlock ${story.id}\` without --agent to remove the lock.`,
-      details: { agentLock: story.agentLock },
-    });
-  }
-  const { agentLock: _removed, ...data } = file.doc.data;
-  const doc = { data, body: file.doc.body };
-  await writeStoryFile(config, file.path, doc);
-  return toStory(config, { ...file, doc }, story.position);
 }
 
 export async function deleteStory(input: { id: string }, ctx: ServiceContext = {}): Promise<{ id: string }> {
