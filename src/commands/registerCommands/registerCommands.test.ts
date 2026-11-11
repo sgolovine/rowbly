@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as storyService from "../../services/story/story.js";
 import { getStory } from "../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../services/testProject/testProject.js";
 import { createProgram, runCli } from "../testCli/testCli.js";
@@ -19,6 +20,35 @@ describe("registerCommands", () => {
 
   afterEach(() => {
     process.exitCode = undefined;
+    vi.restoreAllMocks();
+  });
+
+  it.each(["get", "delete"])("rejects extra story %s arguments before it calls the service", async (action) => {
+    const first = await storyService.createStory({ title: "First" }, project.ctx);
+    const second = await storyService.createStory({ title: "Second" }, project.ctx);
+    const service = vi.spyOn(storyService, action === "get" ? "getStory" : "deleteStory");
+
+    const result = await runCli(["--json", "story", action, first.id, second.id], project.paths.root);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("too many arguments");
+    expect(result.stdout).toBe("");
+    expect(service).not.toHaveBeenCalled();
+    expect(await storyService.searchStories({}, project.ctx)).toEqual([first, second]);
+  });
+
+  it.each([
+    ["project", "update", "--name", "Example"],
+    ["story", "create", "--title", "Example"],
+    ["stage", "get", "BACKLOG"],
+    ["custom-field", "remove", "priority"],
+    ["spec", "link", "example", "ROW-01"],
+    ["skill", "list"],
+  ])("rejects extra arguments for %s %s", async (...args) => {
+    const result = await runCli([...args, "extra"], outside.path);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("too many arguments");
+    expect(result.stdout).toBe("");
   });
 
   it("registers only the resource groups and standalone commands", async () => {
@@ -78,7 +108,7 @@ describe("registerCommands", () => {
     }
 
     it(`rejects an unknown ${resource} action`, async () => {
-      const result = await runCli([resource, "nope"], outside.path);
+      const result = await runCli([resource, "nope", "extra"], outside.path);
       expect(result.exitCode).not.toBe(0);
       expect(result.stderr).toContain("unknown command 'nope'");
     });

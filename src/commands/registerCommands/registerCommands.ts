@@ -30,7 +30,7 @@ export function registerCommands(program: Command): void {
 
 /** Creates a resource command that prints help when no action is given, and rejects an unknown action. */
 function resource(program: Command, name: string, description: string): Command {
-  const command = program.command(name).description(description).allowExcessArguments();
+  const command = program.command(name).description(description).argument("[action...]");
   command.action(() => {
     const [action] = command.args;
     if (action === undefined) command.help();
