@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { listKnownProjects, RC_FILE, recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject, initProject } from "../../../services/project/project.js";
 import { createStage, listStages } from "../../../services/stage/stage.js";
-import { createStory, lockStory, searchStories, unlockStory } from "../../../services/story/story.js";
+import { createStory, searchStories } from "../../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../../services/testProject/testProject.js";
 import type { Layout } from "../../hooks/index.js";
 import { LayoutContext } from "../../hooks/index.js";
@@ -13,6 +13,18 @@ import { keys, renderTui, settle } from "../../testing/index.js";
 import { Shell } from "./Shell.js";
 
 afterEach(cleanup);
+
+/** A version 1 factory state with one `running` attempt for each `[story, stage, model]`. */
+function factoryState(...workers: [story: string, stage: string, model: string][]): string {
+  const attempts = workers.map(([story, stage, model]) => ({
+    story,
+    stage,
+    workerId: `w-${story}`,
+    model,
+    status: "running",
+  }));
+  return JSON.stringify({ version: 1, updatedAt: null, scan: { count: 1, stages: {} }, attempts });
+}
 
 /** Renders the shell and waits for the services to read the project. */
 async function open(ctx: { cwd: string }) {
@@ -44,15 +56,20 @@ describe("Shell", () => {
       expect(tui.frame()).toContain(text);
     };
 
-    it("shows and removes the agent lock of a change from another process", async () => {
+    /** Waits until `text` is gone from the screen. */
+    const goneSoon = async (tui: Awaited<ReturnType<typeof open>>, text: string) => {
+      for (let i = 0; i < 40 && tui.frame().includes(text); i++) await settle(25);
+      expect(tui.frame()).not.toContain(text);
+    };
+
+    it("shows and removes the factory activity of a change from another process", async () => {
       await createStory({ title: "First story" }, project.ctx);
       const tui = await open(project.ctx as { cwd: string });
       expect(tui.frame()).not.toContain("▶");
-      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
       await showsSoon(tui, "▶ claude");
-      await unlockStory({ id: "ROW-01" }, project.ctx);
-      for (let i = 0; i < 40 && tui.frame().includes("▶"); i++) await settle(25);
-      expect(tui.frame()).not.toContain("▶");
+      await project.write("state.json", factoryState());
+      await goneSoon(tui, "▶");
     });
 
     it("keeps the cursor on the selected Story", async () => {
@@ -61,7 +78,7 @@ describe("Shell", () => {
       const tui = await open(project.ctx as { cwd: string });
       await tui.press(keys.down);
       expect(tui.frame()).toMatch(/▌\s*ROW-02/);
-      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
       await showsSoon(tui, "▶ claude");
       expect(tui.frame()).toMatch(/▌\s*ROW-02/);
     });
@@ -71,7 +88,7 @@ describe("Shell", () => {
       const tui = await open(project.ctx as { cwd: string });
       await tui.press("n");
       await tui.type("Draft");
-      await lockStory({ id: "ROW-01", agent: "claude" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
       await settle(300);
       await tui.press();
       expect(tui.frame()).toContain("New Story");
@@ -90,7 +107,7 @@ describe("Shell", () => {
 
     it("keeps the row on one line in a terminal of 80 columns", async () => {
       await createStory({ title: "A title that is long enough to reach the Stage in the row" }, project.ctx);
-      await lockStory({ id: "ROW-01", agent: "a-very-long-agent-name" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "a-very-long-agent-name"]));
       const tui = await openSized(project.ctx as { cwd: string }, { width: 80, height: 24 });
       const row = tui
         .frame()
@@ -98,6 +115,70 @@ describe("Shell", () => {
         .find((line) => line.includes("ROW-01"));
       expect(row).toContain("▶ a-very-long…");
       expect(row).toContain("Backlog");
+    });
+  });
+
+  describe("factory state file", () => {
+    const showsSoon = async (tui: Awaited<ReturnType<typeof open>>, text: string, shown = true) => {
+      for (let i = 0; i < 40 && tui.frame().includes(text) !== shown; i++) await settle(25);
+      expect(tui.frame().includes(text)).toBe(shown);
+    };
+    const count = (frame: string, text: string) => frame.split(text).length - 1;
+
+    it("shows a quiet status line when the file does not exist", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      expect(tui.frame()).toContain("Factory activity: no .rowbly/state.json");
+      expect(tui.frame()).not.toContain("▶");
+    });
+
+    it("shows no status line for a valid file", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
+      const tui = await open(project.ctx as { cwd: string });
+      expect(tui.frame()).toContain("▶ claude");
+      expect(tui.frame()).not.toContain("Factory activity");
+    });
+
+    it("shows a warning with the path for a corrupt file, and still shows the Stories", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      await project.write("state.json", "<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> main\n");
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 160, height: 24 });
+      expect(tui.frame()).toContain("First story");
+      expect(tui.frame()).toContain(
+        `! Factory activity is unavailable: ${join(project.paths.dir, "state.json")}: The file has Git conflict markers`,
+      );
+    });
+
+    it("removes the indicators when the file becomes invalid and shows them again when it is valid, with no toast", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 160, height: 24 });
+      expect(tui.frame()).toContain("▶ claude");
+      await project.write("state.json", "{ nope");
+      await showsSoon(tui, "▶ claude", false);
+      await showsSoon(tui, "Factory activity is unavailable");
+      expect(count(tui.frame(), "not valid JSON")).toBe(1);
+      await project.write("state.json", factoryState(["ROW-01", "BACKLOG", "claude"]));
+      await showsSoon(tui, "▶ claude");
+      expect(tui.frame()).not.toContain("Factory activity");
+      expect(tui.frame()).not.toContain("not valid JSON");
+    });
+
+    it("creates and moves a Story while the file is corrupt", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      await project.write("state.json", "{ nope");
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      await tui.type("Bravo");
+      await tui.press(keys.ctrl("s"));
+      await settle(100);
+      await tui.press();
+      expect((await searchStories({}, project.ctx)).map((s) => s.title)).toEqual(["Alpha", "Bravo"]);
+      await tui.press(keys.ctrlShiftDown);
+      await settle(100);
+      expect((await searchStories({ stage: "DONE" }, project.ctx)).length).toBe(1);
+      expect(await project.read("state.json")).toBe("{ nope");
     });
   });
 
@@ -500,6 +581,7 @@ describe("Shell with several Projects", () => {
       await initProject({ name, key: "AB" }, ctx(name));
     }
     await createStory({ title: "Beta story" }, ctx("Beta"));
+    await writeFile(join(ctx("Beta").cwd, ".rowbly", "state.json"), factoryState(["AB-01", "BACKLOG", "beta-agent"]));
     return ctx;
   }
 
@@ -528,6 +610,9 @@ describe("Shell with several Projects", () => {
     await tui.press();
     expect(tui.frame()).toContain("Beta › All Stages");
     expect(tui.frame()).toContain("Beta story");
+    // The activity comes from the state file of the new Project.
+    expect(tui.frame()).toContain("▶ beta-agent");
+    expect(tui.frame()).not.toContain("Factory activity");
     expect((await listKnownProjects(ctx("Beta"))).map((p) => p.name)).toEqual(["Beta", "Alpha"]);
   });
 

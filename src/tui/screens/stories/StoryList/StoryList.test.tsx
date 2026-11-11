@@ -21,7 +21,6 @@ const stories: Story[] = Array.from({ length: 10 }, (_, i) => ({
   position: 1,
   description: "",
   fields: {},
-  agentLock: null,
   path: "",
 }));
 
@@ -44,6 +43,12 @@ describe("StoryList", () => {
     expect(frame).toMatch(/ {2}ROW-01 Story 1\s+● Backlog/);
     expect(frame).toMatch(/▌ ROW-02 Story 2\s+● Doing/);
     expect(frame).toMatch(/ROW-10 Story 10\s+● Backlog/);
+  });
+
+  it("shows the factory activity of each Story on its row", async () => {
+    const frame = (await renderTui(list({ activity: { "ROW-02": { kind: "active", label: "claude" } } }))).frame();
+    expect(frame).toMatch(/ROW-02 Story 2\s+▶ claude\s+● Doing/);
+    expect(frame.match(/▶/g)).toHaveLength(1);
   });
 
   it("shows the empty text without Stories", async () => {

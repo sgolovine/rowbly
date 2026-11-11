@@ -102,9 +102,9 @@ async function waitFor(condition) {
 }
 
 describe("watch-stages --once", () => {
-  it("reports every existing story on startup with its lock", async () => {
+  it("reports every existing story on startup with its fields", async () => {
     const current = stories({ "ROW-01": "DOING", "ROW-02": "DOING", "ROW-03": "DOING" }).stories;
-    current[1].agentLock = { agent: "other-worker", stage: "DOING", lockedAt: "2026-11-10T20:00:00Z" };
+    current[1].fields = { worktree: "/work/ROW-02" };
     await respond({ stories: current });
 
     const { code, lines } = await once(...fakeCommand());
@@ -212,13 +212,13 @@ describe("watch-stages polling", () => {
     });
   });
 
-  it("reports a released lock while the story stays in the same stage", async () => {
+  it("reports a field change while the story stays in the same stage", async () => {
     const current = stories({ "ROW-01": "DOING" });
-    const locked = { ...current.stories[0], agentLock: { agent: "other", stage: "DOING" } };
-    await respond({ stories: [locked] }, current);
+    const changed = { ...current.stories[0], fields: { worktree: "/work/ROW-01" } };
+    await respond({ stories: [changed] }, current);
     await whilePolling(async (output) => {
       await waitFor(() => output().length >= 3);
-      assert.deepEqual(output()[1], { event: "stories", stories: [locked] });
+      assert.deepEqual(output()[1], { event: "stories", stories: [changed] });
       assert.deepEqual(output()[2], { event: "stories", ...current });
     });
   });

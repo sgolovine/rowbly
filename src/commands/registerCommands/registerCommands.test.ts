@@ -6,7 +6,7 @@ import { createProgram, runCli } from "../testCli/testCli.js";
 
 const resources = {
   project: ["update", "get-instructions"],
-  story: ["create", "update", "delete", "get", "lock", "unlock", "search"],
+  story: ["create", "update", "delete", "get", "search"],
   stage: ["create", "update", "delete", "get"],
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
@@ -80,7 +80,7 @@ describe("registerCommands", () => {
     it(`rejects an unknown ${resource} action`, async () => {
       const result = await runCli([resource, "nope"], outside.path);
       expect(result.exitCode).not.toBe(0);
-      expect(result.stderr).toContain("nope");
+      expect(result.stderr).toContain("unknown command 'nope'");
     });
   }
 

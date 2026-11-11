@@ -1,5 +1,6 @@
 export { deleteStoryMessage } from "./deleteStoryMessage.js";
 export * from "./EditStoryModal/index.js";
+export * from "./FactoryStatusLine/index.js";
 export * from "./NewStoryModal/index.js";
 export * from "./SpecsTab/index.js";
 export * from "./StageHeadingRow/index.js";

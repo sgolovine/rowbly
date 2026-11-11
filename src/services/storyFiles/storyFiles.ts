@@ -15,34 +15,7 @@ export interface StoryFile {
   doc: MarkdownDocument;
 }
 
-/** The record that an agent works on a story. It counts only while the story stays in `stage`. */
-export interface StoryAgentLock {
-  agent: string;
-  /** The stage key of the story when the agent took the lock. */
-  stage: string;
-  /** An ISO-8601 time. */
-  lockedAt: string;
-}
-
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
-const ISO_TIME = /^\d{4}-\d{2}-\d{2}T/;
-
-const isText = (value: unknown): value is string => typeof value === "string" && value.trim() !== "";
-
-/** The `agentLock` frontmatter value as a lock, or `null` when it is absent or malformed. */
-export function parseAgentLock(value: unknown): StoryAgentLock | null {
-  if (typeof value !== "object" || value === null) return null;
-  const { agent, stage, lockedAt } = value as Record<string, unknown>;
-  if (!isText(agent) || !isText(stage) || !isText(lockedAt)) return null;
-  if (!ISO_TIME.test(lockedAt) || Number.isNaN(Date.parse(lockedAt))) return null;
-  return { agent, stage, lockedAt };
-}
-
-/** Removes a well-formed lock when a story changes stage. A malformed one stays for `doctor` to report. */
-export function dropAgentLock(data: Record<string, unknown>): void {
-  if (parseAgentLock(data.agentLock)) delete data.agentLock;
-}
-
 export function formatStoryId(projectKey: string, number: number): string {
   return `${projectKey}-${String(number).padStart(2, "0")}`;
 }

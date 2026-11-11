@@ -15,7 +15,6 @@ const story: Story = {
   position: 1,
   description: "",
   fields: {},
-  agentLock: null,
   path: "",
 };
 
@@ -52,31 +51,31 @@ describe("StoryRow", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  describe("agent lock", () => {
+  describe("factory activity", () => {
     const stage = { name: "Done", category: "done" } as const;
-    const locked = (agent: string, title = story.title): Story => ({
-      ...story,
-      title,
-      agentLock: { agent, stage: "DONE", lockedAt: "2026-11-09T10:00:00.000Z" },
-    });
 
-    it("shows the agent to the left of the Stage", async () => {
+    it.each([
+      [{ kind: "active", label: "claude" }, "▶ claude"],
+      [{ kind: "conflict" }, "▶ conflict"],
+      [{ kind: "unknown" }, "▶ unknown"],
+    ] as const)("shows %o to the left of the Stage", async (activity, text) => {
       const tui = await renderTui(
-        <StoryRow story={locked("claude")} stage={stage} selected clickable onClick={() => {}} />,
+        <StoryRow story={story} activity={activity} stage={stage} selected clickable onClick={() => {}} />,
       );
-      expect(tui.frame()).toMatch(/^▌ ROW-07 Fix login\s+▶ claude\s+● Done\s*$/);
+      expect(tui.frame()).toMatch(new RegExp(`^▌ ROW-07 Fix login\\s+${text}\\s+● Done\\s*$`));
     });
 
-    it("shows no indicator without a lock", async () => {
+    it("shows no indicator without activity", async () => {
       const tui = await renderTui(<StoryRow story={story} stage={stage} selected clickable onClick={() => {}} />);
       expect(tui.frame()).not.toContain("▶");
     });
 
-    it("cuts a long agent name and stays on one line with a long title", async () => {
+    it("cuts a long label and stays on one line with a long title", async () => {
       const tui = await renderTui(
         <Box width={50}>
           <StoryRow
-            story={locked("a-very-long-agent\nname", "A very long title that does not fit in the row at all")}
+            story={{ ...story, title: "A very long title that does not fit in the row at all" }}
+            activity={{ kind: "active", label: "a-very-long-agent\nname" }}
             stage={stage}
             selected={false}
             clickable

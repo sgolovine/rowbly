@@ -28,9 +28,13 @@ export function registerCommands(program: Command): void {
   registerSkillCommands(resource(program, "skill", "Manage agent skills"));
 }
 
-/** Creates a resource command that prints help when no action is given. */
+/** Creates a resource command that prints help when no action is given, and rejects an unknown action. */
 function resource(program: Command, name: string, description: string): Command {
-  const command = program.command(name).description(description);
-  command.action(() => command.help());
+  const command = program.command(name).description(description).allowExcessArguments();
+  command.action(() => {
+    const [action] = command.args;
+    if (action === undefined) command.help();
+    command.error(`error: unknown command '${action}'`, { code: "commander.unknownCommand" });
+  });
   return command;
 }

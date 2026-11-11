@@ -1,24 +1,27 @@
 import { Box, Text } from "ink";
+import type { StoryActivity } from "../../../../services/factoryActivity/factoryActivity.js";
 import type { Story } from "../../../../services/story/story.js";
 import { type RowDragProps, SelectionRow, StageBadge, type StageCategory } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 
-/** The most columns that the name of an agent takes, so the title keeps its room. */
-const AGENT_NAME_MAX = 12;
+/** The most columns that the label of an agent takes, so the title keeps its room. */
+const AGENT_LABEL_MAX = 12;
 
-/** The name of an agent on one line, cut to `AGENT_NAME_MAX` characters. */
-function shortAgentName(agent: string): string {
-  const chars = [...agent.replace(/\s+/g, " ")];
-  return chars.length <= AGENT_NAME_MAX ? chars.join("") : `${chars.slice(0, AGENT_NAME_MAX - 1).join("")}…`;
+/** The label of an activity on one line, cut to `AGENT_LABEL_MAX` characters. */
+function activityLabel(activity: StoryActivity): string {
+  if (activity.kind !== "active") return activity.kind;
+  const chars = [...activity.label.replace(/\s+/g, " ")];
+  return chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
 }
 
 /**
- * One Story in the list: its key and title on the left, its Stage on the right. A Story with an agent lock
- * shows `▶` and the agent to the left of its Stage. `indented` moves the key and title two columns to the
+ * One Story in the list: its key and title on the left, its Stage on the right. A Story with factory `activity`
+ * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. `indented` moves the key and title two columns to the
  * right, below the heading of a Stage section. The `RowDragProps` let the mouse drag the row and drop on it.
  */
 export function StoryRow({
   story,
+  activity,
   stage,
   selected,
   clickable,
@@ -27,6 +30,8 @@ export function StoryRow({
   ...dragProps
 }: {
   story: Story;
+  /** The activity that the factory state records for the Story. */
+  activity?: StoryActivity;
   stage: { name: string; category: StageCategory };
   selected: boolean;
   clickable: boolean;
@@ -46,9 +51,9 @@ export function StoryRow({
             <Text color={theme.inkMuted}>▧ {story.attachmentCount}</Text>
           </Box>
         )}
-        {story.agentLock && (
+        {activity && (
           <Box flexShrink={0} paddingLeft={2}>
-            <Text color={theme.inkMuted}>▶ {shortAgentName(story.agentLock.agent)}</Text>
+            <Text color={theme.inkMuted}>▶ {activityLabel(activity)}</Text>
           </Box>
         )}
         <Box flexShrink={0} paddingLeft={2}>

@@ -118,45 +118,28 @@ describe("story commands", () => {
     });
   });
 
-  describe("agent locks", () => {
-    it("locks a story, shows the lock in story get, and unlocks it", async () => {
+  describe("removed agent locks", () => {
+    it.each(["lock", "unlock"])("gives an unknown-command error for story %s", async (name) => {
       await cli("story", "create", "--title", "First");
-      expect(await cli("story", "lock", "ROW-01", "--agent", "claude")).toEqual({
-        stdout: "Locked ROW-01 for claude",
-        stderr: "",
-        exitCode: 0,
-      });
-      expect((await cli("story", "get", "ROW-01")).stdout).toMatch(/^Agent lock: claude \(since \d{4}-.*\)$/m);
-      expect((await cli("story", "unlock", "ROW-01", "--agent", "claude")).stdout).toBe("Unlocked ROW-01");
-      expect((await cli("story", "get", "ROW-01")).stdout).not.toContain("Agent lock");
-    });
-
-    it("gives the lock as JSON", async () => {
-      await cli("story", "create", "--title", "First");
-      const result = await cli("story", "lock", "ROW-01", "--agent", "claude", "--json");
-      expect(JSON.parse(result.stdout).agentLock).toMatchObject({ agent: "claude", stage: "BACKLOG" });
-    });
-
-    it("requires --agent to lock", async () => {
-      await cli("story", "create", "--title", "First");
-      const result = await cli("story", "lock", "ROW-01");
+      const result = await cli("story", name, "ROW-01");
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("required option '--agent <name>' not specified");
+      expect(result.stderr).toContain(`unknown command '${name}'`);
     });
 
-    it("refuses a second agent and names the holder", async () => {
+    it("gives only the Story keys in story get --json", async () => {
       await cli("story", "create", "--title", "First");
-      await cli("story", "lock", "ROW-01", "--agent", "claude");
-      const result = await cli("story", "lock", "ROW-01", "--agent", "codex");
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("ROW-01 is locked by claude");
-      expect(result.stderr).toContain("rowbly story unlock ROW-01");
-    });
-
-    it("fails to unlock a story with no lock", async () => {
-      await cli("story", "create", "--title", "First");
-      const result = await cli("story", "unlock", "ROW-01");
-      expect(result).toEqual({ stdout: "", stderr: "Error: ROW-01 has no agent lock", exitCode: 1 });
+      const story = JSON.parse((await cli("story", "get", "ROW-01", "--json")).stdout);
+      expect(Object.keys(story).sort()).toEqual([
+        "attachmentCount",
+        "description",
+        "fields",
+        "id",
+        "number",
+        "path",
+        "position",
+        "stage",
+        "title",
+      ]);
     });
   });
 });
