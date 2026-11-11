@@ -1,6 +1,6 @@
 ---
 title: Replace story agent locks with factory state activity
-stage: IN_REVIEW
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-09-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/188
@@ -86,3 +86,9 @@ A later terminal attempt never exposes an earlier attempt as active (the second-
 - Use a theme token for the warning text, the same token that a warning Toast uses. Do not write a hex value. Follow `.agents/skills/rowbly-tui-design/SKILL.md`.
 - The JSON output change and the removed commands are breaking. Use `feat!` or a `BREAKING CHANGE:` footer.
 - The Stories of this repository have no `agentLock` key now, so this repository needs no migration.
+
+## Review findings
+
+1. **P1 — Keep excess argument checks on resource actions.** `src/commands/registerCommands/registerCommands.ts:33` calls `allowExcessArguments()` on each resource. Commander copies this setting to each action. Thus, `story delete ROW-09 ROW-10` calls the delete handler for ROW-09 and silently ignores ROW-10. Other resource actions also accept extra arguments. Restore strict argument checks for actions. Keep the unknown-command error at the resource level. Add tests that extra arguments stop read and write actions before a service call.
+
+Review validation: `pnpm lint`, `pnpm typecheck`, `pnpm test` (935 tests), `pnpm build` and `pnpm test:factory` (70 tests) passed locally. The Test CI job failed at `src/tui/screens/settings/ProjectSection/ProjectSection.test.tsx:29`. This file has no PR change. Repeat CI before merge. The state classification review found no blocking defect.
