@@ -19,12 +19,17 @@ export interface PendingImage {
 }
 const ID = /^a[0-9a-f-]{36}$/;
 function validatePng(bytes: Uint8Array): void {
-  if (bytes.length > MAX_ATTACHMENT_BYTES) throw new ValidationError("Attachment exceeds 10 MiB");
-  if (![137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => bytes[i] === v))
+  if (bytes.length > MAX_ATTACHMENT_BYTES) {
+    throw new ValidationError("Attachment exceeds 10 MiB");
+  }
+  if (![137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => bytes[i] === v)) {
     throw new ValidationError("Attachment must be a PNG image");
+  }
 }
 export function validateAttachmentId(id: string): void {
-  if (!ID.test(id)) throw new ValidationError("Invalid attachment ID");
+  if (!ID.test(id)) {
+    throw new ValidationError("Invalid attachment ID");
+  }
 }
 function parseAttachments(text: string): Attachment[] {
   let value: unknown;
@@ -33,7 +38,9 @@ function parseAttachments(text: string): Attachment[] {
   } catch {
     throw new ValidationError("Malformed attachment metadata");
   }
-  if (!Array.isArray(value)) throw new ValidationError("Attachment metadata must be a list");
+  if (!Array.isArray(value)) {
+    throw new ValidationError("Attachment metadata must be a list");
+  }
   const ids = new Set<string>();
   for (const a of value) {
     if (
@@ -56,26 +63,33 @@ function parseAttachments(text: string): Attachment[] {
       typeof a.createdAt !== "string" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(a.createdAt) ||
       !Number.isFinite(Date.parse(a.createdAt))
-    )
+    ) {
       throw new ValidationError("Malformed attachment metadata", {
         hint: "Run `rowbly doctor` to check attachment files.",
       });
+    }
     ids.add(a.id);
   }
   return value as Attachment[];
 }
 /** Refuse symlinks at every attachment path, including missing final paths. */
 export async function attachmentDir(paths: ProjectPaths, storyId: string): Promise<string> {
-  if (!/^[A-Z][A-Z0-9]*-\d+$/.test(storyId)) throw new ValidationError("Invalid attachment Story ID");
+  if (!/^[A-Z][A-Z0-9]*-\d+$/.test(storyId)) {
+    throw new ValidationError("Invalid attachment Story ID");
+  }
   const root = join(paths.dir, "attachments");
   await Promise.all([root, join(root, storyId)].map(noSymlink));
   return join(root, storyId);
 }
 export async function noSymlink(path: string): Promise<void> {
   try {
-    if ((await lstat(path)).isSymbolicLink()) throw new ValidationError(`Attachment path is a symlink: ${path}`);
+    if ((await lstat(path)).isSymbolicLink()) {
+      throw new ValidationError(`Attachment path is a symlink: ${path}`);
+    }
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw err;
+    }
   }
 }
 export async function readAttachments(dir: string): Promise<Attachment[]> {
@@ -84,7 +98,9 @@ export async function readAttachments(dir: string): Promise<Attachment[]> {
   try {
     return parseAttachments(await readFile(path, "utf8"));
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
     throw err;
   }
 }
@@ -112,12 +128,14 @@ export function prepareImages(images: readonly PendingImage[], totalLimit = fals
     const copy = new Uint8Array(bytes);
     validatePng(copy);
     const clean = basename(name.replaceAll("\\", "/"));
-    if (!clean || clean === "." || clean === ".." || [...clean].some((c) => c.charCodeAt(0) < 32))
+    if (!clean || clean === "." || clean === ".." || [...clean].some((c) => c.charCodeAt(0) < 32)) {
       throw new ValidationError("Invalid attachment name");
+    }
     return { name: clean, bytes: copy };
   });
-  if (totalLimit && result.reduce((n, image) => n + image.bytes.length, 0) > MAX_ATTACHMENT_BYTES)
+  if (totalLimit && result.reduce((n, image) => n + image.bytes.length, 0) > MAX_ATTACHMENT_BYTES) {
     throw new ValidationError("Pending images exceed 10 MiB in total");
+  }
   return result;
 }
 /** Publish the manifest last. Roll back bytes and metadata if the Story save fails. */
@@ -127,7 +145,9 @@ export async function withAttachments<T>(
   now: Date,
   save: () => Promise<T>,
 ): Promise<T> {
-  if (!images.length) return save();
+  if (!images.length) {
+    return save();
+  }
   const previous = await readAttachments(dir);
   const hadManifest = await pathExists(join(dir, "manifest.json"));
   const records = images.map(
@@ -158,10 +178,15 @@ export async function withAttachments<T>(
     return await save();
   } catch (err) {
     if (published) {
-      if (hadManifest) await writeAttachments(dir, previous);
-      else await rm(join(dir, "manifest.json"), { force: true });
+      if (hadManifest) {
+        await writeAttachments(dir, previous);
+      } else {
+        await rm(join(dir, "manifest.json"), { force: true });
+      }
     }
-    for (const path of written) await rm(path, { force: true });
+    for (const path of written) {
+      await rm(path, { force: true });
+    }
     throw err;
   }
 }
@@ -171,14 +196,19 @@ export async function moveAttachmentDirs(paths: ProjectPaths, moves: { from: str
     for (const move of moves) {
       const from = await attachmentDir(paths, move.from);
       const to = await attachmentDir(paths, move.to);
-      if (!(await pathExists(from))) continue;
-      if (await pathExists(to)) throw new ValidationError(`Attachment directory already exists: ${move.to}`);
+      if (!(await pathExists(from))) {
+        continue;
+      }
+      if (await pathExists(to)) {
+        throw new ValidationError(`Attachment directory already exists: ${move.to}`);
+      }
       await rename(from, to);
       completed.push(move);
     }
   } catch (err) {
-    for (const move of completed.reverse())
+    for (const move of completed.reverse()) {
       await rename(await attachmentDir(paths, move.to), await attachmentDir(paths, move.from));
+    }
     throw err;
   }
 }
@@ -188,7 +218,9 @@ export async function attachmentOwners(paths: ProjectPaths): Promise<string[]> {
   try {
     return await readdir(root);
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
     throw err;
   }
 }

@@ -24,15 +24,18 @@ interface InitOptions {
 
 async function readStdin(): Promise<string> {
   let text = "";
-  for await (const chunk of process.stdin) text += chunk;
+  for await (const chunk of process.stdin) {
+    text += chunk;
+  }
   return text;
 }
 
 /** Reads `--input`: `-` is stdin, text that starts with `{` is the JSON itself, and all else is a file path. */
 async function readInput(source: string): Promise<OnboardingInput> {
   let text = source;
-  if (source === "-") text = await readStdin();
-  else if (!source.trimStart().startsWith("{")) {
+  if (source === "-") {
+    text = await readStdin();
+  } else if (!source.trimStart().startsWith("{")) {
     text = await readFile(source, "utf8").catch(() => {
       throw new ValidationError(`Rowbly cannot read the file ${source}`);
     });
@@ -40,7 +43,9 @@ async function readInput(source: string): Promise<OnboardingInput> {
   try {
     return parseOnboardingInput(JSON.parse(text));
   } catch (error) {
-    if (error instanceof SyntaxError) throw new ValidationError(`The setup input is not valid JSON: ${error.message}`);
+    if (error instanceof SyntaxError) {
+      throw new ValidationError(`The setup input is not valid JSON: ${error.message}`);
+    }
     throw error;
   }
 }

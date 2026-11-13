@@ -36,7 +36,9 @@ export function Modal(props: ModalProps) {
   const wrap = useContext(LayerWrapContext);
   const id = useId();
   useLayoutEffect(() => {
-    if (!host) return;
+    if (!host) {
+      return;
+    }
     host.show(
       id,
       wrap(

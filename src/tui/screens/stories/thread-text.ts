@@ -41,7 +41,9 @@ function threadStage(thread: ThreadRecord, stages: StageNames = {}): string {
 
 /** The name of a thread for people: `#2 In Review` for a worker, `Supervisor` for the supervisor. */
 export function threadName(thread: ThreadRecord, stages: StageNames = {}): string {
-  if (thread.role === "supervisor") return "Supervisor";
+  if (thread.role === "supervisor") {
+    return "Supervisor";
+  }
   return `${thread.attemptNumber ? `#${thread.attemptNumber} ` : ""}${threadStage(thread, stages)}`;
 }
 
@@ -53,25 +55,37 @@ export function threadModel(thread: ThreadRecord): string {
 /** A duration in the largest two units: `45s`, `4m 12s`, `2h 5m`, `3d 4h`. */
 export function formatDuration(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
-  if (s < 60) return `${s}s`;
+  if (s < 60) {
+    return `${s}s`;
+  }
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ${s % 60}s`;
+  if (m < 60) {
+    return `${m}m ${s % 60}s`;
+  }
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ${m % 60}m`;
+  if (h < 24) {
+    return `${h}h ${m % 60}m`;
+  }
   return `${Math.floor(h / 24)}d ${h % 24}h`;
 }
 
 /** The run time of the thread: from its start to its end, or to `now` while it runs. Empty before a start. */
 export function threadDuration(thread: ThreadRecord, now: number): string {
-  if (!thread.startedAt) return "";
+  if (!thread.startedAt) {
+    return "";
+  }
   const end = thread.completedAt ? Date.parse(thread.completedAt) : threadActive(thread) ? now : undefined;
   return end === undefined ? "" : formatDuration(end - Date.parse(thread.startedAt));
 }
 
 /** One line about the result: the error, the summary of the worker, or the reason of the last run. */
 export function threadOutcome(thread: ThreadRecord): { text: string; error: boolean } | undefined {
-  if (thread.error) return { text: thread.error.message, error: true };
-  if (thread.result) return { text: `${thread.result.outcome}: ${thread.result.summary}`, error: false };
+  if (thread.error) {
+    return { text: thread.error.message, error: true };
+  }
+  if (thread.result) {
+    return { text: `${thread.result.outcome}: ${thread.result.summary}`, error: false };
+  }
   const reason = thread.runs.at(-1)?.reason;
   return reason ? { text: reason, error: false } : undefined;
 }

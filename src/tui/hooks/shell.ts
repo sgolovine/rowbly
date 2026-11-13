@@ -33,31 +33,54 @@ export function createShellRegistry(): ShellRegistry {
   const hints = new Map<number, Map<string, { hints: readonly KeyHint[]; lead: boolean }>>();
   return {
     capture(keys) {
-      if (keys.text) text += 1;
-      if (keys.escape) escapes += 1;
+      if (keys.text) {
+        text += 1;
+      }
+      if (keys.escape) {
+        escapes += 1;
+      }
       let released = false;
       return () => {
-        if (released) return;
+        if (released) {
+          return;
+        }
         released = true;
-        if (keys.text) text -= 1;
-        if (keys.escape) escapes -= 1;
+        if (keys.text) {
+          text -= 1;
+        }
+        if (keys.escape) {
+          escapes -= 1;
+        }
       };
     },
     captured: () => ({ text: text > 0, escape: escapes > 0 }),
     setDirty(depth, id, isDirty) {
-      if (isDirty) dirty.set(id, depth);
-      else dirty.delete(id);
+      if (isDirty) {
+        dirty.set(id, depth);
+      } else {
+        dirty.delete(id);
+      }
     },
     isDirty(depth) {
-      for (const at of dirty.values()) if (depth === undefined || at === depth) return true;
+      for (const at of dirty.values()) {
+        if (depth === undefined || at === depth) {
+          return true;
+        }
+      }
       return false;
     },
     setHints(depth, id, next, lead = false) {
       const parts = hints.get(depth) ?? new Map();
-      if (next) parts.set(id, { hints: next, lead });
-      else parts.delete(id);
-      if (parts.size > 0) hints.set(depth, parts);
-      else hints.delete(depth);
+      if (next) {
+        parts.set(id, { hints: next, lead });
+      } else {
+        parts.delete(id);
+      }
+      if (parts.size > 0) {
+        hints.set(depth, parts);
+      } else {
+        hints.delete(depth);
+      }
     },
     hints(depth) {
       const parts = [...(hints.get(depth)?.values() ?? [])];
@@ -134,7 +157,9 @@ export function useKeyHints(hints: readonly KeyHint[]): void {
   const key = JSON.stringify(hints);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands in for `hints`, which callers usually rebuild each render.
   useEffect(() => {
-    if (depth < 0) return;
+    if (depth < 0) {
+      return;
+    }
     shell.setHints(depth, id, hints);
     return () => shell.setHints(depth, id, null);
   }, [shell, depth, id, key]);

@@ -19,7 +19,9 @@ export async function prepareWorkerWorktree(root: string, story: Story) {
       cwd: root,
     });
     branch = stdout.trim();
-    if (!branch || branch.startsWith("-")) throw new ConflictError("Invalid pull request branch");
+    if (!branch || branch.startsWith("-")) {
+      throw new ConflictError("Invalid pull request branch");
+    }
     await git(root, "fetch", "origin", branch);
   } else if (story.stage === "IN_REVIEW") {
     throw new ConflictError("Review requires a pull_request field");
@@ -31,18 +33,22 @@ export async function prepareWorkerWorktree(root: string, story: Story) {
   const exists = await stat(path).then(
     () => true,
     (e: NodeJS.ErrnoException) => {
-      if (e.code === "ENOENT") return false;
+      if (e.code === "ENOENT") {
+        return false;
+      }
       throw e;
     },
   );
   if (exists) {
     const other = await realpath(resolve(path, await git(path, "rev-parse", "--git-common-dir")));
-    if (common !== other || (await realpath(path)) === (await realpath(root)))
+    if (common !== other || (await realpath(path)) === (await realpath(root))) {
       throw new ConflictError("Story worktree belongs to another repository or is the main checkout");
+    }
     let current = await git(path, "branch", "--show-current");
     if (story.stage !== "IN_REFINEMENT" && current !== branch) {
-      if (current)
+      if (current) {
         throw new ConflictError("Story worktree branch differs from the required branch; preserve and inspect it");
+      }
       const known = await git(root, "show-ref", "--verify", `refs/heads/${branch}`).then(
         () => true,
         () => false,

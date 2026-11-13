@@ -43,7 +43,9 @@ export function OnboardingSummary({
   useStepHints(onHints, HINTS);
 
   const create = async () => {
-    if (busy || !plan.data) return;
+    if (busy || !plan.data) {
+      return;
+    }
     setBusy(true);
     try {
       const project = await applyOnboarding(input, ctx);
@@ -57,13 +59,18 @@ export function OnboardingSummary({
 
   useInput(
     (_input, key) => {
-      if (key.return) void create();
-      else if (key.escape && !busy) onBack();
+      if (key.return) {
+        void create();
+      } else if (key.escape && !busy) {
+        onBack();
+      }
     },
     { isActive: active },
   );
 
-  if (!plan.data) return plan.loading ? <Loading label="Preparing the summary…" /> : null;
+  if (!plan.data) {
+    return plan.loading ? <Loading label="Preparing the summary…" /> : null;
+  }
   return (
     <Box flexDirection="column" flexGrow={1}>
       <ScrollBody height={layout.height === undefined ? undefined : Math.max(3, layout.height - BUTTON_ROWS)}>

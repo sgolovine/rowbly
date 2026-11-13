@@ -43,8 +43,12 @@ process.exit(0);
 `;
 
 function png(bytes: Buffer): ClipboardImageResult {
-  if (bytes.length > MAX_BYTES) return { reason: "too-large" };
-  if (!bytes.subarray(0, 8).equals(PNG_SIGNATURE)) return { reason: "unsupported" };
+  if (bytes.length > MAX_BYTES) {
+    return { reason: "too-large" };
+  }
+  if (!bytes.subarray(0, 8).equals(PNG_SIGNATURE)) {
+    return { reason: "unsupported" };
+  }
   return { bytes, type: "image/png" };
 }
 
@@ -61,7 +65,9 @@ function readNative(deadline: number): Promise<ClipboardImageResult> {
     let length = 0;
     let finished = false;
     const finish = (result: ClipboardImageResult) => {
-      if (finished) return;
+      if (finished) {
+        return;
+      }
       finished = true;
       clearTimeout(timer);
       pipe.destroy();
@@ -71,26 +77,39 @@ function readNative(deadline: number): Promise<ClipboardImageResult> {
     const timer = setTimeout(() => finish({ reason: "timeout" }), Math.max(1, deadline - Date.now()));
     pipe.on("data", (chunk: Buffer) => {
       length += chunk.length;
-      if (length > MAX_BASE64 + 1024) finish({ reason: "too-large" });
-      else chunks.push(chunk);
+      if (length > MAX_BASE64 + 1024) {
+        finish({ reason: "too-large" });
+      } else {
+        chunks.push(chunk);
+      }
     });
     pipe.on("error", () => finish({ reason: "unsupported" }));
     child.on("error", () => finish({ reason: "unsupported" }));
     child.on("close", (code) => {
-      if (finished) return;
-      if (code !== 0) return finish({ reason: "unsupported" });
+      if (finished) {
+        return;
+      }
+      if (code !== 0) {
+        return finish({ reason: "unsupported" });
+      }
       try {
         const value: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-        if (!value || typeof value !== "object") return finish({ reason: "unsupported" });
-        if ("loadFailed" in value && value.loadFailed === true) nativeLoadFailed = true;
+        if (!value || typeof value !== "object") {
+          return finish({ reason: "unsupported" });
+        }
+        if ("loadFailed" in value && value.loadFailed === true) {
+          nativeLoadFailed = true;
+        }
         if ("reason" in value) {
           const reason = value.reason;
-          if (reason === "unsupported" || reason === "no-display" || reason === "no-image" || reason === "too-large")
+          if (reason === "unsupported" || reason === "no-display" || reason === "no-image" || reason === "too-large") {
             return finish({ reason });
+          }
         }
         if ("base64" in value && typeof value.base64 === "string") {
-          if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value.base64) || value.base64.length % 4 === 1)
+          if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value.base64) || value.base64.length % 4 === 1) {
             return finish({ reason: "unsupported" });
+          }
           return finish(png(Buffer.from(value.base64, "base64")));
         }
       } catch {
@@ -103,17 +122,24 @@ function readNative(deadline: number): Promise<ClipboardImageResult> {
 
 function wlPaste(args: string[], deadline: number): Promise<Buffer | Failure> {
   const left = deadline - Date.now();
-  if (left <= 0) return Promise.resolve({ reason: "timeout" });
+  if (left <= 0) {
+    return Promise.resolve({ reason: "timeout" });
+  }
   return new Promise((resolve) => {
     execFile(
       "wl-paste",
       args,
       { encoding: "buffer", timeout: left, killSignal: "SIGKILL", maxBuffer: MAX_BYTES },
       (error, stdout) => {
-        if (!error) resolve(stdout);
-        else if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") resolve({ reason: "too-large" });
-        else if (error.killed || Date.now() >= deadline) resolve({ reason: "timeout" });
-        else resolve({ reason: error.code === "ENOENT" ? "unsupported" : "no-display" });
+        if (!error) {
+          resolve(stdout);
+        } else if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+          resolve({ reason: "too-large" });
+        } else if (error.killed || Date.now() >= deadline) {
+          resolve({ reason: "timeout" });
+        } else {
+          resolve({ reason: error.code === "ENOENT" ? "unsupported" : "no-display" });
+        }
       },
     );
   });
@@ -123,11 +149,16 @@ function wlPaste(args: string[], deadline: number): Promise<Buffer | Failure> {
 export async function readClipboardImage(): Promise<ClipboardImageResult> {
   const deadline = Date.now() + 3000;
   const native = nativeLoadFailed ? ({ reason: "unsupported" } as const) : await readNative(deadline);
-  if (!("reason" in native) || !["unsupported", "no-display"].includes(native.reason) || !process.env.WAYLAND_DISPLAY)
+  if (!("reason" in native) || !["unsupported", "no-display"].includes(native.reason) || !process.env.WAYLAND_DISPLAY) {
     return native;
+  }
   const types = await wlPaste(["--list-types"], deadline);
-  if (!Buffer.isBuffer(types)) return types;
-  if (!types.toString("utf8").split(/\r?\n/).includes("image/png")) return { reason: "no-image" };
+  if (!Buffer.isBuffer(types)) {
+    return types;
+  }
+  if (!types.toString("utf8").split(/\r?\n/).includes("image/png")) {
+    return { reason: "no-image" };
+  }
   const bytes = await wlPaste(["--type", "image/png"], deadline);
   return Buffer.isBuffer(bytes) ? png(bytes) : bytes;
 }

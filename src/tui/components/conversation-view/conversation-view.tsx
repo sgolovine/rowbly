@@ -86,7 +86,9 @@ export function ConversationView({
   latest.current = { view, follow, offset };
   const [render, setRender] = useState(markdownRenderer);
   useEffect(() => {
-    if (render) return;
+    if (render) {
+      return;
+    }
     let current = true;
     void loadMarkdownRenderer().then((loaded) => current && setRender(() => loaded));
     return () => {
@@ -114,7 +116,11 @@ export function ConversationView({
   );
   useEffect(() => {
     const keep = new Set(blocks.map((block) => `${block.entry.id}:${width}:${render ? 1 : 0}`));
-    for (const key of cache.current.keys()) if (!keep.has(key)) cache.current.delete(key);
+    for (const key of cache.current.keys()) {
+      if (!keep.has(key)) {
+        cache.current.delete(key);
+      }
+    }
   }, [blocks, width, render]);
   const total = blocks.reduce((n, block) => n + block.lines.length, 0);
   const rowsOf = (entries: readonly Entry[]) => entries.reduce((n, entry) => n + linesOf(entry).length, 0);
@@ -128,10 +134,14 @@ export function ConversationView({
     open(threadId, ctx)
       .then(async (c) => {
         opening = c;
-        if (!alive) return c.close();
+        if (!alive) {
+          return c.close();
+        }
         conversation.current = c;
         const page = await c.read({ limit: PAGE_ENTRIES });
-        if (!alive) return;
+        if (!alive) {
+          return;
+        }
         setView({
           entries: page.entries,
           older: page.nextBefore !== null,
@@ -142,8 +152,9 @@ export function ConversationView({
         setOpened((n) => n + 1);
       })
       .catch((error: unknown) => {
-        if (alive)
+        if (alive) {
           setView({ ...LOADING, status: "error", error: error instanceof Error ? error.message : String(error) });
+        }
       });
     return () => {
       alive = false;
@@ -156,7 +167,9 @@ export function ConversationView({
   /** Reads the newest page again and shows the end. */
   const toEnd = useCallback(async () => {
     const c = conversation.current;
-    if (!c) return;
+    if (!c) {
+      return;
+    }
     const page = await c.read({ limit: PAGE_ENTRIES });
     setView({
       entries: page.entries,
@@ -172,13 +185,18 @@ export function ConversationView({
   const read = useCallback(
     async (task: (c: Conversation) => Promise<void>) => {
       const c = conversation.current;
-      if (!c || reading.current) return;
+      if (!c || reading.current) {
+        return;
+      }
       reading.current = true;
       try {
         await task(c);
       } catch (error) {
-        if (error instanceof Error && error.message.includes("no longer available")) await toEnd().catch(() => {});
-        else toast.error(error);
+        if (error instanceof Error && error.message.includes("no longer available")) {
+          await toEnd().catch(() => {});
+        } else {
+          toast.error(error);
+        }
       } finally {
         reading.current = false;
       }
@@ -190,7 +208,9 @@ export function ConversationView({
     read(async (c) => {
       const { view: now } = latest.current;
       const first = now.entries[0];
-      if (!first || !now.older) return;
+      if (!first || !now.older) {
+        return;
+      }
       const page = await c.read({ before: first.id, limit: PAGE_ENTRIES });
       const entries = [...page.entries, ...now.entries];
       const kept = entries.slice(0, MAX_ENTRIES);
@@ -209,7 +229,9 @@ export function ConversationView({
     read(async (c) => {
       const { view: now } = latest.current;
       const last = now.entries.at(-1);
-      if (!last || !now.newer) return;
+      if (!last || !now.newer) {
+        return;
+      }
       const page = await c.read({ after: last.id, limit: PAGE_ENTRIES });
       const entries = [...now.entries, ...page.entries];
       const dropped = entries.slice(0, Math.max(0, entries.length - MAX_ENTRIES));
@@ -229,18 +251,26 @@ export function ConversationView({
   // biome-ignore lint/correctness/useExhaustiveDependencies: `opened` restarts the watch for each opened conversation.
   useEffect(() => {
     const c = conversation.current;
-    if (!live || !c) return;
+    if (!live || !c) {
+      return;
+    }
     return c.watch(
       (page) =>
         setView((now) => {
-          if (now.status === "loading" || now.status === "error") return now;
+          if (now.status === "loading" || now.status === "error") {
+            return now;
+          }
           const last = now.entries.at(-1)?.id;
           const at = last === undefined ? -1 : page.entries.findIndex((entry) => entry.id === last);
           const added = at >= 0 ? page.entries.slice(at + 1) : page.entries;
-          if (added.length === 0 && page.status === now.status) return now;
+          if (added.length === 0 && page.status === now.status) {
+            return now;
+          }
           // While the user reads the history, the new entries wait below, and the view does not move.
-          if (!latest.current.follow || now.newer) return { ...now, newer: true, fresh: true };
-          if (at < 0)
+          if (!latest.current.follow || now.newer) {
+            return { ...now, newer: true, fresh: true };
+          }
+          if (at < 0) {
             return {
               entries: page.entries,
               older: page.nextBefore !== null,
@@ -248,6 +278,7 @@ export function ConversationView({
               fresh: false,
               status: page.status,
             };
+          }
           const entries = [...now.entries, ...added];
           return {
             ...now,
@@ -260,7 +291,9 @@ export function ConversationView({
     );
   }, [live, opened]);
   useEffect(() => {
-    if (!live) setFollow(false);
+    if (!live) {
+      setFollow(false);
+    }
   }, [live]);
 
   const rows = height === undefined ? total : Math.max(1, height - 1);
@@ -269,34 +302,52 @@ export function ConversationView({
   // The top of the window is in view: read the page before it.
   // biome-ignore lint/correctness/useExhaustiveDependencies: a read starts only when the view reaches the top.
   useEffect(() => {
-    if (height !== undefined && start === 0 && view.older && view.status === "ok") void loadOlder();
+    if (height !== undefined && start === 0 && view.older && view.status === "ok") {
+      void loadOlder();
+    }
   }, [start, view.older, view.status, height]);
 
   const scroll = (delta: number) => {
-    if (delta < 0) setFollow(false);
+    if (delta < 0) {
+      setFollow(false);
+    }
     const next = start + delta;
-    if (next > max && view.newer) void loadNewer();
+    if (next > max && view.newer) {
+      void loadNewer();
+    }
     setOffset(Math.max(0, Math.min(max, next)));
   };
   const end = () => {
     setFollow(live);
-    if (view.newer) void read(toEnd);
-    else setOffset("end");
+    if (view.newer) {
+      void read(toEnd);
+    } else {
+      setOffset("end");
+    }
   };
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (key.pageUp || key.pageDown) scroll((key.pageUp ? -1 : 1) * rows);
-      else if (key.home) {
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (key.pageUp || key.pageDown) {
+        scroll((key.pageUp ? -1 : 1) * rows);
+      } else if (key.home) {
         setFollow(false);
         setOffset(0);
-      } else if (key.end) end();
-      else if (input === "f" && live) {
-        if (follow) setFollow(false);
-        else end();
+      } else if (key.end) {
+        end();
+      } else if (input === "f" && live) {
+        if (follow) {
+          setFollow(false);
+        } else {
+          end();
+        }
       } else {
         const delta = moveDelta(input, key);
-        if (delta) scroll(delta);
+        if (delta) {
+          scroll(delta);
+        }
       }
     },
     { isActive: keys },
@@ -304,16 +355,22 @@ export function ConversationView({
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onWheel: (direction) => scroll(direction * WHEEL_LINES) }, keys);
 
-  if (view.status === "loading") return <Text color={theme.inkFaint}>Loading the conversation…</Text>;
-  if (view.status === "error")
+  if (view.status === "loading") {
+    return <Text color={theme.inkFaint}>Loading the conversation…</Text>;
+  }
+  if (view.status === "error") {
     return (
       <Text color={theme.danger} wrap="wrap">
         Rowbly cannot read the conversation: {view.error}
       </Text>
     );
-  if (view.status === "missing")
+  }
+  if (view.status === "missing") {
     return <Text color={theme.inkFaint}>No conversation yet. The worker has not sent its first message.</Text>;
-  if (view.status === "unsupported") return <Text color={theme.inkFaint}>Rowbly cannot show this session format.</Text>;
+  }
+  if (view.status === "unsupported") {
+    return <Text color={theme.inkFaint}>Rowbly cannot show this session format.</Text>;
+  }
 
   // The entries in view, each cut to its rows in view.
   const shown: { id: string; lines: ConversationLine[] }[] = [];
@@ -321,7 +378,9 @@ export function ConversationView({
   for (const block of blocks) {
     const from = Math.max(start - row, 0);
     const to = Math.min(start + rows - row, block.lines.length);
-    if (from < to) shown.push({ id: block.entry.id, lines: block.lines.slice(from, to) });
+    if (from < to) {
+      shown.push({ id: block.entry.id, lines: block.lines.slice(from, to) });
+    }
     row += block.lines.length;
   }
   const atEnd = start >= max && !view.newer;

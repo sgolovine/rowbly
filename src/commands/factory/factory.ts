@@ -21,7 +21,9 @@ export function registerFactoryCommands(program: Command) {
         command,
         async (ctx) => {
           const status = await getFactoryStatus(ctx);
-          if (status.phase === "unavailable") throw new ConflictError(status.error ?? "Factory status is unavailable");
+          if (status.phase === "unavailable") {
+            throw new ConflictError(status.error ?? "Factory status is unavailable");
+          }
           return status;
         },
         (status) => JSON.stringify(status, null, 2),

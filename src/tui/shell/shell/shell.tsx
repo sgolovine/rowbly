@@ -108,7 +108,9 @@ export function Shell({
   const reload = () => setVersion((v) => v + 1);
   const data = useAsync(async () => {
     // No project is a state of the screen, not a failure. A project in a parent directory does not open.
-    if (!(await hasProject(ctx))) return null;
+    if (!(await hasProject(ctx))) {
+      return null;
+    }
     const [project, stages, stories] = await Promise.all([getProject(ctx), listStages(ctx), searchStories({}, ctx)]);
     // A problem with the factory state file is a status, not a failure, so the Stories still load.
     const activity = await getFactoryActivity({ stories }, ctx);
@@ -160,13 +162,18 @@ export function Shell({
   const fold = (key: string, folded: boolean) =>
     setCollapsed((current) => {
       const next = new Set(current);
-      if (folded) next.add(key);
-      else next.delete(key);
+      if (folded) {
+        next.add(key);
+      } else {
+        next.delete(key);
+      }
       return next;
     });
   /** Shows the Story `story` in the list: it leaves a Stage filter that hides it and expands its section. */
   const reveal = (story: Story) => {
-    if (stageKey !== null && story.stage !== stageKey) setStageKey(null);
+    if (stageKey !== null && story.stage !== stageKey) {
+      setStageKey(null);
+    }
     fold(story.stage, false);
     setSelectedId(story.id);
   };
@@ -174,8 +181,11 @@ export function Shell({
   const activateRow = (index: number) => {
     const at = rows[index];
     setSelectedId(at?.id ?? null);
-    if (at?.kind === "stage") fold(at.key, !at.collapsed);
-    else if (at?.kind === "story") setOverlay({ kind: "editStory", story: at.story });
+    if (at?.kind === "stage") {
+      fold(at.key, !at.collapsed);
+    } else if (at?.kind === "story") {
+      setOverlay({ kind: "editStory", story: at.story });
+    }
   };
   // `n` creates the Story in the Stage of the selected row when the list shows every Stage.
   const cursorStage = stages.find((s) => s.key === (stage?.key ?? rowStage(row)))?.key;
@@ -188,23 +198,31 @@ export function Shell({
   const listFocused = idle && !sidebarFocused;
 
   const toggleSidebar = () => {
-    if (sidebarShown) setPane("stories");
+    if (sidebarShown) {
+      setPane("stories");
+    }
     setSidebarShown(!sidebarShown);
   };
   const editStage = () => {
-    if (stage) setOverlay({ kind: "editStage", stage });
+    if (stage) {
+      setOverlay({ kind: "editStage", stage });
+    }
   };
   const toast = useToast();
   const close = () => setOverlay(null);
   // biome-ignore lint/correctness/useExhaustiveDependencies: record only when another Project opens or the name changes.
   useEffect(() => {
-    if (projectRoot === undefined || projectName === undefined) return;
+    if (projectRoot === undefined || projectName === undefined) {
+      return;
+    }
     recordProject({ path: projectRoot, name: projectName }, ctx).catch((err: unknown) => toast.error(err));
   }, [projectRoot, projectName]);
   /** Opens the Project at `path`, with no filter or selection from the Project that was open. */
   const switchProject = (path: string) => {
     close();
-    if (path === projectRoot) return;
+    if (path === projectRoot) {
+      return;
+    }
     setCtx({ ...ctx, cwd: path });
     setStageKey(null);
     setSelectedId(null);
@@ -215,17 +233,23 @@ export function Shell({
   const moveStage = (key: string, position: number) => {
     const from = stages.findIndex((s) => s.key === key) + 1;
     const to = Math.max(1, Math.min(stages.length, position));
-    if (from === 0 || from === to) return;
+    if (from === 0 || from === to) {
+      return;
+    }
     updateStage({ key, position: to }, ctx).then(reload, (err: unknown) => toast.error(err));
   };
 
   /** Puts the Story `story` at the 1-based `position` in the Stage `key`. The selection stays on the Story. */
   const placeStory = (story: Story, key: string, position: number) => {
-    if (key === story.stage && position === story.position) return;
+    if (key === story.stage && position === story.position) {
+      return;
+    }
     updateStory({ id: story.id, stage: key, position }, ctx).then(
       (moved) => {
         // A Stage filter follows the Story to its new Stage.
-        if (stageKey !== null) setStageKey(moved.stage);
+        if (stageKey !== null) {
+          setStageKey(moved.stage);
+        }
         fold(moved.stage, false);
         setSelectedId(moved.id);
         reload();
@@ -239,15 +263,20 @@ export function Shell({
    */
   const moveStoryStage = (story: Story, delta: -1 | 1) => {
     const to = stages[stages.findIndex((s) => s.key === story.stage) + delta];
-    if (!to) return;
+    if (!to) {
+      return;
+    }
     placeStory(story, to.key, delta > 0 ? 1 : stories.filter((s) => s.stage === to.key).length + 1);
   };
   /** Moves the Story `story` one place up or down in its Stage, and past the end into the next Stage. */
   const shiftStory = (story: Story, delta: -1 | 1) => {
     const count = stories.filter((s) => s.stage === story.stage).length;
     const position = story.position + delta;
-    if (position >= 1 && position <= count) placeStory(story, story.stage, position);
-    else moveStoryStage(story, delta);
+    if (position >= 1 && position <= count) {
+      placeStory(story, story.stage, position);
+    } else {
+      moveStoryStage(story, delta);
+    }
   };
   /**
    * The Story `id` was dropped in the gap before the row at `gap`. It goes below the Story above the gap, or
@@ -260,10 +289,14 @@ export function Shell({
       .filter((r) => r.id !== id)
       .at(-1);
     setPane("stories");
-    if (!story) return;
-    if (!above) placeStory(story, stage?.key ?? story.stage, 1);
-    else if (above.kind === "stage") placeStory(story, above.key, 1);
-    else {
+    if (!story) {
+      return;
+    }
+    if (!above) {
+      placeStory(story, stage?.key ?? story.stage, 1);
+    } else if (above.kind === "stage") {
+      placeStory(story, above.key, 1);
+    } else {
       const peers = stories.filter((s) => s.stage === above.story.stage && s.id !== id);
       placeStory(story, above.story.stage, peers.indexOf(above.story) + 2);
     }
@@ -293,39 +326,78 @@ export function Shell({
   useInput(
     (input, key) => {
       // The onboarding steps have no overlay around their text fields.
-      if (noProject && registry.captured().text) return;
-      if (key.ctrl && input === "b") return toggleSidebar();
-      if (key.ctrl && input === "p" && board) return setOverlay({ kind: "finder" });
+      if (noProject && registry.captured().text) {
+        return;
+      }
+      if (key.ctrl && input === "b") {
+        return toggleSidebar();
+      }
+      if (key.ctrl && input === "p" && board) {
+        return setOverlay({ kind: "finder" });
+      }
       const group = groupDelta(key);
-      if (group && board && listFocused && row?.kind === "story") return moveStoryStage(row.story, group);
-      if (key.ctrl || key.meta) return;
-      if (input === "q") return exit();
-      if (input === "?") return setOverlay({ kind: "help" });
-      if (input === "p") return setOverlay({ kind: "projects" });
-      if (!board) return;
-      if (input === ",") return setOverlay({ kind: "settings" });
-      if (input === "f") return setOverlay({ kind: "factory" });
-      if (key.tab && sidebar) return setPane(sidebarFocused ? "stories" : "stages");
-      if (key.escape && sidebarFocused) return setPane("stories");
+      if (group && board && listFocused && row?.kind === "story") {
+        return moveStoryStage(row.story, group);
+      }
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (input === "q") {
+        return exit();
+      }
+      if (input === "?") {
+        return setOverlay({ kind: "help" });
+      }
+      if (input === "p") {
+        return setOverlay({ kind: "projects" });
+      }
+      if (!board) {
+        return;
+      }
+      if (input === ",") {
+        return setOverlay({ kind: "settings" });
+      }
+      if (input === "f") {
+        return setOverlay({ kind: "factory" });
+      }
+      if (key.tab && sidebar) {
+        return setPane(sidebarFocused ? "stories" : "stages");
+      }
+      if (key.escape && sidebarFocused) {
+        return setPane("stories");
+      }
       if (input === "[" || input === "]") {
         return selectStage((stageIndex + (input === "[" ? -1 : 1) + stages.length + 1) % (stages.length + 1));
       }
       const delta = moveDelta(input, key);
       const shift = reorderDelta(input, key);
       if (sidebarFocused) {
-        if (shift && stage) moveStage(stage.key, stageIndex + shift);
-        else if (delta) selectStage(Math.max(0, Math.min(stages.length, stageIndex + delta)));
-        else if (input === "n") setOverlay({ kind: "newStage" });
-        else if (input === "e") editStage();
+        if (shift && stage) {
+          moveStage(stage.key, stageIndex + shift);
+        } else if (delta) {
+          selectStage(Math.max(0, Math.min(stages.length, stageIndex + delta)));
+        } else if (input === "n") {
+          setOverlay({ kind: "newStage" });
+        } else if (input === "e") {
+          editStage();
+        }
       } else if (shift) {
-        if (row?.kind === "story") shiftStory(row.story, shift);
-      } else if (delta) selectStory(Math.max(0, Math.min(rows.length - 1, cursor + delta)));
-      else if (input === "n") setOverlay({ kind: "newStory" });
-      else if (row?.kind === "stage" && (key.return || input === " ")) fold(row.key, !row.collapsed);
-      else if (row?.kind === "story" && key.return) setOverlay({ kind: "editStory", story: row.story });
-      else if (row?.kind === "story" && input === "d") setOverlay({ kind: "deleteStory", story: row.story });
-      else if (row?.kind === "stage" && (key.leftArrow || key.rightArrow)) fold(row.key, key.leftArrow);
-      else if (row?.kind === "story" && key.leftArrow && !stage) {
+        if (row?.kind === "story") {
+          shiftStory(row.story, shift);
+        }
+      } else if (delta) {
+        selectStory(Math.max(0, Math.min(rows.length - 1, cursor + delta)));
+      } else if (input === "n") {
+        setOverlay({ kind: "newStory" });
+      } else if (row?.kind === "stage" && (key.return || input === " ")) {
+        fold(row.key, !row.collapsed);
+      } else if (row?.kind === "story" && key.return) {
+        setOverlay({ kind: "editStory", story: row.story });
+      } else if (row?.kind === "story" && input === "d") {
+        setOverlay({ kind: "deleteStory", story: row.story });
+      } else if (row?.kind === "stage" && (key.leftArrow || key.rightArrow)) {
+        fold(row.key, key.leftArrow);
+      } else if (row?.kind === "story" && key.leftArrow && !stage) {
         // `←` on a Story collapses its section and selects the heading.
         fold(row.story.stage, true);
         setSelectedId(stageRowId(row.story.stage));
@@ -431,7 +503,9 @@ export function Shell({
               onSelect={(id) => setStageKey(id === ALL_STAGES ? null : id)}
               onEdit={(id) => {
                 const edited = stages.find((s) => s.key === id);
-                if (edited) setOverlay({ kind: "editStage", stage: edited });
+                if (edited) {
+                  setOverlay({ kind: "editStage", stage: edited });
+                }
               }}
               // Row 0 is All Stages, so the index of a row is the position of its Stage; a drop on All Stages moves to 1.
               onMove={(id, index) => moveStage(id, index)}

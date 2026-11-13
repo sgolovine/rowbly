@@ -99,7 +99,11 @@ export class MouseStdin extends PassThrough {
   private readonly feed = (chunk: unknown) => {
     const { events, rest, pending } = extractMouse(this.pending + String(chunk));
     this.pending = pending;
-    for (const event of events) this.mouse.emit("mouse", event);
-    if (rest) this.write(rest);
+    for (const event of events) {
+      this.mouse.emit("mouse", event);
+    }
+    if (rest) {
+      this.write(rest);
+    }
   };
 }

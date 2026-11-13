@@ -16,8 +16,9 @@ export async function projectWriteLockPath(root: string): Promise<string> {
 
 /** Holds the kernel lock through a pipe. Parent exit releases the lock through EOF. */
 export async function projectWrite<T>(root: string, action: () => Promise<T>, waitSeconds = 60): Promise<T> {
-  if (process.platform !== "linux")
+  if (process.platform !== "linux") {
     throw new ValidationError("Native factory writes require Linux and util-linux flock");
+  }
   const path = await projectWriteLockPath(root);
   const helper =
     'process.stdout.write("locked\\n"); process.stdin.resume(); process.stdin.on("end", () => process.exit(0));';
@@ -52,11 +53,12 @@ export async function projectWrite<T>(root: string, action: () => Promise<T>, wa
   });
   try {
     await Promise.race([ready, ended]);
-    if (!acquired)
+    if (!acquired) {
       throw new ConflictError("Project write lock is unavailable", {
         cause: failure,
         hint: errorText || `Check flock and the lock at ${path}`,
       });
+    }
     return await action();
   } finally {
     child.stdin.end();

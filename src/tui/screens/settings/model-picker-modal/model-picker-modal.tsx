@@ -48,7 +48,9 @@ export function ModelPickerModal({
     ]),
   ]);
   const save = (choice: ModelChoice | null) => {
-    if (saving.current) return;
+    if (saving.current) {
+      return;
+    }
     saving.current = true;
     onSave(choice).then(
       () => {
@@ -62,9 +64,13 @@ export function ModelPickerModal({
   };
   const pick = (id: string) => {
     const found = models.find((m) => `${m.provider}/${m.modelId}` === id);
-    if (!found) return save(null);
+    if (!found) {
+      return save(null);
+    }
     // A model with one level or none has no choice to make.
-    if (found.thinkingLevels.length <= 1) return save({ provider: found.provider, modelId: found.modelId });
+    if (found.thinkingLevels.length <= 1) {
+      return save({ provider: found.provider, modelId: found.modelId });
+    }
     setModel(found);
   };
   useKeyCapture(active && model !== undefined, { text: false, escape: true });

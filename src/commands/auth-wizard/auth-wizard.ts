@@ -20,7 +20,9 @@ export function createCliAuthInteraction(controller = new AbortController()): Au
           : prompt.type === "secret"
             ? await password(opts)
             : await text({ ...opts, placeholder: prompt.placeholder });
-      if (signal.aborted) throw signal.reason;
+      if (signal.aborted) {
+        throw signal.reason;
+      }
       if (isCancel(value)) {
         controller.abort();
         throw new ValidationError("Login cancelled");
@@ -28,12 +30,15 @@ export function createCliAuthInteraction(controller = new AbortController()): Au
       return value;
     },
     notify(event) {
-      if (event.type === "auth_url") log.info(`${event.url}\n${event.instructions ?? ""}`);
-      else if (event.type === "device_code") log.info(`${event.verificationUri}\nCode: ${event.userCode}`);
-      else
+      if (event.type === "auth_url") {
+        log.info(`${event.url}\n${event.instructions ?? ""}`);
+      } else if (event.type === "device_code") {
+        log.info(`${event.verificationUri}\nCode: ${event.userCode}`);
+      } else {
         log.info(
           `${event.message}${event.type === "info" ? (event.links ?? []).map((l) => `\n${l.url}`).join("") : ""}`,
         );
+      }
     },
   };
 }

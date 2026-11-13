@@ -42,7 +42,9 @@ async function readRc(file: string): Promise<Record<string, unknown>> {
   try {
     text = await readFile(file, "utf8");
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return {};
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return {};
+    }
     throw error;
   }
   let rc: unknown;
@@ -51,13 +53,17 @@ async function readRc(file: string): Promise<Record<string, unknown>> {
   } catch (error) {
     throw invalid(file, error);
   }
-  if (typeof rc !== "object" || rc === null || Array.isArray(rc)) throw invalid(file);
+  if (typeof rc !== "object" || rc === null || Array.isArray(rc)) {
+    throw invalid(file);
+  }
   return rc as Record<string, unknown>;
 }
 
 function rcEntries(rc: Record<string, unknown>, file: string): RcEntry[] {
   const { projects = [] } = rc;
-  if (!Array.isArray(projects) || !projects.every(isRcEntry)) throw invalid(file);
+  if (!Array.isArray(projects) || !projects.every(isRcEntry)) {
+    throw invalid(file);
+  }
   return projects;
 }
 
@@ -83,7 +89,9 @@ export async function recordProject(input: RecordProjectInput, ctx: ServiceConte
   const file = rcPath(ctx);
   const rc = await readRc(file);
   const entries = rcEntries(rc, file);
-  if (entries[0]?.path === input.path && entries[0].name === input.name) return;
+  if (entries[0]?.path === input.path && entries[0].name === input.name) {
+    return;
+  }
   const known = entries.find((entry) => entry.path === input.path);
   await writeRc(file, rc, [{ ...known, ...input }, ...entries.filter((entry) => entry !== known)]);
 }
@@ -94,7 +102,9 @@ export async function forgetProject(path: string, ctx: ServiceContext = {}): Pro
   const rc = await readRc(file);
   const entries = rcEntries(rc, file);
   const projects = entries.filter((entry) => entry.path !== path);
-  if (projects.length === entries.length) return;
+  if (projects.length === entries.length) {
+    return;
+  }
   await writeRc(file, rc, projects);
 }
 
@@ -109,7 +119,9 @@ export async function getDeviceId(ctx: ServiceContext = {}): Promise<string> {
   const file = rcPath(ctx);
   const rc = await readRc(file);
   if (rc.deviceId !== undefined) {
-    if (typeof rc.deviceId !== "string" || !rc.deviceId.trim()) throw invalid(file);
+    if (typeof rc.deviceId !== "string" || !rc.deviceId.trim()) {
+      throw invalid(file);
+    }
     return rc.deviceId;
   }
   const deviceId = randomUUID();

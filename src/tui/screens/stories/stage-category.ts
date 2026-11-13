@@ -7,6 +7,8 @@ import type { StageCategory } from "../../components/index.js";
  */
 export function stageCategory(stages: readonly Stage[], key: string): StageCategory {
   const at = stages.findIndex((stage) => stage.key === key);
-  if (at <= 0 || stages.length < 2) return "backlog";
+  if (at <= 0 || stages.length < 2) {
+    return "backlog";
+  }
   return at === stages.length - 1 ? "done" : "board";
 }

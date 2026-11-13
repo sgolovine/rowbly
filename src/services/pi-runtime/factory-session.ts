@@ -31,7 +31,9 @@ export async function openFactorySession(
       ? sdk.SessionManager.open(join(o.runtimeDir, o.thread.session.file), dir, o.worker?.cwd ?? o.thread.cwd)
       : sdk.SessionManager.create(o.worker?.cwd ?? o.thread.cwd, dir, { id: o.thread.id });
   const model = o.choice ? o.runtime.getModel(o.choice.provider, o.choice.modelId) : undefined;
-  if (o.choice && !model) throw new ValidationError(`Model unavailable: ${o.choice.provider}/${o.choice.modelId}`);
+  if (o.choice && !model) {
+    throw new ValidationError(`Model unavailable: ${o.choice.provider}/${o.choice.modelId}`);
+  }
   const tools = [...o.tools];
   if (o.worker) {
     const w = o.worker;

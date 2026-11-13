@@ -43,7 +43,9 @@ function plainRows(text: string, width: number): string[] {
   return text.split("\n").flatMap((line) => {
     const chars = Array.from(line);
     const rows: string[] = [];
-    for (let i = 0; i < chars.length; i += w) rows.push(chars.slice(i, i + w).join(""));
+    for (let i = 0; i < chars.length; i += w) {
+      rows.push(chars.slice(i, i + w).join(""));
+    }
     return rows.length ? rows : [""];
   });
 }
@@ -60,10 +62,14 @@ function wordRows(text: string, width: number): string[] {
         row = next;
         continue;
       }
-      if (row) rows.push(row);
+      if (row) {
+        rows.push(row);
+      }
       // A word longer than the row breaks at the width.
       const chars = Array.from(word);
-      while (chars.length > w) rows.push(chars.splice(0, w).join(""));
+      while (chars.length > w) {
+        rows.push(chars.splice(0, w).join(""));
+      }
       row = chars.join("");
     }
     rows.push(row);
@@ -75,7 +81,9 @@ function wordRows(text: string, width: number): string[] {
 function capped(rows: string[], max: number, tone: ConversationTone): ConversationLine[] {
   const shown = rows.length > max ? rows.slice(0, max - 1) : rows;
   const lines = shown.map((text) => ({ text, tone }));
-  if (rows.length > max) lines.push({ text: `… ${rows.length - shown.length} more lines`, tone: "quiet" });
+  if (rows.length > max) {
+    lines.push({ text: `… ${rows.length - shown.length} more lines`, tone: "quiet" });
+  }
   return lines;
 }
 
@@ -87,8 +95,9 @@ function messageRows(text: string, width: number, render: MarkdownRenderer): Con
   const lines: ConversationLine[] = [];
   let prose: string[] = [];
   const flush = () => {
-    if (prose.join("").trim())
+    if (prose.join("").trim()) {
       lines.push(...render(prose.join("\n"), width).map((row) => ({ text: row, tone: "body" as const })));
+    }
     prose = [];
   };
   for (const line of text.split("\n")) {
@@ -108,7 +117,9 @@ function messageRows(text: string, width: number, render: MarkdownRenderer): Con
     } else if (line.startsWith("[error] ")) {
       flush();
       lines.push(...wordRows(line.slice(8), width).map((row) => ({ text: row, tone: "error" as const })));
-    } else prose.push(line);
+    } else {
+      prose.push(line);
+    }
   }
   flush();
   return lines;
@@ -117,8 +128,9 @@ function messageRows(text: string, width: number, render: MarkdownRenderer): Con
 /** The label and the body rows of an entry, before the indent and the limit. */
 function parts(entry: ConversationEntry, width: number, render: MarkdownRenderer) {
   const text = safeText(entry.text);
-  if (entry.oversized)
+  if (entry.oversized) {
     return { label: "Large entry", body: plainRows(text, width).map((row) => ({ text: row, tone: "quiet" as const })) };
+  }
   if (entry.type === "message") {
     const [first = "", ...rest] = text.split("\n");
     if (entry.role === "toolResult") {
@@ -145,7 +157,9 @@ function parts(entry: ConversationEntry, width: number, render: MarkdownRenderer
     const summary = text.replace(/^\[(compaction|branch_summary)\] ?/, "");
     return { label, body: wordRows(summary, width).map((row) => ({ text: row, tone: "quiet" as const })) };
   }
-  if (entry.type === "custom_message") return { label: "Factory message", body: messageRows(text, width, render) };
+  if (entry.type === "custom_message") {
+    return { label: "Factory message", body: messageRows(text, width, render) };
+  }
   return { label: entry.type.replaceAll("_", " "), body: [] as ConversationLine[] };
 }
 

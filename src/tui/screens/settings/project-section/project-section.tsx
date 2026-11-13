@@ -20,12 +20,16 @@ export function ProjectSection({ ctx, onChange }: SettingsSectionProps) {
   useKeyHints(idle ? [{ key: "e", description: "edit name" }] : []);
   useInput(
     (input) => {
-      if (input === "e") setEditing(true);
+      if (input === "e") {
+        setEditing(true);
+      }
     },
     { isActive: idle },
   );
 
-  if (!project.data) return project.loading ? <Loading label="Loading the project…" /> : null;
+  if (!project.data) {
+    return project.loading ? <Loading label="Loading the project…" /> : null;
+  }
   return (
     <Box flexDirection="column" gap={1}>
       <DetailView

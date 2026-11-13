@@ -44,7 +44,9 @@ export function ProjectSwitcher({
 
   const known = projects.data ?? [];
   const tagOf = (project: KnownProject) => {
-    if (project.path === current) return <Text color={theme.accent}> · current</Text>;
+    if (project.path === current) {
+      return <Text color={theme.accent}> · current</Text>;
+    }
     return project.missing ? <Text color={theme.danger}> · missing</Text> : undefined;
   };
   const items = known.map((project) => {
@@ -61,13 +63,18 @@ export function ProjectSwitcher({
   });
   const pick = (path: string) => {
     const project = known.find((p) => p.path === path);
-    if (project?.missing && path !== current) toast.push("warning", `${project.name} is no longer at ${path}`);
-    else onSelect(path);
+    if (project?.missing && path !== current) {
+      toast.push("warning", `${project.name} is no longer at ${path}`);
+    } else {
+      onSelect(path);
+    }
   };
   const highlightedProject = known.find((p) => p.path === highlighted);
   useInput(
     (input, key) => {
-      if (input === "d" && !key.ctrl && !key.meta && highlightedProject) setRemoving(highlightedProject);
+      if (input === "d" && !key.ctrl && !key.meta && highlightedProject) {
+        setRemoving(highlightedProject);
+      }
     },
     { isActive: idle && !filtering },
   );

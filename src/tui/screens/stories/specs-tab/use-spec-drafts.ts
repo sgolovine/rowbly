@@ -38,7 +38,9 @@ export function useSpecDrafts(ctx: ServiceContext): SpecDrafts {
 
   const flush = useCallback(() => {
     for (const [slug, { text, written }] of Object.entries(latest.current)) {
-      if (text === written) continue;
+      if (text === written) {
+        continue;
+      }
       writes.current = writes.current
         .then(() => updateSpec({ slug, body: text }, ctx))
         .then(

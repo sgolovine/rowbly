@@ -59,9 +59,13 @@ export async function findProject(ctx: ServiceContext = {}): Promise<ProjectPath
   let dir = resolve(ctx.cwd ?? process.cwd());
   for (;;) {
     const paths = projectPaths(dir);
-    if (await pathExists(paths.configFile)) return paths;
+    if (await pathExists(paths.configFile)) {
+      return paths;
+    }
     const parent = dirname(dir);
-    if (parent === dir) break;
+    if (parent === dir) {
+      break;
+    }
     dir = parent;
   }
   throw new NotFoundError("No Rowbly project found in this directory or any parent", {

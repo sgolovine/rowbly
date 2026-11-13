@@ -35,7 +35,9 @@ export function useStoryPaste(owner: string, storyId?: string, enabled = true) {
   }, [owner]);
   useDirty(pending.length > 0);
   const paste = async () => {
-    if (!allowed || reading) return;
+    if (!allowed || reading) {
+      return;
+    }
     const session = generation.current;
     const current = () => generation.current === session && latest.current.allowed && latest.current.owner === owner;
     reading = true;
@@ -43,14 +45,22 @@ export function useStoryPaste(owner: string, storyId?: string, enabled = true) {
     const progress = toast.pending("Reading clipboard image…");
     try {
       const result = await readClipboardImage();
-      if (!current()) return;
-      if ("reason" in result) throw clipboardFailure(result.reason, storyId);
+      if (!current()) {
+        return;
+      }
+      if ("reason" in result) {
+        throw clipboardFailure(result.reason, storyId);
+      }
       const size = images.current.reduce((n, image) => n + image.bytes.length, 0) + result.bytes.length;
-      if (size > MAX_ATTACHMENT_BYTES) throw new ValidationError("Pending images exceed 10 MiB in total");
+      if (size > MAX_ATTACHMENT_BYTES) {
+        throw new ValidationError("Pending images exceed 10 MiB in total");
+      }
       setPending([...images.current, { name: clipboardName(new Date()), bytes: result.bytes }]);
       toast.push("info", "Image added to draft; save the Story to keep it");
     } catch (err) {
-      if (current()) toast.error(err);
+      if (current()) {
+        toast.error(err);
+      }
     } finally {
       reading = false;
       setBusy(false);
@@ -59,13 +69,17 @@ export function useStoryPaste(owner: string, storyId?: string, enabled = true) {
   };
   useInput(
     (input, key) => {
-      if (input === "v" && (key.ctrl || key.meta)) void paste();
+      if (input === "v" && (key.ctrl || key.meta)) {
+        void paste();
+      }
     },
     { isActive: allowed },
   );
   usePaste(
     (text) => {
-      if (text === "") void paste();
+      if (text === "") {
+        void paste();
+      }
     },
     { isActive: allowed },
   );

@@ -67,7 +67,9 @@ const DEFAULT_STAGES: InitialStage[] = [
 ];
 
 function checkName(name: string, issues: Issue[]): string {
-  if (name.trim() === "") issues.push({ path: ["name"], message: "Name is required" });
+  if (name.trim() === "") {
+    issues.push({ path: ["name"], message: "Name is required" });
+  }
   return name.trim();
 }
 
@@ -146,7 +148,9 @@ export async function updateProject(input: UpdateProjectInput, ctx: ServiceConte
           to: formatStoryId(projectKey, f.number),
         })),
     );
-    for (const move of moves) await rename(move.from, move.to);
+    for (const move of moves) {
+      await rename(move.from, move.to);
+    }
     const old = config.projectKey;
     await rewriteSpecLinks(paths, (stories) =>
       stories.map((id) => {

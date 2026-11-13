@@ -39,8 +39,11 @@ export function StoryModal({
   const [hints, setHints] = useState<readonly KeyHint[]>([]);
   const [confirming, setConfirming] = useState<StoryModalConfirm>(null);
   const close = () => {
-    if (shell.isDirty()) setConfirming("discard");
-    else onClose();
+    if (shell.isDirty()) {
+      setConfirming("discard");
+    } else {
+      onClose();
+    }
   };
   return (
     <Modal title={title} size="screen" flush hints={hints} onClose={confirming === null ? close : undefined}>

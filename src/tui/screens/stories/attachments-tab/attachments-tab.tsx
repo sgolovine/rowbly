@@ -48,15 +48,22 @@ export function AttachmentsTab({
     return () => onTask(false);
   }, [task, onTask]);
   const open = () => {
-    if (item) void openAttachment({ story: storyId, id: item.id }, ctx).catch(toast.error);
+    if (item) {
+      void openAttachment({ story: storyId, id: item.id }, ctx).catch(toast.error);
+    }
   };
   useInput(
     (input, key) => {
       const delta = moveDelta(input, key);
-      if (delta) setCursor((n) => Math.max(0, Math.min(items.length - 1, n + delta)));
-      else if (input === "n") setTask("path");
-      else if (input === "o") open();
-      else if (input === "d" && item) setTask("remove");
+      if (delta) {
+        setCursor((n) => Math.max(0, Math.min(items.length - 1, n + delta)));
+      } else if (input === "n") {
+        setTask("path");
+      } else if (input === "o") {
+        open();
+      } else if (input === "d" && item) {
+        setTask("remove");
+      }
     },
     { isActive: idle },
   );

@@ -90,7 +90,9 @@ function toStory(config: ProjectConfig, file: StoryFile, position = 1): Story {
   for (const field of config.customFields) {
     const value = data[field.key] ?? null;
     const error = fieldValueError(field, value);
-    if (error) issues.push({ path: [field.key], message: error });
+    if (error) {
+      issues.push({ path: [field.key], message: error });
+    }
     fields[field.key] = value as FieldValue;
   }
   throwIfIssues(
@@ -124,7 +126,9 @@ function parseStoryId(config: ProjectConfig, id: string): number {
 async function findStoryFile(paths: ProjectPaths, config: ProjectConfig, id: string): Promise<StoryFile> {
   const number = parseStoryId(config, id);
   const file = (await readStoryFiles(paths)).find((f) => f.projectKey === config.projectKey && f.number === number);
-  if (!file) throw new NotFoundError(`Story ${formatStoryId(config.projectKey, number)} not found`);
+  if (!file) {
+    throw new NotFoundError(`Story ${formatStoryId(config.projectKey, number)} not found`);
+  }
   return file;
 }
 
@@ -137,13 +141,18 @@ function applyFields(config: ProjectConfig, data: Record<string, unknown>, field
       continue;
     }
     const result = coerceFieldValue(field, value);
-    if (result.ok) data[key] = result.value;
-    else issues.push({ path: [key], message: result.error });
+    if (result.ok) {
+      data[key] = result.value;
+    } else {
+      issues.push({ path: [key], message: result.error });
+    }
   }
 }
 
 function checkTitle(title: string, issues: Issue[]): string {
-  if (title.trim() === "") issues.push({ path: ["title"], message: "Title is required" });
+  if (title.trim() === "") {
+    issues.push({ path: ["title"], message: "Title is required" });
+  }
   return title.trim();
 }
 
@@ -157,7 +166,9 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
       ? (config.stages.find((s) => s.enabled) ?? config.stages[0])
       : findStage(config, input.stage, ["stage"], issues);
   const data: Record<string, unknown> = { title: checkTitle(input.title, issues), stage: stage?.key };
-  for (const field of config.customFields) data[field.key] = null;
+  for (const field of config.customFields) {
+    data[field.key] = null;
+  }
   applyFields(config, data, input.fields ?? {}, issues);
   throwIfIssues("The story is invalid", issues);
 
@@ -213,7 +224,9 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
     } catch (err) {
       for (const snapshot of snapshots) {
         const current = await readFile(snapshot.path);
-        if (!current.equals(snapshot.bytes)) await writeFile(snapshot.path, snapshot.bytes);
+        if (!current.equals(snapshot.bytes)) {
+          await writeFile(snapshot.path, snapshot.bytes);
+        }
       }
       throw err;
     }
@@ -226,8 +239,12 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
   const file = await findStoryFile(paths, config, input.id);
   const data = { ...file.doc.data };
   const issues: Issue[] = [];
-  if (input.title !== undefined) data.title = checkTitle(input.title, issues);
-  if (input.stage !== undefined) data.stage = findStage(config, input.stage, ["stage"], issues)?.key;
+  if (input.title !== undefined) {
+    data.title = checkTitle(input.title, issues);
+  }
+  if (input.stage !== undefined) {
+    data.stage = findStage(config, input.stage, ["stage"], issues)?.key;
+  }
   if (input.position !== undefined && (!Number.isInteger(input.position) || input.position < 1)) {
     issues.push({ path: ["position"], message: "Position must be a whole number from 1" });
   }
@@ -248,7 +265,9 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
   const at = Math.max(0, Math.min(peers.length, (input.position ?? peers.length + 1) - 1));
   const order = [...peers.slice(0, at), { ...file, doc }, ...peers.slice(at)];
   for (const [i, f] of order.entries()) {
-    if (f.id !== file.id && f.doc.data.position === i + 1) continue;
+    if (f.id !== file.id && f.doc.data.position === i + 1) {
+      continue;
+    }
     f.doc.data.position = i + 1;
     await writeStoryFile(config, f.path, f.doc);
   }

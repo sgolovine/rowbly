@@ -93,7 +93,9 @@ export async function renderTui(node: ReactElement, options: { toasts?: ToastSto
   const locate = (text: string) => {
     const lines = frame().split("\n");
     const y = lines.findIndex((line) => line.includes(text));
-    if (y < 0) throw new Error(`"${text}" is not on screen:\n${frame()}`);
+    if (y < 0) {
+      throw new Error(`"${text}" is not on screen:\n${frame()}`);
+    }
     return { x: [...(lines[y] ?? "").slice(0, lines[y]?.indexOf(text))].length, y };
   };
   const mouse = async (kind: MouseEvent["kind"], x: number, y: number) => {

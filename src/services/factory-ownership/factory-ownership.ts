@@ -31,7 +31,9 @@ export async function acquireFactoryOwnership(paths: ProjectPaths, owner: Owner,
 
 export async function assertFactoryOwnership(paths: ProjectPaths, token: string): Promise<void> {
   const path = await runtimePath(paths, "factory.lock");
-  if ((await readOwner(path))?.token !== token) throw new ConflictError("Factory owner token changed");
+  if ((await readOwner(path))?.token !== token) {
+    throw new ConflictError("Factory owner token changed");
+  }
 }
 
 export async function releaseFactoryOwnership(paths: ProjectPaths, token: string): Promise<boolean> {

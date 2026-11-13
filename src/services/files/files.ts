@@ -18,8 +18,12 @@ export async function pathOccupied(path: string): Promise<boolean> {
     return true;
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") return false;
-    if (code === "ENOTDIR") return true;
+    if (code === "ENOENT") {
+      return false;
+    }
+    if (code === "ENOTDIR") {
+      return true;
+    }
     throw error;
   }
 }
@@ -30,10 +34,16 @@ export async function canCreateFolder(path: string): Promise<boolean> {
     return (await stat(path)).isDirectory();
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
-    if (code === "ENOTDIR") return false;
-    if (code !== "ENOENT") throw error;
+    if (code === "ENOTDIR") {
+      return false;
+    }
+    if (code !== "ENOENT") {
+      throw error;
+    }
   }
-  if (await pathOccupied(path)) return false;
+  if (await pathOccupied(path)) {
+    return false;
+  }
   return canCreateFolder(dirname(path));
 }
 
@@ -46,7 +56,9 @@ export async function listMarkdownFiles(dir: string): Promise<string[]> {
       .map((entry) => entry.name)
       .sort();
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
     throw error;
   }
 }
@@ -67,7 +79,9 @@ export async function writeFileAtomic(path: string, content: string, options: At
     created = true;
     try {
       await file.writeFile(content, "utf8");
-      if (options.durable) await file.sync();
+      if (options.durable) {
+        await file.sync();
+      }
     } finally {
       await file.close();
     }
@@ -81,6 +95,8 @@ export async function writeFileAtomic(path: string, content: string, options: At
       }
     }
   } finally {
-    if (created) await rm(temp, { force: true });
+    if (created) {
+      await rm(temp, { force: true });
+    }
   }
 }

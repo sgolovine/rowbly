@@ -156,7 +156,9 @@ export function ModalFrame({
       )}
     </Panel>
   );
-  if (!overlay) return <Box alignSelf="flex-start">{frame}</Box>;
+  if (!overlay) {
+    return <Box alignSelf="flex-start">{frame}</Box>;
+  }
   // An absolute box is placed in its direct parent, which may be only as tall as its content (a
   // Board with no Stories), so the height is the known room rather than `100%` of the parent.
   return (

@@ -81,11 +81,15 @@ export function ThreadsTab({
   const [now, setNow] = useState(Date.now);
   const sending = useRef(false);
   useEffect(() => {
-    if (selected) setOpened(true);
+    if (selected) {
+      setOpened(true);
+    }
   }, [selected]);
 
   const data = useAsync(async () => {
-    if (!opened) return undefined;
+    if (!opened) {
+      return undefined;
+    }
     const [list, status] = await Promise.all([
       listThreads({ story: storyId }, ctx),
       getFactoryStatus(ctx).catch(() => undefined),
@@ -112,21 +116,29 @@ export function ThreadsTab({
   }, [current?.id]);
 
   useEffect(() => {
-    if (data.data) onCount(data.data.threads.length);
+    if (data.data) {
+      onCount(data.data.threads.length);
+    }
   }, [data.data, onCount]);
   useEffect(() => onEditing(viewing), [viewing, onEditing]);
   useEffect(() => {
-    if (!current && focus === "thread") setFocus("list");
+    if (!current && focus === "thread") {
+      setFocus("list");
+    }
   }, [current, focus]);
   // The run time of a running thread counts up while the tab is on the screen.
   useEffect(() => {
-    if (!selected || !running) return;
+    if (!selected || !running) {
+      return;
+    }
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [selected, running]);
 
   const command = async (type: "cancel" | "resume", thread: ThreadRecord) => {
-    if (sending.current) return;
+    if (sending.current) {
+      return;
+    }
     sending.current = true;
     const name = `${storyId} ${threadName(thread, stages)}`;
     const progress = toast.pending(type === "cancel" ? `Interrupting ${name}…` : `Resuming ${name}…`);
@@ -142,28 +154,44 @@ export function ThreadsTab({
     }
   };
   const interrupt = () => {
-    if (current && threadActive(current)) setConfirm(current);
+    if (current && threadActive(current)) {
+      setConfirm(current);
+    }
   };
   const resume = () => {
-    if (current && threadResumable(current)) void command("resume", current);
+    if (current && threadResumable(current)) {
+      void command("resume", current);
+    }
   };
 
   useEscape(viewing, () => setFocus("list"));
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (key.tab && !key.shift) setFocus("list");
-      else if (input === "x") interrupt();
-      else if (input === "r") resume();
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (key.tab && !key.shift) {
+        setFocus("list");
+      } else if (input === "x") {
+        interrupt();
+      } else if (input === "r") {
+        resume();
+      }
     },
     { isActive: viewing },
   );
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (current && (key.return || (key.tab && !key.shift))) setFocus("thread");
-      else if (input === "x") interrupt();
-      else if (input === "r") resume();
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (current && (key.return || (key.tab && !key.shift))) {
+        setFocus("thread");
+      } else if (input === "x") {
+        interrupt();
+      } else if (input === "r") {
+        resume();
+      }
     },
     { isActive: listing },
   );
@@ -190,7 +218,9 @@ export function ThreadsTab({
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
   useEffect(() => onHints(hints), [hintsKey, onHints]);
 
-  if (!data.data) return data.loading && opened ? <Loading label="Loading the threads…" /> : null;
+  if (!data.data) {
+    return data.loading && opened ? <Loading label="Loading the threads…" /> : null;
+  }
   const innerHeight = layout.height === undefined ? undefined : layout.height - PANEL_FRAME_HEIGHT;
   const compact = innerHeight !== undefined && innerHeight < FULL_DETAIL_MIN_HEIGHT;
   const showList = split || focus === "list";
@@ -231,8 +261,9 @@ export function ThreadsTab({
                 selected={i === cursor}
                 clickable={listing || viewing}
                 onClick={() => {
-                  if (i === cursor) setFocus("thread");
-                  else {
+                  if (i === cursor) {
+                    setFocus("thread");
+                  } else {
                     setCursor(i);
                     setFocus("list");
                   }

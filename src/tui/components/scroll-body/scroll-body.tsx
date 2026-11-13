@@ -29,7 +29,9 @@ export function ScrollBody({
   const start = Math.min(offset, max);
   const reveal = useCallback(
     (node: DOMElement) => {
-      if (!viewport.current || room === undefined) return;
+      if (!viewport.current || room === undefined) {
+        return;
+      }
       const target = measureElement(node);
       const view = measureElement(viewport.current);
       const delta =
@@ -38,14 +40,17 @@ export function ScrollBody({
           : target.y + target.height > view.y + room
             ? target.y + target.height - view.y - room
             : 0;
-      if (delta) setOffset((current) => Math.max(0, Math.min(max, current + delta)));
+      if (delta) {
+        setOffset((current) => Math.max(0, Math.min(max, current + delta)));
+      }
     },
     [max, room],
   );
   useInput(
     (_input, key) => {
-      if (key.pageDown || key.pageUp)
+      if (key.pageDown || key.pageUp) {
         setOffset(Math.max(0, Math.min(max, start + (key.pageUp ? -1 : 1) * (room ?? 1))));
+      }
     },
     { isActive: active && max > 0 },
   );

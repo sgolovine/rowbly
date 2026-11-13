@@ -25,12 +25,16 @@ export type GuardedProcess = Pick<NodeJS.Process, "on" | "off" | "exit">;
 function createTerminalCleanup(unmount: () => void, io: TerminalIo): () => void {
   let done = false;
   return () => {
-    if (done) return;
+    if (done) {
+      return;
+    }
     done = true;
     try {
       unmount();
     } finally {
-      if (io.stdin.isTTY) io.stdin.setRawMode?.(false);
+      if (io.stdin.isTTY) {
+        io.stdin.setRawMode?.(false);
+      }
       io.stdout.write(RESTORE_SEQUENCE);
     }
   };
@@ -64,9 +68,13 @@ function installCrashGuards(
     unhandledRejection: (reason: unknown) => (reason instanceof RowblyError ? toasts.error(reason) : crash(reason)),
     exit: cleanup,
   };
-  for (const [event, handler] of Object.entries(handlers)) proc.on(event, handler);
+  for (const [event, handler] of Object.entries(handlers)) {
+    proc.on(event, handler);
+  }
   return () => {
-    for (const [event, handler] of Object.entries(handlers)) proc.off(event, handler);
+    for (const [event, handler] of Object.entries(handlers)) {
+      proc.off(event, handler);
+    }
   };
 }
 
@@ -91,7 +99,9 @@ export async function runFullScreen(
     alternateScreen: true,
     kittyKeyboard: { mode: "auto" },
   });
-  if (stdin) io.stdout.write(MOUSE_ON);
+  if (stdin) {
+    io.stdout.write(MOUSE_ON);
+  }
   const cleanup = createTerminalCleanup(() => instance.unmount(), io);
   const uninstall = installCrashGuards(cleanup, proc, io, toasts);
   try {

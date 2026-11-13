@@ -45,7 +45,9 @@ const PHASES: Record<FactoryStatus["phase"], string> = {
 
 /** A list with a title, cut at `LIST_LIMIT` rows. It is empty when there are no rows. */
 function section(title: string, rows: readonly { key: string; node: ReactNode }[]): ReactNode {
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    return null;
+  }
   return (
     <Box flexDirection="column">
       <Text color={theme.inkMuted}>{title}</Text>
@@ -106,8 +108,11 @@ export function FactoryModal({
     let disposed = false;
     void watchThreads(refresh, ctx)
       .then((stop) => {
-        if (disposed) stop();
-        else close = stop;
+        if (disposed) {
+          stop();
+        } else {
+          close = stop;
+        }
       })
       .catch(() => {});
     return () => {
@@ -128,7 +133,9 @@ export function FactoryModal({
   const idle = active && !confirm && !inspecting && !history;
 
   const run = async (kind: "start" | "stop") => {
-    if (working.current) return;
+    if (working.current) {
+      return;
+    }
     working.current = true;
     setBusy(kind);
     const progress = toast.pending(kind === "start" ? "Starting the factory…" : "Stopping the factory…");
@@ -136,7 +143,9 @@ export function FactoryModal({
       if (kind === "start" && launch) {
         setProvider(await checkProvider().catch(() => true));
         await startFactory({ launch }, ctx);
-      } else await stopFactory({}, ctx);
+      } else {
+        await stopFactory({}, ctx);
+      }
       toast.push("info", kind === "start" ? "Started the factory" : "Stopped the factory");
     } catch (error) {
       toast.error(error);
@@ -153,12 +162,20 @@ export function FactoryModal({
   useEscape(active && history && !inspecting && !filtering, () => setHistory(false));
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (input === "s" && canStart) void run("start");
-      else if (input === "x" && canStop) setConfirm(true);
-      else if (key.return && canInspect) setInspect(true);
-      else if (input === "h") setHistory(true);
-      else if (input === "a" && onAiSettings) onAiSettings();
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (input === "s" && canStart) {
+        void run("start");
+      } else if (input === "x" && canStop) {
+        setConfirm(true);
+      } else if (key.return && canInspect) {
+        setInspect(true);
+      } else if (input === "h") {
+        setHistory(true);
+      } else if (input === "a" && onAiSettings) {
+        onAiSettings();
+      }
     },
     { isActive: idle },
   );

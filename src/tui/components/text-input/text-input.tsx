@@ -28,9 +28,13 @@ export function TextInput({ value, onChange, focus = true, width, placeholder, m
 
   usePaste(
     (text) => {
-      if (!text) return;
+      if (!text) {
+        return;
+      }
       const next = editKey(latest.current, text, {} as import("ink").Key, false);
-      if (next) apply(next);
+      if (next) {
+        apply(next);
+      }
     },
     { isActive: focus },
   );
@@ -38,7 +42,9 @@ export function TextInput({ value, onChange, focus = true, width, placeholder, m
   useInput(
     (input, key) => {
       const next = editKey(latest.current, input, key, false);
-      if (next) apply(next);
+      if (next) {
+        apply(next);
+      }
     },
     { isActive: focus },
   );

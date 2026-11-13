@@ -25,15 +25,23 @@ type Task = { kind: "signIn" } | { kind: "signOut" } | { kind: "model"; role: Ro
 
 /** One provider row: its status, from its stored credential or from a key in the environment. */
 function providerStatus(provider: { configured: boolean; credentialType?: string }): string {
-  if (provider.credentialType === "oauth") return "signed in with an account";
-  if (provider.credentialType === "api_key") return "signed in with an API key";
-  if (provider.configured) return "configured outside Rowbly";
+  if (provider.credentialType === "oauth") {
+    return "signed in with an account";
+  }
+  if (provider.credentialType === "api_key") {
+    return "signed in with an API key";
+  }
+  if (provider.configured) {
+    return "configured outside Rowbly";
+  }
   return "not signed in";
 }
 
 /** `provider/model`, with its thinking level, or `Pi default`. */
 function modelText(choice: ModelChoice | undefined): string {
-  if (!choice) return "Pi default";
+  if (!choice) {
+    return "Pi default";
+  }
   return `${choice.provider}/${choice.modelId}${choice.thinkingLevel ? ` · thinking ${choice.thinkingLevel}` : ""}`;
 }
 
@@ -60,7 +68,9 @@ export function AiSection({
   const [filtering, setFiltering] = useState(false);
   const runtime = useAsync(loadRuntime, [loadRuntime]);
   const status = useAsync(async () => {
-    if (!runtime.data) return undefined;
+    if (!runtime.data) {
+      return undefined;
+    }
     const [providers, models] = await Promise.all([getAuthStatus(runtime.data), listAvailableModels(runtime.data)]);
     return { providers, models };
   }, [runtime.data]);
@@ -89,7 +99,9 @@ export function AiSection({
     finish(true);
   };
   const signOut = (id: string) => {
-    if (!runtime.data) return;
+    if (!runtime.data) {
+      return;
+    }
     logoutProvider(runtime.data, id).then(
       () => {
         toast.push("info", `Signed out of ${id}`);
@@ -126,13 +138,19 @@ export function AiSection({
   );
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
+      if (key.ctrl || key.meta) {
+        return;
+      }
       // The provider list takes `enter`: its `onSelect` starts the sign-in.
-      if (input === "d" && canSignOut) setTask({ kind: "signOut" });
-      else if (input === "s" && ready) setTask({ kind: "model", role: "supervisor" });
-      else if (input === "w" && ready) setTask({ kind: "model", role: "worker" });
-      else if (input === "l") setTask({ kind: "limit" });
-      else if (input === "r") {
+      if (input === "d" && canSignOut) {
+        setTask({ kind: "signOut" });
+      } else if (input === "s" && ready) {
+        setTask({ kind: "model", role: "supervisor" });
+      } else if (input === "w" && ready) {
+        setTask({ kind: "model", role: "worker" });
+      } else if (input === "l") {
+        setTask({ kind: "limit" });
+      } else if (input === "r") {
         runtime.reload();
         settings.reload();
       }
@@ -169,7 +187,9 @@ export function AiSection({
               onSelect={(item) => {
                 setSelected(item.value);
                 const chosen = providers.find((p) => p.id === item.value);
-                if (chosen && chosen.methods.length > 0) setTask({ kind: "signIn" });
+                if (chosen && chosen.methods.length > 0) {
+                  setTask({ kind: "signIn" });
+                }
               }}
               onFilteringChange={setFiltering}
             />
@@ -267,10 +287,11 @@ export function AiSection({
           submitOnEnter
           onSubmit={async (values) => {
             const maxWorkers = values.maxWorkers;
-            if (typeof maxWorkers !== "number" || !Number.isSafeInteger(maxWorkers) || maxWorkers < 1)
+            if (typeof maxWorkers !== "number" || !Number.isSafeInteger(maxWorkers) || maxWorkers < 1) {
               throw new ValidationError("Invalid worker limit", {
                 details: { issues: [{ path: ["maxWorkers"], message: "must be a whole number from 1" }] },
               });
+            }
             await updateFactorySettings({ maxWorkers }, ctx);
             toast.push("info", `Saved the worker limit: ${maxWorkers}`);
             finish(true);

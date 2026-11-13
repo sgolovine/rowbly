@@ -40,7 +40,9 @@ export function useFullScreenEditor(): FullScreenEditorControl {
     );
   }, []);
   useEffect(() => {
-    if (!node || !overlay) return;
+    if (!node || !overlay) {
+      return;
+    }
     overlay.open(id, node);
     return () => overlay.close(id);
   }, [node, overlay, id]);

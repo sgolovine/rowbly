@@ -46,10 +46,15 @@ export function StoryFinder({
   useKeyCapture(active, { escape: true });
   useInput(
     (_input, key) => {
-      if (key.escape) onClose();
-      else if (key.downArrow) move(1);
-      else if (key.upArrow) move(-1);
-      else if (key.return && results[selected]) onSelect(results[selected]);
+      if (key.escape) {
+        onClose();
+      } else if (key.downArrow) {
+        move(1);
+      } else if (key.upArrow) {
+        move(-1);
+      } else if (key.return && results[selected]) {
+        onSelect(results[selected]);
+      }
     },
     { isActive: active },
   );

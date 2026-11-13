@@ -65,11 +65,16 @@ export function FullScreenEditor({
   const keys = active && !confirming && save.kind !== "saving";
 
   const close = () => {
-    if (dirty) setConfirming(true);
-    else onClose();
+    if (dirty) {
+      setConfirming(true);
+    } else {
+      onClose();
+    }
   };
   const store = async () => {
-    if (!onSave) return;
+    if (!onSave) {
+      return;
+    }
     const text = latest.current;
     setSave({ kind: "saving" });
     try {
@@ -85,12 +90,18 @@ export function FullScreenEditor({
   useKeyCapture(active, { escape: true });
   useInput(
     (input, key) => {
-      if (key.escape || (key.ctrl && input === "f")) close();
-      else if (key.tab) setMode((m) => (m === "view" ? "edit" : "view"));
-      else if (mode === "view" && input === "e" && !key.ctrl && !key.meta) setMode("edit");
-      else if (key.ctrl && input === "s") {
-        if (onSave) void store();
-        else close();
+      if (key.escape || (key.ctrl && input === "f")) {
+        close();
+      } else if (key.tab) {
+        setMode((m) => (m === "view" ? "edit" : "view"));
+      } else if (mode === "view" && input === "e" && !key.ctrl && !key.meta) {
+        setMode("edit");
+      } else if (key.ctrl && input === "s") {
+        if (onSave) {
+          void store();
+        } else {
+          close();
+        }
       }
     },
     { isActive: keys },
@@ -152,10 +163,17 @@ export function FullScreenEditor({
 
 /** Whether the text is saved, shown after the mode; nothing until there is something to save. */
 function saveStatus(save: SaveState, dirty: boolean): ReactNode {
-  if (save.kind === "saving") return <Text color={theme.inkFaint}>saving…</Text>;
-  if (save.kind === "failed")
+  if (save.kind === "saving") {
+    return <Text color={theme.inkFaint}>saving…</Text>;
+  }
+  if (save.kind === "failed") {
     return <Text color={theme.danger} wrap="truncate-end">{`not saved: ${save.message}`}</Text>;
-  if (dirty) return <Text color={theme.stageBoard}>unsaved</Text>;
-  if (save.kind === "saved") return <Text color={theme.stageDone}>saved</Text>;
+  }
+  if (dirty) {
+    return <Text color={theme.stageBoard}>unsaved</Text>;
+  }
+  if (save.kind === "saved") {
+    return <Text color={theme.stageDone}>saved</Text>;
+  }
   return null;
 }

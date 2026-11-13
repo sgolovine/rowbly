@@ -20,11 +20,15 @@ export function sectionShell(shell: ShellRegistry, onHints: (hints: readonly Key
     ...shell,
     capture(keys) {
       const release = shell.capture(keys);
-      if (!keys.escape) return release;
+      if (!keys.escape) {
+        return release;
+      }
       escapes += 1;
       let released = false;
       return () => {
-        if (released) return;
+        if (released) {
+          return;
+        }
         released = true;
         escapes -= 1;
         release();

@@ -4,7 +4,9 @@ export const promptHash = (text: string) => createHash("sha256").update(text).di
 
 function boundedItem(value: unknown): unknown {
   const text = JSON.stringify(value);
-  if (Buffer.byteLength(text) <= 1024) return value;
+  if (Buffer.byteLength(text) <= 1024) {
+    return value;
+  }
   return { truncated: true, text: Buffer.from(text).subarray(0, 450).toString("utf8") };
 }
 
@@ -22,14 +24,18 @@ export function supervisorDigest(input: Record<string, unknown>) {
       };
       pages.push(page);
       sections[key] = page;
-    } else sections[key] = boundedItem(value);
+    } else {
+      sections[key] = boundedItem(value);
+    }
   }
   let text = JSON.stringify(sections);
   while (Buffer.byteLength(text) > 16 * 1024) {
     const largest = pages
       .filter((page) => page.items.length > 0)
       .sort((a, b) => Buffer.byteLength(JSON.stringify(b.items)) - Buffer.byteLength(JSON.stringify(a.items)))[0];
-    if (!largest) throw new Error("Supervisor digest has too many scalar sections");
+    if (!largest) {
+      throw new Error("Supervisor digest has too many scalar sections");
+    }
     largest.items.pop();
     largest.nextCursor = largest.items.length;
     text = JSON.stringify(sections);

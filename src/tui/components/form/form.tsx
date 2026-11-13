@@ -85,14 +85,20 @@ function isEmpty(raw: Raw): boolean {
 
 /** Converts raw input to a value, or returns an error message. */
 function parse(field: FormField, raw: Raw): { value: FormValue } | { error: string } {
-  if (field.required && isEmpty(raw)) return { error: "required" };
+  if (field.required && isEmpty(raw)) {
+    return { error: "required" };
+  }
   if (field.kind === "number") {
-    if (raw === "") return { value: null };
+    if (raw === "") {
+      return { value: null };
+    }
     const n = Number(raw);
     return Number.isFinite(n) ? { value: n } : { error: "must be a number" };
   }
   if (field.kind === "date") {
-    if (raw === "") return { value: null };
+    if (raw === "") {
+      return { value: null };
+    }
     const ok = typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw) && !Number.isNaN(Date.parse(raw));
     return ok ? { value: raw } : { error: "must be a date (YYYY-MM-DD)" };
   }
@@ -110,10 +116,15 @@ function issuesByField(
   for (const issue of issues as { path?: unknown[]; message?: string }[]) {
     const name = issue.path?.[0];
     const message = issue.message ?? "invalid";
-    if (typeof name === "string" && fields.some((f) => f.name === name)) byField[name] ??= message;
-    else rest.push(message);
+    if (typeof name === "string" && fields.some((f) => f.name === name)) {
+      byField[name] ??= message;
+    } else {
+      rest.push(message);
+    }
   }
-  if (issues.length === 0) rest.push(err.message);
+  if (issues.length === 0) {
+    rest.push(err.message);
+  }
   return { byField, rest };
 }
 
@@ -127,9 +138,15 @@ function useFormKeys(active: boolean, keys: readonly KeyHint[]): void {
   const depth = useContext(ScreenDepthContext);
   const id = useId();
   useEffect(() => {
-    if (!active) return;
-    if (modal) return modal(keys);
-    if (depth < 0) return;
+    if (!active) {
+      return;
+    }
+    if (modal) {
+      return modal(keys);
+    }
+    if (depth < 0) {
+      return;
+    }
     shell.setHints(depth, id, keys, true);
     return () => shell.setHints(depth, id, null);
   }, [active, modal, shell, depth, id, keys]);
@@ -168,8 +185,11 @@ export function Form({
     ? Object.fromEntries(fields.map((f) => [f.name, toRaw(f, controlled[f.name])]))
     : localValues;
   const setValues = (update: (prev: Record<string, Raw>) => Record<string, Raw>) => {
-    if (controlled) onChange?.({ ...controlled, ...update(values) });
-    else setLocalValues(update);
+    if (controlled) {
+      onChange?.({ ...controlled, ...update(values) });
+    } else {
+      setLocalValues(update);
+    }
   };
   const [focus, setFocus] = useState(0);
   const [optionCursor, setOptionCursor] = useState(0);
@@ -229,15 +249,23 @@ export function Form({
   /** Fills the fields that take their text from `source` when focus leaves it, and returns the values. */
   const fill = (source: string | undefined): Record<string, Raw> => {
     const text = source === undefined ? "" : String(values[source] ?? "").trim();
-    if (!text) return values;
+    if (!text) {
+      return values;
+    }
     const fills: Record<string, string> = {};
     for (const f of fields) {
       const from = f.fillFrom;
-      if (!from || from.field !== source) continue;
+      if (!from || from.field !== source) {
+        continue;
+      }
       const current = values[f.name] ?? "";
-      if (current === "" || current === filled[f.name]) fills[f.name] = from.format(text);
+      if (current === "" || current === filled[f.name]) {
+        fills[f.name] = from.format(text);
+      }
     }
-    if (Object.keys(fills).length === 0) return values;
+    if (Object.keys(fills).length === 0) {
+      return values;
+    }
     const next = { ...values, ...fills };
     setValues((prev) => ({ ...prev, ...fills }));
     setFilled((prev) => ({ ...prev, ...fills }));
@@ -251,8 +279,11 @@ export function Form({
     const found: Record<string, string> = {};
     for (const f of fields) {
       const result = parse(f, current[f.name] ?? null);
-      if ("error" in result) found[f.name] = result.error;
-      else parsed[f.name] = result.value;
+      if ("error" in result) {
+        found[f.name] = result.error;
+      } else {
+        parsed[f.name] = result.value;
+      }
     }
     setErrors(found);
     setFormErrors([]);
@@ -268,7 +299,9 @@ export function Form({
         const { byField, rest } = issuesByField(err, fields);
         setErrors(byField);
         setFormErrors(rest);
-      } else toast.error(err);
+      } else {
+        toast.error(err);
+      }
     } finally {
       setBusy(false);
     }
@@ -278,7 +311,9 @@ export function Form({
   const submitCurrent = useRef(submit);
   submitCurrent.current = submit;
   useEffect(() => {
-    if (submitRequest > 0) void submitCurrent.current();
+    if (submitRequest > 0) {
+      void submitCurrent.current();
+    }
   }, [submitRequest]);
 
   const moveFocus = (delta: number) => {
@@ -289,25 +324,38 @@ export function Form({
 
   useInput(
     (input, key) => {
-      if (busy) return;
+      if (busy) {
+        return;
+      }
       if (isSubmitKey(input, key)) {
-        if (!navigation) void submit();
+        if (!navigation) {
+          void submit();
+        }
         return;
       }
       if (key.tab) {
-        if (navigation && key.shift) return;
+        if (navigation && key.shift) {
+          return;
+        }
         moveFocus(key.shift ? -1 : 1);
         return;
       }
       if (!field) {
-        if (key.return) void submit();
-        else if (key.upArrow || input === "k") moveFocus(-1);
+        if (key.return) {
+          void submit();
+        } else if (key.upArrow || input === "k") {
+          moveFocus(-1);
+        }
         return;
       }
       // The TextArea handles its own `enter` and `↑/↓`, and calls back when they leave it.
-      if (field.kind === "multiline") return;
+      if (field.kind === "multiline") {
+        return;
+      }
       // The picker owns Enter and text; only Tab and vertical arrows leave this field.
-      if (searchable && !key.upArrow && !key.downArrow) return;
+      if (searchable && !key.upArrow && !key.downArrow) {
+        return;
+      }
       const raw = values[field.name] ?? null;
       const typed = TYPED_KINDS.includes(field.kind);
       if (key.return && typed && submitOnEnter) {
@@ -317,7 +365,9 @@ export function Form({
       } else if (key.upArrow || (!typed && input === "k")) {
         moveFocus(-1);
       } else if (field.kind === "boolean" || field.kind === "switch") {
-        if (input === " " || ((key.leftArrow || key.rightArrow) && !key.shift)) set(field.name, raw !== true);
+        if (input === " " || ((key.leftArrow || key.rightArrow) && !key.shift)) {
+          set(field.name, raw !== true);
+        }
       } else if (field.kind === "select") {
         const options = field.options ?? [];
         // shift+←/→ is left to the screen (onboarding step navigation).
@@ -330,9 +380,11 @@ export function Form({
         }
       } else if (field.kind === "multiselect") {
         const options = field.options ?? [];
-        if (key.rightArrow || input === "l") setOptionCursor((c) => Math.min(options.length - 1, c + 1));
-        else if (key.leftArrow || input === "h") setOptionCursor((c) => Math.max(0, c - 1));
-        else if (input === " ") {
+        if (key.rightArrow || input === "l") {
+          setOptionCursor((c) => Math.min(options.length - 1, c + 1));
+        } else if (key.leftArrow || input === "h") {
+          setOptionCursor((c) => Math.max(0, c - 1));
+        } else if (input === " ") {
           const option = options[optionCursor];
           const current = Array.isArray(raw) ? raw : [];
           if (option !== undefined) {
@@ -374,7 +426,9 @@ export function Form({
           onChange={(raw) => set(f.name, raw)}
           onLeave={moveFocus}
           onClick={() => {
-            if (i !== focus) moveFocus(i - focus);
+            if (i !== focus) {
+              moveFocus(i - focus);
+            }
           }}
         />
       ))}

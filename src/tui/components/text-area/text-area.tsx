@@ -60,9 +60,13 @@ export function TextArea({
 
   usePaste(
     (text) => {
-      if (!text) return;
+      if (!text) {
+        return;
+      }
       const next = editKey(latest.current, text, {} as import("ink").Key, true);
-      if (next) apply(next);
+      if (next) {
+        apply(next);
+      }
     },
     { isActive: editing },
   );
@@ -77,19 +81,26 @@ export function TextArea({
       if (key.upArrow || key.downArrow) {
         const direction = key.upArrow ? -1 : 1;
         const next = moveRow(state, rowsOf(state.value), direction);
-        if (next) apply(next);
-        else onLeave?.(direction);
+        if (next) {
+          apply(next);
+        } else {
+          onLeave?.(direction);
+        }
         return;
       }
       const next = editKey(state, input, key, true);
-      if (next) apply(next);
+      if (next) {
+        apply(next);
+      }
     },
     { isActive: editing },
   );
 
   const current = rowOf(wrapped, cursor);
   // The caret is followed only while editing, so a long text shows from its first line until then.
-  if (editing) top.current = follow(top.current, current, rows);
+  if (editing) {
+    top.current = follow(top.current, current, rows);
+  }
   const first = Math.min(top.current, Math.max(0, wrapped.length - rows));
   const text = (
     <Box flexDirection="column" height={rows} flexShrink={0} overflow="hidden">
@@ -110,7 +121,9 @@ export function TextArea({
       )}
     </Box>
   );
-  if (!expandable) return text;
+  if (!expandable) {
+    return text;
+  }
   return (
     <Box flexDirection="column" flexShrink={0}>
       {text}

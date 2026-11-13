@@ -25,7 +25,9 @@ export function storyFormFields(stages: readonly Stage[], customFields: readonly
 
 /** The form value of a custom field: `NONE` or `""` when it is unset, otherwise its value as text. */
 export function customFormValue(field: CustomField, value: FieldValue): FormValue {
-  if (value === null) return field.type === "boolean" || field.type === "select" ? NONE : "";
+  if (value === null) {
+    return field.type === "boolean" || field.type === "select" ? NONE : "";
+  }
   return String(value);
 }
 

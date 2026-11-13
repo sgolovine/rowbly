@@ -5,7 +5,7 @@ import { getThread, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
 export function registerThreadCommands(program: Command): void {
-  for (const action of ["cancel", "resume"] as const)
+  for (const action of ["cancel", "resume"] as const) {
     program
       .command(`${action} <id>`)
       .description(`${action} a worker through the running factory`)
@@ -16,6 +16,7 @@ export function registerThreadCommands(program: Command): void {
           (receipt) => JSON.stringify(receipt),
         ),
       );
+  }
   program
     .command("log <id>")
     .description("Print a bounded conversation tail (at most 100 entries)")

@@ -47,15 +47,18 @@ export async function createPiSession(
       noThemes: true,
       noContextFiles: true,
     });
-  if (!options.resourceLoader) await resourceLoader.reload();
+  if (!options.resourceLoader) {
+    await resourceLoader.reload();
+  }
   const { session } = await sdk.createAgentSession({ ...options, settingsManager, resourceLoader });
   let settled = Promise.resolve();
   let resolveSettled: (() => void) | undefined;
   const unsubscribe = session.subscribe((event) => {
-    if (event.type === "agent_start")
+    if (event.type === "agent_start") {
       settled = new Promise<void>((resolve) => {
         resolveSettled = resolve;
       });
+    }
     if (event.type === "agent_settled") {
       resolveSettled?.();
       resolveSettled = undefined;
@@ -66,8 +69,9 @@ export async function createPiSession(
     await session.waitForIdle();
     await settled;
     const last = session.messages.findLast((message) => message.role === "assistant");
-    if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted"))
+    if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
       throw new PiPromptError(last.errorMessage ?? `Assistant ${last.stopReason}`);
+    }
   }
   return {
     session,
@@ -76,7 +80,9 @@ export async function createPiSession(
       await checkSettled();
     },
     async sendDigest(text) {
-      if (!session.isIdle) throw new PiPromptError("Supervisor is busy");
+      if (!session.isIdle) {
+        throw new PiPromptError("Supervisor is busy");
+      }
       await session.sendCustomMessage(
         { customType: "rowbly:factory-digest", content: text, display: false },
         { triggerTurn: true },

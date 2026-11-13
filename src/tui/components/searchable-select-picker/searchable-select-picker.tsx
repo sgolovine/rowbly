@@ -47,11 +47,17 @@ export function SearchableSelectPicker({
   };
   useInput(
     (input, key) => {
-      if (key.escape) onCancel();
-      else if (key.ctrl && input === "l") changeQuery("");
-      else if (key.downArrow) setCursor(Math.max(0, Math.min(results.length - 1, selected + 1)));
-      else if (key.upArrow) setCursor(Math.max(0, selected - 1));
-      else if (key.return && !key.ctrl && results[selected] !== undefined) onSelect(results[selected]);
+      if (key.escape) {
+        onCancel();
+      } else if (key.ctrl && input === "l") {
+        changeQuery("");
+      } else if (key.downArrow) {
+        setCursor(Math.max(0, Math.min(results.length - 1, selected + 1)));
+      } else if (key.upArrow) {
+        setCursor(Math.max(0, selected - 1));
+      } else if (key.return && !key.ctrl && results[selected] !== undefined) {
+        onSelect(results[selected]);
+      }
     },
     { isActive: active },
   );

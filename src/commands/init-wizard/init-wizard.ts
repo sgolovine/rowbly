@@ -18,7 +18,9 @@ import type { ServiceContext } from "../../services/workspace/workspace.js";
 class SetupCancelled extends Error {}
 
 function answer<T>(value: T): Exclude<T, symbol> {
-  if (isCancel(value)) throw new SetupCancelled();
+  if (isCancel(value)) {
+    throw new SetupCancelled();
+  }
   return value as Exclude<T, symbol>;
 }
 
@@ -117,7 +119,9 @@ function rows(items: { label: string; value: string }[]): string {
 
 function showPlan(plan: OnboardingPlan): void {
   note(rows(summarizePlan(plan)), "Summary");
-  for (const warning of plan.warnings) log.warn(warning);
+  for (const warning of plan.warnings) {
+    log.warn(warning);
+  }
   note(rows(plan.edits.map(({ what, where }) => ({ label: what, value: where }))), "Where to edit this later");
 }
 
@@ -142,9 +146,13 @@ export async function askOnboarding(ctx: ServiceContext): Promise<OnboardingInpu
     );
     const input = mode === "defaults" ? {} : await askCustomized(options);
     showPlan(await planOnboarding(input, ctx));
-    if (answer(await confirm({ message: "Create this project?" }))) return input;
+    if (answer(await confirm({ message: "Create this project?" }))) {
+      return input;
+    }
   } catch (error) {
-    if (!(error instanceof SetupCancelled)) throw error;
+    if (!(error instanceof SetupCancelled)) {
+      throw error;
+    }
   }
   cancel("Setup cancelled. Rowbly changed nothing.");
   return null;

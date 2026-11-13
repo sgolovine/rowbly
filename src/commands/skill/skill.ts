@@ -15,8 +15,12 @@ const HARNESS_HELP = `one of ${SKILL_HARNESSES.join(", ")} (repeatable)`;
 function formatInstall({ name, harnesses }: InstallSkillResult): string {
   return harnesses
     .map(({ harness, path, status }) => {
-      if (status === "installed") return `Installed ${name} for ${harness}: ${path}`;
-      if (status === "shared") return `Recorded ${name} for ${harness}, in a folder that it shares: ${path}`;
+      if (status === "installed") {
+        return `Installed ${name} for ${harness}: ${path}`;
+      }
+      if (status === "shared") {
+        return `Recorded ${name} for ${harness}, in a folder that it shares: ${path}`;
+      }
       return `${name} is already installed for ${harness}: ${path}`;
     })
     .join("\n");
@@ -25,15 +29,21 @@ function formatInstall({ name, harnesses }: InstallSkillResult): string {
 function formatRemoval({ name, harnesses }: RemoveSkillResult): string {
   return harnesses
     .map(({ harness, path, status }) => {
-      if (status === "removed") return `Removed ${name} from ${harness}: ${path}`;
-      if (status === "shared") return `Untracked ${name} for ${harness}. Another harness uses the folder: ${path}`;
+      if (status === "removed") {
+        return `Removed ${name} from ${harness}: ${path}`;
+      }
+      if (status === "shared") {
+        return `Untracked ${name} for ${harness}. Another harness uses the folder: ${path}`;
+      }
       return `Untracked ${name} for ${harness}. The folder was already missing: ${path}`;
     })
     .join("\n");
 }
 
 function formatSkills(skills: SkillStatus[]): string {
-  if (skills.length === 0) return "No skills installed.";
+  if (skills.length === 0) {
+    return "No skills installed.";
+  }
   return skills
     .map(({ name, harnesses }) => {
       const states = harnesses.map(({ harness, installed }) => (installed ? harness : `${harness} (missing)`));

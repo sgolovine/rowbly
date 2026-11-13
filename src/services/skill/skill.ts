@@ -85,7 +85,9 @@ async function physicalPath(path: string): Promise<string> {
   try {
     return await realpath(path);
   } catch (error) {
-    if (!isMissing(error)) throw error;
+    if (!isMissing(error)) {
+      throw error;
+    }
     const parent = dirname(path);
     return parent === path ? path : join(await physicalPath(parent), basename(path));
   }
@@ -100,9 +102,13 @@ async function skillEntry(paths: ProjectPaths, harness: SkillHarness, name: stri
 export async function packageDir(): Promise<string> {
   let dir = dirname(fileURLToPath(import.meta.url));
   for (;;) {
-    if (await pathExists(join(dir, "package.json"))) return dir;
+    if (await pathExists(join(dir, "package.json"))) {
+      return dir;
+    }
     const parent = dirname(dir);
-    if (parent === dir) throw new NotFoundError("Rowbly cannot find its package folder");
+    if (parent === dir) {
+      throw new NotFoundError("Rowbly cannot find its package folder");
+    }
     dir = parent;
   }
 }
@@ -114,7 +120,9 @@ export async function bundledSkills(ctx: ServiceContext = {}): Promise<{ dir: st
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return { dir, names: [] };
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { dir, names: [] };
+    }
     throw error;
   }
   const names: string[] = [];
@@ -137,7 +145,9 @@ export async function copySkill(source: string, target: string): Promise<string>
   try {
     firstCreated = await mkdir(parent, { recursive: true });
   } catch (error) {
-    if (!isMissing(error) && (error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    if (!isMissing(error) && (error as NodeJS.ErrnoException).code !== "EEXIST") {
+      throw error;
+    }
     throw new ConflictError(`Rowbly cannot create the folder ${parent}`, {
       hint: "A file or a broken symlink is in its place. Move it, then try again.",
     });
@@ -155,7 +165,9 @@ export async function copySkill(source: string, target: string): Promise<string>
 
 function parseHarnesses(harnesses: string[]): SkillHarness[] {
   const hint = `Harnesses: ${SKILL_HARNESSES.join(", ")}`;
-  if (harnesses.length === 0) throw new ValidationError("Give at least one harness", { hint });
+  if (harnesses.length === 0) {
+    throw new ValidationError("Give at least one harness", { hint });
+  }
   const unknown = harnesses.filter((harness) => !SKILL_HARNESSES.includes(harness as SkillHarness));
   throwIfIssues(
     `Unknown harness: ${unknown.join(", ")}`,
@@ -200,9 +212,13 @@ export async function installSkill(input: InstallSkillInput, ctx: ServiceContext
     const path = skillPath(paths, harness, name);
     const dir = await physicalPath(harnessSkillsDir(paths, harness));
     if (await pathExists(join(path, SKILL_FILE))) {
-      if (tracked.includes(harness)) results.push({ harness, path, status: "already-installed" });
-      else if (trackedDirs.has(dir)) results.push({ harness, path, status: "shared" });
-      else conflicts.push(relative(paths.root, path));
+      if (tracked.includes(harness)) {
+        results.push({ harness, path, status: "already-installed" });
+      } else if (trackedDirs.has(dir)) {
+        results.push({ harness, path, status: "shared" });
+      } else {
+        conflicts.push(relative(paths.root, path));
+      }
     } else if (await pathOccupied(path)) {
       conflicts.push(relative(paths.root, path));
     } else if (claimedDirs.has(dir)) {
@@ -222,9 +238,13 @@ export async function installSkill(input: InstallSkillInput, ctx: ServiceContext
 
   const undo: string[] = [];
   try {
-    for (const path of copies) undo.push(await copySkill(join(bundled.dir, name), path));
+    for (const path of copies) {
+      undo.push(await copySkill(join(bundled.dir, name), path));
+    }
     const added = harnesses.filter((harness) => !tracked.includes(harness));
-    if (added.length > 0) await writeConfig(paths, trackHarnesses(config, name, added));
+    if (added.length > 0) {
+      await writeConfig(paths, trackHarnesses(config, name, added));
+    }
   } catch (error) {
     await Promise.all(undo.map((path) => rm(path, { recursive: true, force: true })));
     throw error;
@@ -254,7 +274,9 @@ async function deleteIfPresent(path: string): Promise<boolean> {
   try {
     await lstat(path);
   } catch (error) {
-    if (isMissing(error)) return false;
+    if (isMissing(error)) {
+      return false;
+    }
     throw error;
   }
   await rm(path, { recursive: true });

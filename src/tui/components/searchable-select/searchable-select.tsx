@@ -26,7 +26,9 @@ export function SearchableSelect({
   report.current = onChange;
   // A picker opened from a short task needs the terminal's room, not that task's clipped body.
   useEffect(() => {
-    if (!picker || !overlay) return;
+    if (!picker || !overlay) {
+      return;
+    }
     overlay.open(id, picker);
     return () => overlay.close(id);
   }, [picker, overlay, id]);
@@ -61,9 +63,12 @@ export function SearchableSelect({
   useKeyCapture(focused && !picker);
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (key.return) open("");
-      else if (
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (key.return) {
+        open("");
+      } else if (
         input &&
         !key.escape &&
         !key.tab &&
@@ -73,8 +78,9 @@ export function SearchableSelect({
         !key.rightArrow &&
         !key.backspace &&
         !key.delete
-      )
+      ) {
         open(input);
+      }
     },
     { isActive: focused && !picker },
   );

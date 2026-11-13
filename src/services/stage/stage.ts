@@ -65,7 +65,9 @@ export function findStage(
 function requireStage(config: ProjectConfig, key: string): StageConfig {
   const issues: Issue[] = [];
   const stage = findStage(config, key, ["key"], issues);
-  if (!stage) throw new NotFoundError(issues[0]?.message ?? `Stage ${key} not found`);
+  if (!stage) {
+    throw new NotFoundError(issues[0]?.message ?? `Stage ${key} not found`);
+  }
   return stage;
 }
 
@@ -112,11 +114,15 @@ export async function createStage(input: CreateStageInput, ctx: ServiceContext =
   const label = input.label.trim();
   const key = (input.key ?? toStageKey(label)).trim().toUpperCase();
   const issues: Issue[] = [];
-  if (!label) issues.push({ path: ["label"], message: "Label is required" });
+  if (!label) {
+    issues.push({ path: ["label"], message: "Label is required" });
+  }
   issues.push(...checkStageKey(key));
   checkPosition(input.position, config.stages.length + 1, issues);
   throwIfIssues("The stage is invalid", issues);
-  if (config.stages.some((s) => s.key === key)) throw new ConflictError(`Stage ${key} already exists`);
+  if (config.stages.some((s) => s.key === key)) {
+    throw new ConflictError(`Stage ${key} already exists`);
+  }
 
   const stage: StageConfig = { key, label, enabled: input.enabled ?? true };
   config.stages.splice((input.position ?? config.stages.length + 1) - 1, 0, stage);
@@ -142,22 +148,32 @@ export async function updateStage(input: UpdateStageInput, ctx: ServiceContext =
     throw new ConflictError(`Stage ${newKey} already exists`);
   }
 
-  if (input.label !== undefined) stage.label = input.label.trim();
-  if (input.enabled !== undefined) stage.enabled = input.enabled;
+  if (input.label !== undefined) {
+    stage.label = input.label.trim();
+  }
+  if (input.enabled !== undefined) {
+    stage.enabled = input.enabled;
+  }
   if (input.position !== undefined) {
     config.stages.splice(config.stages.indexOf(stage), 1);
     config.stages.splice(input.position - 1, 0, stage);
   }
   if (newKey !== oldKey) {
     stage.key = newKey;
-    if (await pathExists(stageFile(paths, oldKey))) await rename(stageFile(paths, oldKey), stageFile(paths, newKey));
+    if (await pathExists(stageFile(paths, oldKey))) {
+      await rename(stageFile(paths, oldKey), stageFile(paths, newKey));
+    }
     await rewriteStories(paths, config, (data) => {
-      if (data.stage !== oldKey) return false;
+      if (data.stage !== oldKey) {
+        return false;
+      }
       data.stage = newKey;
       return true;
     });
   }
-  if (input.prompt !== undefined) await writePrompt(paths, newKey, input.prompt);
+  if (input.prompt !== undefined) {
+    await writePrompt(paths, newKey, input.prompt);
+  }
   await writeConfig(paths, config);
   return toStage(paths, config, stage);
 }
@@ -175,7 +191,9 @@ export async function deleteStage(
   const issues: Issue[] = [];
   const target =
     input.moveStoriesTo === undefined ? undefined : findStage(config, input.moveStoriesTo, ["moveStoriesTo"], issues);
-  if (target === stage) issues.push({ path: ["moveStoriesTo"], message: "Move the stories to a different stage" });
+  if (target === stage) {
+    issues.push({ path: ["moveStoriesTo"], message: "Move the stories to a different stage" });
+  }
   throwIfIssues("Cannot delete the stage", issues);
 
   const inStage = (await readStoryFiles(paths)).filter((file) => file.doc.data.stage === stage.key);
@@ -190,7 +208,9 @@ export async function deleteStage(
   let movedStories = 0;
   if (target) {
     movedStories = await rewriteStories(paths, config, (data) => {
-      if (data.stage !== stage.key) return false;
+      if (data.stage !== stage.key) {
+        return false;
+      }
       data.stage = target.key;
       return true;
     });

@@ -9,7 +9,9 @@ function describe(project: Project): string {
 
 /** Parses `on` or `off`. */
 function parseSwitch(value: string): boolean {
-  if (value === "on" || value === "off") return value === "on";
+  if (value === "on" || value === "off") {
+    return value === "on";
+  }
   throw new InvalidArgumentError("Expected on or off.");
 }
 

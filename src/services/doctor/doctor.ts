@@ -65,7 +65,9 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
   /** Records an issue; when fixing and a fix exists, runs it first. */
   const report = async (issue: Omit<DoctorIssue, "fixed">, apply?: () => void | Promise<void>) => {
     const fixed = fix && apply !== undefined;
-    if (fixed) await apply();
+    if (fixed) {
+      await apply();
+    }
     issues.push({ ...issue, fixed });
   };
 
@@ -107,12 +109,14 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
     (result) => result.stdout.split("\0").filter(Boolean),
     () => [],
   );
-  for (const file of tracked)
+  for (const file of tracked) {
     await report({ severity: "warning", message: "Factory runtime file is tracked by Git", file });
+  }
 
   const threads = await listThreads({}, ctx);
-  for (const issue of threads.issues)
+  for (const issue of threads.issues) {
     await report({ severity: "warning", message: issue.message, file: `.rowbly/runtime/${issue.file}` });
+  }
   for (const thread of threads.threads) {
     if (thread.storyId && !(await pathExists(join(paths.storiesDir, `${thread.storyId}.md`)))) {
       await report({
@@ -152,7 +156,9 @@ async function checkStages(
   let changedConfig = false;
   for (const name of files) {
     const key = name.slice(0, -3);
-    if (config.stages.some((stage) => stage.key === key)) continue;
+    if (config.stages.some((stage) => stage.key === key)) {
+      continue;
+    }
     const file = rel(join(paths.stagesDir, name));
     if (!STAGE_KEY_PATTERN.test(key)) {
       await report({
@@ -170,7 +176,9 @@ async function checkStages(
       },
     );
   }
-  if (changedConfig) await writeConfig(paths, config);
+  if (changedConfig) {
+    await writeConfig(paths, config);
+  }
 }
 
 async function checkStories(
@@ -209,7 +217,9 @@ async function checkStories(
     try {
       story = { id: name.slice(0, -3), ...parsedName, path, doc: parseMarkdown(await readFile(path, "utf8"), file) };
     } catch (error) {
-      if (!(error instanceof RowblyError)) throw error;
+      if (!(error instanceof RowblyError)) {
+        throw error;
+      }
       const reason = error.details.reason;
       await report({ severity: "error", message: `Invalid frontmatter: ${reason ?? error.message}`, file });
       continue;
@@ -270,7 +280,9 @@ async function checkStory(config: ProjectConfig, story: StoryFile, file: string,
       continue;
     }
     const error = fieldValueError(field, data[field.key]);
-    if (!error) continue;
+    if (!error) {
+      continue;
+    }
     const coerced = coerceFieldValue(
       field,
       typeof data[field.key] === "string" ? data[field.key] : String(data[field.key]),
@@ -299,7 +311,9 @@ async function checkStory(config: ProjectConfig, story: StoryFile, file: string,
 
   const known = new Set(["title", "stage", "position", "agentLock", ...config.customFields.map((field) => field.key)]);
   for (const key of Object.keys(data)) {
-    if (known.has(key)) continue;
+    if (known.has(key)) {
+      continue;
+    }
     await report(
       { severity: "error", message: `"${key}" is not a custom field of this project`, file, fix: "Remove it" },
       change(() => {
@@ -308,7 +322,9 @@ async function checkStory(config: ProjectConfig, story: StoryFile, file: string,
     );
   }
 
-  if (changed) await writeStoryFile(config, story.path, story.doc);
+  if (changed) {
+    await writeStoryFile(config, story.path, story.doc);
+  }
 }
 
 async function checkSpecs(
@@ -339,7 +355,9 @@ async function checkSpecs(
     try {
       doc = parseMarkdown(await readFile(path, "utf8"), file);
     } catch (error) {
-      if (!(error instanceof RowblyError)) throw error;
+      if (!(error instanceof RowblyError)) {
+        throw error;
+      }
       const reason = error.details.reason;
       await report({ severity: "error", message: `Invalid frontmatter: ${reason ?? error.message}`, file });
       continue;
@@ -373,8 +391,9 @@ async function checkSpec(
   }
 
   let stories: unknown[] = [];
-  if (Array.isArray(data.stories)) stories = data.stories;
-  else if (data.stories === undefined || data.stories === null) {
+  if (Array.isArray(data.stories)) {
+    stories = data.stories;
+  } else if (data.stories === undefined || data.stories === null) {
     await report(
       { severity: "error", message: "stories is missing", file, fix: "Add an empty list" },
       change(() => {
@@ -435,7 +454,9 @@ async function checkSpec(
   }
 
   for (const key of Object.keys(data)) {
-    if (SPEC_KEYS.includes(key)) continue;
+    if (SPEC_KEYS.includes(key)) {
+      continue;
+    }
     await report(
       { severity: "error", message: `"${key}" is not a spec key (title, stories)`, file, fix: "Remove it" },
       change(() => {
@@ -444,7 +465,9 @@ async function checkSpec(
     );
   }
 
-  if (changed) await writeSpecFile(spec.path, spec.doc);
+  if (changed) {
+    await writeSpecFile(spec.path, spec.doc);
+  }
 }
 
 /** `--fix` copies a skill only into an empty place: a folder that lacks `SKILL.md` can hold the work of a user. */
@@ -455,12 +478,16 @@ async function checkSkills(
   rel: (path: string) => string,
   report: Report,
 ): Promise<void> {
-  if (!config.skills?.length) return;
+  if (!config.skills?.length) {
+    return;
+  }
   const bundled = await bundledSkills(ctx);
   for (const { name, harnesses } of config.skills) {
     for (const harness of harnesses) {
       const path = skillPath(paths, harness, name);
-      if (await pathExists(join(path, SKILL_FILE))) continue;
+      if (await pathExists(join(path, SKILL_FILE))) {
+        continue;
+      }
       const file = rel(path);
       const remove = `\`rowbly skill remove ${name} --harness ${harness}\``;
       if (!(await canCreateFolder(dirname(path)))) {
@@ -517,8 +544,9 @@ async function checkAttachments(paths: ProjectPaths, rel: (path: string) => stri
       for (const a of records) {
         const png = join(dir, `${a.id}.png`);
         await noSymlink(png);
-        if (await pathExists(png)) kept.push(a);
-        else
+        if (await pathExists(png)) {
+          kept.push(a);
+        } else {
           await report(
             {
               severity: "error",
@@ -532,9 +560,10 @@ async function checkAttachments(paths: ProjectPaths, rel: (path: string) => stri
                 records.filter((entry) => entry.id !== a.id),
               ),
           );
+        }
       }
       // Write the combined repair, so multiple missing files are removed together.
-      if (kept.length !== records.length)
+      if (kept.length !== records.length) {
         await report(
           {
             severity: "warning",
@@ -544,13 +573,15 @@ async function checkAttachments(paths: ProjectPaths, rel: (path: string) => stri
           },
           () => writeAttachments(dir, kept),
         );
+      }
       for (const name of await readdir(dir)) {
-        if (name.endsWith(".png") && (!owned || !records.some((a) => `${a.id}.png` === name)))
+        if (name.endsWith(".png") && (!owned || !records.some((a) => `${a.id}.png` === name))) {
           await report({
             severity: "warning",
             message: "Orphan PNG: preserve it for recovery",
             file: rel(join(dir, name)),
           });
+        }
       }
     } catch (err) {
       await report({

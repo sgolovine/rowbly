@@ -11,7 +11,9 @@ import { theme } from "../../theme.js";
 export function HelpModal({ hints, onClose }: { hints: readonly KeyHint[]; onClose(): void }) {
   useInput(
     (input, key) => {
-      if (key.escape || input === "?" || input === "q") onClose();
+      if (key.escape || input === "?" || input === "q") {
+        onClose();
+      }
     },
     { isActive: useIsActive() },
   );

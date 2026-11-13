@@ -41,7 +41,9 @@ function resource(program: Command, name: string, description: string): Command 
   const command = program.command(name).description(description).argument("[action...]");
   command.action(() => {
     const [action] = command.args;
-    if (action === undefined) command.help();
+    if (action === undefined) {
+      command.help();
+    }
     command.error(`error: unknown command '${action}'`, { code: "commander.unknownCommand" });
   });
   return command;

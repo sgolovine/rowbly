@@ -91,20 +91,28 @@ export function SpecsTab({
 
   const count = list.data?.length;
   useEffect(() => {
-    if (count !== undefined) onCount(count);
+    if (count !== undefined) {
+      onCount(count);
+    }
   }, [count, onCount]);
   useEffect(() => onEditing(editing), [editing, onEditing]);
   // A new spec is in the list after the reload: the cursor moves to it there, and its text opens.
   useEffect(() => {
-    if (selectSlug === null) return;
+    if (selectSlug === null) {
+      return;
+    }
     const index = specs.findIndex((spec) => spec.slug === selectSlug);
-    if (index === -1) return;
+    if (index === -1) {
+      return;
+    }
     setCursor(index);
     setSelectSlug(null);
     setMode({ kind: "edit" });
   }, [selectSlug, specs, setCursor]);
   useEffect(() => {
-    if (mode.kind === "edit" && !current && list.data !== undefined) setMode({ kind: "list" });
+    if (mode.kind === "edit" && !current && list.data !== undefined) {
+      setMode({ kind: "list" });
+    }
   }, [mode.kind, current, list.data]);
 
   const remove = (spec: Spec) => {
@@ -128,18 +136,28 @@ export function SpecsTab({
   useEscape(editing, () => setMode({ kind: "list" }));
   useInput(
     (input, key) => {
-      if (key.ctrl && input === "s") drafts.flush();
-      else if (key.tab && !key.shift) setMode({ kind: "list" });
+      if (key.ctrl && input === "s") {
+        drafts.flush();
+      } else if (key.tab && !key.shift) {
+        setMode({ kind: "list" });
+      }
     },
     { isActive: editing },
   );
   useInput(
     (input, key) => {
-      if (key.ctrl || key.meta) return;
-      if (input === "n") setMode({ kind: "new" });
-      else if (current && (key.return || (key.tab && !key.shift))) setMode({ kind: "edit" });
-      else if (current && input === "r") setMode({ kind: "rename", spec: current });
-      else if (current && input === "d") setMode({ kind: "remove", spec: current });
+      if (key.ctrl || key.meta) {
+        return;
+      }
+      if (input === "n") {
+        setMode({ kind: "new" });
+      } else if (current && (key.return || (key.tab && !key.shift))) {
+        setMode({ kind: "edit" });
+      } else if (current && input === "r") {
+        setMode({ kind: "rename", spec: current });
+      } else if (current && input === "d") {
+        setMode({ kind: "remove", spec: current });
+      }
     },
     { isActive: listing },
   );
@@ -168,7 +186,9 @@ export function SpecsTab({
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
   useEffect(() => onHints(hints), [hintsKey, onHints]);
 
-  if (!list.data) return list.loading ? <Loading label="Loading the specs…" /> : null;
+  if (!list.data) {
+    return list.loading ? <Loading label="Loading the specs…" /> : null;
+  }
   const editorWidth = Math.max(20, layout.width - LIST_WIDTH - GAP - PANEL_FRAME_WIDTH);
   const rows = layout.height === undefined ? DEFAULT_ROWS : Math.max(3, layout.height - EDITOR_CHROME);
   return (

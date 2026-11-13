@@ -8,7 +8,9 @@ import type { SettingsSectionProps } from "../settings-sections.js";
 
 /** The glyph and the colour of an issue: fixed, error or warning. */
 function mark(issue: DoctorIssue): { glyph: string; color: string } {
-  if (issue.fixed) return { glyph: "✓", color: theme.accent };
+  if (issue.fixed) {
+    return { glyph: "✓", color: theme.accent };
+  }
   return issue.severity === "error" ? { glyph: "✕", color: theme.danger } : { glyph: "!", color: theme.stageBoard };
 }
 
@@ -21,7 +23,9 @@ export function DoctorSection({ ctx, onChange }: SettingsSectionProps) {
   const [run, setRun] = useState<{ fix: boolean; count: number }>({ fix: false, count: 0 });
   const report = useAsync(async () => {
     const result = await doctor({ fix: run.fix }, ctx);
-    if (run.fix && result.issues.some((issue) => issue.fixed)) onChange();
+    if (run.fix && result.issues.some((issue) => issue.fixed)) {
+      onChange();
+    }
     return result;
   }, [ctx, run]);
   const busy = report.loading;
@@ -36,13 +40,18 @@ export function DoctorSection({ ctx, onChange }: SettingsSectionProps) {
   );
   useInput(
     (input) => {
-      if (input === "r") check();
-      else if (input === "f" && fixable) fix();
+      if (input === "r") {
+        check();
+      } else if (input === "f" && fixable) {
+        fix();
+      }
     },
     { isActive: active && !busy },
   );
 
-  if (!report.data) return busy ? <Loading label="Checking the project…" /> : null;
+  if (!report.data) {
+    return busy ? <Loading label="Checking the project…" /> : null;
+  }
   const { issues, ok } = report.data;
   return (
     <Box flexDirection="column" gap={1}>

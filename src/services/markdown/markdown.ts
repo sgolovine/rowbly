@@ -43,6 +43,8 @@ export function parseMarkdown(text: string, file: string): MarkdownDocument {
 
 export function serializeMarkdown(doc: MarkdownDocument): string {
   const body = doc.body.trim();
-  if (Object.keys(doc.data).length === 0) return body ? `${body}\n` : "";
+  if (Object.keys(doc.data).length === 0) {
+    return body ? `${body}\n` : "";
+  }
   return matter.stringify(body ? `\n${body}` : "", doc.data, OPTIONS);
 }

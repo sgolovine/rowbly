@@ -9,7 +9,9 @@ const AGENT_LABEL_MAX = 12;
 
 /** The label of an activity on one line, cut to `AGENT_LABEL_MAX` characters. */
 function activityLabel(activity: StoryActivity): string {
-  if (activity.kind !== "active") return activity.kind;
+  if (activity.kind !== "active") {
+    return activity.kind;
+  }
   const chars = [...activity.label.replace(/\s+/g, " ")];
   return chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
 }

@@ -31,7 +31,9 @@ export function storyPath(paths: ProjectPaths, projectKey: string, number: numbe
 
 export async function readStoryFile(paths: ProjectPaths, fileName: string): Promise<StoryFile> {
   const parsed = parseStoryFileName(fileName);
-  if (!parsed) throw new Error(`Not a story file name: ${fileName}`);
+  if (!parsed) {
+    throw new Error(`Not a story file name: ${fileName}`);
+  }
   const path = join(paths.storiesDir, fileName);
   const doc = parseMarkdown(await readFile(path, "utf8"), path);
   return { id: fileName.slice(0, -3), ...parsed, path, doc };
@@ -60,10 +62,14 @@ export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
 export function orderStoryData(config: ProjectConfig, data: Record<string, unknown>): Record<string, unknown> {
   const ordered: Record<string, unknown> = {};
   for (const key of ["title", "stage", "position", ...config.customFields.map((field) => field.key)]) {
-    if (key in data) ordered[key] = data[key];
+    if (key in data) {
+      ordered[key] = data[key];
+    }
   }
   for (const [key, value] of Object.entries(data)) {
-    if (!(key in ordered)) ordered[key] = value;
+    if (!(key in ordered)) {
+      ordered[key] = value;
+    }
   }
   return ordered;
 }
@@ -83,7 +89,9 @@ export async function rewriteStories(
 ): Promise<number> {
   let count = 0;
   for (const file of await readStoryFiles(paths)) {
-    if (!change(file.doc.data, file)) continue;
+    if (!change(file.doc.data, file)) {
+      continue;
+    }
     await writeStoryFile(config, file.path, file.doc);
     count++;
   }

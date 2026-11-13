@@ -35,7 +35,9 @@ export async function runCli(args: string[], cwd?: string): Promise<CliResult> {
     await program.parseAsync([...(cwd ? ["-C", cwd] : []), ...args], { from: "user" });
     exitCode = Number(process.exitCode ?? 0);
   } catch (caught) {
-    if (!(caught instanceof CommanderError)) throw caught;
+    if (!(caught instanceof CommanderError)) {
+      throw caught;
+    }
     exitCode = caught.exitCode;
   } finally {
     process.exitCode = undefined;

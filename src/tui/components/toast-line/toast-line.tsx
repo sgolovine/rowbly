@@ -10,7 +10,9 @@ const TOAST_MS = { info: 4000, warning: 6000, error: 8000 } as const;
 export function ToastLine({ toast }: { toast: Toast }) {
   const store = useToast();
   useEffect(() => {
-    if (toast.pending) return;
+    if (toast.pending) {
+      return;
+    }
     const timer = setTimeout(() => store.dismiss(toast.id), TOAST_MS[toast.kind]);
     return () => clearTimeout(timer);
   }, [store, toast]);

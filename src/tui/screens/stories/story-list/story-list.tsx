@@ -58,14 +58,18 @@ export function StoryList({
   const dragged = (value: unknown): value is DraggedStory => (value as DraggedStory | null)?.list === self;
   /** The gap for a drag of `value` over the row at `index`, or `null` where the Story would not move. */
   const gapAt = (value: unknown, index: number): number | null => {
-    if (!dragged(value)) return null;
+    if (!dragged(value)) {
+      return null;
+    }
     const from = rows.findIndex((row) => row.id === value.id);
     const gap = rows[index]?.kind === "stage" || index > from ? index + 1 : index;
     return from >= 0 && (gap === from || gap === from + 1) ? null : gap;
   };
   const drop = (value: unknown, gap: number | null) => {
     setSlot(null);
-    if (dragged(value) && gap !== null) onMove?.(value.id, gap);
+    if (dragged(value) && gap !== null) {
+      onMove?.(value.id, gap);
+    }
   };
   const overflow = height !== undefined && rows.length > height;
   // One row each for the `↑ n more` and `↓ n more` lines, when the list does not fit.
@@ -83,7 +87,9 @@ export function StoryList({
     },
     clickable && overflow,
   );
-  if (rows.length === 0) return <Text color={theme.inkFaint}>{emptyText}</Text>;
+  if (rows.length === 0) {
+    return <Text color={theme.inkFaint}>{emptyText}</Text>;
+  }
   return (
     <Box ref={ref} flexDirection="column">
       {overflow && <Text color={theme.inkFaint}>{above > 0 ? `↑ ${above} more` : " "}</Text>}

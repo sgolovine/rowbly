@@ -33,9 +33,13 @@ export function specPath(paths: ProjectPaths, slug: string): string {
 
 /** `row-1`, `ROW-01` or `1` → `ROW-01`; `undefined` when the value is not a story ID of the project. */
 export function canonicalStoryId(projectKey: string, value: unknown): string | undefined {
-  if (typeof value !== "string" && typeof value !== "number") return undefined;
+  if (typeof value !== "string" && typeof value !== "number") {
+    return undefined;
+  }
   const match = /^(?:([A-Za-z][A-Za-z0-9]*)-)?(\d+)$/.exec(String(value).trim());
-  if (!match || (match[1] !== undefined && match[1].toUpperCase() !== projectKey)) return undefined;
+  if (!match || (match[1] !== undefined && match[1].toUpperCase() !== projectKey)) {
+    return undefined;
+  }
   return formatStoryId(projectKey, Number(match[2]));
 }
 
@@ -57,8 +61,16 @@ export async function readSpecFiles(paths: ProjectPaths): Promise<SpecFile[]> {
 /** Frontmatter in a stable order: title, stories, then anything else. */
 function orderSpecData(data: Record<string, unknown>): Record<string, unknown> {
   const ordered: Record<string, unknown> = {};
-  for (const key of SPEC_KEYS) if (key in data) ordered[key] = data[key];
-  for (const [key, value] of Object.entries(data)) if (!(key in ordered)) ordered[key] = value;
+  for (const key of SPEC_KEYS) {
+    if (key in data) {
+      ordered[key] = data[key];
+    }
+  }
+  for (const [key, value] of Object.entries(data)) {
+    if (!(key in ordered)) {
+      ordered[key] = value;
+    }
+  }
   return ordered;
 }
 
@@ -77,13 +89,19 @@ export async function rewriteSpecLinks(paths: ProjectPaths, change: (stories: st
     try {
       file = await readSpecFile(paths, name.slice(0, -3));
     } catch (error) {
-      if (error instanceof RowblyError) continue;
+      if (error instanceof RowblyError) {
+        continue;
+      }
       throw error;
     }
     const stories = file.doc.data.stories;
-    if (!Array.isArray(stories)) continue;
+    if (!Array.isArray(stories)) {
+      continue;
+    }
     const next = change(stories.map(String));
-    if (next.length === stories.length && next.every((id, i) => id === String(stories[i]))) continue;
+    if (next.length === stories.length && next.every((id, i) => id === String(stories[i]))) {
+      continue;
+    }
     file.doc.data.stories = next;
     await writeSpecFile(file.path, file.doc);
     count++;

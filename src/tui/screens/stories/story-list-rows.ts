@@ -32,7 +32,9 @@ export function storyListRows(
       category: stageCategory(stages, story.stage),
     },
   });
-  if (!collapsed) return stories.map(storyRow);
+  if (!collapsed) {
+    return stories.map(storyRow);
+  }
   const unknown = [...new Set(stories.map((story) => story.stage))].filter((key) => !stages.some((s) => s.key === key));
   const sections = [
     ...stages.map((s) => ({ key: s.key, label: s.label })),
@@ -55,6 +57,8 @@ export function storyListRows(
 
 /** The Stage key of a row: the Stage of its section heading, or the Stage of its Story. */
 export function rowStage(row: StoryListRow | undefined): string | undefined {
-  if (!row) return undefined;
+  if (!row) {
+    return undefined;
+  }
   return row.kind === "stage" ? row.key : row.story.stage;
 }

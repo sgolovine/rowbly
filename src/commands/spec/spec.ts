@@ -26,7 +26,9 @@ interface SpecOptions {
 
 function formatSpec(spec: Spec): string {
   const lines = [`${spec.slug}  ${spec.title}`, `Stories: ${spec.stories.join(", ") || "—"}`];
-  if (spec.body) lines.push("", spec.body);
+  if (spec.body) {
+    lines.push("", spec.body);
+  }
   return lines.join("\n");
 }
 
@@ -38,8 +40,12 @@ async function readBody(opts: SpecOptions, ctx: ServiceContext): Promise<string 
   if (opts.body !== undefined && opts.bodyFile !== undefined) {
     throw new ValidationError("Use --body or --body-file, not both");
   }
-  if (opts.bodyFile === undefined) return opts.body;
-  if (opts.bodyFile === "-") return text(process.stdin);
+  if (opts.bodyFile === undefined) {
+    return opts.body;
+  }
+  if (opts.bodyFile === "-") {
+    return text(process.stdin);
+  }
   return readFile(resolve(ctx.cwd ?? process.cwd(), opts.bodyFile), "utf8");
 }
 

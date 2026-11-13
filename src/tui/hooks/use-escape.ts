@@ -4,7 +4,9 @@ import { useInput } from "ink";
 export function useEscape(active: boolean, onEscape: () => void): void {
   useInput(
     (_input, key) => {
-      if (key.escape) onEscape();
+      if (key.escape) {
+        onEscape();
+      }
     },
     { isActive: active },
   );

@@ -35,13 +35,17 @@ async function readPngFile(file: string, ctx: ServiceContext = {}): Promise<Pend
     throw new NotFoundError(`Cannot read file: ${file}`);
   });
   try {
-    if ((await handle.stat()).size > MAX_ATTACHMENT_BYTES) throw new ValidationError("Attachment exceeds 10 MiB");
+    if ((await handle.stat()).size > MAX_ATTACHMENT_BYTES) {
+      throw new ValidationError("Attachment exceeds 10 MiB");
+    }
     // Read at most one byte past the limit, even if the source changes after stat.
     const bytes = Buffer.alloc(MAX_ATTACHMENT_BYTES + 1);
     let length = 0;
     while (length < bytes.length) {
       const result = await handle.read(bytes, length, bytes.length - length, null);
-      if (!result.bytesRead) break;
+      if (!result.bytesRead) {
+        break;
+      }
       length += result.bytesRead;
     }
     return prepareImages([{ name: file, bytes: bytes.subarray(0, length) }])[0] as PendingImage;
@@ -55,13 +59,19 @@ export async function addAttachment(
 ) {
   const sources =
     Number(input.file !== undefined) + Number(input.fromClipboard === true) + Number(input.image !== undefined);
-  if (sources !== 1) throw new ValidationError("Supply exactly one PNG file or --from-clipboard");
+  if (sources !== 1) {
+    throw new ValidationError("Supply exactly one PNG file or --from-clipboard");
+  }
   const dir = await directory(input.story, ctx);
   let image = input.image;
-  if (input.file !== undefined) image = await readPngFile(input.file, ctx);
+  if (input.file !== undefined) {
+    image = await readPngFile(input.file, ctx);
+  }
   if (input.fromClipboard) {
     const result = await readClipboardImage();
-    if ("reason" in result) throw clipboardFailure(result.reason, input.story);
+    if ("reason" in result) {
+      throw clipboardFailure(result.reason, input.story);
+    }
     image = { name: clipboardName(ctx.now?.() ?? new Date()), bytes: result.bytes };
   }
   return withAttachments(dir, prepareImages([image as PendingImage]), ctx.now?.() ?? new Date(), async () => {
@@ -74,7 +84,9 @@ async function selected(story: string, id: string, ctx: ServiceContext) {
   const dir = await directory(story, ctx);
   const records = await readAttachments(dir);
   const record = records.find((a) => a.id === id);
-  if (!record) throw new NotFoundError(`Attachment ${id} not found on ${story}`);
+  if (!record) {
+    throw new NotFoundError(`Attachment ${id} not found on ${story}`);
+  }
   const path = join(dir, `${id}.png`);
   await noSymlink(path);
   return { dir, records, record, path };

@@ -39,7 +39,9 @@ export function StagesSection({ ctx, onChange }: SettingsSectionProps) {
   const toggle = (stage: Stage) => save(stage, { enabled: !stage.enabled });
   const move = (stage: Stage, shift: number) => {
     const position = stage.position + shift;
-    if (position < 1 || position > stages.length) return;
+    if (position < 1 || position > stages.length) {
+      return;
+    }
     // The selection follows the Stage to its new place.
     setSelectedKey(stage.key);
     save(stage, { position });
@@ -64,17 +66,26 @@ export function StagesSection({ ctx, onChange }: SettingsSectionProps) {
     (input, key) => {
       const shift = reorderDelta(input, key);
       const delta = moveDelta(input, key);
-      if (input === "n") setMode({ kind: "new" });
-      else if (!current) return;
-      else if (shift) move(current, shift);
-      else if (delta) setSelectedKey(stages[Math.max(0, Math.min(stages.length - 1, cursor + delta))]?.key ?? null);
-      else if (key.return || input === "e") setMode({ kind: "edit", stage: current });
-      else if (input === " ") toggle(current);
+      if (input === "n") {
+        setMode({ kind: "new" });
+      } else if (!current) {
+        return;
+      } else if (shift) {
+        move(current, shift);
+      } else if (delta) {
+        setSelectedKey(stages[Math.max(0, Math.min(stages.length - 1, cursor + delta))]?.key ?? null);
+      } else if (key.return || input === "e") {
+        setMode({ kind: "edit", stage: current });
+      } else if (input === " ") {
+        toggle(current);
+      }
     },
     { isActive: idle },
   );
 
-  if (!list.data) return list.loading ? <Loading label="Loading Stages…" /> : null;
+  if (!list.data) {
+    return list.loading ? <Loading label="Loading Stages…" /> : null;
+  }
   const labelWidth = Math.max(0, ...stages.map((s) => s.label.length)) + 4;
   const keyWidth = Math.max(0, ...stages.map((s) => s.key.length)) + 2;
   return (

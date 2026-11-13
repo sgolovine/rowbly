@@ -115,9 +115,13 @@ export function StoryModalBody({
   useEscape(idle && !tabOwnsKeys && !attachmentTask, onRequestClose);
   useInput(
     (input, key) => {
-      if (key.tab && key.shift) setTabId(tabIds[(tab + 1) % tabIds.length] ?? "general");
-      else if (!specEditing && !attachmentTask && isSubmitKey(input, key)) setSubmitRequest((n) => n + 1);
-      else if (general && key.ctrl && input === "d") onConfirming("delete");
+      if (key.tab && key.shift) {
+        setTabId(tabIds[(tab + 1) % tabIds.length] ?? "general");
+      } else if (!specEditing && !attachmentTask && isSubmitKey(input, key)) {
+        setSubmitRequest((n) => n + 1);
+      } else if (general && key.ctrl && input === "d") {
+        onConfirming("delete");
+      }
     },
     { isActive: idle },
   );
@@ -185,7 +189,9 @@ export function StoryModalBody({
                 fields={fields}
                 initialValues={initialValues}
                 onSubmit={async (values) => {
-                  if (paste.busy || savingNow.current) return;
+                  if (paste.busy || savingNow.current) {
+                    return;
+                  }
                   savingNow.current = true;
                   setSaving(true);
                   try {

@@ -8,7 +8,9 @@ export const RUNTIME_IGNORE_RULES = ["/state.json*", "/runtime/"];
 
 export async function missingRuntimeIgnores(paths: ProjectPaths): Promise<string[]> {
   const text = await readFile(paths.ignoreFile, "utf8").catch((error: NodeJS.ErrnoException) => {
-    if (error.code === "ENOENT") return "";
+    if (error.code === "ENOENT") {
+      return "";
+    }
     throw error;
   });
   const rules = text.split(/\r?\n/).map((line) => line.trim());
@@ -18,9 +20,13 @@ export async function missingRuntimeIgnores(paths: ProjectPaths): Promise<string
 /** Adds missing rules and keeps all existing ignore text. */
 export async function ensureRuntimeIgnores(paths: ProjectPaths): Promise<void> {
   const missing = await missingRuntimeIgnores(paths);
-  if (!missing.length) return;
+  if (!missing.length) {
+    return;
+  }
   const text = await readFile(paths.ignoreFile, "utf8").catch((error: NodeJS.ErrnoException) => {
-    if (error.code === "ENOENT") return "";
+    if (error.code === "ENOENT") {
+      return "";
+    }
     throw error;
   });
   await writeFileAtomic(paths.ignoreFile, `${text}${text && !text.endsWith("\n") ? "\n" : ""}${missing.join("\n")}\n`);
@@ -36,14 +42,22 @@ export async function runtimePath(paths: ProjectPaths, reference: string): Promi
   }
   // Resolve the Project itself, but do not accept links inside its private runtime tree.
   const project = await realpath(paths.dir);
-  if (project !== resolve(paths.dir)) throw new ValidationError("The Project directory must not be a symlink");
+  if (project !== resolve(paths.dir)) {
+    throw new ValidationError("The Project directory must not be a symlink");
+  }
   let current = root;
   for (const part of ["", ...rel.split(sep)]) {
-    if (part) current = resolve(current, part);
+    if (part) {
+      current = resolve(current, part);
+    }
     try {
-      if ((await lstat(current)).isSymbolicLink()) throw new ValidationError("Runtime paths must not contain symlinks");
+      if ((await lstat(current)).isSymbolicLink()) {
+        throw new ValidationError("Runtime paths must not contain symlinks");
+      }
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
     }
   }
   return path;

@@ -47,7 +47,9 @@ export function Onboarding({
   const [customize, setCustomize] = useState(false);
   const [choices, setChoices] = useState<Choices>({ custom: [] });
   const options = useAsync(() => onboardingOptions(ctx), [ctx]);
-  if (!options.data) return options.loading ? <Loading label="Loading…" /> : null;
+  if (!options.data) {
+    return options.loading ? <Loading label="Loading…" /> : null;
+  }
 
   const defaults = options.data;
   const stageChoices = withCustomStages(defaults.stages, choices.custom);
@@ -108,9 +110,13 @@ export function Onboarding({
           onAdd: (text) => {
             const label = text.trim();
             const issue = checkStageKey(toStageKey(label))[0];
-            if (issue) return { error: issue.message };
+            if (issue) {
+              return { error: issue.message };
+            }
             const existing = stageChoices.find((stage) => toStageKey(stage) === toStageKey(label));
-            if (existing) return { value: existing };
+            if (existing) {
+              return { value: existing };
+            }
             setChoices((current) => ({ ...current, custom: [...current.custom, label] }));
             return { value: label };
           },

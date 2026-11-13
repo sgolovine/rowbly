@@ -8,6 +8,8 @@ export function useScrollFocus(ref: RefObject<DOMElement | null>, focused: boole
   const reveal = useContext(ScrollFocusContext);
   const { hasMeasured } = useBoxMetrics(ref);
   useLayoutEffect(() => {
-    if (focused && hasMeasured && ref.current) reveal?.(ref.current);
+    if (focused && hasMeasured && ref.current) {
+      reveal?.(ref.current);
+    }
   }, [focused, ref, reveal, hasMeasured]);
 }

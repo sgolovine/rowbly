@@ -56,14 +56,20 @@ export function CustomFieldsSection({ ctx, onChange }: SettingsSectionProps) {
   );
   useInput(
     (input, key) => {
-      if (input === "n") setMode({ kind: "new" });
-      else if (current && (key.return || input === "e")) setMode({ kind: "edit", field: current });
-      else if (current && input === "d") setMode({ kind: "remove", field: current });
+      if (input === "n") {
+        setMode({ kind: "new" });
+      } else if (current && (key.return || input === "e")) {
+        setMode({ kind: "edit", field: current });
+      } else if (current && input === "d") {
+        setMode({ kind: "remove", field: current });
+      }
     },
     { isActive: idle },
   );
 
-  if (!list.data) return list.loading ? <Loading label="Loading Custom Fields…" /> : null;
+  if (!list.data) {
+    return list.loading ? <Loading label="Loading Custom Fields…" /> : null;
+  }
   const labelWidth = Math.max(0, ...fields.map((f) => f.label.length)) + 2;
   const keyWidth = Math.max(0, ...fields.map((f) => f.key.length)) + 2;
   return (

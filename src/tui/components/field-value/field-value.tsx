@@ -37,7 +37,7 @@ export function FieldValue({
         />
       );
     case "select":
-      if (field.searchable)
+      if (field.searchable) {
         return (
           <SearchableSelect
             field={field}
@@ -46,6 +46,7 @@ export function FieldValue({
             onChange={onChange}
           />
         );
+      }
       return <Text>{`‹ ${typeof raw === "string" ? (field.optionLabels?.[raw] ?? raw) : "—"} ›`}</Text>;
     case "multiselect": {
       const checked = Array.isArray(raw) ? raw : [];

@@ -74,7 +74,9 @@ export interface Issue {
 
 /** Throws a `ValidationError` carrying `issues` when there are any. */
 export function throwIfIssues(message: string, issues: Issue[], hint?: string): void {
-  if (issues.length > 0) throw new ValidationError(message, { details: { issues }, hint });
+  if (issues.length > 0) {
+    throw new ValidationError(message, { details: { issues }, hint });
+  }
 }
 
 export function checkProjectKey(key: string, path: Issue["path"] = ["projectKey"]): Issue[] {
@@ -93,7 +95,9 @@ export function checkFieldKey(key: string, path: Issue["path"] = ["key"]): Issue
   if (!FIELD_KEY_PATTERN.test(key)) {
     return [{ path, message: `Field key "${key}" must be lowercase letters, digits and _, starting with a letter` }];
   }
-  if (RESERVED_FIELD_KEYS.includes(key)) return [{ path, message: `Field key "${key}" is reserved` }];
+  if (RESERVED_FIELD_KEYS.includes(key)) {
+    return [{ path, message: `Field key "${key}" is reserved` }];
+  }
   return [];
 }
 
@@ -101,9 +105,15 @@ export function checkFieldOptions(type: CustomFieldType, options: string[] | und
   if (type !== "select") {
     return options === undefined ? [] : [{ path, message: "Only a select field has options" }];
   }
-  if (!options || options.length === 0) return [{ path, message: "A select field needs at least one option" }];
-  if (new Set(options).size !== options.length) return [{ path, message: "Options must be unique" }];
-  if (options.some((option) => option.trim() === "")) return [{ path, message: "Options cannot be empty" }];
+  if (!options || options.length === 0) {
+    return [{ path, message: "A select field needs at least one option" }];
+  }
+  if (new Set(options).size !== options.length) {
+    return [{ path, message: "Options must be unique" }];
+  }
+  if (options.some((option) => option.trim() === "")) {
+    return [{ path, message: "Options cannot be empty" }];
+  }
   return [];
 }
 
@@ -154,7 +164,9 @@ function nonEmptyString(value: unknown): value is string {
 }
 
 function skillIssues(skills: unknown): Issue[] {
-  if (!Array.isArray(skills)) return [{ path: ["skills"], message: "skills must be an array" }];
+  if (!Array.isArray(skills)) {
+    return [{ path: ["skills"], message: "skills must be an array" }];
+  }
   const issues: Issue[] = [];
   const seen = new Set<string>();
   for (const [i, skill] of (skills as unknown[]).entries()) {
@@ -163,15 +175,18 @@ function skillIssues(skills: unknown): Issue[] {
       issues.push({ path, message: "A skill must be an object" });
       continue;
     }
-    if (typeof skill.name !== "string") issues.push({ path: [...path, "name"], message: "name is required" });
-    else {
+    if (typeof skill.name !== "string") {
+      issues.push({ path: [...path, "name"], message: "name is required" });
+    } else {
       if (!isSkillName(skill.name)) {
         issues.push({
           path: [...path, "name"],
           message: `Skill name "${skill.name}" must be lowercase letters and digits, separated by single hyphens`,
         });
       }
-      if (seen.has(skill.name)) issues.push({ path: [...path, "name"], message: `Duplicate skill "${skill.name}"` });
+      if (seen.has(skill.name)) {
+        issues.push({ path: [...path, "name"], message: `Duplicate skill "${skill.name}"` });
+      }
       seen.add(skill.name);
     }
     issues.push(...harnessIssues(skill.harnesses, [...path, "harnesses"]));
@@ -180,8 +195,12 @@ function skillIssues(skills: unknown): Issue[] {
 }
 
 function harnessIssues(harnesses: unknown, path: Issue["path"]): Issue[] {
-  if (!Array.isArray(harnesses)) return [{ path, message: "harnesses must be an array" }];
-  if (harnesses.length === 0) return [{ path, message: "A skill needs at least one harness" }];
+  if (!Array.isArray(harnesses)) {
+    return [{ path, message: "harnesses must be an array" }];
+  }
+  if (harnesses.length === 0) {
+    return [{ path, message: "A skill needs at least one harness" }];
+  }
   const issues: Issue[] = [];
   const seen = new Set<unknown>();
   for (const [i, harness] of (harnesses as unknown[]).entries()) {
@@ -197,11 +216,18 @@ function harnessIssues(harnesses: unknown, path: Issue["path"]): Issue[] {
 
 /** Every problem with a parsed config file; none means `raw` is a valid `ProjectConfig`. */
 export function configIssues(raw: unknown): Issue[] {
-  if (!isRecord(raw)) return [{ path: [], message: "The config must be a JSON object" }];
+  if (!isRecord(raw)) {
+    return [{ path: [], message: "The config must be a JSON object" }];
+  }
   const issues: Issue[] = [];
-  if (!nonEmptyString(raw.projectName)) issues.push({ path: ["projectName"], message: "projectName is required" });
-  if (typeof raw.projectKey !== "string") issues.push({ path: ["projectKey"], message: "projectKey is required" });
-  else issues.push(...checkProjectKey(raw.projectKey));
+  if (!nonEmptyString(raw.projectName)) {
+    issues.push({ path: ["projectName"], message: "projectName is required" });
+  }
+  if (typeof raw.projectKey !== "string") {
+    issues.push({ path: ["projectKey"], message: "projectKey is required" });
+  } else {
+    issues.push(...checkProjectKey(raw.projectKey));
+  }
 
   if (!Array.isArray(raw.customFields)) {
     issues.push({ path: ["customFields"], message: "customFields must be an array" });
@@ -213,13 +239,18 @@ export function configIssues(raw: unknown): Issue[] {
         issues.push({ path, message: "A custom field must be an object" });
         continue;
       }
-      if (typeof field.key !== "string") issues.push({ path: [...path, "key"], message: "key is required" });
-      else {
+      if (typeof field.key !== "string") {
+        issues.push({ path: [...path, "key"], message: "key is required" });
+      } else {
         issues.push(...checkFieldKey(field.key, [...path, "key"]));
-        if (seen.has(field.key)) issues.push({ path: [...path, "key"], message: `Duplicate field key "${field.key}"` });
+        if (seen.has(field.key)) {
+          issues.push({ path: [...path, "key"], message: `Duplicate field key "${field.key}"` });
+        }
         seen.add(field.key);
       }
-      if (!nonEmptyString(field.label)) issues.push({ path: [...path, "label"], message: "label is required" });
+      if (!nonEmptyString(field.label)) {
+        issues.push({ path: [...path, "label"], message: "label is required" });
+      }
       if (!CUSTOM_FIELD_TYPES.includes(field.type as CustomFieldType)) {
         issues.push({ path: [...path, "type"], message: `type must be one of ${CUSTOM_FIELD_TYPES.join(", ")}` });
       } else if (
@@ -241,7 +272,9 @@ export function configIssues(raw: unknown): Issue[] {
   if (!Array.isArray(raw.stages)) {
     issues.push({ path: ["stages"], message: "stages must be an array" });
   } else {
-    if (raw.stages.length === 0) issues.push({ path: ["stages"], message: "A project needs at least one stage" });
+    if (raw.stages.length === 0) {
+      issues.push({ path: ["stages"], message: "A project needs at least one stage" });
+    }
     const seen = new Set<string>();
     for (const [i, stage] of (raw.stages as unknown[]).entries()) {
       const path = ["stages", i];
@@ -249,21 +282,27 @@ export function configIssues(raw: unknown): Issue[] {
         issues.push({ path, message: "A stage must be an object" });
         continue;
       }
-      if (typeof stage.key !== "string") issues.push({ path: [...path, "key"], message: "key is required" });
-      else {
+      if (typeof stage.key !== "string") {
+        issues.push({ path: [...path, "key"], message: "key is required" });
+      } else {
         issues.push(...checkStageKey(stage.key, [...path, "key"]));
-        if (seen.has(stage.key)) issues.push({ path: [...path, "key"], message: `Duplicate stage key "${stage.key}"` });
+        if (seen.has(stage.key)) {
+          issues.push({ path: [...path, "key"], message: `Duplicate stage key "${stage.key}"` });
+        }
         seen.add(stage.key);
       }
-      if (!nonEmptyString(stage.label)) issues.push({ path: [...path, "label"], message: "label is required" });
+      if (!nonEmptyString(stage.label)) {
+        issues.push({ path: [...path, "label"], message: "label is required" });
+      }
       if (typeof stage.enabled !== "boolean") {
         issues.push({ path: [...path, "enabled"], message: "enabled must be true or false" });
       }
     }
   }
   if (raw.features !== undefined) {
-    if (!isRecord(raw.features)) issues.push({ path: ["features"], message: "features must be an object" });
-    else {
+    if (!isRecord(raw.features)) {
+      issues.push({ path: ["features"], message: "features must be an object" });
+    } else {
       for (const [name, value] of Object.entries(raw.features)) {
         if (!FEATURES.includes(name as Feature)) {
           issues.push({ path: ["features", name], message: `Unknown feature "${name}"` });
@@ -273,7 +312,9 @@ export function configIssues(raw: unknown): Issue[] {
       }
     }
   }
-  if (raw.skills !== undefined) issues.push(...skillIssues(raw.skills));
+  if (raw.skills !== undefined) {
+    issues.push(...skillIssues(raw.skills));
+  }
   return issues;
 }
 

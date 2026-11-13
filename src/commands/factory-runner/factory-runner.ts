@@ -25,8 +25,9 @@ export interface LaunchDescriptor {
 }
 export const shellQuote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 export async function createCliShim(descriptor: LaunchDescriptor, ctx: ServiceContext = {}) {
-  if (!isAbsolute(descriptor.entry) || !isAbsolute(descriptor.executable))
+  if (!isAbsolute(descriptor.entry) || !isAbsolute(descriptor.executable)) {
     throw new ValidationError("CLI launch paths must be absolute");
+  }
   const paths = await findProject(ctx);
   await prepareRuntime(paths);
   const shim = await runtimePath(paths, "bin/rowbly");
@@ -48,7 +49,9 @@ export async function runFactoryForeground(
   await preflightFactory(ctx);
   const previous = await readFactoryOwner(paths);
   const owner = await newOwner();
-  if (!(await acquireFactoryOwnership(paths, owner)).acquired) return { phase: "already-running" };
+  if (!(await acquireFactoryOwnership(paths, owner)).acquired) {
+    return { phase: "already-running" };
+  }
   const deadToken = previous && (await probeOwner(previous)) === "dead" ? previous.token : undefined;
   const statusPath = await runtimePath(paths, "status.json");
   const priorStatus = await readFile(statusPath, "utf8").then(
@@ -101,17 +104,24 @@ export async function runFactoryForeground(
     let controlQueue = Promise.resolve();
     let polling = false;
     const poll = () => {
-      if (polling) return;
+      if (polling) {
+        return;
+      }
       polling = true;
       controlQueue = controlQueue
         .then(() =>
           processCommands(paths, owner.token, async (command) => {
-            if (command.type === "stop") await manager.shutdown();
-            else {
-              if (!command.threadId || !command.expectedRunId)
+            if (command.type === "stop") {
+              await manager.shutdown();
+            } else {
+              if (!command.threadId || !command.expectedRunId) {
                 throw new ValidationError("Thread and run IDs are necessary");
-              if (command.type === "cancel") await manager.cancelWorker(command.threadId, command.expectedRunId);
-              else await manager.resumeWorker(command.threadId, command.expectedRunId, command.id);
+              }
+              if (command.type === "cancel") {
+                await manager.cancelWorker(command.threadId, command.expectedRunId);
+              } else {
+                await manager.resumeWorker(command.threadId, command.expectedRunId, command.id);
+              }
             }
           }),
         )

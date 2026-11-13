@@ -42,14 +42,20 @@ export function SkillsSection({ ctx, onChange }: SettingsSectionProps) {
   );
   useInput(
     (input) => {
-      if (input === "i" && canInstall) setMode("install");
-      else if (input === "d" && canRemove) setMode("remove");
-      else if (input === "r") list.reload();
+      if (input === "i" && canInstall) {
+        setMode("install");
+      } else if (input === "d" && canRemove) {
+        setMode("remove");
+      } else if (input === "r") {
+        list.reload();
+      }
     },
     { isActive: idle && !filtering },
   );
 
-  if (list.loading) return <Loading label="Loading skills…" />;
+  if (list.loading) {
+    return <Loading label="Loading skills…" />;
+  }
   return (
     <Box flexDirection="column" gap={1}>
       {list.error !== undefined ? (

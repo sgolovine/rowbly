@@ -12,7 +12,9 @@ interface StageOptions {
 
 /** `--enable` / `--disable` as one optional boolean. */
 function enabledFlag(opts: StageOptions): boolean | undefined {
-  if (opts.enable && opts.disable) return undefined;
+  if (opts.enable && opts.disable) {
+    return undefined;
+  }
   return opts.enable ? true : opts.disable ? false : undefined;
 }
 

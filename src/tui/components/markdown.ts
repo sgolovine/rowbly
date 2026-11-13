@@ -94,7 +94,9 @@ export function plainMarkdownRows(text: string, width: number): string[] {
     .flatMap((line) => {
       const chars = Array.from(line);
       const rows: string[] = [];
-      for (let i = 0; i < chars.length; i += w) rows.push(chars.slice(i, i + w).join(""));
+      for (let i = 0; i < chars.length; i += w) {
+        rows.push(chars.slice(i, i + w).join(""));
+      }
       return rows.length ? rows : [""];
     });
 }

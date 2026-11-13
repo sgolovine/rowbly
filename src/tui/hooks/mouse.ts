@@ -53,7 +53,9 @@ export function createMouseRegistry(): MouseRegistry {
   let over: Target | undefined;
 
   const setOver = (next: Target | undefined) => {
-    if (next === over) return;
+    if (next === over) {
+      return;
+    }
     over?.handlers.current.onDragLeave?.();
     over = next;
   };
@@ -62,26 +64,37 @@ export function createMouseRegistry(): MouseRegistry {
     let best: { target: Target; area: number } | undefined;
     for (const target of targets) {
       const node = target.ref.current;
-      if (!node) continue;
+      if (!node) {
+        continue;
+      }
       const box = measureElement(node);
       const inside =
         event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
       const area = box.width * box.height;
-      if (!inside || area === 0) continue;
+      if (!inside || area === 0) {
+        continue;
+      }
       if (target.clip) {
         const viewport = target.clip.current;
-        if (!viewport) continue;
+        if (!viewport) {
+          continue;
+        }
         const bounds = measureElement(viewport);
         if (
           event.x < bounds.x ||
           event.x >= bounds.x + bounds.width ||
           event.y < bounds.y ||
           event.y >= bounds.y + bounds.height
-        )
+        ) {
           continue;
+        }
       }
-      if (!wants(target.handlers.current)) continue;
-      if (!best || area < best.area) best = { target, area };
+      if (!wants(target.handlers.current)) {
+        continue;
+      }
+      if (!best || area < best.area) {
+        best = { target, area };
+      }
     }
     return best?.target;
   };
@@ -94,7 +107,9 @@ export function createMouseRegistry(): MouseRegistry {
           hovered = undefined;
           target.handlers.current.onLeave?.();
         }
-        if (over === target) setOver(undefined);
+        if (over === target) {
+          setOver(undefined);
+        }
         targets.delete(target);
       };
     },
@@ -110,8 +125,12 @@ export function createMouseRegistry(): MouseRegistry {
         return;
       }
       if (event.kind === "move") {
-        if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
-        if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
+        if (pulling) {
+          return pulling.handlers.current.onPull?.(event.x, event.y);
+        }
+        if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) {
+          dragging.moved = true;
+        }
         if (dragging?.moved) {
           setOver(hit(event, (h) => Boolean(h.onDrop)));
           over?.handlers.current.onDragOver?.(dragging.value, event.x, event.y);
@@ -127,7 +146,9 @@ export function createMouseRegistry(): MouseRegistry {
       if (event.kind === "press") {
         const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined || h.onPull));
         pulling = target?.handlers.current.onPull ? target : null;
-        if (pulling) return;
+        if (pulling) {
+          return;
+        }
         if (target && target.handlers.current.drag !== undefined) {
           dragging = { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false };
           return;
@@ -141,13 +162,17 @@ export function createMouseRegistry(): MouseRegistry {
       setOver(undefined);
       const drop = dragging;
       dragging = null;
-      if (!drop) return;
+      if (!drop) {
+        return;
+      }
       if (!drop.moved && event.x === drop.x && event.y === drop.y) {
         drop.from.handlers.current.onClick?.();
         return;
       }
       const target = hit(event, (h) => Boolean(h.onDrop));
-      if (target && target !== drop.from) target.handlers.current.onDrop?.(drop.value, event.x, event.y);
+      if (target && target !== drop.from) {
+        target.handlers.current.onDrop?.(drop.value, event.x, event.y);
+      }
     },
   };
 }
@@ -160,7 +185,9 @@ const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null
 /** Feeds the reports from a `MouseStdin` into the registry until unmounted. */
 export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
   useEffect(() => {
-    if (!source) return;
+    if (!source) {
+      return;
+    }
     const listener = (event: MouseEvent) => registry.dispatch(event);
     source.on("mouse", listener);
     return () => {

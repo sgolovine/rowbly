@@ -82,7 +82,9 @@ export function Sidebar({
       onPull(x) {
         const left = ref.current ? measureElement(ref.current).x : 0;
         const next = Math.max(SIDEBAR_MIN_WIDTH, Math.min(maxWidth, x - left + 1));
-        if (next !== width) onResize?.(next);
+        if (next !== width) {
+          onResize?.(next);
+        }
       },
     },
     clickable && onResize !== undefined,
@@ -98,7 +100,9 @@ export function Sidebar({
     {
       onWheel: (direction) => {
         const entry = entries[Math.max(0, Math.min(entries.length - 1, current + direction))];
-        if (entry) onSelect(entry.id);
+        if (entry) {
+          onSelect(entry.id);
+        }
       },
     },
     clickable && overflow,
@@ -140,7 +144,9 @@ export function Sidebar({
                   onMove
                     ? (value) => {
                         setOver(null);
-                        if (!dragged(value) || value.id === entry.id) return;
+                        if (!dragged(value) || value.id === entry.id) {
+                          return;
+                        }
                         onFocus();
                         onMove(value.id, i);
                       }

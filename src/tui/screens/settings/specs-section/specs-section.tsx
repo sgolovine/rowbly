@@ -30,12 +30,16 @@ export function SpecsSection({ ctx, onChange }: SettingsSectionProps) {
   useKeyHints(idle ? [{ key: "space", description: on ? "turn off" : "turn on" }] : []);
   useInput(
     (input, key) => {
-      if (input === " " || key.return) toggle();
+      if (input === " " || key.return) {
+        toggle();
+      }
     },
     { isActive: idle },
   );
 
-  if (!project.data) return project.loading ? <Loading label="Loading the project…" /> : null;
+  if (!project.data) {
+    return project.loading ? <Loading label="Loading the project…" /> : null;
+  }
   return (
     <Box flexDirection="column" gap={1}>
       <Box gap={2}>

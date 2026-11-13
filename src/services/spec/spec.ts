@@ -80,7 +80,9 @@ function toSpec(config: ProjectConfig, file: SpecFile): Spec {
     issues.push({ path: ["title"], message: "Title is required" });
   }
   const stories = Array.isArray(data.stories) ? data.stories : [];
-  if (!Array.isArray(data.stories)) issues.push({ path: ["stories"], message: "stories must be a list of Story IDs" });
+  if (!Array.isArray(data.stories)) {
+    issues.push({ path: ["stories"], message: "stories must be a list of Story IDs" });
+  }
   throwIfIssues(
     `Spec ${file.slug} is invalid: ${issues.map((issue) => issue.message).join("; ")}`,
     issues,
@@ -108,20 +110,28 @@ function invalidMessage(issues: readonly Issue[]): string {
 }
 
 function checkTitle(title: string, issues: Issue[]): string {
-  if (title.trim() === "") issues.push({ path: ["title"], message: "Title is required" });
+  if (title.trim() === "") {
+    issues.push({ path: ["title"], message: "Title is required" });
+  }
   return title.trim();
 }
 
 /** The IDs of `stories` as the files name them, without repeats. Each one must be an existing Story. */
 async function resolveStories(stories: readonly string[], ctx: ServiceContext, issues: Issue[]): Promise<string[]> {
-  if (stories.length === 0) issues.push({ path: ["stories"], message: "A spec must be linked to at least one Story" });
+  if (stories.length === 0) {
+    issues.push({ path: ["stories"], message: "A spec must be linked to at least one Story" });
+  }
   const ids: string[] = [];
   for (const id of stories) {
     try {
       const story = await getStory({ id }, ctx);
-      if (!ids.includes(story.id)) ids.push(story.id);
+      if (!ids.includes(story.id)) {
+        ids.push(story.id);
+      }
     } catch (error) {
-      if (!(error instanceof NotFoundError)) throw error;
+      if (!(error instanceof NotFoundError)) {
+        throw error;
+      }
       issues.push({ path: ["stories"], message: `Story ${id} not found` });
     }
   }
@@ -146,7 +156,9 @@ export async function createSpec(input: CreateSpecInput, ctx: ServiceContext = {
   } else {
     const base = toSpecSlug(title) || "spec";
     slug = base;
-    for (let n = 2; await pathExists(specPath(paths, slug)); n++) slug = `${base}-${n}`;
+    for (let n = 2; await pathExists(specPath(paths, slug)); n++) {
+      slug = `${base}-${n}`;
+    }
   }
   const stories = await resolveStories(input.stories, ctx, issues);
   throwIfIssues(invalidMessage(issues), issues);
@@ -175,8 +187,12 @@ export async function updateSpec(input: UpdateSpecInput, ctx: ServiceContext = {
   toSpec(config, file);
   const data = { ...file.doc.data };
   const issues: Issue[] = [];
-  if (input.title !== undefined) data.title = checkTitle(input.title, issues);
-  if (input.stories !== undefined) data.stories = await resolveStories(input.stories, ctx, issues);
+  if (input.title !== undefined) {
+    data.title = checkTitle(input.title, issues);
+  }
+  if (input.stories !== undefined) {
+    data.stories = await resolveStories(input.stories, ctx, issues);
+  }
   throwIfIssues(invalidMessage(issues), issues);
   const doc = { data, body: input.body ?? file.doc.body };
   await writeSpecFile(file.path, doc);

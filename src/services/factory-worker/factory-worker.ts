@@ -27,8 +27,12 @@ export function createResultTool(record: (result: WorkerResult) => Promise<void>
     ),
     async execute(_id: string, result: WorkerResult) {
       const text = JSON.stringify(result);
-      if (previous && previous !== text) throw new ConflictError("Result already recorded with different values");
-      if (!previous) await record(result);
+      if (previous && previous !== text) {
+        throw new ConflictError("Result already recorded with different values");
+      }
+      if (!previous) {
+        await record(result);
+      }
       previous = text;
       return { content: [{ type: "text" as const, text: "Recorded. Stop now." }], details: {} };
     },
@@ -46,7 +50,9 @@ export async function workerMessage(input: {
 }) {
   const instructions = await readFile(join(input.root, ".rowbly/ROWBLY.md"), "utf8").catch(
     (e: NodeJS.ErrnoException) => {
-      if (e.code === "ENOENT") return "";
+      if (e.code === "ENOENT") {
+        return "";
+      }
       throw e;
     },
   );

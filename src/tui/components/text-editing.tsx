@@ -34,7 +34,9 @@ export function wrapRows(value: string, width: number): Row[] {
 /** The index of the row holding `cursor`. A caret on a wrap point belongs to the row it starts. */
 export function rowOf(rows: readonly Row[], cursor: number): number {
   let r = 0;
-  while (r + 1 < rows.length && (rows[r + 1]?.start ?? Infinity) <= cursor) r++;
+  while (r + 1 < rows.length && (rows[r + 1]?.start ?? Infinity) <= cursor) {
+    r++;
+  }
   return r;
 }
 
@@ -43,7 +45,9 @@ export function moveRow(state: EditState, rows: readonly Row[], delta: -1 | 1): 
   const r = rowOf(rows, state.cursor);
   const from = rows[r];
   const to = rows[r + delta];
-  if (!from || !to) return null;
+  if (!from || !to) {
+    return null;
+  }
   return { ...state, cursor: Math.min(to.start + (state.cursor - from.start), to.end) };
 }
 
@@ -68,16 +72,30 @@ function lineEnd(value: string, cursor: number): number {
  */
 export function editKey(state: EditState, input: string, key: Key, multiline: boolean): EditState | null {
   const { value, cursor } = state;
-  if (key.return) return multiline && !key.ctrl && !key.meta ? insert(state, "\n") : null;
+  if (key.return) {
+    return multiline && !key.ctrl && !key.meta ? insert(state, "\n") : null;
+  }
   if (key.backspace) {
     return cursor === 0 ? state : { value: value.slice(0, cursor - 1) + value.slice(cursor), cursor: cursor - 1 };
   }
-  if (key.delete) return { value: value.slice(0, cursor) + value.slice(cursor + 1), cursor };
-  if (key.leftArrow) return { value, cursor: Math.max(0, cursor - 1) };
-  if (key.rightArrow) return { value, cursor: Math.min(value.length, cursor + 1) };
-  if (key.home || (key.ctrl && input === "a")) return { value, cursor: lineStart(value, cursor) };
-  if (key.end || (key.ctrl && input === "e")) return { value, cursor: lineEnd(value, cursor) };
-  if (!input || key.ctrl || key.meta || key.escape || key.tab || key.upArrow || key.downArrow) return null;
+  if (key.delete) {
+    return { value: value.slice(0, cursor) + value.slice(cursor + 1), cursor };
+  }
+  if (key.leftArrow) {
+    return { value, cursor: Math.max(0, cursor - 1) };
+  }
+  if (key.rightArrow) {
+    return { value, cursor: Math.min(value.length, cursor + 1) };
+  }
+  if (key.home || (key.ctrl && input === "a")) {
+    return { value, cursor: lineStart(value, cursor) };
+  }
+  if (key.end || (key.ctrl && input === "e")) {
+    return { value, cursor: lineEnd(value, cursor) };
+  }
+  if (!input || key.ctrl || key.meta || key.escape || key.tab || key.upArrow || key.downArrow) {
+    return null;
+  }
   const text = input.replace(/\r\n?/g, "\n");
   return insert(state, multiline ? text : text.replaceAll("\n", ""));
 }
@@ -117,7 +135,9 @@ export function useEditState(value: string, onChange: (value: string) => void) {
     const changed = next.value !== latest.current.value;
     latest.current = next;
     rerender();
-    if (changed) onChange(next.value);
+    if (changed) {
+      onChange(next.value);
+    }
   };
   return [latest.current, apply, latest] as const;
 }

@@ -52,15 +52,20 @@ export function FormModal({
   const shell = useContext(ShellContext);
   const [confirming, setConfirming] = useState<"discard" | "delete" | null>(null);
   const close = () => {
-    if (shell.isDirty()) setConfirming("discard");
-    else onClose();
+    if (shell.isDirty()) {
+      setConfirming("discard");
+    } else {
+      onClose();
+    }
   };
   const idle = active && confirming === null;
   useKeyCapture(active, { text: false, escape: true });
   useEscape(idle, close);
   useInput(
     (input, key) => {
-      if (key.ctrl && input === "d") setConfirming("delete");
+      if (key.ctrl && input === "d") {
+        setConfirming("delete");
+      }
     },
     { isActive: idle && onDelete !== undefined },
   );

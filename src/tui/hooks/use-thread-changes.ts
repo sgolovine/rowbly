@@ -12,13 +12,18 @@ const FACTORY_POLL_MS = 5000;
  */
 export function useThreadChanges(root: string | undefined, onChange: () => void, factory = false): void {
   useEffect(() => {
-    if (root === undefined) return;
+    if (root === undefined) {
+      return;
+    }
     let stop: (() => void) | undefined;
     let mounted = true;
     watchThreads(onChange, { cwd: root }, { factory }).then(
       (unsubscribe) => {
-        if (mounted) stop = unsubscribe;
-        else unsubscribe();
+        if (mounted) {
+          stop = unsubscribe;
+        } else {
+          unsubscribe();
+        }
       },
       () => {},
     );

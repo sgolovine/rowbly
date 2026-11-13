@@ -119,8 +119,9 @@ function validate(value: unknown): ThreadRecord {
     new Set(t.runs.map((r) => r.id)).size !== t.runs.length ||
     t.runs.at(-1)?.status !== t.status ||
     (t.model !== undefined && !validModel(t.model))
-  )
+  ) {
     throw new ValidationError("Invalid thread metadata");
+  }
   if (
     t.result !== undefined &&
     (!t.result ||
@@ -136,32 +137,44 @@ function validate(value: unknown): ThreadRecord {
         (!Array.isArray(t.result.commits) ||
           t.result.commits.length > 20 ||
           t.result.commits.some((s) => typeof s !== "string"))))
-  )
+  ) {
     throw new ValidationError("Invalid worker result");
+  }
   return t;
 }
 async function threadPath(id: string, ctx: ServiceContext) {
-  if (!validId(id)) throw new ValidationError("Invalid thread ID");
+  if (!validId(id)) {
+    throw new ValidationError("Invalid thread ID");
+  }
   return runtimePath(await findProject(ctx), `threads/${id}.json`);
 }
 async function checkSession(t: ThreadRecord, ctx: ServiceContext) {
   if (t.session.file !== null) {
-    if (!t.session.file.startsWith(`sessions/${t.id}/`) || !t.session.file.endsWith(".jsonl"))
+    if (!t.session.file.startsWith(`sessions/${t.id}/`) || !t.session.file.endsWith(".jsonl")) {
       throw new ValidationError("Invalid thread session reference");
+    }
     await runtimePath(await findProject(ctx), t.session.file);
   }
 }
 export async function getThread(id: string, ctx: ServiceContext = {}): Promise<ThreadRecord> {
   const file = await threadPath(id, ctx);
   try {
-    if ((await stat(file)).size > 1024 * 1024) throw new ValidationError("Thread metadata is too large");
+    if ((await stat(file)).size > 1024 * 1024) {
+      throw new ValidationError("Thread metadata is too large");
+    }
     const t = validate(JSON.parse(await readFile(file, "utf8")));
-    if (t.id !== id) throw new ValidationError("Thread ID does not match its file");
+    if (t.id !== id) {
+      throw new ValidationError("Thread ID does not match its file");
+    }
     await checkSession(t, ctx);
     return t;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new NotFoundError(`Thread ${id} not found`);
-    if (error instanceof SyntaxError) throw new ValidationError(`Invalid thread JSON: ${id}`);
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new NotFoundError(`Thread ${id} not found`);
+    }
+    if (error instanceof SyntaxError) {
+      throw new ValidationError(`Invalid thread JSON: ${id}`);
+    }
     throw error;
   }
 }
@@ -176,7 +189,9 @@ export async function listThreads(
   const paths = await findProject(ctx);
   const dir = await runtimePath(paths, "threads");
   const files = await readdir(dir).catch((e: NodeJS.ErrnoException) => {
-    if (e.code === "ENOENT") return [];
+    if (e.code === "ENOENT") {
+      return [];
+    }
     throw e;
   });
   const result: ThreadList = { threads: [], issues: [] };
@@ -187,8 +202,9 @@ export async function listThreads(
         (!input.story || t.storyId === input.story) &&
         (!input.role || t.role === input.role) &&
         (!input.status || t.status === input.status)
-      )
+      ) {
         result.threads.push(t);
+      }
     } catch (e) {
       result.issues.push({ file: `threads/${file}`, message: e instanceof Error ? e.message : "Thread unavailable" });
     }
@@ -200,7 +216,9 @@ async function save(t: ThreadRecord, ctx: ServiceContext) {
   validate(t);
   await checkSession(t, ctx);
   const text = `${JSON.stringify(t)}\n`;
-  if (Buffer.byteLength(text) > 1024 * 1024) throw new ValidationError("Thread metadata is too large");
+  if (Buffer.byteLength(text) > 1024 * 1024) {
+    throw new ValidationError("Thread metadata is too large");
+  }
   await writeFileAtomic(await threadPath(t.id, ctx), text, { mode: 0o600, durable: true });
   return t;
 }
@@ -226,7 +244,9 @@ export async function createThread(
       await getThread(id, ctx);
       throw new ConflictError(`Thread ${id} already exists`);
     } catch (e) {
-      if (!(e instanceof NotFoundError)) throw e;
+      if (!(e instanceof NotFoundError)) {
+        throw e;
+      }
     }
     const createdAt = (ctx.now?.() ?? new Date()).toISOString();
     const { ownerToken, ...fields } = input;
@@ -273,16 +293,23 @@ export async function transitionThread(
   const paths = await findProject(ctx);
   return (await loadFactoryState(ctx)).withStateLock(paths.root, async () => {
     const t = await getThread(id, ctx);
-    if (t.revision !== input.expectedRevision) throw new ConflictError("Thread revision changed");
-    if ((terminal(t.status) && input.status !== t.status) || (t.status === "running" && input.status === "pending"))
+    if (t.revision !== input.expectedRevision) {
+      throw new ConflictError("Thread revision changed");
+    }
+    if ((terminal(t.status) && input.status !== t.status) || (t.status === "running" && input.status === "pending")) {
       throw new ConflictError("Invalid thread transition");
+    }
     const now = (ctx.now?.() ?? new Date()).toISOString();
     Object.assign(t, input.patch);
     t.status = input.status;
-    if (t.status === "completed") delete t.error;
+    if (t.status === "completed") {
+      delete t.error;
+    }
     t.revision++;
     const run = t.runs.at(-1);
-    if (!run) throw new ValidationError("Missing thread run");
+    if (!run) {
+      throw new ValidationError("Missing thread run");
+    }
     run.status = t.status;
     if (t.status === "running") {
       t.startedAt ??= now;
@@ -303,11 +330,14 @@ export async function appendThreadRun(
   const paths = await findProject(ctx);
   return (await loadFactoryState(ctx)).withStateLock(paths.root, async () => {
     const t = await getThread(id, ctx);
-    if (t.revision !== input.expectedRevision || !terminal(t.status) || !t.resumable || !t.session.file)
+    if (t.revision !== input.expectedRevision || !terminal(t.status) || !t.resumable || !t.session.file) {
       throw new ConflictError("Thread cannot resume");
+    }
     await stat(await runtimePath(paths, t.session.file));
     const previous = t.runs.at(-1);
-    if (previous) previous.reason ??= t.error?.message ?? t.result?.summary;
+    if (previous) {
+      previous.reason ??= t.error?.message ?? t.result?.summary;
+    }
     delete t.error;
     delete t.result;
     t.runs.push({
@@ -330,7 +360,9 @@ export async function projectNativeAttempt(id: string, ctx: ServiceContext = {})
     paths.root,
     async (state) => {
       const t = await getThread(id, ctx);
-      if (t.role !== "worker" || !t.storyId || !t.stage) return state;
+      if (t.role !== "worker" || !t.storyId || !t.stage) {
+        return state;
+      }
       let attempt = state.attempts.find((a) => a.threadId === t.id);
       if (!attempt) {
         attempt = {
@@ -347,7 +379,9 @@ export async function projectNativeAttempt(id: string, ctx: ServiceContext = {})
       attempt.model = t.model ? `${t.model.provider}/${t.model.modelId}` : undefined;
       attempt.startedAt = t.startedAt ?? t.createdAt;
       attempt.stoppedAt = t.completedAt ?? null;
-      if (t.result) attempt.result = t.result;
+      if (t.result) {
+        attempt.result = t.result;
+      }
       return state;
     },
     ctx,
@@ -369,7 +403,9 @@ export async function watchThreads(
   const watcher = watch(paths.dir, { persistent: false, recursive: true }, (_event, file) => {
     const name = file?.toString() ?? "";
     const factory = name === "runtime/status.json" || name === "runtime/factory.lock" || name === "runtime";
-    if (!name.startsWith("runtime/threads") && !(options.factory && factory)) return;
+    if (!name.startsWith("runtime/threads") && !(options.factory && factory)) {
+      return;
+    }
     clearTimeout(timer);
     timer = setTimeout(onChange, 100);
   });

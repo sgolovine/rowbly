@@ -34,7 +34,9 @@ export function MarkdownView({
   const [offset, setOffset] = useState(0);
   const [render, setRender] = useState(markdownRenderer);
   useEffect(() => {
-    if (render) return;
+    if (render) {
+      return;
+    }
     let current = true;
     void loadMarkdownRenderer().then((loaded) => current && setRender(() => loaded));
     return () => {
@@ -50,7 +52,9 @@ export function MarkdownView({
   useInput(
     (input, key) => {
       const delta = key.pageUp ? -rows : key.pageDown ? rows : moveDelta(input, key);
-      if (delta) setOffset(Math.max(0, Math.min(max, start + delta)));
+      if (delta) {
+        setOffset(Math.max(0, Math.min(max, start + delta)));
+      }
     },
     { isActive: isActive && max > 0 },
   );
@@ -63,7 +67,9 @@ export function MarkdownView({
     },
     isActive && max > 0,
   );
-  if (!text.trim()) return <Text color={theme.inkFaint}>{emptyText}</Text>;
+  if (!text.trim()) {
+    return <Text color={theme.inkFaint}>{emptyText}</Text>;
+  }
   return (
     <Box ref={ref} flexDirection="column" flexShrink={0}>
       {lines.slice(start, start + rows).map((line, i) => (

@@ -31,16 +31,22 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
     let current = true;
     const quiet = background.current;
     background.current = false;
-    if (!quiet) setState((prev) => ({ ...prev, loading: true, error: undefined }));
+    if (!quiet) {
+      setState((prev) => ({ ...prev, loading: true, error: undefined }));
+    }
     // Called through `then`, so a synchronous throw from `fn` is a rejection like any other (RES-18C).
     Promise.resolve()
       .then(fn)
       .then(
         (data) => {
-          if (current) setState({ loading: false, error: undefined, data });
+          if (current) {
+            setState({ loading: false, error: undefined, data });
+          }
         },
         (error: unknown) => {
-          if (!current) return;
+          if (!current) {
+            return;
+          }
           if (quiet) {
             // A refresh can replace a load in progress, so it also ends `loading`.
             setState((prev) =>

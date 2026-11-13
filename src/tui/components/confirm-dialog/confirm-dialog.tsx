@@ -39,7 +39,9 @@ export function ConfirmDialog({
   // The popup stays open while the work runs, so a double click must not start it twice.
   const confirmed = useRef(false);
   const confirm = () => {
-    if (confirmed.current) return;
+    if (confirmed.current) {
+      return;
+    }
     confirmed.current = true;
     onConfirm();
   };
@@ -47,11 +49,15 @@ export function ConfirmDialog({
 
   useInput(
     (input, key) => {
-      if (input === "y") confirm();
-      else if (input === "n" || key.escape) onCancel();
-      else if (key.leftArrow || key.rightArrow || key.tab || input === "h" || input === "l")
+      if (input === "y") {
+        confirm();
+      } else if (input === "n" || key.escape) {
+        onCancel();
+      } else if (key.leftArrow || key.rightArrow || key.tab || input === "h" || input === "l") {
         setConfirmFocused((f) => !f);
-      else if (key.return) (confirmFocused ? confirm : onCancel)();
+      } else if (key.return) {
+        (confirmFocused ? confirm : onCancel)();
+      }
     },
     { isActive: active },
   );

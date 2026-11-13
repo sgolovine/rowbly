@@ -7,12 +7,16 @@ export function useCursor(length: number, active: boolean): [number, (index: num
   const [cursor, setCursor] = useState(0);
   const clamped = Math.max(0, Math.min(cursor, length - 1));
   useEffect(() => {
-    if (clamped !== cursor) setCursor(clamped);
+    if (clamped !== cursor) {
+      setCursor(clamped);
+    }
   }, [clamped, cursor]);
   useInput(
     (input, key) => {
       const delta = moveDelta(input, key);
-      if (delta) setCursor(Math.max(0, Math.min(length - 1, clamped + delta)));
+      if (delta) {
+        setCursor(Math.max(0, Math.min(length - 1, clamped + delta)));
+      }
     },
     { isActive: active },
   );

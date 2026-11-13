@@ -34,7 +34,9 @@ export function createToastStore(): ToastStore {
     const capacity = Math.max(0, MAX_TOASTS - pendingCount);
     const regular = new Set(capacity ? next.filter((toast) => !toast.pending).slice(-capacity) : []);
     toasts = next.filter((toast) => toast.pending || regular.has(toast));
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   };
   const store: ToastStore = {
     push(kind, message) {

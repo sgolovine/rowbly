@@ -76,7 +76,9 @@ export function SelectList<T>({
   const index = Math.min(cursor, Math.max(visible.length - 1, 0));
 
   useEffect(() => {
-    if (cursor !== index) setCursor(index);
+    if (cursor !== index) {
+      setCursor(index);
+    }
   }, [cursor, index]);
 
   const highlighted = visible[index];
@@ -95,8 +97,11 @@ export function SelectList<T>({
         if (key.escape) {
           setFilter("");
           setFiltering(false);
-        } else if (key.return) setFiltering(false);
-        else if (key.upArrow || key.downArrow) setCursor(index + moveDelta(input, key, false));
+        } else if (key.return) {
+          setFiltering(false);
+        } else if (key.upArrow || key.downArrow) {
+          setCursor(index + moveDelta(input, key, false));
+        }
         return;
       }
       const delta = moveDelta(input, key);
@@ -110,11 +115,16 @@ export function SelectList<T>({
       }
       const item = visible[index];
       if (multi && input === " " && item) {
-        if (!item.locked) toggle(item.value);
+        if (!item.locked) {
+          toggle(item.value);
+        }
       }
       if (key.return) {
-        if (multi) onSubmit?.([...selected]);
-        else if (item) onSelect?.(item);
+        if (multi) {
+          onSubmit?.([...selected]);
+        } else if (item) {
+          onSelect?.(item);
+        }
       }
     },
     { isActive: active },

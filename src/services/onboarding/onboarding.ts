@@ -186,7 +186,9 @@ function planStages(names: readonly string[], issues: Issue[]): PlannedStage[] {
     const key = toStageKey(name);
     const isDefault = DEFAULT_STAGES.some((stage) => stage.key === key);
     issues.push(...checkStageKey(key, ["stages", index]));
-    if (seen.has(key)) issues.push({ path: ["stages", index], message: `Stage ${key} is listed twice` });
+    if (seen.has(key)) {
+      issues.push({ path: ["stages", index], message: `Stage ${key} is listed twice` });
+    }
     seen.add(key);
     return { key, label: isDefault ? labelFromKey(key) : name.trim(), custom: !isDefault };
   });
@@ -204,14 +206,18 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
   const issues: Issue[] = [];
   const name = (input.name ?? options.name).trim();
   const key = (input.key ?? toProjectKey(name)).trim().toUpperCase();
-  if (name === "") issues.push({ path: ["name"], message: "Name is required" });
+  if (name === "") {
+    issues.push({ path: ["name"], message: "Name is required" });
+  }
   issues.push(...checkProjectKey(key, ["key"]));
 
   const stages = planStages(withAlwaysEnabledStages(input.stages ?? options.stages), issues);
   const required = requiredSkills(stages.map((stage) => stage.key));
   const skills = [...new Set(input.skills ?? options.skills)];
   for (const skill of skills) {
-    if (!options.skills.includes(skill)) issues.push({ path: ["skills"], message: `Unknown skill "${skill}"` });
+    if (!options.skills.includes(skill)) {
+      issues.push({ path: ["skills"], message: `Unknown skill "${skill}"` });
+    }
   }
   for (const skill of required) {
     if (!skills.includes(skill)) {
@@ -302,7 +308,9 @@ export async function applyOnboarding(
       installed.push(await installSkill({ name: skill.name, harnesses: plan.harnesses }, ctx));
     }
   } catch (error) {
-    for (const { name } of installed) await removeSkill({ name }, ctx);
+    for (const { name } of installed) {
+      await removeSkill({ name }, ctx);
+    }
     await rm(projectPaths(plan.root).dir, { recursive: true, force: true });
     throw error;
   }

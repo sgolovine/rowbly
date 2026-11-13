@@ -41,10 +41,11 @@ export function registerAuthCommands(program: Command) {
       run(
         cmd,
         async (ctx) => {
-          if (!process.stdin.isTTY || !process.stdout.isTTY || cmd.optsWithGlobals().json)
+          if (!process.stdin.isTTY || !process.stdout.isTTY || cmd.optsWithGlobals().json) {
             throw new ValidationError("Login needs an interactive terminal", {
               hint: "Run rowbly auth login in a terminal without --json.",
             });
+          }
           const runtime = await authRuntime();
           const interaction = createCliAuthInteraction();
           const providers = await listProviders(runtime);
@@ -54,7 +55,9 @@ export function registerAuthCommands(program: Command) {
             options: providers.filter((p) => p.methods.length).map((p) => ({ id: p.id, label: p.id })),
           });
           const methods = providers.find((p) => p.id === provider)?.methods;
-          if (!methods?.length) throw new ValidationError("Provider has no login method");
+          if (!methods?.length) {
+            throw new ValidationError("Provider has no login method");
+          }
           const type =
             opts.type ??
             (methods.length === 1
@@ -64,7 +67,9 @@ export function registerAuthCommands(program: Command) {
                   message: "Login method",
                   options: methods.map((id) => ({ id, label: id })),
                 }));
-          if (type !== "oauth" && type !== "api_key") throw new ValidationError("Use oauth or api_key");
+          if (type !== "oauth" && type !== "api_key") {
+            throw new ValidationError("Use oauth or api_key");
+          }
           return loginProvider(runtime, provider, type, interaction, ctx);
         },
         (result) => `Logged in: ${result.provider}`,

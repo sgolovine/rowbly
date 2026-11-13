@@ -51,7 +51,9 @@ export function SkillActionModal({
   useEscape(idle, onClose);
 
   const run = async (selected: string[]) => {
-    if (pending.current) return;
+    if (pending.current) {
+      return;
+    }
     pending.current = true;
     setBusy(true);
     try {
@@ -71,9 +73,14 @@ export function SkillActionModal({
   };
   const submit = async (values: FormValues) => {
     const selected = harnesses.filter((h) => values[h] === true);
-    if (selected.length === 0) throw new ValidationError("Select at least one harness.");
-    if (mode === "remove") setTargets(selected);
-    else await run(selected);
+    if (selected.length === 0) {
+      throw new ValidationError("Select at least one harness.");
+    }
+    if (mode === "remove") {
+      setTargets(selected);
+    } else {
+      await run(selected);
+    }
   };
   return (
     <Modal

@@ -62,7 +62,9 @@ export function AuthFlow({
 
   // One sign-in for each chosen method. Closing the Modal cancels it.
   useEffect(() => {
-    if (!method) return;
+    if (!method) {
+      return;
+    }
     const abort = controller.current;
     const interaction: AuthInteraction = {
       signal: abort.signal,
@@ -74,13 +76,19 @@ export function AuthFlow({
             setText("");
             reject(new Error("Prompt cancelled"));
           };
-          if (signals.some((signal) => signal.aborted)) return cancel();
-          for (const signal of signals) signal.addEventListener("abort", cancel, { once: true });
+          if (signals.some((signal) => signal.aborted)) {
+            return cancel();
+          }
+          for (const signal of signals) {
+            signal.addEventListener("abort", cancel, { once: true });
+          }
           setText("");
           setPending({
             prompt,
             resolve: (value) => {
-              for (const signal of signals) signal.removeEventListener("abort", cancel);
+              for (const signal of signals) {
+                signal.removeEventListener("abort", cancel);
+              }
               setPending(undefined);
               setText("");
               resolve(value);
@@ -95,8 +103,11 @@ export function AuthFlow({
         done.current(true);
       },
       (error: unknown) => {
-        if (abort.signal.aborted) toast.push("info", `Cancelled the sign-in to ${provider}`);
-        else toast.error(error);
+        if (abort.signal.aborted) {
+          toast.push("info", `Cancelled the sign-in to ${provider}`);
+        } else {
+          toast.error(error);
+        }
         done.current(false);
       },
     );
@@ -104,15 +115,21 @@ export function AuthFlow({
   }, [method, runtime, provider, ctx, toast]);
 
   const cancel = () => {
-    if (method) controller.current.abort();
-    else done.current(false);
+    if (method) {
+      controller.current.abort();
+    } else {
+      done.current(false);
+    }
   };
   const typing = pending !== undefined && pending.prompt.type !== "select";
   useKeyCapture(active, { text: typing, escape: true });
   useInput(
     (_input, key) => {
-      if (key.escape) cancel();
-      else if (key.return && typing && pending && text.trim()) pending.resolve(text.trim());
+      if (key.escape) {
+        cancel();
+      } else if (key.return && typing && pending && text.trim()) {
+        pending.resolve(text.trim());
+      }
     },
     { isActive: active },
   );

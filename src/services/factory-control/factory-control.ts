@@ -24,14 +24,19 @@ export interface CommandReceipt {
 }
 const validId = (id: string) => /^[a-zA-Z0-9_-]{1,128}$/.test(id);
 export async function readReceipt(paths: ProjectPaths, id: string): Promise<CommandReceipt | undefined> {
-  if (!validId(id)) throw new ValidationError("Invalid request ID");
+  if (!validId(id)) {
+    throw new ValidationError("Invalid request ID");
+  }
   try {
     const value = JSON.parse(await readFile(await runtimePath(paths, `receipts/${id}.json`), "utf8"));
-    if (value.version !== 1 || value.id !== id || !["accepted", "completed", "rejected"].includes(value.status))
+    if (value.version !== 1 || value.id !== id || !["accepted", "completed", "rejected"].includes(value.status)) {
       throw new ValidationError("Invalid command receipt");
+    }
     return value;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return undefined;
+    }
     throw error;
   }
 }
@@ -57,27 +62,36 @@ export async function processCommands(
 ) {
   for (const file of (await readdir(await runtimePath(paths, "control"))).filter((f) => f.endsWith(".json")).sort()) {
     const id = file.slice(0, -5);
-    if (!validId(id)) continue;
+    if (!validId(id)) {
+      continue;
+    }
     let previous: CommandReceipt | undefined;
     try {
       previous = await readReceipt(paths, id);
     } catch {
       continue;
     } // Preserve a corrupt receipt and continue other commands.
-    if (previous && previous.status !== "accepted") continue;
+    if (previous && previous.status !== "accepted") {
+      continue;
+    }
     let command: FactoryCommand | undefined;
     try {
       const path = await runtimePath(paths, `control/${file}`);
-      if ((await stat(path)).size > 4096) throw new ValidationError("Command is too large");
+      if ((await stat(path)).size > 4096) {
+        throw new ValidationError("Command is too large");
+      }
       command = JSON.parse(await readFile(path, "utf8"));
       if (
         command?.version !== 1 ||
         command.id !== id ||
         !["stop", "cancel", "resume"].includes(command.type) ||
         !Number.isFinite(Date.parse(command.createdAt))
-      )
+      ) {
         throw new ValidationError("Invalid factory command");
-      if (command.targetOwnerToken !== token) throw new ConflictError("Factory owner changed");
+      }
+      if (command.targetOwnerToken !== token) {
+        throw new ConflictError("Factory owner changed");
+      }
       await writeReceipt(paths, { version: 1, id, ownerToken: token, status: "accepted", threadId: command.threadId });
       await execute(command);
       await writeReceipt(paths, { version: 1, id, ownerToken: token, status: "completed", threadId: command.threadId });
@@ -104,14 +118,19 @@ export async function pruneFactoryCommands(paths: ProjectPaths, tokens: string[]
     const path = await runtimePath(paths, `control/${file}`);
     let command: FactoryCommand;
     try {
-      if ((await stat(path)).size > 4096) continue;
-      command = JSON.parse(await readFile(path, "utf8"));
-      if (command?.version !== 1 || command.id !== file.slice(0, -5) || typeof command.targetOwnerToken !== "string")
+      if ((await stat(path)).size > 4096) {
         continue;
+      }
+      command = JSON.parse(await readFile(path, "utf8"));
+      if (command?.version !== 1 || command.id !== file.slice(0, -5) || typeof command.targetOwnerToken !== "string") {
+        continue;
+      }
     } catch {
       continue;
     }
-    if (tokens.includes(command.targetOwnerToken)) continue;
+    if (tokens.includes(command.targetOwnerToken)) {
+      continue;
+    }
     const receiptPath = await runtimePath(paths, `receipts/${file}`);
     // Preserve malformed receipts for offline inspection.
     try {
@@ -120,7 +139,9 @@ export async function pruneFactoryCommands(paths: ProjectPaths, tokens: string[]
       continue;
     }
     await unlink(receiptPath).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT") throw error;
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
     });
     await unlink(path);
   }

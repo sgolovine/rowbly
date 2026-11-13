@@ -65,7 +65,9 @@ export function OnboardingChecklist({
   );
 
   const confirmAdd = () => {
-    if (!add) return;
+    if (!add) {
+      return;
+    }
     const result = add.onAdd(text);
     if ("error" in result) {
       setError(result.error);
@@ -81,14 +83,18 @@ export function OnboardingChecklist({
   useInput(
     (input, key) => {
       if (adding) {
-        if (key.return) confirmAdd();
-        else if (key.escape) {
+        if (key.return) {
+          confirmAdd();
+        } else if (key.escape) {
           setAdding(false);
           setText("");
           setError(undefined);
         }
-      } else if (key.escape && !filtering) onBack();
-      else if (input === "n" && add && !filtering) setAdding(true);
+      } else if (key.escape && !filtering) {
+        onBack();
+      } else if (input === "n" && add && !filtering) {
+        setAdding(true);
+      }
     },
     { isActive: active },
   );
@@ -96,8 +102,11 @@ export function OnboardingChecklist({
   const submit = () => {
     // The order of the rows, not the order of the clicks.
     const values = items.filter((item) => checked.includes(item.value)).map((item) => item.value);
-    if (emptyError && values.length === 0) setError(emptyError);
-    else onSubmit(values);
+    if (emptyError && values.length === 0) {
+      setError(emptyError);
+    } else {
+      onSubmit(values);
+    }
   };
 
   const limit = layout.height === undefined ? items.length : Math.max(3, layout.height - CHROME_ROWS);
@@ -123,7 +132,9 @@ export function OnboardingChecklist({
           }}
           onHighlight={(item) => {
             const at = item ? items.indexOf(item) : -1;
-            if (at >= 0) setCursor(at);
+            if (at >= 0) {
+              setCursor(at);
+            }
           }}
           onFilteringChange={setFiltering}
           onSubmit={submit}

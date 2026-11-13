@@ -30,15 +30,21 @@ export async function openConversation(threadId: string, ctx: ServiceContext = {
     threadId,
     read(input = {}) {
       const read = async (): Promise<ConversationPage> => {
-        if (closed) throw new ValidationError("Conversation is closed");
+        if (closed) {
+          throw new ValidationError("Conversation is closed");
+        }
         const thread = await getThread(threadId, ctx);
-        if (closed) throw new ValidationError("Conversation is closed");
+        if (closed) {
+          throw new ValidationError("Conversation is closed");
+        }
         if (thread.session.file !== reference) {
           index?.close();
           index = undefined;
           reference = thread.session.file;
         }
-        if (!reference) return { entries: [], nextBefore: null, bytes: 0, status: "missing", invalidLines: 0 };
+        if (!reference) {
+          return { entries: [], nextBefore: null, bytes: 0, status: "missing", invalidLines: 0 };
+        }
         const selected = reference;
         index ??= new SessionIndex(await runtimePath(paths, selected), () => runtimePath(paths, selected));
         const current = index;
@@ -51,20 +57,25 @@ export async function openConversation(threadId: string, ctx: ServiceContext = {
       };
       const pending = queue.then(read).catch((error: unknown) => {
         const code = (error as NodeJS.ErrnoException)?.code;
-        if (typeof code === "string" && /^E[A-Z]+$/.test(code))
+        if (typeof code === "string" && /^E[A-Z]+$/.test(code)) {
           throw new ValidationError(`Conversation file is unavailable (${code})`);
+        }
         throw error;
       });
       queue = pending.catch(() => {});
       return pending;
     },
     watch(onChange, onError = () => {}) {
-      if (closed) throw new ValidationError("Conversation is closed");
+      if (closed) {
+        throw new ValidationError("Conversation is closed");
+      }
       let active = true,
         busy = false,
         previous = "";
       const tick = async () => {
-        if (!active || busy) return;
+        if (!active || busy) {
+          return;
+        }
         busy = true;
         try {
           const page = await conversation.read();
@@ -74,7 +85,9 @@ export async function openConversation(threadId: string, ctx: ServiceContext = {
             onChange(page);
           }
         } catch (error) {
-          if (active) onError(error);
+          if (active) {
+            onError(error);
+          }
         } finally {
           busy = false;
         }
@@ -92,7 +105,9 @@ export async function openConversation(threadId: string, ctx: ServiceContext = {
     },
     close() {
       closed = true;
-      for (const stop of stops) stop();
+      for (const stop of stops) {
+        stop();
+      }
       index?.close();
       index = undefined;
     },

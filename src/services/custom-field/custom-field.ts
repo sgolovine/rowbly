@@ -61,18 +61,24 @@ export async function addCustomField(input: AddCustomFieldInput, ctx: ServiceCon
   const label = input.label.trim();
   const key = (input.key ?? toFieldKey(label)).trim();
   const issues: Issue[] = [];
-  if (!label) issues.push({ path: ["label"], message: "Label is required" });
+  if (!label) {
+    issues.push({ path: ["label"], message: "Label is required" });
+  }
   issues.push(...checkFieldKey(key));
   checkType(input.type, issues);
   issues.push(...checkFieldOptions(input.type, input.options, ["options"]));
   throwIfIssues("The custom field is invalid", issues);
-  if (config.customFields.some((f) => f.key === key)) throw new ConflictError(`Custom field "${key}" already exists`);
+  if (config.customFields.some((f) => f.key === key)) {
+    throw new ConflictError(`Custom field "${key}" already exists`);
+  }
 
   const field: CustomField = { key, label, type: input.type, ...(input.options && { options: input.options }) };
   config.customFields.push(field);
   await writeConfig(paths, config);
   await rewriteStories(paths, config, (data) => {
-    if (key in data) return false;
+    if (key in data) {
+      return false;
+    }
     data[key] = null;
     return true;
   });
@@ -92,7 +98,9 @@ export async function updateCustomField(input: UpdateCustomFieldInput, ctx: Serv
   if (input.label !== undefined && input.label.trim() === "") {
     issues.push({ path: ["label"], message: "Label is required" });
   }
-  if (newKey !== oldKey) issues.push(...checkFieldKey(newKey, ["newKey"]));
+  if (newKey !== oldKey) {
+    issues.push(...checkFieldKey(newKey, ["newKey"]));
+  }
   checkType(type, issues);
   issues.push(...checkFieldOptions(type, options, ["options"]));
   throwIfIssues("The custom field is invalid", issues);
@@ -111,10 +119,15 @@ export async function updateCustomField(input: UpdateCustomFieldInput, ctx: Serv
   const values = new Map<string, unknown>();
   const valueIssues: Issue[] = [];
   for (const file of await readStoryFiles(paths)) {
-    if (!(oldKey in file.doc.data)) continue;
+    if (!(oldKey in file.doc.data)) {
+      continue;
+    }
     const result = coerceFieldValue(updated, file.doc.data[oldKey]);
-    if (result.ok) values.set(file.id, result.value);
-    else valueIssues.push({ path: [file.id], message: `${file.id}: ${result.error}` });
+    if (result.ok) {
+      values.set(file.id, result.value);
+    } else {
+      valueIssues.push({ path: [file.id], message: `${file.id}: ${result.error}` });
+    }
   }
   throwIfIssues(
     `Existing values do not fit the new definition: ${valueIssues.map((issue) => issue.message).join("; ")}`,
@@ -125,7 +138,9 @@ export async function updateCustomField(input: UpdateCustomFieldInput, ctx: Serv
   config.customFields[config.customFields.indexOf(field)] = updated;
   await writeConfig(paths, config);
   await rewriteStories(paths, config, (data, file) => {
-    if (!(oldKey in data)) return false;
+    if (!(oldKey in data)) {
+      return false;
+    }
     delete data[oldKey];
     data[newKey] = values.get(file.id) ?? null;
     return true;
@@ -141,7 +156,9 @@ export async function removeCustomField(input: { key: string }, ctx: ServiceCont
   config.customFields.splice(config.customFields.indexOf(field), 1);
   await writeConfig(paths, config);
   await rewriteStories(paths, config, (data) => {
-    if (!(field.key in data)) return false;
+    if (!(field.key in data)) {
+      return false;
+    }
     delete data[field.key];
     return true;
   });

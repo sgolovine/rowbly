@@ -32,7 +32,9 @@ export function NewStoryModal({
   const [saving, setSaving] = useState(false);
   const paste = useRef<ReturnType<typeof useStoryPaste> | null>(null);
   const submit = async (values: FormValues) => {
-    if (paste.current?.busy) return;
+    if (paste.current?.busy) {
+      return;
+    }
     setSaving(true);
     try {
       const story = await createStory(

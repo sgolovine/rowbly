@@ -17,9 +17,15 @@ export function factoryLive(status: FactoryStatus | undefined): boolean {
  * It is `…` until the first read completes. `short` leaves out the pending count.
  */
 export function factoryState(status: FactoryStatus | undefined, short = false): string {
-  if (!status) return "…";
-  if (status.phase === "stopped") return "off";
-  if (status.phase !== "ready" || !status.workers) return status.phase;
+  if (!status) {
+    return "…";
+  }
+  if (status.phase === "stopped") {
+    return "off";
+  }
+  if (status.phase !== "ready" || !status.workers) {
+    return status.phase;
+  }
   const { running, pending, limit } = status.workers;
   return pending > 0 && !short ? `${running}/${limit} · ${pending} pending` : `${running}/${limit}`;
 }
@@ -29,10 +35,13 @@ export function factoryState(status: FactoryStatus | undefined, short = false): 
  * stopped. A stopped factory has no problems, because its status file is old.
  */
 export function factoryProblems(status: FactoryStatus | undefined): FactoryProblem[] {
-  if (!status || !factoryLive(status)) return [];
+  if (!status || !factoryLive(status)) {
+    return [];
+  }
   const problems: FactoryProblem[] = [];
-  if (status.phase === "ready" && status.responsive === false)
+  if (status.phase === "ready" && status.responsive === false) {
     problems.push({ key: "heartbeat", text: "The factory does not write its heartbeat." });
+  }
   for (const item of (status.attention ?? []) as unknown[]) {
     if (Array.isArray(item) && typeof item[0] === "string" && typeof item[1]?.text === "string") {
       const story = typeof item[1].storyId === "string" ? `${item[1].storyId}: ` : "";
@@ -52,9 +61,15 @@ export function factoryProblems(status: FactoryStatus | undefined): FactoryProbl
 /** The reason why the factory has not started a worker for a queued Story, in words for people. */
 export function queueReason(entry: FactoryQueueEntry): string {
   const at = entry.retryAt ? ` until ${formatDateTime(entry.retryAt)}` : "";
-  if (entry.action !== "skip") return "waiting for the supervisor";
-  if (entry.reason === "worker limit") return "waiting for a worker slot";
-  if (entry.reason === "launch delay" || entry.reason === "retry delay") return `waiting${at} (${entry.reason})`;
+  if (entry.action !== "skip") {
+    return "waiting for the supervisor";
+  }
+  if (entry.reason === "worker limit") {
+    return "waiting for a worker slot";
+  }
+  if (entry.reason === "launch delay" || entry.reason === "retry delay") {
+    return `waiting${at} (${entry.reason})`;
+  }
   return `${entry.reason}${at}`;
 }
 

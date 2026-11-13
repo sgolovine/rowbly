@@ -12,7 +12,9 @@ function isDate(value: string): boolean {
 
 /** Why `value` is not valid for `field`, or `undefined` when it is. */
 export function fieldValueError(field: CustomField, value: unknown): string | undefined {
-  if (value === null) return undefined;
+  if (value === null) {
+    return undefined;
+  }
   switch (field.type) {
     case "string":
       return typeof value === "string" ? undefined : `${field.label} must be text`;
@@ -42,11 +44,17 @@ export function coerceFieldValue(
   let result = value === undefined ? null : value;
   if (typeof result === "string") {
     const text = result.trim();
-    if (text === "") result = null;
-    else if (field.type === "number" && !Number.isNaN(Number(text))) result = Number(text);
-    else if (field.type === "boolean" && /^(true|yes|y|1)$/i.test(text)) result = true;
-    else if (field.type === "boolean" && /^(false|no|n|0)$/i.test(text)) result = false;
-    else if (field.type !== "string") result = text;
+    if (text === "") {
+      result = null;
+    } else if (field.type === "number" && !Number.isNaN(Number(text))) {
+      result = Number(text);
+    } else if (field.type === "boolean" && /^(true|yes|y|1)$/i.test(text)) {
+      result = true;
+    } else if (field.type === "boolean" && /^(false|no|n|0)$/i.test(text)) {
+      result = false;
+    } else if (field.type !== "string") {
+      result = text;
+    }
   } else if (field.type === "string" && (typeof result === "number" || typeof result === "boolean")) {
     result = String(result);
   }

@@ -70,18 +70,26 @@ export function SettingsBody({
   useKeyCapture(active, { text: false, escape: true });
   // A task on top of the section, or a section that takes `esc` itself, gets the `esc`.
   useEscape(keysOwn, () => {
-    if (focus === "nav") onClose();
-    else if (!childShell.holdsEscape()) setFocus("nav");
+    if (focus === "nav") {
+      onClose();
+    } else if (!childShell.holdsEscape()) {
+      setFocus("nav");
+    }
   });
   useInput(
     (input, key) => {
       if (focus === "section") {
-        if (key.tab && !childShell.holdsEscape()) setFocus("nav");
+        if (key.tab && !childShell.holdsEscape()) {
+          setFocus("nav");
+        }
         return;
       }
       const delta = moveDelta(input, key);
-      if (delta) setSelectedId(sections[(selected + delta + sections.length) % sections.length]?.id);
-      else if (key.tab || key.return || key.rightArrow) setFocus("section");
+      if (delta) {
+        setSelectedId(sections[(selected + delta + sections.length) % sections.length]?.id);
+      } else if (key.tab || key.return || key.rightArrow) {
+        setFocus("section");
+      }
     },
     { isActive: keysOwn },
   );

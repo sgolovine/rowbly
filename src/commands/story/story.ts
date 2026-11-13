@@ -23,9 +23,12 @@ async function formatStory(story: Story, ctx: ServiceContext): Promise<string> {
   const project = await getProject(ctx);
   const stage = project.stages.find((s) => s.key === story.stage);
   const lines = [`${story.id}  ${story.title}`, `Stage: ${stage?.label ?? story.stage} (${story.stage})`];
-  for (const field of project.customFields)
+  for (const field of project.customFields) {
     lines.push(`${field.label}: ${formatValue(story.fields[field.key] ?? null)}`);
-  if (story.description) lines.push("", story.description);
+  }
+  if (story.description) {
+    lines.push("", story.description);
+  }
   return lines.join("\n");
 }
 

@@ -41,9 +41,12 @@ export async function listAvailableModels(runtime: AuthRuntime, provider?: strin
 }
 export async function validateModelChoice(runtime: AuthRuntime, choice: ModelChoice): Promise<ModelChoice> {
   const model = (await listAvailableModels(runtime, choice.provider)).find((m) => m.modelId === choice.modelId);
-  if (!model) throw new ValidationError(`Model unavailable: ${choice.provider}/${choice.modelId}`);
-  if (choice.thinkingLevel && !model.thinkingLevels.includes(choice.thinkingLevel))
+  if (!model) {
+    throw new ValidationError(`Model unavailable: ${choice.provider}/${choice.modelId}`);
+  }
+  if (choice.thinkingLevel && !model.thinkingLevels.includes(choice.thinkingLevel)) {
     throw new ValidationError("The model does not support this thinking level");
+  }
   return choice;
 }
 let loginActive = false;
@@ -55,9 +58,12 @@ export async function loginProvider(
   interaction: AuthInteraction,
   ctx: ServiceContext = {},
 ): Promise<{ provider: string; type: AuthType }> {
-  if (loginActive) throw new ValidationError("Another login is active");
-  if (!(await listProviders(runtime)).find((p) => p.id === provider)?.methods.includes(type))
+  if (loginActive) {
+    throw new ValidationError("Another login is active");
+  }
+  if (!(await listProviders(runtime)).find((p) => p.id === provider)?.methods.includes(type)) {
     throw new ValidationError("Provider does not support this login method");
+  }
   loginActive = true;
   try {
     const deviceId = await getDeviceId(ctx);

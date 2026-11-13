@@ -15,7 +15,9 @@ export interface FactorySettings {
   workerModel?: ModelChoice;
 }
 export function validModel(value: unknown): value is ModelChoice {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== "object") {
+    return false;
+  }
   const model = value as ModelChoice;
   return (
     typeof model.provider === "string" &&
@@ -34,8 +36,9 @@ function validate(value: unknown): FactorySettings {
     settings.maxWorkers < 1 ||
     (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
     (settings.workerModel !== undefined && !validModel(settings.workerModel))
-  )
+  ) {
     throw new ValidationError("Invalid factory settings");
+  }
   return settings;
 }
 export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
@@ -43,8 +46,12 @@ export async function getFactorySettings(ctx: ServiceContext = {}): Promise<Fact
   try {
     return validate(JSON.parse(await readFile(paths.factorySettingsFile, "utf8")));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return { version: 1, maxWorkers: 4 };
-    if (error instanceof SyntaxError) throw new ValidationError("Invalid factory settings JSON");
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { version: 1, maxWorkers: 4 };
+    }
+    if (error instanceof SyntaxError) {
+      throw new ValidationError("Invalid factory settings JSON");
+    }
     throw error;
   }
 }
@@ -72,16 +79,26 @@ export async function configureFactory(
 ) {
   const { authRuntime, validateModelChoice } = await import("../agent-auth/agent-auth.js");
   const patch: Partial<Omit<FactorySettings, "version">> = {};
-  if (input.maxWorkers !== undefined) patch.maxWorkers = input.maxWorkers;
+  if (input.maxWorkers !== undefined) {
+    patch.maxWorkers = input.maxWorkers;
+  }
   for (const role of ["supervisor", "worker"] as const) {
     const value = input[role];
     const thinkingLevel = input[`${role}Thinking`];
-    if (!value && thinkingLevel) throw new ValidationError(`Select the ${role} model with its thinking level`);
-    if (!value) continue;
+    if (!value && thinkingLevel) {
+      throw new ValidationError(`Select the ${role} model with its thinking level`);
+    }
+    if (!value) {
+      continue;
+    }
     const slash = value.indexOf("/");
-    if (slash < 1 || slash === value.length - 1) throw new ValidationError("Use provider/model for a model choice");
+    if (slash < 1 || slash === value.length - 1) {
+      throw new ValidationError("Use provider/model for a model choice");
+    }
     const choice = { provider: value.slice(0, slash), modelId: value.slice(slash + 1), thinkingLevel };
-    if (!validModel(choice)) throw new ValidationError("Invalid model choice");
+    if (!validModel(choice)) {
+      throw new ValidationError("Invalid model choice");
+    }
     runtime ??= await authRuntime();
     patch[`${role}Model`] = await validateModelChoice(runtime, choice);
   }

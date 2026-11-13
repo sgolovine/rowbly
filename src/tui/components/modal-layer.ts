@@ -22,7 +22,9 @@ export function createLayerHost(): LayerHost {
   const listeners = new Set<() => void>();
   const changed = () => {
     snapshot = new Map(nodes);
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   };
   return {
     show(id, node) {
@@ -30,7 +32,9 @@ export function createLayerHost(): LayerHost {
       changed();
     },
     hide(id) {
-      if (nodes.delete(id)) changed();
+      if (nodes.delete(id)) {
+        changed();
+      }
     },
     layers: () => snapshot,
     subscribe(listener) {

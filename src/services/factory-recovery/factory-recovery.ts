@@ -23,19 +23,21 @@ export async function recoverFactory(
   const external = state.attempts.filter(
     (a) => ["preparing", "running"].includes(a.status) && !threads.some((t) => t.id === a.threadId),
   );
-  if (external.length && adoptExternal)
+  if (external.length && adoptExternal) {
     await updateFactoryState(
       paths.root,
       (current) => {
-        for (const a of current.attempts)
+        for (const a of current.attempts) {
           if (external.some((e) => e.workerId === a.workerId && e.story === a.story)) {
             a.status = "interrupted";
             a.stoppedAt = new Date().toISOString();
           }
+        }
         return current;
       },
       ctx,
     );
+  }
   // Exclusive ownership proves that all other native generations are abandoned.
   // Each durable transition and projection can repeat after another crash.
   for (const t of threads) {
@@ -68,8 +70,9 @@ export async function recoverFactory(
 
 /** Checks execution prerequisites before loading credentials or Pi. */
 export async function preflightFactory(ctx: ServiceContext = {}) {
-  if (process.platform !== "linux")
+  if (process.platform !== "linux") {
     throw new ConflictError("Native factory execution requires Linux and util-linux flock");
+  }
   const paths = await findProject(ctx);
   const exec = promisify(execFile);
   try {
