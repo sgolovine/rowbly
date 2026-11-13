@@ -16,6 +16,7 @@ import {
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { theme } from "../../../theme.js";
+import { columnWidth } from "../column-width.js";
 import { CustomFieldFormModal } from "../custom-field-form-modal/index.js";
 import { CustomFieldRow } from "../custom-field-row/index.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
@@ -52,11 +53,6 @@ function fieldsHints(idle: boolean, current: CustomField | undefined): KeyHint[]
         ]
       : []),
   ];
-}
-
-/** The columns of the widest value and two spaces. */
-function columnWidth(values: readonly string[]): number {
-  return Math.max(0, ...values.map((value) => value.length)) + 2;
 }
 
 /** Goes back to the list and reads the fields again, also in the screens behind Settings. */

@@ -5,6 +5,7 @@ import { Loading } from "../../../components/index.js";
 import { useAsync, useIsActive, useKeyHints, useToast } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { StageFormModal } from "../../stages/index.js";
+import { columnWidth } from "../column-width.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
 import { StageRow } from "../stage-row/index.js";
 import {
@@ -16,11 +17,6 @@ import {
   stagesHints,
   toggleStage,
 } from "./stage-actions.js";
-
-/** The columns of the widest value and `pad` spaces. */
-function columnWidth(values: readonly string[], pad: number): number {
-  return Math.max(0, ...values.map((value) => value.length)) + pad;
-}
 
 /** The place of the selected Stage. Without a selection, or after its Stage is gone, the first Stage. */
 function cursorOf(stages: readonly Stage[], selectedKey: string | null): number {
