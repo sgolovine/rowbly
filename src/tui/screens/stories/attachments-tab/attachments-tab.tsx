@@ -1,17 +1,19 @@
-import { Box, Text, useInput } from "ink";
+import { Box, useInput } from "ink";
 import { useEffect, useState } from "react";
-import {
-  type Attachment,
-  addAttachment,
-  listAttachments,
-  openAttachment,
-  removeAttachment,
-} from "../../../../services/attachment/attachment.js";
+import { type Attachment, listAttachments } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { Button, ConfirmDialog, FormModal, ScrollBody, SelectionRow, useCovered } from "../../../components/index.js";
+import { Button, ConfirmDialog, FormModal, useCovered } from "../../../components/index.js";
 import { useAsync, useIsActive, useLayout, useToast } from "../../../hooks/index.js";
-import { type KeyHint, moveDelta } from "../../../keymap.js";
-import { formatDateTime, theme } from "../../../theme.js";
+import type { KeyHint } from "../../../keymap.js";
+import { AttachmentList } from "../attachment-list/index.js";
+import {
+  type AttachmentsTabEnv,
+  type AttachmentTask,
+  attachFile,
+  confirmRemove,
+  handleKey,
+  openItem,
+} from "./attachments-tab-actions.js";
 
 const HINTS: readonly KeyHint[] = [
   { key: "↑/↓", description: "select" },
@@ -19,73 +21,70 @@ const HINTS: readonly KeyHint[] = [
   { key: "o", description: "open" },
   { key: "d", description: "remove" },
 ];
-export function AttachmentsTab({
-  ctx,
-  storyId,
-  selected,
-  onHints,
-  onTask,
-}: {
-  ctx: ServiceContext;
-  storyId: string;
-  selected: boolean;
+
+export interface AttachmentsTabProps {
+  readonly ctx: ServiceContext;
+  readonly storyId: string;
+  /** This tab is the tab on the screen, and takes the keys. */
+  readonly selected: boolean;
   onHints(hints: readonly KeyHint[]): void;
+  /** The tab asks a question, so that the Modal leaves `esc` and the save key to it. */
   onTask(value: boolean): void;
-}) {
+}
+
+/** The rows of the list: the layout height less the Buttons and the blank row above them. */
+function listHeight(height: number | undefined): number | undefined {
+  return height === undefined ? undefined : Math.max(1, height - 2);
+}
+
+/**
+ * The saved images of one Story. The arrows select an image, `n` attaches a PNG from a path, `o` opens the
+ * selected image and `d` asks before it removes the image. The list reads again when the tab is selected.
+ */
+export function AttachmentsTab({ ctx, storyId, selected, onHints, onTask }: AttachmentsTabProps) {
   const active = useIsActive();
   const covered = useCovered();
   const toast = useToast();
   const layout = useLayout();
-  const [task, setTask] = useState<"path" | "remove" | null>(null);
+  const [task, setTask] = useState<AttachmentTask>(null);
   const [cursor, setCursor] = useState(0);
   const state = useAsync(() => listAttachments({ story: storyId }, ctx), [ctx, storyId, selected]);
+
   const items: readonly Attachment[] = state.data ?? [];
   const item = items[Math.min(cursor, items.length - 1)];
   const idle = active && selected && !covered && task === null;
+  const env: AttachmentsTabEnv = {
+    ctx,
+    storyId,
+    toast,
+    count: items.length,
+    item,
+    setTask,
+    setCursor,
+    reload: state.reload,
+  };
+
   useEffect(() => onHints(HINTS), [onHints]);
   useEffect(() => {
     onTask(task !== null);
+
     return () => onTask(false);
   }, [task, onTask]);
-  const open = () => {
-    if (item) {
-      void openAttachment({ story: storyId, id: item.id }, ctx).catch(toast.error);
-    }
-  };
-  useInput(
-    (input, key) => {
-      const delta = moveDelta(input, key);
-      if (delta) {
-        setCursor((n) => Math.max(0, Math.min(items.length - 1, n + delta)));
-      } else if (input === "n") {
-        setTask("path");
-      } else if (input === "o") {
-        open();
-      } else if (input === "d" && item) {
-        setTask("remove");
-      }
-    },
-    { isActive: idle },
-  );
+  useInput((input, key) => handleKey(env, input, key), { isActive: idle });
+
   return (
     <Box flexDirection="column" height={layout.height}>
-      <ScrollBody active={idle} height={layout.height === undefined ? undefined : Math.max(1, layout.height - 2)}>
-        {!items.length && (
-          <Text color={theme.inkFaint}>
-            {state.loading ? "Loading attachments…" : "No attachments. Paste an image or press n to add a PNG file."}
-          </Text>
-        )}
-        {items.map((a, i) => (
-          <SelectionRow key={a.id} selected={a.id === item?.id} active={idle} onClick={() => setCursor(i)}>
-            <Text color={theme.ink}>
-              {a.name} · {a.size} bytes · {formatDateTime(a.createdAt)}
-            </Text>
-          </SelectionRow>
-        ))}
-      </ScrollBody>
+      <AttachmentList
+        items={items}
+        item={item}
+        active={idle}
+        loading={state.loading}
+        height={listHeight(layout.height)}
+        onSelect={setCursor}
+      />
       <Box gap={2} marginTop={1}>
         <Button compact label="New PNG" keyName="n" onClick={() => setTask("path")} clickable={idle} />
-        <Button compact label="Open" keyName="o" onClick={open} clickable={idle && !!item} />
+        <Button compact label="Open" keyName="o" onClick={() => openItem(env)} clickable={idle && !!item} />
         <Button
           compact
           label="Remove"
@@ -102,12 +101,7 @@ export function AttachmentsTab({
           initialValues={{ path: "" }}
           onClose={() => setTask(null)}
           submitOnEnter
-          onSubmit={async (values) => {
-            await addAttachment({ story: storyId, file: String(values.path) }, ctx);
-            setTask(null);
-            state.reload();
-            toast.push("info", "PNG attached");
-          }}
+          onSubmit={(values) => attachFile(env, values)}
         />
       )}
       {task === "remove" && item && (
@@ -118,10 +112,7 @@ export function AttachmentsTab({
           confirmLabel="Remove"
           cancelLabel="Keep"
           onCancel={() => setTask(null)}
-          onConfirm={() => {
-            setTask(null);
-            void removeAttachment({ story: storyId, id: item.id }, ctx).then(() => state.reload(), toast.error);
-          }}
+          onConfirm={() => confirmRemove(env, item)}
         />
       )}
     </Box>

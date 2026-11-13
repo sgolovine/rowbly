@@ -1,3 +1,4 @@
+export * from "./attachment-list/index.js";
 export { deleteStoryMessage } from "./delete-story-message.js";
 export * from "./edit-story-modal/index.js";
 export * from "./factory-status-line/index.js";
