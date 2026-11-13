@@ -6,5 +6,6 @@ export default defineConfig({
   target: "node22",
   platform: "node",
   clean: true,
+  external: ["@earendil-works/pi-coding-agent"],
   banner: { js: "#!/usr/bin/env node" },
 });

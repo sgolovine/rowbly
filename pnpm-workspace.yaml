@@ -1,5 +1,7 @@
 allowBuilds:
   esbuild: true
+  "@google/genai": false
+  protobufjs: false
   # agentic-tui's PTY. Its install script would compile from source; the prebuilt
   # binaries it ships load without it.
   node-pty: false
@@ -19,3 +21,12 @@ minimumReleaseAgeExclude:
   - "@biomejs/cli-linux-x64@2.6.5"
   - "@biomejs/cli-win32-arm64@2.6.5"
   - "@biomejs/cli-win32-x64@2.6.5"
+  - "@earendil-works/pi-agent-core@1.5.2"
+  - "@earendil-works/pi-ai@1.5.2"
+  - "@earendil-works/pi-codemode@1.5.2"
+  - "@earendil-works/pi-coding-agent@1.5.2"
+  - "@earendil-works/pi-mcp@1.5.2"
+  - "@earendil-works/pi-schema@1.5.2"
+  - "@earendil-works/pi-telemetry@1.5.2"
+  - "@earendil-works/pi-tui@1.5.2"
+  - "typebox@1.4.7"
