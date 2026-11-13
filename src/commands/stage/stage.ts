@@ -15,20 +15,25 @@ function enabledFlag(opts: StageOptions): boolean | undefined {
   if (opts.enable && opts.disable) {
     return undefined;
   }
-  return opts.enable ? true : opts.disable ? false : undefined;
+
+  if (opts.enable) {
+    return true;
+  }
+
+  return opts.disable ? false : undefined;
 }
 
 function formatStage(stage: Stage): string {
-  const lines = [
+  return [
     `${stage.key}  ${stage.label}`,
     `Position: ${stage.position}`,
     `Enabled: ${stage.enabled ? "yes" : "no"}`,
-  ];
-  lines.push("", stage.prompt || "(no prompt)");
-  return lines.join("\n");
+    "",
+    stage.prompt || "(no prompt)",
+  ].join("\n");
 }
 
-export function registerStageCommands(program: Command): void {
+function registerCreate(program: Command): void {
   program
     .command("create")
     .description("Create a stage")
@@ -54,7 +59,9 @@ export function registerStageCommands(program: Command): void {
         (stage) => `Created stage ${stage.key} at position ${stage.position}`,
       ),
     );
+}
 
+function registerUpdate(program: Command): void {
   program
     .command("update <key>")
     .description("Update a stage")
@@ -82,7 +89,9 @@ export function registerStageCommands(program: Command): void {
         (stage) => `Updated stage ${stage.key}`,
       ),
     );
+}
 
+function registerDelete(program: Command): void {
   program
     .command("delete <key>")
     .description("Delete a stage")
@@ -95,11 +104,25 @@ export function registerStageCommands(program: Command): void {
           `Deleted stage ${result.key}${result.movedStories > 0 ? `; moved ${result.movedStories} stories` : ""}`,
       ),
     );
+}
 
+function registerGet(program: Command): void {
   program
     .command("get <key>")
     .description("Show a stage and its prompt")
     .action((key: string, _opts: unknown, command: Command) =>
-      run(command, (ctx) => getStage({ key }, ctx), formatStage),
+      run(
+        command,
+        (ctx) => getStage({ key }, ctx),
+        (stage) => formatStage(stage),
+      ),
     );
+}
+
+/** Registers the `rowbly stage` subcommands on the `stage` command. */
+export function registerStageCommands(program: Command): void {
+  registerCreate(program);
+  registerUpdate(program);
+  registerDelete(program);
+  registerGet(program);
 }

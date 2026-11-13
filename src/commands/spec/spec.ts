@@ -25,11 +25,17 @@ interface SpecOptions {
 }
 
 function formatSpec(spec: Spec): string {
-  const lines = [`${spec.slug}  ${spec.title}`, `Stories: ${spec.stories.join(", ") || "—"}`];
-  if (spec.body) {
-    lines.push("", spec.body);
-  }
-  return lines.join("\n");
+  return [
+    `${spec.slug}  ${spec.title}`,
+    `Stories: ${spec.stories.join(", ") || "—"}`,
+    ...(spec.body ? ["", spec.body] : []),
+  ].join("\n");
+}
+
+function listText(specs: readonly Spec[]): string {
+  return specs.length === 0
+    ? "No specs found."
+    : specs.map((spec) => `${spec.slug.padEnd(24)} ${spec.stories.join(",").padEnd(14)} ${spec.title}`).join("\n");
 }
 
 /**
@@ -40,16 +46,19 @@ async function readBody(opts: SpecOptions, ctx: ServiceContext): Promise<string 
   if (opts.body !== undefined && opts.bodyFile !== undefined) {
     throw new ValidationError("Use --body or --body-file, not both");
   }
+
   if (opts.bodyFile === undefined) {
     return opts.body;
   }
+
   if (opts.bodyFile === "-") {
     return text(process.stdin);
   }
+
   return readFile(resolve(ctx.cwd ?? process.cwd(), opts.bodyFile), "utf8");
 }
 
-export function registerSpecCommands(program: Command): void {
+function registerCreate(program: Command): void {
   program
     .command("create")
     .description("Create a spec and link it to one or more stories")
@@ -66,7 +75,9 @@ export function registerSpecCommands(program: Command): void {
         (spec) => `Created spec ${spec.slug} for ${spec.stories.join(", ")}`,
       ),
     );
+}
 
+function registerUpdate(program: Command): void {
   program
     .command("update <slug>")
     .description("Update a spec")
@@ -82,7 +93,9 @@ export function registerSpecCommands(program: Command): void {
         (spec) => `Updated spec ${spec.slug}`,
       ),
     );
+}
 
+function registerDelete(program: Command): void {
   program
     .command("delete <slug>")
     .description("Delete a spec")
@@ -93,14 +106,22 @@ export function registerSpecCommands(program: Command): void {
         (result) => `Deleted spec ${result.slug}`,
       ),
     );
+}
 
+function registerGet(program: Command): void {
   program
     .command("get <slug>")
     .description("Show a spec")
     .action((slug: string, _opts: unknown, command: Command) =>
-      run(command, (ctx) => getSpec({ slug }, ctx), formatSpec),
+      run(
+        command,
+        (ctx) => getSpec({ slug }, ctx),
+        (spec) => formatSpec(spec),
+      ),
     );
+}
 
+function registerList(program: Command): void {
   program
     .command("list")
     .description("List the specs")
@@ -109,15 +130,12 @@ export function registerSpecCommands(program: Command): void {
       run(
         command,
         (ctx) => listSpecs({ story: opts.story }, ctx),
-        (specs) =>
-          specs.length === 0
-            ? "No specs found."
-            : specs
-                .map((spec) => `${spec.slug.padEnd(24)} ${spec.stories.join(",").padEnd(14)} ${spec.title}`)
-                .join("\n"),
+        (specs) => listText(specs),
       ),
     );
+}
 
+function registerLink(program: Command): void {
   program
     .command("link <slug> <story>")
     .description("Link a spec to one more story")
@@ -128,7 +146,9 @@ export function registerSpecCommands(program: Command): void {
         (spec) => `Linked spec ${spec.slug} to ${spec.stories.join(", ")}`,
       ),
     );
+}
 
+function registerUnlink(program: Command): void {
   program
     .command("unlink <slug> <story>")
     .description("Remove the link from a spec to a story; a spec keeps at least one story")
@@ -139,4 +159,15 @@ export function registerSpecCommands(program: Command): void {
         (spec) => `Unlinked spec ${spec.slug}; it stays linked to ${spec.stories.join(", ")}`,
       ),
     );
+}
+
+/** Registers the `rowbly spec` subcommands on the `spec` command. */
+export function registerSpecCommands(program: Command): void {
+  registerCreate(program);
+  registerUpdate(program);
+  registerDelete(program);
+  registerGet(program);
+  registerList(program);
+  registerLink(program);
+  registerUnlink(program);
 }
