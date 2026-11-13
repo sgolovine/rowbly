@@ -11,5 +11,7 @@ export * from "./story-modal/index.js";
 export * from "./story-modal-body/index.js";
 export * from "./story-row/index.js";
 export * from "./thread-detail/index.js";
+export * from "./thread-list-panel/index.js";
+export * from "./thread-panel/index.js";
 export * from "./thread-row/index.js";
 export * from "./threads-tab/index.js";
