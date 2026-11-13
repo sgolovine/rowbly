@@ -66,11 +66,44 @@ describe("factory recovery", () => {
     await recoverFactory(owner.token, "dead", true, project.ctx);
     expect((await readFactoryState(project.paths.root)).attempts[0]?.status).toBe("interrupted");
   });
-  it("quarantines active runs whose owner death is uncertain", async () => {
+  it("recovers A and B after B dies before recovery, but preserves the current owner", async () => {
     const owner = await newOwner();
     await acquireFactoryOwnership(project.paths, owner);
-    const t = await createThread({ role: "supervisor", ownerToken: "uncertain", cwd: project.paths.root }, project.ctx);
-    await recoverFactory(owner.token, "dead", false, project.ctx);
-    expect((await getThread(t.id, project.ctx)).status).toBe("pending");
+    const ids = [];
+    for (const token of ["dead-A", "dead-B", owner.token]) {
+      const t = await createThread({ role: "supervisor", ownerToken: token, cwd: project.paths.root }, project.ctx);
+      await transitionThread(t.id, { expectedRevision: t.revision, status: "running" }, project.ctx);
+      ids.push(t.id);
+    }
+    await recoverFactory(owner.token, "dead-B", false, project.ctx);
+    expect(await Promise.all(ids.map(async (id) => (await getThread(id, project.ctx)).status))).toEqual([
+      "interrupted",
+      "interrupted",
+      "running",
+    ]);
+  });
+  it("finishes partial recovery across generations and repairs projections idempotently", async () => {
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const ids = [];
+    for (const [index, token] of ["dead-A", "dead-A", "dead-B"].entries()) {
+      const t = await createThread(
+        { role: "worker", storyId: `ROW-${index + 1}`, stage: "BACKLOG", ownerToken: token, cwd: project.paths.root },
+        project.ctx,
+      );
+      await transitionThread(t.id, { expectedRevision: t.revision, status: "running" }, project.ctx);
+      await projectNativeAttempt(t.id, project.ctx);
+      ids.push(t.id);
+    }
+    // B persisted one interruption, then died before its state projection.
+    await transitionThread(ids[0], { expectedRevision: 2, status: "interrupted" }, project.ctx);
+    await recoverFactory(owner.token, "dead-B", false, project.ctx);
+    const recovered = await Promise.all(ids.map((id) => getThread(id, project.ctx)));
+    await recoverFactory(owner.token, "dead-B", false, project.ctx);
+    expect(await Promise.all(ids.map((id) => getThread(id, project.ctx)))).toEqual(recovered);
+    expect(recovered.every((t) => t.status === "interrupted")).toBe(true);
+    const state = await readFactoryState(project.paths.root);
+    expect(state.attempts).toHaveLength(3);
+    expect(state.attempts.every((a) => a.status === "interrupted")).toBe(true);
   });
 });

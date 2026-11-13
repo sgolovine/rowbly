@@ -139,7 +139,12 @@ describe("detached factory with offline Pi", () => {
       process.kill(first.owner.pid, "SIGKILL");
       await new Promise((resolve) => setTimeout(resolve, 100));
       await expect.poll(() => probeOwner(first.owner)).toBe("dead");
+      const abandoned = await createThread(
+        { role: "worker", storyId: "D-99", stage: "BACKLOG", cwd: root, ownerToken: "older-dead-generation" },
+        ctx,
+      );
       const restarted = await startFactory({ launch }, ctx);
+      expect((await getThread(abandoned.id, ctx)).status).toBe("interrupted");
       pids.add(restarted.owner.pid);
       expect(restarted.owner.token).not.toBe(first.owner.token);
       const old = (await listThreads({ role: "supervisor" }, ctx)).threads[0];

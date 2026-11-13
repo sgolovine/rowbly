@@ -12,7 +12,7 @@ import { findProject, type ServiceContext } from "../workspace/workspace.js";
 /** Recovery runs only under new ownership, before any supervisor session opens. */
 export async function recoverFactory(
   token: string,
-  deadToken: string | undefined,
+  _deadToken: string | undefined,
   adoptExternal: boolean,
   ctx: ServiceContext,
 ) {
@@ -36,8 +36,11 @@ export async function recoverFactory(
       },
       ctx,
     );
+  // Exclusive ownership proves that all other native generations are abandoned.
+  // Each durable transition and projection can repeat after another crash.
   for (const t of threads) {
-    if (["pending", "running"].includes(t.status) && t.runs.at(-1)?.ownerToken === deadToken) {
+    await assertFactoryOwnership(paths, token);
+    if (["pending", "running"].includes(t.status) && t.runs.at(-1)?.ownerToken !== token) {
       const story = t.storyId ? await getStory({ id: t.storyId }, ctx).catch(() => undefined) : undefined;
       const exists =
         t.session.file &&
