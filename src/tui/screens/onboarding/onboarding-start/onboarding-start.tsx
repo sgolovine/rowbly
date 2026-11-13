@@ -1,8 +1,8 @@
 import { Box, Text } from "ink";
 import { SelectList } from "../../../components/index.js";
+import { useReportHints } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { theme } from "../../../theme.js";
-import { useStepHints } from "../use-step-hints.js";
 
 const HINTS: readonly KeyHint[] = [
   { key: "↑/↓", description: "select" },
@@ -17,7 +17,7 @@ export function OnboardingStart({
   onChoose(mode: "defaults" | "customize"): void;
   onHints(hints: readonly KeyHint[]): void;
 }) {
-  useStepHints(onHints, HINTS);
+  useReportHints(onHints, HINTS);
 
   return (
     <Box flexDirection="column">

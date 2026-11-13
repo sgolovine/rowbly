@@ -7,6 +7,7 @@ export * from "./toasts.js";
 export * from "./use-async.js";
 export * from "./use-cursor.js";
 export * from "./use-escape.js";
+export * from "./use-report-hints.js";
 export * from "./use-story-changes.js";
 export * from "./use-story-paste.js";
 export * from "./use-thread-changes.js";

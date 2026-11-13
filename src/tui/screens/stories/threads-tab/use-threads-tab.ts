@@ -13,12 +13,12 @@ import {
   useFactoryChanges,
   useIsActive,
   useLayout,
+  useReportHints,
   useToast,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { queueEntry } from "../../factory/index.js";
 import { type StageNames, sortThreads } from "../thread-text.js";
-import { useReportHints } from "../use-report-hints.js";
 import { handleListKey, handleThreadKey, type ThreadsTabEnv } from "./threads-tab-actions.js";
 import { type Focus, threadsHints } from "./threads-tab-view.js";
 

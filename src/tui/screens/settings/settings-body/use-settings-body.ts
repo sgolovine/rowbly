@@ -1,5 +1,5 @@
 import { type Key, useInput } from "ink";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useMemo, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useMemo, useState } from "react";
 import { PANEL_FRAME_HEIGHT, PANEL_FRAME_WIDTH, useCovered } from "../../../components/index.js";
 import {
   type Layout,
@@ -10,6 +10,7 @@ import {
   useIsActive,
   useKeyCapture,
   useLayout,
+  useReportHints,
 } from "../../../hooks/index.js";
 import { type KeyHint, moveDelta } from "../../../keymap.js";
 import { SECTION_NAV_WIDTH } from "../section-nav/index.js";
@@ -151,14 +152,12 @@ export function useSettingsBody({ groups, initialSection, onClose, onHints }: Se
   const keysOwn = active && !covered;
   const env: BodyEnv = { sections, selected, focus, childShell, setFocus, setSelectedId, onClose };
   const hints = bodyHints(focus, sectionHints);
-  const hintsKey = JSON.stringify(hints);
 
   useKeyCapture(active, { text: false, escape: true });
   // A task on top of the section, or a section that takes `esc` itself, gets the `esc`.
   useEscape(keysOwn, () => escapeBody(env));
   useInput((input, key) => handleBodyKey(env, input, key), { isActive: keysOwn });
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
-  useEffect(() => onHints(hints), [hintsKey, onHints]);
+  useReportHints(onHints, hints);
 
   const sectionLayout = useMemo(() => sectionArea(layout.width, layout.height), [layout.width, layout.height]);
 

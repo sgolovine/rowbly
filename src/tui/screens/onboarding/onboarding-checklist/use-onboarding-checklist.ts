@@ -1,9 +1,8 @@
 import { type Key, useInput } from "ink";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import type { SelectItem } from "../../../components/index.js";
-import { useIsActive, useLayout } from "../../../hooks/index.js";
+import { useIsActive, useLayout, useReportHints } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
-import { useStepHints } from "../use-step-hints.js";
 
 /** The rows that the heading, the messages and the new-item input take from the list. */
 const CHROME_ROWS = 6;
@@ -183,7 +182,7 @@ export function useOnboardingChecklist(input: ChecklistInput): ChecklistModel {
     setCursor,
   };
 
-  useStepHints(input.onHints, checklistHints(adding, input.add));
+  useReportHints(input.onHints, checklistHints(adding, input.add));
   useInput((text, key) => handleChecklistKey(env, text, key), { isActive: active });
 
   return {

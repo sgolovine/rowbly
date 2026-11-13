@@ -9,10 +9,17 @@ import {
 } from "../../../../services/onboarding/onboarding.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { Button, DetailView, Loading, ScrollBody } from "../../../components/index.js";
-import { showToast, type ToastStore, useAsync, useIsActive, useLayout, useToast } from "../../../hooks/index.js";
+import {
+  showToast,
+  type ToastStore,
+  useAsync,
+  useIsActive,
+  useLayout,
+  useReportHints,
+  useToast,
+} from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { theme } from "../../../theme.js";
-import { useStepHints } from "../use-step-hints.js";
 
 const HINTS: readonly KeyHint[] = [
   { key: "enter", description: "create Project" },
@@ -92,7 +99,7 @@ export function OnboardingSummary({
 
   const env: SummaryEnv = { ctx, input, plan: plan.data, busy, toast, setBusy, onBack, onCreated };
 
-  useStepHints(onHints, HINTS);
+  useReportHints(onHints, HINTS);
   useInput((_input, key) => handleSummaryKey(env, key), { isActive: active });
 
   if (!plan.data) {

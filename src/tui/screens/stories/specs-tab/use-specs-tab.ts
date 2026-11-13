@@ -11,11 +11,11 @@ import {
   useEscape,
   useIsActive,
   useLayout,
+  useReportHints,
   useToast,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import type { SpecMode } from "../spec-dialogs/index.js";
-import { useReportHints } from "../use-report-hints.js";
 import { handleEditKey, handleListKey, type SpecsTabEnv, showList } from "./specs-tab-actions.js";
 import { specsHints } from "./specs-tab-view.js";
 import { useSpecDrafts } from "./use-spec-drafts.js";

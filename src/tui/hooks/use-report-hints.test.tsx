@@ -1,8 +1,8 @@
 import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { KeyHint } from "../../keymap.js";
-import { renderTui } from "../../testing/index.js";
+import type { KeyHint } from "../keymap.js";
+import { renderTui } from "../testing/index.js";
 import { useReportHints } from "./use-report-hints.js";
 
 afterEach(cleanup);

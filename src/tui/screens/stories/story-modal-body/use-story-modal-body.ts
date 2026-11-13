@@ -3,12 +3,19 @@ import { useMemo, useRef, useState } from "react";
 import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { type FormField, type FormModalDelete, type FormValues, useCovered } from "../../../components/index.js";
-import { type Layout, useEscape, useIsActive, useKeyCapture, useLayout, useStoryPaste } from "../../../hooks/index.js";
+import {
+  type Layout,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
+  useLayout,
+  useReportHints,
+  useStoryPaste,
+} from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import type { StoryTabId, StoryTabReports } from "../story-tab-panes/index.js";
 import type { StageNames } from "../thread-text.js";
-import { useReportHints } from "../use-report-hints.js";
 import { handleBodyKey, type StoryModalBodyEnv } from "./story-modal-body-actions.js";
 import {
   generalLayoutOf,

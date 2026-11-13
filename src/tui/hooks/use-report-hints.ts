@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { KeyHint } from "../../keymap.js";
+import type { KeyHint } from "../keymap.js";
 
 /** Gives `hints` to the parent when their content changes, not on each render. */
 export function useReportHints(onHints: (hints: readonly KeyHint[]) => void, hints: readonly KeyHint[]): void {
