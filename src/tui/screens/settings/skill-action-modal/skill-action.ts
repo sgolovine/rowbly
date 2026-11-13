@@ -41,7 +41,7 @@ function harnessStatusText(status: HarnessResult["status"]): string {
 }
 
 /** The result of each harness, in one line for a toast. */
-export function skillResultText(name: string, result: InstallSkillResult | RemoveSkillResult): string {
+function skillResultText(name: string, result: InstallSkillResult | RemoveSkillResult): string {
   return `${name}: ${result.harnesses.map((h) => `${h.harness}: ${harnessStatusText(h.status)}`).join("; ")}`;
 }
 

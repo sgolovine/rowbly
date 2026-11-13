@@ -1,7 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import { ValidationError } from "../../../../services/errors/errors.js";
+import * as skills from "../../../../services/skill/skill.js";
 import { createToastStore } from "../../../hooks/index.js";
-import { removalMessage, type SkillActionEnv, skillResultText, submitSkillForm } from "./skill-action.js";
+import { removalMessage, type SkillActionEnv, submitSkillForm } from "./skill-action.js";
+
+vi.mock("../../../../services/skill/skill.js", async (original) => ({
+  ...(await original<typeof import("../../../../services/skill/skill.js")>()),
+  installSkill: vi.fn(async () => ({
+    harnesses: [
+      { harness: "codex", path: "a", status: "shared" },
+      { harness: "cursor", path: "b", status: "installed" },
+      { harness: "gemini-cli", path: "c", status: "missing" },
+    ],
+  })),
+}));
 
 function env(overrides: Partial<SkillActionEnv> = {}): SkillActionEnv {
   return {
@@ -19,16 +31,16 @@ function env(overrides: Partial<SkillActionEnv> = {}): SkillActionEnv {
 }
 
 describe("skillAction", () => {
-  it("names the result of each harness", () => {
-    expect(
-      skillResultText("develop", {
-        harnesses: [
-          { harness: "codex", path: "a", status: "shared" },
-          { harness: "cursor", path: "b", status: "missing" },
-          { harness: "claude-code", path: "c", status: "removed" },
-        ],
-      } as never),
-    ).toBe("develop: codex: shared (folder kept); cursor: already missing; claude-code: removed");
+  it("installs at once and names the result of each harness", async () => {
+    const e = env({ mode: "install" });
+
+    await submitSkillForm(e, { codex: true, cursor: true });
+
+    expect(skills.installSkill).toHaveBeenCalledWith({ name: "develop", harnesses: ["codex", "cursor"] }, {});
+    expect(e.toast.list().map((t) => t.message)).toEqual(["develop: codex: shared (folder kept); cursor: installed; gemini-cli: already missing"]);
+    expect(e.setBusy).toHaveBeenLastCalledWith(false);
+    expect(e.onSaved).toHaveBeenCalledOnce();
+    expect(e.pending.current).toBe(false);
   });
 
   it("lists the paths that a removal deletes", () => {
