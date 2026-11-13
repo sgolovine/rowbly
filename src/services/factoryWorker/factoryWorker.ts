@@ -1,11 +1,12 @@
 import { access, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { Type } from "typebox";
+import { z } from "zod";
 import { ConflictError } from "../errors/errors.js";
 import { projectWriteLockPath } from "../projectWrite/projectWrite.js";
 import { bundledSkills } from "../skill/skill.js";
 import type { WorkerResult } from "../thread/thread.js";
+import { toolParameters } from "../toolSchema/toolSchema.js";
 
 export function createResultTool(record: (result: WorkerResult) => Promise<void>) {
   let previous: string | undefined;
@@ -13,15 +14,17 @@ export function createResultTool(record: (result: WorkerResult) => Promise<void>
     name: "report_result",
     label: "Report result",
     description: "Record the final bounded result. Stop after this tool.",
-    parameters: Type.Object({
-      outcome: Type.String({ maxLength: 100 }),
-      summary: Type.String({ maxLength: 1000 }),
-      branch: Type.Optional(Type.String({ maxLength: 500 })),
-      commits: Type.Optional(Type.Array(Type.String({ maxLength: 100 }), { maxItems: 20 })),
-      pullRequest: Type.Optional(Type.String({ maxLength: 1000 })),
-      blockers: Type.Array(Type.String({ maxLength: 500 }), { maxItems: 10 }),
-      problems: Type.Array(Type.String({ maxLength: 500 }), { maxItems: 10 }),
-    }),
+    parameters: toolParameters(
+      z.object({
+        outcome: z.string().max(100),
+        summary: z.string().max(1000),
+        branch: z.string().max(500).optional(),
+        commits: z.array(z.string().max(100)).max(20).optional(),
+        pullRequest: z.string().max(1000).optional(),
+        blockers: z.array(z.string().max(500)).max(10),
+        problems: z.array(z.string().max(500)).max(10),
+      }),
+    ),
     async execute(_id: string, result: WorkerResult) {
       const text = JSON.stringify(result);
       if (previous && previous !== text) throw new ConflictError("Result already recorded with different values");

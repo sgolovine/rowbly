@@ -38,6 +38,45 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/services/factoryManager/**", "!**/*.test.ts"],
+      "plugins": [
+        "./biome-plugins/no-nested-function.grit",
+        "./biome-plugins/no-let.grit",
+        "./biome-plugins/no-member-assign.grit",
+        "./biome-plugins/no-mutating-call.grit"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "useBlockStatements": "error",
+            "noNestedTernary": "error",
+            "noParameterAssign": "error",
+            "noIncrementDecrement": "error",
+            "noUselessElse": "error",
+            "useReadonlyClassProperties": "error",
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 400
+              }
+            }
+          },
+          "complexity": {
+            "noExcessiveLinesPerFunction": {
+              "level": "error",
+              "options": {
+                "maxLines": 60
+              }
+            },
+            "noExcessiveCognitiveComplexity": "error"
+          },
+          "performance": {
+            "noDelete": "error"
+          }
+        }
+      }
     }
   ]
 }

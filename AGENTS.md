@@ -145,6 +145,7 @@ src/
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
 skills/               # the bundled skills; `rowbly skill install` copies them into a project
 stages/               # the default stage prompts; onboarding copies them into a project
+biome-plugins/        # GritQL lint plugins for the strict code style (see "Code style" below)
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
 ```
 
@@ -441,6 +442,23 @@ its own to create a story.
 - **Async by default.** Return a `Promise`. Then the callers do not change if an implementation
   starts to do I/O.
 
+## Code style
+
+**Read `.agents/skills/rowbly-code-style/SKILL.md` before you write or change TypeScript in `src/`.**
+`src/services/factoryManager/` is the reference implementation of the style. The rules in short:
+
+- Put each function at the top level. A callback argument can stay inline.
+- Do not change an object, an array, a Map or a Set. Make a new value.
+- Use `const`, not `let`. Do not assign to a parameter or a property.
+- Put shared state that changes in a `Store`, and read it again after each `await`.
+- Use `{` and `}` for each `if`, `else`, `for` and `while`.
+- Put the declarations at the top of a function, in groups. Put a blank line between groups.
+- Give each file one concern. A module folder can have many files.
+
+The strict override in `biome.json` enforces part of the style. It uses Biome rules and the GritQL
+plugins in `biome-plugins/`. It applies only to the folders in its `includes` list.
+Write all new modules in the strict style. To move a folder to the style, follow the skill.
+
 ### Add a CLI command
 
 1. Write or extend the service in `src/services/`.
@@ -577,6 +595,7 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
 | -------------------- | ---------------------------------------------------------------------------------------- |
 | `rowbly-tui-design`  | All TUI screens, components, modals, forms, lists, colours, borders and key hints        |
 | `rowbly-screenshots` | Screenshots and real-terminal checks of the TUI or the CLI                               |
+| `rowbly-code-style`  | The TypeScript style: top-level functions, immutable state, layout and files             |
 | `agentic-tui`        | The PTY tool. This is an unchanged copy from `@codebolt/agentic-tui` (see `UPSTREAM.md`) |
 
 ## Conventions
@@ -593,7 +612,9 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
      in the future.
   3. Run `pnpm lint` and repair all other code that the new rule finds.
 
-  If Biome has no rule for the problem, repair the problem and tell the user.
+  If Biome has no rule for the problem, write a GritQL plugin in `biome-plugins/`, if the problem
+  has a pattern in the syntax. If a plugin cannot find the problem, repair it and tell the user.
+  A rule of the strict code style goes into the strict override. Repair only the folders in its list.
 - Write all documentation in STE. See "Documentation language: ASD-STE100".
 - Before you complete a change, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
   If you change a script in `skills/factory/scripts/`, also run `pnpm test:factory`.

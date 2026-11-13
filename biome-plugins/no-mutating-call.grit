@@ -1,0 +1,21 @@
+language js
+
+// These methods change an array, a Map or a Set in place. Build a new value.
+`$target.$method($args)` as $call where {
+  $method <: or {
+    `push`,
+    `pop`,
+    `shift`,
+    `unshift`,
+    `splice`,
+    `sort`,
+    `reverse`,
+    `fill`,
+    `copyWithin`,
+    `set`,
+    `delete`,
+    `add`,
+    `clear`
+  },
+  register_diagnostic(span=$call, message="Do not change an array, a Map or a Set in place. Build a new value.")
+}
