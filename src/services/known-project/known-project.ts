@@ -29,6 +29,7 @@ interface RcEntry {
 
 function isRcEntry(value: unknown): value is RcEntry {
   const entry = value as Partial<RcEntry> | null;
+
   return typeof entry?.path === "string" && typeof entry.name === "string";
 }
 
@@ -36,34 +37,51 @@ function invalid(file: string, cause?: unknown): ValidationError {
   return new ValidationError(`${file} is invalid`, { hint: "Fix the file by hand.", cause });
 }
 
-/** The whole file, so a write keeps the keys that are not Rowbly's projects. Nothing at `file` is an empty file. */
-async function readRc(file: string): Promise<Record<string, unknown>> {
-  let text: string;
+/** The text of the file, or `undefined` when nothing is at `file`. */
+async function readRcText(file: string): Promise<string | undefined> {
   try {
-    text = await readFile(file, "utf8");
+    return await readFile(file, "utf8");
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {};
+      return undefined;
     }
+
     throw error;
   }
-  let rc: unknown;
+}
+
+function parseRc(text: string, file: string): unknown {
   try {
-    rc = JSON.parse(text);
+    return JSON.parse(text);
   } catch (error) {
     throw invalid(file, error);
   }
+}
+
+/** The whole file, so a write keeps the keys that are not Rowbly's projects. Nothing at `file` is an empty file. */
+async function readRc(file: string): Promise<Record<string, unknown>> {
+  const text = await readRcText(file);
+
+  if (text === undefined) {
+    return {};
+  }
+
+  const rc = parseRc(text, file);
+
   if (typeof rc !== "object" || rc === null || Array.isArray(rc)) {
     throw invalid(file);
   }
+
   return rc as Record<string, unknown>;
 }
 
 function rcEntries(rc: Record<string, unknown>, file: string): RcEntry[] {
   const { projects = [] } = rc;
+
   if (!Array.isArray(projects) || !projects.every(isRcEntry)) {
     throw invalid(file);
   }
+
   return projects;
 }
 
@@ -75,6 +93,7 @@ function rcPath(ctx: ServiceContext): string {
 export async function listKnownProjects(ctx: ServiceContext = {}): Promise<KnownProject[]> {
   const file = rcPath(ctx);
   const entries = rcEntries(await readRc(file), file);
+
   return Promise.all(
     entries.map(async ({ path, name }) => ({
       path,
@@ -89,10 +108,12 @@ export async function recordProject(input: RecordProjectInput, ctx: ServiceConte
   const file = rcPath(ctx);
   const rc = await readRc(file);
   const entries = rcEntries(rc, file);
+  const known = entries.find((entry) => entry.path === input.path);
+
   if (entries[0]?.path === input.path && entries[0].name === input.name) {
     return;
   }
-  const known = entries.find((entry) => entry.path === input.path);
+
   await writeRc(file, rc, [{ ...known, ...input }, ...entries.filter((entry) => entry !== known)]);
 }
 
@@ -102,30 +123,43 @@ export async function forgetProject(path: string, ctx: ServiceContext = {}): Pro
   const rc = await readRc(file);
   const entries = rcEntries(rc, file);
   const projects = entries.filter((entry) => entry.path !== path);
+
   if (projects.length === entries.length) {
     return;
   }
+
   await writeRc(file, rc, projects);
 }
 
 async function writeRc(file: string, rc: Record<string, unknown>, projects: RcEntry[]): Promise<void> {
   // A dotfile manager often makes this file a link: write through the link and keep it.
   const target = await realpath(file).catch(() => file);
+
   await writeFileAtomic(target, `${JSON.stringify({ ...rc, projects }, null, 2)}\n`);
+}
+
+/** Gives the stored installation ID. Throws when the stored value is not a nonempty string. */
+function storedDeviceId(rc: Record<string, unknown>, file: string): string {
+  if (typeof rc.deviceId !== "string" || !rc.deviceId.trim()) {
+    throw invalid(file);
+  }
+
+  return rc.deviceId;
 }
 
 /** Returns the nonsecret installation ID. Invalid rc data stays unchanged. */
 export async function getDeviceId(ctx: ServiceContext = {}): Promise<string> {
   const file = rcPath(ctx);
   const rc = await readRc(file);
+
   if (rc.deviceId !== undefined) {
-    if (typeof rc.deviceId !== "string" || !rc.deviceId.trim()) {
-      throw invalid(file);
-    }
-    return rc.deviceId;
+    return storedDeviceId(rc, file);
   }
+
   const deviceId = randomUUID();
   const target = await realpath(file).catch(() => file);
+
   await writeFileAtomic(target, `${JSON.stringify({ ...rc, deviceId }, null, 2)}\n`, { mode: 0o600 });
+
   return deviceId;
 }
