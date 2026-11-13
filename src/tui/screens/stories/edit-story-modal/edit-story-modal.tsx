@@ -4,11 +4,10 @@ import type { Stage } from "../../../../services/stage/stage.js";
 import { deleteStory, type Story, updateStory } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
-import { type ToastStore, useToast } from "../../../hooks/index.js";
+import { showToast, type ToastStore, useToast } from "../../../hooks/index.js";
 import { deleteStoryMessage } from "../delete-story-message.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 import { StoryModal } from "../story-modal/index.js";
-import { toastInfo } from "../toast-info.js";
 
 /** The environment of the save and the delete of the Story. */
 interface EditStoryEnv {
@@ -34,7 +33,7 @@ async function saveStory(env: EditStoryEnv, values: FormValues, attachments?: re
     env.ctx,
   );
 
-  toastInfo(env.toast, `Saved ${saved.id}`);
+  showToast(env.toast, "info", `Saved ${saved.id}`);
   env.onSaved(saved);
 }
 
@@ -47,7 +46,7 @@ function removeStory(env: EditStoryEnv): Promise<void> {
 }
 
 function storyDeleted(env: EditStoryEnv, id: string): void {
-  toastInfo(env.toast, `Deleted ${id}`);
+  showToast(env.toast, "info", `Deleted ${id}`);
   env.onDeleted(id);
 }
 

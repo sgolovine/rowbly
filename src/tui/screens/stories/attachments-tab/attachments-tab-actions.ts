@@ -8,9 +8,8 @@ import {
 } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
-import type { ToastStore } from "../../../hooks/index.js";
+import { showToast, type ToastStore } from "../../../hooks/index.js";
 import { moveDelta } from "../../../keymap.js";
-import { toastInfo } from "../toast-info.js";
 
 /** The question that the Attachments tab asks: the path of a new PNG, or the removal of an image. */
 export type AttachmentTask = "path" | "remove" | null;
@@ -55,7 +54,7 @@ export async function attachFile(env: AttachmentsTabEnv, values: FormValues): Pr
   await addAttachment({ story: env.storyId, file: String(values.path) }, env.ctx);
   env.setTask(null);
   env.reload();
-  toastInfo(env.toast, "PNG attached");
+  showToast(env.toast, "info", "PNG attached");
 }
 
 /** Closes the question and removes `item`. */

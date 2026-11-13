@@ -3,9 +3,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { createSpec, deleteSpec, type Spec, unlinkSpec, updateSpec } from "../../../../services/spec/spec.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
-import type { ToastStore } from "../../../hooks/index.js";
+import { showToast, type ToastStore } from "../../../hooks/index.js";
 import type { SpecMode } from "../spec-dialogs/index.js";
-import { toastInfo } from "../toast-info.js";
 import { listKeyMode } from "./specs-tab-view.js";
 import type { SpecDrafts } from "./use-spec-drafts.js";
 
@@ -63,7 +62,7 @@ export function clickRow(env: SpecsTabEnv, index: number): void {
 export async function createStorySpec(env: SpecsTabEnv, values: FormValues): Promise<void> {
   const spec = await createSpec({ title: String(values.title ?? ""), stories: [env.storyId] }, env.ctx);
 
-  toastInfo(env.toast, `Created ${spec.title}`);
+  showToast(env.toast, "info", `Created ${spec.title}`);
   env.setSelectSlug(spec.slug);
   showList(env);
   env.reload();
@@ -73,7 +72,7 @@ export async function createStorySpec(env: SpecsTabEnv, values: FormValues): Pro
 export async function renameStorySpec(env: SpecsTabEnv, spec: Spec, values: FormValues): Promise<void> {
   const renamed = await updateSpec({ slug: spec.slug, title: String(values.title ?? "") }, env.ctx);
 
-  toastInfo(env.toast, `Renamed to ${renamed.title}`);
+  showToast(env.toast, "info", `Renamed to ${renamed.title}`);
   showList(env);
   env.reload();
 }
@@ -86,7 +85,7 @@ export async function removeStorySpec(env: SpecsTabEnv, spec: Spec): Promise<voi
   try {
     await env.drafts.forget(spec.slug);
     await (shared ? unlinkSpec({ slug: spec.slug, story: storyId }, ctx) : deleteSpec({ slug: spec.slug }, ctx));
-    toastInfo(env.toast, shared ? `Removed ${spec.title} from ${storyId}` : `Deleted ${spec.title}`);
+    showToast(env.toast, "info", shared ? `Removed ${spec.title} from ${storyId}` : `Deleted ${spec.title}`);
     showList(env);
     env.reload();
   } catch (err) {

@@ -3,9 +3,8 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { sendFactoryCommand } from "../../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { runExclusive, type ToastStore } from "../../../hooks/index.js";
+import { runExclusive, showToast, type ToastStore } from "../../../hooks/index.js";
 import { type StageNames, threadActive, threadName, threadResumable } from "../thread-text.js";
-import { toastInfo } from "../toast-info.js";
 import type { Focus } from "./threads-tab-view.js";
 
 /** The environment of the handlers of the Threads tab. */
@@ -37,7 +36,7 @@ async function commandTask(env: ThreadsTabEnv, type: CommandType, thread: Thread
 
   try {
     await sendFactoryCommand(type, { threadId: thread.id }, env.ctx);
-    toastInfo(env.toast, type === "cancel" ? `Interrupted ${name}` : `Resumed ${name}`);
+    showToast(env.toast, "info", type === "cancel" ? `Interrupted ${name}` : `Resumed ${name}`);
     env.refresh();
   } catch (error) {
     env.toast.error(error);

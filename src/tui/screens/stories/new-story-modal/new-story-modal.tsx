@@ -4,10 +4,16 @@ import type { Stage } from "../../../../services/stage/stage.js";
 import { createStory, type Story } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { FormModal, type FormValues } from "../../../components/index.js";
-import { IMAGE_PASTE_HINT, type ToastStore, type useStoryPaste, useToast, writeRef } from "../../../hooks/index.js";
+import {
+  IMAGE_PASTE_HINT,
+  showToast,
+  type ToastStore,
+  type useStoryPaste,
+  useToast,
+  writeRef,
+} from "../../../hooks/index.js";
 import { NewStoryImages } from "../new-story-images/index.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
-import { toastInfo } from "../toast-info.js";
 
 type StoryPaste = ReturnType<typeof useStoryPaste>;
 
@@ -45,7 +51,7 @@ async function createNewStory(env: NewStoryEnv, values: FormValues): Promise<voi
     );
 
     paste.current?.saved();
-    toastInfo(env.toast, `Created ${story.id}`);
+    showToast(env.toast, "info", `Created ${story.id}`);
     env.onCreated(story);
   } finally {
     env.setSaving(false);

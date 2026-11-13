@@ -1,8 +1,7 @@
 import { createStage, type Stage, updateStage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { FormModal, type FormValues } from "../../../components/index.js";
-import { type ToastStore, useToast } from "../../../hooks/index.js";
-import { toastInfo } from "../../stories/index.js";
+import { showToast, type ToastStore, useToast } from "../../../hooks/index.js";
 
 /** The environment of the save of the Stage. */
 interface StageFormEnv {
@@ -24,7 +23,7 @@ async function saveStage(env: StageFormEnv, values: FormValues): Promise<void> {
 
   const saved = stage ? await updateStage({ key: stage.key, ...input }, ctx) : await createStage(input, ctx);
 
-  toastInfo(env.toast, stage ? `Updated ${saved.label}` : `Created ${saved.label}`);
+  showToast(env.toast, "info", stage ? `Updated ${saved.label}` : `Created ${saved.label}`);
   env.onSaved(saved);
 }
 
