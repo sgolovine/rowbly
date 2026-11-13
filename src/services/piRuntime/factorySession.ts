@@ -20,6 +20,10 @@ export async function openFactorySession(
   o: FactorySessionOptions,
 ): Promise<{ handle: PiSession; model: ModelChoice; file: string }> {
   const sdk = await loadPi();
+  if (o.choice) {
+    const { validateModelChoice } = await import("../agentAuth/agentAuth.js");
+    await validateModelChoice(o.runtime, o.choice);
+  }
   const dir = `${o.runtimeDir}/sessions/${o.thread.id}`;
   await mkdir(dir, { recursive: true, mode: 0o700 });
   const manager =

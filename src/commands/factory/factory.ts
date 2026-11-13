@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { ValidationError } from "../../services/errors/errors.js";
 import { getFactoryStatus } from "../../services/factoryManager/factoryManager.js";
+import { configureFactory, type ModelChoice } from "../../services/factorySettings/factorySettings.js";
 import { runFactoryForeground } from "../factoryRunner/factoryRunner.js";
 import { parsePosition, run } from "../output/output.js";
 
@@ -26,5 +27,30 @@ export function registerFactoryCommands(program: Command) {
         },
         () => "Factory stopped.",
       ),
+    );
+  program
+    .command("configure")
+    .description("Set factory models and worker limit")
+    .option("--max-workers <n>", "worker limit", parsePosition)
+    .option("--supervisor <model>", "provider/model")
+    .option("--worker <model>", "provider/model")
+    .option("--supervisor-thinking <level>", "supported thinking level")
+    .option("--worker-thinking <level>", "supported thinking level")
+    .action(
+      (
+        opts: {
+          maxWorkers?: number;
+          supervisor?: string;
+          worker?: string;
+          supervisorThinking?: ModelChoice["thinkingLevel"];
+          workerThinking?: ModelChoice["thinkingLevel"];
+        },
+        cmd: Command,
+      ) =>
+        run(
+          cmd,
+          (ctx) => configureFactory(opts, ctx),
+          (settings) => JSON.stringify(settings, null, 2),
+        ),
     );
 }

@@ -12,7 +12,9 @@ const resources = {
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
-  factory: ["status", "start"],
+  factory: ["status", "start", "configure"],
+  auth: ["providers", "status", "login", "logout"],
+  model: ["list"],
   thread: ["log", "list", "show"],
 };
 
@@ -69,6 +71,8 @@ describe("registerCommands", () => {
       "spec",
       "skill",
       "factory",
+      "auth",
+      "model",
       "thread",
     ]);
     for (const [resource, actions] of Object.entries(resources)) {

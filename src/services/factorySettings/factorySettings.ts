@@ -57,3 +57,33 @@ export async function updateFactorySettings(
   await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
   return settings;
 }
+
+/** Validates explicit model choices before the settings file changes. */
+export async function configureFactory(
+  input: {
+    maxWorkers?: number;
+    supervisor?: string;
+    worker?: string;
+    supervisorThinking?: ModelChoice["thinkingLevel"];
+    workerThinking?: ModelChoice["thinkingLevel"];
+  },
+  ctx: ServiceContext = {},
+  runtime?: import("../agentAuth/agentAuth.js").AuthRuntime,
+) {
+  const { authRuntime, validateModelChoice } = await import("../agentAuth/agentAuth.js");
+  const patch: Partial<Omit<FactorySettings, "version">> = {};
+  if (input.maxWorkers !== undefined) patch.maxWorkers = input.maxWorkers;
+  for (const role of ["supervisor", "worker"] as const) {
+    const value = input[role];
+    const thinkingLevel = input[`${role}Thinking`];
+    if (!value && thinkingLevel) throw new ValidationError(`Select the ${role} model with its thinking level`);
+    if (!value) continue;
+    const slash = value.indexOf("/");
+    if (slash < 1 || slash === value.length - 1) throw new ValidationError("Use provider/model for a model choice");
+    const choice = { provider: value.slice(0, slash), modelId: value.slice(slash + 1), thinkingLevel };
+    if (!validModel(choice)) throw new ValidationError("Invalid model choice");
+    runtime ??= await authRuntime();
+    patch[`${role}Model`] = await validateModelChoice(runtime, choice);
+  }
+  return updateFactorySettings(patch, ctx);
+}

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { readFile, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -101,4 +102,18 @@ async function writeRc(file: string, rc: Record<string, unknown>, projects: RcEn
   // A dotfile manager often makes this file a link: write through the link and keep it.
   const target = await realpath(file).catch(() => file);
   await writeFileAtomic(target, `${JSON.stringify({ ...rc, projects }, null, 2)}\n`);
+}
+
+/** Returns the nonsecret installation ID. Invalid rc data stays unchanged. */
+export async function getDeviceId(ctx: ServiceContext = {}): Promise<string> {
+  const file = rcPath(ctx);
+  const rc = await readRc(file);
+  if (rc.deviceId !== undefined) {
+    if (typeof rc.deviceId !== "string" || !rc.deviceId.trim()) throw invalid(file);
+    return rc.deviceId;
+  }
+  const deviceId = randomUUID();
+  const target = await realpath(file).catch(() => file);
+  await writeFileAtomic(target, `${JSON.stringify({ ...rc, deviceId }, null, 2)}\n`, { mode: 0o600 });
+  return deviceId;
 }
