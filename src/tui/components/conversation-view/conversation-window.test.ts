@@ -16,6 +16,10 @@ function entries(from: number, count: number): ConversationEntry[] {
   return Array.from({ length: count }, (_, i) => ({ id: `m${from + i}`, type: "message", text: `${from + i}` }));
 }
 
+function entry(id: string): ConversationEntry {
+  return { id, type: "message", text: "" };
+}
+
 function page(list: ConversationEntry[], more: Partial<ConversationPage> = {}): ConversationPage {
   return { entries: list, nextBefore: null, bytes: 0, status: "ok", invalidLines: 0, ...more };
 }
@@ -63,8 +67,8 @@ describe("conversation windows", () => {
 
 describe("the viewport", () => {
   const blocks = [
-    { entry: entries(1, 1)[0]!, lines: [1, 2, 3].map((n) => ({ text: `a${n}`, tone: "body" as const })) },
-    { entry: entries(2, 1)[0]!, lines: [1, 2].map((n) => ({ text: `b${n}`, tone: "body" as const })) },
+    { entry: entry("m1"), lines: [1, 2, 3].map((n) => ({ text: `a${n}`, tone: "body" as const })) },
+    { entry: entry("m2"), lines: [1, 2].map((n) => ({ text: `b${n}`, tone: "body" as const })) },
   ];
 
   it("shows the end, or the rows from an offset", () => {
