@@ -1,6 +1,8 @@
+import { writeFile } from "node:fs/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as factory from "../../services/factory/factory.js";
 import { newOwner } from "../../services/factoryOwnership/factoryOwnership.js";
+import { prepareRuntime } from "../../services/runtimeFiles/runtimeFiles.js";
 import { useTestProject } from "../../services/testProject/testProject.js";
 import { runCli } from "../testCli/testCli.js";
 
@@ -23,5 +25,12 @@ describe("factory commands", () => {
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout).phase).toBe("ready");
     expect(start).toHaveBeenCalledOnce();
+  });
+  it("returns exit one for unavailable runtime status", async () => {
+    await prepareRuntime(project.paths);
+    await writeFile(`${project.paths.runtimeDir}/factory.lock`, "{");
+    const result = await runCli(["--json", "factory", "status"], project.paths.root);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("CONFLICT");
   });
 });

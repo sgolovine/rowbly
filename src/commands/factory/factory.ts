@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { Command } from "commander";
+import { ConflictError } from "../../services/errors/errors.js";
 import {
   getFactoryLogs,
   getFactoryStatus,
@@ -16,7 +17,15 @@ export function registerFactoryCommands(program: Command) {
     .command("status")
     .description("Show native factory status")
     .action((_opts: unknown, command: Command) =>
-      run(command, getFactoryStatus, (status) => JSON.stringify(status, null, 2)),
+      run(
+        command,
+        async (ctx) => {
+          const status = await getFactoryStatus(ctx);
+          if (status.phase === "unavailable") throw new ConflictError(status.error ?? "Factory status is unavailable");
+          return status;
+        },
+        (status) => JSON.stringify(status, null, 2),
+      ),
     );
   const launch = {
     executable: process.execPath,
