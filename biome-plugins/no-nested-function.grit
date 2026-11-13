@@ -1,0 +1,15 @@
+language js
+
+// A function inside a function body must move to the top level. A callback argument stays inline.
+or {
+  JsFunctionDeclaration() as $fn where { $fn <: within JsFunctionBody() },
+  JsVariableDeclarator() as $fn where {
+    $fn <: within JsFunctionBody(),
+    $fn <: JsVariableDeclarator(initializer=JsInitializerClause(expression=or {
+      JsArrowFunctionExpression(),
+      JsFunctionExpression()
+    }))
+  }
+} where {
+  register_diagnostic(span=$fn, message="Move this function to the top level. Only a callback argument can stay inline.")
+}

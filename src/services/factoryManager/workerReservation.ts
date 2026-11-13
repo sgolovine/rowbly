@@ -45,28 +45,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     return { threadId: prior };
   }
 
-  if (getState(manager).stopping) {
-    throw new ConflictError("Factory is stopping");
-  }
-
-  const { threads } = await listThreads({ role: "worker" }, manager.ctx);
-  const activeThreads = threads.filter((t) => isActiveStatus(t.status));
-
-  if (activeThreads.some((t) => t.storyId === input.storyId)) {
-    throw new ConflictError("Story already has an active worker");
-  }
-
-  const story = await getStory({ id: input.storyId }, manager.ctx);
-
-  if (story.stage !== input.stage) {
-    throw new ConflictError("Story Stage changed");
-  }
-
-  const { active, limit } = getState(manager);
-
-  if (Math.max(active.size, activeThreads.length) >= limit) {
-    throw new ConflictError("Worker capacity is full");
-  }
+  const story = await assertSlotAvailable(manager, input);
 
   if (input.resumeThreadId) {
     const previous = await getThread(input.resumeThreadId, manager.ctx);
@@ -109,6 +88,34 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
   await persistStatus(manager);
 
   return { threadId: thread.id };
+}
+
+/** Checks that the factory runs, the Story has no worker and is in the Stage, and a slot is free. */
+async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput): Promise<Story> {
+  if (getState(manager).stopping) {
+    throw new ConflictError("Factory is stopping");
+  }
+
+  const { threads } = await listThreads({ role: "worker" }, manager.ctx);
+  const activeThreads = threads.filter((t) => isActiveStatus(t.status));
+
+  if (activeThreads.some((t) => t.storyId === input.storyId)) {
+    throw new ConflictError("Story already has an active worker");
+  }
+
+  const story = await getStory({ id: input.storyId }, manager.ctx);
+
+  if (story.stage !== input.stage) {
+    throw new ConflictError("Story Stage changed");
+  }
+
+  const { active, limit } = getState(manager);
+
+  if (Math.max(active.size, activeThreads.length) >= limit) {
+    throw new ConflictError("Worker capacity is full");
+  }
+
+  return story;
 }
 
 function canResume(thread: ThreadRecord, story: Story): boolean {

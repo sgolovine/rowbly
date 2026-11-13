@@ -34,6 +34,11 @@ function textResult(value: unknown) {
 
 /** The tools that the supervisor session uses to read the factory and to control workers. */
 export function createSupervisorTools(manager: Manager) {
+  return [...readTools(manager), ...workerTools(manager), ...policyTools(manager), ...noteTools(manager)];
+}
+
+/** Tools that read the factory, a Thread, a Story or a Stage. */
+function readTools(manager: Manager) {
   return [
     {
       name: "factory_snapshot",
@@ -47,21 +52,6 @@ export function createSupervisorTools(manager: Manager) {
       ),
       execute: async (_id: string, args: { cursor?: number; limit?: number }) =>
         textResult(await serial(manager, () => buildSnapshot(manager, args.cursor, args.limit))),
-    },
-    {
-      name: "start_worker",
-      label: "Start worker",
-      description: "Reserve an eligible worker",
-      parameters: toolParameters(
-        z.object({
-          storyId: z.string(),
-          stage: z.string(),
-          requestId: z.string().min(1).max(128),
-          resumeThreadId: z.string().optional(),
-          model: MODEL_CHOICE_SCHEMA.optional(),
-        }),
-      ),
-      execute: async (_id: string, args: ReserveWorkerInput) => textResult(await reserveWorker(manager, args)),
     },
     {
       name: "inspect_worker",
@@ -92,6 +82,47 @@ export function createSupervisorTools(manager: Manager) {
       parameters: toolParameters(z.object({ stage: z.string() })),
       execute: async (_id: string, args: { stage: string }) => textResult(await readStage(manager, args.stage)),
     },
+  ];
+}
+
+/** Tools that start and stop workers. */
+function workerTools(manager: Manager) {
+  return [
+    {
+      name: "start_worker",
+      label: "Start worker",
+      description: "Reserve an eligible worker",
+      parameters: toolParameters(
+        z.object({
+          storyId: z.string(),
+          stage: z.string(),
+          requestId: z.string().min(1).max(128),
+          resumeThreadId: z.string().optional(),
+          model: MODEL_CHOICE_SCHEMA.optional(),
+        }),
+      ),
+      execute: async (_id: string, args: ReserveWorkerInput) => textResult(await reserveWorker(manager, args)),
+    },
+    {
+      name: "stop_worker",
+      label: "Stop worker",
+      description: "Interrupt only the expected active run",
+      parameters: toolParameters(
+        z.object({
+          threadId: z.string(),
+          expectedRunId: z.string(),
+          reason: z.string().max(500),
+        }),
+      ),
+      execute: async (_id: string, args: { threadId: string; expectedRunId: string; reason: string }) =>
+        textResult(await stopWorker(manager, args.threadId, args.expectedRunId)),
+    },
+  ];
+}
+
+/** Tools that classify Stages, and hold or release Stories. */
+function policyTools(manager: Manager) {
+  return [
     {
       name: "classify_stage",
       label: "Classify Stage",
@@ -115,6 +146,27 @@ export function createSupervisorTools(manager: Manager) {
         textResult(await serial(manager, () => releaseHeldStory(manager, args.storyId))),
     },
     {
+      name: "hold_candidate",
+      label: "Hold candidate",
+      description: "Hold a current Story for at most thirty minutes",
+      parameters: toolParameters(
+        z.object({
+          storyId: z.string(),
+          stage: z.string(),
+          reason: z.string().max(500),
+          reconsiderAt: z.string(),
+        }),
+      ),
+      execute: async (_id: string, args: HoldInput) =>
+        textResult(await serial(manager, () => holdCandidate(manager, args))),
+    },
+  ];
+}
+
+/** Tools that record notes and problems for later turns. */
+function noteTools(manager: Manager) {
+  return [
+    {
       name: "save_note",
       label: "Save note",
       description: "Save a bounded operational note",
@@ -130,21 +182,6 @@ export function createSupervisorTools(manager: Manager) {
       execute: async () => textResult(await serial(manager, () => clearNotes(manager))),
     },
     {
-      name: "hold_candidate",
-      label: "Hold candidate",
-      description: "Hold a current Story for at most thirty minutes",
-      parameters: toolParameters(
-        z.object({
-          storyId: z.string(),
-          stage: z.string(),
-          reason: z.string().max(500),
-          reconsiderAt: z.string(),
-        }),
-      ),
-      execute: async (_id: string, args: HoldInput) =>
-        textResult(await serial(manager, () => holdCandidate(manager, args))),
-    },
-    {
       name: "raise_attention",
       label: "Raise attention",
       description: "Record a bounded problem and continue other work",
@@ -157,20 +194,6 @@ export function createSupervisorTools(manager: Manager) {
       ),
       execute: async (_id: string, args: { key: string; text: string; storyId?: string }) =>
         textResult(await serial(manager, () => raiseAttention(manager, args))),
-    },
-    {
-      name: "stop_worker",
-      label: "Stop worker",
-      description: "Interrupt only the expected active run",
-      parameters: toolParameters(
-        z.object({
-          threadId: z.string(),
-          expectedRunId: z.string(),
-          reason: z.string().max(500),
-        }),
-      ),
-      execute: async (_id: string, args: { threadId: string; expectedRunId: string; reason: string }) =>
-        textResult(await stopWorker(manager, args.threadId, args.expectedRunId)),
     },
   ];
 }

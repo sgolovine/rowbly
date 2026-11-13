@@ -1,0 +1,7 @@
+language js
+
+// Each binding gets one value. Compute the value with a function or a conditional expression.
+JsVariableDeclaration() as $declaration where {
+  $declaration <: r"(?s)let\s.*",
+  register_diagnostic(span=$declaration, message="Use const. Do not reassign a variable.")
+}

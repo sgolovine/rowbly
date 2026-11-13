@@ -1,0 +1,10 @@
+language js
+
+// An assignment to a property changes an object in place. Build a new object.
+JsAssignmentExpression() as $assignment where {
+  $assignment <: JsAssignmentExpression(left=or {
+    JsStaticMemberAssignment(),
+    JsComputedMemberAssignment()
+  }),
+  register_diagnostic(span=$assignment, message="Do not change an object in place. Build a new object.")
+}
