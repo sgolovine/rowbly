@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { watchThreads } from "../../services/thread/thread.js";
+import { stopOnAbort } from "./stop-on-abort.js";
 
 /** A crashed factory writes no file, so a factory watch also reads the status again after this time. */
 const FACTORY_POLL_MS = 5000;
@@ -15,23 +16,18 @@ export function useThreadChanges(root: string | undefined, onChange: () => void,
     if (root === undefined) {
       return;
     }
-    let stop: (() => void) | undefined;
-    let mounted = true;
+
+    const live = new AbortController();
+    const timer = factory ? setInterval(onChange, FACTORY_POLL_MS) : undefined;
+
     watchThreads(onChange, { cwd: root }, { factory }).then(
-      (unsubscribe) => {
-        if (mounted) {
-          stop = unsubscribe;
-        } else {
-          unsubscribe();
-        }
-      },
+      (unsubscribe) => stopOnAbort(live.signal, unsubscribe),
       () => {},
     );
-    const timer = factory ? setInterval(onChange, FACTORY_POLL_MS) : undefined;
     timer?.unref?.();
+
     return () => {
-      mounted = false;
-      stop?.();
+      live.abort();
       clearInterval(timer);
     };
   }, [root, onChange, factory]);

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { watchStories } from "../../services/story-watch/story-watch.js";
+import { stopOnAbort } from "./stop-on-abort.js";
 
 /**
  * Calls `onChange` when the Story files of the project at `root` change, also from a different process. It
@@ -11,21 +12,14 @@ export function useStoryChanges(root: string | undefined, onChange: () => void):
     if (root === undefined) {
       return;
     }
-    let stop: (() => void) | undefined;
-    let mounted = true;
+
+    const live = new AbortController();
+
     watchStories(onChange, { cwd: root }).then(
-      (unsubscribe) => {
-        if (mounted) {
-          stop = unsubscribe;
-        } else {
-          unsubscribe();
-        }
-      },
+      (unsubscribe) => stopOnAbort(live.signal, unsubscribe),
       () => {},
     );
-    return () => {
-      mounted = false;
-      stop?.();
-    };
+
+    return () => live.abort();
   }, [root, onChange]);
 }
