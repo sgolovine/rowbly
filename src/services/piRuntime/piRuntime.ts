@@ -48,12 +48,25 @@ export async function createPiSession(
     });
   if (!options.resourceLoader) await resourceLoader.reload();
   const { session } = await sdk.createAgentSession({ ...options, settingsManager, resourceLoader });
+  let settled = Promise.resolve();
+  let resolveSettled: (() => void) | undefined;
+  const unsubscribe = session.subscribe((event) => {
+    if (event.type === "agent_start")
+      settled = new Promise<void>((resolve) => {
+        resolveSettled = resolve;
+      });
+    if (event.type === "agent_settled") {
+      resolveSettled?.();
+      resolveSettled = undefined;
+    }
+  });
   let closing: Promise<void> | undefined;
   return {
     session,
     async prompt(text) {
       await session.prompt(text);
       await session.waitForIdle();
+      await settled;
       const last = session.messages.findLast((message) => message.role === "assistant");
       if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
         throw new PiPromptError(last.errorMessage ?? `Assistant ${last.stopReason}`);
@@ -63,6 +76,8 @@ export async function createPiSession(
       closing ??= (async () => {
         await session.abort();
         await session.waitForIdle();
+        await settled;
+        unsubscribe();
         session.dispose();
         await options.modelRuntime.settleCredentialWrites();
       })();

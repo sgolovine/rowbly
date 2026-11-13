@@ -26,6 +26,10 @@ export interface ProjectPaths {
   storiesDir: string;
   stagesDir: string;
   specsDir: string;
+  ignoreFile: string;
+  factorySettingsFile: string;
+  stateFile: string;
+  runtimeDir: string;
 }
 
 export function projectPaths(root: string): ProjectPaths {
@@ -38,6 +42,10 @@ export function projectPaths(root: string): ProjectPaths {
     storiesDir: join(dir, "stories"),
     stagesDir: join(dir, "stages"),
     specsDir: join(dir, "specs"),
+    ignoreFile: join(dir, ".gitignore"),
+    factorySettingsFile: join(dir, "factory.json"),
+    stateFile: join(dir, "state.json"),
+    runtimeDir: join(dir, "runtime"),
   };
 }
 
@@ -59,4 +67,20 @@ export async function findProject(ctx: ServiceContext = {}): Promise<ProjectPath
   throw new NotFoundError("No Rowbly project found in this directory or any parent", {
     hint: "Run `rowbly init` to create one here.",
   });
+}
+
+export function runtimePaths(paths: ProjectPaths) {
+  const dir = paths.runtimeDir;
+  return {
+    dir,
+    lockFile: join(dir, "factory.lock"),
+    guardFile: join(dir, "lifecycle.guard"),
+    statusFile: join(dir, "status.json"),
+    controlDir: join(dir, "control"),
+    receiptsDir: join(dir, "receipts"),
+    threadsDir: join(dir, "threads"),
+    sessionsDir: join(dir, "sessions"),
+    binDir: join(dir, "bin"),
+    logsDir: join(dir, "logs"),
+  };
 }

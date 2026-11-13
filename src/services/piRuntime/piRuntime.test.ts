@@ -76,7 +76,12 @@ describe("Pi runtime", () => {
       fauxAssistantMessage("Done"),
     ]);
     b.faux.setResponses([fauxAssistantMessage("Independent")]);
+    let settled = false;
+    a.managed.session.subscribe((event) => {
+      if (event.type === "agent_settled") settled = true;
+    });
     await Promise.all([a.managed.prompt("A"), b.managed.prompt("B")]);
+    expect(settled).toBe(true);
     expect(a.sessionManager.getSessionId()).not.toBe(b.sessionManager.getSessionId());
     expect(a.managed.session.getLastAssistantText()).toBe("Done");
     expect(b.managed.session.getLastAssistantText()).toBe("Independent");

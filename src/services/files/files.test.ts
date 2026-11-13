@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTempDir } from "../testProject/testProject.js";
@@ -58,5 +58,19 @@ describe("files", () => {
     await writeFileAtomic(path, "hello");
     expect(await readFile(path, "utf8")).toBe("hello");
     expect(await readdir(join(dir.path, "x", "y"))).toEqual(["file.txt"]);
+  });
+  it("atomic writes do not collide and retain private mode", async () => {
+    const path = join(dir.path, "shared");
+    const values = Array.from({ length: 40 }, (_, index) => String(index).repeat(1000));
+    await Promise.all(values.map((value) => writeFileAtomic(path, value, { mode: 0o600, durable: true })));
+    expect(values).toContain(await readFile(path, "utf8"));
+    expect((await stat(path)).mode & 0o777).toBe(0o600);
+    expect(await readdir(dir.path)).toEqual(["shared"]);
+  });
+  it("removes temporary files after a failed rename", async () => {
+    const path = join(dir.path, "folder");
+    await mkdir(path);
+    await expect(writeFileAtomic(path, "fail")).rejects.toThrow();
+    expect(await readdir(dir.path)).toEqual(["folder"]);
   });
 });

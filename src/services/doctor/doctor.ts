@@ -1,5 +1,7 @@
+import { execFile } from "node:child_process";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
+import { promisify } from "node:util";
 import {
   attachmentDir,
   attachmentOwners,
@@ -12,6 +14,7 @@ import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
 import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
+import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtimeFiles/runtimeFiles.js";
 import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import {
   canonicalStoryId,
@@ -82,6 +85,29 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
       );
     }
   }
+
+  const missingIgnores = await missingRuntimeIgnores(paths);
+  if (missingIgnores.length) {
+    await report(
+      {
+        severity: "warning",
+        message: "Factory runtime ignore rules are missing",
+        file: rel(paths.ignoreFile),
+        fix: "Add the missing rules",
+      },
+      () => ensureRuntimeIgnores(paths),
+    );
+  }
+  const tracked = await promisify(execFile)(
+    "git",
+    ["-C", paths.root, "ls-files", "-z", "--", ".rowbly/runtime", ".rowbly/state.json*"],
+    { encoding: "utf8" },
+  ).then(
+    (result) => result.stdout.split("\0").filter(Boolean),
+    () => [],
+  );
+  for (const file of tracked)
+    await report({ severity: "warning", message: "Factory runtime file is tracked by Git", file });
 
   await checkStages(paths, config, rel, report);
   await checkStories(paths, config, rel, report);

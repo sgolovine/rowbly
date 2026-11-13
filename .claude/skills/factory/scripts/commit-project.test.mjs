@@ -164,3 +164,17 @@ it("prints the result as JSON, and the usage for bad arguments", async () => {
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /Usage: commit-project\.mjs/);
 });
+
+it("excludes new and already tracked runtime files from canonical commits", async () => {
+  await write(".rowbly/runtime/tracked.json", "old");
+  git("add", "--", ".rowbly/runtime/tracked.json");
+  git("commit", "-qm", "seed tracked runtime");
+  await write(".rowbly/runtime/tracked.json", "new");
+  await write(".rowbly/runtime/untracked.json", "private");
+  await write(".rowbly/stories/ROW-01.md", "changed");
+  const result = await commitProject(root);
+  assert.equal(result.status, "committed");
+  assert.deepEqual(result.paths, [".rowbly/stories/ROW-01.md"]);
+  assert.equal(git("show", "HEAD:.rowbly/runtime/tracked.json"), "old");
+  assert.match(git("status", "--porcelain"), /runtime/);
+});

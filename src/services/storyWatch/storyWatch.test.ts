@@ -1,4 +1,5 @@
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
@@ -37,6 +38,23 @@ describe("watchStories", () => {
     await rm(project.paths.storiesDir, { recursive: true });
     await sleep(50);
     stop();
+  });
+
+  it("ignores runtime watcher floods and retains state activity invalidation", async () => {
+    await mkdir(project.paths.runtimeDir);
+    const onChange = vi.fn();
+    const stop = await watchStories(onChange, project.ctx);
+    try {
+      await Promise.all(
+        Array.from({ length: 30 }, (_, index) => writeFile(join(project.paths.runtimeDir, `${index}.json`), "{}")),
+      );
+      await sleep(200);
+      expect(onChange).not.toHaveBeenCalled();
+      await writeFile(project.paths.stateFile, "{}");
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+    } finally {
+      stop();
+    }
   });
 
   it("fails without a project", async () => {

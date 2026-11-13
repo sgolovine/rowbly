@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 // Read and replace the factory state. Assignment belongs to the supervisor.
+import { randomUUID } from "node:crypto";
+import { acquireOwner, newOwner, releaseOwner } from "./ownership-lock.mjs";
 import { realpathSync } from "node:fs";
 import { open, readFile, rename, stat, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -52,7 +54,7 @@ export const readState = (root) => guard(root, load);
 async function replace(path, input) {
   const state = validate(input);
   state.updatedAt = new Date().toISOString();
-  const temporary = `${path}.tmp-${process.pid}`;
+  const temporary = `${path}.tmp-${randomUUID()}`;
   const file = await open(temporary, "wx", 0o600);
   try {
     try {
@@ -80,31 +82,20 @@ export const writeState = (root, input) => guard(root, async (path) => {
   return replace(path, input);
 });
 
-const LOCK_STALE_MS = 120_000;
-
-/**
- * Runs one read-change-write of the state at a time, across processes. Without it, a scan can replace the record of
- * a worker that started during the scan. A lock older than two minutes is from a process that stopped.
- */
+/** Serializes state transactions. A live or uncertain owner retains its lock. */
 export async function withStateLock(root, action) {
   const lock = `${statePath(root)}.lock`;
-  for (let waited = 0; ; waited += 50) {
-    try {
-      await (await open(lock, "wx")).close();
-      break;
-    } catch (error) {
-      // Any other failure also occurs in the action, which reports it with the path and the repair.
-      if (error.code !== "EEXIST") break;
-      const age = Date.now() - (await stat(lock).then((file) => file.mtimeMs, () => Date.now()));
-      if (age > LOCK_STALE_MS || waited > LOCK_STALE_MS) await unlink(lock).catch(() => {});
-      else await sleep(50);
-    }
+  const guard = `${lock}.guard`;
+  const owner = await newOwner();
+  const deadline = Date.now() + 120_000;
+  for (;;) {
+    const result = await acquireOwner(lock, guard, owner);
+    if (result.acquired) break;
+    if (Date.now() >= deadline) throw new Error(`State lock is busy: ${lock}`);
+    await sleep(50);
   }
-  try {
-    return await action();
-  } finally {
-    await unlink(lock).catch(() => {});
-  }
+  try { return await action(); }
+  finally { await releaseOwner(lock, guard, owner.token); }
 }
 
 const KEPT = {

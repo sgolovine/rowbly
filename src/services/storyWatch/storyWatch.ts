@@ -11,7 +11,8 @@ const QUIET_MS = 100;
 export async function watchStories(onChange: () => void, ctx: ServiceContext = {}): Promise<() => void> {
   const paths = await findProject(ctx);
   let timer: NodeJS.Timeout | undefined;
-  const watcher = watch(paths.dir, { persistent: false, recursive: true }, () => {
+  const watcher = watch(paths.dir, { persistent: false, recursive: true }, (_event, filename) => {
+    if (filename === "runtime" || filename?.startsWith("runtime/")) return;
     clearTimeout(timer);
     timer = setTimeout(onChange, QUIET_MS);
   });

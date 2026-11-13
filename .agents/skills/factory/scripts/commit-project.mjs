@@ -46,7 +46,7 @@ async function commitLocked(root, message = DEFAULT_MESSAGE) {
     ]);
     const records = status.split("\0").filter(Boolean)
       .map((record) => ({ code: record.slice(0, 2), path: record.slice(3) }))
-      .filter(({ path }) => path !== `${project}/state.json` && !path.startsWith(`${project}/state.json.`));
+      .filter(({ path }) => path !== `${project}/state.json` && !path.startsWith(`${project}/state.json.`) && path !== `${project}/runtime` && !path.startsWith(`${project}/runtime/`));
     const conflicts = records.filter(({ code }) => CONFLICTS.has(code)).map(({ path }) => path);
     if (conflicts.length > 0) {
       return { status: "conflict", paths: conflicts, detail: "Resolve the merge conflict in these files." };

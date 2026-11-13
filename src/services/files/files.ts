@@ -1,4 +1,5 @@
-import { access, lstat, mkdir, readdir, rename, stat, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { access, lstat, mkdir, open, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export async function pathExists(path: string): Promise<boolean> {
@@ -50,10 +51,36 @@ export async function listMarkdownFiles(dir: string): Promise<string[]> {
   }
 }
 
-/** Writes through a temporary file and a rename, so a reader never sees a half-written file. */
-export async function writeFileAtomic(path: string, content: string): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  const temp = join(dirname(path), `.${Date.now()}-${process.pid}.tmp`);
-  await writeFile(temp, content, "utf8");
-  await rename(temp, path);
+export interface AtomicWriteOptions {
+  mode?: number;
+  durable?: boolean;
+}
+
+/** Writes a complete file through an exclusive temporary file and atomic rename. */
+export async function writeFileAtomic(path: string, content: string, options: AtomicWriteOptions = {}): Promise<void> {
+  const parent = dirname(path);
+  await mkdir(parent, { recursive: true });
+  const temp = join(parent, `.${randomUUID()}.tmp`);
+  let created = false;
+  try {
+    const file = await open(temp, "wx", options.mode);
+    created = true;
+    try {
+      await file.writeFile(content, "utf8");
+      if (options.durable) await file.sync();
+    } finally {
+      await file.close();
+    }
+    await rename(temp, path);
+    if (options.durable) {
+      const directory = await open(parent, "r");
+      try {
+        await directory.sync();
+      } finally {
+        await directory.close();
+      }
+    }
+  } finally {
+    if (created) await rm(temp, { force: true });
+  }
 }
