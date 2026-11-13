@@ -40,3 +40,7 @@ export async function releaseFactoryOwnership(paths: ProjectPaths, token: string
   const runtime = runtimePaths(paths);
   return releaseOwner(runtime.lockFile, runtime.guardFile, token);
 }
+
+export async function readFactoryOwner(paths: ProjectPaths) {
+  return readOwner(await runtimePath(paths, "factory.lock"));
+}

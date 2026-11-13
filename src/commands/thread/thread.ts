@@ -1,9 +1,21 @@
 import type { Command } from "commander";
 import { getThreadLog } from "../../services/conversation/conversation.js";
+import { sendFactoryCommand } from "../../services/factory/factory.js";
 import { getThread, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
 export function registerThreadCommands(program: Command): void {
+  for (const action of ["cancel", "resume"] as const)
+    program
+      .command(`${action} <id>`)
+      .description(`${action} a worker through the running factory`)
+      .action((id: string, _opts: unknown, command: Command) =>
+        run(
+          command,
+          (ctx) => sendFactoryCommand(action, { threadId: id }, ctx),
+          (receipt) => JSON.stringify(receipt),
+        ),
+      );
   program
     .command("log <id>")
     .description("Print a bounded conversation tail (at most 100 entries)")

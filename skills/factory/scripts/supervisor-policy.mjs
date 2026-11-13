@@ -203,6 +203,7 @@ export function releaseStory(previous, story) {
   const state = structuredClone(previous);
   state.attempts ??= [];
   if (state.parked) delete state.parked[story];
+  if (state.nativeCancelled) delete state.nativeCancelled[story];
   resetBudget(state, story);
   const last = state.attempts.findLast((attempt) => attempt.story === story);
   if (last && stoppedStatuses.has(last.status)) last.observedStageDeparture = true;

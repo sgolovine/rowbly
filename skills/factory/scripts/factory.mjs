@@ -10,6 +10,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
+import { readOwner, probeOwner } from "./ownership-lock.mjs";
 import { renderWorkerMessage } from "./worker-message.mjs";
 import { commitProject, lockPath } from "./commit-project.mjs";
 import { readState, resetState, statePath, withStateLock, writeState } from "./factory-state.mjs";
@@ -172,7 +173,14 @@ async function loadState() {
 }
 
 /** One read-change-write of the state. The change gets the state and gives the new state, or nothing. */
+async function assertExternalOwnership() {
+  if (!root) return;
+  const owner = await readOwner(join(root, ".rowbly/runtime/factory.lock"));
+  if (owner && await probeOwner(owner) !== "dead")
+    throw new Problem("A native factory owns this Project.", ["Use rowbly factory status. Do not assign an external worker."]);
+}
 const update = (change) => withStateLock(root, async () => {
+  await assertExternalOwnership();
   const state = await loadState();
   const next = await change(state);
   if (next) await writeState(root, next);
@@ -256,6 +264,7 @@ async function scan() {
   }
   let moved = [];
   const output = await withStateLock(root, async () => {
+    await assertExternalOwnership();
     const state = await loadState();
     const active = state.attempts.filter((attempt) => !stopped.has(attempt.status));
     const { workers, warnings } = parseWorkers(active.map((attempt) => attempt.workerId));
@@ -641,6 +650,7 @@ try {
   if (!root && command !== "check") {
     throw new Problem(`No .rowbly/ at or above ${resolve(values.root ?? process.cwd())}.`, ["Give the Project directory with --root <dir>."]);
   }
+  await assertExternalOwnership();
   const result = await commands[command]();
   console.log(typeof result === "string" ? result : JSON.stringify(result, null, 2));
 } catch (error) {

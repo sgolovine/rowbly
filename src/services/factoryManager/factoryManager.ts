@@ -8,9 +8,13 @@ import {
   acquireFactoryOwnership,
   assertFactoryOwnership,
   newOwner,
+  type Owner,
+  probeOwner,
+  readFactoryOwner,
   releaseFactoryOwnership,
 } from "../factoryOwnership/factoryOwnership.js";
 import { evaluateScan, markReported, pendingReports, releaseStory, storyHash } from "../factoryPolicy/factoryPolicy.js";
+import { recoverFactory } from "../factoryRecovery/factoryRecovery.js";
 import { getFactorySettings, type ModelChoice } from "../factorySettings/factorySettings.js";
 import { readFactoryState, updateFactoryState } from "../factoryState/factoryState.js";
 import { createResultTool, workerMessage } from "../factoryWorker/factoryWorker.js";
@@ -39,6 +43,8 @@ import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 export interface FactoryDependencies {
   runtime: ModelRuntime;
+  ownership?: { owner: Owner; deadToken?: string };
+  adoptExternal?: boolean;
   agentDir: string;
   shim: string;
   skillsDir: string;
@@ -51,9 +57,20 @@ export type FactoryManager = Awaited<ReturnType<typeof createFactoryManager>>;
 export async function createFactoryManager(deps: FactoryDependencies, context: ServiceContext = {}) {
   const paths = await findProject(context);
   const ctx = { ...context, cwd: paths.root };
-  const owner = await newOwner();
-  if (!(await acquireFactoryOwnership(paths, owner)).acquired)
+  const previous = deps.ownership ? undefined : await readFactoryOwner(paths);
+  const deadToken =
+    deps.ownership?.deadToken ?? (previous && (await probeOwner(previous)) === "dead" ? previous.token : undefined);
+  const owner = deps.ownership?.owner ?? (await newOwner());
+  if (deps.ownership) await assertFactoryOwnership(paths, owner.token);
+  else if (!(await acquireFactoryOwnership(paths, owner)).acquired)
     throw new ConflictError("Another factory owns this Project");
+  let externalActive = 0;
+  try {
+    externalActive = (await recoverFactory(owner.token, deadToken, !!deps.adoptExternal, ctx)).externalActive;
+  } catch (error) {
+    await releaseFactoryOwnership(paths, owner.token);
+    throw error;
+  }
   let queue: Promise<unknown> = Promise.resolve();
   function serial<T>(call: () => Promise<T>): Promise<T> {
     const next = queue.then(async () => {
@@ -88,6 +105,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
   }
   let unwatch: (() => void) | undefined;
   let timer: NodeJS.Timeout | undefined;
+  let heartbeat: NodeJS.Timeout | undefined;
   let deadlineTimer: NodeJS.Timeout | undefined;
   let authStamp = await stat(join(deps.agentDir, "auth.json")).then(
     (s) => s.mtimeMs,
@@ -103,6 +121,10 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
   const holds = new Map<string, { stage: string; reason: string; reconsiderAt: string }>();
   const attention = new Map<string, { text: string; storyId?: string }>();
   const providers = new Map<string, { reason: string; retryAt?: string }>();
+  if (externalActive)
+    attention.set("external", {
+      text: `${externalActive} external attempts remain protected. Stop external workers before --adopt-external.`,
+    });
   try {
     const stored = JSON.parse(await readFile(await runtimePath(paths, "status.json"), "utf8"));
     if (Array.isArray(stored.attention))
@@ -153,6 +175,14 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     const stages = await classifiedStages();
     const state = await readFactoryState(paths.root, ctx);
     const policy = evaluateScan(state, { stories, stages, maxActive });
+    const cancelled = (state.nativeCancelled ?? {}) as Record<string, { stage: string; hash: string }>;
+    for (const decision of policy.decisions) {
+      const story = stories.find((s) => s.id === decision.story);
+      if (story && cancelled[story.id]?.stage === story.stage && cancelled[story.id]?.hash === storyHash(story)) {
+        decision.action = "skip";
+        decision.reason = "cancelled by user";
+      }
+    }
     for (const decision of policy.decisions) {
       const hold = holds.get(decision.story);
       if (hold && hold.stage === decision.stage && Date.parse(hold.reconsiderAt) > Date.now()) {
@@ -225,9 +255,14 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     let handle: PiSession | undefined;
     let reportedResult: WorkerResult | undefined;
     let assignedProvider: string | undefined;
+    let lastActivityAt = new Date().toISOString();
+    let lastTool: string | undefined;
+    let unsubscribe: (() => void) | undefined;
+    let activityTimer: NodeJS.Timeout | undefined;
     try {
       const intent = await getThread(id, ctx);
       await deps.beforeLaunch?.(intent);
+      if ((await getThread(id, ctx)).status !== "pending") return;
       if (stopping) throw new ConflictError("Factory is stopping");
       const story = await getStory({ id: intent.storyId as string }, ctx);
       if (story.stage !== intent.stage) throw new ConflictError("Story Stage changed before launch");
@@ -287,6 +322,34 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
         model: `${opened.model.provider}/${opened.model.modelId}`,
         skillsDir: deps.skillsDir,
       });
+      unsubscribe = handle.session.subscribe((event) => {
+        lastActivityAt = new Date().toISOString();
+        if (event.type === "tool_execution_start") lastTool = event.toolName;
+      });
+      let activityWritePending = false;
+      activityTimer = setInterval(() => {
+        if (activityWritePending) return;
+        activityWritePending = true;
+        void serial(async () => {
+          if (!handle) return;
+          const t = await getThread(id, ctx);
+          if (!["running", "pending"].includes(t.status)) return;
+          const stats = handle.session.getSessionStats();
+          await change(id, t.status, {
+            lastActivityAt,
+            lastTool,
+            usage: {
+              ...stats.tokens,
+              cost: stats.cost,
+            },
+          });
+        })
+          .catch(() => {})
+          .finally(() => {
+            activityWritePending = false;
+          });
+      }, 1000);
+      activityTimer.unref();
       await handle.prompt(prompt);
       let result = reportedResult;
       if (!result && !stopping) {
@@ -300,7 +363,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
         }
       }
       await serial(async () => {
-        if ((await getThread(id, ctx)).status === "interrupted") return;
+        if (["interrupted", "cancelled"].includes((await getThread(id, ctx)).status)) return;
         const fresh = await getStory({ id: story.id }, ctx).catch(() => undefined);
         result ??= { outcome: "unknown", summary: "Worker stopped without a result", blockers: [], problems: [] };
         if (fresh?.stage === intent.stage)
@@ -322,11 +385,15 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
           });
       });
     } finally {
+      clearInterval(activityTimer);
+      unsubscribe?.();
       if (handle) {
         const stats = handle.session.getSessionStats();
         await serial(async () => {
           const t = await getThread(id, ctx);
           await change(id, t.status, {
+            lastActivityAt,
+            lastTool,
             usage: {
               input: stats.tokens.input,
               output: stats.tokens.output,
@@ -363,6 +430,29 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
       if (story.stage !== input.stage) throw new ConflictError("Story Stage changed");
       if (Math.max(active.size, threads.filter((t) => ["pending", "running"].includes(t.status)).length) >= limit)
         throw new ConflictError("Worker capacity is full");
+      if (input.resumeThreadId) {
+        const previous = await getThread(input.resumeThreadId, ctx);
+        if (previous.runs.at(-1)?.id === input.requestId) return { threadId: previous.id };
+        if (
+          !previous.resumable ||
+          previous.status === "completed" ||
+          previous.runs.length >= 3 ||
+          previous.storyId !== story.id ||
+          previous.stage !== story.stage ||
+          !previous.worktree
+        )
+          throw new ConflictError("Thread cannot resume in this Stage");
+        await stat(previous.worktree);
+        await updateFactoryState(
+          paths.root,
+          (state) => {
+            const cancelled = { ...((state.nativeCancelled as object) ?? {}) } as Record<string, unknown>;
+            delete cancelled[story.id];
+            return { ...releaseStory(state, story.id), nativeCancelled: cancelled };
+          },
+          ctx,
+        );
+      }
       const choice = input.model ?? settings.workerModel;
       if (choice) {
         const { validateModelChoice } = await import("../agentAuth/agentAuth.js");
@@ -390,7 +480,11 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
         )
           throw new ConflictError("Thread cannot resume in this Stage");
         if (!(await stat(previous.worktree)).isDirectory()) throw new ConflictError("Resume worktree is unavailable");
-        t = await appendThreadRun(previous.id, { expectedRevision: previous.revision, ownerToken: owner.token }, ctx);
+        t = await appendThreadRun(
+          previous.id,
+          { expectedRevision: previous.revision, ownerToken: owner.token, runId: input.requestId },
+          ctx,
+        );
       } else {
         t = await createThread(
           {
@@ -728,6 +822,10 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     try {
       await openSupervisor();
       phase = "ready";
+      heartbeat = setInterval(() => {
+        void serial(persistStatus).catch(() => {});
+      }, 5000);
+      heartbeat.unref();
       if (stopping) return;
       unwatch = await watchStories(notify, ctx, { includeState: false });
       timer = setInterval(notify, 30_000);
@@ -835,6 +933,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
       stopping = true;
       unwatch?.();
       clearInterval(timer);
+      clearInterval(heartbeat);
       clearTimeout(deadlineTimer);
       phase = "stopping";
       wake?.();
@@ -859,6 +958,39 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
   return {
     run,
     reserveWorker,
+    cancelWorker: async (id: string, expectedRunId: string) => {
+      const session = await serial(async () => {
+        const t = await getThread(id, ctx);
+        if (t.runs.at(-1)?.id !== expectedRunId || t.runs.at(-1)?.ownerToken !== owner.token)
+          throw new ConflictError("Worker run changed");
+        if (t.status === "cancelled") return undefined;
+        if (!active.has(id) || !["pending", "running"].includes(t.status))
+          throw new ConflictError("Worker is not active");
+        const story = await getStory({ id: t.storyId as string }, ctx);
+        await updateFactoryState(
+          paths.root,
+          (state) => ({
+            ...state,
+            nativeCancelled: {
+              ...((state.nativeCancelled as object) ?? {}),
+              [story.id]: { stage: story.stage, hash: storyHash(story) },
+            },
+          }),
+          ctx,
+        );
+        await change(id, "cancelled", { resumable: !!t.session.file });
+        return active.get(id)?.session;
+      });
+      await session?.session.abort();
+    },
+    resumeWorker: async (id: string, expectedRunId: string, requestId: string) => {
+      const t = await getThread(id, ctx);
+      if (t.runs.at(-1)?.id !== expectedRunId) {
+        if (t.runs.at(-1)?.id && t.runs.at(-1)?.id === requestId) return;
+        throw new ConflictError("Worker run changed");
+      }
+      await reserveWorker({ storyId: t.storyId as string, stage: t.stage as string, requestId, resumeThreadId: id });
+    },
     retryProvider: (provider: string) =>
       serial(async () => {
         providers.delete(provider);

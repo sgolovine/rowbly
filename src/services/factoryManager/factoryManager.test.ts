@@ -110,7 +110,7 @@ describe("foreground factory", () => {
       async () => {
         const workers = (await listThreads({ role: "worker" }, { cwd: root })).threads;
         expect(workers.length).toBe(1);
-        expect(["completed", "failed", "interrupted"]).toContain(workers[0]?.status);
+        expect(["completed", "failed", "interrupted", "cancelled"]).toContain(workers[0]?.status);
       },
       { timeout: 10000, interval: 20 },
     );
@@ -151,6 +151,44 @@ describe("foreground factory", () => {
       await run;
     }
   }, 15000);
+  it("publishes bounded live activity and usage, then final totals", async () => {
+    const story = await createStory({ title: "Progress", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([tool("bash", { command: "sleep 1.5" }), fauxAssistantMessage("RESULT: complete")]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "activity" });
+    await vi.waitFor(
+      async () => {
+        const t = (await listThreads({ role: "worker" }, { cwd: root })).threads[0];
+        expect(t?.status).toBe("running");
+        expect(t?.lastTool).toBe("bash");
+        expect(t?.lastActivityAt).toBeTruthy();
+        expect(t?.usage?.input).toBeTypeOf("number");
+      },
+      { timeout: 4000, interval: 30 },
+    );
+    const t = await settled();
+    expect(t?.lastTool).toBe("bash");
+    expect(t?.usage?.output).toBeGreaterThanOrEqual(0);
+  });
+  it("cancels only the expected run and suppresses automatic reassignment", async () => {
+    let release = () => {};
+    const barrier = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const story = await createStory({ title: "Cancel", stage: "WORK" }, { cwd: root });
+    const f = await fixture(() => barrier);
+    const { threadId } = await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "cancel" });
+    const t = (await listThreads({ role: "worker" }, { cwd: root })).threads[0];
+    try {
+      await expect(f.manager.cancelWorker(threadId, "old-run")).rejects.toThrow(/changed/);
+      await f.manager.cancelWorker(threadId, t.runs.at(-1)?.id ?? "missing");
+      release();
+      expect((await settled())?.status).toBe("cancelled");
+      expect((await f.manager.reconcile()).find((d) => d.story === story.id)?.reason).toBe("cancelled by user");
+    } finally {
+      release();
+    }
+  });
   it("persists pending intent and rejects duplicates, capacity overflow, and stale Stages", async () => {
     let release = () => {};
     const barrier = new Promise<void>((resolve) => {
@@ -205,14 +243,10 @@ describe("foreground factory", () => {
       tool("report_result", { outcome: "complete", summary: "Resumed", blockers: [], problems: [] }),
       fauxAssistantMessage("Done"),
     ]);
-    expect(
-      await f.manager.reserveWorker({
-        storyId: story.id,
-        stage: "WORK",
-        requestId: "resume",
-        resumeThreadId: previous?.id,
-      }),
-    ).toEqual({ threadId: previous?.id });
+    if (!previous?.runs.at(-1)) throw new Error("Missing previous run");
+    const previousRun = previous.runs.at(-1)?.id ?? "missing";
+    await f.manager.resumeWorker(previous.id, previousRun, "resume");
+    await f.manager.resumeWorker(previous.id, previousRun, "resume");
     await vi.waitFor(async () =>
       expect((await listThreads({ role: "worker" }, { cwd: root })).threads[0]?.status).toBe("completed"),
     );

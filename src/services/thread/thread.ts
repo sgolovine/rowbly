@@ -296,7 +296,7 @@ export async function transitionThread(
 }
 export async function appendThreadRun(
   id: string,
-  input: { expectedRevision: number; ownerToken: string },
+  input: { expectedRevision: number; ownerToken: string; runId?: string },
   ctx: ServiceContext = {},
 ): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
@@ -306,7 +306,7 @@ export async function appendThreadRun(
       throw new ConflictError("Thread cannot resume");
     await stat(await runtimePath(paths, t.session.file));
     t.runs.push({
-      id: randomUUID(),
+      id: input.runId ?? randomUUID(),
       ownerToken: input.ownerToken,
       createdAt: (ctx.now?.() ?? new Date()).toISOString(),
       status: "pending",
