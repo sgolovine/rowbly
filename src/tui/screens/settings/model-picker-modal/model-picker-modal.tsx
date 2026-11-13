@@ -1,20 +1,52 @@
-import { Box, Text } from "ink";
-import { useRef, useState } from "react";
+import { type Dispatch, type RefObject, type SetStateAction, useRef, useState } from "react";
 import type { ModelChoice } from "../../../../services/factory-settings/factory-settings.js";
-import { Modal, SearchableSelectPicker, SelectList } from "../../../components/index.js";
-import { ActiveContext, useEscape, useIsActive, useKeyCapture, useToast } from "../../../hooks/index.js";
-import { theme } from "../../../theme.js";
+import { Modal, SearchableSelectPicker } from "../../../components/index.js";
+import {
+  runExclusive,
+  type ToastStore,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
+  useToast,
+} from "../../../hooks/index.js";
+import { ThinkingPicker } from "../thinking-picker/index.js";
+import { DEFAULT, levelChoice, modelLabels, type PickerModel, pickerHints, pickerId } from "./model-picker-text.js";
 
-/** A model that a signed-in provider offers, with the thinking levels that it supports. */
-export interface PickerModel {
-  provider: string;
-  modelId: string;
-  name: string;
-  thinkingLevels: readonly string[];
+export type { PickerModel } from "./model-picker-text.js";
+
+/** What a save of the picker reads and changes. */
+interface PickerEnv {
+  readonly models: readonly PickerModel[];
+  readonly toast: ToastStore;
+  /** True while a save runs, so that a second `enter` does not save again. */
+  readonly saving: RefObject<boolean>;
+  readonly setModel: Dispatch<SetStateAction<PickerModel | undefined>>;
+  readonly onSave: (choice: ModelChoice | null) => Promise<void>;
 }
 
-/** The option that clears the choice, so that Pi selects its default model. */
-const DEFAULT = "";
+/** Saves the choice. An error shows as a toast, and the Modal stays open. */
+function saveChoice(env: PickerEnv, choice: ModelChoice | null): void {
+  runExclusive(env.saving, () => env.onSave(choice)).catch((error: unknown) => env.toast.error(error));
+}
+
+/** The Pi default and a model with one level or none have no level to choose, so they save at once. */
+function pickModel(env: PickerEnv, id: string): void {
+  const found = env.models.find((m) => pickerId(m) === id);
+
+  if (!found) {
+    saveChoice(env, null);
+
+    return;
+  }
+
+  if (found.thinkingLevels.length <= 1) {
+    saveChoice(env, { provider: found.provider, modelId: found.modelId });
+
+    return;
+  }
+
+  env.setModel(found);
+}
 
 /**
  * Selects the model of one factory role in two steps, in a generic Modal: a model from a search of the
@@ -39,91 +71,29 @@ export function ModelPickerModal({
   const toast = useToast();
   const [model, setModel] = useState<PickerModel | undefined>(undefined);
   const saving = useRef(false);
-  const ids = models.map((m) => `${m.provider}/${m.modelId}`);
-  const labels = Object.fromEntries([
-    [DEFAULT, "Pi default"],
-    ...models.map((m) => [
-      `${m.provider}/${m.modelId}`,
-      m.name && m.name !== m.modelId ? `${m.provider}/${m.modelId} · ${m.name}` : `${m.provider}/${m.modelId}`,
-    ]),
-  ]);
-  const save = (choice: ModelChoice | null) => {
-    if (saving.current) {
-      return;
-    }
-    saving.current = true;
-    onSave(choice).then(
-      () => {
-        saving.current = false;
-      },
-      (error: unknown) => {
-        saving.current = false;
-        toast.error(error);
-      },
-    );
-  };
-  const pick = (id: string) => {
-    const found = models.find((m) => `${m.provider}/${m.modelId}` === id);
-    if (!found) {
-      return save(null);
-    }
-    // A model with one level or none has no choice to make.
-    if (found.thinkingLevels.length <= 1) {
-      return save({ provider: found.provider, modelId: found.modelId });
-    }
-    setModel(found);
-  };
+
+  const env: PickerEnv = { models, toast, saving, setModel, onSave };
+
   useKeyCapture(active && model !== undefined, { text: false, escape: true });
   useEscape(active && model !== undefined, () => setModel(undefined));
-  const currentId = current ? `${current.provider}/${current.modelId}` : DEFAULT;
+
   return (
-    <Modal
-      title={model ? `${title} › Thinking` : title}
-      onClose={onClose}
-      hints={
-        model
-          ? [
-              { key: "enter", description: "save" },
-              { key: "↑/↓", description: "select" },
-              { key: "esc", description: "back" },
-            ]
-          : [
-              { key: "enter", description: "choose" },
-              { key: "↑/↓", description: "select" },
-              { key: "ctrl+l", description: "clear query" },
-              { key: "esc", description: "cancel" },
-            ]
-      }
-    >
+    <Modal title={model ? `${title} › Thinking` : title} onClose={onClose} hints={pickerHints(model !== undefined)}>
       {model ? (
-        <Box flexDirection="column" gap={1}>
-          <Text color={theme.inkMuted} wrap="truncate-end">
-            The thinking levels of {model.provider}/{model.modelId}
-          </Text>
-          <ActiveContext.Provider value={active}>
-            <SelectList
-              items={[
-                { value: DEFAULT, label: "Model default" },
-                ...model.thinkingLevels.map((level) => ({ value: level, label: level })),
-              ]}
-              defaultIndex={Math.max(0, model.thinkingLevels.indexOf(current?.thinkingLevel ?? "") + 1)}
-              onSelect={(item) =>
-                save({
-                  provider: model.provider,
-                  modelId: model.modelId,
-                  ...(item.value ? { thinkingLevel: item.value as ModelChoice["thinkingLevel"] } : {}),
-                })
-              }
-            />
-          </ActiveContext.Provider>
-        </Box>
+        <ThinkingPicker
+          modelId={pickerId(model)}
+          levels={model.thinkingLevels}
+          current={current?.thinkingLevel}
+          active={active}
+          onSelect={(level) => saveChoice(env, levelChoice(model, level))}
+        />
       ) : (
         <SearchableSelectPicker
-          options={[DEFAULT, ...ids]}
-          labels={labels}
+          options={[DEFAULT, ...models.map(pickerId)]}
+          labels={modelLabels(models)}
           initialQuery=""
-          value={currentId}
-          onSelect={pick}
+          value={current ? pickerId(current) : DEFAULT}
+          onSelect={(id) => pickModel(env, id)}
           onCancel={onClose}
         />
       )}
