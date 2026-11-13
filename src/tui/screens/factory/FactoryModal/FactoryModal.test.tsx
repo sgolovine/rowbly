@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
 import { useTestProject } from "../../../../services/testProject/testProject.js";
-import { createThread } from "../../../../services/thread/thread.js";
+import { createThread, transitionThread } from "../../../../services/thread/thread.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
 import { FactoryModal } from "./FactoryModal.js";
 
@@ -58,7 +58,7 @@ describe("FactoryModal", () => {
     const { tui, onClose } = await open({ version: 1, phase: "stopped" });
     expect(tui.frame()).toContain("Stopped");
     expect(tui.frame()).toContain("limit 4");
-    expect(tui.frame()).toContain("No AI provider is signed in");
+    expect(tui.frame()).not.toContain("No AI provider is signed in");
     expect(tui.frame()).toMatch(/s start/);
     await tui.press("s");
     await settle(20);
@@ -133,6 +133,44 @@ describe("FactoryModal", () => {
     expect(onAiSettings).toHaveBeenCalledOnce();
   });
 
+  it("peeks stopped supervisors and selects historical metadata without loading providers or starting a daemon", async () => {
+    const old = await createThread({ role: "supervisor", cwd: project.paths.root, ownerToken: "old" }, project.ctx);
+    await transitionThread(old.id, { expectedRevision: old.revision, status: "failed" }, project.ctx);
+    const current = await createThread(
+      { role: "supervisor", cwd: project.paths.root, ownerToken: "current" },
+      project.ctx,
+    );
+    const checkProvider = vi.fn(async () => true);
+    const props = { ctx: project.ctx, launch, onClose: vi.fn(), checkProvider };
+    const tui = await renderTui(<FactoryModal {...props} status={{ ...running, supervisorThreadId: current.id }} />);
+    await settle(50);
+    await tui.press(keys.enter);
+    await tui.rerender(<FactoryModal {...props} status={{ version: 1, phase: "stopped" }} />);
+    await transitionThread(current.id, { expectedRevision: current.revision, status: "interrupted" }, project.ctx);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Supervisor · interrupted");
+    });
+    expect(tui.frame()).not.toContain("f follow");
+    await tui.press(keys.escape);
+    await tui.press("h");
+    expect(tui.frame()).toContain("Supervisor history");
+    expect(tui.frame()).toContain("failed");
+    await tui.press("/");
+    await tui.press("failed");
+    await tui.press(keys.enter);
+    await tui.press(keys.enter);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Supervisor · failed");
+      expect(tui.frame()).toContain("No conversation yet");
+    });
+    expect(checkProvider).not.toHaveBeenCalled();
+    expect(factory.startFactory).not.toHaveBeenCalled();
+    await tui.press(keys.escape);
+    expect(tui.frame()).toContain("Supervisor history");
+  });
+
   it("asks a stopped factory without a provider to sign in with a", async () => {
     const tui = await renderTui(
       <FactoryModal
@@ -144,6 +182,8 @@ describe("FactoryModal", () => {
         checkProvider={async () => false}
       />,
     );
+    await settle(50);
+    await tui.press("s");
     await settle(50);
     await tui.press();
     expect(tui.frame()).toContain("Press a to sign in");

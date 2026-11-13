@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from "ink";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { authRuntime, getAuthStatus } from "../../../../services/agentAuth/agentAuth.js";
 import {
   type FactoryLaunch,
@@ -8,7 +8,7 @@ import {
   stopFactory,
 } from "../../../../services/factory/factory.js";
 import { getFactorySettings } from "../../../../services/factorySettings/factorySettings.js";
-import { getThread } from "../../../../services/thread/thread.js";
+import { listThreads, watchThreads } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   Button,
@@ -18,6 +18,7 @@ import {
   DetailView,
   Modal,
   modalSize,
+  SelectList,
 } from "../../../components/index.js";
 import { useAsync, useEscape, useIsActive, useKeyCapture, useLayout, useToast } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
@@ -92,20 +93,39 @@ export function FactoryModal({
   const layout = useLayout();
   const working = useRef(false);
   const live = factoryLive(status);
-  const supervisorId = live ? status?.supervisorThreadId : undefined;
-  const supervisor = useAsync(
-    async () => (supervisorId ? getThread(supervisorId, ctx).catch(() => undefined) : undefined),
-    [ctx, supervisorId],
+  const [selectedId, setSelectedId] = useState<string>();
+  const [history, setHistory] = useState(false);
+  const [filtering, setFiltering] = useState(false);
+  const supervisors = useAsync(
+    () => listThreads({ role: "supervisor" }, ctx),
+    [ctx, status?.phase, status?.supervisorThreadId],
   );
+  const refresh = supervisors.refresh;
+  useEffect(() => {
+    let close: (() => void) | undefined;
+    let disposed = false;
+    void watchThreads(refresh, ctx)
+      .then((stop) => {
+        if (disposed) stop();
+        else close = stop;
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+      close?.();
+    };
+  }, [ctx, refresh]);
+  const threads = supervisors.data?.threads ?? [];
+  const supervisorId = selectedId ?? status?.supervisorThreadId ?? threads.at(-1)?.id;
+  const supervisor = threads.find((thread) => thread.id === supervisorId);
+  const supervisorLive = supervisor?.status === "running";
   const settings = useAsync(() => getFactorySettings(ctx), [ctx]);
-  // Only a stopped factory asks Pi about providers, before a start.
-  const provider = useAsync(async () => (live ? true : checkProvider().catch(() => true)), [live, checkProvider]);
+  const [provider, setProvider] = useState<boolean>();
   const canStart = !live && busy === null && launch !== undefined;
   const canStop = live && status?.phase !== "stopping" && busy === null;
   const canInspect = supervisorId !== undefined;
-  // A factory that stops while its supervisor shows goes back to the details.
   const inspecting = inspect && canInspect;
-  const idle = active && !confirm && !inspecting;
+  const idle = active && !confirm && !inspecting && !history;
 
   const run = async (kind: "start" | "stop") => {
     if (working.current) return;
@@ -113,8 +133,10 @@ export function FactoryModal({
     setBusy(kind);
     const progress = toast.pending(kind === "start" ? "Starting the factory…" : "Stopping the factory…");
     try {
-      if (kind === "start" && launch) await startFactory({ launch }, ctx);
-      else await stopFactory({}, ctx);
+      if (kind === "start" && launch) {
+        setProvider(await checkProvider().catch(() => true));
+        await startFactory({ launch }, ctx);
+      } else await stopFactory({}, ctx);
       toast.push("info", kind === "start" ? "Started the factory" : "Stopped the factory");
     } catch (error) {
       toast.error(error);
@@ -128,12 +150,14 @@ export function FactoryModal({
   useKeyCapture(active, { text: false, escape: true });
   useEscape(idle, onClose);
   useEscape(active && inspecting, () => setInspect(false));
+  useEscape(active && history && !inspecting && !filtering, () => setHistory(false));
   useInput(
     (input, key) => {
       if (key.ctrl || key.meta) return;
       if (input === "s" && canStart) void run("start");
       else if (input === "x" && canStop) setConfirm(true);
       else if (key.return && canInspect) setInspect(true);
+      else if (input === "h") setHistory(true);
       else if (input === "a" && onAiSettings) onAiSettings();
     },
     { isActive: idle },
@@ -143,11 +167,12 @@ export function FactoryModal({
   const limit = workers?.limit ?? settings.data?.maxWorkers;
   const problems = factoryProblems(status);
   const queue = live ? (status?.queue ?? []) : [];
-  const model = supervisor.data?.model;
+  const model = supervisor?.model;
   const hints: KeyHint[] = [
     ...(canStart ? [{ key: "s", description: "start" }] : []),
     ...(canStop ? [{ key: "x", description: "stop" }] : []),
     ...(canInspect ? [{ key: "enter", description: "supervisor" }] : []),
+    { key: "h", description: "history" },
     ...(onAiSettings ? [{ key: "a", description: "AI settings" }] : []),
     { key: "esc", description: "back" },
   ];
@@ -156,17 +181,51 @@ export function FactoryModal({
     const body = modalSize(layout, { footer: true }).body;
     return (
       <Modal
-        title="Factory › Supervisor"
-        hints={[...conversationKeys(true), { key: "esc", description: "back" }]}
+        title={`Factory › Supervisor · ${supervisor?.status ?? "unavailable"}`}
+        hints={[...conversationKeys(supervisorLive), { key: "esc", description: "back" }]}
         onClose={() => setInspect(false)}
       >
         <ConversationView
           ctx={ctx}
           threadId={supervisorId}
-          live
+          live={supervisorLive}
           active={active}
           width={body.width}
           height={body.height}
+        />
+      </Modal>
+    );
+  }
+  if (history) {
+    return (
+      <Modal
+        title="Factory › Supervisor history"
+        hints={[
+          { key: "↑/↓", description: "select" },
+          { key: "enter", description: "peek" },
+          { key: "/", description: "filter" },
+          { key: "esc", description: "back" },
+        ]}
+        onClose={() => setHistory(false)}
+      >
+        <SelectList
+          items={[...threads].reverse().map((thread) => ({
+            value: thread.id,
+            label: `${formatDateTime(thread.createdAt)} · ${thread.status}`,
+            description: thread.model ? `${thread.model.provider}/${thread.model.modelId}` : "Pi default",
+          }))}
+          defaultIndex={Math.max(
+            0,
+            [...threads].reverse().findIndex((thread) => thread.id === supervisorId),
+          )}
+          limit={Math.max(1, Math.min(8, (layout.height ?? 20) - 10))}
+          emptyText="No supervisor history"
+          isActive={active}
+          onFilteringChange={setFiltering}
+          onSelect={(item) => {
+            setSelectedId(item.value);
+            setInspect(true);
+          }}
         />
       </Modal>
     );
@@ -201,7 +260,7 @@ export function FactoryModal({
             ...(live && status?.owner ? [{ label: "Started", value: formatDateTime(status.owner.startedAt) }] : []),
           ]}
         />
-        {!live && provider.data === false && (
+        {!live && provider === false && (
           <Text color={theme.inkMuted} wrap="wrap">
             {onAiSettings
               ? "No AI provider is signed in. Press a to sign in before you start the factory."
@@ -253,6 +312,7 @@ export function FactoryModal({
           {canInspect && (
             <Button label="Supervisor" keyName="enter" compact clickable={idle} onClick={() => setInspect(true)} />
           )}
+          <Button label="History" keyName="h" compact clickable={idle} onClick={() => setHistory(true)} />
           {onAiSettings && <Button label="AI settings" keyName="a" compact clickable={idle} onClick={onAiSettings} />}
           {live && (
             <Button
