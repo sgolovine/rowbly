@@ -1,14 +1,25 @@
 import { execFile } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { useTempDir } from "../testProject/testProject.js";
-import { projectWrite, projectWriteLockPath } from "./projectWrite.js";
+import { commitCanonicalProject, projectWrite, projectWriteLockPath } from "./projectWrite.js";
 
 const run = promisify(execFile);
 describe("projectWrite", () => {
   const dir = useTempDir();
+  it("commits canonical files and excludes runtime under the shared lock", async () => {
+    await run("git", ["init", dir.path]);
+    await run("git", ["-C", dir.path, "config", "user.name", "Test"]);
+    await run("git", ["-C", dir.path, "config", "user.email", "test@example.com"]);
+    await mkdir(join(dir.path, ".rowbly/runtime"), { recursive: true });
+    await writeFile(join(dir.path, ".rowbly/ROWBLY.md"), "# Instructions");
+    await writeFile(join(dir.path, ".rowbly/runtime/private.json"), "{}");
+    expect(await commitCanonicalProject(dir.path)).toMatchObject({ status: "committed" });
+    const tracked = await run("git", ["-C", dir.path, "ls-files"]);
+    expect(tracked.stdout).toBe(".rowbly/ROWBLY.md\n");
+  });
   it("uses the external commit lock path and excludes worker writes", async () => {
     await run("git", ["init", dir.path]);
     const lock = await projectWriteLockPath(dir.path);

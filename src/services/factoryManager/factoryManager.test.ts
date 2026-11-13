@@ -1,16 +1,18 @@
 import { execFile } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factoryRunner/factoryRunner.js";
+import { pendingReports } from "../factoryPolicy/factoryPolicy.js";
 import { updateFactorySettings } from "../factorySettings/factorySettings.js";
-import { readFactoryState } from "../factoryState/factoryState.js";
+import { readFactoryState, updateFactoryState } from "../factoryState/factoryState.js";
 import { loadPi } from "../piRuntime/piRuntime.js";
 import { initProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, getStory, updateStory } from "../story/story.js";
+import { promptHash } from "../supervisorDigest/supervisorDigest.js";
 import { useTempDir } from "../testProject/testProject.js";
 import { listThreads } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factoryManager.js";
@@ -60,7 +62,7 @@ describe("foreground factory", () => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
-  async function fixture(beforeLaunch?: Parameters<typeof createFactoryManager>[0]["beforeLaunch"]) {
+  async function fixture(beforeLaunch?: Parameters<typeof createFactoryManager>[0]["beforeLaunch"], classify = true) {
     const sdk = await loadPi();
     const runtime = await sdk.ModelRuntime.create({
       credentials: new InMemoryCredentialStore(),
@@ -84,6 +86,11 @@ describe("foreground factory", () => {
       },
       { cwd: root },
     );
+    if (classify)
+      await updateFactoryState(root, (state) => ({
+        ...state,
+        prompts: { WORK: { hash: promptHash("Move this Story to Done. Report complete."), class: "work" } },
+      }));
     const shim = await createCliShim(
       {
         executable: process.execPath,
@@ -213,5 +220,184 @@ describe("foreground factory", () => {
     expect(current?.session).toEqual(previous?.session);
     expect(current?.runs).toHaveLength(2);
     expect((await readFactoryState(root)).attempts).toHaveLength(1);
+  });
+  it("idle factory makes zero provider calls across repeated board saves", async () => {
+    const f = await fixture();
+    const model = vi.fn();
+    f.supervisor.setResponses([
+      () => {
+        model();
+        return fauxAssistantMessage("Unexpected");
+      },
+    ]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () => expect((await f.manager.snapshot()).phase).toBe("ready"));
+      for (let i = 0; i < 10; i++) await writeFile(join(root, ".rowbly/ROWBLY.md"), `# Instructions ${i}`);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      expect(model).not.toHaveBeenCalled();
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("classifies the fresh prompt through real Pi tools before a reservation", async () => {
+    const story = await createStory({ title: "Classify me", stage: "WORK" }, { cwd: root });
+    const f = await fixture(undefined, false);
+    await expect(f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "early" })).rejects.toThrow(
+      "not eligible",
+    );
+    f.supervisor.setResponses([
+      tool("classify_stage", { stage: "WORK", promptHash: "expired", class: "work" }),
+      tool("classify_stage", {
+        stage: "WORK",
+        promptHash: promptHash("Move this Story to Done. Report complete."),
+        class: "work",
+      }),
+      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "classified" }),
+      fauxAssistantMessage("Wait"),
+      fauxAssistantMessage("Done"),
+    ]);
+    f.worker.setResponses([
+      tool("report_result", { outcome: "complete", summary: "WORKER_PRIVATE", blockers: [], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+    const run = f.manager.run();
+    try {
+      expect((await settled())?.status).toBe("completed");
+      const supervisor = (await listThreads({ role: "supervisor" }, { cwd: root })).threads[0];
+      const history = await readFile(join(root, ".rowbly/runtime", supervisor?.session.file as string), "utf8");
+      expect(history).toContain("Stage prompt changed");
+      expect(history).not.toContain('"name":"bash"');
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("rejects a changed prompt after durable reservation", async () => {
+    let release = () => {};
+    const barrier = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const story = await createStory({ title: "Changed prompt", stage: "WORK" }, { cwd: root });
+    const f = await fixture(() => barrier);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "before-change" });
+    await writeFile(join(root, ".rowbly/stages/WORK.md"), "Different instructions");
+    release();
+    expect((await settled())?.error?.message).toContain("prompt changed");
+  });
+  it("quota pause does not block a worker with another provider", async () => {
+    const story = await createStory({ title: "Quota", stage: "WORK" }, { cwd: root });
+    const other = await createStory({ title: "Other provider", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
+    await settled();
+    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
+    await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
+      "paused",
+    );
+    f.supervisor.setResponses([
+      tool("report_result", { outcome: "complete", summary: "Other provider", blockers: [], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+    await f.manager.reserveWorker({
+      storyId: other.id,
+      stage: "WORK",
+      requestId: "other",
+      model: { provider: f.supervisor.getModel().provider, modelId: f.supervisor.getModel().id },
+    });
+    await vi.waitFor(async () =>
+      expect((await listThreads({ story: other.id }, { cwd: root })).threads[0]?.status).toBe("completed"),
+    );
+    await f.manager.retryProvider("worker");
+    expect((await f.manager.snapshot()).providers.worker).toBeUndefined();
+  });
+  it("holds a candidate and saves notes and attention through real Pi tools", async () => {
+    const story = await createStory({ title: "Hold", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.supervisor.setResponses([
+      tool("hold_candidate", {
+        storyId: story.id,
+        stage: "WORK",
+        reason: "Wait for check",
+        reconsiderAt: new Date(Date.now() + 60_000).toISOString(),
+      }),
+      tool("save_note", { text: "Check later" }),
+      tool("raise_attention", { key: "check", text: "Check is pending", storyId: story.id }),
+      fauxAssistantMessage("Wait"),
+      fauxAssistantMessage("Wait"),
+    ]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () => expect((await readFactoryState(root)).notes).toEqual(["Check later"]));
+      await expect(f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "held" })).rejects.toThrow(
+        "held",
+      );
+      expect((await f.manager.snapshot()).holds[story.id]?.reason).toBe("Wait for check");
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("failed digest remains unacknowledged while other workers survive", async () => {
+    const story = await createStory({ title: "Report", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([
+      tool("report_result", { outcome: "complete", summary: "Report me", blockers: [], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "report" });
+    await settled();
+    f.supervisor.setResponses([
+      fauxAssistantMessage("", { stopReason: "error", errorMessage: "Simulated supervisor failure" }),
+    ]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () =>
+        expect(JSON.stringify((await f.manager.snapshot()).attention)).toContain("Supervisor turn failed"),
+      );
+      expect(pendingReports(await readFactoryState(root)).length).toBeGreaterThan(0);
+      expect((await f.manager.snapshot()).phase).toBe("ready");
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("rotation reconstructs operational notes without the previous conversation", async () => {
+    const story = await createStory({ title: "Rotate", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.supervisor.setResponses([
+      tool("save_note", { text: "Persistent operational fact" }),
+      fauxAssistantMessage("Previous conversation private text"),
+      fauxAssistantMessage("Fresh supervisor"),
+    ]);
+    const now = Date.now.bind(Date);
+    let offset = 0;
+    const date = vi.spyOn(Date, "now").mockImplementation(() => now() + offset);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () =>
+        expect((await readFactoryState(root)).notes).toEqual(["Persistent operational fact"]),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      offset = 25 * 60 * 60_000;
+      await updateStory({ id: story.id, title: "Rotate now" }, { cwd: root });
+      await vi.waitFor(async () =>
+        expect((await listThreads({ role: "supervisor" }, { cwd: root })).threads).toHaveLength(2),
+      );
+      const threads = (await listThreads({ role: "supervisor" }, { cwd: root })).threads;
+      const current = threads.find((t) => t.parentThreadId);
+      await vi.waitFor(async () => {
+        const text = await readFile(join(root, ".rowbly/runtime", current?.session.file as string), "utf8");
+        expect(text).toContain("Persistent operational fact");
+        expect(text).not.toContain("Previous conversation private text");
+      });
+    } finally {
+      date.mockRestore();
+      await f.manager.shutdown();
+      await run;
+    }
   });
 });

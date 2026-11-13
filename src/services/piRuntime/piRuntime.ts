@@ -14,6 +14,7 @@ export class PiPromptError extends RowblyError {
 export interface PiSession {
   session: AgentSession;
   prompt(text: string): Promise<void>;
+  sendDigest(text: string): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -61,16 +62,26 @@ export async function createPiSession(
     }
   });
   let closing: Promise<void> | undefined;
+  async function checkSettled() {
+    await session.waitForIdle();
+    await settled;
+    const last = session.messages.findLast((message) => message.role === "assistant");
+    if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted"))
+      throw new PiPromptError(last.errorMessage ?? `Assistant ${last.stopReason}`);
+  }
   return {
     session,
     async prompt(text) {
       await session.prompt(text);
-      await session.waitForIdle();
-      await settled;
-      const last = session.messages.findLast((message) => message.role === "assistant");
-      if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
-        throw new PiPromptError(last.errorMessage ?? `Assistant ${last.stopReason}`);
-      }
+      await checkSettled();
+    },
+    async sendDigest(text) {
+      if (!session.isIdle) throw new PiPromptError("Supervisor is busy");
+      await session.sendCustomMessage(
+        { customType: "rowbly:factory-digest", content: text, display: false },
+        { triggerTurn: true },
+      );
+      await checkSettled();
     },
     close() {
       closing ??= (async () => {

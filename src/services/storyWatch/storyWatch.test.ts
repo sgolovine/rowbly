@@ -57,6 +57,20 @@ describe("watchStories", () => {
     }
   });
 
+  it("lets the manager exclude its own state transactions", async () => {
+    const onChange = vi.fn();
+    const stop = await watchStories(onChange, project.ctx, { includeState: false });
+    try {
+      await writeFile(project.paths.stateFile, "{}");
+      await sleep(200);
+      expect(onChange).not.toHaveBeenCalled();
+      await createStory({ title: "External edit" }, project.ctx);
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+    } finally {
+      stop();
+    }
+  });
+
   it("fails without a project", async () => {
     await expect(watchStories(() => {}, { cwd: empty.path })).rejects.toBeInstanceOf(NotFoundError);
   });

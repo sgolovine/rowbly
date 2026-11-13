@@ -1,6 +1,7 @@
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { bundledSkills } from "../skill/skill.js";
 
@@ -61,4 +62,17 @@ export async function projectWrite<T>(root: string, action: () => Promise<T>, wa
     child.stdin.end();
     await ended;
   }
+}
+
+/** Commits canonical files while projectWrite holds the shared kernel lock. */
+export async function commitCanonicalProject(root: string) {
+  const { dir } = await bundledSkills();
+  return projectWrite(root, async () => {
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [join(dir, "factory/scripts/commit-project.mjs"), "--root", root, "--locked"],
+      { timeout: 60_000 },
+    );
+    return JSON.parse(stdout) as { status: string; detail?: string };
+  });
 }
