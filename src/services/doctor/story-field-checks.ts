@@ -1,8 +1,8 @@
 import type { CustomField, ProjectConfig } from "../config/config.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import type { Store } from "../store/store.js";
 import { type DocRepair, type DoctorIssue, type DoctorRun, noted, reportChange } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 
 /** A missing field gets no value. A value of the wrong type has a fix when the text converts to the type. */
 async function fieldIssue(

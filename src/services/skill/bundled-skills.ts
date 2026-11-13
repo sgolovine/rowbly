@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 import { isSkillName } from "../config/config.js";
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import type { ServiceContext } from "../workspace/workspace.js";
-import { mapInOrder } from "./map-in-order.js";
 import { isMissing, SKILL_FILE } from "./skill-paths.js";
 
 /** Walks up from `dir` to the first folder with a `package.json`. */

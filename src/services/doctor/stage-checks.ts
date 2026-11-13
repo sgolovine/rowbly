@@ -2,8 +2,8 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { labelFromKey, type ProjectConfig, STAGE_KEY_PATTERN, writeConfig } from "../config/config.js";
 import { listMarkdownFiles } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 
 /** The issues, and the config that the later checks use. A fix can add stages to it. */
 interface StageCheck {

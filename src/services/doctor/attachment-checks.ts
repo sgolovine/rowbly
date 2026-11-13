@@ -9,9 +9,9 @@ import {
   writeAttachments,
 } from "../attachment-files/attachment-files.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 
 /**
  * The scan of one attachment folder. The issues stay in the store, so that a later failure in the same

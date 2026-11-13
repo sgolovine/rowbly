@@ -2,6 +2,7 @@ import { rm } from "node:fs/promises";
 import { featureEnabled, type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import {
   canonicalStoryId,
   readSpecFile,
@@ -151,12 +152,7 @@ async function lookupStory(id: string, ctx: ServiceContext): Promise<StoryLookup
 async function resolveStories(stories: readonly string[], ctx: ServiceContext): Promise<ResolvedStories> {
   const empty =
     stories.length === 0 ? [{ path: ["stories"], message: "A spec must be linked to at least one Story" }] : [];
-  // Each lookup waits for the previous one, so the Stories are read one at a time, in order. The list comes from
-  // the input of a person, so it is short.
-  const lookups = await stories.reduce<Promise<readonly StoryLookup[]>>(
-    async (previous, id) => [...(await previous), await lookupStory(id, ctx)],
-    Promise.resolve([]),
-  );
+  const lookups = await mapInOrder(stories, (id) => lookupStory(id, ctx));
 
   return {
     ids: [...new Set(lookups.flatMap((lookup) => ("id" in lookup ? [lookup.id] : [])))],

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
 import { listMarkdownFiles, writeFileAtomic } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { type MarkdownDocument, parseMarkdown, serializeMarkdown } from "../markdown/markdown.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 
@@ -118,9 +119,7 @@ export async function rewriteStories(
 ): Promise<number> {
   const files = await readStoryFiles(paths);
 
-  // Each step waits for the previous count, so the stories are written one at a time, in order.
-  return files.reduce(
-    async (count, file) => (await count) + (await rewriteStory(config, file, change)),
-    Promise.resolve(0),
-  );
+  const counts = await mapInOrder(files, (file) => rewriteStory(config, file, change));
+
+  return counts.reduce((sum, count) => sum + count, 0);
 }

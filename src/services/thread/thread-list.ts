@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
+import { mapInOrder } from "../in-order/in-order.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
-import { Store } from "../store/store.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { getThread } from "./thread-files.js";
 import type { ThreadList, ThreadRecord, ThreadStatus } from "./thread-types.js";
@@ -25,19 +25,9 @@ function readOutcome(file: string, ctx: ServiceContext): Promise<ReadOutcome> {
   );
 }
 
-function enqueue<T>(chain: Store<{ tail: Promise<unknown> }>, call: () => Promise<T>): Promise<T> {
-  const next = chain.current.tail.then(call);
-
-  chain.update(() => ({ tail: next }));
-
-  return next;
-}
-
 /** Reads one file at a time, in name order. Parallel reads of many files could use all file handles. */
 function readInOrder(files: readonly string[], ctx: ServiceContext): Promise<ReadOutcome[]> {
-  const chain = new Store<{ tail: Promise<unknown> }>({ tail: Promise.resolve() });
-
-  return Promise.all(files.map((file) => enqueue(chain, () => readOutcome(file, ctx))));
+  return mapInOrder(files, (file) => readOutcome(file, ctx));
 }
 
 function matches(thread: ThreadRecord, input: ListFilter): boolean {

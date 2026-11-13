@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapInOrder } from "./map-in-order.js";
+import { mapInOrder } from "./in-order.js";
 
 describe("mapInOrder", () => {
   it("runs one action at a time, in order", async () => {
@@ -13,6 +13,10 @@ describe("mapInOrder", () => {
 
     expect(result).toEqual([2, 4, 6]);
     expect(events).toEqual(["start 1", "end 1", "start 2", "end 2", "start 3", "end 3"]);
+  });
+
+  it("gives each action the index of its item", async () => {
+    expect(await mapInOrder(["a", "b"], async (item, index) => `${index}:${item}`)).toEqual(["0:a", "1:b"]);
   });
 
   it("gives an empty list for no items", async () => {

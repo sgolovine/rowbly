@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { listMarkdownFiles } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { parseMarkdown } from "../markdown/markdown.js";
 import { Store } from "../store/store.js";
 import { parseStoryFileName, type StoryFile, writeStoryFile } from "../story-files/story-files.js";
@@ -16,7 +17,6 @@ import {
   reportChange,
   withoutKey,
 } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 import { fieldIssues } from "./story-field-checks.js";
 
 interface NumberedFile {

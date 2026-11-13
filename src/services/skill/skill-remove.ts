@@ -1,8 +1,8 @@
 import { lstat, rm } from "node:fs/promises";
 import { readConfig, type SkillHarness, writeConfig } from "../config/config.js";
 import { NotFoundError } from "../errors/errors.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
-import { mapInOrder } from "./map-in-order.js";
 import { findSkill, parseHarnesses } from "./skill-config.js";
 import { isMissing, physicalPath, skillEntry, skillPath } from "./skill-paths.js";
 

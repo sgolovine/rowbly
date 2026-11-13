@@ -14,6 +14,7 @@ import {
 } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { formatStoryId, readStoryFiles, storyPath } from "../story-files/story-files.js";
@@ -77,10 +78,8 @@ export function defaultProjectName(ctx: ServiceContext = {}): string {
 
 /** Writes the prompt file of each stage, one at a time, in board order. */
 async function writeStagePrompts(paths: ProjectPaths, stages: readonly InitialStage[]): Promise<void> {
-  await stages.reduce<Promise<void>>(
-    (previous, stage) =>
-      previous.then(() => writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`)),
-    Promise.resolve(),
+  await mapInOrder(stages, (stage) =>
+    writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`),
   );
 }
 
@@ -152,11 +151,7 @@ async function renameStoryKey(paths: ProjectPaths, oldKey: string, newKey: strin
     paths,
     owned.map((file) => ({ from: file.id, to: formatStoryId(newKey, file.number) })),
   );
-  // Each rename waits for the previous one, so the files move one at a time, in order.
-  await owned.reduce<Promise<void>>(
-    (previous, file) => previous.then(() => rename(file.path, storyPath(paths, newKey, file.number))),
-    Promise.resolve(),
-  );
+  await mapInOrder(owned, (file) => rename(file.path, storyPath(paths, newKey, file.number)));
   await rewriteSpecLinks(paths, (stories) => stories.map((id) => renamedLink(id, oldKey, newKey)));
 }
 

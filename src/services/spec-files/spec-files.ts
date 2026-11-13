@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { RowblyError } from "../errors/errors.js";
 import { listMarkdownFiles, writeFileAtomic } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { type MarkdownDocument, parseMarkdown, serializeMarkdown } from "../markdown/markdown.js";
 import { formatStoryId } from "../story-files/story-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
@@ -120,9 +121,7 @@ async function rewriteLinks(
 export async function rewriteSpecLinks(paths: ProjectPaths, change: (stories: string[]) => string[]): Promise<number> {
   const names = await listSpecFileNames(paths);
 
-  // Each step waits for the previous count, so the specs are read and written one at a time, in order.
-  return names.reduce(
-    async (count, name) => (await count) + (await rewriteLinks(paths, name, change)),
-    Promise.resolve(0),
-  );
+  const counts = await mapInOrder(names, (name) => rewriteLinks(paths, name, change));
+
+  return counts.reduce((sum, count) => sum + count, 0);
 }

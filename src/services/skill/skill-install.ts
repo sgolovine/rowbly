@@ -3,10 +3,10 @@ import { join, relative } from "node:path";
 import { type ProjectConfig, readConfig, type SkillHarness, writeConfig } from "../config/config.js";
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import { pathExists, pathOccupied } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { Store, withMember } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { bundledSkills, copySkill } from "./bundled-skills.js";
-import { mapInOrder } from "./map-in-order.js";
 import { findSkill, parseHarnesses, trackHarnesses } from "./skill-config.js";
 import { harnessSkillsDir, physicalPath, SKILL_FILE, skillPath } from "./skill-paths.js";
 

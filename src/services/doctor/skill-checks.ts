@@ -1,9 +1,9 @@
 import { dirname, join } from "node:path";
 import type { ProjectConfig, SkillHarness } from "../config/config.js";
 import { canCreateFolder, pathExists, pathOccupied } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 
 interface SkillTarget {
   readonly name: string;

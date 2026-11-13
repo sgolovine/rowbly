@@ -3,6 +3,7 @@ import { join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { listMarkdownFiles } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
 import { SPEC_KEYS, SPEC_SLUG_PATTERN, type SpecFile, writeSpecFile } from "../spec-files/spec-files.js";
 import { Store } from "../store/store.js";
@@ -16,7 +17,6 @@ import {
   reportChange,
   withoutKey,
 } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 import { type SpecCheck, type SpecRepair, walkLinks } from "./spec-link-checks.js";
 
 type SpecRead = { readonly doc: MarkdownDocument } | { readonly issue: DoctorIssue };

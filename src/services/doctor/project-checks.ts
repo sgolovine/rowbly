@@ -3,10 +3,10 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { listThreads, type ThreadRecord } from "../thread/thread.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
-import { mapInOrder } from "./map-in-order.js";
 
 async function folderIssue(run: DoctorRun, dir: string): Promise<DoctorIssue[]> {
   if (await pathExists(dir)) {

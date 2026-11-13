@@ -1,6 +1,7 @@
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { attachmentDir, prepareImages, withAttachments } from "../attachment-files/attachment-files.js";
 import { type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import type { MarkdownDocument } from "../markdown/markdown.js";
 import { rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
@@ -119,11 +120,7 @@ async function placeStory(
   const at = Math.max(0, Math.min(peers.length, (position ?? peers.length + 1) - 1));
   const order = [...peers.slice(0, at), updated, ...peers.slice(at)];
 
-  // Each write waits for the previous one, so the files are written one at a time, in order.
-  await order.reduce<Promise<void>>(
-    (previous, f, i) => previous.then(() => writePosition(config, f, i + 1, f.id === updated.id)),
-    Promise.resolve(),
-  );
+  await mapInOrder(order, (f, i) => writePosition(config, f, i + 1, f.id === updated.id));
 
   return toStory(config, updated, at + 1);
 }
@@ -186,11 +183,7 @@ async function updateOrRestore(
 
     return await getStory({ id: input.id }, ctx);
   } catch (err) {
-    // Each restore waits for the previous one, so the files are restored one at a time, in order.
-    await snapshots.reduce<Promise<void>>(
-      (previous, snapshot) => previous.then(() => restoreSnapshot(snapshot)),
-      Promise.resolve(),
-    );
+    await mapInOrder(snapshots, (snapshot) => restoreSnapshot(snapshot));
     throw err;
   }
 }
