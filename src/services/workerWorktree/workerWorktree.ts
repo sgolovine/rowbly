@@ -21,10 +21,6 @@ export async function prepareWorkerWorktree(root: string, story: Story) {
     branch = stdout.trim();
     if (!branch || branch.startsWith("-")) throw new ConflictError("Invalid pull request branch");
     await git(root, "fetch", "origin", branch);
-    // A local continuation can contain work that is not pushed yet.
-    await git(root, "show-ref", "--verify", `refs/heads/${branch}`).catch(() =>
-      git(root, "branch", branch, "FETCH_HEAD"),
-    );
   } else if (story.stage === "IN_REVIEW") {
     throw new ConflictError("Review requires a pull_request field");
   }
@@ -43,9 +39,24 @@ export async function prepareWorkerWorktree(root: string, story: Story) {
     const other = await realpath(resolve(path, await git(path, "rev-parse", "--git-common-dir")));
     if (common !== other || (await realpath(path)) === (await realpath(root)))
       throw new ConflictError("Story worktree belongs to another repository or is the main checkout");
-    const current = await git(path, "branch", "--show-current");
-    if (story.stage !== "IN_REFINEMENT" && current !== branch)
-      throw new ConflictError("Story worktree branch differs from the required branch; preserve and inspect it");
+    let current = await git(path, "branch", "--show-current");
+    if (story.stage !== "IN_REFINEMENT" && current !== branch) {
+      if (current)
+        throw new ConflictError("Story worktree branch differs from the required branch; preserve and inspect it");
+      const known = await git(root, "show-ref", "--verify", `refs/heads/${branch}`).then(
+        () => true,
+        () => false,
+      );
+      try {
+        await git(path, "switch", ...(known ? [branch] : ["-c", branch]));
+      } catch (cause) {
+        throw new ConflictError("Cannot select the required Story worktree branch; preserve and inspect it", {
+          cause,
+          hint: `Inspect ${path} before retry. Git refused the branch switch: ${cause instanceof Error ? cause.message : String(cause)}`,
+        });
+      }
+      current = branch;
+    }
     return { path, branch: current || undefined };
   }
   await mkdir(dirname(path), { recursive: true });
@@ -57,6 +68,14 @@ export async function prepareWorkerWorktree(root: string, story: Story) {
     () => true,
     () => false,
   );
-  await git(root, "worktree", "add", ...(known ? [] : ["-b", branch]), path, known ? branch : "HEAD");
+  // A local continuation can contain work that is not pushed yet.
+  await git(
+    root,
+    "worktree",
+    "add",
+    ...(known ? [] : ["-b", branch]),
+    path,
+    known ? branch : typeof pr === "string" && pr ? "FETCH_HEAD" : "HEAD",
+  );
   return { path, branch };
 }
