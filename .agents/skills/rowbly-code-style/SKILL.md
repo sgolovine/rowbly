@@ -61,7 +61,7 @@ These rules are in the strict override of `biome.json`.
 | `performance/noDelete`                    | The `delete` operator.                                                 |
 | `biome-plugins/no-nested-function.grit`   | A named function inside a function body.                               |
 | `biome-plugins/no-let.grit`               | A `let` declaration.                                                   |
-| `biome-plugins/no-member-assign.grit`     | An assignment to a property, for example `state.count = 1`. A class constructor can set `this.<field>`. |
+| `biome-plugins/no-member-assign.grit`     | An assignment to a property, for example `state.count = 1`. A statement of a constructor body can set `this.<field>`. |
 | `biome-plugins/no-mutating-call.grit`     | `push`, `splice`, `sort`, `set`, `delete`, `add`, `clear` and similar. |
 
 The plugins use GritQL. They find patterns in the syntax, not in the types. Thus
