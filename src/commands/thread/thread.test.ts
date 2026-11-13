@@ -1,9 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { useTestProject } from "../../services/testProject/testProject.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../services/thread/thread.js";
-import { runCli } from "../testCli/testCli.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 vi.mock("@earendil-works/pi-coding-agent", () => {
   throw new Error("SDK must stay unloaded");

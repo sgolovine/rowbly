@@ -1,117 +1,66 @@
-import { ValidationError } from "../errors/errors.js";
-import { runtimePath } from "../runtimeFiles/runtimeFiles.js";
+import { Store } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { type ConversationPage, SessionIndex } from "./sessionIndex.js";
+import { queueRead } from "./conversation-read.js";
+import type { ConversationEnv, ConversationState, ReadInput } from "./conversation-state.js";
+import { startWatch, stopWatch } from "./conversation-watch.js";
+import type { ConversationPage } from "./session-types.js";
 
-export type { ConversationEntry, ConversationPage } from "./sessionIndex.js";
-export type ConversationCursor = string;
+export type { ConversationEntry, ConversationPage } from "./session-index.js";
+
 export interface Conversation {
   threadId: string;
-  read(input?: {
-    before?: ConversationCursor | null;
-    after?: ConversationCursor | null;
-    limit?: number;
-    maxBytes?: number;
-  }): Promise<ConversationPage>;
+  read(input?: ReadInput): Promise<ConversationPage>;
   watch(onChange: (page: ConversationPage) => void, onError?: (error: unknown) => void): () => void;
   close(): void;
 }
+
+function closeEnv(env: ConversationEnv): void {
+  const { watches } = env.store.update(() => ({ closed: true }));
+
+  for (const run of watches) {
+    stopWatch(env, run);
+  }
+
+  env.store.current.index?.close();
+  env.store.update(() => ({ index: undefined }));
+}
+
 /** Opens only the selected thread. A read never resumes Pi or repairs its files. */
 export async function openConversation(threadId: string, ctx: ServiceContext = {}): Promise<Conversation> {
   await getThread(threadId, ctx);
+
   const paths = await findProject(ctx);
-  let index: SessionIndex | undefined,
-    reference: string | null = null,
-    closed = false;
-  let queue: Promise<unknown> = Promise.resolve();
-  const stops = new Set<() => void>();
-  const conversation: Conversation = {
+  const initial: ConversationState = { reference: null, closed: false, queue: Promise.resolve(), watches: new Set() };
+  const env: ConversationEnv = { threadId, ctx, paths, store: new Store(initial) };
+
+  return {
     threadId,
-    read(input = {}) {
-      const read = async (): Promise<ConversationPage> => {
-        if (closed) throw new ValidationError("Conversation is closed");
-        const thread = await getThread(threadId, ctx);
-        if (closed) throw new ValidationError("Conversation is closed");
-        if (thread.session.file !== reference) {
-          index?.close();
-          index = undefined;
-          reference = thread.session.file;
-        }
-        if (!reference) return { entries: [], nextBefore: null, bytes: 0, status: "missing", invalidLines: 0 };
-        const selected = reference;
-        index ??= new SessionIndex(await runtimePath(paths, selected), () => runtimePath(paths, selected));
-        const current = index;
-        const page = await current.page({ ...input, leaf: thread.session.leafId });
-        if (closed) {
-          current.close();
-          throw new ValidationError("Conversation is closed");
-        }
-        return page;
-      };
-      const pending = queue.then(read).catch((error: unknown) => {
-        const code = (error as NodeJS.ErrnoException)?.code;
-        if (typeof code === "string" && /^E[A-Z]+$/.test(code))
-          throw new ValidationError(`Conversation file is unavailable (${code})`);
-        throw error;
-      });
-      queue = pending.catch(() => {});
-      return pending;
-    },
-    watch(onChange, onError = () => {}) {
-      if (closed) throw new ValidationError("Conversation is closed");
-      let active = true,
-        busy = false,
-        previous = "";
-      const tick = async () => {
-        if (!active || busy) return;
-        busy = true;
-        try {
-          const page = await conversation.read();
-          const digest = JSON.stringify(page);
-          if (active && digest !== previous) {
-            previous = digest;
-            onChange(page);
-          }
-        } catch (error) {
-          if (active) onError(error);
-        } finally {
-          busy = false;
-        }
-      };
-      const timer = setInterval(() => void tick(), 500);
-      timer.unref();
-      const stop = () => {
-        active = false;
-        clearInterval(timer);
-        stops.delete(stop);
-      };
-      stops.add(stop);
-      void tick();
-      return stop;
-    },
-    close() {
-      closed = true;
-      for (const stop of stops) stop();
-      index?.close();
-      index = undefined;
-    },
+    read: (input = {}) => queueRead(env, input),
+    watch: (onChange, onError) => startWatch(env, onChange, onError),
+    close: () => closeEnv(env),
   };
-  return conversation;
 }
-export function readConversationPage(conversation: Conversation, input?: Parameters<Conversation["read"]>[0]) {
+
+/** Reads one page of a conversation. */
+export function readConversationPage(conversation: Conversation, input?: ReadInput): Promise<ConversationPage> {
   return conversation.read(input);
 }
+
+/** Watches a conversation, and gives the function that stops the watch. */
 export function watchConversation(
   conversation: Conversation,
   onChange: (page: ConversationPage) => void,
   onError?: (error: unknown) => void,
-) {
+): () => void {
   return conversation.watch(onChange, onError);
 }
+
+/** Closes a conversation and stops its watches. */
 export function closeConversation(conversation: Conversation): void {
   conversation.close();
 }
+
 /** Returns a bounded tail for CLI output and explicit supervisor inspection. */
 export async function getThreadLog(
   threadId: string,
@@ -119,6 +68,7 @@ export async function getThreadLog(
   ctx: ServiceContext = {},
 ): Promise<ConversationPage> {
   const conversation = await openConversation(threadId, ctx);
+
   try {
     return await conversation.read({ limit: input.tail ?? 20 });
   } finally {

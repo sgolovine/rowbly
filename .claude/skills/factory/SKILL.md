@@ -7,7 +7,7 @@ description: Run a factory supervisor that watches the Stories of the current Ro
 
 Use the native factory first. The native manager runs its own Pi supervisor and workers outside the harness.
 Use the external harness path only when the user selects it or native execution prerequisites are not available.
-Read `references/rowbly_reference.md` before each command path.
+Read `references/rowbly-reference.md` before each command path.
 
 ## Native path
 

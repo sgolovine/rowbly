@@ -1,9 +1,9 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { addCustomField } from "../customField/customField.js";
+import { addCustomField } from "../custom-field/custom-field.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { updateStage } from "../stage/stage.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { createStory, deleteStory, getStory, searchStories, updateStory } from "./story.js";
 
 describe("story", () => {

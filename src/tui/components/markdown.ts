@@ -1,7 +1,31 @@
 import chalk from "chalk";
 import type { MarkedExtension } from "marked";
+import { Store, withEntry } from "../../services/store/store.js";
 import { theme } from "../theme.js";
-import { markdownToPlain } from "./DetailView/index.js";
+import { markdownToPlain } from "./detail-view/index.js";
+import { plainRows } from "./text-rows.js";
+
+/** Lays out markdown for the terminal: the rows it takes at `width`. */
+export type MarkdownRenderer = (text: string, width: number) => string[];
+
+type MarkedModule = typeof import("marked");
+type Marked = InstanceType<MarkedModule["Marked"]>;
+
+/** The modules that the renderer loads on first use. */
+interface MarkdownModules {
+  readonly Marked: MarkedModule["Marked"];
+  readonly markedTerminal: typeof import("marked-terminal")["markedTerminal"];
+  readonly wrapAnsi: typeof import("wrap-ansi")["default"];
+}
+
+/** The renderer of this process, once it loads, and one Marked for each width. */
+interface MarkdownState {
+  readonly loaded?: MarkdownRenderer;
+  readonly loading?: Promise<MarkdownRenderer>;
+  readonly byWidth: ReadonlyMap<number, Marked>;
+}
+
+const markdown = new Store<MarkdownState>({ byWidth: new Map() });
 
 /**
  * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours
@@ -12,13 +36,80 @@ function tint(color: string): (text: string) => string {
   return (text) => chalk.hex(color)(text);
 }
 
-const strong = (color: string) => (text: string) => chalk.bold(tint(color)(text));
+function strong(color: string): (text: string) => string {
+  return (text) => chalk.bold(tint(color)(text));
+}
 
-/** Lays out markdown for the terminal: the rows it takes at `width`. */
-export type MarkdownRenderer = (text: string, width: number) => string[];
+/** A Marked for `width`. One Marked for each width, so rendering never touches Marked's global options. */
+function createMarked({ Marked, markedTerminal }: MarkdownModules, width: number): Marked {
+  return new Marked(
+    // `@types/marked-terminal` types the extension as a renderer class; at run time it is an extension.
+    markedTerminal({
+      width,
+      reflowText: true,
+      tab: 2,
+      heading: strong(theme.ink),
+      firstHeading: strong(theme.ink),
+      code: tint(theme.inkMuted),
+      codespan: tint(theme.inkMuted),
+      blockquote: tint(theme.inkMuted),
+      html: tint(theme.inkMuted),
+      link: tint(theme.accent),
+      href: tint(theme.inkMuted),
+      del: tint(theme.inkMuted),
+    }) as unknown as MarkedExtension,
+    {
+      renderer: {
+        // `marked-terminal` prints a tight list item's text raw; render its inline markdown instead.
+        code(token) {
+          return `\n${tint(theme.inkMuted)(token.text)}\n`;
+        },
+        text(token) {
+          return "tokens" in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
+        },
+      },
+    },
+  );
+}
 
-let loaded: MarkdownRenderer | undefined;
-let loading: Promise<MarkdownRenderer> | undefined;
+function markedFor(modules: MarkdownModules, width: number): Marked {
+  const known = markdown.current.byWidth.get(width);
+  const marked = known ?? createMarked(modules, width);
+
+  if (!known) {
+    markdown.update(({ byWidth }) => ({ byWidth: withEntry(byWidth, width, marked) }));
+  }
+
+  return marked;
+}
+
+function renderMarkdown(modules: MarkdownModules, text: string, width: number): string[] {
+  const size = Math.max(1, width);
+  const rendered = markedFor(modules, size)
+    .parse(text, { async: false })
+    // A full reset would also clear the background of the modal the text is shown in.
+    .replaceAll("\u001b[0m", "")
+    .replace(/\s+$/, "");
+
+  return rendered.split("\n").flatMap((line) => modules.wrapAnsi(line, size, { hard: true, trim: false }).split("\n"));
+}
+
+function rendererOf(modules: MarkdownModules): MarkdownRenderer {
+  return (text, width) => renderMarkdown(modules, text, width);
+}
+
+async function importRenderer(): Promise<MarkdownRenderer> {
+  const [{ Marked }, { markedTerminal }, { default: wrapAnsi }] = await Promise.all([
+    import("marked"),
+    import("marked-terminal"),
+    import("wrap-ansi"),
+  ]);
+  const loaded = rendererOf({ Marked, markedTerminal, wrapAnsi });
+
+  markdown.update(() => ({ loaded }));
+
+  return loaded;
+}
 
 /**
  * Markdown rendered for the terminal: headings, emphasis, lists, code and tables styled as
@@ -27,74 +118,19 @@ let loading: Promise<MarkdownRenderer> | undefined;
  * first use rather than with the TUI, because its code highlighting takes a moment to load.
  */
 export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
-  loading ??= Promise.all([import("marked"), import("marked-terminal"), import("wrap-ansi")]).then(
-    ([{ Marked }, { markedTerminal }, { default: wrapAnsi }]) => {
-      // One Marked per width, so rendering never touches Marked's global options.
-      const renderers = new Map<number, InstanceType<typeof Marked>>();
-      const renderer = (width: number) => {
-        let marked = renderers.get(width);
-        if (!marked) {
-          // `@types/marked-terminal` types the extension as a renderer class; at run time it is an extension.
-          marked = new Marked(
-            markedTerminal({
-              width,
-              reflowText: true,
-              tab: 2,
-              heading: strong(theme.ink),
-              firstHeading: strong(theme.ink),
-              code: tint(theme.inkMuted),
-              codespan: tint(theme.inkMuted),
-              blockquote: tint(theme.inkMuted),
-              html: tint(theme.inkMuted),
-              link: tint(theme.accent),
-              href: tint(theme.inkMuted),
-              del: tint(theme.inkMuted),
-            }) as unknown as MarkedExtension,
-            {
-              renderer: {
-                // `marked-terminal` prints a tight list item's text raw; render its inline markdown instead.
-                code(token) {
-                  return `\n${tint(theme.inkMuted)(token.text)}\n`;
-                },
-                text(token) {
-                  return "tokens" in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
-                },
-              },
-            },
-          );
-          renderers.set(width, marked);
-        }
-        return marked;
-      };
-      loaded = (text, width) => {
-        const w = Math.max(1, width);
-        const rendered = renderer(w)
-          .parse(text, { async: false })
-          // A full reset would also clear the background of the modal the text is shown in.
-          .replaceAll("\u001b[0m", "")
-          .replace(/\s+$/, "");
-        return rendered.split("\n").flatMap((line) => wrapAnsi(line, w, { hard: true, trim: false }).split("\n"));
-      };
-      return loaded;
-    },
-  );
+  const loading = markdown.current.loading ?? importRenderer();
+
+  markdown.update(() => ({ loading }));
+
   return loading;
 }
 
 /** The markdown renderer once it has loaded; until then `undefined`. */
 export function markdownRenderer(): MarkdownRenderer | undefined {
-  return loaded;
+  return markdown.current.loaded;
 }
 
 /** The text without markdown syntax, in rows of at most `width` characters: shown until the renderer loads. */
 export function plainMarkdownRows(text: string, width: number): string[] {
-  const w = Math.max(1, width);
-  return markdownToPlain(text.replace(/\s+$/, ""))
-    .split("\n")
-    .flatMap((line) => {
-      const chars = Array.from(line);
-      const rows: string[] = [];
-      for (let i = 0; i < chars.length; i += w) rows.push(chars.slice(i, i + w).join(""));
-      return rows.length ? rows : [""];
-    });
+  return plainRows(markdownToPlain(text.replace(/\s+$/, "")), width);
 }

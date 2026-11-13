@@ -1,10 +1,16 @@
 language js
 
 // An assignment to a property changes an object in place. Build a new object.
+// A statement of a class constructor body can give `this.<field>` its first value.
+// The same assignment inside a nested function, arrow or block of the constructor is a change.
 JsAssignmentExpression() as $assignment where {
   $assignment <: JsAssignmentExpression(left=or {
     JsStaticMemberAssignment(),
     JsComputedMemberAssignment()
   }),
+  or {
+    not $assignment <: JsAssignmentExpression(left=JsStaticMemberAssignment(object=JsThisExpression())),
+    not $assignment <: within JsConstructorClassMember(body=JsFunctionBody(statements=some JsExpressionStatement(expression=$assignment)))
+  },
   register_diagnostic(span=$assignment, message="Do not change an object in place. Build a new object.")
 }

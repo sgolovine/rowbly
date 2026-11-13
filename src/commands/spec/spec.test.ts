@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { updateProject } from "../../services/project/project.js";
 import { getSpec } from "../../services/spec/spec.js";
 import { createStory } from "../../services/story/story.js";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("spec commands", () => {
   const project = useTestProject();

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { createStory } from "../story/story.js";
-import { useTempDir, useTestProject } from "../testProject/testProject.js";
+import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { defaultProjectName, getInstructions, getProject, initProject, updateProject } from "./project.js";
 

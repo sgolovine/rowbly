@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { useTempDir } from "../testProject/testProject.js";
+import { useTempDir } from "../test-project/test-project.js";
 import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied, writeFileAtomic } from "./files.js";
 
 describe("files", () => {

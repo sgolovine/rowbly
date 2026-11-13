@@ -25,7 +25,15 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case"]
+          }
+        }
+      }
     }
   },
   "overrides": [
@@ -40,7 +48,7 @@
       }
     },
     {
-      "includes": ["src/services/factoryManager/**", "!**/*.test.ts"],
+      "includes": ["src/**", "!**/*.test.ts", "!**/*.test.tsx"],
       "plugins": [
         "./biome-plugins/no-nested-function.grit",
         "./biome-plugins/no-let.grit",

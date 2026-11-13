@@ -7,7 +7,7 @@ description: Develop a refined Rowbly Story in a Git worktree, or fix the findin
 
 This skill builds the work of one refined Story in a linked Git worktree and commits it to a branch.
 
-Read `references/rowbly_reference.md` before you run a `rowbly` command.
+Read `references/rowbly-reference.md` before you run a `rowbly` command.
 
 ## Project and Story fields
 

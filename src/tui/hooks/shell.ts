@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect, useId } from "react";
+import { Store, withEntry, withoutEntry } from "../../services/store/store.js";
 import type { KeyHint } from "../keymap.js";
 
 /**
@@ -22,47 +23,95 @@ export interface ShellRegistry {
 
 /** Which keys a capture takes from the shell. */
 interface CaptureKeys {
-  text: boolean;
-  escape: boolean;
+  readonly text: boolean;
+  readonly escape: boolean;
 }
 
-export function createShellRegistry(): ShellRegistry {
-  let text = 0;
-  let escapes = 0;
-  const dirty = new Map<string, number>();
-  const hints = new Map<number, Map<string, { hints: readonly KeyHint[]; lead: boolean }>>();
+interface HintPart {
+  readonly hints: readonly KeyHint[];
+  readonly lead: boolean;
+}
+
+interface ShellState {
+  /** The number of captures that take printable keys and `esc`. */
+  readonly text: number;
+  readonly escapes: number;
+  /** The depth of each screen part that holds a dirty form. */
+  readonly dirty: ReadonlyMap<string, number>;
+  readonly hints: ReadonlyMap<number, ReadonlyMap<string, HintPart>>;
+}
+
+type ShellStore = Store<ShellState>;
+
+function captureKeys(store: ShellStore, keys: CaptureKeys): () => void {
+  const capture = new Store({ released: false });
+
+  store.update((state) => countCapture(state, keys, 1));
+
+  return () => releaseKeys(store, capture, keys);
+}
+
+/** Releases a capture one time, also when the caller releases it again. */
+function releaseKeys(store: ShellStore, capture: Store<{ released: boolean }>, keys: CaptureKeys): void {
+  if (capture.current.released) {
+    return;
+  }
+
+  capture.update(() => ({ released: true }));
+  store.update((state) => countCapture(state, keys, -1));
+}
+
+function countCapture(state: ShellState, keys: CaptureKeys, step: 1 | -1): Partial<ShellState> {
   return {
-    capture(keys) {
-      if (keys.text) text += 1;
-      if (keys.escape) escapes += 1;
-      let released = false;
-      return () => {
-        if (released) return;
-        released = true;
-        if (keys.text) text -= 1;
-        if (keys.escape) escapes -= 1;
-      };
-    },
-    captured: () => ({ text: text > 0, escape: escapes > 0 }),
-    setDirty(depth, id, isDirty) {
-      if (isDirty) dirty.set(id, depth);
-      else dirty.delete(id);
-    },
-    isDirty(depth) {
-      for (const at of dirty.values()) if (depth === undefined || at === depth) return true;
-      return false;
-    },
-    setHints(depth, id, next, lead = false) {
-      const parts = hints.get(depth) ?? new Map();
-      if (next) parts.set(id, { hints: next, lead });
-      else parts.delete(id);
-      if (parts.size > 0) hints.set(depth, parts);
-      else hints.delete(depth);
-    },
-    hints(depth) {
-      const parts = [...(hints.get(depth)?.values() ?? [])];
-      return uniqueKeys([...parts.filter((p) => p.lead), ...parts.filter((p) => !p.lead)].flatMap((p) => p.hints));
-    },
+    text: keys.text ? state.text + step : state.text,
+    escapes: keys.escape ? state.escapes + step : state.escapes,
+  };
+}
+
+function setDirty(store: ShellStore, depth: number, id: string, isDirty: boolean): void {
+  store.update((state) => ({ dirty: isDirty ? withEntry(state.dirty, id, depth) : withoutEntry(state.dirty, id) }));
+}
+
+function isDirtyAt(state: ShellState, depth: number | undefined): boolean {
+  return [...state.dirty.values()].some((at) => depth === undefined || at === depth);
+}
+
+/** The hint parts of each depth, with the part `id` at `depth` set, or removed with `null`. */
+function withHintPart(
+  hints: ShellState["hints"],
+  depth: number,
+  id: string,
+  next: readonly KeyHint[] | null,
+  lead: boolean,
+): ShellState["hints"] {
+  const parts = hints.get(depth) ?? new Map<string, HintPart>();
+  const changed = next ? withEntry(parts, id, { hints: next, lead }) : withoutEntry(parts, id);
+
+  return changed.size > 0 ? withEntry(hints, depth, changed) : withoutEntry(hints, depth);
+}
+
+function setHints(store: ShellStore, depth: number, id: string, next: readonly KeyHint[] | null, lead: boolean): void {
+  store.update((state) => ({ hints: withHintPart(state.hints, depth, id, next, lead) }));
+}
+
+/** The hints of the screen at `depth`: the lead parts first. */
+function hintsAt(state: ShellState, depth: number): readonly KeyHint[] {
+  const parts = [...(state.hints.get(depth)?.values() ?? [])];
+
+  return uniqueKeys([...parts.filter((p) => p.lead), ...parts.filter((p) => !p.lead)].flatMap((p) => p.hints));
+}
+
+/** Makes the registry that the shell and its screens share. */
+export function createShellRegistry(): ShellRegistry {
+  const store = new Store<ShellState>({ text: 0, escapes: 0, dirty: new Map(), hints: new Map() });
+
+  return {
+    capture: (keys) => captureKeys(store, keys),
+    captured: () => ({ text: store.current.text > 0, escape: store.current.escapes > 0 }),
+    setDirty: (depth, id, isDirty) => setDirty(store, depth, id, isDirty),
+    isDirty: (depth) => isDirtyAt(store.current, depth),
+    setHints: (depth, id, next, lead = false) => setHints(store, depth, id, next, lead),
+    hints: (depth) => hintsAt(store.current, depth),
   };
 }
 
@@ -88,6 +137,7 @@ export interface MainOverlay {
 /** `null` outside the shell, which has nothing to cover. */
 export const MainOverlayContext = createContext<MainOverlay | null>(null);
 
+/** The overlay over the whole terminal, or `null` outside the shell. */
 export function useMainOverlay(): MainOverlay | null {
   return useContext(MainOverlayContext);
 }
@@ -109,6 +159,7 @@ export function useKeyCapture(active: boolean, options: { text?: boolean; escape
   const shell = useContext(ShellContext);
   const withText = options.text ?? true;
   const withEscape = options.escape ?? false;
+
   useEffect(
     () => (active ? shell.capture({ text: withText, escape: withEscape }) : undefined),
     [shell, active, withText, withEscape],
@@ -120,8 +171,10 @@ export function useDirty(dirty: boolean): void {
   const shell = useContext(ShellContext);
   const depth = useContext(ScreenDepthContext);
   const id = useId();
+
   useEffect(() => {
     shell.setDirty(depth, id, dirty);
+
     return () => shell.setDirty(depth, id, false);
   }, [shell, depth, id, dirty]);
 }
@@ -132,10 +185,15 @@ export function useKeyHints(hints: readonly KeyHint[]): void {
   const depth = useContext(ScreenDepthContext);
   const id = useId();
   const key = JSON.stringify(hints);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands in for `hints`, which callers usually rebuild each render.
   useEffect(() => {
-    if (depth < 0) return;
+    if (depth < 0) {
+      return;
+    }
+
     shell.setHints(depth, id, hints);
+
     return () => shell.setHints(depth, id, null);
   }, [shell, depth, id, key]);
 }

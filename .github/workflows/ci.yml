@@ -28,6 +28,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # `biome ci` runs the linter, the formatter and the import order checks, and annotates the PR.
       - run: pnpm exec biome ci .
+      # Biome checks only the names of script files. This script checks all file and folder names.
+      - run: node scripts/check-names.mjs
       - run: pnpm typecheck
       # The factory skill scripts have their own node:test suite, separate from Vitest.
       - run: pnpm test:factory

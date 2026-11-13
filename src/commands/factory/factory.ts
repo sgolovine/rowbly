@@ -8,30 +8,50 @@ import {
   startFactory,
   stopFactory,
 } from "../../services/factory/factory.js";
-import { configureFactory, type ModelChoice } from "../../services/factorySettings/factorySettings.js";
-import { runFactoryForeground } from "../factoryRunner/factoryRunner.js";
+import { configureFactory, type ModelChoice } from "../../services/factory-settings/factory-settings.js";
+import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { type LaunchDescriptor, runFactoryForeground } from "../factory-runner/factory-runner.js";
 import { parsePosition, run } from "../output/output.js";
 
-export function registerFactoryCommands(program: Command) {
+interface ConfigureOptions {
+  maxWorkers?: number;
+  supervisor?: string;
+  worker?: string;
+  supervisorThinking?: ModelChoice["thinkingLevel"];
+  workerThinking?: ModelChoice["thinkingLevel"];
+}
+
+interface StartOptions {
+  foreground?: boolean;
+  maxWorkers?: number;
+  adoptExternal?: boolean;
+}
+
+/** The status of the daemon. A status that Rowbly cannot read is an error, so that the exit code is 1. */
+async function availableStatus(ctx: ServiceContext): Promise<Awaited<ReturnType<typeof getFactoryStatus>>> {
+  const status = await getFactoryStatus(ctx);
+
+  if (status.phase === "unavailable") {
+    throw new ConflictError(status.error ?? "Factory status is unavailable");
+  }
+
+  return status;
+}
+
+function registerStatus(program: Command): void {
   program
     .command("status")
     .description("Show native factory status")
     .action((_opts: unknown, command: Command) =>
       run(
         command,
-        async (ctx) => {
-          const status = await getFactoryStatus(ctx);
-          if (status.phase === "unavailable") throw new ConflictError(status.error ?? "Factory status is unavailable");
-          return status;
-        },
+        (ctx) => availableStatus(ctx),
         (status) => JSON.stringify(status, null, 2),
       ),
     );
-  const launch = {
-    executable: process.execPath,
-    execArgv: [...process.execArgv],
-    entry: resolve(process.argv[1] as string),
-  };
+}
+
+function registerRun(program: Command): void {
   program
     .command("run", { hidden: true })
     .option("--max-workers <n>", "worker limit", parsePosition)
@@ -43,6 +63,9 @@ export function registerFactoryCommands(program: Command) {
         () => "Factory stopped.",
       ),
     );
+}
+
+function registerStop(program: Command): void {
   program
     .command("stop")
     .description("Stop the native factory")
@@ -53,6 +76,9 @@ export function registerFactoryCommands(program: Command) {
         () => "Factory stopped.",
       ),
     );
+}
+
+function registerRestart(program: Command, launch: LaunchDescriptor): void {
   program
     .command("restart")
     .description("Restart the native factory")
@@ -64,6 +90,9 @@ export function registerFactoryCommands(program: Command) {
         (status) => JSON.stringify(status),
       ),
     );
+}
+
+function registerLogs(program: Command): void {
   program
     .command("logs")
     .description("Print bounded factory logs")
@@ -75,21 +104,25 @@ export function registerFactoryCommands(program: Command) {
         (result) => result.lines.join("\n"),
       ),
     );
+}
+
+function registerStart(program: Command, launch: LaunchDescriptor): void {
   program
     .command("start")
     .description("Start the native factory")
     .option("--adopt-external", "adopt stopped external attempts")
     .option("--foreground", "run in this terminal")
     .option("--max-workers <n>", "worker limit", parsePosition)
-    .action((opts: { foreground?: boolean; maxWorkers?: number; adoptExternal?: boolean }, command: Command) =>
+    .action((opts: StartOptions, command: Command) =>
       run(
         command,
-        async (ctx) => {
-          return opts.foreground ? runFactoryForeground(opts, ctx) : startFactory({ ...opts, launch }, ctx);
-        },
+        async (ctx) => (opts.foreground ? runFactoryForeground(opts, ctx) : startFactory({ ...opts, launch }, ctx)),
         (status) => JSON.stringify(status),
       ),
     );
+}
+
+function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description("Set factory models and worker limit")
@@ -98,21 +131,29 @@ export function registerFactoryCommands(program: Command) {
     .option("--worker <model>", "provider/model")
     .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
-    .action(
-      (
-        opts: {
-          maxWorkers?: number;
-          supervisor?: string;
-          worker?: string;
-          supervisorThinking?: ModelChoice["thinkingLevel"];
-          workerThinking?: ModelChoice["thinkingLevel"];
-        },
-        cmd: Command,
-      ) =>
-        run(
-          cmd,
-          (ctx) => configureFactory(opts, ctx),
-          (settings) => JSON.stringify(settings, null, 2),
-        ),
+    .action((opts: ConfigureOptions, cmd: Command) =>
+      run(
+        cmd,
+        (ctx) => configureFactory(opts, ctx),
+        (settings) => JSON.stringify(settings, null, 2),
+      ),
     );
+}
+
+/** Registers the `rowbly factory` subcommands on the `factory` command. */
+export function registerFactoryCommands(program: Command): void {
+  // A detached daemon starts with the same Node, loader flags and entry file as this process.
+  const launch = {
+    executable: process.execPath,
+    execArgv: [...process.execArgv],
+    entry: resolve(process.argv[1] as string),
+  };
+
+  registerStatus(program);
+  registerRun(program);
+  registerStop(program);
+  registerRestart(program, launch);
+  registerLogs(program);
+  registerStart(program, launch);
+  registerConfigure(program);
 }

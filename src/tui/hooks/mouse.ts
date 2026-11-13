@@ -1,7 +1,9 @@
 import type { EventEmitter } from "node:events";
 import { type DOMElement, measureElement } from "ink";
-import { createContext, type RefObject, useContext, useEffect, useRef } from "react";
+import { createContext, type RefObject, useContext, useEffect } from "react";
+import { Store, withMember, withoutMember } from "../../services/store/store.js";
 import type { MouseEvent } from "../mouse.js";
+import { useLatest } from "./refs.js";
 
 /** Lines one notch of the mouse wheel scrolls. */
 export const WHEEL_LINES = 3;
@@ -30,9 +32,9 @@ export interface MouseHandlers {
 }
 
 interface Target {
-  ref: RefObject<DOMElement | null>;
-  handlers: RefObject<MouseHandlers>;
-  clip: RefObject<DOMElement | null> | null;
+  readonly ref: RefObject<DOMElement | null>;
+  readonly handlers: RefObject<MouseHandlers>;
+  readonly clip: RefObject<DOMElement | null> | null;
 }
 
 /**
@@ -44,111 +46,250 @@ export interface MouseRegistry {
   dispatch(event: MouseEvent): void;
 }
 
+/** A press on a box with a `drag` value, until the release. */
+interface Drag {
+  readonly value: unknown;
+  readonly from: Target;
+  readonly x: number;
+  readonly y: number;
+  readonly moved: boolean;
+}
+
+interface MouseState {
+  readonly targets: ReadonlySet<Target>;
+  readonly hovered: Target | undefined;
+  readonly dragging: Drag | null;
+  readonly pulling: Target | null;
+  /** The drop target under a drag that has moved, told on entering and leaving. */
+  readonly over: Target | undefined;
+}
+
+type MouseStore = Store<MouseState>;
+
+type Wants = (handlers: MouseHandlers) => boolean;
+
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+interface Hit {
+  readonly target: Target;
+  readonly area: number;
+}
+
+/** What each kind of mouse event does to the registry. */
+const DISPATCH: Readonly<Record<MouseEvent["kind"], (store: MouseStore, event: MouseEvent) => void>> = {
+  wheelUp: dispatchWheel,
+  wheelDown: dispatchWheel,
+  menu: cancelGesture,
+  move: dispatchMove,
+  press: dispatchPress,
+  release: dispatchRelease,
+};
+
+function contains(box: Box, event: MouseEvent): boolean {
+  return event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
+}
+
+/** Whether the pointer is in the visible cells of the viewport that clips `target`. */
+function insideClip(target: Target, event: MouseEvent): boolean {
+  const viewport = target.clip?.current;
+
+  if (!target.clip) {
+    return true;
+  }
+
+  return viewport ? contains(measureElement(viewport), event) : false;
+}
+
+/** The area of `target` when the pointer is on it and it wants the event, or `0`. */
+function hitArea(target: Target, event: MouseEvent, wants: Wants): number {
+  const node = target.ref.current;
+  const box = node ? measureElement(node) : undefined;
+  const area = box ? box.width * box.height : 0;
+
+  if (!box || area === 0 || !contains(box, event)) {
+    return 0;
+  }
+
+  return insideClip(target, event) && wants(target.handlers.current) ? area : 0;
+}
+
+/** Keeps the first of the smallest boxes. */
+function smallerHit(best: Hit | undefined, target: Target, area: number): Hit | undefined {
+  return area > 0 && (!best || area < best.area) ? { target, area } : best;
+}
+
+/** The smallest box under the pointer that wants the event. */
+function hit(store: MouseStore, event: MouseEvent, wants: Wants): Target | undefined {
+  const best = [...store.current.targets].reduce<Hit | undefined>(
+    (found, target) => smallerHit(found, target, hitArea(target, event, wants)),
+    undefined,
+  );
+
+  return best?.target;
+}
+
+function setOver(store: MouseStore, next: Target | undefined): void {
+  const { over } = store.current;
+
+  if (next === over) {
+    return;
+  }
+
+  over?.handlers.current.onDragLeave?.();
+  store.update(() => ({ over: next }));
+}
+
+function registerTarget(store: MouseStore, target: Target): () => void {
+  store.update((state) => ({ targets: withMember(state.targets, target) }));
+
+  return () => unregisterTarget(store, target);
+}
+
+function unregisterTarget(store: MouseStore, target: Target): void {
+  if (store.current.hovered === target) {
+    store.update(() => ({ hovered: undefined }));
+    target.handlers.current.onLeave?.();
+  }
+
+  if (store.current.over === target) {
+    setOver(store, undefined);
+  }
+
+  store.update((state) => ({ targets: withoutMember(state.targets, target) }));
+}
+
+function dispatchWheel(store: MouseStore, event: MouseEvent): void {
+  hit(store, event, (handlers) => Boolean(handlers.onWheel))?.handlers.current.onWheel?.(
+    event.kind === "wheelUp" ? -1 : 1,
+  );
+}
+
+/** A right click ends a drag or a pull. */
+function cancelGesture(store: MouseStore): void {
+  store.update(() => ({ pulling: null, dragging: null }));
+  setOver(store, undefined);
+}
+
+function dispatchMove(store: MouseStore, event: MouseEvent): void {
+  const { pulling } = store.current;
+
+  if (pulling) {
+    pulling.handlers.current.onPull?.(event.x, event.y);
+
+    return;
+  }
+
+  dragOver(store, event);
+  hover(store, event);
+}
+
+/** Tells the drop target under a drag that has moved. */
+function dragOver(store: MouseStore, event: MouseEvent): void {
+  const { dragging } = store.current;
+
+  if (!dragging) {
+    return;
+  }
+
+  if (event.x !== dragging.x || event.y !== dragging.y) {
+    store.update(() => ({ dragging: { ...dragging, moved: true } }));
+  }
+
+  if (!store.current.dragging?.moved) {
+    return;
+  }
+
+  setOver(
+    store,
+    hit(store, event, (handlers) => Boolean(handlers.onDrop)),
+  );
+  store.current.over?.handlers.current.onDragOver?.(dragging.value, event.x, event.y);
+}
+
+function hover(store: MouseStore, event: MouseEvent): void {
+  const next = hit(store, event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
+  const { hovered } = store.current;
+
+  if (next === hovered) {
+    return;
+  }
+
+  hovered?.handlers.current.onLeave?.();
+  store.update(() => ({ hovered: next }));
+  next?.handlers.current.onEnter?.();
+}
+
+function dispatchPress(store: MouseStore, event: MouseEvent): void {
+  const target = hit(store, event, (handlers) =>
+    Boolean(handlers.onClick || handlers.drag !== undefined || handlers.onPull),
+  );
+  const pulling = target?.handlers.current.onPull ? target : null;
+
+  store.update(() => ({ pulling }));
+
+  if (pulling) {
+    return;
+  }
+
+  if (target && target.handlers.current.drag !== undefined) {
+    store.update(() => ({
+      dragging: { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false },
+    }));
+
+    return;
+  }
+
+  store.update(() => ({ dragging: null }));
+  setOver(store, undefined);
+  target?.handlers.current.onClick?.();
+}
+
+function dispatchRelease(store: MouseStore, event: MouseEvent): void {
+  store.update(() => ({ pulling: null }));
+  setOver(store, undefined);
+
+  const drop = store.current.dragging;
+
+  store.update(() => ({ dragging: null }));
+
+  if (drop) {
+    release(store, event, drop);
+  }
+}
+
+/** A release in the cell of the press is a click. Elsewhere, it drops the value on the box under it. */
+function release(store: MouseStore, event: MouseEvent, drop: Drag): void {
+  if (!drop.moved && event.x === drop.x && event.y === drop.y) {
+    drop.from.handlers.current.onClick?.();
+
+    return;
+  }
+
+  const target = hit(store, event, (handlers) => Boolean(handlers.onDrop));
+
+  if (target && target !== drop.from) {
+    target.handlers.current.onDrop?.(drop.value, event.x, event.y);
+  }
+}
+
+/** Makes the registry of the clickable boxes for one app. */
 export function createMouseRegistry(): MouseRegistry {
-  const targets = new Set<Target>();
-  let hovered: Target | undefined;
-  let dragging: { value: unknown; from: Target; x: number; y: number; moved: boolean } | null = null;
-  let pulling: Target | null = null;
-  // The drop target under a drag that has moved, told on entering and leaving.
-  let over: Target | undefined;
-
-  const setOver = (next: Target | undefined) => {
-    if (next === over) return;
-    over?.handlers.current.onDragLeave?.();
-    over = next;
-  };
-
-  const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
-    let best: { target: Target; area: number } | undefined;
-    for (const target of targets) {
-      const node = target.ref.current;
-      if (!node) continue;
-      const box = measureElement(node);
-      const inside =
-        event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
-      const area = box.width * box.height;
-      if (!inside || area === 0) continue;
-      if (target.clip) {
-        const viewport = target.clip.current;
-        if (!viewport) continue;
-        const bounds = measureElement(viewport);
-        if (
-          event.x < bounds.x ||
-          event.x >= bounds.x + bounds.width ||
-          event.y < bounds.y ||
-          event.y >= bounds.y + bounds.height
-        )
-          continue;
-      }
-      if (!wants(target.handlers.current)) continue;
-      if (!best || area < best.area) best = { target, area };
-    }
-    return best?.target;
-  };
+  const store = new Store<MouseState>({
+    targets: new Set(),
+    hovered: undefined,
+    dragging: null,
+    pulling: null,
+    over: undefined,
+  });
 
   return {
-    register(target) {
-      targets.add(target);
-      return () => {
-        if (hovered === target) {
-          hovered = undefined;
-          target.handlers.current.onLeave?.();
-        }
-        if (over === target) setOver(undefined);
-        targets.delete(target);
-      };
-    },
-    dispatch(event) {
-      if (event.kind === "wheelUp" || event.kind === "wheelDown") {
-        hit(event, (h) => Boolean(h.onWheel))?.handlers.current.onWheel?.(event.kind === "wheelUp" ? -1 : 1);
-        return;
-      }
-      if (event.kind === "menu") {
-        pulling = null;
-        dragging = null;
-        setOver(undefined);
-        return;
-      }
-      if (event.kind === "move") {
-        if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
-        if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
-        if (dragging?.moved) {
-          setOver(hit(event, (h) => Boolean(h.onDrop)));
-          over?.handlers.current.onDragOver?.(dragging.value, event.x, event.y);
-        }
-        const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
-        if (next !== hovered) {
-          hovered?.handlers.current.onLeave?.();
-          hovered = next;
-          hovered?.handlers.current.onEnter?.();
-        }
-        return;
-      }
-      if (event.kind === "press") {
-        const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined || h.onPull));
-        pulling = target?.handlers.current.onPull ? target : null;
-        if (pulling) return;
-        if (target && target.handlers.current.drag !== undefined) {
-          dragging = { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false };
-          return;
-        }
-        dragging = null;
-        setOver(undefined);
-        target?.handlers.current.onClick?.();
-        return;
-      }
-      pulling = null;
-      setOver(undefined);
-      const drop = dragging;
-      dragging = null;
-      if (!drop) return;
-      if (!drop.moved && event.x === drop.x && event.y === drop.y) {
-        drop.from.handlers.current.onClick?.();
-        return;
-      }
-      const target = hit(event, (h) => Boolean(h.onDrop));
-      if (target && target !== drop.from) target.handlers.current.onDrop?.(drop.value, event.x, event.y);
-    },
+    register: (target) => registerTarget(store, target),
+    dispatch: (event) => DISPATCH[event.kind](store, event),
   };
 }
 
@@ -157,12 +298,22 @@ export const MouseContext = createContext<MouseRegistry | null>(null);
 /** Restricts descendant mouse targets to the visible cells of a borderless viewport. */
 const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null);
 
+/** Gives one listener for the `on` and the `off` of a mouse source. */
+function mouseListener(registry: MouseRegistry): (event: MouseEvent) => void {
+  return (event) => registry.dispatch(event);
+}
+
 /** Feeds the reports from a `MouseStdin` into the registry until unmounted. */
 export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
   useEffect(() => {
-    if (!source) return;
-    const listener = (event: MouseEvent) => registry.dispatch(event);
+    if (!source) {
+      return;
+    }
+
+    const listener = mouseListener(registry);
+
     source.on("mouse", listener);
+
     return () => {
       source.off("mouse", listener);
     };
@@ -173,10 +324,10 @@ export function useMouseSource(registry: MouseRegistry, source: EventEmitter | u
 export function useMouse(ref: RefObject<DOMElement | null>, handlers: MouseHandlers, active = true): void {
   const registry = useContext(MouseContext);
   const clip = useContext(MouseClipContext);
-  const latest = useRef(handlers);
-  latest.current = handlers;
+  const latest = useLatest(handlers);
+
   useEffect(
     () => (registry && active ? registry.register({ ref, handlers: latest, clip }) : undefined),
-    [registry, ref, active, clip],
+    [registry, ref, active, clip, latest],
   );
 }

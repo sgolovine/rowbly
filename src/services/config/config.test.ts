@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import {
   checkFieldKey,
   checkFieldOptions,

@@ -2,8 +2,8 @@ import { mkdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { pathExists } from "../../services/files/files.js";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("skill commands", () => {
   const project = useTestProject();
@@ -25,7 +25,7 @@ describe("skill commands", () => {
       exitCode: 0,
     });
     expect(await pathExists(at(".claude/skills/develop/SKILL.md"))).toBe(true);
-    expect(await readFile(at(".cursor/skills/develop/references/rowbly_reference.md"), "utf8")).toContain("rowbly");
+    expect(await readFile(at(".cursor/skills/develop/references/rowbly-reference.md"), "utf8")).toContain("rowbly");
     expect(JSON.parse(await project.read("rowbly.config.json")).skills).toEqual([
       { name: "develop", harnesses: ["claude-code", "cursor"] },
     ]);
@@ -58,7 +58,7 @@ describe("skill commands", () => {
   });
 
   it("rejects the shared reference file", async () => {
-    expect((await cli("skill", "install", "rowbly_reference.md", "--harness", "codex")).exitCode).toBe(1);
+    expect((await cli("skill", "install", "rowbly-reference.md", "--harness", "codex")).exitCode).toBe(1);
     expect(await pathExists(at(".agents"))).toBe(false);
   });
 

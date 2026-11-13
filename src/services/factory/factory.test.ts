@@ -6,8 +6,8 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { build } from "tsup";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { newOwner, probeOwner, readFactoryOwner } from "../factoryOwnership/factoryOwnership.js";
-import { updateFactorySettings } from "../factorySettings/factorySettings.js";
+import { newOwner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
+import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { initProject } from "../project/project.js";
 import { createThread, getThread, listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
@@ -168,7 +168,7 @@ describe("detached factory with offline Pi", () => {
     ).rejects.toThrow(/fixture early failure/);
     const owner = await newOwner();
     const { acquireFactoryOwnership, releaseFactoryOwnership } = await import(
-      "../factoryOwnership/factoryOwnership.js"
+      "../factory-ownership/factory-ownership.js"
     );
     await acquireFactoryOwnership(projectPaths(root), owner);
     try {

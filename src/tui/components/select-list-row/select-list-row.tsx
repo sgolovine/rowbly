@@ -1,0 +1,35 @@
+import { Box, type DOMElement, Text } from "ink";
+import { type ReactNode, useRef } from "react";
+import { useMouse } from "../../hooks/index.js";
+import { theme } from "../../theme.js";
+import { useScrollFocus } from "../scroll-focus.js";
+
+/**
+ * One row of a `SelectList`: the `›` marker on the highlighted row, and a click target while `onClick`
+ * is set.
+ */
+export function SelectListRow({
+  highlighted,
+  active,
+  onClick,
+  children,
+}: {
+  highlighted: boolean;
+  active: boolean;
+  onClick?(): void;
+  children: ReactNode;
+}) {
+  const ref = useRef<DOMElement>(null);
+
+  useScrollFocus(ref, highlighted && active);
+  useMouse(ref, { onClick }, active && onClick !== undefined);
+
+  return (
+    <Box ref={ref} backgroundColor={highlighted ? theme.selection : undefined}>
+      <Text color={theme.ink} bold={highlighted}>
+        <Text color={theme.accent}>{highlighted ? "▌ " : "  "}</Text>
+        {children}
+      </Text>
+    </Box>
+  );
+}

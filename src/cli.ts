@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { Command } from "commander";
 import pkg from "../package.json" with { type: "json" };
-import { registerCommands } from "./commands/registerCommands/registerCommands.js";
+import { registerCommands } from "./commands/register-commands/register-commands.js";
 import { renderTui } from "./tui/index.js";
 
 const program = new Command().name("rowbly").description(pkg.description).version(pkg.version, "-v, --version");

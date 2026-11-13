@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { acquireFactoryOwnership, newOwner } from "../factoryOwnership/factoryOwnership.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { acquireFactoryOwnership, newOwner } from "../factory-ownership/factory-ownership.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { runtimePaths } from "../workspace/workspace.js";
 import { getFactoryStatus } from "./factory.js";
 

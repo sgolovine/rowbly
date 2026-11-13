@@ -3,17 +3,16 @@ import { join, resolve } from "node:path";
 import {
   type CustomField,
   checkProjectKey,
-  checkStageKey,
   type Issue,
   labelFromKey,
   SKILL_HARNESSES,
   type SkillHarness,
   throwIfIssues,
   toProjectKey,
-  toStageKey,
 } from "../config/config.js";
-import { ConflictError, ValidationError } from "../errors/errors.js";
+import { ConflictError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { defaultProjectName, getProject, initProject, type Project } from "../project/project.js";
 import {
   bundledSkills,
@@ -23,21 +22,19 @@ import {
   packageDir,
   removeSkill,
 } from "../skill/skill.js";
+import { Store } from "../store/store.js";
 import { projectPaths, type ServiceContext } from "../workspace/workspace.js";
+import { headline, type OnboardingInput } from "./onboarding-input.js";
+import {
+  DEFAULT_STAGES,
+  type PlannedStage,
+  planStages,
+  requiredSkills,
+  withAlwaysEnabledStages,
+} from "./onboarding-stages.js";
 
-/** What a user chooses in onboarding. A choice that is left out takes its default. */
-export interface OnboardingInput {
-  name?: string;
-  key?: string;
-  /**
-   * In board order. Each entry is the key or name of a default stage, or the name of a custom stage.
-   * Backlog and Done are always in the project: if one is left out, it goes at the start or the end.
-   */
-  stages?: string[];
-  skills?: string[];
-  /** Every skill in `skills` is installed for each of these harnesses. */
-  harnesses?: string[];
-}
+export { type OnboardingInput, parseOnboardingInput } from "./onboarding-input.js";
+export { isAlwaysEnabledStage, requiredSkills, withCustomStages } from "./onboarding-stages.js";
 
 interface OnboardingHarness {
   id: SkillHarness;
@@ -53,13 +50,6 @@ export interface OnboardingOptions {
   stages: string[];
   skills: string[];
   harnesses: OnboardingHarness[];
-}
-
-interface PlannedStage {
-  key: string;
-  label: string;
-  /** `true`: the stage is not a default stage, so its prompt is a placeholder. */
-  custom: boolean;
 }
 
 interface PlannedSkill {
@@ -93,22 +83,15 @@ export interface OnboardingResult extends Project {
   warnings: string[];
 }
 
-/** The stages in the top-level `stages/` folder, in board order, and the skills that their prompts use. */
-const DEFAULT_STAGES = [
-  { key: "BACKLOG", skills: [] },
-  { key: "IN_REFINEMENT", skills: ["refine"] },
-  { key: "IN_DEVELOPMENT", skills: ["develop"] },
-  { key: "IN_REVIEW", skills: ["review"] },
-  { key: "DONE", skills: [] },
-] as const;
+/** The skills that the onboarding installed so far, for the rollback. */
+interface InstallProgress {
+  readonly installed: readonly InstallSkillResult[];
+}
 
 /** The companion skill that runs the factory supervisor. Onboarding marks it as required, but the user can leave it out. */
 export const FACTORY_SKILL = "factory";
 
 export const FACTORY_SKILL_WARNING = `The factory requires the companion skill "${FACTORY_SKILL}". Without it, you cannot run the factory. To install it later, run \`rowbly skill install ${FACTORY_SKILL} --harness <id>\`.`;
-
-/** The default stages that onboarding always creates. */
-const ALWAYS_ENABLED_STAGES = ["BACKLOG", "DONE"];
 
 /** The custom fields that the bundled skills read and write. */
 const SKILL_FIELDS: readonly { field: CustomField; skills: readonly string[] }[] = [
@@ -124,13 +107,6 @@ const EDIT_LOCATIONS: readonly EditLocation[] = [
   { what: "Skills", where: "rowbly skill install and rowbly skill remove" },
 ];
 
-const INPUT_KEYS = ["name", "key", "stages", "skills", "harnesses"];
-
-/** The CLI prints the list of issues only if there are two or more, so one issue must be the message. */
-function headline(issues: Issue[], several: string): string {
-  return issues.length === 1 ? (issues[0]?.message ?? several) : several;
-}
-
 function placeholderPrompt(label: string): string {
   return `This is a placeholder. Replace this text with the instructions for agents in the ${label} stage.\n\nUntil then, do not work on stories in this stage.`;
 }
@@ -138,6 +114,7 @@ function placeholderPrompt(label: string): string {
 /** The default of each step for a project in `ctx.cwd`. */
 export async function onboardingOptions(ctx: ServiceContext = {}): Promise<OnboardingOptions> {
   const name = defaultProjectName(ctx);
+
   return {
     name,
     key: toProjectKey(name),
@@ -147,49 +124,36 @@ export async function onboardingOptions(ctx: ServiceContext = {}): Promise<Onboa
   };
 }
 
-/** The skills that the default stages among `stages` use. */
-export function requiredSkills(stages: readonly string[]): string[] {
-  const keys = stages.map(toStageKey);
-  return DEFAULT_STAGES.filter((stage) => keys.includes(stage.key)).flatMap((stage) => [...stage.skills]);
+function nameIssues(name: string): Issue[] {
+  return name === "" ? [{ path: ["name"], message: "Name is required" }] : [];
 }
 
-export function isAlwaysEnabledStage(stage: string): boolean {
-  return ALWAYS_ENABLED_STAGES.includes(toStageKey(stage));
-}
-
-/** Adds Backlog at the start and Done at the end of `stages`, if they are not in the list. */
-function withAlwaysEnabledStages(stages: readonly string[]): string[] {
-  const keys = stages.map(toStageKey);
+/** Unknown skills first, then the required skills that the choice leaves out. */
+function skillIssues(skills: readonly string[], bundled: readonly string[], required: readonly string[]): Issue[] {
   return [
-    ...(keys.includes("BACKLOG") ? [] : [labelFromKey("BACKLOG")]),
-    ...stages,
-    ...(keys.includes("DONE") ? [] : [labelFromKey("DONE")]),
+    ...skills
+      .filter((skill) => !bundled.includes(skill))
+      .map((skill) => ({ path: ["skills"], message: `Unknown skill "${skill}"` })),
+    ...required
+      .filter((skill) => !skills.includes(skill))
+      .map((skill) => ({ path: ["skills"], message: `Skill "${skill}" is required by the selected default stages` })),
   ];
 }
 
-/** Puts the `custom` stages that are not in `stages` before Done, or at the end if there is no Done. */
-export function withCustomStages(stages: readonly string[], custom: readonly string[]): string[] {
-  const keys = new Set(stages.map(toStageKey));
-  const added = custom.filter((label) => {
-    const fresh = !keys.has(toStageKey(label));
-    keys.add(toStageKey(label));
-    return fresh;
-  });
-  const done = stages.findIndex((stage) => toStageKey(stage) === "DONE");
-  const at = done < 0 ? stages.length : done;
-  return [...stages.slice(0, at), ...added, ...stages.slice(at)];
+function harnessIssues(skills: readonly string[], harnesses: readonly string[]): Issue[] {
+  return [
+    ...harnesses
+      .filter((harness) => !SKILL_HARNESSES.includes(harness as SkillHarness))
+      .map((harness) => ({ path: ["harnesses"], message: `Unknown harness "${harness}"` })),
+    ...(skills.length > 0 && harnesses.length === 0
+      ? [{ path: ["harnesses"], message: "Choose at least one harness for the skills" }]
+      : []),
+  ];
 }
 
-function planStages(names: readonly string[], issues: Issue[]): PlannedStage[] {
-  const seen = new Set<string>();
-  return names.map((name, index) => {
-    const key = toStageKey(name);
-    const isDefault = DEFAULT_STAGES.some((stage) => stage.key === key);
-    issues.push(...checkStageKey(key, ["stages", index]));
-    if (seen.has(key)) issues.push({ path: ["stages", index], message: `Stage ${key} is listed twice` });
-    seen.add(key);
-    return { key, label: isDefault ? labelFromKey(key) : name.trim(), custom: !isDefault };
-  });
+/** The warning for a setup that leaves out the factory skill, if the Rowbly package has the skill. */
+function factorySkillWarnings(skills: readonly string[], bundled: readonly string[]): string[] {
+  return bundled.includes(FACTORY_SKILL) && !skills.includes(FACTORY_SKILL) ? [FACTORY_SKILL_WARNING] : [];
 }
 
 /** Checks the choices and resolves the defaults. It writes nothing. */
@@ -197,38 +161,27 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
   const options = await onboardingOptions(ctx);
   const root = resolve(ctx.cwd ?? process.cwd());
   const { dir } = projectPaths(root);
+
   if (await pathExists(dir)) {
     throw new ConflictError(`${dir} already exists`, { hint: "Run `rowbly doctor` to check the existing project." });
   }
 
-  const issues: Issue[] = [];
   const name = (input.name ?? options.name).trim();
   const key = (input.key ?? toProjectKey(name)).trim().toUpperCase();
-  if (name === "") issues.push({ path: ["name"], message: "Name is required" });
-  issues.push(...checkProjectKey(key, ["key"]));
-
-  const stages = planStages(withAlwaysEnabledStages(input.stages ?? options.stages), issues);
-  const required = requiredSkills(stages.map((stage) => stage.key));
+  const planned = planStages(withAlwaysEnabledStages(input.stages ?? options.stages));
+  const required = requiredSkills(planned.stages.map((stage) => stage.key));
   const skills = [...new Set(input.skills ?? options.skills)];
-  for (const skill of skills) {
-    if (!options.skills.includes(skill)) issues.push({ path: ["skills"], message: `Unknown skill "${skill}"` });
-  }
-  for (const skill of required) {
-    if (!skills.includes(skill)) {
-      issues.push({ path: ["skills"], message: `Skill "${skill}" is required by the selected default stages` });
-    }
-  }
-
   const harnesses = skills.length === 0 ? [] : [...new Set(input.harnesses ?? SKILL_HARNESSES)];
-  for (const harness of harnesses) {
-    if (!SKILL_HARNESSES.includes(harness as SkillHarness)) {
-      issues.push({ path: ["harnesses"], message: `Unknown harness "${harness}"` });
-    }
-  }
-  if (skills.length > 0 && harnesses.length === 0) {
-    issues.push({ path: ["harnesses"], message: "Choose at least one harness for the skills" });
-  }
+
+  const issues = [
+    ...nameIssues(name),
+    ...checkProjectKey(key, ["key"]),
+    ...planned.issues,
+    ...skillIssues(skills, options.skills, required),
+    ...harnessIssues(skills, harnesses),
+  ];
   const harnessIssue = issues.some((issue) => issue.path[0] === "harnesses");
+
   throwIfIssues(
     headline(issues, "The setup is invalid"),
     issues,
@@ -239,9 +192,9 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
     name,
     key,
     root,
-    stages,
-    skills: [...skills]
-      .sort()
+    stages: planned.stages,
+    skills: skills
+      .toSorted()
       .map((skill) => ({ name: skill, required: skill === FACTORY_SKILL || required.includes(skill) })),
     harnesses: harnesses as SkillHarness[],
     customFields: SKILL_FIELDS.filter(({ skills: users }) => users.some((skill) => skills.includes(skill))).map(
@@ -252,22 +205,22 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
   };
 }
 
-/** The warning for a setup that leaves out the factory skill, if the Rowbly package has the skill. */
-function factorySkillWarnings(skills: readonly string[], bundled: readonly string[]): string[] {
-  return bundled.includes(FACTORY_SKILL) && !skills.includes(FACTORY_SKILL) ? [FACTORY_SKILL_WARNING] : [];
+/** The labels of the stages with a default prompt, or with a placeholder prompt when `custom` is true. */
+function stageLabels(plan: OnboardingPlan, custom: boolean): string[] {
+  return plan.stages.filter((stage) => stage.custom === custom).map((s) => s.label);
 }
 
 /** The rows of the summary that both front ends show. */
 export function summarizePlan(plan: OnboardingPlan): { label: string; value: string }[] {
-  const prompts = (custom: boolean) => plan.stages.filter((stage) => stage.custom === custom).map((s) => s.label);
   const none = "—";
+
   return [
     { label: "Name", value: plan.name },
     { label: "Key", value: plan.key },
     { label: "Folder", value: plan.root },
     { label: "Stages", value: plan.stages.map((stage) => stage.label).join(" → ") },
-    { label: "Default prompts", value: prompts(false).join(", ") || none },
-    { label: "Placeholder prompts", value: prompts(true).join(", ") || none },
+    { label: "Default prompts", value: stageLabels(plan, false).join(", ") || none },
+    { label: "Placeholder prompts", value: stageLabels(plan, true).join(", ") || none },
     {
       label: "Skills",
       value: plan.skills.map((skill) => `${skill.name}${skill.required ? " (required)" : ""}`).join(", ") || none,
@@ -275,6 +228,33 @@ export function summarizePlan(plan: OnboardingPlan): { label: string; value: str
     { label: "Harnesses", value: plan.harnesses.join(", ") || none },
     { label: "Custom fields", value: plan.customFields.map((field) => field.key).join(", ") || none },
   ];
+}
+
+/** Installs one skill and records it, so that a later failure can remove it. */
+async function installAndRecord(
+  plan: OnboardingPlan,
+  name: string,
+  progress: Store<InstallProgress>,
+  ctx: ServiceContext,
+): Promise<void> {
+  const result = await installSkill({ name, harnesses: plan.harnesses }, ctx);
+
+  progress.update((state) => ({ installed: [...state.installed, result] }));
+}
+
+/** Installs the skills one at a time. A failure removes the installed skills and the new project. */
+async function installPlannedSkills(plan: OnboardingPlan, ctx: ServiceContext): Promise<InstallSkillResult[]> {
+  const progress = new Store<InstallProgress>({ installed: [] });
+
+  try {
+    await mapInOrder(plan.skills, (skill) => installAndRecord(plan, skill.name, progress, ctx));
+  } catch (error) {
+    await mapInOrder(progress.current.installed, ({ name }) => removeSkill({ name }, ctx));
+    await rm(projectPaths(plan.root).dir, { recursive: true, force: true });
+    throw error;
+  }
+
+  return [...progress.current.installed];
 }
 
 /**
@@ -294,44 +274,10 @@ export async function applyOnboarding(
       prompt: custom ? placeholderPrompt(label) : await readFile(join(stagesDir, `${key}.md`), "utf8"),
     })),
   );
+
   await initProject({ name: plan.name, key: plan.key, stages, customFields: plan.customFields }, ctx);
 
-  const installed: InstallSkillResult[] = [];
-  try {
-    for (const skill of plan.skills) {
-      installed.push(await installSkill({ name: skill.name, harnesses: plan.harnesses }, ctx));
-    }
-  } catch (error) {
-    for (const { name } of installed) await removeSkill({ name }, ctx);
-    await rm(projectPaths(plan.root).dir, { recursive: true, force: true });
-    throw error;
-  }
+  const installed = await installPlannedSkills(plan, ctx);
+
   return { ...(await getProject(ctx)), installed, edits: plan.edits, warnings: plan.warnings };
-}
-
-function stringList(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
-
-/** Checks the shape of JSON input for `rowbly init`. */
-export function parseOnboardingInput(value: unknown): OnboardingInput {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new ValidationError("The setup input must be a JSON object");
-  }
-  const record = value as Record<string, unknown>;
-  const issues: Issue[] = Object.keys(record)
-    .filter((key) => !INPUT_KEYS.includes(key))
-    .map((key) => ({ path: [key], message: `Unknown setup key "${key}"` }));
-  for (const key of ["name", "key"]) {
-    if (record[key] !== undefined && typeof record[key] !== "string") {
-      issues.push({ path: [key], message: `"${key}" must be a string` });
-    }
-  }
-  for (const key of ["stages", "skills", "harnesses"]) {
-    if (record[key] !== undefined && !stringList(record[key])) {
-      issues.push({ path: [key], message: `"${key}" must be a list of strings` });
-    }
-  }
-  throwIfIssues(headline(issues, "The setup input is invalid"), issues, `Keys: ${INPUT_KEYS.join(", ")}`);
-  return record as OnboardingInput;
 }

@@ -1,34 +1,91 @@
-import type { CustomField } from "../config/config.js";
+import type { CustomField, CustomFieldType } from "../config/config.js";
 
 /** A custom field's value in a story; `null` when it is not set. */
 export type FieldValue = string | number | boolean | null;
 
+interface ValueRule {
+  readonly accepts: (value: unknown, field: CustomField) => boolean;
+  readonly message: (field: CustomField) => string;
+}
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The check and the error text for each field type. */
+const VALUE_RULES: Readonly<Record<CustomFieldType, ValueRule>> = {
+  string: {
+    accepts: (value) => typeof value === "string",
+    message: (field) => `${field.label} must be text`,
+  },
+  number: {
+    accepts: (value) => typeof value === "number" && Number.isFinite(value),
+    message: (field) => `${field.label} must be a number`,
+  },
+  boolean: {
+    accepts: (value) => typeof value === "boolean",
+    message: (field) => `${field.label} must be true or false`,
+  },
+  url: {
+    accepts: (value) => typeof value === "string" && URL.canParse(value),
+    message: (field) => `${field.label} must be a URL`,
+  },
+  date: {
+    accepts: (value) => typeof value === "string" && isDate(value),
+    message: (field) => `${field.label} must be a date (YYYY-MM-DD)`,
+  },
+  select: {
+    accepts: (value, field) => typeof value === "string" && field.options?.includes(value) === true,
+    message: (field) => `${field.label} must be one of ${field.options?.join(", ")}`,
+  },
+};
 
 function isDate(value: string): boolean {
   const date = new Date(`${value}T00:00:00Z`);
+
   return DATE.test(value) && !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
 /** Why `value` is not valid for `field`, or `undefined` when it is. */
 export function fieldValueError(field: CustomField, value: unknown): string | undefined {
-  if (value === null) return undefined;
-  switch (field.type) {
-    case "string":
-      return typeof value === "string" ? undefined : `${field.label} must be text`;
-    case "number":
-      return typeof value === "number" && Number.isFinite(value) ? undefined : `${field.label} must be a number`;
-    case "boolean":
-      return typeof value === "boolean" ? undefined : `${field.label} must be true or false`;
-    case "url":
-      return typeof value === "string" && URL.canParse(value) ? undefined : `${field.label} must be a URL`;
-    case "date":
-      return typeof value === "string" && isDate(value) ? undefined : `${field.label} must be a date (YYYY-MM-DD)`;
-    case "select":
-      return typeof value === "string" && field.options?.includes(value)
-        ? undefined
-        : `${field.label} must be one of ${field.options?.join(", ")}`;
+  const rule = VALUE_RULES[field.type];
+
+  if (value === null || rule.accepts(value, field)) {
+    return undefined;
   }
+
+  return rule.message(field);
+}
+
+/** Parses text by the field type. A text that does not parse stays text, so the check can name the problem. */
+function coerceText(field: CustomField, text: string): unknown {
+  if (text === "") {
+    return null;
+  }
+
+  if (field.type === "number" && !Number.isNaN(Number(text))) {
+    return Number(text);
+  }
+
+  if (field.type === "boolean" && /^(true|yes|y|1)$/i.test(text)) {
+    return true;
+  }
+
+  if (field.type === "boolean" && /^(false|no|n|0)$/i.test(text)) {
+    return false;
+  }
+
+  return text;
+}
+
+function coerceValue(field: CustomField, value: unknown): unknown {
+  if (typeof value === "string") {
+    return field.type === "string" && value.trim() !== "" ? value : coerceText(field, value.trim());
+  }
+
+  if (field.type === "string" && (typeof value === "number" || typeof value === "boolean")) {
+    return String(value);
+  }
+
+  return value === undefined ? null : value;
 }
 
 /**
@@ -39,17 +96,8 @@ export function coerceFieldValue(
   field: CustomField,
   value: unknown,
 ): { ok: true; value: FieldValue } | { ok: false; error: string } {
-  let result = value === undefined ? null : value;
-  if (typeof result === "string") {
-    const text = result.trim();
-    if (text === "") result = null;
-    else if (field.type === "number" && !Number.isNaN(Number(text))) result = Number(text);
-    else if (field.type === "boolean" && /^(true|yes|y|1)$/i.test(text)) result = true;
-    else if (field.type === "boolean" && /^(false|no|n|0)$/i.test(text)) result = false;
-    else if (field.type !== "string") result = text;
-  } else if (field.type === "string" && (typeof result === "number" || typeof result === "boolean")) {
-    result = String(result);
-  }
+  const result = coerceValue(field, value);
   const error = fieldValueError(field, result);
+
   return error ? { ok: false, error } : { ok: true, value: result as FieldValue };
 }

@@ -1,11 +1,16 @@
 import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { attachmentDir, prepareImages, readAttachments, withAttachments } from "../attachmentFiles/attachmentFiles.js";
+import {
+  attachmentDir,
+  prepareImages,
+  readAttachments,
+  withAttachments,
+} from "../attachment-files/attachment-files.js";
 import { doctor } from "../doctor/doctor.js";
 import { updateProject } from "../project/project.js";
 import { createStory, deleteStory, getStory, searchStories, updateStory } from "../story/story.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { addAttachment, clipboardName, listAttachments, MAX_ATTACHMENT_BYTES, removeAttachment } from "./attachment.js";
 
 const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1]);
@@ -112,6 +117,28 @@ describe("attachments", () => {
     await writeFile(join(dir, "manifest.json"), "broken");
     expect((await doctor({ fix: true }, p.ctx)).ok).toBe(false);
     expect(await readFile(join(dir, "manifest.json"), "utf8")).toBe("broken");
+  });
+  it("doctor reports the issues of a folder in the order of the scan", async () => {
+    const { story, file, dir } = await setup();
+    const first = await addAttachment({ story: story.id, file }, p.ctx);
+    const second = await addAttachment({ story: story.id, file }, p.ctx);
+    await rm(join(dir, `${first?.id}.png`));
+    await rm(join(dir, `${second?.id}.png`));
+    await writeFile(join(dir, "orphan-a.png"), png);
+    await writeFile(join(dir, "orphan-b.png"), png);
+    const orphans = (await readdir(dir)).filter((name) => name.startsWith("orphan-"));
+    const report = await doctor({}, p.ctx);
+    const messages = report.issues.filter((i) => i.file?.includes("attachments")).map((i) => i.message);
+    expect(messages).toEqual([
+      `Attachment ${first?.name} has no PNG`,
+      `Attachment ${second?.name} has no PNG`,
+      "Attachment metadata references missing PNGs",
+      "Orphan PNG: preserve it for recovery",
+      "Orphan PNG: preserve it for recovery",
+    ]);
+    expect(report.issues.filter((i) => i.message.startsWith("Orphan")).map((i) => i.file?.split("/").at(-1))).toEqual(
+      orphans,
+    );
   });
   it("refuses symlink directories and malicious metadata", async () => {
     const { story, file, dir } = await setup();

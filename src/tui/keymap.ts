@@ -58,27 +58,60 @@ export function formKeys(submit: string, enterSubmits = false): readonly KeyHint
  * `shift+↑/↓` is left to screens, where it moves the selected entry (like `K`/`J`).
  */
 export function moveDelta(input: string, key: Key, vim = true): -1 | 0 | 1 {
-  if (key.shift && (key.upArrow || key.downArrow)) return 0;
-  if (key.upArrow || (vim && input === "k")) return -1;
-  if (key.downArrow || (vim && input === "j")) return 1;
+  if (key.shift && (key.upArrow || key.downArrow)) {
+    return 0;
+  }
+
+  if (key.upArrow || (vim && input === "k")) {
+    return -1;
+  }
+
+  if (key.downArrow || (vim && input === "j")) {
+    return 1;
+  }
+
   return 0;
 }
 
 /** `shift+↑/↓`, with `K`/`J` as alternatives: moves the selected entry up or down its list. */
 export function reorderDelta(input: string, key: Key): -1 | 0 | 1 {
-  if (key.ctrl) return 0;
-  if (key.shift && key.upArrow) return -1;
-  if (key.shift && key.downArrow) return 1;
-  if (input === "K") return -1;
-  if (input === "J") return 1;
+  if (key.ctrl) {
+    return 0;
+  }
+
+  if (key.shift && key.upArrow) {
+    return -1;
+  }
+
+  if (key.shift && key.downArrow) {
+    return 1;
+  }
+
+  if (input === "K") {
+    return -1;
+  }
+
+  if (input === "J") {
+    return 1;
+  }
+
   return 0;
 }
 
 /** `ctrl+shift+↑/↓`: moves the selected entry to the previous or next group, for example a Story to a Stage. */
 export function groupDelta(key: Key): -1 | 0 | 1 {
-  if (!key.ctrl || !key.shift) return 0;
-  if (key.upArrow) return -1;
-  if (key.downArrow) return 1;
+  if (!key.ctrl || !key.shift) {
+    return 0;
+  }
+
+  if (key.upArrow) {
+    return -1;
+  }
+
+  if (key.downArrow) {
+    return 1;
+  }
+
   return 0;
 }
 

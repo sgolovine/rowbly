@@ -1,1 +1,1 @@
-export * from "./renderTui.js";
+export * from "./render-tui.js";

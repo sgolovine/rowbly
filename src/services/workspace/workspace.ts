@@ -32,8 +32,10 @@ export interface ProjectPaths {
   runtimeDir: string;
 }
 
+/** Gives the paths of the project files for a project in `root`. */
 export function projectPaths(root: string): ProjectPaths {
   const dir = join(root, ROWBLY_DIR);
+
   return {
     root,
     dir,
@@ -54,23 +56,35 @@ export async function hasProject(ctx: ServiceContext = {}): Promise<boolean> {
   return pathExists(projectPaths(resolve(ctx.cwd ?? process.cwd())).configFile);
 }
 
-/** Finds the nearest project at or above `ctx.cwd`, the way git finds its repository. */
-export async function findProject(ctx: ServiceContext = {}): Promise<ProjectPaths> {
-  let dir = resolve(ctx.cwd ?? process.cwd());
-  for (;;) {
-    const paths = projectPaths(dir);
-    if (await pathExists(paths.configFile)) return paths;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
+/** Gives the paths of the project in `dir`, or in the nearest parent directory that has one. */
+async function nearestProject(dir: string): Promise<ProjectPaths | undefined> {
+  const paths = projectPaths(dir);
+  const parent = dirname(dir);
+
+  if (await pathExists(paths.configFile)) {
+    return paths;
   }
-  throw new NotFoundError("No Rowbly project found in this directory or any parent", {
-    hint: "Run `rowbly init` to create one here.",
-  });
+
+  return parent === dir ? undefined : nearestProject(parent);
 }
 
+/** Finds the nearest project at or above `ctx.cwd`, the way git finds its repository. */
+export async function findProject(ctx: ServiceContext = {}): Promise<ProjectPaths> {
+  const paths = await nearestProject(resolve(ctx.cwd ?? process.cwd()));
+
+  if (!paths) {
+    throw new NotFoundError("No Rowbly project found in this directory or any parent", {
+      hint: "Run `rowbly init` to create one here.",
+    });
+  }
+
+  return paths;
+}
+
+/** Gives the paths of the private runtime files of the native factory. */
 export function runtimePaths(paths: ProjectPaths) {
   const dir = paths.runtimeDir;
+
   return {
     dir,
     lockFile: join(dir, "factory.lock"),
