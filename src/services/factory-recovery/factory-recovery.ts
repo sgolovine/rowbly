@@ -5,6 +5,7 @@ import { ConflictError } from "../errors/errors.js";
 import { assertFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import type { PolicyAttempt, PolicyState } from "../factory-policy/factory-policy.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { getStory } from "../story/story.js";
 import { listThreads, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
@@ -51,6 +52,22 @@ async function interruptThread(paths: ProjectPaths, thread: ThreadRecord, ctx: S
   );
 }
 
+/** Checks the ownership again, interrupts the Thread of a dead owner and repairs its projection. */
+async function recoverThread(
+  paths: ProjectPaths,
+  token: string,
+  thread: ThreadRecord,
+  ctx: ServiceContext,
+): Promise<void> {
+  await assertFactoryOwnership(paths, token);
+
+  if (["pending", "running"].includes(thread.status) && thread.runs.at(-1)?.ownerToken !== token) {
+    await interruptThread(paths, thread, ctx);
+  }
+
+  await projectNativeAttempt(thread.id, ctx);
+}
+
 /** Recovery runs only under new ownership, before any supervisor session opens. */
 export async function recoverFactory(
   token: string,
@@ -74,15 +91,7 @@ export async function recoverFactory(
 
   // Exclusive ownership proves that all other native generations are abandoned.
   // Each durable transition and projection can repeat after another crash.
-  for (const t of threads) {
-    await assertFactoryOwnership(paths, token);
-
-    if (["pending", "running"].includes(t.status) && t.runs.at(-1)?.ownerToken !== token) {
-      await interruptThread(paths, t, ctx);
-    }
-
-    await projectNativeAttempt(t.id, ctx);
-  }
+  await mapInOrder(threads, (thread) => recoverThread(paths, token, thread, ctx));
 
   return { externalActive: adoptExternal ? 0 : external.length };
 }

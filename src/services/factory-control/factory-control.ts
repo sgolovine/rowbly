@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 
@@ -170,9 +171,7 @@ export async function processCommands(
 ) {
   const files = (await readdir(await runtimePath(paths, "control"))).filter((f) => f.endsWith(".json")).toSorted();
 
-  for (const file of files) {
-    await processCommand(paths, token, execute, file);
-  }
+  await mapInOrder(files, (file) => processCommand(paths, token, execute, file));
 }
 
 /** Gives a well-formed command of at most 4096 bytes. Any other file gives `undefined`. */
@@ -226,7 +225,5 @@ export async function pruneFactoryCommands(paths: ProjectPaths, tokens: string[]
   const { unlink } = await import("node:fs/promises");
   const files = (await readdir(await runtimePath(paths, "control"))).filter((f) => /^[\w-]+\.json$/.test(f));
 
-  for (const file of files) {
-    await pruneCommand(paths, tokens, file, unlink);
-  }
+  await mapInOrder(files, (file) => pruneCommand(paths, tokens, file, unlink));
 }

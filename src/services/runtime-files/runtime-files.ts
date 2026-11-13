@@ -2,6 +2,7 @@ import { chmod, lstat, mkdir, readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { type ProjectPaths, runtimePaths } from "../workspace/workspace.js";
 
 const RUNTIME_IGNORE_RULES = ["/state.json*", "/runtime/"];
@@ -76,11 +77,16 @@ export async function runtimePath(paths: ProjectPaths, reference: string): Promi
     throw new ValidationError("The Project directory must not be a symlink");
   }
 
-  for (const current of pathsToCheck(root, rel)) {
-    await assertNotSymlink(current);
-  }
+  await mapInOrder(pathsToCheck(root, rel), (current) => assertNotSymlink(current));
 
   return path;
+}
+
+/** Checks the path of one runtime directory, then creates it with mode 0700. */
+async function prepareRuntimeDir(paths: ProjectPaths, path: string): Promise<void> {
+  await runtimePath(paths, `${relative(paths.runtimeDir, path) || "."}/.check`);
+  await mkdir(path, { recursive: true, mode: 0o700 });
+  await chmod(path, 0o700);
 }
 
 /** Creates the private runtime directories with mode 0700 and adds the runtime ignore rules. */
@@ -88,11 +94,9 @@ export async function prepareRuntime(paths: ProjectPaths): Promise<void> {
   await runtimePath(paths, "status.json");
   await ensureRuntimeIgnores(paths);
 
-  for (const [key, path] of Object.entries(runtimePaths(paths))) {
-    if (key === "dir" || key.endsWith("Dir")) {
-      await runtimePath(paths, `${relative(paths.runtimeDir, path) || "."}/.check`);
-      await mkdir(path, { recursive: true, mode: 0o700 });
-      await chmod(path, 0o700);
-    }
-  }
+  const dirs = Object.entries(runtimePaths(paths))
+    .filter(([key]) => key === "dir" || key.endsWith("Dir"))
+    .map(([, path]) => path);
+
+  await mapInOrder(dirs, (path) => prepareRuntimeDir(paths, path));
 }

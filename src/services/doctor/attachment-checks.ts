@@ -93,13 +93,11 @@ async function checkOrphans(run: DoctorRun, folder: OwnerFolder, owned: boolean)
   const orphans = names.filter(
     (name) => name.endsWith(".png") && (!owned || !records.some((a) => `${a.id}.png` === name)),
   );
+  const issues = orphans.map((name) =>
+    noted({ severity: "warning", message: "Orphan PNG: preserve it for recovery", file: rel(run, join(dir, name)) }),
+  );
 
-  for (const name of orphans) {
-    addIssue(
-      folder.scan,
-      noted({ severity: "warning", message: "Orphan PNG: preserve it for recovery", file: rel(run, join(dir, name)) }),
-    );
-  }
+  folder.scan.update((state) => ({ issues: [...state.issues, ...issues] }));
 }
 
 async function scanOwner(run: DoctorRun, owner: string, file: string, scan: Store<OwnerScan>): Promise<void> {
@@ -109,10 +107,7 @@ async function scanOwner(run: DoctorRun, owner: string, file: string, scan: Stor
 
   const folder: OwnerFolder = { dir, records, scan };
 
-  for (const record of records) {
-    await checkRecord(run, folder, record);
-  }
-
+  await mapInOrder(records, (record) => checkRecord(run, folder, record));
   await checkManifest(run, folder, file);
   await checkOrphans(run, folder, owned);
 }

@@ -3,6 +3,7 @@ import { lstat, mkdir, open, readdir, readFile, rename, rm } from "node:fs/promi
 import { basename, join } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 
@@ -30,6 +31,11 @@ interface SaveProgress {
 interface AttachmentMove {
   readonly from: string;
   readonly to: string;
+}
+
+/** The folder moves that completed so far, for the rollback. */
+interface MoveProgress {
+  readonly completed: readonly AttachmentMove[];
 }
 
 const ID = /^a[0-9a-f-]{36}$/;
@@ -209,25 +215,33 @@ export function prepareImages(images: readonly PendingImage[], totalLimit = fals
   return result;
 }
 
-/** Writes each image to a new file. The progress records a file as soon as it exists. */
+/** Writes one image to a new file. The progress records the file as soon as it exists. */
+async function writeImage(
+  dir: string,
+  image: PendingImage,
+  record: Attachment | undefined,
+  progress: Store<SaveProgress>,
+): Promise<void> {
+  const path = join(dir, `${record?.id}.png`);
+  const handle = await open(path, "wx");
+
+  progress.update((state) => ({ written: [...state.written, path] }));
+
+  try {
+    await handle.writeFile(image.bytes);
+  } finally {
+    await handle.close();
+  }
+}
+
+/** Writes each image to a new file, one at a time. */
 async function writeImages(
   dir: string,
   images: readonly PendingImage[],
   records: readonly Attachment[],
   progress: Store<SaveProgress>,
 ): Promise<void> {
-  for (const [i, image] of images.entries()) {
-    const path = join(dir, `${records[i]?.id}.png`);
-    const handle = await open(path, "wx");
-
-    progress.update((state) => ({ written: [...state.written, path] }));
-
-    try {
-      await handle.writeFile(image.bytes);
-    } finally {
-      await handle.close();
-    }
-  }
+  await mapInOrder(images, (image, i) => writeImage(dir, image, records[i], progress));
 }
 
 async function rollBackSave(
@@ -244,9 +258,7 @@ async function rollBackSave(
     }
   }
 
-  for (const path of progress.written) {
-    await rm(path, { force: true });
-  }
+  await mapInOrder(progress.written, (path) => rm(path, { force: true }));
 }
 
 /** Publish the manifest last. Roll back bytes and metadata if the Story save fails. */
@@ -304,21 +316,26 @@ async function moveAttachmentDir(paths: ProjectPaths, move: AttachmentMove): Pro
   return true;
 }
 
+/** Moves one folder and records the move, so that a later failure can move it back. */
+async function moveAndRecord(paths: ProjectPaths, move: AttachmentMove, progress: Store<MoveProgress>): Promise<void> {
+  if (await moveAttachmentDir(paths, move)) {
+    progress.update((state) => ({ completed: [...state.completed, move] }));
+  }
+}
+
+/** Moves a completed folder back to its first name. */
+async function moveBack(paths: ProjectPaths, move: AttachmentMove): Promise<void> {
+  await rename(await attachmentDir(paths, move.to), await attachmentDir(paths, move.from));
+}
+
 /** Moves the attachment folders of renamed Stories. A failure moves the completed folders back. */
 export async function moveAttachmentDirs(paths: ProjectPaths, moves: { from: string; to: string }[]): Promise<void> {
-  const progress = new Store<{ readonly completed: readonly AttachmentMove[] }>({ completed: [] });
+  const progress = new Store<MoveProgress>({ completed: [] });
 
   try {
-    for (const move of moves) {
-      if (await moveAttachmentDir(paths, move)) {
-        progress.update((state) => ({ completed: [...state.completed, move] }));
-      }
-    }
+    await mapInOrder(moves, (move) => moveAndRecord(paths, move, progress));
   } catch (err) {
-    for (const move of progress.current.completed.toReversed()) {
-      await rename(await attachmentDir(paths, move.to), await attachmentDir(paths, move.from));
-    }
-
+    await mapInOrder(progress.current.completed.toReversed(), (move) => moveBack(paths, move));
     throw err;
   }
 }

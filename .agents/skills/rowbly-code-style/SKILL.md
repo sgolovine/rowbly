@@ -118,7 +118,18 @@ Some state must be shared by tasks that run at the same time. Put this state in 
 - Give a short-lived task its own `Store`, for example `WorkerRun` in `worker-launch.ts`.
 
 Run async work one item at a time with `mapInOrder` from `src/services/in-order/in-order.ts`. It
-replaces a `for` loop with `await`, and it keeps the order of the results.
+replaces a `for` loop with `await`, and it keeps the order of the results. A failure stops the later
+items, as in the loop. To roll back, record each completed item in a `Store`, for example
+`moveAttachmentDirs` in `src/services/attachment-files/attachment-files.ts`.
+
+Keep a `while` or `for` loop with `await` only when a condition, not a list, ends the loop:
+
+- A poll that stops at a deadline or at a stop request, for example `waitForReady` in
+  `src/services/factory/factory.ts`.
+- A read that stops at the end of a file, for example `scanChunks` in
+  `src/services/conversation/session-index.ts`.
+- A search that stops at the first match, for example `findSkillPath` in
+  `src/services/factory-worker/factory-worker.ts`.
 
 A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
 state that the caller read.

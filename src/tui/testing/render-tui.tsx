@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import { stripVTControlCharacters } from "node:util";
 import { render } from "ink-testing-library";
 import type { ReactElement } from "react";
+import { mapInOrder } from "../../services/in-order/in-order.js";
 import { createToastStore, type ToastStore } from "../hooks/index.js";
 import type { MouseEvent } from "../mouse.js";
 import { TuiProviders } from "../tui-providers.js";
@@ -112,19 +113,22 @@ async function sendMouse(
   await idle(ink, 0);
 }
 
+async function pressKey(ink: Ink, input: string): Promise<void> {
+  ink.stdin.write(input);
+  await idle(ink, input === keys.escape ? 30 : 0);
+}
+
 async function pressKeys(ink: Ink, inputs: readonly string[]): Promise<void> {
-  for (const input of inputs) {
-    ink.stdin.write(input);
-    await idle(ink, input === keys.escape ? 30 : 0);
-  }
+  await mapInOrder(inputs, (input) => pressKey(ink, input));
+}
+
+async function typeChar(ink: Ink, char: string): Promise<void> {
+  ink.stdin.write(char);
+  await settle(5);
 }
 
 async function typeText(ink: Ink, text: string): Promise<void> {
-  for (const char of text) {
-    ink.stdin.write(char);
-    await settle(5);
-  }
-
+  await mapInOrder([...text], (char) => typeChar(ink, char));
   await idle(ink, 0);
 }
 

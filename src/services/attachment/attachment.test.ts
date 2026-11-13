@@ -118,6 +118,28 @@ describe("attachments", () => {
     expect((await doctor({ fix: true }, p.ctx)).ok).toBe(false);
     expect(await readFile(join(dir, "manifest.json"), "utf8")).toBe("broken");
   });
+  it("doctor reports the issues of a folder in the order of the scan", async () => {
+    const { story, file, dir } = await setup();
+    const first = await addAttachment({ story: story.id, file }, p.ctx);
+    const second = await addAttachment({ story: story.id, file }, p.ctx);
+    await rm(join(dir, `${first?.id}.png`));
+    await rm(join(dir, `${second?.id}.png`));
+    await writeFile(join(dir, "orphan-a.png"), png);
+    await writeFile(join(dir, "orphan-b.png"), png);
+    const orphans = (await readdir(dir)).filter((name) => name.startsWith("orphan-"));
+    const report = await doctor({}, p.ctx);
+    const messages = report.issues.filter((i) => i.file?.includes("attachments")).map((i) => i.message);
+    expect(messages).toEqual([
+      `Attachment ${first?.name} has no PNG`,
+      `Attachment ${second?.name} has no PNG`,
+      "Attachment metadata references missing PNGs",
+      "Orphan PNG: preserve it for recovery",
+      "Orphan PNG: preserve it for recovery",
+    ]);
+    expect(report.issues.filter((i) => i.message.startsWith("Orphan")).map((i) => i.file?.split("/").at(-1))).toEqual(
+      orphans,
+    );
+  });
   it("refuses symlink directories and malicious metadata", async () => {
     const { story, file, dir } = await setup();
     await mkdir(join(p.paths.root, "outside"));

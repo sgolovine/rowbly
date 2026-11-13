@@ -12,6 +12,7 @@ import {
 } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { defaultProjectName, getProject, initProject, type Project } from "../project/project.js";
 import {
   bundledSkills,
@@ -80,6 +81,11 @@ export interface OnboardingResult extends Project {
   installed: InstallSkillResult[];
   edits: EditLocation[];
   warnings: string[];
+}
+
+/** The skills that the onboarding installed so far, for the rollback. */
+interface InstallProgress {
+  readonly installed: readonly InstallSkillResult[];
 }
 
 /** The companion skill that runs the factory supervisor. Onboarding marks it as required, but the user can leave it out. */
@@ -224,21 +230,26 @@ export function summarizePlan(plan: OnboardingPlan): { label: string; value: str
   ];
 }
 
+/** Installs one skill and records it, so that a later failure can remove it. */
+async function installAndRecord(
+  plan: OnboardingPlan,
+  name: string,
+  progress: Store<InstallProgress>,
+  ctx: ServiceContext,
+): Promise<void> {
+  const result = await installSkill({ name, harnesses: plan.harnesses }, ctx);
+
+  progress.update((state) => ({ installed: [...state.installed, result] }));
+}
+
 /** Installs the skills one at a time. A failure removes the installed skills and the new project. */
 async function installPlannedSkills(plan: OnboardingPlan, ctx: ServiceContext): Promise<InstallSkillResult[]> {
-  const progress = new Store<{ readonly installed: readonly InstallSkillResult[] }>({ installed: [] });
+  const progress = new Store<InstallProgress>({ installed: [] });
 
   try {
-    for (const skill of plan.skills) {
-      const result = await installSkill({ name: skill.name, harnesses: plan.harnesses }, ctx);
-
-      progress.update((state) => ({ installed: [...state.installed, result] }));
-    }
+    await mapInOrder(plan.skills, (skill) => installAndRecord(plan, skill.name, progress, ctx));
   } catch (error) {
-    for (const { name } of progress.current.installed) {
-      await removeSkill({ name }, ctx);
-    }
-
+    await mapInOrder(progress.current.installed, ({ name }) => removeSkill({ name }, ctx));
     await rm(projectPaths(plan.root).dir, { recursive: true, force: true });
     throw error;
   }

@@ -51,6 +51,11 @@ interface InstallPlan {
   readonly claimedDirs: ReadonlySet<string>;
 }
 
+/** The copies that an install made so far, for the rollback. */
+interface UndoPaths {
+  readonly paths: readonly string[];
+}
+
 const EMPTY_PLAN: InstallPlan = { results: [], copies: [], conflicts: [], claimedDirs: new Set() };
 
 async function inspectTarget(paths: ProjectPaths, harness: SkillHarness, name: string): Promise<HarnessTarget> {
@@ -103,6 +108,13 @@ function planTarget(env: PlanEnv, plan: InstallPlan, target: HarnessTarget): Ins
   };
 }
 
+/** Copies the skill to one path and records the copy, so that a later failure can delete it. */
+async function copyAndRecord(from: string, path: string, undo: Store<UndoPaths>): Promise<void> {
+  const created = await copySkill(from, path);
+
+  undo.update((state) => ({ paths: [...state.paths, created] }));
+}
+
 /** Copies the skill and tracks the new harnesses. A failure deletes each copy that it made. */
 async function applyInstall(
   paths: ProjectPaths,
@@ -112,14 +124,10 @@ async function applyInstall(
   copies: readonly string[],
   added: SkillHarness[],
 ): Promise<void> {
-  const undo = new Store<{ readonly paths: readonly string[] }>({ paths: [] });
+  const undo = new Store<UndoPaths>({ paths: [] });
 
   try {
-    for (const path of copies) {
-      const created = await copySkill(join(source, name), path);
-
-      undo.update((state) => ({ paths: [...state.paths, created] }));
-    }
+    await mapInOrder(copies, (path) => copyAndRecord(join(source, name), path, undo));
 
     if (added.length > 0) {
       await writeConfig(paths, trackHarnesses(config, name, added));

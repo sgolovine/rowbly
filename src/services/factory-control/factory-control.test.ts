@@ -22,6 +22,20 @@ describe("factory control receipts", () => {
     expect((await readReceipt(project.paths, current.id))?.status).toBe("completed");
     expect((await readReceipt(project.paths, stale.id))?.status).toBe("rejected");
   });
+  it("executes the commands one at a time, in the order of their file names", async () => {
+    await prepareRuntime(project.paths);
+    const published = await Promise.all(
+      [1, 2, 3].map(() => publishCommand(project.paths, { targetOwnerToken: "current", type: "stop" })),
+    );
+    const order: string[] = [];
+    const execute = vi.fn(async (command: { id: string }) => {
+      expect(order).toHaveLength(execute.mock.calls.length - 1);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      order.push(command.id);
+    });
+    await processCommands(project.paths, "current", execute);
+    expect(order).toEqual(published.map((command) => command.id).toSorted());
+  });
   it("preserves corrupt receipts without blocking another request", async () => {
     await prepareRuntime(project.paths);
     const bad = await publishCommand(project.paths, { targetOwnerToken: "current", type: "stop" });
