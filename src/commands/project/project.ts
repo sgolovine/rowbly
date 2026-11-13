@@ -4,6 +4,7 @@ import { run } from "../output/output.js";
 
 function describe(project: Project): string {
   const specs = project.features?.specs ? "\nSpecs: on" : "";
+
   return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}`;
 }
 
@@ -12,10 +13,11 @@ function parseSwitch(value: string): boolean {
   if (value === "on" || value === "off") {
     return value === "on";
   }
+
   throw new InvalidArgumentError("Expected on or off.");
 }
 
-export function registerProjectCommands(program: Command): void {
+function registerUpdate(program: Command): void {
   program
     .command("update")
     .description("Update the project's name, key or features")
@@ -37,7 +39,9 @@ export function registerProjectCommands(program: Command): void {
         (project) => `Updated ${describe(project)}`,
       ),
     );
+}
 
+function registerGetInstructions(program: Command): void {
   program
     .command("get-instructions")
     .description("Show the project's instructions for agents, from .rowbly/ROWBLY.md")
@@ -48,4 +52,10 @@ export function registerProjectCommands(program: Command): void {
         (result) => result.instructions || "(no instructions)",
       ),
     );
+}
+
+/** Registers the `rowbly project` subcommands on the `project` command. */
+export function registerProjectCommands(program: Command): void {
+  registerUpdate(program);
+  registerGetInstructions(program);
 }

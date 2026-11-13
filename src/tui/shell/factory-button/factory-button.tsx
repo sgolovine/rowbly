@@ -9,6 +9,7 @@ const LABEL = "Factory";
 /** The text after the label: the state in `ink-muted`, then `! n` in `stage-board` for problems. */
 function noteParts(status: FactoryStatus | undefined, short: boolean): { state: string; problems: string } {
   const count = factoryProblems(status).length;
+
   return { state: factoryState(status, short), problems: count > 0 ? ` ! ${count}` : "" };
 }
 
@@ -18,6 +19,7 @@ function noteParts(status: FactoryStatus | undefined, short: boolean): { state: 
  */
 export function factoryButtonWidth(status: FactoryStatus | undefined, withKey: boolean, short = false): number {
   const { state, problems } = noteParts(status, short);
+
   return 1 + LABEL.length + 1 + state.length + problems.length + (withKey ? 4 : 0) + 1;
 }
 
@@ -40,6 +42,7 @@ export function FactoryButton({
   clickable: boolean;
 }) {
   const { state, problems } = noteParts(status, short);
+
   return (
     <Button
       label={LABEL}

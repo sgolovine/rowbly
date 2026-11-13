@@ -1,0 +1,67 @@
+import type { Stage } from "../../../services/stage/stage.js";
+import type { KeyHint } from "../../keymap.js";
+import type { ShellView, StoryListRow } from "./shell-state.js";
+
+/** The keys without a board: the onboarding steps, and the Project switcher. */
+function boardlessHints(view: ShellView, onboardingHints: readonly KeyHint[]): KeyHint[] {
+  return [
+    ...(view.noProject ? onboardingHints : []),
+    { key: "p", description: "switch Project", secondary: view.noProject },
+  ];
+}
+
+function sidebarHints(stage: Stage | undefined): KeyHint[] {
+  return [
+    { key: "↑/↓", description: "select Stage" },
+    { key: "n", description: "new Stage" },
+    ...(stage
+      ? [
+          { key: "e", description: "edit Stage" },
+          { key: "shift+↑/↓", description: "move Stage" },
+        ]
+      : []),
+    { key: "tab", description: "Stories" },
+    { key: "ctrl+b", description: "hide Stages" },
+    { key: "p", description: "switch Project", secondary: true },
+  ];
+}
+
+/** The keys of the selected row: a heading expands or collapses, and a Story opens or moves. */
+function rowHints(row: StoryListRow | undefined): KeyHint[] {
+  if (row?.kind === "stage") {
+    return [{ key: "enter", description: row.collapsed ? "expand" : "collapse" }];
+  }
+
+  return row?.kind === "story"
+    ? [
+        { key: "enter", description: "edit Story" },
+        { key: "shift+↑/↓", description: "move Story" },
+        { key: "ctrl+shift+↑/↓", description: "change Stage", secondary: true },
+      ]
+    : [];
+}
+
+function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
+  return [
+    { key: "↑/↓", description: "select" },
+    ...rowHints(view.row),
+    { key: "n", description: "new Story" },
+    ...(view.row?.kind === "story" ? [{ key: "d", description: "delete" }] : []),
+    ...(view.sidebar ? [{ key: "tab", description: "Stages" }] : []),
+    { key: "ctrl+p", description: "find" },
+    { key: "p", description: "switch Project", secondary: true },
+    { key: "f", description: "factory", secondary: true },
+    { key: ",", description: "settings", secondary: true },
+    { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
+    ...(view.stage ? [] : [{ key: "←/→", description: "collapse/expand", secondary: true }]),
+  ];
+}
+
+/** The keys of the region in focus, for the footer and the help Modal. */
+export function shellHints(view: ShellView, sidebarShown: boolean, onboardingHints: readonly KeyHint[]): KeyHint[] {
+  if (!view.board) {
+    return boardlessHints(view, onboardingHints);
+  }
+
+  return view.sidebarFocused ? sidebarHints(view.stage) : listHints(view, sidebarShown);
+}

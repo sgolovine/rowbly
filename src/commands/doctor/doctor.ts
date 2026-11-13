@@ -1,7 +1,38 @@
 import type { Command } from "commander";
-import { doctor } from "../../services/doctor/doctor.js";
-import { run } from "../output/output.js";
+import { type DoctorIssue, type DoctorReport, doctor } from "../../services/doctor/doctor.js";
+import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { run, setExitCode } from "../output/output.js";
 
+/** Runs the checks. A report with problems sets exit code 1, also with `--json`. */
+async function runDoctor(fix: boolean | undefined, ctx: ServiceContext): Promise<DoctorReport> {
+  const report = await doctor({ fix }, ctx);
+
+  if (!report.ok) {
+    setExitCode(1);
+  }
+
+  return report;
+}
+
+function issueLine(issue: DoctorIssue): string {
+  const status = issue.fixed ? "fixed" : issue.severity;
+  const fix = issue.fix && !issue.fixed ? ` (fix: ${issue.fix})` : "";
+
+  return `${status.padEnd(7)} ${issue.file}: ${issue.message}${fix}`;
+}
+
+function reportText(report: DoctorReport): string {
+  if (report.issues.length === 0) {
+    return "No problems found.";
+  }
+
+  const fixable = report.issues.filter((issue) => issue.fix && !issue.fixed).length;
+  const footer = fixable > 0 ? ["", `Run \`rowbly doctor --fix\` to fix ${fixable} of them.`] : [];
+
+  return [...report.issues.map((issue) => issueLine(issue)), ...footer].join("\n");
+}
+
+/** Registers `rowbly doctor`. */
 export function registerDoctor(program: Command): void {
   program
     .command("doctor")
@@ -10,28 +41,8 @@ export function registerDoctor(program: Command): void {
     .action((opts: { fix?: boolean }, command: Command) =>
       run(
         command,
-        async (ctx) => {
-          const report = await doctor({ fix: opts.fix }, ctx);
-          if (!report.ok) {
-            process.exitCode = 1;
-          }
-          return report;
-        },
-        (report) => {
-          if (report.issues.length === 0) {
-            return "No problems found.";
-          }
-          const lines = report.issues.map((issue) => {
-            const status = issue.fixed ? "fixed" : issue.severity;
-            const fix = issue.fix && !issue.fixed ? ` (fix: ${issue.fix})` : "";
-            return `${status.padEnd(7)} ${issue.file}: ${issue.message}${fix}`;
-          });
-          const fixable = report.issues.filter((issue) => issue.fix && !issue.fixed).length;
-          if (fixable > 0) {
-            lines.push("", `Run \`rowbly doctor --fix\` to fix ${fixable} of them.`);
-          }
-          return lines.join("\n");
-        },
+        (ctx) => runDoctor(opts.fix, ctx),
+        (report) => reportText(report),
       ),
     );
 }

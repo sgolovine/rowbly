@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { access, lstat, mkdir, open, readdir, rename, rm, stat } from "node:fs/promises";
+import { access, type FileHandle, lstat, mkdir, open, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
+/** Whether `path` is accessible. A broken symlink does not count. */
 export async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
+
     return true;
   } catch {
     return false;
@@ -15,15 +17,19 @@ export async function pathExists(path: string): Promise<boolean> {
 export async function pathOccupied(path: string): Promise<boolean> {
   try {
     await lstat(path);
+
     return true;
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
+
     if (code === "ENOENT") {
       return false;
     }
+
     if (code === "ENOTDIR") {
       return true;
     }
+
     throw error;
   }
 }
@@ -34,16 +40,20 @@ export async function canCreateFolder(path: string): Promise<boolean> {
     return (await stat(path)).isDirectory();
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
+
     if (code === "ENOTDIR") {
       return false;
     }
+
     if (code !== "ENOENT") {
       throw error;
     }
   }
+
   if (await pathOccupied(path)) {
     return false;
   }
+
   return canCreateFolder(dirname(path));
 }
 
@@ -51,14 +61,16 @@ export async function canCreateFolder(path: string): Promise<boolean> {
 export async function listMarkdownFiles(dir: string): Promise<string[]> {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
+
     return entries
       .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
       .map((entry) => entry.name)
-      .sort();
+      .toSorted();
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
     }
+
     throw error;
   }
 }
@@ -68,35 +80,48 @@ export interface AtomicWriteOptions {
   durable?: boolean;
 }
 
+/** Writes the content, and syncs it to the disk when the write must be durable. */
+async function writeTemp(file: FileHandle, content: string, durable: boolean | undefined): Promise<void> {
+  try {
+    await file.writeFile(content, "utf8");
+
+    if (durable) {
+      await file.sync();
+    }
+  } finally {
+    await file.close();
+  }
+}
+
+/** Syncs the folder so that the rename survives a crash. */
+async function syncDirectory(parent: string): Promise<void> {
+  const directory = await open(parent, "r");
+
+  try {
+    await directory.sync();
+  } finally {
+    await directory.close();
+  }
+}
+
 /** Writes a complete file through an exclusive temporary file and atomic rename. */
 export async function writeFileAtomic(path: string, content: string, options: AtomicWriteOptions = {}): Promise<void> {
   const parent = dirname(path);
+
   await mkdir(parent, { recursive: true });
+
   const temp = join(parent, `.${randomUUID()}.tmp`);
-  let created = false;
+  // Open outside the cleanup, so that a failed exclusive open never removes a file of a different writer.
+  const file = await open(temp, "wx", options.mode);
+
   try {
-    const file = await open(temp, "wx", options.mode);
-    created = true;
-    try {
-      await file.writeFile(content, "utf8");
-      if (options.durable) {
-        await file.sync();
-      }
-    } finally {
-      await file.close();
-    }
+    await writeTemp(file, content, options.durable);
     await rename(temp, path);
+
     if (options.durable) {
-      const directory = await open(parent, "r");
-      try {
-        await directory.sync();
-      } finally {
-        await directory.close();
-      }
+      await syncDirectory(parent);
     }
   } finally {
-    if (created) {
-      await rm(temp, { force: true });
-    }
+    await rm(temp, { force: true });
   }
 }

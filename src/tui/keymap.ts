@@ -61,12 +61,15 @@ export function moveDelta(input: string, key: Key, vim = true): -1 | 0 | 1 {
   if (key.shift && (key.upArrow || key.downArrow)) {
     return 0;
   }
+
   if (key.upArrow || (vim && input === "k")) {
     return -1;
   }
+
   if (key.downArrow || (vim && input === "j")) {
     return 1;
   }
+
   return 0;
 }
 
@@ -75,18 +78,23 @@ export function reorderDelta(input: string, key: Key): -1 | 0 | 1 {
   if (key.ctrl) {
     return 0;
   }
+
   if (key.shift && key.upArrow) {
     return -1;
   }
+
   if (key.shift && key.downArrow) {
     return 1;
   }
+
   if (input === "K") {
     return -1;
   }
+
   if (input === "J") {
     return 1;
   }
+
   return 0;
 }
 
@@ -95,12 +103,15 @@ export function groupDelta(key: Key): -1 | 0 | 1 {
   if (!key.ctrl || !key.shift) {
     return 0;
   }
+
   if (key.upArrow) {
     return -1;
   }
+
   if (key.downArrow) {
     return 1;
   }
+
   return 0;
 }
 

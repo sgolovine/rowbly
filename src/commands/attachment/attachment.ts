@@ -7,6 +7,7 @@ import {
 } from "../../services/attachment/attachment.js";
 import { run } from "../output/output.js";
 
+/** Registers the `rowbly` attachment commands on the root program. */
 export function registerAttachmentCommands(program: Command): void {
   program
     .command("add-attachment <story> [file]")
@@ -19,6 +20,7 @@ export function registerAttachmentCommands(program: Command): void {
         (a) => `Attached ${a?.name} (${a?.id})`,
       ),
     );
+
   program
     .command("list-attachments <story>")
     .description("List the PNG images of a Story")
@@ -30,6 +32,7 @@ export function registerAttachmentCommands(program: Command): void {
           items.length ? items.map((a) => `${a.id}  ${a.name}  ${a.size} bytes`).join("\n") : "No attachments.",
       ),
     );
+
   program
     .command("open-attachment <story> <id>")
     .description("Open a PNG with the associated application")
@@ -40,6 +43,7 @@ export function registerAttachmentCommands(program: Command): void {
         (r) => `Opened ${r.opened}`,
       ),
     );
+
   program
     .command("remove-attachment <story> <id>")
     .description("Remove an attachment and its PNG")
