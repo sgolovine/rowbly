@@ -1,10 +1,15 @@
 language js
 
 // An assignment to a property changes an object in place. Build a new object.
+// A class constructor can give `this.<field>` its first value.
 JsAssignmentExpression() as $assignment where {
   $assignment <: JsAssignmentExpression(left=or {
     JsStaticMemberAssignment(),
     JsComputedMemberAssignment()
   }),
+  or {
+    not $assignment <: JsAssignmentExpression(left=JsStaticMemberAssignment(object=JsThisExpression())),
+    not $assignment <: within JsConstructorClassMember()
+  },
   register_diagnostic(span=$assignment, message="Do not change an object in place. Build a new object.")
 }

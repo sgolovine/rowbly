@@ -77,10 +77,10 @@ pnpm dev --help       # run from source with CLI args
 pnpm build            # bundle to dist/
 pnpm start            # run the built bundle
 pnpm typecheck        # tsc --noEmit
-pnpm test             # vitest run: run all tests one time
+pnpm test             # vitest run: run all tests one time; then the node:test suite of scripts/
 pnpm test:watch       # vitest: run the tests again when a file changes
 pnpm test:factory     # node --test: run the tests of the factory skill scripts
-pnpm lint             # biome check: lint, formatting and import order
+pnpm lint             # biome check: lint, formatting and import order; then the dash-case name check
 pnpm lint:fix         # biome check --write: apply safe fixes and format
 pnpm format           # biome format --write
 pnpm knip             # knip: find unused files, exports and dependencies
@@ -96,15 +96,15 @@ src/
   commands/           # one folder per module: <name>/<name>.ts, and <name>/<name>.test.ts when the module has a test
     register-commands/ # registerCommands(): attaches every subcommand to the program
     output/           # run(): calls a service, prints text or --json, turns RowblyErrors into exit code 1
-    test-cli/          # runCli(), createProgram(): run commands in tests
+    test-cli/         # runCli(), createProgram(): run commands in tests
     init/             # the `rowbly init` command: flags and JSON input
-    init-wizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
+    init-wizard/      # askOnboarding(): the @clack/prompts questions of `rowbly init`
     auth/ auth-wizard/ model/ factory/ factory-runner/ thread/ # native factory commands and foreground adapters
-    <area>/           # one folder per area: project (project update, project get-instructions), doctor, story, stage, customField, spec, skill
+    <area>/           # one folder per area: project (project update, project get-instructions), doctor, story, stage, custom-field, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
     app.tsx           # root TUI component: TuiProviders around the Shell
-    tui-providers.tsx  # the contexts every shared component reads; wrap the app in it
+    tui-providers.tsx # the contexts every shared component reads; wrap the app in it
     shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal
     screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), onboarding/ (Onboarding and its steps), settings/ (SettingsModal, sections)
     terminal.ts       # runFullScreen(): alternate screen, mouse, kitty keys, terminal restore
@@ -112,7 +112,7 @@ src/
     keymap.ts         # KeyHint, global keys, form keys, moveDelta (arrows + j/k)
     mouse.ts          # MouseStdin: takes SGR mouse reports out of stdin before Ink reads it
     components/       # the shared component library: one folder per component (barrel: components/index.ts)
-    hooks/            # contexts and hooks: focus, key capture, hints, layout, mouse, toasts, useAsync
+    hooks/            # contexts and hooks: focus, key capture, hints, layout, mouse, toasts, useAsync, refs
     testing/          # renderTui(): renders a component in TuiProviders for tests; keys for stdin
   services/           # one folder per module: <name>/<name>.ts, and <name>/<name>.test.ts when the module has a test
     errors/           # RowblyError, ValidationError, NotFoundError, ConflictError: the typed errors services throw
@@ -120,32 +120,34 @@ src/
     config/           # ProjectConfig types, validation, key rules, read/write of rowbly.config.json
     fields/           # custom field value checks and parsing text input by field type
     markdown/         # YAML frontmatter + body parsing and writing
-    story-files/       # raw story file IO shared by the domain services
-    spec-files/        # raw spec file IO shared by the domain services
-    project/ story/ stage/ custom-field/ spec/ skill/ doctor/   # the domain services
+    story-files/      # raw story file IO shared by the domain services
+    spec-files/       # raw spec file IO shared by the domain services
+    project/ story/ stage/ custom-field/ spec/ skill/ doctor/ # the domain services
     onboarding/       # planOnboarding(), applyOnboarding(): the setup that the TUI and `rowbly init` share
-    pi-runtime/        # lazy Pi imports, session adapter, runtime and model catalog
-    agent-auth/        # provider status, model checks, login and logout
-    factory-settings/  # optional factory.json and role model choices
+    pi-runtime/       # lazy Pi imports, session adapter, runtime and model catalog
+    agent-auth/       # provider status, model checks, login and logout
+    factory-settings/ # optional factory.json and role model choices
     factory/          # daemon client, status, controls and operational logs
-    factory-manager/   # serial supervisor loop, tools, reservations and worker lifecycle
-    factory-worker/    # independent worker session, result and activity
+    factory-manager/  # serial supervisor loop, tools, reservations and worker lifecycle
+    factory-worker/   # independent worker session, result and activity
     factory-ownership/ # daemon ownership and process identity
-    factory-control/   # durable commands and receipts
-    factory-recovery/  # dead-owner reconciliation and resume eligibility
+    factory-control/  # durable commands and receipts
+    factory-recovery/ # dead-owner reconciliation and resume eligibility
     factory-policy/ factory-state/ # shared v1 policy and state transactions
-    project-write/     # shared kernel flock for canonical factory writes
-    runtime-files/     # private runtime paths and ignore rules
+    project-write/    # shared kernel flock for canonical factory writes
+    runtime-files/    # private runtime paths and ignore rules
     thread/           # metadata, runs, state projection and watches
     conversation/     # read-only selected-file Pi v3 history and bounded pages
     supervisor-digest/ # bounded operational facts without worker transcripts
-    worker-worktree/   # one worktree per Story, with existing work preserved
-    story-watch/       # watchStories(): calls a function when the files of the stories folder change
-    known-project/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
-    test-project/      # useTempDir(), useTestProject(): temporary projects for service tests
+    worker-worktree/  # one worktree per Story, with existing work preserved
+    story-watch/      # watchStories(): calls a function when the files of the stories folder change
+    known-project/    # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
+    test-project/     # useTempDir(), useTestProject(): temporary projects for service tests
+    store/            # Store, withEntry(), withMember() and more: immutable shared state for the strict style
 skills/               # the bundled skills; `rowbly skill install` copies them into a project
 stages/               # the default stage prompts; onboarding copies them into a project
 biome-plugins/        # GritQL lint plugins for the strict code style (see "Code style" below)
+scripts/              # check-names.mjs: the dash-case check of all file and folder names
 .agents/skills/       # agent skills for developing Rowbly (see "Agent skills" below)
 ```
 
@@ -456,8 +458,11 @@ its own to create a story.
 - Give each file one concern. A module folder can have many files.
 
 The strict override in `biome.json` enforces part of the style. It uses Biome rules and the GritQL
-plugins in `biome-plugins/`. It applies only to the folders in its `includes` list.
-Write all new modules in the strict style. To move a folder to the style, follow the skill.
+plugins in `biome-plugins/`. The style applies to all non-test TypeScript in `src/`.
+Test files use only the recommended rules of Biome.
+
+All files and folders use dash-case names, for example `src/tui/components/button/button.tsx`.
+`pnpm lint` checks the names with Biome and with `scripts/check-names.mjs`. The skill gives the exceptions.
 
 ### Add a CLI command
 
@@ -524,9 +529,10 @@ The rules:
 
 ### TUI code organization (`src/tui/`)
 
-- **One component per file.** Put each React component in its own `PascalCase.tsx` file, with the
-  name of the component. Do not add a new component to a file that exists. A small private helper
-  (a constant or a pure function) can stay in the file of the only component that uses it.
+- **One component per file.** Put each React component in its own dash-case `.tsx` file, with the
+  name of the component. For example, the `StoryRow` component is in `story-row.tsx`. Do not add a
+  new component to a file that exists. A small private helper (a constant or a pure function) can
+  stay in the file of the only component that uses it.
 - **One folder per component in `components/`.** Put each component in its own folder, with its test
   and an `index.ts` that exports it:
 
@@ -538,7 +544,7 @@ The rules:
   ```
 
   A component imports a different component through the folder (`'../button/index.js'`). Add each
-  component folder to `components/index.ts`. The `camelCase.ts` helpers stay in `components/`, with
+  component folder to `components/index.ts`. The dash-case `.ts` helpers stay in `components/`, with
   their tests next to them.
 - **Group by area, with a barrel.** Each folder has an `index.ts` that exports the items that the
   other parts of the app use. Import from the folder (`'../components/index.js'`). Do not import from
@@ -550,7 +556,7 @@ The rules:
     of the area.
   - `hooks/`: contexts and hooks.
 - **Keep `app.tsx` thin.** It only puts the providers (`TuiProviders`) around the shell.
-- Put each pure helper or constant that more than one file uses in its own `camelCase.ts` file, for
+- Put each pure helper or constant that more than one file uses in its own dash-case `.ts` file, for
   example `components/shell-layout.ts`.
 
 ## Tests
@@ -614,7 +620,7 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
 
   If Biome has no rule for the problem, write a GritQL plugin in `biome-plugins/`, if the problem
   has a pattern in the syntax. If a plugin cannot find the problem, repair it and tell the user.
-  A rule of the strict code style goes into the strict override. Repair only the folders in its list.
+  A rule of the strict code style goes into the strict override.
 - Write all documentation in STE. See "Documentation language: ASD-STE100".
 - Before you complete a change, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
   If you change a script in `skills/factory/scripts/`, also run `pnpm test:factory`.

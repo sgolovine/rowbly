@@ -6,7 +6,6 @@ export class Store<T extends object> {
   #value: Readonly<T>;
 
   constructor(initial: T) {
-    // biome-ignore lint/plugin: the store cell is the one place where the shared state changes.
     this.#value = Object.freeze({ ...initial });
   }
 

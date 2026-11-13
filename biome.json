@@ -48,7 +48,7 @@
       }
     },
     {
-      "includes": ["src/services/factory-manager/**", "!**/*.test.ts"],
+      "includes": ["src/**", "!**/*.test.ts", "!**/*.test.tsx"],
       "plugins": [
         "./biome-plugins/no-nested-function.grit",
         "./biome-plugins/no-let.grit",
