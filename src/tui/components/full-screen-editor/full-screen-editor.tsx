@@ -9,8 +9,6 @@ import { SaveStatus } from "../save-status/index.js";
 import { TextArea } from "../text-area/index.js";
 import { type EditorMode, useEditorState } from "./use-editor-state.js";
 
-export type { EditorMode } from "./use-editor-state.js";
-
 export interface FullScreenEditorProps {
   /** Shown in the top edge of the border. */
   title: string;

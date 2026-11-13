@@ -1,6 +1,7 @@
 import type { ConversationEntry } from "../../services/conversation/conversation.js";
 import { formatDateTime } from "../theme.js";
 import { type MarkdownRenderer, plainMarkdownRows } from "./markdown.js";
+import { safeText } from "./safe-text.js";
 import { plainRows, wordRows } from "./text-rows.js";
 
 /** How a line of a conversation reads: its ink and its weight. */
@@ -24,19 +25,6 @@ const TOOL_RESULT_ROWS = 12;
 const TOOL_CALL_ROWS = 3;
 /** No entry takes more rows than this, so one long message cannot fill the memory. */
 const ENTRY_ROWS = 400;
-
-/** Removes terminal escape sequences and control characters: a conversation is text, never terminal commands. */
-export function safeText(text: string): string {
-  return (
-    text
-      // biome-ignore lint/suspicious/noControlCharactersInRegex: these are the sequences to remove.
-      .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(\u0007|\u001b\\)?|\u001b[@-_]/g, "")
-      .replaceAll("\t", "  ")
-      .replaceAll("\r\n", "\n")
-      // biome-ignore lint/suspicious/noControlCharactersInRegex: these are the characters to remove.
-      .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "")
-  );
-}
 
 /** `rows` cut at `max`, with a last row that counts the rows that it leaves out. */
 function capped(rows: readonly string[], max: number, tone: ConversationTone): ConversationLine[] {

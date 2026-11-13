@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { conversationLines, safeText } from "./conversation-lines.js";
+import { conversationLines } from "./conversation-lines.js";
+import { safeText } from "./safe-text.js";
 
 const at = "2026-11-12T10:00:00.000Z";
 

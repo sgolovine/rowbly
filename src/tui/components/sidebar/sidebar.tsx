@@ -7,8 +7,6 @@ import { Panel } from "../panel/index.js";
 import { SIDEBAR_CHROME_HEIGHT, SIDEBAR_MIN_WIDTH } from "../shell-layout.js";
 import { type SidebarEntry, SidebarRow, type SidebarRowEnv } from "../sidebar-row/index.js";
 
-export type { SidebarEntry } from "../sidebar-row/index.js";
-
 interface SidebarProps {
   title: string;
   entries: readonly SidebarEntry[];
