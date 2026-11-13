@@ -7,6 +7,20 @@ import { TextInput } from "../text-input/index.js";
 
 type Raw = string | boolean | string[] | null;
 
+/** What a select that cycles shows: the label of the choice, or `—` for no choice. */
+function selectText(field: FormField, raw: Raw): string {
+  return `‹ ${typeof raw === "string" ? (field.optionLabels?.[raw] ?? raw) : "—"} ›`;
+}
+
+function stringOrNull(raw: Raw): string | null {
+  return typeof raw === "string" ? raw : null;
+}
+
+function checkedOptions(raw: Raw): readonly string[] {
+  return Array.isArray(raw) ? raw : [];
+}
+
+/** The input of one `Form` field, for its kind: a toggle, a switch, a select, options, a text area or a text input. */
 export function FieldValue({
   field,
   raw,
@@ -37,34 +51,26 @@ export function FieldValue({
         />
       );
     case "select":
-      if (field.searchable) {
-        return (
-          <SearchableSelect
-            field={field}
-            value={typeof raw === "string" ? raw : null}
-            focused={focused}
-            onChange={onChange}
-          />
-        );
-      }
-      return <Text>{`‹ ${typeof raw === "string" ? (field.optionLabels?.[raw] ?? raw) : "—"} ›`}</Text>;
-    case "multiselect": {
-      const checked = Array.isArray(raw) ? raw : [];
+      return field.searchable ? (
+        <SearchableSelect field={field} value={stringOrNull(raw)} focused={focused} onChange={onChange} />
+      ) : (
+        <Text>{selectText(field, raw)}</Text>
+      );
+    case "multiselect":
       return (
         <Box columnGap={2} flexWrap="wrap">
           {(field.options ?? []).map((option, i) => (
             <Text key={option} underline={focused && i === optionCursor}>
-              {checked.includes(option) ? "[x] " : "[ ] "}
+              {checkedOptions(raw).includes(option) ? "[x] " : "[ ] "}
               {field.optionLabels?.[option] ?? option}
             </Text>
           ))}
         </Box>
       );
-    }
     case "multiline":
       return (
         <TextArea
-          value={typeof raw === "string" ? raw : ""}
+          value={stringOrNull(raw) ?? ""}
           onChange={onChange}
           focus={focused}
           width={width}
