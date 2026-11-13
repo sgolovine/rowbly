@@ -3,6 +3,7 @@ import { ConflictError } from "../errors/errors.js";
 import { releaseStory, storyHash } from "../factory-policy/factory-policy.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
+import { withEntry } from "../store/store.js";
 import { getStory, type Story } from "../story/story.js";
 import {
   appendThreadRun,
@@ -22,7 +23,6 @@ import {
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
-import { withEntry } from "./store.js";
 import { launchWorker } from "./worker-launch.js";
 
 export interface ReserveWorkerInput {

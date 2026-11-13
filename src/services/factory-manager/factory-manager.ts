@@ -12,6 +12,7 @@ import {
 import { recoverFactory } from "../factory-recovery/factory-recovery.js";
 import { type FactorySettings, getFactorySettings } from "../factory-settings/factory-settings.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
+import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { shutdownFactory } from "./factory-shutdown.js";
 import {
@@ -25,7 +26,6 @@ import {
   setState,
 } from "./manager-state.js";
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
-import { Store, withoutEntry } from "./store.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
 

@@ -4,9 +4,9 @@ import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
+import { type Store, withEntry } from "../store/store.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
-import { type Store, withEntry } from "./store.js";
 
 export interface FactoryDependencies {
   runtime: ModelRuntime;

@@ -37,3 +37,13 @@ export function withoutEntry<K, V>(map: ReadonlyMap<K, V>, key: K): ReadonlyMap<
 export function withoutEntries<K, V>(map: ReadonlyMap<K, V>, matches: (value: V) => boolean): ReadonlyMap<K, V> {
   return new Map([...map].filter(([, value]) => !matches(value)));
 }
+
+/** Gives a new set with the value added. The source set does not change. */
+export function withMember<T>(set: ReadonlySet<T>, value: T): ReadonlySet<T> {
+  return new Set([...set, value]);
+}
+
+/** Gives a new set without the value. The source set does not change. */
+export function withoutMember<T>(set: ReadonlySet<T>, value: T): ReadonlySet<T> {
+  return new Set([...set].filter((member) => member !== value));
+}
