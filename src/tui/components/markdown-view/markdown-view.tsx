@@ -1,9 +1,11 @@
-import { Box, type DOMElement, Text, useInput } from "ink";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useIsActive, useMouse, WHEEL_LINES } from "../../hooks/index.js";
+import { Box, type DOMElement, type Key, Text, useInput } from "ink";
+import { type Dispatch, type SetStateAction, useMemo, useRef, useState } from "react";
+import { useIsActive, useMouse } from "../../hooks/index.js";
 import { moveDelta } from "../../keymap.js";
 import { theme } from "../../theme.js";
-import { loadMarkdownRenderer, markdownRenderer, plainMarkdownRows } from "../markdown.js";
+import { plainMarkdownRows } from "../markdown.js";
+import { clampOffset, wheelOffset } from "../scroll-offset.js";
+import { useMarkdownRenderer } from "../use-markdown-renderer.js";
 
 export interface MarkdownViewProps {
   /** Markdown source. */
@@ -16,6 +18,31 @@ export interface MarkdownViewProps {
   active?: boolean;
   /** Shown dimmed when the text is empty. */
   emptyText?: string;
+}
+
+/** The rows of the text in view, and the setter of the first row. */
+interface ScrollEnv {
+  readonly rows: number;
+  readonly max: number;
+  readonly start: number;
+  readonly setOffset: Dispatch<SetStateAction<number>>;
+}
+
+/** The rows that a key scrolls: a page for `pgup/pgdn`, otherwise one row for `↑/↓` or `j/k`. */
+function keyDelta(rows: number, input: string, key: Key): number {
+  if (key.pageUp) {
+    return -rows;
+  }
+
+  return key.pageDown ? rows : moveDelta(input, key);
+}
+
+function scrollKey(env: ScrollEnv, input: string, key: Key): void {
+  const delta = keyDelta(env.rows, input, key);
+
+  if (delta) {
+    env.setOffset(clampOffset(env.start + delta, env.max));
+  }
 }
 
 /**
@@ -32,44 +59,28 @@ export function MarkdownView({
 }: MarkdownViewProps) {
   const isActive = useIsActive() && active;
   const [offset, setOffset] = useState(0);
-  const [render, setRender] = useState(markdownRenderer);
-  useEffect(() => {
-    if (render) {
-      return;
-    }
-    let current = true;
-    void loadMarkdownRenderer().then((loaded) => current && setRender(() => loaded));
-    return () => {
-      current = false;
-    };
-  }, [render]);
+  const render = useMarkdownRenderer();
   const lines = useMemo(() => (render ?? plainMarkdownRows)(text, width), [render, text, width]);
+  const ref = useRef<DOMElement>(null);
+
   const fits = height === undefined || lines.length <= height;
   // One row is kept for the position when the text scrolls.
   const rows = fits ? lines.length : Math.max(1, height - 1);
   const max = Math.max(0, lines.length - rows);
   const start = Math.min(offset, max);
-  useInput(
-    (input, key) => {
-      const delta = key.pageUp ? -rows : key.pageDown ? rows : moveDelta(input, key);
-      if (delta) {
-        setOffset(Math.max(0, Math.min(max, start + delta)));
-      }
-    },
-    { isActive: isActive && max > 0 },
-  );
-  const ref = useRef<DOMElement>(null);
+  const env: ScrollEnv = { rows, max, start, setOffset };
+
+  useInput((input, key) => scrollKey(env, input, key), { isActive: isActive && max > 0 });
   useMouse(
     ref,
-    {
-      onWheel: (direction) =>
-        setOffset((current) => Math.max(0, Math.min(max, Math.min(current, max) + direction * WHEEL_LINES))),
-    },
+    { onWheel: (direction) => setOffset((current) => wheelOffset(current, max, direction)) },
     isActive && max > 0,
   );
+
   if (!text.trim()) {
     return <Text color={theme.inkFaint}>{emptyText}</Text>;
   }
+
   return (
     <Box ref={ref} flexDirection="column" flexShrink={0}>
       {lines.slice(start, start + rows).map((line, i) => (

@@ -10,6 +10,7 @@ type Raw = string | boolean | string[] | null;
 const FOCUSED_BACKGROUND = theme.fieldFocus;
 const INPUT_BACKGROUND = theme.field;
 
+/** One row of a `Form`: the label, the input of the field and its error. A click focuses the field. */
 export function FieldRow({
   field,
   raw,
@@ -36,9 +37,12 @@ export function FieldRow({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
+  const lit = focused && active;
+
   useScrollFocus(ref, focused && active);
   useMouse(ref, { onClick }, active);
-  const lit = focused && active;
+
   return (
     <Box ref={ref} flexDirection="column" flexShrink={0}>
       <Box>

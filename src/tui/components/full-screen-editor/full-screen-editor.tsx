@@ -1,16 +1,13 @@
-import { Box, Text, useInput } from "ink";
-import { type ReactNode, useRef, useState } from "react";
-import { useIsActive, useKeyCapture, useLayout } from "../../hooks/index.js";
+import { Box } from "ink";
+import { useIsActive, useLayout } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
-import { theme } from "../../theme.js";
 import { ConfirmDialog } from "../confirm-dialog/index.js";
 import { EditorModeTab } from "../editor-mode-tab/index.js";
 import { MarkdownView } from "../markdown-view/index.js";
 import { Modal, modalSize } from "../modal/index.js";
+import { SaveStatus } from "../save-status/index.js";
 import { TextArea } from "../text-area/index.js";
-
-/** `view` shows the markdown rendered; `edit` shows the raw text in a `TextArea`. */
-export type EditorMode = "view" | "edit";
+import { type EditorMode, useEditorState } from "./use-editor-state.js";
 
 export interface FullScreenEditorProps {
   /** Shown in the top edge of the border. */
@@ -34,7 +31,15 @@ const UNBOUNDED_ROWS = 10;
 /** The row above the text that shows the mode and whether the text is saved, and a blank row under it. */
 const MODE_ROWS = 2;
 
-type SaveState = { kind: "idle" | "saving" | "saved" } | { kind: "failed"; message: string };
+/** The keys of the editor. `ctrl+s` saves when the editor can save, and otherwise closes it. */
+function editorHints(mode: EditorMode, saves: boolean): KeyHint[] {
+  return [
+    mode === "view" ? { key: "tab/e", description: "edit" } : { key: "tab", description: "view" },
+    ...(mode === "view" ? [{ key: "↑/↓", description: "scroll" }] : []),
+    { key: "ctrl+s", description: saves ? "save" : "close" },
+    { key: "esc", description: "close" },
+  ];
+}
 
 /**
  * A text in a modal as large as the area it covers, in two modes: `view` renders the markdown and
@@ -50,81 +55,32 @@ export function FullScreenEditor({
   onSave,
   onClose,
 }: FullScreenEditorProps) {
-  const [value, setValue] = useState(initial);
-  const [mode, setMode] = useState<EditorMode>(initialMode);
-  const [saved, setSaved] = useState(initial);
-  const [save, setSave] = useState<SaveState>({ kind: "idle" });
-  const [confirming, setConfirming] = useState(false);
-  // The latest text, for a save that starts before the edit's render.
-  const latest = useRef(initial);
   const outer = useLayout();
   const active = useIsActive();
+  const editor = useEditorState({ initial, initialMode, active, onChange, onSave, onClose });
+
+  const { mode, keys } = editor;
   const { body } = modalSize(outer, { size: "screen", maxWidth: outer.width, footer: true });
   const rows = body.height === undefined ? UNBOUNDED_ROWS : Math.max(1, body.height - MODE_ROWS);
-  const dirty = onSave !== undefined && value !== saved;
-  const keys = active && !confirming && save.kind !== "saving";
 
-  const close = () => {
-    if (dirty) {
-      setConfirming(true);
-    } else {
-      onClose();
-    }
-  };
-  const store = async () => {
-    if (!onSave) {
-      return;
-    }
-    const text = latest.current;
-    setSave({ kind: "saving" });
-    try {
-      await onSave(text);
-      setSaved(text);
-      setSave({ kind: "saved" });
-    } catch (err) {
-      setSave({ kind: "failed", message: err instanceof Error ? err.message : String(err) });
-    }
-  };
-
-  // The shell leaves `esc` to the editor, rather than going back from the screen below.
-  useKeyCapture(active, { escape: true });
-  useInput(
-    (input, key) => {
-      if (key.escape || (key.ctrl && input === "f")) {
-        close();
-      } else if (key.tab) {
-        setMode((m) => (m === "view" ? "edit" : "view"));
-      } else if (mode === "view" && input === "e" && !key.ctrl && !key.meta) {
-        setMode("edit");
-      } else if (key.ctrl && input === "s") {
-        if (onSave) {
-          void store();
-        } else {
-          close();
-        }
-      }
-    },
-    { isActive: keys },
-  );
-
-  const hints: KeyHint[] = [
-    mode === "view" ? { key: "tab/e", description: "edit" } : { key: "tab", description: "view" },
-    ...(mode === "view" ? [{ key: "↑/↓", description: "scroll" }] : []),
-    { key: "ctrl+s", description: onSave ? "save" : "close" },
-    { key: "esc", description: "close" },
-  ];
   return (
-    <Modal title={title} hints={hints} size="screen" maxWidth={outer.width} onClose={confirming ? undefined : close}>
+    <Modal
+      title={title}
+      hints={editorHints(mode, onSave !== undefined)}
+      size="screen"
+      maxWidth={outer.width}
+      onClose={editor.confirming ? undefined : editor.close}
+    >
       <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
-        <EditorModeTab label="View" selected={mode === "view"} active={keys} onClick={() => setMode("view")} />
-        <EditorModeTab label="Edit" selected={mode === "edit"} active={keys} onClick={() => setMode("edit")} />
-        {saveStatus(save, dirty)}
+        <EditorModeTab label="View" selected={mode === "view"} active={keys} onClick={() => editor.setMode("view")} />
+        <EditorModeTab label="Edit" selected={mode === "edit"} active={keys} onClick={() => editor.setMode("edit")} />
+        <SaveStatus save={editor.save} dirty={editor.dirty} />
       </Box>
       {mode === "view" ? (
         // As tall as the text box, so switching modes keeps the editor's size.
         <Box flexDirection="column" height={rows} flexShrink={0}>
           <MarkdownView
-            text={value}
+            text={editor.value}
             width={body.width}
             height={rows}
             active={keys}
@@ -133,19 +89,15 @@ export function FullScreenEditor({
         </Box>
       ) : (
         <TextArea
-          value={value}
-          onChange={(next) => {
-            latest.current = next;
-            setValue(next);
-            onChange?.(next);
-          }}
+          value={editor.value}
+          onChange={editor.edit}
           width={body.width}
           rows={rows}
           focus={keys}
           expandable={false}
         />
       )}
-      {confirming && (
+      {editor.confirming && (
         <ConfirmDialog
           title="Discard changes"
           message="Close and discard unsaved changes?"
@@ -154,26 +106,9 @@ export function FullScreenEditor({
           destructive
           isActive={active}
           onConfirm={onClose}
-          onCancel={() => setConfirming(false)}
+          onCancel={() => editor.setConfirming(false)}
         />
       )}
     </Modal>
   );
-}
-
-/** Whether the text is saved, shown after the mode; nothing until there is something to save. */
-function saveStatus(save: SaveState, dirty: boolean): ReactNode {
-  if (save.kind === "saving") {
-    return <Text color={theme.inkFaint}>saving…</Text>;
-  }
-  if (save.kind === "failed") {
-    return <Text color={theme.danger} wrap="truncate-end">{`not saved: ${save.message}`}</Text>;
-  }
-  if (dirty) {
-    return <Text color={theme.stageBoard}>unsaved</Text>;
-  }
-  if (save.kind === "saved") {
-    return <Text color={theme.stageDone}>saved</Text>;
-  }
-  return null;
 }

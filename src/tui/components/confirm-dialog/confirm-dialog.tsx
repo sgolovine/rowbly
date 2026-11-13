@@ -1,6 +1,6 @@
-import { Box, Text, useInput } from "ink";
-import { useRef, useState } from "react";
-import { useIsActive, useKeyCapture } from "../../hooks/index.js";
+import { Box, type Key, Text, useInput } from "ink";
+import { type Dispatch, type RefObject, type SetStateAction, useRef, useState } from "react";
+import { useIsActive, useKeyCapture, writeRef } from "../../hooks/index.js";
 import { Button } from "../button/index.js";
 import { Modal } from "../modal/index.js";
 
@@ -17,6 +17,47 @@ export interface ConfirmDialogProps {
   onConfirm(): void;
   onCancel(): void;
   isActive?: boolean;
+}
+
+interface ConfirmEnv {
+  readonly confirmFocused: boolean;
+  readonly setConfirmFocused: Dispatch<SetStateAction<boolean>>;
+  readonly confirm: () => void;
+  readonly onCancel: () => void;
+}
+
+/** Confirms one time. The popup stays open while the work runs, so a double click must not start it twice. */
+function confirmOnce(confirmed: RefObject<boolean>, onConfirm: () => void): void {
+  if (confirmed.current) {
+    return;
+  }
+
+  writeRef(confirmed, true);
+  onConfirm();
+}
+
+function handleConfirmKey(env: ConfirmEnv, input: string, key: Key): void {
+  if (input === "y") {
+    env.confirm();
+
+    return;
+  }
+
+  if (input === "n" || key.escape) {
+    env.onCancel();
+
+    return;
+  }
+
+  if (key.leftArrow || key.rightArrow || key.tab || input === "h" || input === "l") {
+    env.setConfirmFocused((focused) => !focused);
+
+    return;
+  }
+
+  if (key.return) {
+    (env.confirmFocused ? env.confirm : env.onCancel)();
+  }
 }
 
 /**
@@ -36,31 +77,13 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const active = useIsActive() && isActive;
   const [confirmFocused, setConfirmFocused] = useState(false);
-  // The popup stays open while the work runs, so a double click must not start it twice.
   const confirmed = useRef(false);
-  const confirm = () => {
-    if (confirmed.current) {
-      return;
-    }
-    confirmed.current = true;
-    onConfirm();
-  };
-  useKeyCapture(active, { escape: true });
 
-  useInput(
-    (input, key) => {
-      if (input === "y") {
-        confirm();
-      } else if (input === "n" || key.escape) {
-        onCancel();
-      } else if (key.leftArrow || key.rightArrow || key.tab || input === "h" || input === "l") {
-        setConfirmFocused((f) => !f);
-      } else if (key.return) {
-        (confirmFocused ? confirm : onCancel)();
-      }
-    },
-    { isActive: active },
-  );
+  const actions = { confirm: () => confirmOnce(confirmed, onConfirm) };
+  const env: ConfirmEnv = { confirmFocused, setConfirmFocused, confirm: actions.confirm, onCancel };
+
+  useKeyCapture(active, { escape: true });
+  useInput((input, key) => handleConfirmKey(env, input, key), { isActive: active });
 
   return (
     <Modal title={title} size="dialog" hints={ESC_CANCEL}>
@@ -70,7 +93,7 @@ export function ConfirmDialog({
           <Button
             label={confirmLabel}
             keyName="y"
-            onClick={confirm}
+            onClick={actions.confirm}
             clickable={active}
             compact
             destructive={destructive}

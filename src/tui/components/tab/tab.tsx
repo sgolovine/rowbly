@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 
+/** One tab of `Tabs`: the selected tab is on the `accent` fill. A click selects it. */
 export function Tab({
   label,
   selected,
@@ -15,7 +16,9 @@ export function Tab({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick }, active);
+
   return (
     <Box ref={ref}>
       <Text

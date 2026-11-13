@@ -6,7 +6,9 @@ import { theme } from "../../theme.js";
 /** A clickable `✕`, set into a border to close what it frames. */
 export function CloseButton({ onClick }: { onClick(): void }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick }, useIsActive());
+
   return (
     <Box ref={ref} flexShrink={0}>
       <Text color={theme.inkFaint}>{" ✕ "}</Text>

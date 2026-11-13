@@ -29,8 +29,11 @@ export function Panel({
   ...box
 }: PanelProps) {
   const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, onClick !== undefined);
+
   const color = focused ? theme.accent : theme.border;
+
+  useMouse(ref, { onClick }, onClick !== undefined);
+
   return (
     <Box ref={ref} flexDirection="column" flexShrink={0} {...pick(box)}>
       <Box height={1} flexShrink={0}>

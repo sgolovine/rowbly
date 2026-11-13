@@ -1,10 +1,12 @@
-import { Box, Text, useInput, usePaste } from "ink";
-import { useRef } from "react";
-import { useKeyCapture } from "../../hooks/index.js";
+import { Box, type Key, Text, useInput, usePaste } from "ink";
+import { type RefObject, useRef } from "react";
+import { useKeyCapture, useLatest, writeRef } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import { FullScreenButton } from "../full-screen-button/index.js";
-import { editKey, follow, moveRow, rowOf, useEditState, WithCaret, wrapRows } from "../text-editing.js";
-import { useFullScreenEditor } from "../use-full-screen-editor.js";
+import { type EditState, editKey, follow, moveRow, type Row, rowOf, wrapRows } from "../text-editing.js";
+import { useEditState } from "../use-edit-state.js";
+import { type FullScreenEditorControl, useFullScreenEditor } from "../use-full-screen-editor.js";
+import { WithCaret } from "../with-caret/index.js";
 
 export interface TextAreaProps {
   value: string;
@@ -23,6 +25,76 @@ export interface TextAreaProps {
   expandable?: boolean;
   /** The full-screen editor's title. */
   title?: string;
+}
+
+interface TextAreaEnv {
+  readonly latest: RefObject<EditState>;
+  readonly apply: (next: EditState) => void;
+  readonly width: number;
+  readonly expandable: boolean;
+  readonly onLeave?: (direction: -1 | 1) => void;
+  readonly expand: () => void;
+}
+
+/** The rows of `text`. One column is kept free so the caret fits after a full row. */
+function textRows(text: string, width: number): Row[] {
+  return wrapRows(text, width - 1);
+}
+
+/** Opens the editor with the latest text. The editor holds the text from then on, and reports every edit to the latest `onChange`. */
+function expandText(
+  editor: FullScreenEditorControl,
+  title: string,
+  latest: RefObject<EditState>,
+  report: RefObject<(value: string) => void>,
+): void {
+  editor.open({ title, initial: latest.current.value, mode: "edit", onChange: (next) => report.current(next) });
+}
+
+function pasteText(env: TextAreaEnv, text: string): void {
+  const next = text ? editKey(env.latest.current, text, {} as Key, true) : null;
+
+  if (next) {
+    env.apply(next);
+  }
+}
+
+function handleTextAreaKey(env: TextAreaEnv, input: string, key: Key): void {
+  const state = env.latest.current;
+
+  if (env.expandable && key.ctrl && input === "f") {
+    env.expand();
+
+    return;
+  }
+
+  if (key.upArrow || key.downArrow) {
+    moveCaretRow(env, state, key.upArrow ? -1 : 1);
+
+    return;
+  }
+
+  const next = editKey(state, input, key, true);
+
+  if (next) {
+    env.apply(next);
+  }
+}
+
+function moveCaretRow(env: TextAreaEnv, state: EditState, direction: -1 | 1): void {
+  const next = moveRow(state, textRows(state.value, env.width), direction);
+
+  if (next) {
+    env.apply(next);
+
+    return;
+  }
+
+  env.onLeave?.(direction);
+}
+
+function rowText(value: string, row: Row): string {
+  return value.slice(row.start, row.end);
 }
 
 /**
@@ -44,91 +116,57 @@ export function TextArea({
 }: TextAreaProps) {
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
   const editor = useFullScreenEditor();
+  const top = useRef(0);
+  const report = useLatest(onChange);
+
   const expanded = editor.isOpen;
   const editing = focus && !expanded;
-  useKeyCapture(editing);
-  const top = useRef(0);
-  // One column is kept free so the caret fits after a full row.
-  const rowsOf = (text: string) => wrapRows(text, width - 1);
-  const wrapped = rowsOf(value);
-
-  // The editor holds the text once it opens, and reports every edit to the latest `onChange`.
-  const report = useRef(onChange);
-  report.current = onChange;
-  const expand = () =>
-    editor.open({ title, initial: latest.current.value, mode: "edit", onChange: (next) => report.current(next) });
-
-  usePaste(
-    (text) => {
-      if (!text) {
-        return;
-      }
-      const next = editKey(latest.current, text, {} as import("ink").Key, true);
-      if (next) {
-        apply(next);
-      }
-    },
-    { isActive: editing },
-  );
-
-  useInput(
-    (input, key) => {
-      const state = latest.current;
-      if (expandable && key.ctrl && input === "f") {
-        expand();
-        return;
-      }
-      if (key.upArrow || key.downArrow) {
-        const direction = key.upArrow ? -1 : 1;
-        const next = moveRow(state, rowsOf(state.value), direction);
-        if (next) {
-          apply(next);
-        } else {
-          onLeave?.(direction);
-        }
-        return;
-      }
-      const next = editKey(state, input, key, true);
-      if (next) {
-        apply(next);
-      }
-    },
-    { isActive: editing },
-  );
-
+  const wrapped = textRows(value, width);
   const current = rowOf(wrapped, cursor);
+  const actions = { expand: () => expandText(editor, title, latest, report) };
+  const env: TextAreaEnv = { latest, apply, width, expandable, onLeave, expand: actions.expand };
+
+  useKeyCapture(editing);
+  usePaste((text) => pasteText(env, text), { isActive: editing });
+  useInput((input, key) => handleTextAreaKey(env, input, key), { isActive: editing });
+
   // The caret is followed only while editing, so a long text shows from its first line until then.
   if (editing) {
-    top.current = follow(top.current, current, rows);
+    writeRef(top, follow(top.current, current, rows));
   }
+
   const first = Math.min(top.current, Math.max(0, wrapped.length - rows));
+  const caretRow = editing ? current : -1;
   const text = (
     <Box flexDirection="column" height={rows} flexShrink={0} overflow="hidden">
       {!value && !editing ? (
         <Text color={theme.inkFaint}>{placeholder}</Text>
       ) : (
-        wrapped.slice(first, first + rows).map((row, i) => {
-          const text = value.slice(row.start, row.end);
-          return (
-            // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their position.
-            <Text key={i} wrap="truncate-end">
-              {/* An empty Text has no height, so a blank line holds a space to keep its row. */}
-              {editing && first + i === current ? <WithCaret text={text} at={cursor - row.start} /> : text || " "}
-              {editing && !value && placeholder && <Text color={theme.inkFaint}>{placeholder}</Text>}
-            </Text>
-          );
-        })
+        wrapped.slice(first, first + rows).map((row, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their position.
+          <Text key={i} wrap="truncate-end">
+            {/* An empty Text has no height, so a blank line holds a space to keep its row. */}
+            {first + i === caretRow ? (
+              <WithCaret text={rowText(value, row)} at={cursor - row.start} />
+            ) : (
+              rowText(value, row) || " "
+            )}
+            {editing && !value && placeholder && <Text color={theme.inkFaint}>{placeholder}</Text>}
+          </Text>
+        ))
       )}
     </Box>
   );
+
   if (!expandable) {
     return text;
   }
+
   return (
     <Box flexDirection="column" flexShrink={0}>
       {text}
       <Box gap={2}>
-        <FullScreenButton focused={focus} clickable={!expanded} onClick={expand} />
+        <FullScreenButton focused={focus} clickable={!expanded} onClick={actions.expand} />
         {wrapped.length > rows && (
           <Text color={theme.inkFaint}>
             ↑↓ {first + 1}–{Math.min(wrapped.length, first + rows)} of {wrapped.length}

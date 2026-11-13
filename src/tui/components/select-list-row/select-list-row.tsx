@@ -20,8 +20,10 @@ export function SelectListRow({
   children: ReactNode;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useScrollFocus(ref, highlighted && active);
   useMouse(ref, { onClick }, active && onClick !== undefined);
+
   return (
     <Box ref={ref} backgroundColor={highlighted ? theme.selection : undefined}>
       <Text color={theme.ink} bold={highlighted}>
