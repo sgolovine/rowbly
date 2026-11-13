@@ -1,22 +1,110 @@
-import { Box, Text, useInput } from "ink";
-import { useState } from "react";
+import { Box, type Key, Text, useInput } from "ink";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import type { CustomField } from "../../../../services/config/config.js";
 import { listCustomFields, removeCustomField } from "../../../../services/custom-field/custom-field.js";
-import { Button, ConfirmDialog, Loading, SelectionRow } from "../../../components/index.js";
-import { useAsync, useCursor, useIsActive, useKeyHints, useToast } from "../../../hooks/index.js";
+import type { ServiceContext } from "../../../../services/workspace/workspace.js";
+import { Button, ConfirmDialog, Loading } from "../../../components/index.js";
+import {
+  type AsyncState,
+  showToast,
+  type ToastStore,
+  useAsync,
+  useCursor,
+  useIsActive,
+  useKeyHints,
+  useToast,
+} from "../../../hooks/index.js";
+import type { KeyHint } from "../../../keymap.js";
 import { theme } from "../../../theme.js";
 import { CustomFieldFormModal } from "../custom-field-form-modal/index.js";
+import { CustomFieldRow } from "../custom-field-row/index.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
 
 type Mode =
-  | { kind: "list" }
-  | { kind: "new" }
-  | { kind: "edit"; field: CustomField }
-  | { kind: "remove"; field: CustomField };
+  | { readonly kind: "list" }
+  | { readonly kind: "new" }
+  | { readonly kind: "edit"; readonly field: CustomField }
+  | { readonly kind: "remove"; readonly field: CustomField };
 
-/** `select: a, b` for a select field, the type for all other fields. */
-function describeType(field: CustomField): string {
-  return field.type === "select" ? `select: ${field.options?.join(", ") ?? ""}` : field.type;
+/** What the handlers of the section read and change. */
+interface FieldsEnv {
+  readonly ctx: ServiceContext;
+  readonly toast: ToastStore;
+  readonly list: AsyncState<CustomField[]>;
+  readonly current: CustomField | undefined;
+  readonly setMode: Dispatch<SetStateAction<Mode>>;
+  readonly setCursor: (index: number) => void;
+  readonly onChange: () => void;
+}
+
+function fieldsHints(idle: boolean, current: CustomField | undefined): KeyHint[] {
+  if (!idle) {
+    return [];
+  }
+
+  return [
+    { key: "↑/↓", description: "select" },
+    { key: "n", description: "new Custom Field" },
+    ...(current
+      ? [
+          { key: "enter", description: "edit" },
+          { key: "d", description: "remove" },
+        ]
+      : []),
+  ];
+}
+
+/** The columns of the widest value and two spaces. */
+function columnWidth(values: readonly string[]): number {
+  return Math.max(0, ...values.map((value) => value.length)) + 2;
+}
+
+/** Goes back to the list and reads the fields again, also in the screens behind Settings. */
+function done(env: FieldsEnv): void {
+  env.setMode({ kind: "list" });
+  env.list.reload();
+  env.onChange();
+}
+
+function fieldKey(env: FieldsEnv, input: string, key: Key): void {
+  if (input === "n") {
+    env.setMode({ kind: "new" });
+
+    return;
+  }
+
+  if (env.current && (key.return || input === "e")) {
+    env.setMode({ kind: "edit", field: env.current });
+
+    return;
+  }
+
+  if (env.current && input === "d") {
+    env.setMode({ kind: "remove", field: env.current });
+  }
+}
+
+function openField(env: FieldsEnv, index: number, field: CustomField): void {
+  env.setCursor(index);
+  env.setMode({ kind: "edit", field });
+}
+
+/** Removes the field and its values. A failure goes back to the list. */
+function removeField(env: FieldsEnv, field: CustomField): void {
+  removeCustomField({ key: field.key }, env.ctx).then(
+    () => removed(env, field),
+    (err: unknown) => removeFailed(env, err),
+  );
+}
+
+function removed(env: FieldsEnv, field: CustomField): void {
+  showToast(env.toast, "info", `Removed ${field.label}`);
+  done(env);
+}
+
+function removeFailed(env: FieldsEnv, err: unknown): void {
+  env.toast.error(err);
+  env.setMode({ kind: "list" });
 }
 
 /**
@@ -32,73 +120,33 @@ export function CustomFieldsSection({ ctx, onChange }: SettingsSectionProps) {
   const fields = list.data ?? [];
   const idle = active && mode.kind === "list";
   const [cursor, setCursor] = useCursor(fields.length, idle);
+
   const current = fields[cursor];
+  const env: FieldsEnv = { ctx, toast, list, current, setMode, setCursor, onChange };
 
-  const done = () => {
-    setMode({ kind: "list" });
-    list.reload();
-    onChange();
-  };
-
-  useKeyHints(
-    idle
-      ? [
-          { key: "↑/↓", description: "select" },
-          { key: "n", description: "new Custom Field" },
-          ...(current
-            ? [
-                { key: "enter", description: "edit" },
-                { key: "d", description: "remove" },
-              ]
-            : []),
-        ]
-      : [],
-  );
-  useInput(
-    (input, key) => {
-      if (input === "n") {
-        setMode({ kind: "new" });
-      } else if (current && (key.return || input === "e")) {
-        setMode({ kind: "edit", field: current });
-      } else if (current && input === "d") {
-        setMode({ kind: "remove", field: current });
-      }
-    },
-    { isActive: idle },
-  );
+  useKeyHints(fieldsHints(idle, current));
+  useInput((input, key) => fieldKey(env, input, key), { isActive: idle });
 
   if (!list.data) {
     return list.loading ? <Loading label="Loading Custom Fields…" /> : null;
   }
-  const labelWidth = Math.max(0, ...fields.map((f) => f.label.length)) + 2;
-  const keyWidth = Math.max(0, ...fields.map((f) => f.key.length)) + 2;
+
+  const labelWidth = columnWidth(fields.map((f) => f.label));
+  const keyWidth = columnWidth(fields.map((f) => f.key));
+
   return (
     <Box flexDirection="column">
       {fields.length === 0 && <Text color={theme.inkFaint}>No Custom Fields. Press n to add one.</Text>}
       {fields.map((field, i) => (
-        <SelectionRow
+        <CustomFieldRow
           key={field.key}
+          field={field}
           selected={i === cursor}
           active={idle}
-          onClick={() => {
-            setCursor(i);
-            setMode({ kind: "edit", field });
-          }}
-        >
-          <Box>
-            <Box width={labelWidth} flexShrink={0}>
-              <Text color={theme.ink} bold={i === cursor}>
-                {field.label}
-              </Text>
-            </Box>
-            <Box width={keyWidth} flexShrink={0}>
-              <Text color={i === cursor ? theme.inkMuted : theme.inkFaint}>{field.key}</Text>
-            </Box>
-            <Text color={theme.inkMuted} wrap="truncate-end">
-              {describeType(field)}
-            </Text>
-          </Box>
-        </SelectionRow>
+          labelWidth={labelWidth}
+          keyWidth={keyWidth}
+          onClick={() => openField(env, i, field)}
+        />
       ))}
       <Box marginTop={1}>
         <Button
@@ -114,7 +162,7 @@ export function CustomFieldsSection({ ctx, onChange }: SettingsSectionProps) {
           ctx={ctx}
           field={mode.kind === "edit" ? mode.field : undefined}
           onClose={() => setMode({ kind: "list" })}
-          onSaved={done}
+          onSaved={() => done(env)}
         />
       )}
       {mode.kind === "remove" && (
@@ -124,19 +172,7 @@ export function CustomFieldsSection({ ctx, onChange }: SettingsSectionProps) {
           confirmLabel="Remove"
           cancelLabel="Cancel"
           destructive
-          onConfirm={() => {
-            const { field } = mode;
-            removeCustomField({ key: field.key }, ctx).then(
-              () => {
-                toast.push("info", `Removed ${field.label}`);
-                done();
-              },
-              (err: unknown) => {
-                toast.error(err);
-                setMode({ kind: "list" });
-              },
-            );
-          }}
+          onConfirm={() => removeField(env, mode.field)}
           onCancel={() => setMode({ kind: "list" })}
         />
       )}

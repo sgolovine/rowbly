@@ -19,18 +19,18 @@ export interface SettingsSectionProps {
  * One entry in the section list of Settings. The section reads `useIsActive()` for its focus and declares
  * its keys with `useKeyHints`. The Settings Modal shows them in its hint strip.
  */
-interface SettingsSection {
-  id: string;
-  label: string;
+export interface SettingsSection {
+  readonly id: string;
+  readonly label: string;
   /** One line about the contents, in the header band of the section. */
-  description: string;
-  Component: ComponentType<SettingsSectionProps>;
+  readonly description: string;
+  readonly Component: ComponentType<SettingsSectionProps>;
 }
 
 /** A heading in the section list and the sections under it. */
 export interface SettingsGroup {
-  title: string;
-  sections: readonly SettingsSection[];
+  readonly title: string;
+  readonly sections: readonly SettingsSection[];
 }
 
 /** Every settings section, in the order of the section list. To add a setting, add a section here. */
