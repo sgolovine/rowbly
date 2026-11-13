@@ -1,17 +1,52 @@
-import { Box, Text, useInput } from "ink";
-import { useState } from "react";
-import { type DoctorIssue, doctor } from "../../../../services/doctor/doctor.js";
+import { Box, useInput } from "ink";
+import { type Dispatch, type SetStateAction, useState } from "react";
+import { type DoctorReport, doctor } from "../../../../services/doctor/doctor.js";
+import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { Button, Loading } from "../../../components/index.js";
 import { useAsync, useIsActive, useKeyHints } from "../../../hooks/index.js";
-import { theme } from "../../../theme.js";
+import type { KeyHint } from "../../../keymap.js";
+import { DoctorReportView } from "../doctor-report/index.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
 
-/** The glyph and the colour of an issue: fixed, error or warning. */
-function mark(issue: DoctorIssue): { glyph: string; color: string } {
-  if (issue.fixed) {
-    return { glyph: "✓", color: theme.accent };
+/** One run of the checks. A new `count` runs the checks again, also with the same `fix`. */
+interface DoctorRun {
+  readonly fix: boolean;
+  readonly count: number;
+}
+
+/** Runs the checks. A fix that changed files tells Settings, so that the board reads them again. */
+async function runDoctor(ctx: ServiceContext, run: DoctorRun, onChange: () => void): Promise<DoctorReport> {
+  const result = await doctor({ fix: run.fix }, ctx);
+
+  if (run.fix && result.issues.some((issue) => issue.fixed)) {
+    onChange();
   }
-  return issue.severity === "error" ? { glyph: "✕", color: theme.danger } : { glyph: "!", color: theme.stageBoard };
+
+  return result;
+}
+
+function nextRun(setRun: Dispatch<SetStateAction<DoctorRun>>, fix: boolean): void {
+  setRun((current) => ({ fix, count: current.count + 1 }));
+}
+
+function doctorHints(idle: boolean, fixable: boolean): KeyHint[] {
+  if (!idle) {
+    return [];
+  }
+
+  return [{ key: "r", description: "check again" }, ...(fixable ? [{ key: "f", description: "fix" }] : [])];
+}
+
+function doctorKey(setRun: Dispatch<SetStateAction<DoctorRun>>, fixable: boolean, input: string): void {
+  if (input === "r") {
+    nextRun(setRun, false);
+
+    return;
+  }
+
+  if (input === "f" && fixable) {
+    nextRun(setRun, true);
+  }
 }
 
 /**
@@ -20,76 +55,35 @@ function mark(issue: DoctorIssue): { glyph: string; color: string } {
  */
 export function DoctorSection({ ctx, onChange }: SettingsSectionProps) {
   const active = useIsActive();
-  const [run, setRun] = useState<{ fix: boolean; count: number }>({ fix: false, count: 0 });
-  const report = useAsync(async () => {
-    const result = await doctor({ fix: run.fix }, ctx);
-    if (run.fix && result.issues.some((issue) => issue.fixed)) {
-      onChange();
-    }
-    return result;
-  }, [ctx, run]);
+  const [run, setRun] = useState<DoctorRun>({ fix: false, count: 0 });
+  const report = useAsync(() => runDoctor(ctx, run, onChange), [ctx, run]);
+
   const busy = report.loading;
   const fixable = report.data?.issues.some((issue) => issue.fix && !issue.fixed) ?? false;
-  const check = () => setRun((r) => ({ fix: false, count: r.count + 1 }));
-  const fix = () => setRun((r) => ({ fix: true, count: r.count + 1 }));
 
-  useKeyHints(
-    active && !busy
-      ? [{ key: "r", description: "check again" }, ...(fixable ? [{ key: "f", description: "fix" }] : [])]
-      : [],
-  );
-  useInput(
-    (input) => {
-      if (input === "r") {
-        check();
-      } else if (input === "f" && fixable) {
-        fix();
-      }
-    },
-    { isActive: active && !busy },
-  );
+  useKeyHints(doctorHints(active && !busy, fixable));
+  useInput((input) => doctorKey(setRun, fixable, input), { isActive: active && !busy });
 
   if (!report.data) {
     return busy ? <Loading label="Checking the project…" /> : null;
   }
+
   const { issues, ok } = report.data;
+
   return (
     <Box flexDirection="column" gap={1}>
-      {busy ? (
-        <Loading label="Checking the project…" />
-      ) : issues.length === 0 ? (
-        <Text color={theme.ink}>No problems. The files agree with the config.</Text>
-      ) : (
-        <Text color={ok ? theme.ink : theme.danger}>
-          {ok ? "No errors." : "The project has errors."}{" "}
-          <Text color={theme.inkFaint}>
-            {issues.length} {issues.length === 1 ? "issue" : "issues"}, {issues.filter((i) => i.fixed).length} fixed
-          </Text>
-        </Text>
-      )}
-      {issues.length > 0 && (
-        <Box flexDirection="column">
-          {issues.map((issue, i) => {
-            const { glyph, color } = mark(issue);
-            return (
-              // biome-ignore lint/suspicious/noArrayIndexKey: the issues of one report do not change order.
-              <Box key={i} flexDirection="column" marginBottom={1}>
-                <Text>
-                  <Text color={color}>{glyph}</Text> <Text color={theme.ink}>{issue.message}</Text>
-                </Text>
-                <Text color={theme.inkFaint}>
-                  {"  "}
-                  {issue.file}
-                  {issue.fix ? ` · ${issue.fixed ? "fixed" : "fix"}: ${issue.fix}` : ""}
-                </Text>
-              </Box>
-            );
-          })}
-        </Box>
-      )}
+      <DoctorReportView issues={issues} ok={ok} busy={busy} />
       <Box gap={2}>
-        <Button label="Check again" keyName="r" onClick={check} clickable={active && !busy} compact />
-        {fixable && <Button label="Fix" keyName="f" onClick={fix} clickable={active && !busy} compact />}
+        <Button
+          label="Check again"
+          keyName="r"
+          onClick={() => nextRun(setRun, false)}
+          clickable={active && !busy}
+          compact
+        />
+        {fixable && (
+          <Button label="Fix" keyName="f" onClick={() => nextRun(setRun, true)} clickable={active && !busy} compact />
+        )}
       </Box>
     </Box>
   );

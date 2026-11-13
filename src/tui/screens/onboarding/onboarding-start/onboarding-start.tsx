@@ -18,6 +18,7 @@ export function OnboardingStart({
   onHints(hints: readonly KeyHint[]): void;
 }) {
   useStepHints(onHints, HINTS);
+
   return (
     <Box flexDirection="column">
       <Text bold color={theme.ink}>

@@ -1,20 +1,18 @@
 import { Box, Text } from "ink";
 import { useRef, useState } from "react";
 import { SKILL_HARNESSES } from "../../../../services/config/config.js";
-import { ValidationError } from "../../../../services/errors/errors.js";
-import { installSkill, removeSkill, type SkillStatus } from "../../../../services/skill/skill.js";
+import type { SkillStatus } from "../../../../services/skill/skill.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import {
-  Button,
-  ConfirmDialog,
-  Form,
-  type FormField,
-  type FormValues,
-  Loading,
-  Modal,
-} from "../../../components/index.js";
+import { Button, ConfirmDialog, Form, type FormField, Loading, Modal } from "../../../components/index.js";
 import { useEscape, useIsActive, useKeyCapture, useToast } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
+import {
+  confirmRemoval,
+  removalMessage,
+  type SkillActionEnv,
+  type SkillMode,
+  submitSkillForm,
+} from "./skill-action.js";
 
 /** Selects harnesses and confirms the paths before removal. */
 export function SkillActionModal({
@@ -26,7 +24,7 @@ export function SkillActionModal({
   onSaved,
 }: {
   ctx: ServiceContext;
-  mode: "install" | "remove";
+  mode: SkillMode;
   name: string;
   tracked?: SkillStatus;
   onClose(): void;
@@ -47,41 +45,11 @@ export function SkillActionModal({
   }));
   const initialValues = Object.fromEntries(harnesses.map((h) => [h, mode === "remove"]));
   const idle = active && !busy && targets === null;
+  const env: SkillActionEnv = { ctx, mode, name, harnesses, toast, pending, setBusy, setTargets, onSaved };
+
   useKeyCapture(active, { text: false, escape: true });
   useEscape(idle, onClose);
 
-  const run = async (selected: string[]) => {
-    if (pending.current) {
-      return;
-    }
-    pending.current = true;
-    setBusy(true);
-    try {
-      const result =
-        mode === "install"
-          ? await installSkill({ name, harnesses: selected }, ctx)
-          : await removeSkill({ name, harnesses: selected }, ctx);
-      toast.push(
-        "info",
-        `${name}: ${result.harnesses.map((h) => `${h.harness}: ${h.status === "shared" ? "shared (folder kept)" : h.status === "missing" ? "already missing" : h.status}`).join("; ")}`,
-      );
-      onSaved();
-    } finally {
-      pending.current = false;
-      setBusy(false);
-    }
-  };
-  const submit = async (values: FormValues) => {
-    const selected = harnesses.filter((h) => values[h] === true);
-    if (selected.length === 0) {
-      throw new ValidationError("Select at least one harness.");
-    }
-    if (mode === "remove") {
-      setTargets(selected);
-    } else {
-      await run(selected);
-    }
-  };
   return (
     <Modal
       title={`${mode === "install" ? "Install" : "Uninstall"} skill › ${name}`}
@@ -97,7 +65,7 @@ export function SkillActionModal({
         <Form
           fields={fields}
           initialValues={initialValues}
-          onSubmit={submit}
+          onSubmit={(values) => submitSkillForm(env, values)}
           submitLabel={mode === "install" ? "install" : "continue"}
           isActive={idle}
           submitRequest={submitRequest}
@@ -120,15 +88,10 @@ export function SkillActionModal({
           destructive
           confirmLabel="Uninstall"
           cancelLabel="Cancel"
-          message={`Uninstall ${name} for these harnesses?\n${targets.map((h) => `${h}: ${tracked?.harnesses.find((entry) => entry.harness === h)?.path}`).join("\n")}\nRemoval deletes local changes in removed folders. Another harness can still read a retained or shared skill folder.`}
+          message={removalMessage(name, targets, tracked)}
           isActive={!busy}
           onCancel={() => setTargets(null)}
-          onConfirm={() => {
-            void run(targets).catch((error: unknown) => {
-              toast.error(error);
-              setTargets(null);
-            });
-          }}
+          onConfirm={() => confirmRemoval(env, targets)}
         />
       )}
     </Modal>

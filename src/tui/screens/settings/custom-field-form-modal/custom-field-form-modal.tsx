@@ -1,8 +1,8 @@
 import { CUSTOM_FIELD_TYPES, type CustomField, type CustomFieldType } from "../../../../services/config/config.js";
 import { addCustomField, updateCustomField } from "../../../../services/custom-field/custom-field.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { FormModal } from "../../../components/index.js";
-import { useToast } from "../../../hooks/index.js";
+import { FormModal, type FormValues } from "../../../components/index.js";
+import { showToast, type ToastStore, useToast } from "../../../hooks/index.js";
 
 /** `"a, b ,c"` → `["a", "b", "c"]`. */
 function parseOptions(text: string): string[] {
@@ -10,6 +10,31 @@ function parseOptions(text: string): string[] {
     .split(",")
     .map((option) => option.trim())
     .filter((option) => option !== "");
+}
+
+/** What a save of the form reads. */
+interface FieldFormEnv {
+  readonly ctx: ServiceContext;
+  readonly field: CustomField | undefined;
+  readonly toast: ToastStore;
+  readonly onSaved: (field: CustomField) => void;
+}
+
+/** Adds the field, or updates the field that the form edits. A `select` field keeps its options. */
+async function saveField(env: FieldFormEnv, values: FormValues): Promise<void> {
+  const type = String(values.type) as CustomFieldType;
+  const input = {
+    label: String(values.label ?? ""),
+    type,
+    options: type === "select" ? parseOptions(String(values.options ?? "")) : undefined,
+  };
+
+  const saved = env.field
+    ? await updateCustomField({ key: env.field.key, ...input }, env.ctx)
+    : await addCustomField(input, env.ctx);
+
+  showToast(env.toast, "info", env.field ? `Updated ${saved.label}` : `Added ${saved.label}`);
+  env.onSaved(saved);
 }
 
 /**
@@ -30,6 +55,9 @@ export function CustomFieldFormModal({
   onClose(): void;
 }) {
   const toast = useToast();
+
+  const env: FieldFormEnv = { ctx, field, toast, onSaved };
+
   return (
     <FormModal
       title={field ? `Edit Custom Field › ${field.label}` : "New Custom Field"}
@@ -43,19 +71,7 @@ export function CustomFieldFormModal({
         type: field?.type ?? "string",
         options: field?.options?.join(", ") ?? "",
       }}
-      onSubmit={async (values) => {
-        const type = String(values.type) as CustomFieldType;
-        const input = {
-          label: String(values.label ?? ""),
-          type,
-          options: type === "select" ? parseOptions(String(values.options ?? "")) : undefined,
-        };
-        const saved = field
-          ? await updateCustomField({ key: field.key, ...input }, ctx)
-          : await addCustomField(input, ctx);
-        toast.push("info", field ? `Updated ${saved.label}` : `Added ${saved.label}`);
-        onSaved(saved);
-      }}
+      onSubmit={(values) => saveField(env, values)}
       onClose={onClose}
     />
   );
