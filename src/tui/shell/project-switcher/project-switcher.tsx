@@ -1,4 +1,4 @@
-import { type Key, Text, useInput } from "ink";
+import { type Key, useInput } from "ink";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import { forgetProject, type KnownProject, listKnownProjects } from "../../../services/known-project/known-project.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
@@ -15,7 +15,7 @@ import {
   useToast,
 } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
-import { theme } from "../../theme.js";
+import { ProjectTag } from "../project-tag/index.js";
 
 /** The most columns a name takes in a row, so the path has room. */
 const NAME_WIDTH = 24;
@@ -49,14 +49,6 @@ function tagText(project: KnownProject, current: string | undefined): string {
   return project.missing ? " · missing" : "";
 }
 
-function tagNode(project: KnownProject, current: string | undefined) {
-  if (project.path === current) {
-    return <Text color={theme.accent}> · current</Text>;
-  }
-
-  return project.missing ? <Text color={theme.danger}> · missing</Text> : undefined;
-}
-
 /** The row of `project`: the name, the tag and as much of the path as fits in `width`. */
 function projectItem(project: KnownProject, current: string | undefined, width: number): SelectItem {
   const name = cutEnd(project.name, NAME_WIDTH);
@@ -66,7 +58,7 @@ function projectItem(project: KnownProject, current: string | undefined, width: 
   return {
     value: project.path,
     label: name,
-    tag: tagNode(project, current),
+    tag: <ProjectTag project={project} current={current} />,
     description: room >= 8 ? cutStart(project.path, room) : undefined,
   };
 }
