@@ -40,10 +40,22 @@ describe("thread", () => {
     await writeFile(join(p.paths.runtimeDir, file), "");
     await transitionThread(
       t.id,
-      { expectedRevision: 1, status: "interrupted", patch: { session: { id: t.id, file }, resumable: true } },
+      {
+        expectedRevision: 1,
+        status: "interrupted",
+        patch: {
+          session: { id: t.id, file },
+          resumable: true,
+          error: { class: "unknown", code: "OWNER_DIED", message: "Previous owner died" },
+          result: { outcome: "unknown", summary: "Old result", blockers: [], problems: [] },
+        },
+      },
       p.ctx,
     );
     const resumed = await appendThreadRun(t.id, { expectedRevision: 2, ownerToken: "new" }, p.ctx);
+    expect(resumed.error).toBeUndefined();
+    expect(resumed.result).toBeUndefined();
+    expect(resumed.runs[0].reason).toBe("Previous owner died");
     expect(resumed.runs.map((r) => r.status)).toEqual(["interrupted", "pending"]);
     await expect(transitionThread(t.id, { expectedRevision: 2, status: "running" }, p.ctx)).rejects.toThrow("revision");
   });

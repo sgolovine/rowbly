@@ -1,5 +1,9 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { useTestProject } from "../../../services/testProject/testProject.js";
 import type { ThreadRecord } from "../../../services/thread/thread.js";
+import { appendThreadRun, createThread, transitionThread } from "../../../services/thread/thread.js";
 import {
   formatDuration,
   sortThreads,
@@ -28,6 +32,60 @@ function thread(fields: Partial<ThreadRecord>): ThreadRecord {
 }
 
 describe("threadText", () => {
+  const project = useTestProject();
+  it("shows the new result after an interrupted thread resumes and completes", async () => {
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-01", stage: "BACKLOG", cwd: project.paths.root, ownerToken: "dead" },
+      project.ctx,
+    );
+    const file = `sessions/${t.id}/history.jsonl`;
+    await mkdir(join(project.paths.runtimeDir, `sessions/${t.id}`), { recursive: true });
+    await writeFile(join(project.paths.runtimeDir, file), "");
+    const interrupted = await transitionThread(
+      t.id,
+      {
+        expectedRevision: t.revision,
+        status: "interrupted",
+        patch: {
+          session: { id: t.id, file },
+          resumable: true,
+          error: { class: "unknown", code: "OWNER_DIED", message: "Previous owner died" },
+        },
+      },
+      project.ctx,
+    );
+    const resumed = await appendThreadRun(
+      t.id,
+      { expectedRevision: interrupted.revision, ownerToken: "live" },
+      project.ctx,
+    );
+    const running = await transitionThread(
+      t.id,
+      {
+        expectedRevision: resumed.revision,
+        status: "running",
+        patch: {
+          error: { class: "transient", code: "TEMP", message: "Temporary failure" },
+        },
+      },
+      project.ctx,
+    );
+    const completed = await transitionThread(
+      t.id,
+      {
+        expectedRevision: running.revision,
+        status: "completed",
+        patch: {
+          result: { outcome: "success", summary: "New work completed", blockers: [], problems: [] },
+        },
+      },
+      project.ctx,
+    );
+    expect(completed.error).toBeUndefined();
+    expect(completed.runs[0].reason).toBe("Previous owner died");
+    expect(threadOutcome(completed)).toEqual({ text: "success: New work completed", error: false });
+  });
+
   it("puts active threads first, then the newest", () => {
     const old = thread({ id: "old", status: "completed", createdAt: "2026-11-10T00:00:00.000Z" });
     const recent = thread({ id: "recent", status: "failed", createdAt: "2026-11-12T00:00:00.000Z" });

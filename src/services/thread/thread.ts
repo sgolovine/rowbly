@@ -279,6 +279,7 @@ export async function transitionThread(
     const now = (ctx.now?.() ?? new Date()).toISOString();
     Object.assign(t, input.patch);
     t.status = input.status;
+    if (t.status === "completed") delete t.error;
     t.revision++;
     const run = t.runs.at(-1);
     if (!run) throw new ValidationError("Missing thread run");
@@ -305,6 +306,10 @@ export async function appendThreadRun(
     if (t.revision !== input.expectedRevision || !terminal(t.status) || !t.resumable || !t.session.file)
       throw new ConflictError("Thread cannot resume");
     await stat(await runtimePath(paths, t.session.file));
+    const previous = t.runs.at(-1);
+    if (previous) previous.reason ??= t.error?.message ?? t.result?.summary;
+    delete t.error;
+    delete t.result;
     t.runs.push({
       id: input.runId ?? randomUUID(),
       ownerToken: input.ownerToken,
