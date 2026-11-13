@@ -1,6 +1,6 @@
 import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { listKnownProjects } from "../../../services/known-project/known-project.js";
 import { createStory } from "../../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../../services/test-project/test-project.js";
@@ -37,7 +37,10 @@ describe("useShellData", () => {
 
     await settle(100);
     expect(tui.frame()).toContain("Rowbly: 0");
-    expect((await listKnownProjects({})).some((known) => known.path === project.ctx.cwd)).toBe(true);
+    // The hook records the Project after the board shows.
+    await vi.waitFor(async () =>
+      expect((await listKnownProjects({})).some((known) => known.path === project.ctx.cwd)).toBe(true),
+    );
 
     await createStory({ title: "One" }, project.ctx);
     seen.at(-1)?.reload();

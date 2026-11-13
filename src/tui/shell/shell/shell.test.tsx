@@ -403,7 +403,11 @@ describe("Shell", () => {
     await tui.press();
     expect((await listStages(project.ctx)).map((s) => s.key)).toEqual(["DONE", "REVIEW", "BACKLOG"]);
     // The last Stage cannot go further down.
-    await tui.press(keys.shiftDown, "K", keys.shiftUp);
+    await tui.press(keys.shiftDown, "K");
+    await settle(50);
+    await tui.press();
+    expect((await listStages(project.ctx)).map((s) => s.key)).toEqual(["DONE", "BACKLOG", "REVIEW"]);
+    await tui.press(keys.shiftUp);
     await settle(50);
     await tui.press();
     expect((await listStages(project.ctx)).map((s) => s.key)).toEqual(["BACKLOG", "DONE", "REVIEW"]);
@@ -729,11 +733,13 @@ describe("Shell without a project", () => {
     await tui.press();
     expect(tui.frame()).toContain("Summary");
     await tui.press(keys.enter);
-    await settle(300);
-    await tui.press();
+    // The setup copies the Stage prompts and the skills, so the time to the board depends on the disk.
+    await vi.waitFor(() => expect(tui.frame()).toContain("╭─Stages"), { timeout: 5000, interval: 50 });
     expect(await getProject(ctx)).toMatchObject({ projectName: basename(dir.path) });
-    expect(tui.frame()).toContain("╭─Stages");
-    expect((await listKnownProjects(ctx)).map((p) => p.name)).toEqual([basename(dir.path)]);
+    // The Shell records the Project after the board shows.
+    await vi.waitFor(async () =>
+      expect((await listKnownProjects(ctx)).map((p) => p.name)).toEqual([basename(dir.path)]),
+    );
   });
 
   it("does not quit or open the switcher when q and p are typed in a text field", async () => {

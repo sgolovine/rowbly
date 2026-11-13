@@ -49,8 +49,8 @@ describe("SpecsTab", () => {
 
   it("shows that a Story has no specs", async () => {
     const { tui, onCount } = await setup();
-    expect(tui.frame()).toContain("No Specs");
-    expect(onCount).toHaveBeenLastCalledWith(0);
+    await shown(tui, "No Specs");
+    await vi.waitFor(() => expect(onCount).toHaveBeenLastCalledWith(0));
   });
 
   it("lists only the specs of the Story and shows the text of the selected spec", async () => {
@@ -58,8 +58,8 @@ describe("SpecsTab", () => {
     await createSpec({ title: "Design", stories: ["ROW-01", "ROW-02"], body: "The design text" }, project.ctx);
     await createSpec({ title: "Other", stories: ["ROW-02"] }, project.ctx);
     const { tui, onCount } = await setup();
-    expect(onCount).toHaveBeenLastCalledWith(2);
-    expect(tui.frame()).toContain("The API text");
+    await shown(tui, "The API text");
+    await vi.waitFor(() => expect(onCount).toHaveBeenLastCalledWith(2));
     expect(tui.frame()).not.toContain("Other");
     await tui.press(keys.down);
     expect(tui.frame()).toContain("The design text");

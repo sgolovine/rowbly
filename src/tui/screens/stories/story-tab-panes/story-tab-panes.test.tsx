@@ -48,8 +48,8 @@ describe("StoryTabPanes", () => {
     await vi.waitFor(async () => {
       await tui.press();
       expect(tui.frame()).toContain("The API text");
+      expect(calls.setSpecCount).toHaveBeenLastCalledWith(1);
     });
-    expect(calls.setSpecCount).toHaveBeenLastCalledWith(1);
     expect(tui.frame()).not.toContain("No attachments");
   });
 });
