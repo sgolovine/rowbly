@@ -3,9 +3,11 @@ import { formatDateTime } from "../../theme.js";
 
 /** One item that asks for the attention of a person. */
 export interface FactoryProblem {
-  key: string;
-  text: string;
+  readonly key: string;
+  readonly text: string;
 }
+
+type ProviderPauses = NonNullable<FactoryStatus["providers"]>;
 
 /** True when a factory process owns the Project and has not stopped. A status file of a stopped factory is old. */
 export function factoryLive(status: FactoryStatus | undefined): boolean {
@@ -20,13 +22,17 @@ export function factoryState(status: FactoryStatus | undefined, short = false): 
   if (!status) {
     return "…";
   }
+
   if (status.phase === "stopped") {
     return "off";
   }
+
   if (status.phase !== "ready" || !status.workers) {
     return status.phase;
   }
+
   const { running, pending, limit } = status.workers;
+
   return pending > 0 && !short ? `${running}/${limit} · ${pending} pending` : `${running}/${limit}`;
 }
 
@@ -38,38 +44,63 @@ export function factoryProblems(status: FactoryStatus | undefined): FactoryProbl
   if (!status || !factoryLive(status)) {
     return [];
   }
-  const problems: FactoryProblem[] = [];
-  if (status.phase === "ready" && status.responsive === false) {
-    problems.push({ key: "heartbeat", text: "The factory does not write its heartbeat." });
+
+  return [
+    ...heartbeatProblems(status),
+    ...((status.attention ?? []) as unknown[]).flatMap(attentionProblem),
+    ...providerProblems(status.providers ?? {}),
+  ];
+}
+
+/** A ready factory that does not write its heartbeat. */
+function heartbeatProblems(status: FactoryStatus): FactoryProblem[] {
+  return status.phase === "ready" && status.responsive === false
+    ? [{ key: "heartbeat", text: "The factory does not write its heartbeat." }]
+    : [];
+}
+
+/** One attention item: a `[key, { text, storyId? }]` pair or a `{ file, message }` issue. Other shapes give none. */
+function attentionProblem(item: unknown): FactoryProblem[] {
+  if (Array.isArray(item) && typeof item[0] === "string" && typeof item[1]?.text === "string") {
+    const story = typeof item[1].storyId === "string" ? `${item[1].storyId}: ` : "";
+
+    return [{ key: `attention:${item[0]}`, text: `${story}${item[1].text}` }];
   }
-  for (const item of (status.attention ?? []) as unknown[]) {
-    if (Array.isArray(item) && typeof item[0] === "string" && typeof item[1]?.text === "string") {
-      const story = typeof item[1].storyId === "string" ? `${item[1].storyId}: ` : "";
-      problems.push({ key: `attention:${item[0]}`, text: `${story}${item[1].text}` });
-    } else if (item && typeof item === "object" && "file" in item && "message" in item) {
-      const issue = item as { file: unknown; message: unknown };
-      problems.push({ key: `issue:${String(issue.file)}`, text: `${String(issue.file)}: ${String(issue.message)}` });
-    }
+
+  if (item && typeof item === "object" && "file" in item && "message" in item) {
+    const issue = item as { file: unknown; message: unknown };
+
+    return [{ key: `issue:${String(issue.file)}`, text: `${String(issue.file)}: ${String(issue.message)}` }];
   }
-  for (const [provider, pause] of Object.entries(status.providers ?? {})) {
+
+  return [];
+}
+
+/** The providers that the factory paused, with the time of the next try. */
+function providerProblems(providers: ProviderPauses): FactoryProblem[] {
+  return Object.entries(providers).map(([provider, pause]) => {
     const until = pause.retryAt ? ` until ${formatDateTime(pause.retryAt)}` : "";
-    problems.push({ key: `provider:${provider}`, text: `Provider ${provider} is paused (${pause.reason})${until}.` });
-  }
-  return problems;
+
+    return { key: `provider:${provider}`, text: `Provider ${provider} is paused (${pause.reason})${until}.` };
+  });
 }
 
 /** The reason why the factory has not started a worker for a queued Story, in words for people. */
 export function queueReason(entry: FactoryQueueEntry): string {
   const at = entry.retryAt ? ` until ${formatDateTime(entry.retryAt)}` : "";
+
   if (entry.action !== "skip") {
     return "waiting for the supervisor";
   }
+
   if (entry.reason === "worker limit") {
     return "waiting for a worker slot";
   }
+
   if (entry.reason === "launch delay" || entry.reason === "retry delay") {
     return `waiting${at} (${entry.reason})`;
   }
+
   return `${entry.reason}${at}`;
 }
 
