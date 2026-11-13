@@ -2,7 +2,6 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { Conversation, ConversationPage, openConversation } from "../../../services/conversation/conversation.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { writeRef } from "../../hooks/index.js";
-import { loadMarkdownRenderer, type MarkdownRenderer } from "../markdown.js";
 import type { LatestView } from "./conversation-reads.js";
 import {
   type ConversationWindow,
@@ -25,22 +24,6 @@ export interface OpenEnv {
   readonly setOffset: Dispatch<SetStateAction<number | "end">>;
   /** Counts the opened conversations, so that the watch starts again for each one. */
   readonly setOpened: Dispatch<SetStateAction<number>>;
-}
-
-/** Loads the Markdown renderer once, if it is not loaded. Gives the cleanup that drops a late result. */
-export function loadRenderer(
-  render: MarkdownRenderer | undefined,
-  setRender: Dispatch<SetStateAction<MarkdownRenderer | undefined>>,
-): (() => void) | undefined {
-  if (render) {
-    return undefined;
-  }
-
-  const live = new AbortController();
-
-  void loadMarkdownRenderer().then((loaded) => live.signal.aborted || setRender(() => loaded));
-
-  return () => live.abort();
 }
 
 async function readFirstPage(env: OpenEnv, signal: AbortSignal): Promise<void> {

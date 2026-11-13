@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Conversation, ConversationEntry, openConversation } from "../../../services/conversation/conversation.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { useLatest, useToast } from "../../hooks/index.js";
-import { markdownRenderer } from "../markdown.js";
+import { useMarkdownRenderer } from "../use-markdown-renderer.js";
 import type { ReadEnv } from "./conversation-reads.js";
-import { loadRenderer, openWindow, watchWindow } from "./conversation-session.js";
+import { openWindow, watchWindow } from "./conversation-session.js";
 import { type ConversationWindow, type EntryBlock, LOADING } from "./conversation-window.js";
 import { cachedLines, type LineCache, pruneLines } from "./line-cache.js";
 
@@ -30,7 +30,7 @@ export function useConversationWindow({ ctx, threadId, live, width, open }: Conv
   const conversation = useRef<Conversation | undefined>(undefined);
   const reading = useRef(false);
   const latest = useLatest({ view, follow, offset });
-  const [render, setRender] = useState(markdownRenderer);
+  const render = useMarkdownRenderer();
   const cache = useRef<LineCache>(new Map());
 
   const linesOf = useCallback((entry: ConversationEntry) => cachedLines(cache, entry, width, render), [width, render]);
@@ -48,7 +48,6 @@ export function useConversationWindow({ ctx, threadId, live, width, open }: Conv
     rowsOf: (entries) => entries.reduce((n, entry) => n + linesOf(entry).length, 0),
   };
 
-  useEffect(() => loadRenderer(render, setRender), [render]);
   useEffect(
     () =>
       pruneLines(
