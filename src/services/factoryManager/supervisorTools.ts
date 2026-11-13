@@ -1,29 +1,20 @@
-import { Type } from "typebox";
+import { z } from "zod";
 import { getThreadLog } from "../conversation/conversation.js";
 import { ConflictError } from "../errors/errors.js";
 import { releaseStory } from "../factoryPolicy/factoryPolicy.js";
 import { updateFactoryState } from "../factoryState/factoryState.js";
 import { getStory } from "../story/story.js";
 import { getThread } from "../thread/thread.js";
+import { toolParameters } from "../toolSchema/toolSchema.js";
 import { changeThread, getState, type Manager, notify, serial, setState } from "./managerState.js";
 import { buildSnapshot, classifiedStages, persistStatus } from "./managerStatus.js";
 import { withEntry, withoutEntry } from "./store.js";
 import { type ReserveWorkerInput, reserveWorker } from "./workerReservation.js";
 
-const MODEL_CHOICE_SCHEMA = Type.Object({
-  provider: Type.String(),
-  modelId: Type.String(),
-  thinkingLevel: Type.Optional(
-    Type.Union([
-      Type.Literal("off"),
-      Type.Literal("minimal"),
-      Type.Literal("low"),
-      Type.Literal("medium"),
-      Type.Literal("high"),
-      Type.Literal("xhigh"),
-      Type.Literal("max"),
-    ]),
-  ),
+const MODEL_CHOICE_SCHEMA = z.object({
+  provider: z.string(),
+  modelId: z.string(),
+  thinkingLevel: z.enum(["off", "minimal", "low", "medium", "high", "xhigh", "max"]).optional(),
 });
 
 interface HoldInput {
@@ -48,10 +39,12 @@ export function createSupervisorTools(manager: Manager) {
       name: "factory_snapshot",
       label: "Factory snapshot",
       description: "Read bounded policy decisions and worker metadata",
-      parameters: Type.Object({
-        cursor: Type.Optional(Type.Integer({ minimum: 0 })),
-        limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 12 })),
-      }),
+      parameters: toolParameters(
+        z.object({
+          cursor: z.int().min(0).optional(),
+          limit: z.int().min(1).max(12).optional(),
+        }),
+      ),
       execute: async (_id: string, args: { cursor?: number; limit?: number }) =>
         textResult(await serial(manager, () => buildSnapshot(manager, args.cursor, args.limit))),
     },
@@ -59,24 +52,28 @@ export function createSupervisorTools(manager: Manager) {
       name: "start_worker",
       label: "Start worker",
       description: "Reserve an eligible worker",
-      parameters: Type.Object({
-        storyId: Type.String(),
-        stage: Type.String(),
-        requestId: Type.String({ minLength: 1, maxLength: 128 }),
-        resumeThreadId: Type.Optional(Type.String()),
-        model: Type.Optional(MODEL_CHOICE_SCHEMA),
-      }),
+      parameters: toolParameters(
+        z.object({
+          storyId: z.string(),
+          stage: z.string(),
+          requestId: z.string().min(1).max(128),
+          resumeThreadId: z.string().optional(),
+          model: MODEL_CHOICE_SCHEMA.optional(),
+        }),
+      ),
       execute: async (_id: string, args: ReserveWorkerInput) => textResult(await reserveWorker(manager, args)),
     },
     {
       name: "inspect_worker",
       label: "Inspect worker",
       description: "Read metadata; request bounded history explicitly",
-      parameters: Type.Object({
-        threadId: Type.String(),
-        history: Type.Optional(Type.Boolean()),
-        limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 20 })),
-      }),
+      parameters: toolParameters(
+        z.object({
+          threadId: z.string(),
+          history: z.boolean().optional(),
+          limit: z.int().min(1).max(20).optional(),
+        }),
+      ),
       execute: async (_id: string, args: { threadId: string; history?: boolean; limit?: number }) =>
         textResult(await inspectWorker(manager, args)),
     },
@@ -84,7 +81,7 @@ export function createSupervisorTools(manager: Manager) {
       name: "story_get",
       label: "Read Story",
       description: "Read a bounded current Story",
-      parameters: Type.Object({ storyId: Type.String() }),
+      parameters: toolParameters(z.object({ storyId: z.string() })),
       execute: async (_id: string, args: { storyId: string }) =>
         textResult(JSON.stringify(await getStory({ id: args.storyId }, manager.ctx)).slice(0, 8192)),
     },
@@ -92,18 +89,20 @@ export function createSupervisorTools(manager: Manager) {
       name: "stage_get",
       label: "Read Stage",
       description: "Read the prompt and its current hash",
-      parameters: Type.Object({ stage: Type.String() }),
+      parameters: toolParameters(z.object({ stage: z.string() })),
       execute: async (_id: string, args: { stage: string }) => textResult(await readStage(manager, args.stage)),
     },
     {
       name: "classify_stage",
       label: "Classify Stage",
       description: "Classify only the current prompt hash",
-      parameters: Type.Object({
-        stage: Type.String(),
-        promptHash: Type.String(),
-        class: Type.Union([Type.Literal("work"), Type.Literal("hold"), Type.Literal("invalid")]),
-      }),
+      parameters: toolParameters(
+        z.object({
+          stage: z.string(),
+          promptHash: z.string(),
+          class: z.enum(["work", "hold", "invalid"]),
+        }),
+      ),
       execute: async (_id: string, args: { stage: string; promptHash: string; class: string }) =>
         textResult(await serial(manager, () => classifyStage(manager, args))),
     },
@@ -111,7 +110,7 @@ export function createSupervisorTools(manager: Manager) {
       name: "release_story",
       label: "Release Story",
       description: "Release policy parking and holds",
-      parameters: Type.Object({ storyId: Type.String() }),
+      parameters: toolParameters(z.object({ storyId: z.string() })),
       execute: async (_id: string, args: { storyId: string }) =>
         textResult(await serial(manager, () => releaseHeldStory(manager, args.storyId))),
     },
@@ -119,7 +118,7 @@ export function createSupervisorTools(manager: Manager) {
       name: "save_note",
       label: "Save note",
       description: "Save a bounded operational note",
-      parameters: Type.Object({ text: Type.String({ minLength: 1, maxLength: 1000 }) }),
+      parameters: toolParameters(z.object({ text: z.string().min(1).max(1000) })),
       execute: async (_id: string, args: { text: string }) =>
         textResult(await serial(manager, () => saveNote(manager, args.text))),
     },
@@ -127,19 +126,21 @@ export function createSupervisorTools(manager: Manager) {
       name: "clear_notes",
       label: "Clear notes",
       description: "Clear operational notes",
-      parameters: Type.Object({}),
+      parameters: toolParameters(z.object({})),
       execute: async () => textResult(await serial(manager, () => clearNotes(manager))),
     },
     {
       name: "hold_candidate",
       label: "Hold candidate",
       description: "Hold a current Story for at most thirty minutes",
-      parameters: Type.Object({
-        storyId: Type.String(),
-        stage: Type.String(),
-        reason: Type.String({ maxLength: 500 }),
-        reconsiderAt: Type.String(),
-      }),
+      parameters: toolParameters(
+        z.object({
+          storyId: z.string(),
+          stage: z.string(),
+          reason: z.string().max(500),
+          reconsiderAt: z.string(),
+        }),
+      ),
       execute: async (_id: string, args: HoldInput) =>
         textResult(await serial(manager, () => holdCandidate(manager, args))),
     },
@@ -147,11 +148,13 @@ export function createSupervisorTools(manager: Manager) {
       name: "raise_attention",
       label: "Raise attention",
       description: "Record a bounded problem and continue other work",
-      parameters: Type.Object({
-        key: Type.String({ maxLength: 128 }),
-        text: Type.String({ maxLength: 1000 }),
-        storyId: Type.Optional(Type.String()),
-      }),
+      parameters: toolParameters(
+        z.object({
+          key: z.string().max(128),
+          text: z.string().max(1000),
+          storyId: z.string().optional(),
+        }),
+      ),
       execute: async (_id: string, args: { key: string; text: string; storyId?: string }) =>
         textResult(await serial(manager, () => raiseAttention(manager, args))),
     },
@@ -159,11 +162,13 @@ export function createSupervisorTools(manager: Manager) {
       name: "stop_worker",
       label: "Stop worker",
       description: "Interrupt only the expected active run",
-      parameters: Type.Object({
-        threadId: Type.String(),
-        expectedRunId: Type.String(),
-        reason: Type.String({ maxLength: 500 }),
-      }),
+      parameters: toolParameters(
+        z.object({
+          threadId: z.string(),
+          expectedRunId: z.string(),
+          reason: z.string().max(500),
+        }),
+      ),
       execute: async (_id: string, args: { threadId: string; expectedRunId: string; reason: string }) =>
         textResult(await stopWorker(manager, args.threadId, args.expectedRunId)),
     },

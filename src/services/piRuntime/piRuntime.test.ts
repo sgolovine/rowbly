@@ -2,9 +2,10 @@ import { mkdir, readFile } from "node:fs/promises";
 import net from "node:net";
 import { join } from "node:path";
 import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialStore } from "@earendil-works/pi-ai";
-import { Type } from "typebox";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { useTempDir } from "../testProject/testProject.js";
+import { toolParameters } from "../toolSchema/toolSchema.js";
 import { createPiSession, loadPi, type PiSession } from "./piRuntime.js";
 
 describe("Pi runtime", () => {
@@ -57,8 +58,8 @@ describe("Pi runtime", () => {
           name: "echo_local",
           label: "Echo",
           description: "Echo local text",
-          parameters: Type.Object({ text: Type.String() }),
-          async execute(_id, args) {
+          parameters: toolParameters(z.object({ text: z.string() })),
+          async execute(_id, args: { text: string }) {
             return { content: [{ type: "text", text: args.text }], details: {} };
           },
         }),
