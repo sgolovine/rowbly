@@ -4,10 +4,62 @@ import type { Stage } from "../../../../services/stage/stage.js";
 import { deleteStory, type Story, updateStory } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
-import { useToast } from "../../../hooks/index.js";
+import { type ToastStore, useToast } from "../../../hooks/index.js";
 import { deleteStoryMessage } from "../delete-story-message.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 import { StoryModal } from "../story-modal/index.js";
+import { toastInfo } from "../toast-info.js";
+
+/** The environment of the save and the delete of the Story. */
+interface EditStoryEnv {
+  readonly ctx: ServiceContext;
+  readonly story: Story;
+  readonly customFields: readonly CustomField[];
+  readonly toast: ToastStore;
+  readonly onSaved: (story: Story) => void;
+  readonly onDeleted: (id: string) => void;
+}
+
+/** Saves the values of the form and the pasted images to the Story. */
+async function saveStory(env: EditStoryEnv, values: FormValues, attachments?: readonly PendingImage[]): Promise<void> {
+  const saved = await updateStory(
+    {
+      attachments,
+      id: env.story.id,
+      title: String(values.title ?? ""),
+      stage: typeof values.stage === "string" ? values.stage : undefined,
+      description: String(values.description ?? ""),
+      fields: customFieldInput(env.customFields, values),
+    },
+    env.ctx,
+  );
+
+  toastInfo(env.toast, `Saved ${saved.id}`);
+  env.onSaved(saved);
+}
+
+/** Deletes the Story, and shows a failure as a toast. */
+function removeStory(env: EditStoryEnv): Promise<void> {
+  return deleteStory({ id: env.story.id }, env.ctx).then(
+    ({ id }) => storyDeleted(env, id),
+    (err: unknown) => env.toast.error(err),
+  );
+}
+
+function storyDeleted(env: EditStoryEnv, id: string): void {
+  toastInfo(env.toast, `Deleted ${id}`);
+  env.onDeleted(id);
+}
+
+/** The values of the form: the fields of the Story and its custom field values. */
+function initialValues(story: Story, customFields: readonly CustomField[]): FormValues {
+  return {
+    title: story.title,
+    stage: story.stage,
+    description: story.description,
+    ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, story.fields[f.key] ?? null)])),
+  };
+}
 
 /**
  * Edits the Story in a screen Modal. General has the Story fields, and Attachments has the saved PNG images.
@@ -35,46 +87,26 @@ export function EditStoryModal({
   onClose(): void;
 }) {
   const toast = useToast();
-  const submit = async (values: FormValues, attachments?: readonly PendingImage[]) => {
-    const saved = await updateStory(
-      {
-        attachments,
-        id: story.id,
-        title: String(values.title ?? ""),
-        stage: typeof values.stage === "string" ? values.stage : undefined,
-        description: String(values.description ?? ""),
-        fields: customFieldInput(customFields, values),
-      },
-      ctx,
-    );
-    toast.push("info", `Saved ${saved.id}`);
-    onSaved(saved);
-  };
-  const remove = () =>
-    deleteStory({ id: story.id }, ctx).then(
-      ({ id }) => {
-        toast.push("info", `Deleted ${id}`);
-        onDeleted(id);
-      },
-      (err: unknown) => toast.error(err),
-    );
-  const form = {
-    title: `Edit ${story.id}`,
-    fields: storyFormFields(stages, customFields),
-    initialValues: {
-      title: story.title,
-      stage: story.stage,
-      description: story.description,
-      ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, story.fields[f.key] ?? null)])),
-    },
-    onSubmit: submit,
-    onClose,
-    onDelete: {
-      title: `Delete Story › ${story.id}`,
-      message: deleteStoryMessage(story),
-      onConfirm: remove,
-    },
-  };
+
+  const env: EditStoryEnv = { ctx, story, customFields, toast, onSaved, onDeleted };
   const stageNames = Object.fromEntries(stages.map((stage) => [stage.key, stage.label]));
-  return <StoryModal ctx={ctx} storyId={story.id} stages={stageNames} specs={specs} {...form} />;
+
+  return (
+    <StoryModal
+      ctx={ctx}
+      storyId={story.id}
+      stages={stageNames}
+      specs={specs}
+      title={`Edit ${story.id}`}
+      fields={storyFormFields(stages, customFields)}
+      initialValues={initialValues(story, customFields)}
+      onSubmit={(values, attachments) => saveStory(env, values, attachments)}
+      onClose={onClose}
+      onDelete={{
+        title: `Delete Story › ${story.id}`,
+        message: deleteStoryMessage(story),
+        onConfirm: () => removeStory(env),
+      }}
+    />
+  );
 }

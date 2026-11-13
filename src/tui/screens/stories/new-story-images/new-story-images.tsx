@@ -12,8 +12,11 @@ export function NewStoryImages({
   onPaste(value: ReturnType<typeof useStoryPaste>): void;
 }) {
   const paste = useStoryPaste("new Story", undefined, enabled);
+
+  // No dependencies: the parent reads the paste state of the last render.
   useEffect(() => {
     onPaste(paste);
   });
+
   return paste.summary ? <Text color={theme.inkMuted}>{paste.summary}</Text> : null;
 }

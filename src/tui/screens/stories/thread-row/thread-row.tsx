@@ -36,6 +36,7 @@ export function ThreadRow({
   const outcome = threadOutcome(thread);
   // `ink-faint` has too little contrast on the `selection` fill.
   const secondary = selected ? theme.inkMuted : theme.inkFaint;
+
   return (
     <SelectionRow selected={selected} active={clickable} onClick={onClick}>
       <Box paddingRight={1}>
