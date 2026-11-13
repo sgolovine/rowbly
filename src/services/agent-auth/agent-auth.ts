@@ -34,6 +34,7 @@ export async function listProviders(runtime: AuthRuntime) {
 export async function getAuthStatus(runtime: AuthRuntime) {
   const credentials = await runtime.listCredentials();
   const available = (await Promise.all(runtime.getProviders().map((p) => runtime.getAvailable(p.id)))).flat();
+
   return (await listProviders(runtime)).map((p) => ({
     ...p,
     configured: available.some((m) => m.provider === p.id),

@@ -8,6 +8,7 @@ export type PiLoader = () => Promise<PiSdk>;
 /** Loads the SDK only for authentication or execution. */
 export const loadPi: PiLoader = () => import("@earendil-works/pi-coding-agent");
 
+/** A Pi prompt that ended with an error, an abort or a busy supervisor. */
 export class PiPromptError extends RowblyError {
   readonly code = "PI_PROMPT";
 }
