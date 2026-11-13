@@ -11,6 +11,7 @@ export * from "./stage-heading-row/index.js";
 export * from "./story-confirm-dialogs/index.js";
 export * from "./story-general-tab/index.js";
 export * from "./story-list/index.js";
+export * from "./story-list-item/index.js";
 export { rowStage, stageRowId, storyListRows } from "./story-list-rows.js";
 export * from "./story-modal/index.js";
 export * from "./story-modal-body/index.js";
