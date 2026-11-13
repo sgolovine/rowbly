@@ -122,14 +122,18 @@ export function StoryModalBody({
     { isActive: idle },
   );
 
+  const tabHints = attachmentTab ? attachmentHints : threadsTab ? threadHints : specHints;
+  // The `esc` of the tab or of the Modal goes last, where a narrow hint strip keeps it.
+  const tabEsc = tabHints.at(-1)?.key === "esc" ? tabHints.at(-1) : undefined;
+  const esc = tabEsc ?? (tabOwnsKeys ? undefined : { key: "esc", description: "close" });
   const hints: readonly KeyHint[] = general
     ? [{ key: "ctrl+d", description: "delete" }]
     : [
-        ...(attachmentTab ? attachmentHints : threadsTab ? threadHints : specHints),
+        ...(tabEsc ? tabHints.slice(0, -1) : tabHints),
         { key: "ctrl+s", description: "save" },
         IMAGE_PASTE_HINT,
         { key: "shift+tab", description: "next tab", secondary: true },
-        ...(tabOwnsKeys ? [] : [{ key: "esc", description: "close" }]),
+        ...(esc ? [esc] : []),
       ];
   const hintsKey = JSON.stringify(hints);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.

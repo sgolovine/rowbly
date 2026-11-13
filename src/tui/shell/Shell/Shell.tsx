@@ -65,7 +65,7 @@ type Overlay =
   | { kind: "finder" }
   | { kind: "projects" }
   | { kind: "help" }
-  | { kind: "settings" }
+  | { kind: "settings"; section?: string }
   | { kind: "newStory" }
   | { kind: "editStory"; story: Story }
   | { kind: "deleteStory"; story: Story }
@@ -555,7 +555,13 @@ export function Shell({
               />
             )}
             {board && overlay?.kind === "settings" && (
-              <SettingsModal ctx={ctx} projectName={projectName} onChange={reload} onClose={close} />
+              <SettingsModal
+                ctx={ctx}
+                projectName={projectName}
+                section={overlay.section}
+                onChange={reload}
+                onClose={close}
+              />
             )}
             {board && overlay?.kind === "factory" && (
               <FactoryModal
@@ -564,6 +570,7 @@ export function Shell({
                 stages={Object.fromEntries(stages.map((s) => [s.key, s.label]))}
                 launch={launch}
                 onClose={close}
+                onAiSettings={() => setOverlay({ kind: "settings", section: "ai" })}
               />
             )}
             {overlay?.kind === "projects" && (

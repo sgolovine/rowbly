@@ -35,7 +35,7 @@ export function sortThreads(threads: readonly ThreadRecord[]): ThreadRecord[] {
 export type StageNames = Readonly<Record<string, string>>;
 
 /** The Stage of a thread by its name, for example `In Review`. */
-export function threadStage(thread: ThreadRecord, stages: StageNames = {}): string {
+function threadStage(thread: ThreadRecord, stages: StageNames = {}): string {
   return thread.stage ? (stages[thread.stage] ?? thread.stage) : "—";
 }
 

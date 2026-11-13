@@ -21,6 +21,15 @@ function Controlled({ initial = "", onChange, ...props }: Partial<TextInputProps
 }
 
 describe("TextInput", () => {
+  it("shows a dot for each character of a masked value, and reports the real text", async () => {
+    const onChange = vi.fn();
+    const tui = await renderTui(<Controlled mask onChange={onChange} />);
+    await tui.type("sk-123");
+    expect(tui.frame()).not.toContain("sk-123");
+    expect(tui.frame()).toContain("••••••");
+    expect(onChange).toHaveBeenLastCalledWith("sk-123");
+  });
+
   it("shows the placeholder while empty", async () => {
     const tui = await renderTui(<Controlled placeholder="Story title" focus={false} />);
     expect(tui.frame()).toContain("Story title");

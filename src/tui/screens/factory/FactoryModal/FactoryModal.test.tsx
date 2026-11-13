@@ -3,7 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
 import { useTestProject } from "../../../../services/testProject/testProject.js";
-import { renderTui, settle } from "../../../testing/index.js";
+import { createThread } from "../../../../services/thread/thread.js";
+import { keys, renderTui, settle } from "../../../testing/index.js";
 import { FactoryModal } from "./FactoryModal.js";
 
 vi.mock("../../../../services/factory/factory.js", async (original) => ({
@@ -101,5 +102,50 @@ describe("FactoryModal", () => {
     );
     await tui.click("Stop");
     expect(tui.frame()).toContain("Stop the factory?");
+  });
+
+  it("shows the supervisor conversation with enter, goes back with esc, and opens AI settings with a", async () => {
+    const supervisor = await createThread(
+      { role: "supervisor", cwd: project.paths.root, ownerToken: "t" },
+      project.ctx,
+    );
+    const onAiSettings = vi.fn();
+    const tui = await renderTui(
+      <FactoryModal
+        ctx={project.ctx}
+        status={{ ...running, supervisorThreadId: supervisor.id }}
+        launch={launch}
+        onClose={() => {}}
+        onAiSettings={onAiSettings}
+        checkProvider={async () => true}
+      />,
+    );
+    await settle(50);
+    await tui.press(keys.enter);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Factory › Supervisor");
+      expect(tui.frame()).toContain("No conversation yet");
+    });
+    await tui.press(keys.escape);
+    expect(tui.frame()).toContain("2 running · 1 pending");
+    await tui.press("a");
+    expect(onAiSettings).toHaveBeenCalledOnce();
+  });
+
+  it("asks a stopped factory without a provider to sign in with a", async () => {
+    const tui = await renderTui(
+      <FactoryModal
+        ctx={project.ctx}
+        status={{ version: 1, phase: "stopped" }}
+        launch={launch}
+        onClose={() => {}}
+        onAiSettings={() => {}}
+        checkProvider={async () => false}
+      />,
+    );
+    await settle(50);
+    await tui.press();
+    expect(tui.frame()).toContain("Press a to sign in");
   });
 });

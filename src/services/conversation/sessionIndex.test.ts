@@ -114,4 +114,33 @@ describe("SessionIndex", () => {
     expect(JSON.stringify(page)).not.toContain("secret-signature");
     expect(JSON.stringify(page)).not.toContain("base64-payload");
   });
+  it("pages forward from a cursor on the active branch only", async () => {
+    const file = join(dir.path, "forward.jsonl");
+    await writeFile(
+      file,
+      lines(
+        header,
+        entry("a", null),
+        entry("b", "a"),
+        entry("side", "b"),
+        entry("c", "b"),
+        entry("d", "c"),
+        entry("e", "d"),
+      ),
+    );
+    const index = new SessionIndex(file);
+    const first = await index.page({ after: "a", limit: 2 });
+    expect(first.entries.map((e) => e.id)).toEqual(["b", "c"]);
+    expect(first.nextAfter).toBe("c");
+    expect(first.nextBefore).toBe("b");
+    const next = await index.page({ after: first.nextAfter, limit: 2 });
+    expect(next.entries.map((e) => e.id)).toEqual(["d", "e"]);
+    expect(next.nextAfter).toBeNull();
+    expect((await index.page({ after: "e" })).entries).toEqual([]);
+    await expect(index.page({ after: "side" })).rejects.toThrow("no longer available");
+    await expect(index.page({ after: "a", before: "e" })).rejects.toThrow("one conversation cursor");
+    const older = await index.page({ before: "c", limit: 1 });
+    expect(older.entries.map((e) => e.id)).toEqual(["b"]);
+    expect(older.nextBefore).toBe("b");
+  });
 });

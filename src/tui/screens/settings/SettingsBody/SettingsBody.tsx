@@ -35,12 +35,15 @@ const PANEL_GAP = 1;
 export function SettingsBody({
   ctx,
   groups,
+  section: initialSection,
   onChange,
   onClose,
   onHints,
 }: {
   ctx: ServiceContext;
   groups: readonly SettingsGroup[];
+  /** The id of a section that opens with the focus, for example `ai` from the Factory controls. */
+  section?: string;
   onChange(): void;
   onClose(): void;
   /** The keys of the region in focus, for the hint strip of the Modal. */
@@ -51,8 +54,9 @@ export function SettingsBody({
   const covered = useCovered();
   const layout = useLayout();
   const sections = groups.flatMap((group) => group.sections);
-  const [selectedId, setSelectedId] = useState(sections[0]?.id);
-  const [focus, setFocus] = useState<Focus>("nav");
+  const opened = sections.some((s) => s.id === initialSection);
+  const [selectedId, setSelectedId] = useState(opened ? initialSection : sections[0]?.id);
+  const [focus, setFocus] = useState<Focus>(opened ? "section" : "nav");
   const [sectionHints, setSectionHints] = useState<readonly KeyHint[]>([]);
   // The section declares its keys as a screen does; they come here, not to the footer of the shell.
   const childShell = useMemo(() => sectionShell(shell, setSectionHints), [shell]);

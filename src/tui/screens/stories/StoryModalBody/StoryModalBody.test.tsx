@@ -6,6 +6,7 @@ import { updateProject } from "../../../../services/project/project.js";
 import { createSpec } from "../../../../services/spec/spec.js";
 import { createStory } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/testProject/testProject.js";
+import type { KeyHint } from "../../../keymap.js";
 import { keys, renderTui } from "../../../testing/index.js";
 import { StoryModalBody, type StoryModalConfirm } from "./StoryModalBody.js";
 
@@ -22,7 +23,15 @@ interface Calls {
 }
 
 /** Holds the confirmation state, as `StoryModal` does. */
-function Host({ cwd, calls }: { cwd: string; calls: Calls }) {
+function Host({
+  cwd,
+  calls,
+  onHints = () => {},
+}: {
+  cwd: string;
+  calls: Calls;
+  onHints?(hints: readonly KeyHint[]): void;
+}) {
   const [confirming, setConfirming] = useState<StoryModalConfirm>(null);
   return (
     <StoryModalBody
@@ -36,7 +45,7 @@ function Host({ cwd, calls }: { cwd: string; calls: Calls }) {
       onDelete={{ title: "Delete Story", message: "Delete it?", onConfirm: calls.confirmDelete }}
       confirming={confirming}
       onConfirming={setConfirming}
-      onHints={() => {}}
+      onHints={onHints}
     />
   );
 }
@@ -149,5 +158,26 @@ describe("StoryModalBody", () => {
     await tui.click("Attachments");
     expect(tui.frame()).toContain("Attachments");
     expect(tui.frame()).not.toContain("No Threads");
+  });
+
+  it("puts the esc of a tab region last in the hints, where a narrow strip keeps it", async () => {
+    let hints: readonly KeyHint[] = [];
+    const calls = { submit: vi.fn(), close: vi.fn(), requestClose: vi.fn(), confirmDelete: vi.fn() };
+    const tui = await renderTui(
+      <Host
+        cwd={project.ctx.cwd as string}
+        calls={calls}
+        onHints={(next) => {
+          hints = next;
+        }}
+      />,
+    );
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Specs 1");
+    });
+    await tui.press(keys.shiftTab, keys.enter);
+    await vi.waitFor(() => expect(hints.at(-1)).toEqual({ key: "esc", description: "back to specs" }));
+    expect(hints.filter((hint) => hint.key === "esc")).toHaveLength(1);
   });
 });

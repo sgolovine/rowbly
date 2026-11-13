@@ -10,8 +10,16 @@ import {
 import { getFactorySettings } from "../../../../services/factorySettings/factorySettings.js";
 import { getThread } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { Button, ConfirmDialog, DetailView, Modal } from "../../../components/index.js";
-import { useAsync, useEscape, useIsActive, useKeyCapture, useToast } from "../../../hooks/index.js";
+import {
+  Button,
+  ConfirmDialog,
+  ConversationView,
+  conversationKeys,
+  DetailView,
+  Modal,
+  modalSize,
+} from "../../../components/index.js";
+import { useAsync, useEscape, useIsActive, useKeyCapture, useLayout, useToast } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { formatDateTime, theme } from "../../../theme.js";
 import { factoryLive, factoryProblems, queueReason } from "../factoryStatus.js";
@@ -52,7 +60,8 @@ function section(title: string, rows: readonly { key: string; node: ReactNode }[
  * The Factory controls (`f`), in a generic Modal: the state of the factory, its supervisor and workers,
  * the problems that ask for attention and the queued Stories with the reason why they wait. `s` starts the
  * factory as a process of its own, and `x` asks before it stops the factory. The factory keeps running
- * when the TUI quits. `status` comes from the shell, which reads it again on each change.
+ * when the TUI quits. `enter` shows the conversation of the supervisor in the same Modal, and `esc` goes
+ * back. `a` opens the AI settings. `status` comes from the shell, which reads it again on each change.
  */
 export function FactoryModal({
   ctx,
@@ -60,6 +69,7 @@ export function FactoryModal({
   stages = {},
   launch,
   onClose,
+  onAiSettings,
   checkProvider = providerReady,
 }: {
   ctx: ServiceContext;
@@ -69,6 +79,8 @@ export function FactoryModal({
   /** How to start the factory process. Without it, the Modal cannot start the factory. */
   launch?: FactoryLaunch;
   onClose(): void;
+  /** Opens the AI section of Settings: providers, models and the worker limit. */
+  onAiSettings?(): void;
   /** Tells if an AI provider is ready. Tests replace it, so that they do not load Pi. */
   checkProvider?: () => Promise<boolean>;
 }) {
@@ -76,6 +88,8 @@ export function FactoryModal({
   const toast = useToast();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState<"start" | "stop" | null>(null);
+  const [inspect, setInspect] = useState(false);
+  const layout = useLayout();
   const working = useRef(false);
   const live = factoryLive(status);
   const supervisorId = live ? status?.supervisorThreadId : undefined;
@@ -88,7 +102,10 @@ export function FactoryModal({
   const provider = useAsync(async () => (live ? true : checkProvider().catch(() => true)), [live, checkProvider]);
   const canStart = !live && busy === null && launch !== undefined;
   const canStop = live && status?.phase !== "stopping" && busy === null;
-  const idle = active && !confirm;
+  const canInspect = supervisorId !== undefined;
+  // A factory that stops while its supervisor shows goes back to the details.
+  const inspecting = inspect && canInspect;
+  const idle = active && !confirm && !inspecting;
 
   const run = async (kind: "start" | "stop") => {
     if (working.current) return;
@@ -110,11 +127,14 @@ export function FactoryModal({
 
   useKeyCapture(active, { text: false, escape: true });
   useEscape(idle, onClose);
+  useEscape(active && inspecting, () => setInspect(false));
   useInput(
     (input, key) => {
       if (key.ctrl || key.meta) return;
       if (input === "s" && canStart) void run("start");
       else if (input === "x" && canStop) setConfirm(true);
+      else if (key.return && canInspect) setInspect(true);
+      else if (input === "a" && onAiSettings) onAiSettings();
     },
     { isActive: idle },
   );
@@ -127,8 +147,30 @@ export function FactoryModal({
   const hints: KeyHint[] = [
     ...(canStart ? [{ key: "s", description: "start" }] : []),
     ...(canStop ? [{ key: "x", description: "stop" }] : []),
+    ...(canInspect ? [{ key: "enter", description: "supervisor" }] : []),
+    ...(onAiSettings ? [{ key: "a", description: "AI settings" }] : []),
     { key: "esc", description: "back" },
   ];
+  if (inspecting && supervisorId) {
+    // The layout here is the area around the Modal; the conversation fills the body of the Modal.
+    const body = modalSize(layout, { footer: true }).body;
+    return (
+      <Modal
+        title="Factory › Supervisor"
+        hints={[...conversationKeys(true), { key: "esc", description: "back" }]}
+        onClose={() => setInspect(false)}
+      >
+        <ConversationView
+          ctx={ctx}
+          threadId={supervisorId}
+          live
+          active={active}
+          width={body.width}
+          height={body.height}
+        />
+      </Modal>
+    );
+  }
   return (
     <Modal title="Factory" hints={hints} onClose={idle ? onClose : undefined}>
       <Box flexDirection="column" gap={1}>
@@ -161,7 +203,9 @@ export function FactoryModal({
         />
         {!live && provider.data === false && (
           <Text color={theme.inkMuted} wrap="wrap">
-            No AI provider is signed in. Sign in with rowbly auth login before you start the factory.
+            {onAiSettings
+              ? "No AI provider is signed in. Press a to sign in before you start the factory."
+              : "No AI provider is signed in. Sign in with rowbly auth login before you start the factory."}
           </Text>
         )}
         {!live && launch === undefined && (
@@ -206,6 +250,10 @@ export function FactoryModal({
               onClick={() => void run("start")}
             />
           )}
+          {canInspect && (
+            <Button label="Supervisor" keyName="enter" compact clickable={idle} onClick={() => setInspect(true)} />
+          )}
+          {onAiSettings && <Button label="AI settings" keyName="a" compact clickable={idle} onClick={onAiSettings} />}
           {live && (
             <Button
               label={busy === "stop" || status?.phase === "stopping" ? "Stop…" : "Stop"}

@@ -8,7 +8,12 @@ export type { ConversationEntry, ConversationPage } from "./sessionIndex.js";
 export type ConversationCursor = string;
 export interface Conversation {
   threadId: string;
-  read(input?: { before?: ConversationCursor | null; limit?: number; maxBytes?: number }): Promise<ConversationPage>;
+  read(input?: {
+    before?: ConversationCursor | null;
+    after?: ConversationCursor | null;
+    limit?: number;
+    maxBytes?: number;
+  }): Promise<ConversationPage>;
   watch(onChange: (page: ConversationPage) => void, onError?: (error: unknown) => void): () => void;
   close(): void;
 }

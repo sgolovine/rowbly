@@ -152,6 +152,21 @@ describe("Shell", () => {
       expect(tui.frame()).toContain("Threads");
     });
 
+    it("opens the AI settings from the Factory controls with a", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("f");
+      await settle(50);
+      await tui.press("a");
+      await settle(50);
+      await tui.press();
+      expect(tui.frame()).toContain("Rowbly › Settings");
+      expect(tui.frame()).toContain("╭─AI─");
+      expect(tui.frame()).toMatch(/Worker limit\s+4/);
+      expect(tui.frame()).toMatch(/▌ AI/);
+      expect(tui.frame()).not.toContain("Status");
+    });
+
     it("updates the counts of the header quietly when the factory writes its status", async () => {
       await createStory({ title: "First story" }, project.ctx);
       const tui = await open(project.ctx as { cwd: string });

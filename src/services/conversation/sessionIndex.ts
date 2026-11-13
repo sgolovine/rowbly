@@ -20,6 +20,8 @@ export interface ConversationEntry {
 export interface ConversationPage {
   entries: ConversationEntry[];
   nextBefore: string | null;
+  /** On a page read with `after`: the cursor for the next newer page, or `null` at the newest entry. */
+  nextAfter?: string | null;
   bytes: number;
   status: "ok" | "missing" | "unsupported";
   invalidLines: number;
@@ -271,8 +273,12 @@ export class SessionIndex {
     if (this.lineBytes <= MAX_ENTRY_BYTES) this.parts.push(Buffer.from(piece));
     else this.parts = [];
   }
+  /**
+   * Reads one page of the active branch, oldest entry first. Without a cursor, the page ends at the leaf.
+   * `before` reads the entries older than an entry. `after` reads the entries newer than an entry.
+   */
   async page(
-    input: { before?: string | null; limit?: number; maxBytes?: number; leaf?: string } = {},
+    input: { before?: string | null; after?: string | null; limit?: number; maxBytes?: number; leaf?: string } = {},
   ): Promise<ConversationPage> {
     await this.refresh();
     const limit = input.limit ?? 20,
@@ -294,23 +300,54 @@ export class SessionIndex {
       invalidLines: this.invalidLines,
     };
     if (this.status !== "ok") return page;
-    if (input.before && !this.byId.has(input.before))
-      throw new ValidationError("Conversation cursor is no longer available");
-    let id = input.before ? this.byId.get(input.before)?.parentId : (input.leaf ?? this.leaf);
-    const selected: EntryIndex[] = [],
-      seen = new Set<string>();
-    while (id && selected.length < limit) {
+    if (input.before && input.after) throw new ValidationError("Use one conversation cursor");
+    const cursor = input.before ?? input.after;
+    if (cursor && !this.byId.has(cursor)) throw new ValidationError("Conversation cursor is no longer available");
+    const seen = new Set<string>();
+    const step = (id: string) => {
       if (seen.has(id)) throw new ValidationError("Conversation branch has a cycle");
       seen.add(id);
       const meta = this.byId.get(id);
       if (!meta) throw new ValidationError("Conversation parent is missing");
-      if (page.bytes + meta.length > maxBytes && selected.length) break;
+      return meta;
+    };
+    // Newest entry first; the read below puts them in order.
+    const selected: EntryIndex[] = [];
+    const take = (meta: EntryIndex) => {
+      if (selected.length >= limit || (page.bytes + meta.length > maxBytes && selected.length)) return false;
       selected.push(meta);
       page.bytes += Math.min(meta.length, maxBytes);
-      id = meta.parentId;
-      if (meta.length > maxBytes) break;
+      return meta.length <= maxBytes;
+    };
+    if (input.after) {
+      // The index has no child links, so walk the branch from the leaf back to the cursor. Only metadata stays.
+      const newer: EntryIndex[] = [];
+      let id = input.leaf ?? this.leaf;
+      while (id && id !== input.after) {
+        const meta = step(id);
+        newer.push(meta);
+        id = meta.parentId;
+      }
+      if (id !== input.after) throw new ValidationError("Conversation cursor is no longer available");
+      let count = 0;
+      for (const meta of newer.reverse()) {
+        const more = take(meta);
+        if (selected.at(-1) === meta) count++;
+        if (!more) break;
+      }
+      selected.reverse();
+      page.nextAfter = count < newer.length ? (selected[0]?.id ?? null) : null;
+      page.nextBefore = selected.at(-1)?.id ?? null;
+    } else {
+      let id = input.before ? this.byId.get(input.before)?.parentId : (input.leaf ?? this.leaf);
+      while (id && selected.length < limit) {
+        const meta = step(id);
+        const more = take(meta);
+        if (selected.at(-1) === meta) id = meta.parentId;
+        if (!more) break;
+      }
+      page.nextBefore = id ? (selected.at(-1)?.id ?? null) : null;
     }
-    page.nextBefore = id ? (selected.at(-1)?.id ?? null) : null;
     await this.validatePath();
     const fd = await open(this.file, "r");
     try {

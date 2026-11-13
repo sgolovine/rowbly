@@ -1,5 +1,6 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as conversation from "../../../../services/conversation/conversation.js";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
 import { useTestProject } from "../../../../services/testProject/testProject.js";
@@ -13,6 +14,14 @@ vi.mock("../../../../services/factory/factory.js", async (original) => ({
   getFactoryStatus: vi.fn(async () => ({ version: 1, phase: "stopped" })),
   sendFactoryCommand: vi.fn(async () => ({ status: "completed" })),
 }));
+
+vi.mock("../../../../services/conversation/conversation.js", async (original) => {
+  const actual = await original<typeof import("../../../../services/conversation/conversation.js")>();
+  return { ...actual, openConversation: vi.fn(actual.openConversation) };
+});
+vi.mock("@earendil-works/pi-coding-agent", () => {
+  throw new Error("A peek must not load Pi");
+});
 
 afterEach(() => {
   cleanup();
@@ -152,7 +161,7 @@ describe("ThreadsTab", () => {
       await tui.press();
       expect(tui.frame()).not.toContain("▶ running");
     });
-    expect(tui.frame()).not.toContain("Loading");
+    expect(tui.frame()).not.toContain("Loading the threads");
   });
 
   it("says when the Story waits for a worker slot", async () => {
@@ -165,5 +174,24 @@ describe("ThreadsTab", () => {
     const { tui } = await open();
     await settle(20);
     expect(tui.frame()).toContain("Waiting for a worker slot");
+  });
+
+  it("opens the conversation of the selected thread only, and a peek sends no command", async () => {
+    const { tui, onEditing } = await open(120, 30);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("No conversation yet");
+    });
+    expect(conversation.openConversation).toHaveBeenCalledTimes(1);
+    expect(conversation.openConversation).toHaveBeenLastCalledWith(ids.pending, project.ctx);
+    // A fast move through the list opens only the thread where the selection stays.
+    await tui.press(keys.down, keys.down, keys.down);
+    await settle(300);
+    expect(conversation.openConversation).toHaveBeenCalledTimes(2);
+    expect(conversation.openConversation).toHaveBeenLastCalledWith(ids.cancelled, project.ctx);
+    await tui.press(keys.enter);
+    expect(onEditing).toHaveBeenLastCalledWith(true);
+    await tui.press(keys.pageUp, keys.end, keys.escape);
+    expect(factory.sendFactoryCommand).not.toHaveBeenCalled();
   });
 });
