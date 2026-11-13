@@ -39,14 +39,22 @@ const ACTIVE_STATUSES = new Set(["preparing", "running"]);
 const STATUSES = new Set([...ACTIVE_STATUSES, "completed", "failed", "blocked", "interrupted"]);
 /** The mandatory attempt fields after `story`. */
 const ATTEMPT_FIELDS = ["stage", "workerId", "status"] as const;
+
 const CONFLICT_MARKER = /^(<{7}|={7}|>{7})(\s|$)/m;
 
 type Attempt = Partial<Record<"story" | "stage" | "workerId" | "status" | "model", string>>;
 
+/** The attempts of a valid file, and the names of the parts that the file does not have. */
+interface CheckedState {
+  readonly attempts: Attempt[];
+  readonly missing: string[];
+}
+
 class InvalidState extends Error {}
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function checkString(value: unknown, path: string): void {
   if (value !== undefined && typeof value !== "string") {
@@ -54,87 +62,179 @@ function checkString(value: unknown, path: string): void {
   }
 }
 
-/** Checks the parts of the file that Rowbly uses. Throws `InvalidState`, and returns the missing parts. */
-function validate(state: unknown): { attempts: Attempt[]; missing: string[] } {
+function checkHeader(state: unknown): asserts state is Record<string, unknown> {
   if (!isObject(state)) {
     throw new InvalidState("The file is not a JSON object");
   }
+
   if (state.version === undefined) {
     throw new InvalidState("version is missing");
   }
+
   if (state.version !== 1) {
     throw new InvalidState(`Unsupported version ${JSON.stringify(state.version)}`);
   }
+
   if (state.updatedAt !== undefined && state.updatedAt !== null) {
     checkString(state.updatedAt, "updatedAt");
   }
-  const missing: string[] = [];
-  if (state.scan === undefined) {
-    missing.push("scan");
-  } else if (!isObject(state.scan)) {
+}
+
+/** Checks `scan`, and gives `["scan"]` when the file does not have it. */
+function checkScan(scan: unknown): string[] {
+  if (scan === undefined) {
+    return ["scan"];
+  }
+
+  if (!isObject(scan)) {
     throw new InvalidState("scan must be an object");
-  } else {
-    const { count, stages } = state.scan;
-    if (count !== undefined && typeof count !== "number") {
-      throw new InvalidState("scan.count must be a number");
+  }
+
+  const { count, stages } = scan;
+
+  if (count !== undefined && typeof count !== "number") {
+    throw new InvalidState("scan.count must be a number");
+  }
+
+  if (stages !== undefined) {
+    if (!isObject(stages)) {
+      throw new InvalidState("scan.stages must be an object");
     }
-    if (stages !== undefined) {
-      if (!isObject(stages)) {
-        throw new InvalidState("scan.stages must be an object");
-      }
-      for (const [id, stage] of Object.entries(stages)) {
-        checkString(stage, `scan.stages.${id}`);
-      }
+
+    for (const [id, stage] of Object.entries(stages)) {
+      checkString(stage, `scan.stages.${id}`);
     }
   }
+
+  return [];
+}
+
+/** Checks one attempt, and gives the names of its missing mandatory fields. */
+function checkAttempt(attempt: unknown, i: number): { attempt: Attempt; missing: string[] } {
+  const at = `attempts[${i}]`;
+
+  if (!isObject(attempt)) {
+    throw new InvalidState(`${at} must be an object`);
+  }
+
+  for (const key of ["story", "stage", "workerId", "status", "model"] as const) {
+    checkString(attempt[key], `${at}.${key}`);
+  }
+
+  if (typeof attempt.status === "string" && !STATUSES.has(attempt.status)) {
+    throw new InvalidState(`${at}.status "${attempt.status}" is not a known status`);
+  }
+
+  const missing = (["story", ...ATTEMPT_FIELDS] as const)
+    .filter((key) => attempt[key] === undefined)
+    .map((key) => `${at}.${key}`);
+
+  return { attempt: attempt as Attempt, missing };
+}
+
+/** Checks the parts of the file that Rowbly uses. Throws `InvalidState`, and returns the missing parts. */
+function validate(state: unknown): CheckedState {
+  checkHeader(state);
+
+  const scanMissing = checkScan(state.scan);
+
   if (state.attempts === undefined) {
-    missing.push("attempts");
-    return { attempts: [], missing };
+    return { attempts: [], missing: [...scanMissing, "attempts"] };
   }
+
   if (!Array.isArray(state.attempts)) {
     throw new InvalidState("attempts must be an array");
   }
-  const attempts = state.attempts.map((attempt: unknown, i): Attempt => {
-    const at = `attempts[${i}]`;
-    if (!isObject(attempt)) {
-      throw new InvalidState(`${at} must be an object`);
-    }
-    for (const key of ["story", "stage", "workerId", "status", "model"] as const) {
-      checkString(attempt[key], `${at}.${key}`);
-    }
-    if (typeof attempt.status === "string" && !STATUSES.has(attempt.status)) {
-      throw new InvalidState(`${at}.status "${attempt.status}" is not a known status`);
-    }
-    if (attempt.story === undefined) {
-      missing.push(`${at}.story`);
-    }
-    for (const key of ATTEMPT_FIELDS) {
-      if (attempt[key] === undefined) {
-        missing.push(`${at}.${key}`);
-      }
-    }
-    return attempt as Attempt;
-  });
-  return { attempts, missing };
+
+  const checked = state.attempts.map((attempt: unknown, i) => checkAttempt(attempt, i));
+
+  return {
+    attempts: checked.map((entry) => entry.attempt),
+    missing: [...scanMissing, ...checked.flatMap((entry) => entry.missing)],
+  };
 }
 
 /** The activity of one Story from its attempts, by the activity rules. */
 function storyActivity(story: { id: string; stage: string }, attempts: readonly Attempt[]): StoryActivity | undefined {
   // An attempt without a Stage can belong to the current Stage, so it counts here.
   const matched = attempts.filter((a) => a.story === story.id && (a.stage === undefined || a.stage === story.stage));
+
   if (matched.some((a) => ATTEMPT_FIELDS.some((key) => a[key] === undefined))) {
     return { kind: "unknown" };
   }
+
   const active = matched.flatMap((a, i) => (ACTIVE_STATUSES.has(a.status as string) ? [i] : []));
+
   if (active.length === 0) {
     return undefined;
   }
+
   // A later attempt replaces an active one, so the two disagree. Do not show the earlier worker.
   if (active.length > 1 || active[0] !== matched.length - 1) {
     return { kind: "conflict" };
   }
+
   const last = matched[matched.length - 1] as Attempt;
+
   return { kind: "active", label: last.model ?? (last.workerId as string) };
+}
+
+/** Gives the text of the file, or the activity for a file that is absent or cannot be read. */
+async function readStateText(path: string): Promise<string | FactoryActivity> {
+  try {
+    return await readFile(path, "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return { path, status: "missing", stories: {} };
+    }
+
+    return { path, status: "unavailable", message: (err as Error).message, stories: {} };
+  }
+}
+
+function parseState(text: string): unknown {
+  if (CONFLICT_MARKER.test(text)) {
+    throw new InvalidState("The file has Git conflict markers");
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new InvalidState(`The file is not valid JSON: ${(err as Error).message}`);
+  }
+}
+
+/** Gives the checked state, or the `unavailable` activity of a file that Rowbly cannot accept. */
+function checkText(path: string, text: string): CheckedState | FactoryActivity {
+  try {
+    return validate(parseState(text));
+  } catch (err) {
+    if (!(err instanceof InvalidState)) {
+      throw err;
+    }
+
+    return { path, status: "unavailable", message: err.message, stories: {} };
+  }
+}
+
+function activityEntry(story: { id: string; stage: string }, attempts: readonly Attempt[]): [string, StoryActivity][] {
+  const activity = storyActivity(story, attempts);
+
+  return activity ? [[story.id, activity]] : [];
+}
+
+function activities(
+  stories: readonly { id: string; stage: string }[],
+  attempts: readonly Attempt[],
+): Record<string, StoryActivity> {
+  return Object.fromEntries(stories.flatMap((story) => activityEntry(story, attempts)));
+}
+
+function missingMessage(missing: readonly string[]): string {
+  const [first, second, third, ...more] = missing;
+  const names = [first, second, third].filter(Boolean).join(", ") + (more.length ? ` and ${more.length} more` : "");
+
+  return `Missing ${names}`;
 }
 
 /**
@@ -147,44 +247,23 @@ export async function getFactoryActivity(
   ctx: ServiceContext = {},
 ): Promise<FactoryActivity> {
   const path = join((await findProject(ctx)).dir, "state.json");
-  let text: string;
-  try {
-    text = await readFile(path, "utf8");
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      return { path, status: "missing", stories: {} };
-    }
-    return { path, status: "unavailable", message: (err as Error).message, stories: {} };
+  const text = await readStateText(path);
+
+  if (typeof text !== "string") {
+    return text;
   }
-  let checked: ReturnType<typeof validate>;
-  try {
-    if (CONFLICT_MARKER.test(text)) {
-      throw new InvalidState("The file has Git conflict markers");
-    }
-    let state: unknown;
-    try {
-      state = JSON.parse(text);
-    } catch (err) {
-      throw new InvalidState(`The file is not valid JSON: ${(err as Error).message}`);
-    }
-    checked = validate(state);
-  } catch (err) {
-    if (!(err instanceof InvalidState)) {
-      throw err;
-    }
-    return { path, status: "unavailable", message: err.message, stories: {} };
+
+  const checked = checkText(path, text);
+
+  if ("status" in checked) {
+    return checked;
   }
-  const stories: Record<string, StoryActivity> = {};
-  for (const story of input.stories) {
-    const activity = storyActivity(story, checked.attempts);
-    if (activity) {
-      stories[story.id] = activity;
-    }
-  }
+
+  const stories = activities(input.stories, checked.attempts);
+
   if (checked.missing.length === 0) {
     return { path, status: "ok", stories };
   }
-  const [first, second, third, ...more] = checked.missing;
-  const names = [first, second, third].filter(Boolean).join(", ") + (more.length ? ` and ${more.length} more` : "");
-  return { path, status: "incomplete", message: `Missing ${names}`, stories };
+
+  return { path, status: "incomplete", message: missingMessage(checked.missing), stories };
 }

@@ -9,9 +9,11 @@ type StateModule = typeof import("../../../skills/factory/scripts/factory-state.
 /** Loads the shipped script by URL so its executable entry stays outside the CLI bundle. */
 export async function loadFactoryState(ctx: ServiceContext = {}): Promise<StateModule> {
   const { dir } = await bundledSkills(ctx);
+
   return import(pathToFileURL(join(dir, "factory", "scripts", "factory-state.mjs")).href);
 }
 
+/** Reads the v1 policy state of the Project without the state lock. */
 export async function readFactoryState(root: string, ctx: ServiceContext = {}): Promise<PolicyState> {
   return (await loadFactoryState(ctx)).readState(root);
 }
@@ -23,5 +25,6 @@ export async function updateFactoryState(
   ctx: ServiceContext = {},
 ): Promise<PolicyState> {
   const module = await loadFactoryState(ctx);
+
   return module.withStateLock(root, async () => module.writeState(root, await update(await module.readState(root))));
 }

@@ -4,32 +4,59 @@ import { ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
 import { type ProjectPaths, runtimePaths } from "../workspace/workspace.js";
 
-export const RUNTIME_IGNORE_RULES = ["/state.json*", "/runtime/"];
+const RUNTIME_IGNORE_RULES = ["/state.json*", "/runtime/"];
 
-export async function missingRuntimeIgnores(paths: ProjectPaths): Promise<string[]> {
-  const text = await readFile(paths.ignoreFile, "utf8").catch((error: NodeJS.ErrnoException) => {
+/** Reads the ignore file of the Project. An absent file gives empty text. */
+async function readIgnoreText(paths: ProjectPaths): Promise<string> {
+  return readFile(paths.ignoreFile, "utf8").catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") {
       return "";
     }
+
     throw error;
   });
+}
+
+/** Gives the runtime ignore rules that the ignore file of the Project does not have. */
+export async function missingRuntimeIgnores(paths: ProjectPaths): Promise<string[]> {
+  const text = await readIgnoreText(paths);
+
   const rules = text.split(/\r?\n/).map((line) => line.trim());
+
   return RUNTIME_IGNORE_RULES.filter((rule) => !rules.includes(rule));
 }
 
 /** Adds missing rules and keeps all existing ignore text. */
 export async function ensureRuntimeIgnores(paths: ProjectPaths): Promise<void> {
   const missing = await missingRuntimeIgnores(paths);
+
   if (!missing.length) {
     return;
   }
-  const text = await readFile(paths.ignoreFile, "utf8").catch((error: NodeJS.ErrnoException) => {
-    if (error.code === "ENOENT") {
-      return "";
-    }
-    throw error;
-  });
+
+  const text = await readIgnoreText(paths);
+
   await writeFileAtomic(paths.ignoreFile, `${text}${text && !text.endsWith("\n") ? "\n" : ""}${missing.join("\n")}\n`);
+}
+
+/** Gives the runtime root and each path below it, down to the full path of `rel`. */
+function pathsToCheck(root: string, rel: string): string[] {
+  const parts = rel.split(sep);
+
+  return [root, ...parts.map((_, index) => resolve(root, ...parts.slice(0, index + 1)))];
+}
+
+/** Rejects a symlink at `path`. An absent path is accepted. */
+async function assertNotSymlink(path: string): Promise<void> {
+  try {
+    if ((await lstat(path)).isSymbolicLink()) {
+      throw new ValidationError("Runtime paths must not contain symlinks");
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
 }
 
 /** Rejects absolute references, traversal and symlinks, including a symlink at the runtime root. */
@@ -37,35 +64,30 @@ export async function runtimePath(paths: ProjectPaths, reference: string): Promi
   const root = paths.runtimeDir;
   const path = resolve(root, reference);
   const rel = relative(root, path);
+
   if (!reference || isAbsolute(reference) || rel === ".." || rel.startsWith(`..${sep}`) || !rel) {
     throw new ValidationError("Invalid runtime path");
   }
+
   // Resolve the Project itself, but do not accept links inside its private runtime tree.
   const project = await realpath(paths.dir);
+
   if (project !== resolve(paths.dir)) {
     throw new ValidationError("The Project directory must not be a symlink");
   }
-  let current = root;
-  for (const part of ["", ...rel.split(sep)]) {
-    if (part) {
-      current = resolve(current, part);
-    }
-    try {
-      if ((await lstat(current)).isSymbolicLink()) {
-        throw new ValidationError("Runtime paths must not contain symlinks");
-      }
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-    }
+
+  for (const current of pathsToCheck(root, rel)) {
+    await assertNotSymlink(current);
   }
+
   return path;
 }
 
+/** Creates the private runtime directories with mode 0700 and adds the runtime ignore rules. */
 export async function prepareRuntime(paths: ProjectPaths): Promise<void> {
   await runtimePath(paths, "status.json");
   await ensureRuntimeIgnores(paths);
+
   for (const [key, path] of Object.entries(runtimePaths(paths))) {
     if (key === "dir" || key.endsWith("Dir")) {
       await runtimePath(paths, `${relative(paths.runtimeDir, path) || "."}/.check`);
