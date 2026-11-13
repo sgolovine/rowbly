@@ -60,23 +60,6 @@ export function unknownStageIssues(config: ProjectConfig, key: string, path: Iss
     : [{ path, message: `Unknown stage "${key}". Stages: ${config.stages.map((s) => s.key).join(", ")}` }];
 }
 
-/**
- * Finds a stage by key, ignoring case. When it is missing, records an issue at `path`.
- * New code uses `lookupStage` and `unknownStageIssues`, which do not change a list.
- * @public
- */
-export function findStage(
-  config: ProjectConfig,
-  key: string,
-  path: Issue["path"],
-  issues: Issue[],
-): StageConfig | undefined {
-  // biome-ignore lint/plugin: the exported contract adds the issue to the list of the caller.
-  issues.push(...unknownStageIssues(config, key, path));
-
-  return lookupStage(config, key);
-}
-
 function requireStage(config: ProjectConfig, key: string): StageConfig {
   const stage = lookupStage(config, key);
 
