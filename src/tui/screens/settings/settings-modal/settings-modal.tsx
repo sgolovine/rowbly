@@ -27,6 +27,7 @@ export function SettingsModal({
   onClose(): void;
 }) {
   const [hints, setHints] = useState<readonly KeyHint[]>([]);
+
   return (
     <Modal
       title={projectName ? `${projectName} › Settings` : "Settings"}
