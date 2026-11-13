@@ -94,17 +94,17 @@ pnpm link --global    # put `rowbly` on your PATH for local testing
 src/
   cli.ts              # entry point: builds the Commander program, picks TUI vs CLI
   commands/           # one folder per module: <name>/<name>.ts, and <name>/<name>.test.ts when the module has a test
-    registerCommands/ # registerCommands(): attaches every subcommand to the program
+    register-commands/ # registerCommands(): attaches every subcommand to the program
     output/           # run(): calls a service, prints text or --json, turns RowblyErrors into exit code 1
-    testCli/          # runCli(), createProgram(): run commands in tests
+    test-cli/          # runCli(), createProgram(): run commands in tests
     init/             # the `rowbly init` command: flags and JSON input
-    initWizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
-    auth/ authWizard/ model/ factory/ factoryRunner/ thread/ # native factory commands and foreground adapters
+    init-wizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
+    auth/ auth-wizard/ model/ factory/ factory-runner/ thread/ # native factory commands and foreground adapters
     <area>/           # one folder per area: project (project update, project get-instructions), doctor, story, stage, customField, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
-    App.tsx           # root TUI component: TuiProviders around the Shell
-    TuiProviders.tsx  # the contexts every shared component reads; wrap the app in it
+    app.tsx           # root TUI component: TuiProviders around the Shell
+    tui-providers.tsx  # the contexts every shared component reads; wrap the app in it
     shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal
     screens/          # stories/ (StoryList, StoryRow, NewStoryModal), stages/ (StageFormModal), onboarding/ (Onboarding and its steps), settings/ (SettingsModal, sections)
     terminal.ts       # runFullScreen(): alternate screen, mouse, kitty keys, terminal restore
@@ -120,29 +120,29 @@ src/
     config/           # ProjectConfig types, validation, key rules, read/write of rowbly.config.json
     fields/           # custom field value checks and parsing text input by field type
     markdown/         # YAML frontmatter + body parsing and writing
-    storyFiles/       # raw story file IO shared by the domain services
-    specFiles/        # raw spec file IO shared by the domain services
-    project/ story/ stage/ customField/ spec/ skill/ doctor/   # the domain services
+    story-files/       # raw story file IO shared by the domain services
+    spec-files/        # raw spec file IO shared by the domain services
+    project/ story/ stage/ custom-field/ spec/ skill/ doctor/   # the domain services
     onboarding/       # planOnboarding(), applyOnboarding(): the setup that the TUI and `rowbly init` share
-    piRuntime/        # lazy Pi imports, session adapter, runtime and model catalog
-    agentAuth/        # provider status, model checks, login and logout
-    factorySettings/  # optional factory.json and role model choices
+    pi-runtime/        # lazy Pi imports, session adapter, runtime and model catalog
+    agent-auth/        # provider status, model checks, login and logout
+    factory-settings/  # optional factory.json and role model choices
     factory/          # daemon client, status, controls and operational logs
-    factoryManager/   # serial supervisor loop, tools, reservations and worker lifecycle
-    factoryWorker/    # independent worker session, result and activity
-    factoryOwnership/ # daemon ownership and process identity
-    factoryControl/   # durable commands and receipts
-    factoryRecovery/  # dead-owner reconciliation and resume eligibility
-    factoryPolicy/ factoryState/ # shared v1 policy and state transactions
-    projectWrite/     # shared kernel flock for canonical factory writes
-    runtimeFiles/     # private runtime paths and ignore rules
+    factory-manager/   # serial supervisor loop, tools, reservations and worker lifecycle
+    factory-worker/    # independent worker session, result and activity
+    factory-ownership/ # daemon ownership and process identity
+    factory-control/   # durable commands and receipts
+    factory-recovery/  # dead-owner reconciliation and resume eligibility
+    factory-policy/ factory-state/ # shared v1 policy and state transactions
+    project-write/     # shared kernel flock for canonical factory writes
+    runtime-files/     # private runtime paths and ignore rules
     thread/           # metadata, runs, state projection and watches
     conversation/     # read-only selected-file Pi v3 history and bounded pages
-    supervisorDigest/ # bounded operational facts without worker transcripts
-    workerWorktree/   # one worktree per Story, with existing work preserved
-    storyWatch/       # watchStories(): calls a function when the files of the stories folder change
-    knownProject/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
-    testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
+    supervisor-digest/ # bounded operational facts without worker transcripts
+    worker-worktree/   # one worktree per Story, with existing work preserved
+    story-watch/       # watchStories(): calls a function when the files of the stories folder change
+    known-project/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
+    test-project/      # useTempDir(), useTestProject(): temporary projects for service tests
 skills/               # the bundled skills; `rowbly skill install` copies them into a project
 stages/               # the default stage prompts; onboarding copies them into a project
 biome-plugins/        # GritQL lint plugins for the strict code style (see "Code style" below)
@@ -189,7 +189,7 @@ The `position` of a story sets its order in its stage. A story without a `positi
 stories that have one, in the order of their numbers. When a story moves, the service writes a new
 `position` to each story of the stage that changes place.
 
-`src/services/factoryActivity/factoryActivity.ts` reads `.rowbly/state.json` and gives the factory
+`src/services/factory-activity/factory-activity.ts` reads `.rowbly/state.json` and gives the factory
 activity of each story. The format is version 1 of the factory skill
 (`skills/factory/references/supervisor-policy.md`). The service uses only the attempts of a story in
 its current stage:
@@ -413,7 +413,7 @@ The two front ends call the same service functions.
 ```
  rowbly story create --name foobar          TUI "Create story" screen
               │                                       │
-   src/commands/story/story.ts             src/tui/screens/CreateStory.tsx
+   src/commands/story/story.ts             src/tui/screens/create-story.tsx
               │                                       │
               └────────► src/services/story/story.ts ◄┘
                                 createStory({ name })
@@ -445,7 +445,7 @@ its own to create a story.
 ## Code style
 
 **Read `.agents/skills/rowbly-code-style/SKILL.md` before you write or change TypeScript in `src/`.**
-`src/services/factoryManager/` is the reference implementation of the style. The rules in short:
+`src/services/factory-manager/` is the reference implementation of the style. The rules in short:
 
 - Put each function at the top level. A callback argument can stay inline.
 - Do not change an object, an array, a Map or a Set. Make a new value.
@@ -480,7 +480,7 @@ Write all new modules in the strict style. To move a folder to the style, follow
    }
    ```
 
-3. Pass the resource command to this function from `registerCommands` in `src/commands/registerCommands/registerCommands.ts`.
+3. Pass the resource command to this function from `registerCommands` in `src/commands/register-commands/register-commands.ts`.
 
 The command file only changes flags into service input and formats the service output. Commander
 gives `--help` for each subcommand automatically.
@@ -531,13 +531,13 @@ The rules:
   and an `index.ts` that exports it:
 
   ```
-  components/Button/
-    Button.tsx
-    Button.test.tsx
-    index.ts          # export * from "./Button.js";
+  components/button/
+    button.tsx
+    button.test.tsx
+    index.ts          # export * from "./button.js";
   ```
 
-  A component imports a different component through the folder (`'../Button/index.js'`). Add each
+  A component imports a different component through the folder (`'../button/index.js'`). Add each
   component folder to `components/index.ts`. The `camelCase.ts` helpers stay in `components/`, with
   their tests next to them.
 - **Group by area, with a barrel.** Each folder has an `index.ts` that exports the items that the
@@ -549,9 +549,9 @@ The rules:
   - `screens/<area>/`: the screens and their screen-specific parts. Register them in the `index.ts`
     of the area.
   - `hooks/`: contexts and hooks.
-- **Keep `App.tsx` thin.** It only puts the providers (`TuiProviders`) around the shell.
+- **Keep `app.tsx` thin.** It only puts the providers (`TuiProviders`) around the shell.
 - Put each pure helper or constant that more than one file uses in its own `camelCase.ts` file, for
-  example `components/shellLayout.ts`.
+  example `components/shell-layout.ts`.
 
 ## Tests
 
@@ -566,7 +566,7 @@ they test. A component test is in the folder of its component.
 - **Test the behaviour.** Examine the text, the keys and the mouse actions. Do not examine the
   colours.
 - Call `cleanup` from ink-testing-library in `afterEach`.
-- **Each service has a test.** Use `useTestProject()` or `useTempDir()` from `src/services/testProject/testProject.ts`.
+- **Each service has a test.** Use `useTestProject()` or `useTempDir()` from `src/services/test-project/test-project.ts`.
   They give each test a new project in a temporary directory.
 
 Native session tests use Pi's faux provider and in-memory credentials. They make no live provider requests.

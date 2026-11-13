@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { authRuntime, listAvailableModels } from "../../services/agentAuth/agentAuth.js";
+import { authRuntime, listAvailableModels } from "../../services/agent-auth/agent-auth.js";
 import { run } from "../output/output.js";
 
 export function registerModelCommands(program: Command) {

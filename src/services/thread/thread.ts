@@ -3,10 +3,10 @@ import { watch } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { isAbsolute } from "node:path";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
-import { type ModelChoice, validModel } from "../factorySettings/factorySettings.js";
-import { loadFactoryState, updateFactoryState } from "../factoryState/factoryState.js";
+import { type ModelChoice, validModel } from "../factory-settings/factory-settings.js";
+import { loadFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
-import { prepareRuntime, runtimePath } from "../runtimeFiles/runtimeFiles.js";
+import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 export type ThreadStatus = "pending" | "running" | "completed" | "failed" | "cancelled" | "interrupted";

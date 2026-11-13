@@ -7,7 +7,7 @@ description: Refine a Rowbly Story from an agent or a person so that it has all 
 
 This skill makes one Story ready for development. Do not write code in this skill.
 
-Read `references/rowbly_reference.md` before you run a `rowbly` command.
+Read `references/rowbly-reference.md` before you run a `rowbly` command.
 
 Run each `rowbly` command as `rowbly -C <root> --json ...`.
 

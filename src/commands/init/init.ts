@@ -7,7 +7,7 @@ import {
   type OnboardingResult,
   parseOnboardingInput,
 } from "../../services/onboarding/onboarding.js";
-import { askOnboarding } from "../initWizard/initWizard.js";
+import { askOnboarding } from "../init-wizard/init-wizard.js";
 import { collect, run } from "../output/output.js";
 
 interface InitOptions {

@@ -1,10 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as factory from "../../services/factory/factory.js";
-import { newOwner } from "../../services/factoryOwnership/factoryOwnership.js";
-import { prepareRuntime } from "../../services/runtimeFiles/runtimeFiles.js";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { newOwner } from "../../services/factory-ownership/factory-ownership.js";
+import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("factory commands", () => {
   const project = useTestProject();

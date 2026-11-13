@@ -2,8 +2,8 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "project": [
     "src/**/*.{ts,tsx}!",
-    "!src/commands/testCli/**!",
-    "!src/services/testProject/**!",
+    "!src/commands/test-cli/**!",
+    "!src/services/test-project/**!",
     "!src/tui/testing/**!"
   ],
   "ignoreBinaries": ["wl-paste", "flock"],

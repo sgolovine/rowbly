@@ -3,7 +3,7 @@ import { readConfig } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { createStory, deleteStory } from "../story/story.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { createSpec, deleteSpec, getSpec, linkSpec, listSpecs, unlinkSpec, updateSpec } from "./spec.js";
 
 describe("spec", () => {

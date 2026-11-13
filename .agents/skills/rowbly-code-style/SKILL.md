@@ -8,7 +8,7 @@ description: >
 
 # Rowbly code style
 
-This guide gives the code style of Rowbly. `src/services/factoryManager/` is the reference
+This guide gives the code style of Rowbly. `src/services/factory-manager/` is the reference
 implementation. Read it as an example of each rule.
 
 Biome enforces part of the style. This guide also gives the rules that Biome cannot find.
@@ -55,7 +55,7 @@ The plugins use GritQL. They find patterns in the syntax, not in the types. Thus
 - A callback argument can stay inline. Keep it to one expression, and call a named function from it.
 - An object of methods can call top-level functions. Each method must be one expression.
 
-Example from `supervisorLoop.ts`:
+Example from `supervisor-loop.ts`:
 
 ```ts
 async function superviseOnce(manager: Manager, contract: string): Promise<void> {
@@ -91,7 +91,7 @@ Some state must be shared by tasks that run at the same time. Put this state in 
   can replace it.
 - Change the state with `setState(manager, (state) => ({ … }))`. The function gives only the changed
   fields.
-- Give a short-lived task its own `Store`, for example `WorkerRun` in `workerLaunch.ts`.
+- Give a short-lived task its own `Store`, for example `WorkerRun` in `worker-launch.ts`.
 
 A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
 state that the caller read.
@@ -110,7 +110,7 @@ Put a blank line between groups of statements:
 - Put a blank line before and after each `if`, `for`, `while` and `try` block.
 - Put a blank line before the last `return` of a function, if the function has more than one statement.
 
-Example from `managerStatus.ts`:
+Example from `manager-status.ts`:
 
 ```ts
 export async function scan(manager: Manager, maxActive = getState(manager).limit): Promise<ScanResult> {
@@ -130,9 +130,9 @@ export async function scan(manager: Manager, maxActive = getState(manager).limit
 
 ## Files
 
-- Give each file one concern. Give it a name for that concern, for example `workerLaunch.ts`.
-- A module folder can have many files. Keep the entry file, for example `factoryManager.ts`, small.
-- Put shared types and small shared helpers in a state file, for example `managerState.ts`.
+- Give each file one concern. Give it a name for that concern, for example `worker-launch.ts`.
+- A module folder can have many files. Keep the entry file, for example `factory-manager.ts`, small.
+- Put shared types and small shared helpers in a state file, for example `manager-state.ts`.
 - Import other files of the module directly. Do not make an import cycle.
 - Put the fields of a large type in groups, with a comment above each group.
 

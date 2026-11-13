@@ -1,8 +1,8 @@
 import { rm, symlink } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("doctor command", () => {
   const project = useTestProject();

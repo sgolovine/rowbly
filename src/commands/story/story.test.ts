@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { addCustomField } from "../../services/customField/customField.js";
+import { addCustomField } from "../../services/custom-field/custom-field.js";
 import { getStory } from "../../services/story/story.js";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("story commands", () => {
   const project = useTestProject();

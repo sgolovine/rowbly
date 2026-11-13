@@ -1,5 +1,5 @@
 import type { FactoryLaunch } from "../services/factory/factory.js";
-import { App } from "./App.js";
+import { App } from "./app.js";
 import { createToastStore } from "./hooks/index.js";
 import { runFullScreen } from "./terminal.js";
 

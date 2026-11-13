@@ -1,11 +1,16 @@
 import { mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { attachmentDir, prepareImages, readAttachments, withAttachments } from "../attachmentFiles/attachmentFiles.js";
+import {
+  attachmentDir,
+  prepareImages,
+  readAttachments,
+  withAttachments,
+} from "../attachment-files/attachment-files.js";
 import { doctor } from "../doctor/doctor.js";
 import { updateProject } from "../project/project.js";
 import { createStory, deleteStory, getStory, searchStories, updateStory } from "../story/story.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { addAttachment, clipboardName, listAttachments, MAX_ATTACHMENT_BYTES, removeAttachment } from "./attachment.js";
 
 const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1]);

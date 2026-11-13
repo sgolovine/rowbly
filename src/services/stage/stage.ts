@@ -12,7 +12,7 @@ import {
 } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
-import { readStoryFiles, rewriteStories } from "../storyFiles/storyFiles.js";
+import { readStoryFiles, rewriteStories } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Stage extends StageConfig {

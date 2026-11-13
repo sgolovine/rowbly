@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
-import { useTempDir, useTestProject } from "../testProject/testProject.js";
+import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import { findProject, hasProject, projectPaths } from "./workspace.js";
 
 describe("projectPaths", () => {

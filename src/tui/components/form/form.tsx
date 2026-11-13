@@ -1,0 +1,404 @@
+import { Box, Text, useInput } from "ink";
+import { useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import { ValidationError } from "../../../services/errors/errors.js";
+import { ScreenDepthContext, ShellContext, useDirty, useIsActive, useLayout, useToast } from "../../hooks/index.js";
+import { FORM_KEYS, formKeys, isSubmitKey, type KeyHint } from "../../keymap.js";
+import { theme } from "../../theme.js";
+import { FieldRow } from "../field-row/index.js";
+import { FormNavigationContext } from "../form-navigation.js";
+import { FormKeysContext, useCovered } from "../modal-layer.js";
+
+/** How a form field is edited. */
+type FieldKind = "text" | "multiline" | "number" | "boolean" | "switch" | "date" | "select" | "multiselect";
+
+export interface FormField {
+  /** Key in the submitted values; also matched against `ValidationError` issue paths. */
+  name: string;
+  label: string;
+  kind: FieldKind;
+  required?: boolean;
+  /** Choices for `select` and `multiselect`. */
+  options?: readonly string[];
+  /** What a choice shows instead of its value, e.g. a Stage's name for its key. */
+  optionLabels?: Readonly<Record<string, string>>;
+  /** A select opens a fuzzy picker over option values and labels instead of cycling. */
+  searchable?: boolean;
+  /** Separate search fields when a display label combines several values. Defaults to the label. */
+  optionSearchText?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Fills this text field from another field's text when focus leaves that field, e.g. a key from a
+   * name: `{ field: 'name', format: slugFromName }`. A value typed here is never replaced.
+   */
+  fillFrom?: { field: string; format(text: string): string };
+  /** What a `switch` shows for its two states. Defaults to `On` and `Off`. */
+  switchLabels?: { on: string; off: string };
+}
+
+/** text/multiline: string · number: number | null · boolean/switch: boolean · date: `YYYY-MM-DD` | null · select: string | null · multiselect: string[] */
+export type FormValue = string | number | boolean | string[] | null;
+export type FormValues = Record<string, FormValue>;
+
+export interface FormProps {
+  fields: readonly FormField[];
+  initialValues?: FormValues;
+  /** May throw: a `ValidationError` shows its issues inline, any other error becomes a toast. */
+  onSubmit(values: FormValues): void | Promise<void>;
+  isActive?: boolean;
+  /** What the `ctrl+s` hint says the form does: `save` (the default), or e.g. `apply` for a filter. */
+  submitLabel?: string;
+  /** `enter` on a text, number or date field submits, like `ctrl+s`, instead of moving to the next field. */
+  submitOnEnter?: boolean;
+  /** Screen-specific keys shown after save, before navigation hints. */
+  extraHints?: readonly KeyHint[];
+  /** Controlled values for forms whose drafts outlive the mounted editor. */
+  values?: FormValues;
+  onChange?(values: FormValues): void;
+  /** Increment to validate and submit this form from another create tab. */
+  submitRequest?: number;
+  onInvalid?(): void;
+}
+
+type Raw = string | boolean | string[] | null;
+
+const NO_EXTRA_HINTS: readonly KeyHint[] = [];
+
+/** Kinds edited in a `TextInput`, where letters are text rather than keys. */
+const TYPED_KINDS: readonly FieldKind[] = ["text", "number", "date"];
+
+function toRaw(field: FormField, value: FormValue | undefined): Raw {
+  switch (field.kind) {
+    case "boolean":
+    case "switch":
+      return value === true;
+    case "select":
+      return typeof value === "string" ? value : null;
+    case "multiselect":
+      return Array.isArray(value) ? value : [];
+    default:
+      return value === null || value === undefined ? "" : String(value);
+  }
+}
+
+function isEmpty(raw: Raw): boolean {
+  return raw === null || raw === "" || (Array.isArray(raw) && raw.length === 0);
+}
+
+/** Converts raw input to a value, or returns an error message. */
+function parse(field: FormField, raw: Raw): { value: FormValue } | { error: string } {
+  if (field.required && isEmpty(raw)) return { error: "required" };
+  if (field.kind === "number") {
+    if (raw === "") return { value: null };
+    const n = Number(raw);
+    return Number.isFinite(n) ? { value: n } : { error: "must be a number" };
+  }
+  if (field.kind === "date") {
+    if (raw === "") return { value: null };
+    const ok = typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw) && !Number.isNaN(Date.parse(raw));
+    return ok ? { value: raw } : { error: "must be a date (YYYY-MM-DD)" };
+  }
+  return { value: raw };
+}
+
+/** Maps `ValidationError.details.issues` (zod issues) to fields by the first path segment. */
+function issuesByField(
+  err: ValidationError,
+  fields: readonly FormField[],
+): { byField: Record<string, string>; rest: string[] } {
+  const byField: Record<string, string> = {};
+  const rest: string[] = [];
+  const issues = Array.isArray(err.details.issues) ? err.details.issues : [];
+  for (const issue of issues as { path?: unknown[]; message?: string }[]) {
+    const name = issue.path?.[0];
+    const message = issue.message ?? "invalid";
+    if (typeof name === "string" && fields.some((f) => f.name === name)) byField[name] ??= message;
+    else rest.push(message);
+  }
+  if (issues.length === 0) rest.push(err.message);
+  return { byField, rest };
+}
+
+/**
+ * Shows the Form keys while `active`: in the strip of the Modal around the form, or else with the
+ * screen's own hints, so every form says `ctrl+s save` without its screen adding it.
+ */
+function useFormKeys(active: boolean, keys: readonly KeyHint[]): void {
+  const modal = useContext(FormKeysContext);
+  const shell = useContext(ShellContext);
+  const depth = useContext(ScreenDepthContext);
+  const id = useId();
+  useEffect(() => {
+    if (!active) return;
+    if (modal) return modal(keys);
+    if (depth < 0) return;
+    shell.setHints(depth, id, keys, true);
+    return () => shell.setHints(depth, id, null);
+  }, [active, modal, shell, depth, id, keys]);
+}
+
+/**
+ * A keyboard form with saving in the enclosing Modal hint strip. `enter`, `tab` and `↓` move to the next
+ * field and `shift+tab` and `↑` to the previous one; text, number and date fields are `TextInput`s;
+ * multiline fields are `TextArea`s, where `enter` starts a new line, `↑/↓` leave the text from its
+ * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
+ * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` after the last field submits.
+ */
+export function Form({
+  fields,
+  initialValues = {},
+  onSubmit,
+  isActive = true,
+  submitLabel = "save",
+  submitOnEnter = false,
+  extraHints,
+  values: controlled,
+  onChange,
+  submitRequest = 0,
+  onInvalid,
+}: FormProps) {
+  const covered = useCovered();
+  const active = useIsActive() && isActive && !covered;
+  const navigation = useContext(FormNavigationContext);
+  const hints = extraHints ?? navigation?.extraHints ?? NO_EXTRA_HINTS;
+  const formId = useId();
+  const toast = useToast();
+  const layout = useLayout();
+  const [initial] = useState(() => Object.fromEntries(fields.map((f) => [f.name, toRaw(f, initialValues[f.name])])));
+  const [localValues, setLocalValues] = useState<Record<string, Raw>>(initial);
+  const values = controlled
+    ? Object.fromEntries(fields.map((f) => [f.name, toRaw(f, controlled[f.name])]))
+    : localValues;
+  const setValues = (update: (prev: Record<string, Raw>) => Record<string, Raw>) => {
+    if (controlled) onChange?.({ ...controlled, ...update(values) });
+    else setLocalValues(update);
+  };
+  const [focus, setFocus] = useState(0);
+  const [optionCursor, setOptionCursor] = useState(0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  // The values `fillFrom` last put in each field, so a field still holding one is filled again.
+  // A starting value that `fillFrom` would give counts as filled, so a change of the source updates it.
+  const [filled, setFilled] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      fields.flatMap((f) => {
+        const text = f.fillFrom ? String(initial[f.fillFrom.field] ?? "").trim() : "";
+        return f.fillFrom && text && initial[f.name] === f.fillFrom.format(text)
+          ? [[f.name, String(initial[f.name])]]
+          : [];
+      }),
+    ),
+  );
+
+  // `focus === fields.length` accepts Enter to submit without a separate button.
+  const field = fields[focus];
+  const searchable = field?.kind === "select" && field.searchable === true;
+  useEffect(() => navigation?.register(formId, active && field !== undefined), [navigation, formId, active, field]);
+  const keys = useMemo(
+    () =>
+      navigation
+        ? [
+            { key: "ctrl+s", description: submitLabel },
+            { key: "shift+tab", description: "next tab" },
+            ...(searchable ? [{ key: "enter", description: "search" }] : []),
+            { key: searchable ? "tab/↑/↓" : "tab/↑/↓/enter", description: "field" },
+          ]
+        : searchable
+          ? [
+              { key: "ctrl+s", description: submitLabel },
+              { key: "enter", description: "search" },
+              { key: "tab/↑/↓", description: "field" },
+              { key: "shift+tab", description: "previous field" },
+            ]
+          : submitLabel === "save" && !submitOnEnter
+            ? FORM_KEYS
+            : formKeys(submitLabel, submitOnEnter),
+    [navigation, submitLabel, searchable, submitOnEnter],
+  );
+  useFormKeys(
+    active,
+    useMemo(() => [...keys.slice(0, 1), ...hints, ...keys.slice(1)], [keys, hints]),
+  );
+  const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
+  useDirty(dirty);
+
+  const set = (name: string, raw: Raw) => {
+    setValues((prev) => ({ ...prev, [name]: raw }));
+    setErrors(({ [name]: _cleared, ...rest }) => rest);
+  };
+
+  /** Fills the fields that take their text from `source` when focus leaves it, and returns the values. */
+  const fill = (source: string | undefined): Record<string, Raw> => {
+    const text = source === undefined ? "" : String(values[source] ?? "").trim();
+    if (!text) return values;
+    const fills: Record<string, string> = {};
+    for (const f of fields) {
+      const from = f.fillFrom;
+      if (!from || from.field !== source) continue;
+      const current = values[f.name] ?? "";
+      if (current === "" || current === filled[f.name]) fills[f.name] = from.format(text);
+    }
+    if (Object.keys(fills).length === 0) return values;
+    const next = { ...values, ...fills };
+    setValues((prev) => ({ ...prev, ...fills }));
+    setFilled((prev) => ({ ...prev, ...fills }));
+    setErrors((prev) => Object.fromEntries(Object.entries(prev).filter(([name]) => !(name in fills))));
+    return next;
+  };
+
+  const submit = async () => {
+    const current = fill(field?.name);
+    const parsed: FormValues = {};
+    const found: Record<string, string> = {};
+    for (const f of fields) {
+      const result = parse(f, current[f.name] ?? null);
+      if ("error" in result) found[f.name] = result.error;
+      else parsed[f.name] = result.value;
+    }
+    setErrors(found);
+    setFormErrors([]);
+    if (Object.keys(found).length > 0) {
+      onInvalid?.();
+      return;
+    }
+    setBusy(true);
+    try {
+      await onSubmit(parsed);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        const { byField, rest } = issuesByField(err, fields);
+        setErrors(byField);
+        setFormErrors(rest);
+      } else toast.error(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // External save requests validate Details even while another tab is visible.
+  const submitCurrent = useRef(submit);
+  submitCurrent.current = submit;
+  useEffect(() => {
+    if (submitRequest > 0) void submitCurrent.current();
+  }, [submitRequest]);
+
+  const moveFocus = (delta: number) => {
+    fill(field?.name);
+    setFocus((f) => Math.max(0, Math.min(fields.length, f + delta)));
+    setOptionCursor(0);
+  };
+
+  useInput(
+    (input, key) => {
+      if (busy) return;
+      if (isSubmitKey(input, key)) {
+        if (!navigation) void submit();
+        return;
+      }
+      if (key.tab) {
+        if (navigation && key.shift) return;
+        moveFocus(key.shift ? -1 : 1);
+        return;
+      }
+      if (!field) {
+        if (key.return) void submit();
+        else if (key.upArrow || input === "k") moveFocus(-1);
+        return;
+      }
+      // The TextArea handles its own `enter` and `↑/↓`, and calls back when they leave it.
+      if (field.kind === "multiline") return;
+      // The picker owns Enter and text; only Tab and vertical arrows leave this field.
+      if (searchable && !key.upArrow && !key.downArrow) return;
+      const raw = values[field.name] ?? null;
+      const typed = TYPED_KINDS.includes(field.kind);
+      if (key.return && typed && submitOnEnter) {
+        void submit();
+      } else if (key.return || key.downArrow || (!typed && input === "j")) {
+        moveFocus(1);
+      } else if (key.upArrow || (!typed && input === "k")) {
+        moveFocus(-1);
+      } else if (field.kind === "boolean" || field.kind === "switch") {
+        if (input === " " || ((key.leftArrow || key.rightArrow) && !key.shift)) set(field.name, raw !== true);
+      } else if (field.kind === "select") {
+        const options = field.options ?? [];
+        // shift+←/→ is left to the screen (onboarding step navigation).
+        const right = key.rightArrow && !key.shift;
+        const left = key.leftArrow && !key.shift;
+        const step = right || input === "l" || input === " " ? 1 : left || input === "h" ? -1 : 0;
+        if (step && options.length > 0) {
+          const at = typeof raw === "string" ? options.indexOf(raw) : -1;
+          set(field.name, options[(at + step + options.length) % options.length] ?? null);
+        }
+      } else if (field.kind === "multiselect") {
+        const options = field.options ?? [];
+        if (key.rightArrow || input === "l") setOptionCursor((c) => Math.min(options.length - 1, c + 1));
+        else if (key.leftArrow || input === "h") setOptionCursor((c) => Math.max(0, c - 1));
+        else if (input === " ") {
+          const option = options[optionCursor];
+          const current = Array.isArray(raw) ? raw : [];
+          if (option !== undefined) {
+            set(field.name, current.includes(option) ? current.filter((o) => o !== option) : [...current, option]);
+          }
+        }
+      }
+    },
+    { isActive: active },
+  );
+
+  const labelWidth = Math.max(...fields.map((f) => f.label.length + (f.required ? 1 : 0))) + 4;
+  const inputWidth = Math.max(16, Math.min(INPUT_MAX_WIDTH, layout.width - labelWidth));
+  // A blank line between fields in a terminal; when they do not fit, the body around the form
+  // scrolls (the focused field stays in view) rather than the fields closing up.
+  const roomy = layout.height !== undefined;
+  return (
+    <Box flexDirection="column" gap={roomy ? 1 : 0} flexShrink={0}>
+      <Text color={theme.inkFaint} wrap="truncate-end">
+        {busy
+          ? "Saving…"
+          : searchable
+            ? "type or enter to search"
+            : field
+              ? FIELD_HELP[field.kind]
+              : `ctrl+s ${submitLabel}`}
+      </Text>
+      {fields.map((f, i) => (
+        <FieldRow
+          key={f.name}
+          field={f}
+          raw={values[f.name] ?? null}
+          focused={i === focus}
+          active={active}
+          error={errors[f.name]}
+          labelWidth={labelWidth}
+          inputWidth={inputWidth}
+          optionCursor={optionCursor}
+          onChange={(raw) => set(f.name, raw)}
+          onLeave={moveFocus}
+          onClick={() => {
+            if (i !== focus) moveFocus(i - focus);
+          }}
+        />
+      ))}
+      <Box flexDirection="column">
+        {formErrors.map((message) => (
+          <Text key={message} color={theme.danger}>
+            {message}
+          </Text>
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+/** Widest an input grows; longer text scrolls inside it. */
+const INPUT_MAX_WIDTH = 64;
+
+const FIELD_HELP: Record<FieldKind, string> = {
+  text: "type to edit",
+  number: "type a number",
+  date: "type YYYY-MM-DD",
+  boolean: "space toggles",
+  switch: "space toggles",
+  select: "←/→ change",
+  multiselect: "←/→ pick · space toggles",
+  multiline: "enter new line · ctrl+f full screen",
+};

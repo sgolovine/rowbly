@@ -3,7 +3,7 @@ import { basename, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
-import { useTempDir } from "../testProject/testProject.js";
+import { useTempDir } from "../test-project/test-project.js";
 import {
   applyOnboarding,
   FACTORY_SKILL_WARNING,

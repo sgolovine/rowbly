@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import * as auth from "../../services/agentAuth/agentAuth.js";
-import { runCli } from "../testCli/testCli.js";
+import * as auth from "../../services/agent-auth/agent-auth.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 afterEach(() => {
   process.exitCode = undefined;

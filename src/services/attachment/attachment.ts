@@ -12,13 +12,13 @@ import {
   validateAttachmentId,
   withAttachments,
   writeAttachments,
-} from "../attachmentFiles/attachmentFiles.js";
+} from "../attachment-files/attachment-files.js";
 import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
-export type { Attachment, PendingImage } from "../attachmentFiles/attachmentFiles.js";
+export type { Attachment, PendingImage } from "../attachment-files/attachment-files.js";
 export { MAX_ATTACHMENT_BYTES };
 export function clipboardName(now: Date): string {
   const iso = now.toISOString();

@@ -2,8 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { doctor } from "../doctor/doctor.js";
-import { readFactoryState } from "../factoryState/factoryState.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { readFactoryState } from "../factory-state/factory-state.js";
+import { useTestProject } from "../test-project/test-project.js";
 import {
   appendThreadRun,
   createThread,

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { createStory, getStory } from "../story/story.js";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { createStage, deleteStage, findStage, getStage, listStages, updateStage } from "./stage.js";
 
 describe("findStage", () => {

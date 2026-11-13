@@ -7,7 +7,7 @@ description: Review the work that the develop skill did for a Rowbly Story, and 
 
 This skill examines the pull request of one Story. Do not change the code in this skill.
 
-Read `references/rowbly_reference.md` before you run a `rowbly` command.
+Read `references/rowbly-reference.md` before you run a `rowbly` command.
 
 Run each `rowbly` command as `rowbly -C <root> --json ...`.
 

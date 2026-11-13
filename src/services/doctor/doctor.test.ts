@@ -2,11 +2,11 @@ import { lstat, mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
-import { addCustomField } from "../customField/customField.js";
+import { addCustomField } from "../custom-field/custom-field.js";
 import { pathExists } from "../files/files.js";
 import { installSkill } from "../skill/skill.js";
 import { createStory } from "../story/story.js";
-import { useTempDir, useTestProject } from "../testProject/testProject.js";
+import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import type { ServiceContext } from "../workspace/workspace.js";
 import { doctor } from "./doctor.js";
 

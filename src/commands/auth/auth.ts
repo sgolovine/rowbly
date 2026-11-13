@@ -5,9 +5,9 @@ import {
   listProviders,
   loginProvider,
   logoutProvider,
-} from "../../services/agentAuth/agentAuth.js";
+} from "../../services/agent-auth/agent-auth.js";
 import { ValidationError } from "../../services/errors/errors.js";
-import { createCliAuthInteraction } from "../authWizard/authWizard.js";
+import { createCliAuthInteraction } from "../auth-wizard/auth-wizard.js";
 import { run } from "../output/output.js";
 
 export function registerAuthCommands(program: Command) {

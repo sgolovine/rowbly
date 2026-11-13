@@ -4,10 +4,10 @@ import { open, readdir, stat } from "node:fs/promises";
 import { isAbsolute } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { ConflictError, ValidationError } from "../errors/errors.js";
-import { publishCommand, readReceipt } from "../factoryControl/factoryControl.js";
-import { type FactoryManager, getFactoryStatus as readStatus } from "../factoryManager/factoryManager.js";
-import { type Owner, probeOwner, readFactoryOwner } from "../factoryOwnership/factoryOwnership.js";
-import { prepareRuntime, runtimePath } from "../runtimeFiles/runtimeFiles.js";
+import { publishCommand, readReceipt } from "../factory-control/factory-control.js";
+import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
+import { type Owner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
+import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { getThread } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 

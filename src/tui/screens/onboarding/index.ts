@@ -1,1 +1,1 @@
-export * from "./Onboarding/index.js";
+export * from "./onboarding/index.js";

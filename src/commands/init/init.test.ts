@@ -2,8 +2,8 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { getProject } from "../../services/project/project.js";
-import { useTempDir } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTempDir } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("init", () => {
   const dir = useTempDir();

@@ -8,13 +8,13 @@ import {
   noSymlink,
   readAttachments,
   writeAttachments,
-} from "../attachmentFiles/attachmentFiles.js";
+} from "../attachment-files/attachment-files.js";
 import { labelFromKey, type ProjectConfig, parseConfig, STAGE_KEY_PATTERN, writeConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
 import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
-import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtimeFiles/runtimeFiles.js";
+import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import {
   canonicalStoryId,
@@ -22,8 +22,8 @@ import {
   SPEC_SLUG_PATTERN,
   type SpecFile,
   writeSpecFile,
-} from "../specFiles/specFiles.js";
-import { formatStoryId, parseStoryFileName, type StoryFile, writeStoryFile } from "../storyFiles/storyFiles.js";
+} from "../spec-files/spec-files.js";
+import { formatStoryId, parseStoryFileName, type StoryFile, writeStoryFile } from "../story-files/story-files.js";
 import { listThreads } from "../thread/thread.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 

@@ -8,8 +8,8 @@ import {
   startFactory,
   stopFactory,
 } from "../../services/factory/factory.js";
-import { configureFactory, type ModelChoice } from "../../services/factorySettings/factorySettings.js";
-import { runFactoryForeground } from "../factoryRunner/factoryRunner.js";
+import { configureFactory, type ModelChoice } from "../../services/factory-settings/factory-settings.js";
+import { runFactoryForeground } from "../factory-runner/factory-runner.js";
 import { parsePosition, run } from "../output/output.js";
 
 export function registerFactoryCommands(program: Command) {

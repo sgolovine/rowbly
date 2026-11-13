@@ -1,10 +1,10 @@
 import { ValidationError } from "../errors/errors.js";
-import { runtimePath } from "../runtimeFiles/runtimeFiles.js";
+import { runtimePath } from "../runtime-files/runtime-files.js";
 import { getThread } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { type ConversationPage, SessionIndex } from "./sessionIndex.js";
+import { type ConversationPage, SessionIndex } from "./session-index.js";
 
-export type { ConversationEntry, ConversationPage } from "./sessionIndex.js";
+export type { ConversationEntry, ConversationPage } from "./session-index.js";
 export type ConversationCursor = string;
 export interface Conversation {
   threadId: string;

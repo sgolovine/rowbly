@@ -34,28 +34,28 @@ library parts that its row names. Follow the guideline of the pattern.
 
 | Component | What it is | Status · code | Guide |
 | --- | --- | --- | --- |
-| `Button` | A clickable label with its key next to it in a key cap. Use it for header controls and for the `+ New …` bottom of a sidebar. It has no frame. | Library · `Button.tsx` | [guide](components/Button.md) · [preview](previews/Button.html) |
-| `ConfirmDialog` | The question and the `y`/`n` choices of a confirmation, in a `Modal`. It shows before an operation that you cannot undo. | Library · `ConfirmDialog.tsx` | [guide](components/ConfirmDialog.md) · [preview](previews/ConfirmDialog.html) |
-| `ContextMenu` | A list of items in a frame. A right click opens it at the pointer, on top of all other content. Each item names the key that does the same operation. | Pattern · not in the library | [guide](components/ContextMenu.md) |
-| `DetailView` | Label–value rows for a record. | Library · `DetailView.tsx` | [guide](components/DetailView.md) · [preview](previews/DetailView.html) |
-| `FormModal` | A generic `Modal` with one `Form`, to create or edit a record. `esc` and the `✕` close it. If the Form has changes, it asks before it discards them. | Library · `FormModal.tsx` | [guide](components/Form.md) |
-| `Form` | Fields with labels (text, multiline, number, boolean, switch, date, select, searchable select, multiselect) to create and edit a record, in a Modal. It shows the issues of a `ValidationError` under their fields. | Library · `Form.tsx`, `FieldRow.tsx`, `FieldValue.tsx` | [guide](components/Form.md) · [preview](previews/Form.html) |
-| `KeyHints` | The keys of the region in focus. It is the footer, and the strip at the bottom of a Modal. | Library · `KeyHints.tsx`, `Footer.tsx`, `HelpOverlay.tsx` | [guide](components/KeyHints.md) · [preview](previews/KeyHints.html) |
-| `Modal` | The generic Modal: one short task on top of the screen (Forms, pickers, ConfirmDialog, Help). `size="screen"` makes a screen Modal. | Library · `Modal.tsx`, `ModalFrame.tsx` | [guide](components/Modal.md) · [preview](previews/Modal.html) |
-| `Panel` | A region of the screen in a `border-round` frame, with its title in the top edge (`╭─Board───╮`). | Library · `Panel.tsx` | [guide](components/Panel.md) · [preview](previews/Panel.html) |
-| `SidebarList` | The rows of a sidebar, with a quiet Button at its bottom. Drag its right edge to change its size. An `editable` row shows a `✎` that edits the row when you click it. | Library · `Sidebar.tsx`, `SidebarItem.tsx` | [guide](components/SidebarList.md) · [preview](previews/SidebarList.html) |
-| `StageBadge` | A Stage name with its `●`. Its colour comes from its Stage Category: `stage-backlog`, `stage-board`, `stage-done`. | Library · `StageBadge.tsx` | [guide](components/StageBadge.md) · [preview](previews/StageBadge.html) |
-| `Switch` | A track with a knob and the label of its state (`━━● Enabled`, `●── Disabled`). A click toggles it. In a `Form`, use the `switch` field kind. | Library · `Switch.tsx` | [guide](components/Switch.md) |
-| `Tabs` | A row of tabs, for example the tabs of the detail view of a record. | Library · `Tabs.tsx`, `Tab.tsx` | [guide](components/Tabs.md) · [preview](previews/Tabs.html) |
-| `Toast` | A short message at the bottom right after an operation. It goes away automatically (info 4 s, warning 6 s, error 8 s). Push one with `useToast()`. | Library · `ToastArea.tsx`, `ToastLine.tsx` | [guide](components/Toast.md) · [preview](previews/Toast.html) |
-| `ViewSwitch` | The views of a screen on one line: `Stages / List v`. | Pattern · not in the library | [guide](components/ViewSwitch.md) · [preview](previews/ViewSwitch.html) |
-| `BoardScreen` | The full Board screen of v1 at its default size: header, Boards sidebar, Board panel, footer. | Pattern · `Panel`, `Sidebar`, `Footer` | [preview](previews/BoardScreen.html) |
-| `Header` | The header of v1: one Panel across the top, three rows high. The Buttons on the right go away when the width becomes smaller. | Pattern · `Panel`, `Button`, `ViewSwitch` | [guide](components/Header.md) · [preview](previews/Header.html) |
-| `ListRow` | A row of a list view: a group heading or a record. | Pattern · `SelectionRow`, `StageBadge` | [guide](components/ListRow.md) · [preview](previews/ListRow.html) |
-| `StageColumn` | One Stage on a Board: its name, a rule, then its Stories in Rank order. | Pattern · `StageBadge`, `StoryCard` | [guide](components/StageColumn.md) · [preview](previews/StageColumn.html) |
-| `StoryCard` | A Story on a Board: three rows in a `border-round` frame. It uses `useMouse` for drag and drop. | Pattern · `Box` + `useMouse({ drag })` | [guide](components/StoryCard.md) · [preview](previews/StoryCard.html) |
-| `StoryModal` | A screen Modal for one record: a header band, Tabs, and a body that scrolls. | Pattern · `Modal size="screen"`, `Tabs`, `ScrollBody` | [guide](components/StoryModal.md) · [preview](previews/StoryModal.html) |
-| `SettingsModal` | A screen Modal with a section list on the left and the section on the right. | Pattern · `Modal size="screen"`, `SelectionRow`, `sectionShell` | [guide](components/SettingsModal.md) · [preview](previews/SettingsModal.html) |
+| `Button` | A clickable label with its key next to it in a key cap. Use it for header controls and for the `+ New …` bottom of a sidebar. It has no frame. | Library · `button.tsx` | [guide](components/button.md) · [preview](previews/button.html) |
+| `ConfirmDialog` | The question and the `y`/`n` choices of a confirmation, in a `Modal`. It shows before an operation that you cannot undo. | Library · `confirm-dialog.tsx` | [guide](components/confirm-dialog.md) · [preview](previews/confirm-dialog.html) |
+| `ContextMenu` | A list of items in a frame. A right click opens it at the pointer, on top of all other content. Each item names the key that does the same operation. | Pattern · not in the library | [guide](components/context-menu.md) |
+| `DetailView` | Label–value rows for a record. | Library · `detail-view.tsx` | [guide](components/detail-view.md) · [preview](previews/detail-view.html) |
+| `FormModal` | A generic `Modal` with one `Form`, to create or edit a record. `esc` and the `✕` close it. If the Form has changes, it asks before it discards them. | Library · `form-modal.tsx` | [guide](components/form.md) |
+| `Form` | Fields with labels (text, multiline, number, boolean, switch, date, select, searchable select, multiselect) to create and edit a record, in a Modal. It shows the issues of a `ValidationError` under their fields. | Library · `form.tsx`, `field-row.tsx`, `field-value.tsx` | [guide](components/form.md) · [preview](previews/form.html) |
+| `KeyHints` | The keys of the region in focus. It is the footer, and the strip at the bottom of a Modal. | Library · `key-hints.tsx`, `footer.tsx`, `help-overlay.tsx` | [guide](components/key-hints.md) · [preview](previews/key-hints.html) |
+| `Modal` | The generic Modal: one short task on top of the screen (Forms, pickers, ConfirmDialog, Help). `size="screen"` makes a screen Modal. | Library · `modal.tsx`, `modal-frame.tsx` | [guide](components/modal.md) · [preview](previews/modal.html) |
+| `Panel` | A region of the screen in a `border-round` frame, with its title in the top edge (`╭─Board───╮`). | Library · `panel.tsx` | [guide](components/panel.md) · [preview](previews/panel.html) |
+| `SidebarList` | The rows of a sidebar, with a quiet Button at its bottom. Drag its right edge to change its size. An `editable` row shows a `✎` that edits the row when you click it. | Library · `sidebar.tsx`, `sidebar-item.tsx` | [guide](components/sidebar-list.md) · [preview](previews/sidebar-list.html) |
+| `StageBadge` | A Stage name with its `●`. Its colour comes from its Stage Category: `stage-backlog`, `stage-board`, `stage-done`. | Library · `stage-badge.tsx` | [guide](components/stage-badge.md) · [preview](previews/stage-badge.html) |
+| `Switch` | A track with a knob and the label of its state (`━━● Enabled`, `●── Disabled`). A click toggles it. In a `Form`, use the `switch` field kind. | Library · `switch.tsx` | [guide](components/switch.md) |
+| `Tabs` | A row of tabs, for example the tabs of the detail view of a record. | Library · `tabs.tsx`, `tab.tsx` | [guide](components/tabs.md) · [preview](previews/tabs.html) |
+| `Toast` | A short message at the bottom right after an operation. It goes away automatically (info 4 s, warning 6 s, error 8 s). Push one with `useToast()`. | Library · `toast-area.tsx`, `toast-line.tsx` | [guide](components/toast.md) · [preview](previews/toast.html) |
+| `ViewSwitch` | The views of a screen on one line: `Stages / List v`. | Pattern · not in the library | [guide](components/view-switch.md) · [preview](previews/view-switch.html) |
+| `BoardScreen` | The full Board screen of v1 at its default size: header, Boards sidebar, Board panel, footer. | Pattern · `Panel`, `Sidebar`, `Footer` | [preview](previews/board-screen.html) |
+| `Header` | The header of v1: one Panel across the top, three rows high. The Buttons on the right go away when the width becomes smaller. | Pattern · `Panel`, `Button`, `ViewSwitch` | [guide](components/header.md) · [preview](previews/header.html) |
+| `ListRow` | A row of a list view: a group heading or a record. | Pattern · `SelectionRow`, `StageBadge` | [guide](components/list-row.md) · [preview](previews/list-row.html) |
+| `StageColumn` | One Stage on a Board: its name, a rule, then its Stories in Rank order. | Pattern · `StageBadge`, `StoryCard` | [guide](components/stage-column.md) · [preview](previews/stage-column.html) |
+| `StoryCard` | A Story on a Board: three rows in a `border-round` frame. It uses `useMouse` for drag and drop. | Pattern · `Box` + `useMouse({ drag })` | [guide](components/story-card.md) · [preview](previews/story-card.html) |
+| `StoryModal` | A screen Modal for one record: a header band, Tabs, and a body that scrolls. | Pattern · `Modal size="screen"`, `Tabs`, `ScrollBody` | [guide](components/story-modal.md) · [preview](previews/story-modal.html) |
+| `SettingsModal` | A screen Modal with a section list on the left and the section on the right. | Pattern · `Modal size="screen"`, `SelectionRow`, `sectionShell` | [guide](components/settings-modal.md) · [preview](previews/settings-modal.html) |
 
 The library also contains other code that has no guideline of its own:
 
@@ -71,11 +71,11 @@ The library also contains other code that has no guideline of its own:
 | `Spinner`, `Loading` | The braille spinner, alone or with a label. |
 | `CloseButton` | The clickable `✕` in the top edge of a Modal. |
 | `OverlayHost` | Supplies `useMainOverlay()`, and draws the items that it opens. `TuiProviders` contains it. |
-| `shellLayout.ts` | The sizes of the sidebar, the header and the footer. |
+| `shell-layout.ts` | The sizes of the sidebar, the header and the footer. |
 
 ## How to use the library
 
-- **Providers.** Wrap the app in `TuiProviders` (`src/tui/TuiProviders.tsx`). It supplies toasts,
+- **Providers.** Wrap the app in `TuiProviders` (`src/tui/tui-providers.tsx`). It supplies toasts,
   the shell registry, the mouse registry, the terminal size as the layout, and the `OverlayHost`.
   Start the app full screen with `runFullScreen` (`src/tui/terminal.ts`). This function turns on
   mouse reports and the kitty keyboard protocol. It restores the terminal on exit, on signals and

@@ -5,11 +5,11 @@ import {
   prepareImages,
   readAttachments,
   withAttachments,
-} from "../attachmentFiles/attachmentFiles.js";
+} from "../attachment-files/attachment-files.js";
 import { type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { NotFoundError } from "../errors/errors.js";
 import { coerceFieldValue, type FieldValue, fieldValueError } from "../fields/fields.js";
-import { rewriteSpecLinks } from "../specFiles/specFiles.js";
+import { rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { findStage } from "../stage/stage.js";
 import {
   formatStoryId,
@@ -18,7 +18,7 @@ import {
   sortStoryFiles,
   storyPath,
   writeStoryFile,
-} from "../storyFiles/storyFiles.js";
+} from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Story {

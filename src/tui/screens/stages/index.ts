@@ -1,1 +1,1 @@
-export * from "./StageFormModal/index.js";
+export * from "./stage-form-modal/index.js";

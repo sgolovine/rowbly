@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { useTestProject } from "../testProject/testProject.js";
+import { useTestProject } from "../test-project/test-project.js";
 import { createThread, listThreads, transitionThread } from "../thread/thread.js";
 import {
   closeConversation,

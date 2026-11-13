@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists, pathOccupied } from "../files/files.js";
-import { useTempDir, useTestProject } from "../testProject/testProject.js";
+import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import type { ServiceContext } from "../workspace/workspace.js";
 import { bundledSkills, installSkill, listSkills, removeSkill } from "./skill.js";
 
@@ -26,7 +26,7 @@ describe("skill service", () => {
   beforeEach(async () => {
     await writeSkill(fixture.path, "alpha");
     await writeSkill(fixture.path, "beta");
-    await writeFile(join(fixture.path, "rowbly_reference.md"), "shared");
+    await writeFile(join(fixture.path, "rowbly-reference.md"), "shared");
     await mkdir(join(fixture.path, "not-a-skill"));
     ctx = { ...project.ctx, skillsDir: fixture.path };
   });
@@ -179,7 +179,7 @@ describe("skill service", () => {
       expect(await skills()).toBeUndefined();
     });
 
-    it.each(["rowbly_reference.md", "../x", "not-a-skill", "nope"])("rejects the name %s", async (name) => {
+    it.each(["rowbly-reference.md", "../x", "not-a-skill", "nope"])("rejects the name %s", async (name) => {
       const error = await installSkill({ name, harnesses: ["codex"] }, ctx).catch((e) => e);
       expect(error).toBeInstanceOf(NotFoundError);
       expect(error.hint).toBe("Bundled skills: alpha, beta");

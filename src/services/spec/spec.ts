@@ -11,7 +11,7 @@ import {
   specPath,
   toSpecSlug,
   writeSpecFile,
-} from "../specFiles/specFiles.js";
+} from "../spec-files/spec-files.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 

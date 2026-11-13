@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import type { MarkedExtension } from "marked";
 import { theme } from "../theme.js";
-import { markdownToPlain } from "./DetailView/index.js";
+import { markdownToPlain } from "./detail-view/index.js";
 
 /**
  * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours

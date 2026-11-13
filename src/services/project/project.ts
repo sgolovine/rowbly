@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
-import { moveAttachmentDirs } from "../attachmentFiles/attachmentFiles.js";
+import { moveAttachmentDirs } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
   checkProjectKey,
@@ -14,9 +14,9 @@ import {
 } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
-import { ensureRuntimeIgnores } from "../runtimeFiles/runtimeFiles.js";
-import { canonicalStoryId, rewriteSpecLinks } from "../specFiles/specFiles.js";
-import { formatStoryId, readStoryFiles, storyPath } from "../storyFiles/storyFiles.js";
+import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
+import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
+import { formatStoryId, readStoryFiles, storyPath } from "../story-files/story-files.js";
 import { findProject, projectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Project extends ProjectConfig {

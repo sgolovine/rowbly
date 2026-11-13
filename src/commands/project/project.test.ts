@@ -1,8 +1,8 @@
 import { rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { getProject } from "../../services/project/project.js";
-import { useTestProject } from "../../services/testProject/testProject.js";
-import { runCli } from "../testCli/testCli.js";
+import { useTestProject } from "../../services/test-project/test-project.js";
+import { runCli } from "../test-cli/test-cli.js";
 
 describe("project commands", () => {
   describe("project update", () => {
