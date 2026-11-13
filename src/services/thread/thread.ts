@@ -254,6 +254,7 @@ export async function transitionThread(
     patch?: Partial<
       Pick<
         ThreadRecord,
+        | "cwd"
         | "session"
         | "model"
         | "result"

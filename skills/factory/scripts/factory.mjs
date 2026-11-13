@@ -10,6 +10,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
+import { renderWorkerMessage } from "./worker-message.mjs";
 import { commitProject, lockPath } from "./commit-project.mjs";
 import { readState, resetState, statePath, withStateLock, writeState } from "./factory-state.mjs";
 import { evaluateScan, normalizeStatus, pendingReports, recordLaunchFailure, recordStart, releaseStory } from "./supervisor-policy.mjs";
@@ -438,7 +439,7 @@ Do not give the same result again if a decision of yours can prevent it. Do the 
   };
   const template = await readFile(new URL("../references/worker-message.md", import.meta.url), "utf8");
   const text = template.replace("{{earlier}}\n", earlier ? `${earlier}\n` : "");
-  return text.replaceAll(/\{\{(\w+)\}\}/g, (_, name) => fields[name]).trimEnd();
+  return renderWorkerMessage(text, fields);
 }
 
 async function started() {

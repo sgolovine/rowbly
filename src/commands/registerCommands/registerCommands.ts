@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import { registerAttachmentCommands } from "../attachment/attachment.js";
 import { registerCustomFieldCommands } from "../customField/customField.js";
 import { registerDoctor } from "../doctor/doctor.js";
+import { registerFactoryCommands } from "../factory/factory.js";
 import { registerInit } from "../init/init.js";
 import { registerProjectCommands } from "../project/project.js";
 import { registerSkillCommands } from "../skill/skill.js";
@@ -27,6 +28,7 @@ export function registerCommands(program: Command): void {
   registerCustomFieldCommands(resource(program, "custom-field", "Manage custom fields"));
   registerSpecCommands(resource(program, "spec", "Manage specs"));
   registerSkillCommands(resource(program, "skill", "Manage agent skills"));
+  registerFactoryCommands(resource(program, "factory", "Control the native factory"));
   registerThreadCommands(resource(program, "thread", "Inspect agent threads"));
 }
 
