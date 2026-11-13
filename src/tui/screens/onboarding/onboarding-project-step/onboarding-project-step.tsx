@@ -10,6 +10,39 @@ import { theme } from "../../../theme.js";
 
 const BACK: KeyHint = { key: "esc", description: "back" };
 
+/** The fields of the step. The key follows the name until the person changes it. */
+function projectFields() {
+  return [
+    { name: "name", label: "Name", kind: "text" as const, required: true },
+    {
+      name: "key",
+      label: "Key",
+      kind: "text" as const,
+      required: true,
+      fillFrom: { field: "name", format: toProjectKey },
+    },
+  ];
+}
+
+/** Adds `esc` to the keys of the Form. The Form has nothing to undo, so the cleanup does nothing. */
+function showStepKeys(onHints: (hints: readonly KeyHint[]) => void, keys: readonly KeyHint[]): () => void {
+  onHints([...keys, BACK]);
+
+  return () => {};
+}
+
+/** Checks the name and the key, then goes on. A ValidationError shows under its field. */
+async function submitProject(
+  ctx: ServiceContext,
+  onNext: (name: string, key: string) => void,
+  values: FormValues,
+): Promise<void> {
+  const next = { name: String(values.name ?? ""), key: String(values.key ?? "") };
+  const plan = await planOnboarding(next, ctx);
+
+  onNext(plan.name, plan.key);
+}
+
 /** The name and the key of the new Project, in a Form on the screen. */
 export function OnboardingProjectStep({
   ctx,
@@ -27,29 +60,10 @@ export function OnboardingProjectStep({
   onHints(hints: readonly KeyHint[]): void;
 }) {
   useEscape(useIsActive(), onBack);
-  const showKeys = useCallback(
-    (keys: readonly KeyHint[]) => {
-      onHints([...keys, BACK]);
-      return () => {};
-    },
-    [onHints],
-  );
-  const [fields] = useState(() => [
-    { name: "name", label: "Name", kind: "text" as const, required: true },
-    {
-      name: "key",
-      label: "Key",
-      kind: "text" as const,
-      required: true,
-      fillFrom: { field: "name", format: toProjectKey },
-    },
-  ]);
-  const submit = async (values: FormValues) => {
-    const next = { name: String(values.name ?? ""), key: String(values.key ?? "") };
-    // A ValidationError shows under its field.
-    const plan = await planOnboarding(next, ctx);
-    onNext(plan.name, plan.key);
-  };
+
+  const showKeys = useCallback((keys: readonly KeyHint[]) => showStepKeys(onHints, keys), [onHints]);
+  const [fields] = useState(projectFields);
+
   return (
     <Box flexDirection="column" gap={1}>
       <Box flexDirection="column">
@@ -62,7 +76,7 @@ export function OnboardingProjectStep({
         <Form
           fields={fields}
           initialValues={{ name, key: projectKey }}
-          onSubmit={submit}
+          onSubmit={(values) => submitProject(ctx, onNext, values)}
           submitLabel="next"
           submitOnEnter
         />
