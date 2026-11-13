@@ -130,7 +130,9 @@ function useParentReports(props: ThreadsTabProps, data: ThreadsData | undefined,
       onCount(data.threads.length);
     }
   }, [data, onCount]);
-  useEffect(() => onEditing(viewing), [viewing, onEditing]);
+  useEffect(() => {
+    onEditing(viewing);
+  }, [viewing, onEditing]);
 }
 
 /** Goes back to the list when the selected thread goes away. */

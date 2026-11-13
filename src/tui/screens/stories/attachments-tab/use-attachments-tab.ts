@@ -65,7 +65,9 @@ export function useAttachmentsTab({
     reload: state.reload,
   };
 
-  useEffect(() => onHints(HINTS), [onHints]);
+  useEffect(() => {
+    onHints(HINTS);
+  }, [onHints]);
   useEffect(() => {
     onTask(task !== null);
 

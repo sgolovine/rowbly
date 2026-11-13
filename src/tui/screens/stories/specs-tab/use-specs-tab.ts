@@ -51,7 +51,9 @@ function useParentReports(props: SpecsTabProps, count: number | undefined, editi
       onCount(count);
     }
   }, [count, onCount]);
-  useEffect(() => onEditing(editing), [editing, onEditing]);
+  useEffect(() => {
+    onEditing(editing);
+  }, [editing, onEditing]);
 }
 
 /** Selects a new spec after the reload puts it in the list, and opens its text. */

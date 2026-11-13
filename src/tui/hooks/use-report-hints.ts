@@ -6,5 +6,7 @@ export function useReportHints(onHints: (hints: readonly KeyHint[]) => void, hin
   const hintsKey = JSON.stringify(hints);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
-  useEffect(() => onHints(hints), [hintsKey, onHints]);
+  useEffect(() => {
+    onHints(hints);
+  }, [hintsKey, onHints]);
 }

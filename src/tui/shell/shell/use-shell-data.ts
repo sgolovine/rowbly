@@ -84,7 +84,9 @@ export function useShellData(ctx: ServiceContext): ShellData {
 
   useFactoryChanges(projectRoot, factory.refresh);
   // biome-ignore lint/correctness/useExhaustiveDependencies: record only when another Project opens or the name changes.
-  useEffect(() => recordOpenProject(ctx, projectRoot, projectName, toast), [projectRoot, projectName]);
+  useEffect(() => {
+    recordOpenProject(ctx, projectRoot, projectName, toast);
+  }, [projectRoot, projectName]);
 
   return { data, factory, reload: () => bump(setVersion) };
 }

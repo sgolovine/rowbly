@@ -155,7 +155,9 @@ export function useSelectList<T>({
     }
   }, [cursor, index]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: report only when the highlighted item changes.
-  useEffect(() => onHighlight?.(highlighted), [highlighted]);
+  useEffect(() => {
+    onHighlight?.(highlighted);
+  }, [highlighted]);
   useInput((input, key) => handleListKey(env, input, key), { isActive: active });
   useMouse(
     listRef,
