@@ -1,7 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { cleanup } from "ink-testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { FactoryStatus } from "../../../services/factory/factory.js";
+import * as factory from "../../../services/factory/factory.js";
 import { listKnownProjects, RC_FILE, recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject, initProject } from "../../../services/project/project.js";
 import { createStage, listStages } from "../../../services/stage/stage.js";
@@ -12,7 +14,22 @@ import { LayoutContext } from "../../hooks/index.js";
 import { keys, renderTui, settle } from "../../testing/index.js";
 import { Shell } from "./Shell.js";
 
-afterEach(cleanup);
+// The real status by default; a test can replace it. Pi must not load: the Factory controls ask it about providers.
+vi.mock("../../../services/factory/factory.js", async (original) => {
+  const actual = await original<typeof import("../../../services/factory/factory.js")>();
+  return { ...actual, getFactoryStatus: vi.fn(actual.getFactoryStatus) };
+});
+vi.mock("../../../services/agentAuth/agentAuth.js", async (original) => ({
+  ...(await original<typeof import("../../../services/agentAuth/agentAuth.js")>()),
+  authRuntime: vi.fn(async () => {
+    throw new Error("Pi is not loaded in this test");
+  }),
+}));
+
+afterEach(() => {
+  cleanup();
+  vi.mocked(factory.getFactoryStatus).mockReset();
+});
 
 /** A version 1 factory state with one `running` attempt for each `[story, stage, model]`. */
 function factoryState(...workers: [story: string, stage: string, model: string][]): string {
@@ -118,6 +135,57 @@ describe("Shell", () => {
     });
   });
 
+  describe("factory controls", () => {
+    it("keeps the board usable without a provider or a runtime, and f opens the Factory controls", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      expect(tui.frame()).toContain("ROW-01");
+      expect(tui.frame()).toMatch(/Factory off {2}f/);
+      await tui.press("f");
+      await settle(50);
+      await tui.press();
+      expect(tui.frame()).toMatch(/Status\s+Stopped/);
+      expect(tui.frame()).toContain("limit 4");
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("Stopped");
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Threads");
+    });
+
+    it("opens the AI settings from the Factory controls with a", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("f");
+      await settle(50);
+      await tui.press("a");
+      await settle(50);
+      await tui.press();
+      expect(tui.frame()).toContain("Rowbly › Settings");
+      expect(tui.frame()).toContain("╭─AI─");
+      expect(tui.frame()).toMatch(/Worker limit\s+4/);
+      expect(tui.frame()).toMatch(/▌ AI/);
+      expect(tui.frame()).not.toContain("Status");
+    });
+
+    it("updates the counts of the header quietly when the factory writes its status", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      expect(tui.frame()).toContain("Factory off");
+      vi.mocked(factory.getFactoryStatus).mockResolvedValue({
+        version: 1,
+        phase: "ready",
+        liveness: "alive",
+        responsive: true,
+        workers: { running: 1, pending: 1, waiting: 0, limit: 4 },
+      } as FactoryStatus);
+      await mkdir(join(project.paths.dir, "runtime"), { recursive: true });
+      await writeFile(join(project.paths.dir, "runtime/status.json"), "{}\n");
+      for (let i = 0; i < 40 && !tui.frame().includes("1/4 · 1 pending"); i++) await settle(25);
+      expect(tui.frame()).toContain("Factory 1/4 · 1 pending");
+      expect(tui.frame()).not.toContain("Loading");
+    });
+  });
+
   describe("factory state file", () => {
     const showsSoon = async (tui: Awaited<ReturnType<typeof open>>, text: string, shown = true) => {
       for (let i = 0; i < 40 && tui.frame().includes(text) !== shown; i++) await settle(25);
@@ -125,10 +193,11 @@ describe("Shell", () => {
     };
     const count = (frame: string, text: string) => frame.split(text).length - 1;
 
-    it("shows a quiet status line when the file does not exist", async () => {
+    it("shows no status line when the file does not exist, and the header shows the stopped factory", async () => {
       await createStory({ title: "First story" }, project.ctx);
       const tui = await open(project.ctx as { cwd: string });
-      expect(tui.frame()).toContain("Factory activity: no .rowbly/state.json");
+      expect(tui.frame()).not.toContain("Factory activity");
+      expect(tui.frame()).toContain("Factory off");
       expect(tui.frame()).not.toContain("▶");
     });
 

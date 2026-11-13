@@ -14,9 +14,9 @@ describe("FactoryStatusLine", () => {
     expect(tui.frame()).toBe("");
   });
 
-  it("shows a note for a missing file", async () => {
+  it("shows nothing for a missing file, because the header shows the state of the factory", async () => {
     const tui = await renderTui(<FactoryStatusLine activity={{ path, status: "missing", stories: {} }} />);
-    expect(tui.frame()).toBe("Factory activity: no .rowbly/state.json");
+    expect(tui.frame()).toBe("");
   });
 
   it("shows a warning with the path and the reason for a file that Rowbly cannot use", async () => {

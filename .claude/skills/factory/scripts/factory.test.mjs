@@ -579,3 +579,13 @@ it("gives the usage as an action for a command or an option that it does not kno
     assert.match(result.json.actions.join("\n"), /Usage: node factory\.mjs <command>/);
   }
 });
+
+it("refuses external assignment while a native owner is live", async () => {
+  const { newOwner } = await import("./ownership-lock.mjs");
+  await mkdir(join(root, ".rowbly/runtime"));
+  await writeFile(join(root, ".rowbly/runtime/factory.lock"), JSON.stringify(await newOwner()));
+  const result = factory("started", "--story", "ROW-01", "--worker-id", "external");
+  assert.equal(result.code, 1);
+  assert.match(result.json.error.message, /native factory owns/);
+  assert.equal(await readFile(statePath(), "utf8").catch(() => null), null);
+});

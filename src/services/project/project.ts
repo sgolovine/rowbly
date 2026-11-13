@@ -14,6 +14,7 @@ import {
 } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
+import { ensureRuntimeIgnores } from "../runtimeFiles/runtimeFiles.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../specFiles/specFiles.js";
 import { formatStoryId, readStoryFiles, storyPath } from "../storyFiles/storyFiles.js";
 import { findProject, projectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -101,6 +102,7 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
   for (const stage of stages) {
     await writeFileAtomic(resolve(paths.stagesDir, `${stage.key}.md`), `${stage.prompt.trimEnd()}\n`);
   }
+  await ensureRuntimeIgnores(paths);
   await writeFileAtomic(paths.instructionsFile, "# ROWBLY INSTRUCTIONS\n");
   await writeConfig(paths, config);
   return { ...config, root };

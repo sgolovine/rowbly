@@ -27,6 +27,7 @@ import { isSubmitKey, type KeyHint } from "../../../keymap.js";
 import { theme } from "../../../theme.js";
 import { AttachmentsTab } from "../AttachmentsTab/index.js";
 import { SpecsTab } from "../SpecsTab/index.js";
+import { ThreadsTab } from "../ThreadsTab/index.js";
 
 /** Which confirmation is on top of the Modal. */
 export type StoryModalConfirm = "discard" | "delete" | null;
@@ -40,16 +41,19 @@ const GENERAL_PADDING_Y = 2;
 const NO_HINTS: readonly KeyHint[] = [];
 /** The Form leaves `shift+tab` and the save key to this body, which changes the tab and asks the Form to save. */
 const NAVIGATION = { extraHints: NO_HINTS, register: () => () => {} };
-const GENERAL = 0;
+
+/** The tabs of the Modal. The position of a tab depends on the tabs before it, so the body uses these ids. */
+type TabId = "general" | "specs" | "attachments" | "threads";
 
 /**
  * The inside of the `StoryModal`. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
- * change of tab keeps the text that is not saved. The Delete Button and `ctrl+d` of the General tab ask
- * before they delete the Story.
+ * change of tab keeps the text that is not saved. The Threads tab reads its data only after it is selected.
+ * The Delete Button and `ctrl+d` of the General tab ask before they delete the Story.
  */
 export function StoryModalBody({
   ctx,
   storyId,
+  stages,
   specs = true,
   fields,
   initialValues,
@@ -63,6 +67,8 @@ export function StoryModalBody({
 }: {
   ctx: ServiceContext;
   storyId: string;
+  /** The names of the Stages by key, for the Threads tab. */
+  stages?: Readonly<Record<string, string>>;
   specs?: boolean;
   fields: readonly FormField[];
   initialValues: FormValues;
@@ -80,14 +86,25 @@ export function StoryModalBody({
   const active = useIsActive();
   const covered = useCovered();
   const layout = useLayout();
-  const [tab, setTab] = useState(GENERAL);
+  const tabIds: readonly TabId[] = specs
+    ? ["general", "specs", "attachments", "threads"]
+    : ["general", "attachments", "threads"];
+  const [tabId, setTabId] = useState<TabId>("general");
+  const tab = Math.max(0, tabIds.indexOf(tabId));
   const [specCount, setSpecCount] = useState<number | undefined>(undefined);
+  const [threadCount, setThreadCount] = useState<number | undefined>(undefined);
+  const [threadViewing, setThreadViewing] = useState(false);
+  const [threadHints, setThreadHints] = useState<readonly KeyHint[]>(NO_HINTS);
   const [specEditing, setSpecEditing] = useState(false);
   const [specHints, setSpecHints] = useState<readonly KeyHint[]>(NO_HINTS);
   const [submitRequest, setSubmitRequest] = useState(0);
   const idle = active && !covered && confirming === null;
-  const general = tab === GENERAL;
-  const attachmentTab = tab === (specs ? 2 : 1);
+  const general = tabIds[tab] === "general";
+  const specsTab = tabIds[tab] === "specs";
+  const attachmentTab = tabIds[tab] === "attachments";
+  const threadsTab = tabIds[tab] === "threads";
+  // A sub-region of a tab that takes `esc` and `tab` for itself.
+  const tabOwnsKeys = specEditing || threadViewing;
   const [saving, setSaving] = useState(false);
   const savingNow = useRef(false);
   const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, storyId, idle && !saving);
@@ -95,24 +112,28 @@ export function StoryModalBody({
   const [attachmentTask, setAttachmentTask] = useState(false);
 
   useKeyCapture(active, { text: false, escape: true });
-  useEscape(idle && !specEditing && !attachmentTask, onRequestClose);
+  useEscape(idle && !tabOwnsKeys && !attachmentTask, onRequestClose);
   useInput(
     (input, key) => {
-      if (key.tab && key.shift) setTab((n) => (n + 1) % (specs ? 3 : 2));
+      if (key.tab && key.shift) setTabId(tabIds[(tab + 1) % tabIds.length] ?? "general");
       else if (!specEditing && !attachmentTask && isSubmitKey(input, key)) setSubmitRequest((n) => n + 1);
       else if (general && key.ctrl && input === "d") onConfirming("delete");
     },
     { isActive: idle },
   );
 
+  const tabHints = attachmentTab ? attachmentHints : threadsTab ? threadHints : specHints;
+  // The `esc` of the tab or of the Modal goes last, where a narrow hint strip keeps it.
+  const tabEsc = tabHints.at(-1)?.key === "esc" ? tabHints.at(-1) : undefined;
+  const esc = tabEsc ?? (tabOwnsKeys ? undefined : { key: "esc", description: "close" });
   const hints: readonly KeyHint[] = general
     ? [{ key: "ctrl+d", description: "delete" }]
     : [
-        ...(attachmentTab ? attachmentHints : specHints),
+        ...(tabEsc ? tabHints.slice(0, -1) : tabHints),
         { key: "ctrl+s", description: "save" },
         IMAGE_PASTE_HINT,
         { key: "shift+tab", description: "next tab", secondary: true },
-        ...(specEditing ? [] : [{ key: "esc", description: "close" }]),
+        ...(esc ? [esc] : []),
       ];
   const hintsKey = JSON.stringify(hints);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
@@ -144,9 +165,10 @@ export function StoryModalBody({
             "General",
             ...(specs ? [specCount === undefined ? "Specs" : `Specs ${specCount}`] : []),
             "Attachments",
+            threadCount === undefined ? "Threads" : `Threads ${threadCount}`,
           ]}
           selected={tab}
-          onSelect={setTab}
+          onSelect={(index) => setTabId(tabIds[index] ?? "general")}
           active={idle}
         />
       </Box>
@@ -193,17 +215,28 @@ export function StoryModalBody({
         </Box>
       </LayoutContext.Provider>
       <LayoutContext.Provider value={specsLayout}>
-        <Box display={!general && !attachmentTab ? "flex" : "none"} flexDirection="column">
+        <Box display={specsTab ? "flex" : "none"} flexDirection="column">
           {specs && (
             <SpecsTab
               ctx={ctx}
               storyId={storyId}
-              selected={specs && !general && !attachmentTab && confirming === null}
+              selected={specsTab && confirming === null}
               onCount={setSpecCount}
               onEditing={setSpecEditing}
               onHints={setSpecHints}
             />
           )}
+        </Box>
+        <Box display={threadsTab ? "flex" : "none"} flexDirection="column">
+          <ThreadsTab
+            ctx={ctx}
+            storyId={storyId}
+            stages={stages}
+            selected={threadsTab && confirming === null}
+            onCount={setThreadCount}
+            onEditing={setThreadViewing}
+            onHints={setThreadHints}
+          />
         </Box>
       </LayoutContext.Provider>
       <LayoutContext.Provider value={generalLayout}>

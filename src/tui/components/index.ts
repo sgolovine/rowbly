@@ -1,6 +1,8 @@
 export * from "./Button/index.js";
 export * from "./CloseButton/index.js";
 export * from "./ConfirmDialog/index.js";
+export * from "./ConversationEntry/index.js";
+export * from "./ConversationView/index.js";
 export * from "./DetailView/index.js";
 export * from "./Footer/index.js";
 export * from "./Form/index.js";
@@ -17,6 +19,7 @@ export { FormKeysContext, useCovered } from "./modalLayer.js";
 export * from "./OverlayHost/index.js";
 export * from "./Panel/index.js";
 export { ScrollBody } from "./ScrollBody/index.js";
+export * from "./SearchableSelectPicker/index.js";
 export { type RowDragProps, SelectionRow } from "./SelectionRow/index.js";
 export * from "./SelectList/index.js";
 export * from "./SelectListRow/index.js";

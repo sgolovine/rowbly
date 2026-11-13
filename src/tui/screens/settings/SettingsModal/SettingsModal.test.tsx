@@ -16,7 +16,17 @@ describe("SettingsModal", () => {
     await settle(50);
     const frame = tui.frame();
     expect(frame).toContain("Rowbly › Settings");
-    for (const label of ["Project", "General", "Stages", "Custom Fields", "Skills", "Maintenance", "Doctor"]) {
+    for (const label of [
+      "Project",
+      "General",
+      "Stages",
+      "Custom Fields",
+      "Skills",
+      "Factory",
+      "AI",
+      "Maintenance",
+      "Doctor",
+    ]) {
       expect(frame).toContain(label);
     }
     expect(frame).toContain("enter open section");

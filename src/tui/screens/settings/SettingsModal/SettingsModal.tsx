@@ -13,12 +13,15 @@ export function SettingsModal({
   ctx,
   projectName,
   groups = SETTINGS_GROUPS,
+  section,
   onChange,
   onClose,
 }: {
   ctx: ServiceContext;
   projectName?: string;
   groups?: readonly SettingsGroup[];
+  /** The id of a section that opens with the focus. */
+  section?: string;
   /** A section changed the project. */
   onChange(): void;
   onClose(): void;
@@ -32,7 +35,14 @@ export function SettingsModal({
       hints={hints}
       onClose={onClose}
     >
-      <SettingsBody ctx={ctx} groups={groups} onChange={onChange} onClose={onClose} onHints={setHints} />
+      <SettingsBody
+        ctx={ctx}
+        groups={groups}
+        section={section}
+        onChange={onChange}
+        onClose={onClose}
+        onHints={setHints}
+      />
     </Modal>
   );
 }

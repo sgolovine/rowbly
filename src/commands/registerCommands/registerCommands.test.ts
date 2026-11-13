@@ -12,6 +12,10 @@ const resources = {
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
+  factory: ["status", "run", "stop", "restart", "logs", "start", "configure"],
+  auth: ["providers", "status", "login", "logout"],
+  model: ["list"],
+  thread: ["cancel", "resume", "log", "list", "show"],
 };
 
 describe("registerCommands", () => {
@@ -66,6 +70,10 @@ describe("registerCommands", () => {
       "custom-field",
       "spec",
       "skill",
+      "factory",
+      "auth",
+      "model",
+      "thread",
     ]);
     for (const [resource, actions] of Object.entries(resources)) {
       expect(
@@ -88,7 +96,7 @@ describe("registerCommands", () => {
         expect(result.exitCode).toBe(0);
         expect(result.stderr).toBe("");
         expect(result.stdout).toContain(`Usage: rowbly ${resource}`);
-        for (const action of actions) expect(result.stdout).toContain(action);
+        for (const action of actions.filter((a) => a !== "run")) expect(result.stdout).toContain(action);
         expect(await readdir(outside.path)).toEqual(before);
       });
     }

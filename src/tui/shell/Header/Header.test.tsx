@@ -1,5 +1,8 @@
+import { Box } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { FactoryStatus } from "../../../services/factory/factory.js";
+import { LayoutContext } from "../../hooks/index.js";
 import { renderTui } from "../../testing/index.js";
 import { Header } from "./Header.js";
 
@@ -72,5 +75,73 @@ describe("Header", () => {
     expect(finder).toHaveBeenCalledOnce();
     expect(settings).toHaveBeenCalledOnce();
     expect(newStory).toHaveBeenCalledOnce();
+  });
+
+  describe("Factory Button", () => {
+    const stopped = { version: 1, phase: "stopped" } as const;
+    /** The full header at `width` columns, with a running factory or a stopped one. */
+    const header = (width: number, onClick = () => {}) => (
+      <LayoutContext.Provider value={{ width, height: undefined }}>
+        <Box width={width}>
+          <Header
+            project={{ name: "rowbly", onClick: () => {} }}
+            finder={{ onClick: () => {} }}
+            factory={{ status: stopped, onClick }}
+            settings={{ onClick: () => {} }}
+            newStory={{ onClick: () => {}, showKey: true }}
+            clickable
+          />
+        </Box>
+      </LayoutContext.Provider>
+    );
+
+    it("shows the factory state with its key before Settings, and calls onClick on a click", async () => {
+      const onClick = vi.fn();
+      const tui = await renderTui(header(140, onClick));
+      expect(tui.frame()).toMatch(/Factory off {2}f {2}\| {1,2}Settings {2},/);
+      expect(tui.frame()).toContain("Find Stories");
+      await tui.click("Factory");
+      expect(onClick).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the Project Button and + New Story at narrow widths, and drops the Factory key cap first", async () => {
+      const tui = await renderTui(header(80));
+      expect(tui.frame()).toContain("rowbly");
+      expect(tui.frame()).toContain("+ New Story");
+      expect(tui.frame()).toContain("Factory off");
+      for (const width of [70, 60, 50]) {
+        await tui.rerender(header(width));
+        expect(tui.frame()).toContain("rowbly");
+        expect(tui.frame()).toContain("+ New Story");
+        // A row that does not fit wraps, and the Panel grows taller than three rows.
+        expect(tui.frame().split("\n")).toHaveLength(3);
+      }
+      expect(tui.frame()).not.toContain("Factory");
+    });
+
+    it("leaves out the pending count of a running factory before it drops the Button", async () => {
+      const running = {
+        version: 1,
+        phase: "ready",
+        liveness: "alive",
+        workers: { running: 2, pending: 1, waiting: 0, limit: 3 },
+      } as FactoryStatus;
+      const tui = await renderTui(
+        <LayoutContext.Provider value={{ width: 80, height: undefined }}>
+          <Box width={80}>
+            <Header
+              project={{ name: "Shop", onClick: () => {} }}
+              finder={{ onClick: () => {} }}
+              factory={{ status: running, onClick: () => {} }}
+              settings={{ onClick: () => {} }}
+              newStory={{ onClick: () => {}, showKey: true }}
+              clickable
+            />
+          </Box>
+        </LayoutContext.Provider>,
+      );
+      expect(tui.frame()).toMatch(/Factory 2\/3 {2}f/);
+      expect(tui.frame()).not.toContain("pending");
+    });
   });
 });

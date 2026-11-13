@@ -18,11 +18,14 @@ Commander parses them.
 
 ## Domain concepts
 
-Rowbly has five concepts. Use these names in code, services, commands and UI text.
+Rowbly has these concepts. Use these names in code, services, commands and UI text.
 
 ```
 Project ── configuration: custom field definitions, stages (each with an optional prompt)
+  ├── Factory ── native supervisor and independent workers
+  │     └── Thread ── one Pi session, with one or more runs
   └── Story ── custom field values, exactly one stage
+        ├── Thread ── the history of one worker attempt
         └── Spec ── a Markdown document, linked to one or more stories
 ```
 
@@ -36,9 +39,16 @@ Project ── configuration: custom field definitions, stages (each with an opt
   Each story in a project **must** have a stage. Each project from `rowbly init` or the TUI starts with the stages that
   onboarding selects. Users can add more stages. Each stage can have a prompt. The prompt tells agents what
   to do with a story while the story is in that stage.
-- **Factory activity.** The factory activity shows the workers that the factory state records for a
-  story in its current stage. The factory supervisor writes the state to `.rowbly/state.json`. Rowbly
-  only reads this file. It does not check that a worker is alive.
+- **Factory.** The native factory runs a Pi supervisor and independent Pi workers in a separate daemon.
+  The manager controls ownership, worker slots, worktrees, sessions, commands and recovery.
+  The external factory skill remains available when the native factory is off.
+  Never run native and external supervisors together.
+- **Thread.** A Thread holds metadata for one Pi session. A worker Thread belongs to one Story and one Stage attempt.
+  A resume adds a run to the same Thread. A retry creates a new Thread.
+  Supervisor Threads belong to the Factory. History stays after a Story is deleted.
+- **Factory activity.** The activity shows workers from `.rowbly/state.json` for the current Story Stage.
+  The native factory and the external supervisor both write this file under the shared state lock.
+  The activity reader does not check worker liveness. Native factory controls check daemon ownership separately.
 - **Spec.** A spec is a Markdown document that describes the work of a story. A spec must have a link
   to at least one story, and a story can have many specs. Specs are an optional feature. Each project
   starts with specs off. Turn them on in the Specs section of Settings or with
@@ -46,7 +56,8 @@ Project ── configuration: custom field definitions, stages (each with an opt
 
 ## Stack
 
-- **TypeScript** (ESM, `"type": "module"`), Node >= 22
+- **TypeScript** (ESM, `"type": "module"`), Node >= 22.19.0
+- **Pi** (`@earendil-works/pi-coding-agent` and `@earendil-works/pi-ai`), pinned to 1.5.2, supplies sessions, authentication and models.
 - **Commander.js** to parse arguments
 - **Ink** and **React** for the TUI. `marked`, `marked-terminal`, `wrap-ansi` and `chalk` render
   Markdown in the TUI.
@@ -88,6 +99,7 @@ src/
     testCli/          # runCli(), createProgram(): run commands in tests
     init/             # the `rowbly init` command: flags and JSON input
     initWizard/       # askOnboarding(): the @clack/prompts questions of `rowbly init`
+    auth/ authWizard/ model/ factory/ factoryRunner/ thread/ # native factory commands and foreground adapters
     <area>/           # one folder per area: project (project update, project get-instructions), doctor, story, stage, customField, spec, skill
   tui/
     index.tsx         # renderTui(): mounts the Ink app and waits for exit
@@ -112,6 +124,22 @@ src/
     specFiles/        # raw spec file IO shared by the domain services
     project/ story/ stage/ customField/ spec/ skill/ doctor/   # the domain services
     onboarding/       # planOnboarding(), applyOnboarding(): the setup that the TUI and `rowbly init` share
+    piRuntime/        # lazy Pi imports, session adapter, runtime and model catalog
+    agentAuth/        # provider status, model checks, login and logout
+    factorySettings/  # optional factory.json and role model choices
+    factory/          # daemon client, status, controls and operational logs
+    factoryManager/   # serial supervisor loop, tools, reservations and worker lifecycle
+    factoryWorker/    # independent worker session, result and activity
+    factoryOwnership/ # daemon ownership and process identity
+    factoryControl/   # durable commands and receipts
+    factoryRecovery/  # dead-owner reconciliation and resume eligibility
+    factoryPolicy/ factoryState/ # shared v1 policy and state transactions
+    projectWrite/     # shared kernel flock for canonical factory writes
+    runtimeFiles/     # private runtime paths and ignore rules
+    thread/           # metadata, runs, state projection and watches
+    conversation/     # read-only selected-file Pi v3 history and bounded pages
+    supervisorDigest/ # bounded operational facts without worker transcripts
+    workerWorktree/   # one worktree per Story, with existing work preserved
     storyWatch/       # watchStories(): calls a function when the files of the stories folder change
     knownProject/     # listKnownProjects(), recordProject(), forgetProject(): the projects in ~/.rowblyrc.json
     testProject/      # useTempDir(), useTestProject(): temporary projects for service tests
@@ -136,7 +164,19 @@ the problems that it can repair.
   stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset)
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
-  state.json          # optional; the factory supervisor writes it; Rowbly only reads it
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  .gitignore          # /state.json* and /runtime/; existing text stays
+  state.json          # v1 policy state; native factory or external supervisor writes it
+  runtime/            # private, ignored; directories use mode 0700
+    factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
+    lifecycle.guard   # short exclusive gate for ownership changes
+    status.json       # heartbeat, workers, queue, holds, provider pauses and attention
+    control/<id>.json # immutable stop, cancel or resume request
+    receipts/<id>.json # accepted, completed or rejected command result
+    threads/<id>.json # small Thread metadata, with runs and exact session reference
+    sessions/<id>/<pi-name>.jsonl # native Pi history; file reference starts as null
+    bin/rowbly        # exact-version CLI shim for workers
+    logs/<id>.jsonl   # operational logs; no transcript bodies
 ```
 
 The order of `stages` in the config is the order of the board. The custom field types are `string`,
@@ -160,8 +200,98 @@ its current stage:
 
 A problem with the file never stops the load of the project. The service gives a status in place of an
 error: `ok`, `missing`, `unavailable` or `incomplete`. An `unavailable` file gives no activity. The TUI
-shows the activity as `▶` in the story row, and shows each file problem in one line below the story
-list. The service and the TUI never write `state.json`.
+shows the activity as `▶` in the story row, and shows each file problem in one line below the Story
+list. A Project without `state.json` shows no status line.
+The activity service and the TUI never write `state.json` directly.
+
+### Native runtime, locks and recovery
+
+Existing Projects need no migration of Stories, Stages, Specs or config.
+Without `factory.json`, the worker limit is four and Pi selects default models.
+Explicit model choices must be available and must support the selected thinking level.
+Rowbly does not write global Pi settings. Credentials stay in Pi storage, outside the Project.
+
+Initialization creates `.rowbly/.gitignore`. Native start and `doctor --fix` add missing runtime ignore rules.
+Canonical factory commits exclude runtime files, also when Git already tracks them.
+Do not commit runtime files or credentials.
+
+The factory uses three locks:
+
+1. `runtime/factory.lock` holds daemon ownership. `lifecycle.guard` serializes owner creation, takeover and release.
+   Linux boot ID and process start ticks protect against PID reuse.
+   A live, foreign, corrupt or uncertain owner prevents takeover. An old heartbeat does not prove death.
+2. `state.json.lock` serializes v1 state transactions and Thread metadata writes.
+   The shared scripts preserve unknown v1 keys. Do not hold this lock across model, Git or subprocess work.
+3. The Git common directory holds the Project write lock from `commit-project.mjs::lockPath(root)`.
+   Native factory writers use util-linux `flock -w 60` for canonical changes and commits.
+   Workers use the exact CLI shim under the same lock. There is no unlocked fallback.
+
+Never acquire the Project write lock while the state lock is held.
+No kernel lock spans a model request. Existing human CLI and TUI writes retain their previous concurrency limits.
+A crash inside a lifecycle guard can leave the guard in place. Do not remove a guard because of its age.
+
+Offline repair must first establish that all relevant factory processes have stopped.
+
+Native execution requires Linux, Git, local files and util-linux `flock`.
+The board, metadata and Peek remain separate from native execution prerequisites.
+There is no ownership guarantee across hosts, NFS, PID namespaces or copied runtime directories.
+Old external skill copies do not honor native ownership. Never run both supervisors together.
+
+Updated external scripts refuse a live or uncertain native owner.
+Native start preserves external active attempts. `--adopt-external` marks them interrupted; it does not stop external workers.
+Stop external workers before this explicit adoption.
+
+Normal stop aborts Pi sessions and preserves histories and worktrees. A restart waits for stop and ownership release.
+After definite owner death, recovery marks active runs interrupted and repairs missing native state projections.
+A worker can resume only with a session file and its Story in the original Stage.
+
+The manager also checks policy eligibility and the original worktree. Completed Threads cannot resume.
+Each Thread has at most three runs. A retry uses a new Thread.
+A cancellation holds the Story and Stage until release, explicit resume or a material Story change.
+
+A later start lets the supervisor select eligible interrupted Threads; it does not resume all Threads automatically.
+Shell descendants started by a crashed daemon are not tracked. Normal stop relies on Pi abort for shell children.
+Do not assume exactly-once shell effects. Dirty worktrees and malformed runtime files stay on disk.
+
+Doctor reports corrupt and orphan Threads. It does not repair their histories or take over a live daemon.
+
+### Native commands and TUI controls
+
+| Commands                                                                  | Purpose                                                                      |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.            |
+| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential.        |
+| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                        |
+| `factory configure`                                                       | Set `--max-workers`, `--supervisor`, `--worker` and the role thinking flags. |
+| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                         |
+| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                        |
+| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.                      |
+| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                         |
+| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.           |
+| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                                  |
+
+CLI login requires a terminal without `--json`. API keys use a masked prompt, never an argument.
+Configured models do not prove provider access, quota or credential health.
+The Pi SDK loads on demand for authentication, model selection and native execution.
+The board, help, doctor, metadata, status and read-only conversation paths do not import Pi runtime values.
+
+`tsup` keeps Pi external. Keep the lazy boundary in `piRuntime` and its import tests.
+Peek reads current Pi v3 histories without SDK session creation or file writes.
+Unknown formats show a placeholder. Only finalized messages appear; token deltas do not appear.
+
+In the TUI, `f` opens Factory controls. The header shows active and pending counts when space permits.
+In Factory controls, `s` starts, `x` requests stop with confirmation, and `enter` opens the supervisor conversation.
+The `a` key opens Settings at the AI section. Close the TUI without a stop to leave the daemon active.
+
+The Story Threads tab shows all statuses and a queue note when the Story waits for a worker slot.
+Select a Thread to Peek. Use `x` to interrupt with confirmation, or `r` to resume an eligible Thread.
+The viewer uses arrows or `j`/`k`, Page Up, Page Down, Home, End and the mouse wheel.
+
+Scroll up to stop follow. Use End or `f` to follow again. Escape returns to the previous view.
+Settings has a Factory group with an AI section for providers, role models and the worker limit.
+There, Enter signs in, `d` signs out with confirmation, `s`/`w` selects role models, `l` sets the limit, and `r` reloads.
+
+The model picker offers supported thinking levels and `Pi default`. Escape cancels authentication and restores focus.
 
 Older versions of Rowbly wrote an agent lock to the `agentLock` key of a story. Rowbly does not use
 this key now. `rowbly doctor` shows a warning for each story file with an `agentLock` key. To remove
@@ -420,6 +550,13 @@ they test. A component test is in the folder of its component.
 - Call `cleanup` from ink-testing-library in `afterEach`.
 - **Each service has a test.** Use `useTestProject()` or `useTempDir()` from `src/services/testProject/testProject.ts`.
   They give each test a new project in a temporary directory.
+
+Native session tests use Pi's faux provider and in-memory credentials. They make no live provider requests.
+Daemon tests use private HOME and Pi agent directories, temporary Git Projects and a loader that blocks network access.
+
+Keep live credentials out of tests. Do not add a production faux-provider flag.
+Scripted authentication tests do not prove real OAuth login, provider entitlement or token refresh.
+Live provider validation is separate from the automated checks.
 
 The tests of `skills/factory/scripts/` are separate from the Vitest tests. They use `node:test`. Run them with
 `pnpm test:factory`. The lint job of CI also runs them.

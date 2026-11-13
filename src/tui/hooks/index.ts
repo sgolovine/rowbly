@@ -8,3 +8,4 @@ export * from "./useCursor.js";
 export * from "./useEscape.js";
 export * from "./useStoryChanges.js";
 export * from "./useStoryPaste.js";
+export * from "./useThreadChanges.js";

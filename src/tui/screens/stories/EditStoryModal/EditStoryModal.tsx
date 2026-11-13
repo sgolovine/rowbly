@@ -75,5 +75,6 @@ export function EditStoryModal({
       onConfirm: remove,
     },
   };
-  return <StoryModal ctx={ctx} storyId={story.id} specs={specs} {...form} />;
+  const stageNames = Object.fromEntries(stages.map((stage) => [stage.key, stage.label]));
+  return <StoryModal ctx={ctx} storyId={story.id} stages={stageNames} specs={specs} {...form} />;
 }

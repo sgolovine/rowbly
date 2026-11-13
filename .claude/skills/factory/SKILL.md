@@ -5,11 +5,49 @@ description: Run a factory supervisor that watches the Stories of the current Ro
 
 # Factory
 
-The agent that runs this skill is the factory supervisor. The supervisor starts workers and records them. It does not do the work of a Story, and it does not move a Story.
+Use the native factory first. The native manager runs its own Pi supervisor and workers outside the harness.
+Use the external harness path only when the user selects it or native execution prerequisites are not available.
+Read `references/rowbly_reference.md` before each command path.
 
-A worker is a thread that does the work of one Stage for one Story. If the harness can start threads, always start each worker as a thread. Start a worker as a subagent only if the harness cannot start threads.
+## Native path
 
-Read `references/rowbly_reference.md` before you run a `rowbly` command.
+1. Run `rowbly -C <root> --json factory status`.
+2. Run `rowbly -C <root> --json factory start` when no native factory is active.
+3. Run `rowbly -C <root> --json factory status` to report the result.
+
+Do not start external scans or harness workers for a native factory.
+The manager reads Project instructions and Stage prompts. It owns reservations, capacity, sessions, worktrees and canonical commits.
+Use `rowbly -C <root> --json factory logs --tail 20` for operational errors.
+Use `rowbly -C <root> --json thread list` for worker metadata.
+
+Use `rowbly -C <root> --json thread log <id> --tail 20` for read-only history.
+Use `rowbly -C <root> --json thread cancel <id>` to interrupt a worker.
+Use `rowbly -C <root> --json thread resume <id>` for an eligible Thread through the active native factory.
+Use `rowbly -C <root> --json factory stop` when the user requests a stop.
+A restart uses `rowbly -C <root> --json factory restart` after stop completes.
+
+Native execution requires Node >=22.19.0, Linux, Git, local files, util-linux `flock` and a configured Pi model.
+Use `rowbly auth status` and `rowbly model list` to examine configuration without a provider health claim.
+If credentials are absent, report the prerequisite. Continue other authorized work without a question or a wait for a person.
+Do not switch to an external supervisor after an ownership, storage or uncertain-start error.
+
+Report the error and inspect status and logs. Preserve existing runtime files and worktrees.
+
+Never run native and external supervisors together. Updated external scripts reject a live or uncertain native owner.
+Old copies do not honor this protocol. Confirm external workers have stopped before native adoption.
+`rowbly -C <root> --json factory start --adopt-external` marks external active attempts interrupted.
+
+It does not stop external workers or import external conversations.
+See [Supervisor policy](references/supervisor-policy.md) for locks, state projection and recovery limits.
+
+## External harness path
+
+The rest of this skill describes the external supervisor only.
+In this path, the agent runs the supervisor and starts harness workers. It does not do Story work or move Stories.
+A worker does the work of one Stage for one Story.
+
+Use a harness thread when available. Use a subagent only when the harness cannot start a thread.
+Native Threads represent Pi sessions; external harness thread IDs remain v1 worker IDs.
 
 ## Goal and rules
 
@@ -60,7 +98,7 @@ The tool saves the state of the factory in `<root>/.rowbly/state.json`. Do not e
 
 If the user names a different command for Rowbly, add `-- <command>` to the `check` command. The tool saves it for the later commands.
 
-## Start the factory
+## Start the external factory
 
 Do these five steps one time, when the user starts the factory. Do not start a test worker.
 
@@ -292,7 +330,7 @@ Do the action for the problem. Then continue the scan. None of these problems st
 | A Stage prompt is missing or `invalid` | Tell the user one time, as the action tells you. Do not write a Stage prompt. The Stories of the other Stages continue. |
 | The commit of the Project files did not complete | Tell the user one time, as the action tells you. `scan` tries again on each scan. Do not reset, discard or amend in Git. |
 | The state file is not valid | Run `factory.mjs reset-state --root <root>`. It keeps the valid records. Do its actions, so that no Story gets a second worker. |
-| A different supervisor works on the same Project | Add `--busy <story>` to `scan` for each Story that has a worker of the other supervisor. |
+| A different external supervisor works on the same Project | Add `--busy <story>` to `scan` for each Story that has a worker of the other supervisor. |
 | A user tells you to try a parked Story again | Run `factory.mjs release --root <root> --story <story>`. |
 | A problem that this table does not show | Obey rule 7 of "Goal and rules". |
 
@@ -317,6 +355,8 @@ The `scan` command applies these rules. You do not apply them yourself. Use them
 Workers write the Project files through `rowbly -C <root>` under the shared write lock. The first message gives them the lock path. Their source commits stay in their own worktrees.
 
 ## Stop the factory
+
+For the native path, use `rowbly -C <root> --json factory stop`. The steps below apply to the external path.
 
 Stop the factory only in these conditions:
 

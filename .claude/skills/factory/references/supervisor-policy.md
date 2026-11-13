@@ -2,7 +2,60 @@
 
 `scripts/supervisor-policy.mjs` holds the assignment rules of the factory. It does no I/O.
 `scripts/factory.mjs scan` supplies the facts, calls the policy, saves the state and prints the decisions.
-The supervisor uses `factory.mjs`. It does not call the policy directly.
+The external supervisor uses `factory.mjs`. It does not call the policy directly.
+
+## Native execution and external compatibility
+
+The native manager uses the same v1 policy through `factoryPolicy` and `factoryState`.
+The external harness path uses `factory.mjs`. Never run both supervisors together.
+Updated external scripts check native ownership before work and inside assignment transactions.
+Old installed scripts do not honor native ownership or the stronger state lock protocol.
+
+Native `runtime/factory.lock` records daemon ownership. `runtime/lifecycle.guard` serializes owner changes.
+Only definite owner death permits takeover. An old heartbeat does not prove death.
+A corrupt, foreign or uncertain owner prevents takeover.
+
+A guard left after a crash needs offline repair after all relevant factory processes have stopped.
+Never remove a guard because of its age.
+
+Both paths use `state.json.lock` for state transactions. Unknown v1 keys stay intact.
+Native factory writes to canonical Project files use the shared Git common-directory lock through util-linux `flock`.
+Native workers use the exact CLI shim under that lock. They have no unlocked fallback.
+
+Do not acquire the Project write lock while the state lock is held.
+Do not hold either lock across a model request. Existing human CLI and TUI writes retain their previous concurrency limits.
+Native execution requires Linux, Git and local files. Multi-host and NFS ownership are not supported.
+
+A native Thread is one Pi session and one policy attempt. Its UUID is also the v1 `workerId`.
+The native manager saves pending intent before the v1 `preparing` attempt and before worktree or session creation.
+Pending occupies a worker slot. A Story that waits for capacity has no fictitious Thread.
+
+Recovery repairs the two-file projection by Thread ID without duplicate attempts.
+Native cancellation maps to v1 `interrupted` and saves a Story/Stage/content hold.
+Release, explicit resume or a material Story change clears that hold.
+
+Resume adds a run to the same Thread and reuses the exact session and policy attempt.
+The Story must remain in its original Stage. The session file and original worktree must exist.
+
+The manager checks policy eligibility. Completed Threads cannot resume. Each Thread has at most three runs.
+A new retry creates a new Thread. Supervisor rotation creates a new Factory Thread with a predecessor link.
+
+Normal stop aborts Pi sessions and preserves histories and worktrees.
+After definite daemon death, recovery marks active runs interrupted.
+A worker is resumable only with a session file and its Story in the original Stage.
+Shell descendants started by a crashed daemon are not tracked. Normal stop relies on Pi abort for shell children.
+
+Do not assume exactly-once shell effects.
+Native start preserves external active attempts unless `--adopt-external` marks them interrupted.
+Stop external workers first. Adoption does not stop workers or import their conversations.
+
+The native loop observes file changes, worker results and retry or hold deadlines.
+It sends bounded operational digests without worker transcripts. Explicit history inspection has twenty entries and a 4 KiB text limit.
+Report delivery is at least once. The manager acknowledges reports after a successful supervisor turn.
+
+Unanswered decisions use bounded backoff. An idle factory makes no provider requests.
+The native snapshot persists holds, provider pauses, attention, report checkpoints and queue reasons.
+The AI selects eligible work; there is no deterministic launch fallback.
 
 ## Facts
 

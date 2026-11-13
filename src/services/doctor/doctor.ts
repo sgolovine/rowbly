@@ -1,5 +1,7 @@
+import { execFile } from "node:child_process";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
+import { promisify } from "node:util";
 import {
   attachmentDir,
   attachmentOwners,
@@ -12,6 +14,7 @@ import { RowblyError } from "../errors/errors.js";
 import { coerceFieldValue, fieldValueError } from "../fields/fields.js";
 import { canCreateFolder, listMarkdownFiles, pathExists, pathOccupied } from "../files/files.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
+import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtimeFiles/runtimeFiles.js";
 import { bundledSkills, copySkill, SKILL_FILE, skillPath } from "../skill/skill.js";
 import {
   canonicalStoryId,
@@ -21,6 +24,7 @@ import {
   writeSpecFile,
 } from "../specFiles/specFiles.js";
 import { formatStoryId, parseStoryFileName, type StoryFile, writeStoryFile } from "../storyFiles/storyFiles.js";
+import { listThreads } from "../thread/thread.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface DoctorIssue {
@@ -83,6 +87,41 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
     }
   }
 
+  const missingIgnores = await missingRuntimeIgnores(paths);
+  if (missingIgnores.length) {
+    await report(
+      {
+        severity: "warning",
+        message: "Factory runtime ignore rules are missing",
+        file: rel(paths.ignoreFile),
+        fix: "Add the missing rules",
+      },
+      () => ensureRuntimeIgnores(paths),
+    );
+  }
+  const tracked = await promisify(execFile)(
+    "git",
+    ["-C", paths.root, "ls-files", "-z", "--", ".rowbly/runtime", ".rowbly/state.json*"],
+    { encoding: "utf8" },
+  ).then(
+    (result) => result.stdout.split("\0").filter(Boolean),
+    () => [],
+  );
+  for (const file of tracked)
+    await report({ severity: "warning", message: "Factory runtime file is tracked by Git", file });
+
+  const threads = await listThreads({}, ctx);
+  for (const issue of threads.issues)
+    await report({ severity: "warning", message: issue.message, file: `.rowbly/runtime/${issue.file}` });
+  for (const thread of threads.threads) {
+    if (thread.storyId && !(await pathExists(join(paths.storiesDir, `${thread.storyId}.md`)))) {
+      await report({
+        severity: "warning",
+        message: `Thread ${thread.id} links to a Story that does not exist`,
+        file: `.rowbly/runtime/threads/${thread.id}.json`,
+      });
+    }
+  }
   await checkStages(paths, config, rel, report);
   await checkStories(paths, config, rel, report);
   await checkSpecs(paths, config, rel, report);

@@ -19,13 +19,14 @@ const GROUPS: SettingsGroup[] = [
   { title: "Two", sections: [{ id: "beta", label: "Beta", description: "About beta.", Component: Beta }] },
 ];
 
-async function setup() {
+async function setup(section?: string) {
   const onClose = vi.fn();
   let hints: readonly KeyHint[] = [];
   const tui = await renderTui(
     <SettingsBody
       ctx={{}}
       groups={GROUPS}
+      section={section}
       onChange={() => {}}
       onClose={onClose}
       onHints={(next) => {
@@ -83,5 +84,12 @@ describe("SettingsBody", () => {
     await tui.click("Two");
     expect(tui.frame()).toContain("alpha content");
     expect(hints()).toContain("esc close");
+  });
+
+  it("opens a section with the focus when the Modal opens on it", async () => {
+    const { tui, hints } = await setup("beta");
+    expect(tui.frame()).toContain("▌ Beta");
+    expect(tui.frame()).toContain("beta content");
+    expect(hints()).toContain("esc back to sections");
   });
 });

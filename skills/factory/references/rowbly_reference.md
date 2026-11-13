@@ -17,7 +17,7 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 - Do not run `rowbly` with no arguments. This starts the TUI, and the TUI waits for a person.
 - Do not assume the keys of the Stages or the custom fields. Read them from the config (section 3).
 - Change data only with commands. A command examines the data before it writes the data.
-- Run only one command that writes at a time for each Project. Rowbly does not lock its files. In a
+- Run only one command that writes at a time for each Project. Human CLI writes have no global transaction lock. In a
   test, six parallel `story create` commands all reported success, but only four Stories were written.
 - Get approval from the user before you run `story delete`, `stage delete`, `spec delete` or
   `custom-field remove`. These commands do not ask for confirmation.
@@ -35,7 +35,7 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 | Custom field | A field that you define one time. It applies to all Stories of the Project.         |
 | Spec         | A Markdown document that describes work. It links to one or more Stories.           |
 
-Each new Project has two Stages, `BACKLOG` and `DONE`. Specs are off in each new Project.
+Each new Project has Backlog and Done, plus the other Stages selected at setup. Specs are off in each new Project.
 
 ## 3. Find the Project and read its config
 
@@ -110,6 +110,38 @@ The old flat resource commands do not work.
 The commands `init` and `doctor` stay at the root.
 
 A flag with `(repeat)` can occur more than one time.
+
+### Native factory and Threads
+
+| Command | Function |
+| --- | --- |
+| `rowbly auth providers` | Lists provider login methods. |
+| `rowbly auth status` | Shows configured status, without a health check. |
+| `rowbly auth login [provider] [--type oauth\|api_key]` | Uses an interactive terminal without `--json`; secrets use masked prompts. |
+| `rowbly auth logout <provider>` | Removes a stored credential. |
+| `rowbly model list [--provider <id>]` | Lists configured models and supported thinking levels. |
+| `rowbly factory configure --max-workers <n> --supervisor <provider/model> --worker <provider/model>` | Saves optional Project factory settings. |
+| `rowbly factory start [--foreground] [--max-workers <n>] [--adopt-external]` | Starts the native factory. |
+| `rowbly factory status` | Reads native status without Pi activation. |
+| `rowbly factory stop` | Aborts native sessions and preserves histories and worktrees. |
+| `rowbly factory restart [--adopt-external]` | Waits for stop before a replacement start. |
+| `rowbly factory logs [--tail <n>]` | Reads bounded operational logs without transcript bodies. |
+| `rowbly thread list [--story <id>]` | Lists active and historical metadata without transcript reads. |
+| `rowbly thread show <id>` | Reads one Thread record. |
+| `rowbly thread log <id> [--tail <n>]` | Reads current Pi format without activation; default 20, maximum 100 entries. |
+| `rowbly thread cancel <id>` | Interrupts through the active native factory. |
+| `rowbly thread resume <id>` | Resumes an eligible Thread through the active native factory. |
+
+Native execution requires Node >=22.19.0, Linux, Git, local files and util-linux `flock`.
+Model configuration does not prove entitlement or credential health.
+Use `--supervisor-thinking` or `--worker-thinking` with a supported level in `factory configure`.
+Factory settings stay in `.rowbly/factory.json`. Credentials stay in Pi storage.
+
+Never run native and external supervisors together. Stop external workers before explicit `--adopt-external` use.
+Adoption marks active external attempts interrupted; it does not stop workers or import their conversations.
+
+Resume keeps the same session and adds a run. Completed Threads cannot resume. Each Thread has at most three runs.
+See [Supervisor policy](supervisor-policy.md) for ownership, locks and recovery limits.
 
 ### Project
 

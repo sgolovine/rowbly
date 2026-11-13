@@ -13,13 +13,15 @@ export interface TextInputProps {
   width?: number;
   /** Shown dimmed while the value is empty. */
   placeholder?: string;
+  /** Shows a `•` for each character, for a secret such as an API key. */
+  mask?: boolean;
 }
 
 /**
  * A one-line text input: typing, `←/→`, `home`/`end` (`ctrl+a`/`ctrl+e`), `backspace` and `delete`.
  * While focused, the shell leaves printable keys to it; `enter`, `tab`, `↑/↓` and `esc` go to its parent.
  */
-export function TextInput({ value, onChange, focus = true, width, placeholder }: TextInputProps) {
+export function TextInput({ value, onChange, focus = true, width, placeholder, mask = false }: TextInputProps) {
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
   useKeyCapture(focus);
   const offset = useRef(0);
@@ -41,12 +43,14 @@ export function TextInput({ value, onChange, focus = true, width, placeholder }:
     { isActive: focus },
   );
 
+  // A masked value keeps its length, so the caret stays on the same column.
+  const visible = mask ? "•".repeat(value.length) : value;
   if (!focus) {
-    return <Text wrap="truncate-end">{value || <Text color={theme.inkFaint}>{placeholder}</Text>}</Text>;
+    return <Text wrap="truncate-end">{visible || <Text color={theme.inkFaint}>{placeholder}</Text>}</Text>;
   }
   const size = width ?? value.length + 1;
   offset.current = follow(offset.current, cursor, size);
-  const shown = value.slice(offset.current, offset.current + size);
+  const shown = visible.slice(offset.current, offset.current + size);
   return (
     <Text wrap="truncate-end">
       <WithCaret text={shown} at={cursor - offset.current} />

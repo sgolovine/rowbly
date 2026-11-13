@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
+import { AiSection } from "./AiSection/index.js";
 import { CustomFieldsSection } from "./CustomFieldsSection/index.js";
 import { DoctorSection } from "./DoctorSection/index.js";
 import { ProjectSection } from "./ProjectSection/index.js";
@@ -66,6 +67,17 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Specs",
         description: "Markdown documents that are linked to Stories.",
         Component: SpecsSection,
+      },
+    ],
+  },
+  {
+    title: "Factory",
+    sections: [
+      {
+        id: "ai",
+        label: "AI",
+        description: "AI providers, the models of the factory and the worker limit.",
+        Component: AiSection,
       },
     ],
   },

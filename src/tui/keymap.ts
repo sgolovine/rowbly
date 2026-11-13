@@ -25,6 +25,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "ctrl+p", description: "find Stories" },
   { key: "p", description: "switch Project" },
   { key: "ctrl+b", description: "show or hide the Stage sidebar" },
+  { key: "f", description: "factory controls" },
   { key: ",", description: "settings" },
   { key: "ctrl+f", description: "edit a text field full screen" },
   { key: "esc", description: "back" },

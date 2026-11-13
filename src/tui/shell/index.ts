@@ -1,3 +1,4 @@
+export * from "./FactoryButton/index.js";
 export * from "./Header/index.js";
 export * from "./HelpModal/index.js";
 export * from "./ProjectSwitcher/index.js";

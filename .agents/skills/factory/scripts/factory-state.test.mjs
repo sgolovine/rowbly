@@ -133,3 +133,18 @@ it("preserves the earlier state when the Project directory is read-only", async 
     await chmod(directory, 0o755);
   }
 });
+
+it("takes over a definitely dead state owner and preserves a live old lock", async () => {
+  const { newOwner } = await import("./ownership-lock.mjs");
+  const { withStateLock } = await import("./factory-state.mjs");
+  const owner = await newOwner();
+  await writeFile(`${path}.lock`, JSON.stringify({ ...owner, processIdentity: "old-boot:1" }));
+  await withStateLock(root, async () => {
+    const held = JSON.parse(await readFile(`${path}.lock`, "utf8"));
+    assert.notEqual(held.token, owner.token);
+    const { acquireOwner } = await import("./ownership-lock.mjs");
+    const blocked = await acquireOwner(`${path}.lock`, `${path}.lock.guard`, await newOwner());
+    assert.equal(blocked.acquired, false);
+  });
+  assert.deepEqual(await readdir(directory), []);
+});

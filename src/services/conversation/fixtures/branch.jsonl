@@ -1,0 +1,6 @@
+{"type":"session","version":3,"id":"fixture","timestamp":"2026-11-12T00:00:00.000Z","cwd":"/tmp/rowbly-fixture"}
+{"type":"message","id":"a","parentId":null,"timestamp":"2026-11-12T00:00:00.000Z","message":{"role":"user","content":"Original question π🦆","timestamp":1794441600000}}
+{"type":"message","id":"sibling","parentId":"a","timestamp":"2026-11-12T00:00:01.000Z","message":{"role":"user","content":"Sibling branch","timestamp":1794441601000}}
+{"type":"message","id":"b","parentId":"a","timestamp":"2026-11-12T00:00:02.000Z","message":{"role":"user","content":"Active branch","timestamp":1794441602000}}
+{"type":"compaction","id":"c","parentId":"b","timestamp":"2026-11-12T00:00:03.000Z","summary":"Prior history summary","firstKeptEntryId":"b","tokensBefore":100}
+{"type":"context_edit","id":"d","parentId":"c","timestamp":"2026-11-12T00:00:04.000Z","targetId":"a","replacement":null}
