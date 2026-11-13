@@ -1,7 +1,32 @@
 import { createStage, type Stage, updateStage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { FormModal } from "../../../components/index.js";
-import { useToast } from "../../../hooks/index.js";
+import { FormModal, type FormValues } from "../../../components/index.js";
+import { type ToastStore, useToast } from "../../../hooks/index.js";
+import { toastInfo } from "../../stories/index.js";
+
+/** The environment of the save of the Stage. */
+interface StageFormEnv {
+  readonly ctx: ServiceContext;
+  /** The Stage to edit. Without it, the form creates a Stage. */
+  readonly stage: Stage | undefined;
+  readonly toast: ToastStore;
+  readonly onSaved: (stage: Stage) => void;
+}
+
+/** Creates the Stage, or updates the edited Stage, with the values of the form. */
+async function saveStage(env: StageFormEnv, values: FormValues): Promise<void> {
+  const { ctx, stage } = env;
+  const input = {
+    label: String(values.label ?? ""),
+    enabled: values.enabled === true,
+    prompt: String(values.prompt ?? ""),
+  };
+
+  const saved = stage ? await updateStage({ key: stage.key, ...input }, ctx) : await createStage(input, ctx);
+
+  toastInfo(env.toast, stage ? `Updated ${saved.label}` : `Created ${saved.label}`);
+  env.onSaved(saved);
+}
 
 /**
  * Creates a Stage, or edits `stage`, in a generic Modal: its name, whether it is enabled, and its prompt
@@ -21,6 +46,9 @@ export function StageFormModal({
   onClose(): void;
 }) {
   const toast = useToast();
+
+  const env: StageFormEnv = { ctx, stage, toast, onSaved };
+
   return (
     <FormModal
       title={stage ? `Edit Stage › ${stage.label}` : "New Stage"}
@@ -30,16 +58,7 @@ export function StageFormModal({
         { name: "prompt", label: "Prompt", kind: "multiline" },
       ]}
       initialValues={{ label: stage?.label ?? "", enabled: stage?.enabled ?? true, prompt: stage?.prompt ?? "" }}
-      onSubmit={async (values) => {
-        const input = {
-          label: String(values.label ?? ""),
-          enabled: values.enabled === true,
-          prompt: String(values.prompt ?? ""),
-        };
-        const saved = stage ? await updateStage({ key: stage.key, ...input }, ctx) : await createStage(input, ctx);
-        toast.push("info", stage ? `Updated ${saved.label}` : `Created ${saved.label}`);
-        onSaved(saved);
-      }}
+      onSubmit={(values) => saveStage(env, values)}
       onClose={onClose}
     />
   );
