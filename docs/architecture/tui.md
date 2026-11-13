@@ -75,6 +75,8 @@ The screen areas in `screens/` are:
   - `hooks/`: contexts and hooks.
 - Put each pure helper or constant that more than one file uses in its own dash-case `.ts` file, for
   example `components/shell-layout.ts`.
+- Use the shared hooks before you write a new one: `useReportHints`, `stopOnAbort`, `showToast`,
+  `useAsync` and the ref helpers of `refs.ts`. Import them from `hooks/index.ts`.
 - Follow the React patterns of the
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.

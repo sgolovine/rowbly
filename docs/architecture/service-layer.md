@@ -111,6 +111,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `story-files/`, `spec-files/`, `attachment-files/` | Raw file I/O that the domain services share.                                |
 | `clipboard/`                                       | Read a PNG image from the system clipboard.                                 |
 | `store/`                                           | `Store`, `withEntry()`, `withMember()` and more: immutable shared state.    |
+| `in-order/`                                        | `mapInOrder()`: run async work one item at a time, in order.                |
 | `test-project/`                                    | `useTempDir()`, `useTestProject()`: temporary Projects for tests.           |
 
 ### Native factory

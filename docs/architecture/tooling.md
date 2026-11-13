@@ -41,6 +41,9 @@ pnpm link --global    # put `rowbly` on your PATH for local testing
   code style and the GritQL plugins in `biome-plugins/`. The
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#rules-that-biome-enforces)
   lists each rule and plugin.
+- A `biome-ignore` comment must give a specific reason and cover the smallest span. The
+  [Exceptions](../../.agents/skills/rowbly-code-style/SKILL.md#exceptions) section of the skill lists
+  each exception. Biome reports a suppression that it does not use.
 
 To add a lint rule, follow [../contributing/lint-rules.md](../contributing/lint-rules.md).
 

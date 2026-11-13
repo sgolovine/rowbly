@@ -117,6 +117,9 @@ Some state must be shared by tasks that run at the same time. Put this state in 
   fields.
 - Give a short-lived task its own `Store`, for example `WorkerRun` in `worker-launch.ts`.
 
+Run async work one item at a time with `mapInOrder` from `src/services/in-order/in-order.ts`. It
+replaces a `for` loop with `await`, and it keeps the order of the results.
+
 A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
 state that the caller read.
 
@@ -190,6 +193,12 @@ The strict rules also apply to components and hooks in `src/tui/`. Use these pat
 9. **Registries.** A closure registry (mouse, shell, toasts) keeps its state in a `Store` with a
    `ReadonlyMap` or a `ReadonlySet`. A `useSyncExternalStore` snapshot must keep the same reference
    until the state changes.
+
+Use the shared hooks of `src/tui/hooks/` before you write a new one:
+
+- `useReportHints(onHints, hints)` gives the key hints of a child to its parent when they change.
+- `stopOnAbort(signal, stop)` stops a watch when the effect ends, also when the watch starts later.
+- `showToast(toast, kind, message)` shows a toast.
 
 A long or complex component gets smaller in these steps:
 
@@ -265,12 +274,27 @@ export function ThreadList({ threads, onOpen }: Props) {
 
 ## Exceptions
 
-A rule can have a necessary exception. Each exception is in one small function or class:
+A rule can have a necessary exception. Each exception is in one small function or class. These are
+the only `lint/plugin` exceptions:
 
-- `Store` in `src/services/store/store.ts` replaces its own value.
-- `writeRef` in `src/tui/hooks/refs.ts` writes a React ref.
-- The scanner of the conversation session reads each byte of a large file. One
-  `biome-ignore-start lint/plugin` and `biome-ignore-end lint/plugin` range covers this hot path.
+- `Store.update` in `src/services/store/store.ts`: the store cell replaces its own value.
+- `writeRef` in `src/tui/hooks/refs.ts`: a React ref changes in place.
+- `src/services/conversation/session-scanner.ts`: the scan of each byte of a large file changes its
+  own state. One `biome-ignore-start` and `biome-ignore-end` range covers the two scanner classes.
+- `showToast` in `src/tui/hooks/toasts.ts`: `ToastStore.push` has the name of an array method, but
+  the store makes a new list.
+- `setExitCode` in `src/commands/output/output.ts`: `process.exitCode` is the Node API for the exit
+  code.
+
+Call `showToast`, not `toast.push`. Call `setExitCode`, not `process.exitCode = …`.
+
+Some recommended Biome rules also have exceptions, each on one line:
+
+- `noArrayIndexKey`: rows of text that have no identity other than their position.
+- `useExhaustiveDependencies`: an effect with a key that stands in for a value, for example
+  `JSON.stringify(hints)`, or an effect that must run only for some changes. The comment gives the
+  dependency that starts the effect.
+- `noControlCharactersInRegex`: the regular expressions that find or remove terminal sequences.
 
 To add an exception:
 
