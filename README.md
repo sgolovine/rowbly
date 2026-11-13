@@ -9,83 +9,175 @@
   <a href="https://github.com/sgolovine/rowbly/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/rowbly" alt="License"></a>
 </p>
 
-<p align="center">
-  <strong>The Easiest Way to Run an AI Software Factory</strong>
-</p>
+# Rowbly
 
-Rowbly is the simplest way to set up and manage an AI-powered software factory. Create stories, organize them into predefined stages, and let your AI agents automatically pick up and execute the work.
+Rowbly keeps a Kanban board in Markdown and JSON files in your repository.
+Its native factory runs a Pi supervisor and independent workers. Each worker has a Story, a worktree and a separate conversation.
+The terminal UI and CLI use the same services.
 
-The biggest challenge with AI software factories isn't writing code, it's orchestrating the agents. Coordinating supervisors, delegating tasks, and tracking progress can quickly become a project of its own.
+## Prerequisites
 
-Rowbly eliminates that complexity with an intuitive Kanban board and a companion agent skill that runs a supervisor to monitor your workflow, assign work to agents, and keep development moving automatically.
+Rowbly requires Node >=22.19.0. Native factory execution also requires Linux, Git, local files and util-linux `flock`.
+The board and read-only history do not require provider credentials.
+Other platforms have no native execution guarantee. Multi-host, NFS and copied-runtime ownership are not supported.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/sgolovine/rowbly/main/assets/screenshot.png" alt="The Rowbly terminal UI shows the stories of a project, grouped by stage, with the name of the agent that works on each story" width="100%">
-</p>
+## First start
 
-## Agent Installation
+1. Install Rowbly:
 
-Paste this prompt into your agent harness (Claude Code, Codex, Gemini CLI, GitHub Copilot or Cursor). Run the agent in the root of your repository.
+   ```sh
+   npm install -g rowbly
+   ```
 
-```text
-Install and set up Rowbly (https://github.com/sgolovine/rowbly) in this repository. Do these steps:
+2. Open a terminal in your repository.
+3. Run `rowbly` to create a Project through the TUI.
 
-1. Run `node --version`. Rowbly needs Node 24 or later. If the version is older, stop and tell me.
-2. Run `npm install -g rowbly`. If the global install fails because of permissions, use `npx rowbly` in place of `rowbly` for the steps that follow.
-3. Run `rowbly --version` to confirm the install.
-4. If `.rowbly/` already exists in this directory, skip to step 6.
-5. Run `rowbly init --defaults --harness <id>`, where `<id>` is the harness that you are: `claude-code`, `codex`, `gemini-cli`, `github-copilot` or `cursor`. Do not run `rowbly` with no arguments, because that starts the interactive TUI.
-6. Run `rowbly doctor`. If it reports problems, run `rowbly doctor --fix` and then run `rowbly doctor` again.
-7. Run `rowbly project get-instructions` and `rowbly --help`, and read the installed Rowbly skills, so that you know how to use Rowbly.
-8. Tell me what you installed: the project name and key, the stages, the skills and the folders that they are in. Then tell me to run `rowbly` to open the board.
-```
+4. Select defaults or customize the name, Stages, skills and harnesses.
+5. Press `?` to see the keys.
 
-## Manual Installation
+Use `npx rowbly` without a global install. Use `rowbly init` for the CLI setup questions.
+Agents can use `rowbly init --defaults --harness codex` without interactive questions.
+Replace `codex` with the correct harness ID from the table below.
 
-Rowbly runs on Node 24 or later. Install it from npm:
+Run `rowbly doctor` to examine the Project files. Run `rowbly --help` to see the commands.
+
+## Provider sign-in and models
+
+1. Run `rowbly auth providers` to see provider IDs and login methods.
+2. Run `rowbly auth login` in an interactive terminal.
+3. Select a provider and follow its account or API-key prompts.
+4. Run `rowbly model list` to see configured models and supported thinking levels.
+5. Set the factory models and worker limit:
+
+   ```sh
+   rowbly factory configure --supervisor <provider/model> --worker <provider/model> --max-workers 4
+   ```
+
+`--supervisor-thinking` and `--worker-thinking` select a supported thinking level for each role.
+Without explicit choices, Pi selects default models. Rowbly does not change global Pi settings.
+Factory preferences stay in `.rowbly/factory.json`. Credentials stay in Pi storage, outside the Project.
+
+API keys use masked prompts. Do not put secrets in command arguments or Project files.
+`rowbly auth status` reports configured status, without a health check.
+A model list does not prove provider access, quota or credential health.
+Use `rowbly auth logout <provider>` to remove a stored credential.
+
+In the TUI, open Settings and select AI in the Factory group.
+Enter signs in to the selected provider. The `d` key signs out with confirmation.
+The `s` and `w` keys select supervisor and worker models. The picker offers supported thinking levels and `Pi default`.
+
+Use `l` for the worker limit and `r` to reload. Escape cancels sign-in and returns focus.
+
+## Factory controls
+
+1. Create a Story and put it in a Stage whose prompt gives an agent work.
+2. Press `f` to open Factory controls.
+3. Press `s` to start the native factory.
+
+The header shows Factory status and worker counts when space permits.
+Factory controls show the supervisor model, worker counts, queue reasons, provider pauses and attention items.
+Enter opens the supervisor conversation. The `a` key opens the AI section of Settings.
+
+The factory runs in a separate daemon. Close the TUI to leave the factory active.
+
+The same controls are available through the CLI:
 
 ```sh
-npm install -g rowbly
+rowbly factory start
+rowbly factory status
+rowbly factory logs --tail 20
+rowbly factory stop
+rowbly factory restart
 ```
 
-You can also run it directly with `npx`:
+Use `rowbly factory start --foreground` to run in the current terminal.
+Native execution requires a Git repository. Workers preserve existing branch work and dirty worktrees.
+The supervisor receives bounded worker summaries. It reads transcript excerpts only through explicit inspection.
+
+A Project without `state.json` remains valid and shows no activity status line below the Story list.
+
+## Threads and conversations
+
+Open a Story and select its Threads tab. The tab shows active and historical worker attempts.
+A pending Thread is a durable reservation that occupies a worker slot.
+A Story that waits for capacity has a queue note, without a fictitious Thread.
+Select a Thread to read its conversation without agent activation.
+
+Use `x` to interrupt with confirmation. Use `r` to resume an eligible Thread through the active factory.
+
+The viewer supports arrows, `j`/`k`, Page Up, Page Down, Home, End and the mouse wheel.
+Scroll up to stop follow. Press End or `f` to follow again. Escape returns to the previous view.
+
+Only finalized Pi messages appear. Unknown session formats show a placeholder.
+Read-only history works while the factory is off.
 
 ```sh
-npx rowbly
+rowbly thread list --story APP-01
+rowbly thread show <id>
+rowbly thread log <id> --tail 20
+rowbly thread cancel <id>
+rowbly thread resume <id>
 ```
 
-Once started, initialize rowbly in one of two ways:
+`thread log` has a maximum of 100 entries. Metadata lists do not load transcripts.
+Conversation reads use bounded pages from the selected current-format Pi history.
+Thread history stays after a Story is deleted.
 
-```sh
+## Stop, resume and recovery
 
-rowbly # runs interactive TUI onboarding
+Press `x` in Factory controls and confirm to stop. The CLI equivalent is `rowbly factory stop`.
+Normal stop aborts Pi sessions and preserves histories and worktrees.
+Start again to let the supervisor select eligible interrupted Threads. A start does not automatically resume every Thread.
 
-rowbly init # same process as above but without the TUI
-```
+Explicit resume requires an active factory, the original Story Stage, a session file, policy eligibility and the original worktree.
+Completed Threads cannot resume. Each Thread has at most three runs; retries create new Threads.
+Cancellation holds the Story and Stage until release, explicit resume or a material Story change.
 
-Press `?` in the terminal UI to see all the keys. Run `rowbly --help` to see all the commands.
+After definite daemon death, recovery marks active runs interrupted and repairs missing native state projections.
+An old heartbeat does not prove death. Live or uncertain owners prevent takeover.
+Shell descendants started by a crashed daemon are not tracked. Normal stop relies on Pi abort for shell children.
 
-## Features
+Do not assume exactly-once shell effects. Examine uncertain external effects before a resume.
+A lifecycle guard left after a crash requires offline repair after all relevant factory processes have stopped.
+See [AGENTS.md](AGENTS.md) for the lock contract and recovery limits.
 
-- **Board in plain files.** Each story is a Markdown file in your repository.
-- **Prompts for each stage.** Tell your agents what to do with a story in each stage.
-- **Custom fields.** Add the data that your project wants on each story.
-- **Skills that are ready for use.** Install the factory, refine, develop and review skills in your project.
+## Files and compatibility
+
+Stories, Stage prompts, Specs and Project instructions remain ordinary files under `.rowbly/`.
+Existing Projects need no migration. Without factory settings, the worker limit is four.
+`.rowbly/.gitignore` excludes `/state.json*` and `/runtime/`.
+The native factory or the external supervisor writes v1 `state.json`; unknown v1 keys stay intact.
+
+Runtime metadata, command receipts, operational logs and Pi histories stay in `.rowbly/runtime/`.
+Do not commit runtime files or credentials. Doctor reports tracked runtime files and corrupt or orphan Threads.
+`rowbly doctor --fix` can add missing ignore rules. It does not repair conversations.
+
+The external factory skill remains available when the native factory is off.
+Never run both supervisors together. Updated external scripts refuse a live or uncertain native owner.
+Old installed copies do not honor this ownership protocol.
+Stop external workers before `rowbly factory start --adopt-external` marks their active attempts interrupted.
+
+That option does not stop external workers or import their conversations.
+
+| Path                    | Support and limits                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------- |
+| Existing Projects       | No Story, Stage, Spec or config migration. Missing runtime files remain valid.              |
+| Native execution        | Linux, Git, local files and util-linux `flock`; minimum Node 22.19.0.                       |
+| External harness        | Retained when native execution is off; old copies cannot protect native ownership.          |
+| Peek                    | Current Pi v3 only; unknown versions show a placeholder; no agent activation.               |
+| Recovery                | Definite local owner death only; no shell descendant tracking after a daemon crash.         |
+| Authentication evidence | Faux and scripted tests; real login, entitlement and refresh need separate live validation. |
 
 ## Skills
 
-Rowbly comes with four skills that teach your agent a full development process:
+| Skill     | Function                                                                      |
+| --------- | ----------------------------------------------------------------------------- |
+| `factory` | Starts the native factory, or supervises workers through an external harness. |
+| `refine`  | Makes a Story ready for development without source code changes.              |
+| `develop` | Builds a refined Story in a Git worktree, or repairs review findings.         |
+| `review`  | Examines a Story pull request and reports if it is ready to merge.            |
 
-| Skill     | What it does                                                                    |
-| --------- | ------------------------------------------------------------------------------- |
-| `refine`  | Makes a story ready for development. It writes no code.                         |
-| `develop` | Builds a refined story in a Git worktree, or fixes the findings of a review.    |
-| `review`  | Examines the pull request of a story and reports if the work is ready to merge. |
-| `factory` | Watches your stories and starts a worker for each story in a work stage.        |
-
-Use one skill by itself, or use all four as a software factory. Put stories on the board, and the factory starts the correct worker for each stage.
-
-Install a skill for one or more harnesses:
+Install skills for your harness:
 
 ```sh
 rowbly skill install factory --harness claude-code --harness codex
@@ -99,34 +191,37 @@ rowbly skill install factory --harness claude-code --harness codex
 | `github-copilot` | `.github/skills`      |
 | `cursor`         | `.cursor/skills`      |
 
-Run `rowbly skill list` to see the installed skills. Run `rowbly skill remove` to remove a skill.
+Run `rowbly skill list` to see installed skills. Run `rowbly skill remove` to remove a skill.
+Keep local changes to an installed skill in a different place. Removal deletes the tracked folder and its local changes.
 
-Keep your changes to an installed skill in a different place. `rowbly skill remove` deletes the folder and all local changes in it.
+## Development and validation
 
-## Development
-
-Rowbly uses TypeScript, [Commander.js](https://github.com/tj/commander.js) and [Ink](https://github.com/vadimdemedes/ink). It uses [pnpm](https://pnpm.io) as the package manager.
+Rowbly uses TypeScript, Commander.js, Ink and the pinned Pi SDK 1.5.2. It uses pnpm as the package manager.
+Pi loads on demand for authentication, model selection and native execution.
+The board, help, doctor, factory status, metadata and read-only history paths do not import Pi runtime values.
 
 ```sh
 git clone https://github.com/sgolovine/rowbly.git
 cd rowbly
 pnpm install
-pnpm dev              # run the terminal UI from source
-pnpm dev --help       # run the CLI from source
-pnpm add -g "path:$PWD" # install rowbly to your PATH
+pnpm dev
 ```
 
-Run these checks before you send a change:
+Run these checks before a change is complete:
 
 ```sh
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm test:factory
 ```
 
-Read [`AGENTS.md`](https://github.com/sgolovine/rowbly/blob/main/AGENTS.md) for the architecture, the conventions and the rules for the TUI design system.
+Automated session tests use Pi's faux provider, in-memory credentials and no live provider requests.
+Daemon tests isolate HOME and Pi directories and block network access.
+These tests do not prove real provider entitlement, browser login or token refresh.
+Live provider validation is separate. See [AGENTS.md](AGENTS.md) for architecture and contribution rules.
 
 ## License
 
-Rowbly is free software under the [MIT License](https://github.com/sgolovine/rowbly/blob/main/LICENSE.md).
+Rowbly uses the [MIT License](LICENSE.md).

@@ -133,7 +133,7 @@ export async function sendFactoryCommand(
   const owner = await readFactoryOwner(paths);
   if (!owner || (await probeOwner(owner)) !== "alive")
     throw new ConflictError("Factory is not running", {
-      hint: "Run rowbly factory start, then send the command again.",
+      hint: "Start the factory with rowbly factory start or with f then s in the TUI. Then retry the command.",
     });
   const thread = input.threadId ? await getThread(input.threadId, ctx) : undefined;
   const command = await publishCommand(paths, {

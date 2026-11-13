@@ -425,9 +425,10 @@ describe("foreground factory", () => {
       await vi.waitFor(async () =>
         expect((await listThreads({ role: "supervisor" }, { cwd: root })).threads).toHaveLength(2),
       );
-      const threads = (await listThreads({ role: "supervisor" }, { cwd: root })).threads;
-      const current = threads.find((t) => t.parentThreadId);
       await vi.waitFor(async () => {
+        const threads = (await listThreads({ role: "supervisor" }, { cwd: root })).threads;
+        const current = threads.find((t) => t.parentThreadId);
+        expect(current?.session.file).toBeTruthy();
         const text = await readFile(join(root, ".rowbly/runtime", current?.session.file as string), "utf8");
         expect(text).toContain("Persistent operational fact");
         expect(text).not.toContain("Previous conversation private text");
