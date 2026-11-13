@@ -1,469 +1,295 @@
+import type { Stats } from "node:fs";
 import { type FileHandle, open } from "node:fs/promises";
 import { ValidationError } from "../errors/errors.js";
+import { Store } from "../store/store.js";
+import { type BranchPage, newerPage, olderPage, type PageBounds } from "./session-branch.js";
+import { displayEntry, oversizedEntry } from "./session-display.js";
+import { type ScanView, SessionScanner } from "./session-scanner.js";
+import { type ConversationEntry, type ConversationPage, type EntryIndex, MAX_ENTRY_BYTES } from "./session-types.js";
 
-export interface EntryIndex {
-  id: string;
-  parentId: string | null;
-  type: string;
-  timestamp?: string;
-  offset: number;
-  length: number;
+export type { ConversationEntry, ConversationPage } from "./session-types.js";
+export { MAX_ENTRY_BYTES } from "./session-types.js";
+
+interface PageInput {
+  readonly before?: string | null;
+  readonly after?: string | null;
+  readonly limit?: number;
+  readonly maxBytes?: number;
+  readonly leaf?: string;
 }
-export interface ConversationEntry {
-  id: string;
-  type: string;
-  timestamp?: string;
-  role?: string;
-  text: string;
-  oversized?: boolean;
+
+interface FileTimes {
+  readonly size: number;
+  readonly mtimeMs: number;
+  readonly ctimeMs: number;
 }
-export interface ConversationPage {
-  entries: ConversationEntry[];
-  nextBefore: string | null;
-  /** On a page read with `after`: the cursor for the next newer page, or `null` at the newest entry. */
-  nextAfter?: string | null;
-  bytes: number;
-  status: "ok" | "missing" | "unsupported";
-  invalidLines: number;
+
+/** The state of one index. A reset replaces the scanner and forgets the file. */
+interface IndexState {
+  readonly scanner: SessionScanner;
+  readonly identity: string | null;
+  readonly previous: FileTimes | null;
+  readonly closed: boolean;
 }
-export const MAX_ENTRY_BYTES = 256 * 1024;
+
+interface IndexDiagnostics {
+  readonly entries: number;
+  readonly pendingBytes: number;
+  readonly retainedBytes: number;
+  readonly closed: boolean;
+}
+
+/** The fixed environment of one index, and the store of its state. */
+interface IndexEnv {
+  readonly file: string;
+  readonly validatePath: () => Promise<unknown>;
+  readonly store: Store<IndexState>;
+}
+
 const MAX_PAGE_BYTES = 512 * 1024;
+const READ_CHUNK_BYTES = 64 * 1024;
 
-/** Extracts small top-level scalars in any key order, without retaining nested values. */
-class IndexFields {
-  fields: Record<string, unknown> = {};
-  private depth = 0;
-  private quoted = false;
-  private escaped = false;
-  private token = "";
-  private key: string | undefined;
-  private expectingKey = true;
-  private capture = false;
-  private overflow = false;
-  private primitive = "";
-  private invalid = false;
-  feed(byte: number): void {
-    const c = String.fromCharCode(byte);
-    if (this.quoted) {
-      if (this.capture && this.token.length < 2048) {
-        this.token += c;
-      } else if (this.capture) {
-        this.overflow = true;
-      }
-      if (this.escaped) {
-        this.escaped = false;
-        return;
-      }
-      if (c === "\\") {
-        this.escaped = true;
-        return;
-      }
-      if (c === '"') {
-        this.quoted = false;
-        if (this.capture && !this.overflow) {
-          try {
-            const value = JSON.parse(this.token);
-            if (this.expectingKey) {
-              this.key = value;
-              this.expectingKey = false;
-            } else if (this.key) {
-              this.fields[this.key] = value;
-            }
-          } catch {
-            this.invalid = true;
-          }
-        }
-        this.token = "";
-      }
+async function skipValidation(): Promise<void> {}
+
+function emptyState(): Omit<IndexState, "closed"> {
+  return { scanner: new SessionScanner(), identity: null, previous: null };
+}
+
+function resetIndex(index: IndexEnv): void {
+  index.store.update(() => emptyState());
+}
+
+function fileIdentity(stats: Stats): string {
+  return `${stats.dev}:${stats.ino}`;
+}
+
+/** Tells if the file is not the file that the index read, or if a writer replaced its bytes. */
+function isReplaced(state: IndexState, stats: Stats): boolean {
+  const { previous } = state;
+  const touched =
+    stats.size === previous?.size && (stats.mtimeMs !== previous.mtimeMs || stats.ctimeMs !== previous.ctimeMs);
+
+  return fileIdentity(stats) !== state.identity || stats.size < state.scanner.offset || touched;
+}
+
+function openIfPresent(file: string): Promise<FileHandle | null> {
+  return open(file, "r").catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  });
+}
+
+/** Reads the file from the scanner offset to `size`. A file that became shorter ends the scan early. */
+async function scanChunks(fd: FileHandle, scanner: SessionScanner, size: number): Promise<void> {
+  const buffer = Buffer.allocUnsafe(READ_CHUNK_BYTES);
+
+  while (scanner.offset < size) {
+    const { bytesRead } = await fd.read(buffer, 0, Math.min(buffer.length, size - scanner.offset), scanner.offset);
+
+    if (!bytesRead) {
       return;
     }
-    if (c === '"') {
-      this.quoted = true;
-      this.capture = this.depth === 1;
-      this.overflow = false;
-      this.token = this.capture ? '"' : "";
-      return;
-    }
-    if (c === "{" || c === "[") {
-      this.depth++;
-      return;
-    }
-    if (c === "}" || c === "]" || c === ",") {
-      if (this.depth === 1 && this.key && this.primitive.trim()) {
-        try {
-          this.fields[this.key] = JSON.parse(this.primitive);
-        } catch {
-          this.invalid = true;
-        }
-      }
-      this.primitive = "";
-      if (c !== ",") {
-        this.depth--;
-      }
-      if (this.depth === 1 && c === ",") {
-        this.expectingKey = true;
-        this.key = undefined;
-      }
-      return;
-    }
-    if (this.depth === 1 && c !== ":" && !this.expectingKey && this.primitive.length < 128) {
-      this.primitive += c;
-    }
-  }
-  finish(): Record<string, unknown> | null {
-    return this.invalid || this.quoted || this.depth !== 0 ? null : this.fields;
+
+    scanner.scan(buffer, bytesRead);
   }
 }
 
-function content(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
+/** Indexes the bytes that the file has after the last scan. A replaced file starts a new scan. */
+async function scanFile(index: IndexEnv, fd: FileHandle): Promise<void> {
+  const stats = await fd.stat();
+  const current = index.store.current;
+
+  if (current.identity && isReplaced(current, stats)) {
+    resetIndex(index);
   }
-  if (!Array.isArray(value)) {
-    return "";
-  }
-  return value
-    .map((block) => {
-      if (!block || typeof block !== "object") {
-        return "[unknown content]";
-      }
-      if (block.type === "text") {
-        return typeof block.text === "string" ? block.text : "";
-      }
-      if (block.type === "thinking") {
-        return block.redacted ? "[redacted thinking]" : `[thinking] ${block.thinking ?? ""}`;
-      }
-      if (block.type === "image") {
-        return `[image: ${block.mimeType ?? "attachment"}]`;
-      }
-      if (block.type === "toolCall") {
-        return `[tool ${block.name}] ${JSON.stringify(block.arguments)}`;
-      }
-      return `[${block.type ?? "unknown content"}]`;
-    })
-    .join("\n");
+
+  const { scanner } = index.store.update(() => ({ identity: fileIdentity(stats) }));
+
+  await scanChunks(fd, scanner, stats.size);
+  index.store.update(() => ({ previous: { size: stats.size, mtimeMs: stats.mtimeMs, ctimeMs: stats.ctimeMs } }));
 }
-function display(entry: Record<string, unknown>, meta: EntryIndex): ConversationEntry {
-  const result: ConversationEntry = { id: meta.id, type: meta.type, timestamp: meta.timestamp, text: "" };
-  if (entry.type === "message") {
-    const message = entry.message as Record<string, unknown> | undefined;
-    result.role = typeof message?.role === "string" ? message.role : "unknown";
-    if (result.role === "bashExecution") {
-      result.text = `[bash] ${message?.command ?? ""}\n${message?.output ?? ""}`;
-    } else if (result.role === "toolResult") {
-      result.text = `[tool result ${message?.toolName ?? ""}${message?.isError ? " error" : ""}]\n${content(message?.content)}`;
-    } else {
-      result.text = content(message?.content);
-    }
-    if (message?.errorMessage) {
-      result.text += `\n[error] ${message.errorMessage}`;
-    }
-  } else if (entry.type === "compaction" || entry.type === "branch_summary") {
-    result.text = `[${entry.type}] ${entry.summary ?? ""}`;
-  } else if (entry.type === "custom_message") {
-    result.text = entry.display === false ? "[hidden custom message]" : content(entry.content);
-  } else {
-    result.text = `[${meta.type}]`;
+
+async function refreshIndex(index: IndexEnv): Promise<void> {
+  if (index.store.current.closed) {
+    throw new ValidationError("Conversation is closed");
   }
-  // Output stays bounded even if a future renderer expands the source record.
-  result.text = result.text.slice(0, 32 * 1024);
-  return result;
+
+  await index.validatePath();
+
+  const fd = await openIfPresent(index.file);
+
+  if (!fd) {
+    resetIndex(index);
+
+    return;
+  }
+
+  try {
+    await scanFile(index, fd);
+  } finally {
+    await fd.close();
+  }
+}
+
+function pageBounds(input: PageInput): PageBounds {
+  const limit = input.limit ?? 20;
+  const maxBytes = input.maxBytes ?? MAX_PAGE_BYTES;
+  const validLimit = Number.isSafeInteger(limit) && limit >= 1 && limit <= 100;
+  const validBytes = Number.isSafeInteger(maxBytes) && maxBytes >= 1 && maxBytes <= MAX_PAGE_BYTES;
+
+  if (!validLimit || !validBytes) {
+    throw new ValidationError("Invalid conversation page bounds");
+  }
+
+  return { limit, maxBytes };
+}
+
+function selectBranch(scan: ScanView, input: PageInput, bounds: PageBounds): BranchPage {
+  const cursor = input.before ?? input.after;
+  const leaf = input.leaf ?? scan.leaf;
+
+  if (input.before && input.after) {
+    throw new ValidationError("Use one conversation cursor");
+  }
+
+  if (cursor && !scan.byId.has(cursor)) {
+    throw new ValidationError("Conversation cursor is no longer available");
+  }
+
+  if (input.after) {
+    return newerPage(scan.byId, leaf, input.after, bounds);
+  }
+
+  return olderPage(scan.byId, input.before ? scan.byId.get(input.before)?.parentId : leaf, bounds);
+}
+
+/** Fills `buffer` from `position`. One read can give fewer bytes than asked. */
+async function readFully(fd: FileHandle, buffer: Buffer, position: number, filled: number): Promise<void> {
+  if (filled >= buffer.length) {
+    return;
+  }
+
+  const { bytesRead } = await fd.read(buffer, filled, buffer.length - filled, position + filled);
+
+  if (!bytesRead) {
+    throw new ValidationError("Conversation changed during read");
+  }
+
+  await readFully(fd, buffer, position, filled + bytesRead);
+}
+
+async function readEntry(fd: FileHandle, meta: EntryIndex, maxBytes: number): Promise<ConversationEntry> {
+  if (meta.length > Math.min(maxBytes, MAX_ENTRY_BYTES)) {
+    return oversizedEntry(meta);
+  }
+
+  const buffer = Buffer.allocUnsafe(meta.length);
+
+  await readFully(fd, buffer, meta.offset, 0);
+
+  try {
+    return displayEntry(JSON.parse(buffer.toString("utf8")), meta);
+  } catch {
+    throw new ValidationError("Conversation record is corrupt");
+  }
+}
+
+/** Reads the entries one at a time, in order. A page has at most 100 entries. */
+async function readEntries(
+  fd: FileHandle,
+  metas: readonly EntryIndex[],
+  maxBytes: number,
+): Promise<ConversationEntry[]> {
+  const [first, ...rest] = metas;
+
+  if (!first) {
+    return [];
+  }
+
+  const entry = await readEntry(fd, first, maxBytes);
+
+  return [entry, ...(await readEntries(fd, rest, maxBytes))];
+}
+
+async function readSelected(
+  index: IndexEnv,
+  metas: readonly EntryIndex[],
+  maxBytes: number,
+): Promise<ConversationEntry[]> {
+  await index.validatePath();
+
+  const fd = await open(index.file, "r");
+
+  try {
+    if (isReplaced(index.store.current, await fd.stat())) {
+      throw new ValidationError("Conversation changed; read the page again");
+    }
+
+    return await readEntries(fd, metas, maxBytes);
+  } finally {
+    await fd.close();
+  }
+}
+
+async function readPage(index: IndexEnv, input: PageInput): Promise<ConversationPage> {
+  await refreshIndex(index);
+
+  const bounds = pageBounds(input);
+  const scan = index.store.current.scanner.view();
+  const { status, invalidLines } = scan;
+
+  if (status !== "ok") {
+    return { entries: [], nextBefore: null, bytes: 0, status, invalidLines };
+  }
+
+  const branch = selectBranch(scan, input, bounds);
+  const entries = await readSelected(index, branch.selected, bounds.maxBytes);
+  const page = { entries, nextBefore: branch.nextBefore, bytes: branch.bytes, status, invalidLines };
+
+  return input.after ? { ...page, nextAfter: branch.nextAfter ?? null } : page;
+}
+
+function indexDiagnostics(index: IndexEnv): IndexDiagnostics {
+  const { scanner, closed } = index.store.current;
+
+  return { ...scanner.diagnostics(), closed };
+}
+
+function closeIndex(index: IndexEnv): void {
+  index.store.update(() => ({ ...emptyState(), closed: true }));
 }
 
 /** A selected-file index. It owns no SDK object, open file descriptor or global cache. */
 export class SessionIndex {
-  private byId = new Map<string, EntryIndex>();
-  private leaf: string | null = null;
-  private offset = 0;
-  private lineStart = 0;
-  private lineBytes = 0;
-  private parts: Buffer[] = [];
-  private fields = new IndexFields();
-  private identity: string | null = null;
-  private previous: { size: number; mtimeMs: number; ctimeMs: number } | null = null;
-  private header = false;
-  private status: ConversationPage["status"] = "missing";
-  private invalidLines = 0;
-  private closed = false;
-  constructor(
-    private readonly file: string,
-    private readonly validatePath: () => Promise<unknown> = async () => {},
-  ) {}
-  private reset() {
-    this.byId.clear();
-    this.leaf = null;
-    this.offset = 0;
-    this.lineStart = 0;
-    this.lineBytes = 0;
-    this.parts = [];
-    this.fields = new IndexFields();
-    this.identity = null;
-    this.previous = null;
-    this.header = false;
-    this.status = "missing";
-    this.invalidLines = 0;
+  private readonly index: IndexEnv;
+
+  constructor(file: string, validatePath: () => Promise<unknown> = skipValidation) {
+    this.index = { file, validatePath, store: new Store<IndexState>({ ...emptyState(), closed: false }) };
   }
-  private consume() {
-    let e: Record<string, unknown> | null;
-    try {
-      e =
-        this.lineBytes <= MAX_ENTRY_BYTES
-          ? JSON.parse(Buffer.concat(this.parts).toString("utf8"))
-          : this.fields.finish();
-    } catch {
-      e = null;
-    }
-    if (!e || typeof e !== "object") {
-      this.invalidLines++;
-      return;
-    }
-    if (!this.header) {
-      this.header = true;
-      this.status = e.type === "session" && e.version === 3 ? "ok" : "unsupported";
-      return;
-    }
-    if (this.status !== "ok") {
-      return;
-    }
-    if (
-      typeof e.id !== "string" ||
-      !e.id ||
-      e.id.length > 128 ||
-      typeof e.type !== "string" ||
-      e.type.length > 128 ||
-      !(e.parentId === null || (typeof e.parentId === "string" && e.parentId.length <= 128)) ||
-      this.byId.has(e.id)
-    ) {
-      this.invalidLines++;
-      return;
-    }
-    if (this.byId.size >= 250_000) {
-      throw new ValidationError("Conversation index limit reached");
-    }
-    this.byId.set(e.id, {
-      id: e.id,
-      parentId: e.parentId,
-      type: e.type,
-      timestamp: typeof e.timestamp === "string" ? e.timestamp.slice(0, 128) : undefined,
-      offset: this.lineStart,
-      length: this.lineBytes,
-    });
-    this.leaf = e.id;
+
+  /** Indexes the lines that the file has after the last refresh. */
+  refresh(): Promise<void> {
+    return refreshIndex(this.index);
   }
-  async refresh(): Promise<void> {
-    if (this.closed) {
-      throw new ValidationError("Conversation is closed");
-    }
-    await this.validatePath();
-    let fd: FileHandle;
-    try {
-      fd = await open(this.file, "r");
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
-        this.reset();
-        return;
-      }
-      throw e;
-    }
-    try {
-      const s = await fd.stat();
-      const identity = `${s.dev}:${s.ino}`;
-      if (
-        this.identity &&
-        (this.identity !== identity ||
-          s.size < this.offset ||
-          (s.size === this.previous?.size &&
-            (s.mtimeMs !== this.previous.mtimeMs || s.ctimeMs !== this.previous.ctimeMs)))
-      ) {
-        this.reset();
-      }
-      this.identity = identity;
-      const buffer = Buffer.allocUnsafe(64 * 1024);
-      while (this.offset < s.size) {
-        const { bytesRead } = await fd.read(buffer, 0, Math.min(buffer.length, s.size - this.offset), this.offset);
-        if (!bytesRead) {
-          break;
-        }
-        let start = 0;
-        for (let i = 0; i < bytesRead; i++) {
-          if (buffer[i] !== 10) {
-            this.fields.feed(buffer[i]);
-            continue;
-          }
-          this.addPart(buffer.subarray(start, i));
-          this.consume();
-          this.lineStart = this.offset + i + 1;
-          this.lineBytes = 0;
-          this.parts = [];
-          this.fields = new IndexFields();
-          start = i + 1;
-        }
-        this.addPart(buffer.subarray(start, bytesRead));
-        this.offset += bytesRead;
-      }
-      this.previous = { size: s.size, mtimeMs: s.mtimeMs, ctimeMs: s.ctimeMs };
-    } finally {
-      await fd.close();
-    }
-  }
-  private addPart(piece: Buffer) {
-    this.lineBytes += piece.length;
-    if (this.lineBytes <= MAX_ENTRY_BYTES) {
-      this.parts.push(Buffer.from(piece));
-    } else {
-      this.parts = [];
-    }
-  }
+
   /**
    * Reads one page of the active branch, oldest entry first. Without a cursor, the page ends at the leaf.
    * `before` reads the entries older than an entry. `after` reads the entries newer than an entry.
    */
-  async page(
-    input: { before?: string | null; after?: string | null; limit?: number; maxBytes?: number; leaf?: string } = {},
-  ): Promise<ConversationPage> {
-    await this.refresh();
-    const limit = input.limit ?? 20,
-      maxBytes = input.maxBytes ?? MAX_PAGE_BYTES;
-    if (
-      !Number.isSafeInteger(limit) ||
-      limit < 1 ||
-      limit > 100 ||
-      !Number.isSafeInteger(maxBytes) ||
-      maxBytes < 1 ||
-      maxBytes > MAX_PAGE_BYTES
-    ) {
-      throw new ValidationError("Invalid conversation page bounds");
-    }
-    const page: ConversationPage = {
-      entries: [],
-      nextBefore: null,
-      bytes: 0,
-      status: this.status,
-      invalidLines: this.invalidLines,
-    };
-    if (this.status !== "ok") {
-      return page;
-    }
-    if (input.before && input.after) {
-      throw new ValidationError("Use one conversation cursor");
-    }
-    const cursor = input.before ?? input.after;
-    if (cursor && !this.byId.has(cursor)) {
-      throw new ValidationError("Conversation cursor is no longer available");
-    }
-    const seen = new Set<string>();
-    const step = (id: string) => {
-      if (seen.has(id)) {
-        throw new ValidationError("Conversation branch has a cycle");
-      }
-      seen.add(id);
-      const meta = this.byId.get(id);
-      if (!meta) {
-        throw new ValidationError("Conversation parent is missing");
-      }
-      return meta;
-    };
-    // Newest entry first; the read below puts them in order.
-    const selected: EntryIndex[] = [];
-    const take = (meta: EntryIndex) => {
-      if (selected.length >= limit || (page.bytes + meta.length > maxBytes && selected.length)) {
-        return false;
-      }
-      selected.push(meta);
-      page.bytes += Math.min(meta.length, maxBytes);
-      return meta.length <= maxBytes;
-    };
-    if (input.after) {
-      // The index has no child links, so walk the branch from the leaf back to the cursor. Only metadata stays.
-      const newer: EntryIndex[] = [];
-      let id = input.leaf ?? this.leaf;
-      while (id && id !== input.after) {
-        const meta = step(id);
-        newer.push(meta);
-        id = meta.parentId;
-      }
-      if (id !== input.after) {
-        throw new ValidationError("Conversation cursor is no longer available");
-      }
-      let count = 0;
-      for (const meta of newer.reverse()) {
-        const more = take(meta);
-        if (selected.at(-1) === meta) {
-          count++;
-        }
-        if (!more) {
-          break;
-        }
-      }
-      selected.reverse();
-      page.nextAfter = count < newer.length ? (selected[0]?.id ?? null) : null;
-      page.nextBefore = selected.at(-1)?.id ?? null;
-    } else {
-      let id = input.before ? this.byId.get(input.before)?.parentId : (input.leaf ?? this.leaf);
-      while (id && selected.length < limit) {
-        const meta = step(id);
-        const more = take(meta);
-        if (selected.at(-1) === meta) {
-          id = meta.parentId;
-        }
-        if (!more) {
-          break;
-        }
-      }
-      page.nextBefore = id ? (selected.at(-1)?.id ?? null) : null;
-    }
-    await this.validatePath();
-    const fd = await open(this.file, "r");
-    try {
-      const s = await fd.stat();
-      if (
-        `${s.dev}:${s.ino}` !== this.identity ||
-        s.size < this.offset ||
-        (s.size === this.previous?.size && (s.mtimeMs !== this.previous.mtimeMs || s.ctimeMs !== this.previous.ctimeMs))
-      ) {
-        throw new ValidationError("Conversation changed; read the page again");
-      }
-      for (const meta of selected.reverse()) {
-        if (meta.length > Math.min(maxBytes, MAX_ENTRY_BYTES)) {
-          page.entries.push({
-            id: meta.id,
-            type: meta.type,
-            timestamp: meta.timestamp,
-            text: `[oversized ${meta.type}: ${meta.length} bytes]`,
-            oversized: true,
-          });
-          continue;
-        }
-        const buffer = Buffer.allocUnsafe(meta.length);
-        let n = 0;
-        while (n < buffer.length) {
-          const read = await fd.read(buffer, n, buffer.length - n, meta.offset + n);
-          if (!read.bytesRead) {
-            throw new ValidationError("Conversation changed during read");
-          }
-          n += read.bytesRead;
-        }
-        try {
-          page.entries.push(display(JSON.parse(buffer.toString("utf8")), meta));
-        } catch {
-          throw new ValidationError("Conversation record is corrupt");
-        }
-      }
-    } finally {
-      await fd.close();
-    }
-    return page;
+  page(input: PageInput = {}): Promise<ConversationPage> {
+    return readPage(this.index, input);
   }
-  diagnostics() {
-    return {
-      entries: this.byId.size,
-      pendingBytes: this.lineBytes,
-      retainedBytes: this.parts.reduce((n, b) => n + b.length, 0),
-      closed: this.closed,
-    };
+
+  /** Gives the counters that show how much memory the index holds. */
+  diagnostics(): IndexDiagnostics {
+    return indexDiagnostics(this.index);
   }
+
+  /** Releases the index. A later read fails. */
   close(): void {
-    this.reset();
-    this.closed = true;
+    closeIndex(this.index);
   }
 }
