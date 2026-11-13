@@ -12,7 +12,7 @@ const resources = {
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
-  thread: ["list", "show"],
+  thread: ["log", "list", "show"],
 };
 
 describe("registerCommands", () => {

@@ -62,7 +62,7 @@ export interface ThreadRecord {
 const statuses: ThreadStatus[] = ["pending", "running", "completed", "failed", "cancelled", "interrupted"];
 const terminal = (status: ThreadStatus) => status !== "pending" && status !== "running";
 function validId(id: string): boolean {
-  return /^[a-zA-Z0-9_-]{1,128}$/.test(id);
+  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(id);
 }
 function validate(value: unknown): ThreadRecord {
   const t = value as ThreadRecord;
@@ -79,6 +79,25 @@ function validate(value: unknown): ThreadRecord {
     !isAbsolute(t.cwd) ||
     typeof t.resumable !== "boolean" ||
     (t.role === "worker" && (!t.storyId || !t.stage)) ||
+    (t.storyId !== undefined && (typeof t.storyId !== "string" || !/^[A-Z][A-Z0-9]*-\d+$/.test(t.storyId))) ||
+    (t.stage !== undefined && (typeof t.stage !== "string" || !/^[A-Z][A-Z0-9_]*$/.test(t.stage))) ||
+    (t.parentThreadId !== undefined && !validId(t.parentThreadId)) ||
+    (t.attemptNumber !== undefined && (!Number.isSafeInteger(t.attemptNumber) || t.attemptNumber < 1)) ||
+    [t.startedAt, t.completedAt, t.lastActivityAt].some(
+      (v) => v !== undefined && (typeof v !== "string" || !Number.isFinite(Date.parse(v))),
+    ) ||
+    [t.branch, t.lastTool].some((v) => v !== undefined && typeof v !== "string") ||
+    (t.worktree !== undefined && (typeof t.worktree !== "string" || !isAbsolute(t.worktree))) ||
+    (t.usage !== undefined &&
+      (!t.usage ||
+        [t.usage.input, t.usage.output, t.usage.cacheRead, t.usage.cacheWrite, t.usage.cost].some(
+          (v) => typeof v !== "number" || !Number.isFinite(v) || v < 0,
+        ))) ||
+    (t.error !== undefined &&
+      (!t.error ||
+        !["auth", "quota", "transient", "launch", "storage", "configuration", "unknown"].includes(t.error.class) ||
+        typeof t.error.code !== "string" ||
+        typeof t.error.message !== "string")) ||
     !t.session ||
     t.session.id !== t.id ||
     !(t.session.file === null || typeof t.session.file === "string") ||
@@ -91,7 +110,11 @@ function validate(value: unknown): ThreadRecord {
         typeof r.ownerToken !== "string" ||
         !r.ownerToken ||
         !statuses.includes(r.status) ||
-        !Number.isFinite(Date.parse(r.createdAt)),
+        !Number.isFinite(Date.parse(r.createdAt)) ||
+        [r.startedAt, r.endedAt].some(
+          (v) => v !== undefined && (typeof v !== "string" || !Number.isFinite(Date.parse(v))),
+        ) ||
+        (r.reason !== undefined && typeof r.reason !== "string"),
     ) ||
     new Set(t.runs.map((r) => r.id)).size !== t.runs.length ||
     t.runs.at(-1)?.status !== t.status ||
@@ -99,8 +122,9 @@ function validate(value: unknown): ThreadRecord {
   )
     throw new ValidationError("Invalid thread metadata");
   if (
-    t.result &&
-    (typeof t.result.outcome !== "string" ||
+    t.result !== undefined &&
+    (!t.result ||
+      typeof t.result.outcome !== "string" ||
       typeof t.result.summary !== "string" ||
       t.result.summary.length > 1000 ||
       !Array.isArray(t.result.blockers) ||
@@ -108,7 +132,10 @@ function validate(value: unknown): ThreadRecord {
       [t.result.blockers, t.result.problems].some(
         (a) => a.length > 10 || a.some((s) => typeof s !== "string" || s.length > 500),
       ) ||
-      (t.result.commits && (t.result.commits.length > 20 || t.result.commits.some((s) => typeof s !== "string"))))
+      (t.result.commits !== undefined &&
+        (!Array.isArray(t.result.commits) ||
+          t.result.commits.length > 20 ||
+          t.result.commits.some((s) => typeof s !== "string"))))
   )
     throw new ValidationError("Invalid worker result");
   return t;
@@ -172,7 +199,9 @@ export async function listThreads(
 async function save(t: ThreadRecord, ctx: ServiceContext) {
   validate(t);
   await checkSession(t, ctx);
-  await writeFileAtomic(await threadPath(t.id, ctx), `${JSON.stringify(t)}\n`, { mode: 0o600, durable: true });
+  const text = `${JSON.stringify(t)}\n`;
+  if (Buffer.byteLength(text) > 1024 * 1024) throw new ValidationError("Thread metadata is too large");
+  await writeFileAtomic(await threadPath(t.id, ctx), text, { mode: 0o600, durable: true });
   return t;
 }
 export async function createThread(
