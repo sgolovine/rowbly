@@ -11,14 +11,18 @@ import { getThread, type ThreadRecord, type WorkerResult } from "../thread/threa
 import { prepareWorkerWorktree } from "../workerWorktree/workerWorktree.js";
 import {
   changeThread,
+  getState,
   isActiveStatus,
   isProviderPaused,
+  type Manager,
   type ManagerState,
   notify,
-  pauseForError,
+  pausedProviders,
   serial,
+  setState,
 } from "./managerState.js";
 import { persistStatus } from "./managerStatus.js";
+import { Store, withEntry, withoutEntry } from "./store.js";
 
 type WorkerWorktree = Awaited<ReturnType<typeof prepareWorkerWorktree>>;
 type OpenedSession = Awaited<ReturnType<typeof openFactorySession>>;
@@ -26,40 +30,43 @@ type SessionEvent = Parameters<Parameters<PiSession["session"]["subscribe"]>[0]>
 
 /** The state of one worker launch, from the reservation to the close of its session. */
 interface WorkerRun {
-  id: string;
-  handle?: PiSession;
-  reportedResult?: WorkerResult;
-  assignedProvider?: string;
-  lastActivityAt: string;
-  lastTool?: string;
-  unsubscribe?: () => void;
-  activityTimer?: NodeJS.Timeout;
-  activityWritePending: boolean;
+  readonly id: string;
+  readonly handle?: PiSession;
+  readonly reportedResult?: WorkerResult;
+  readonly assignedProvider?: string;
+  readonly lastActivityAt: string;
+  readonly lastTool?: string;
+  readonly unsubscribe?: () => void;
+  readonly activityTimer?: NodeJS.Timeout;
+  readonly activityWritePending: boolean;
 }
 
+type RunStore = Store<WorkerRun>;
+
 /** Prepares, prompts and finishes one reserved worker Thread. */
-export async function launchWorker(manager: ManagerState, id: string): Promise<void> {
-  const run: WorkerRun = { id, lastActivityAt: new Date().toISOString(), activityWritePending: false };
+export async function launchWorker(manager: Manager, id: string): Promise<void> {
+  const run = new Store<WorkerRun>({ id, lastActivityAt: new Date().toISOString(), activityWritePending: false });
 
   try {
     await runWorker(manager, run);
   } catch (error) {
-    await failWorker(manager, run, error);
+    await failWorker(manager, run.current, error);
   } finally {
-    await finishWorker(manager, run);
+    await finishWorker(manager, run.current);
   }
 }
 
-async function runWorker(manager: ManagerState, run: WorkerRun): Promise<void> {
-  const intent = await getThread(run.id, manager.ctx);
+async function runWorker(manager: Manager, run: RunStore): Promise<void> {
+  const { id } = run.current;
+  const intent = await getThread(id, manager.ctx);
 
   await manager.deps.beforeLaunch?.(intent);
 
-  if ((await getThread(run.id, manager.ctx)).status !== "pending") {
+  if ((await getThread(id, manager.ctx)).status !== "pending") {
     return;
   }
 
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
   }
 
@@ -74,30 +81,30 @@ async function runWorker(manager: ManagerState, run: WorkerRun): Promise<void> {
     intent.runs.length > 1 ? { ...story, fields: { ...story.fields, worktree: intent.worktree ?? null } } : story,
   );
 
-  await serial(manager, () => assignWorktree(manager, run.id, intent, story.id, worktree));
+  await serial(manager, () => assignWorktree(manager, id, intent, story.id, worktree));
 
   const opened = await openWorkerSession(manager, run, intent, worktree.path);
 
-  await serial(manager, () => startWorkerRun(manager, run.id, intent, story.id, opened));
+  await serial(manager, () => startWorkerRun(manager, id, intent, story.id, opened));
 
-  const prompt = await buildWorkerPrompt(manager, run.id, intent, story, worktree.path, opened.model);
+  const prompt = await buildWorkerPrompt(manager, id, intent, story, worktree.path, opened.model);
 
   trackWorkerActivity(manager, run, opened.handle);
   await opened.handle.prompt(prompt);
 
   const result = await collectWorkerResult(manager, run, opened.handle);
 
-  await serial(manager, () => completeWorker(manager, run.id, intent, story.id, result));
+  await serial(manager, () => completeWorker(manager, id, intent, story.id, result));
 }
 
 async function assignWorktree(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   intent: ThreadRecord,
   storyId: string,
   worktree: WorkerWorktree,
 ): Promise<void> {
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
   }
 
@@ -117,8 +124,8 @@ async function assignWorktree(
 }
 
 async function openWorkerSession(
-  manager: ManagerState,
-  run: WorkerRun,
+  manager: Manager,
+  run: RunStore,
   intent: ThreadRecord,
   worktreePath: string,
 ): Promise<OpenedSession> {
@@ -128,37 +135,42 @@ async function openWorkerSession(
     runtimeDir: manager.paths.runtimeDir,
     runtime: manager.deps.runtime,
     agentDir: manager.deps.agentDir,
-    choice: intent.model ?? manager.settings.workerModel,
+    choice: intent.model ?? getState(manager).settings.workerModel,
     worker: { cwd: worktreePath, root: manager.paths.root, shim: manager.deps.shim },
     tools: [resultTool],
   });
-  const entry = manager.active.get(run.id);
 
-  run.handle = opened.handle;
-  run.assignedProvider = opened.model.provider;
-
-  if (entry) {
-    entry.session = opened.handle;
-  }
-
+  run.update(() => ({ handle: opened.handle, assignedProvider: opened.model.provider }));
+  setState(manager, (state) => attachSession(state.active, run.current.id, opened.handle));
   manager.deps.onModel?.("worker", opened.model);
 
   return opened;
 }
 
-async function recordResult(manager: ManagerState, run: WorkerRun, result: WorkerResult): Promise<void> {
-  await changeThread(manager, run.id, "running", { result });
-  run.reportedResult = result;
+/** Gives the active workers with the session on the entry of the Thread, if the entry is still there. */
+function attachSession(active: ManagerState["active"], id: string, session: PiSession): Partial<ManagerState> {
+  const entry = active.get(id);
+
+  if (!entry) {
+    return {};
+  }
+
+  return { active: withEntry(active, id, { ...entry, session }) };
+}
+
+async function recordResult(manager: Manager, run: RunStore, result: WorkerResult): Promise<void> {
+  await changeThread(manager, run.current.id, "running", { result });
+  run.update(() => ({ reportedResult: result }));
 }
 
 async function startWorkerRun(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   intent: ThreadRecord,
   storyId: string,
   opened: OpenedSession,
 ): Promise<void> {
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
   }
 
@@ -174,7 +186,7 @@ async function startWorkerRun(
 }
 
 async function buildWorkerPrompt(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   intent: ThreadRecord,
   story: Story,
@@ -183,7 +195,7 @@ async function buildWorkerPrompt(
 ): Promise<string> {
   const stage = (await listStages(manager.ctx)).find((s) => s.key === intent.stage);
 
-  if (stage && manager.promptClaims.get(id) !== promptHash(stage.prompt)) {
+  if (stage && getState(manager).promptClaims.get(id) !== promptHash(stage.prompt)) {
     throw new ConflictError("Stage prompt changed before launch");
   }
 
@@ -203,36 +215,39 @@ async function buildWorkerPrompt(
   });
 }
 
-function trackWorkerActivity(manager: ManagerState, run: WorkerRun, handle: PiSession): void {
-  run.unsubscribe = handle.session.subscribe((event) => recordActivity(run, event));
-  run.activityTimer = setInterval(() => writeActivity(manager, run), 1000);
-  run.activityTimer.unref();
+function trackWorkerActivity(manager: Manager, run: RunStore, handle: PiSession): void {
+  const unsubscribe = handle.session.subscribe((event) => recordActivity(run, event));
+  const activityTimer = setInterval(() => writeActivity(manager, run), 1000);
+
+  activityTimer.unref();
+  run.update(() => ({ unsubscribe, activityTimer }));
 }
 
-function recordActivity(run: WorkerRun, event: SessionEvent): void {
-  run.lastActivityAt = new Date().toISOString();
+function recordActivity(run: RunStore, event: SessionEvent): void {
+  const lastActivityAt = new Date().toISOString();
 
   if (event.type === "tool_execution_start") {
-    run.lastTool = event.toolName;
-  }
-}
-
-/** Writes the activity of a worker, but never queues a second write while one is pending. */
-function writeActivity(manager: ManagerState, run: WorkerRun): void {
-  if (run.activityWritePending) {
+    run.update(() => ({ lastActivityAt, lastTool: event.toolName }));
     return;
   }
 
-  run.activityWritePending = true;
-
-  void serial(manager, () => persistActivity(manager, run))
-    .catch(() => {})
-    .finally(() => {
-      run.activityWritePending = false;
-    });
+  run.update(() => ({ lastActivityAt }));
 }
 
-async function persistActivity(manager: ManagerState, run: WorkerRun): Promise<void> {
+/** Writes the activity of a worker, but never queues a second write while one is pending. */
+function writeActivity(manager: Manager, run: RunStore): void {
+  if (run.current.activityWritePending) {
+    return;
+  }
+
+  run.update(() => ({ activityWritePending: true }));
+
+  void serial(manager, () => persistActivity(manager, run.current))
+    .catch(() => {})
+    .finally(() => run.update(() => ({ activityWritePending: false })));
+}
+
+async function persistActivity(manager: Manager, run: WorkerRun): Promise<void> {
   if (!run.handle) {
     return;
   }
@@ -254,12 +269,12 @@ async function persistActivity(manager: ManagerState, run: WorkerRun): Promise<v
 
 /** Takes the reported result, or a RESULT line, or asks the worker one more time to report. */
 async function collectWorkerResult(
-  manager: ManagerState,
-  run: WorkerRun,
+  manager: Manager,
+  run: RunStore,
   handle: PiSession,
 ): Promise<WorkerResult | undefined> {
-  if (run.reportedResult || manager.stopping) {
-    return run.reportedResult;
+  if (run.current.reportedResult || getState(manager).stopping) {
+    return run.current.reportedResult;
   }
 
   const fallback = handle.session.getLastAssistantText()?.match(/RESULT:\s*([^\n]+)\s*$/)?.[1];
@@ -270,11 +285,11 @@ async function collectWorkerResult(
 
   await handle.prompt("Call report_result now with the final outcome, summary, blockers and problems. Then stop.");
 
-  return run.reportedResult;
+  return run.current.reportedResult;
 }
 
 async function completeWorker(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   intent: ThreadRecord,
   storyId: string,
@@ -291,20 +306,21 @@ async function completeWorker(
     blockers: [],
     problems: [],
   };
+  const problems =
+    fresh?.stage === intent.stage
+      ? [...result.problems.slice(0, 9), "Story remains in the assigned Stage"]
+      : result.problems;
+  const { stopping } = getState(manager);
 
-  if (fresh?.stage === intent.stage) {
-    result.problems = [...result.problems.slice(0, 9), "Story remains in the assigned Stage"];
-  }
-
-  await changeThread(manager, id, manager.stopping ? "interrupted" : "completed", {
-    result,
-    resumable: manager.stopping,
+  await changeThread(manager, id, stopping ? "interrupted" : "completed", {
+    result: { ...result, problems },
+    resumable: stopping,
   });
 }
 
-async function failWorker(manager: ManagerState, run: WorkerRun, error: unknown): Promise<void> {
+async function failWorker(manager: Manager, run: WorkerRun, error: unknown): Promise<void> {
   await serial(manager, async () => {
-    pauseForError(manager, run.assignedProvider, error);
+    setState(manager, (state) => ({ providers: pausedProviders(state.providers, run.assignedProvider, error) }));
 
     const thread = await getThread(run.id, manager.ctx);
 
@@ -312,7 +328,7 @@ async function failWorker(manager: ManagerState, run: WorkerRun, error: unknown)
       return;
     }
 
-    await changeThread(manager, run.id, manager.stopping ? "interrupted" : "failed", {
+    await changeThread(manager, run.id, getState(manager).stopping ? "interrupted" : "failed", {
       resumable: !!thread.session.file,
       error: {
         class: run.handle ? "unknown" : "launch",
@@ -324,7 +340,7 @@ async function failWorker(manager: ManagerState, run: WorkerRun, error: unknown)
 }
 
 /** Stops the activity tracking, writes the final usage, closes the session and frees the slot. */
-async function finishWorker(manager: ManagerState, run: WorkerRun): Promise<void> {
+async function finishWorker(manager: Manager, run: WorkerRun): Promise<void> {
   clearInterval(run.activityTimer);
   run.unsubscribe?.();
 
@@ -350,7 +366,7 @@ async function finishWorker(manager: ManagerState, run: WorkerRun): Promise<void
 
   await run.handle?.close();
   await serial(manager, async () => {
-    manager.active.delete(run.id);
+    setState(manager, (state) => ({ active: withoutEntry(state.active, run.id) }));
     await persistStatus(manager);
   });
   notify(manager);

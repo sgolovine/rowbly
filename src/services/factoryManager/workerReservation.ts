@@ -13,14 +13,16 @@ import {
   type ThreadRecord,
 } from "../thread/thread.js";
 import {
-  type ActiveWorker,
   changeThread,
+  getState,
   isActiveStatus,
   isProviderPaused,
-  type ManagerState,
+  type Manager,
   serial,
+  setState,
 } from "./managerState.js";
 import { classifiedStages, persistStatus, scan } from "./managerStatus.js";
+import { withEntry } from "./store.js";
 import { launchWorker } from "./workerLaunch.js";
 
 export interface ReserveWorkerInput {
@@ -32,18 +34,18 @@ export interface ReserveWorkerInput {
 }
 
 /** Reserves a worker slot for an eligible Story, then launches the worker in the background. */
-export function reserveWorker(manager: ManagerState, input: ReserveWorkerInput): Promise<{ threadId: string }> {
+export function reserveWorker(manager: Manager, input: ReserveWorkerInput): Promise<{ threadId: string }> {
   return serial(manager, () => reserveWorkerSlot(manager, input));
 }
 
-async function reserveWorkerSlot(manager: ManagerState, input: ReserveWorkerInput): Promise<{ threadId: string }> {
-  const prior = manager.requests.get(input.requestId);
+async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): Promise<{ threadId: string }> {
+  const prior = getState(manager).requests.get(input.requestId);
 
   if (prior) {
     return { threadId: prior };
   }
 
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
   }
 
@@ -60,7 +62,9 @@ async function reserveWorkerSlot(manager: ManagerState, input: ReserveWorkerInpu
     throw new ConflictError("Story Stage changed");
   }
 
-  if (Math.max(manager.active.size, activeThreads.length) >= manager.limit) {
+  const { active, limit } = getState(manager);
+
+  if (Math.max(active.size, activeThreads.length) >= limit) {
     throw new ConflictError("Worker capacity is full");
   }
 
@@ -74,7 +78,7 @@ async function reserveWorkerSlot(manager: ManagerState, input: ReserveWorkerInpu
     await releaseForResume(manager, previous, story);
   }
 
-  const choice = input.model ?? manager.settings.workerModel;
+  const choice = input.model ?? getState(manager).settings.workerModel;
 
   await assertWorkerModel(manager, choice);
 
@@ -87,20 +91,19 @@ async function reserveWorkerSlot(manager: ManagerState, input: ReserveWorkerInpu
 
   await updateFactoryState(manager.paths.root, () => policy.state, manager.ctx);
 
-  let thread = input.resumeThreadId
+  const created = input.resumeThreadId
     ? await appendResumeRun(manager, input.resumeThreadId, story, input.requestId)
     : await createWorkerThread(manager, story, decision.attempt ?? 1);
-
-  if (choice) {
-    thread = await changeThread(manager, thread.id, "pending", { model: choice });
-  }
+  const thread = choice ? await changeThread(manager, created.id, "pending", { model: choice }) : created;
 
   await projectNativeAttempt(thread.id, manager.ctx);
 
   const stage = (await classifiedStages(manager)).find((s) => s.key === story.stage);
 
-  manager.promptClaims.set(thread.id, stage?.promptHash ?? "");
-  manager.requests.set(input.requestId, thread.id);
+  setState(manager, (state) => ({
+    promptClaims: withEntry(state.promptClaims, thread.id, stage?.promptHash ?? ""),
+    requests: withEntry(state.requests, input.requestId, thread.id),
+  }));
   startWorkerTask(manager, thread.id);
 
   await persistStatus(manager);
@@ -120,7 +123,7 @@ function canResume(thread: ThreadRecord, story: Story): boolean {
 }
 
 /** Checks a resume, then releases the policy parking and the user cancellation of the Story. */
-async function releaseForResume(manager: ManagerState, previous: ThreadRecord, story: Story): Promise<void> {
+async function releaseForResume(manager: Manager, previous: ThreadRecord, story: Story): Promise<void> {
   if (!canResume(previous, story)) {
     throw new ConflictError("Thread cannot resume in this Stage");
   }
@@ -129,17 +132,16 @@ async function releaseForResume(manager: ManagerState, previous: ThreadRecord, s
   await updateFactoryState(
     manager.paths.root,
     (state) => {
-      const cancelled = { ...((state.nativeCancelled as object) ?? {}) } as Record<string, unknown>;
+      const cancelled = Object.entries((state.nativeCancelled as object) ?? {});
+      const nativeCancelled = Object.fromEntries(cancelled.filter(([storyId]) => storyId !== story.id));
 
-      delete cancelled[story.id];
-
-      return { ...releaseStory(state, story.id), nativeCancelled: cancelled };
+      return { ...releaseStory(state, story.id), nativeCancelled };
     },
     manager.ctx,
   );
 }
 
-async function assertWorkerModel(manager: ManagerState, choice: ModelChoice | undefined): Promise<void> {
+async function assertWorkerModel(manager: Manager, choice: ModelChoice | undefined): Promise<void> {
   if (!choice) {
     return;
   }
@@ -153,12 +155,7 @@ async function assertWorkerModel(manager: ManagerState, choice: ModelChoice | un
   }
 }
 
-async function appendResumeRun(
-  manager: ManagerState,
-  threadId: string,
-  story: Story,
-  runId: string,
-): Promise<ThreadRecord> {
+async function appendResumeRun(manager: Manager, threadId: string, story: Story, runId: string): Promise<ThreadRecord> {
   const previous = await getThread(threadId, manager.ctx);
 
   if (previous.role !== "worker" || !canResume(previous, story)) {
@@ -176,7 +173,7 @@ async function appendResumeRun(
   );
 }
 
-function createWorkerThread(manager: ManagerState, story: Story, attemptNumber: number): Promise<ThreadRecord> {
+function createWorkerThread(manager: Manager, story: Story, attemptNumber: number): Promise<ThreadRecord> {
   return createThread(
     {
       role: "worker",
@@ -184,23 +181,25 @@ function createWorkerThread(manager: ManagerState, story: Story, attemptNumber: 
       stage: story.stage,
       cwd: manager.paths.root,
       ownerToken: manager.owner.token,
-      parentThreadId: manager.supervisorId,
+      parentThreadId: getState(manager).supervisorId,
       attemptNumber,
     },
     manager.ctx,
   );
 }
 
-/** Registers the worker slot before the launch starts, so that the slot counts at once. */
-function startWorkerTask(manager: ManagerState, threadId: string): void {
-  const entry: ActiveWorker = { task: Promise.resolve() };
+/**
+ * Registers the worker slot before the launch starts, so that the slot counts at once.
+ * The launch starts in a later microtask, after the registration.
+ */
+function startWorkerTask(manager: Manager, threadId: string): void {
+  const task = Promise.resolve().then(() => launchWorker(manager, threadId));
 
-  manager.active.set(threadId, entry);
-  entry.task = Promise.resolve().then(() => launchWorker(manager, threadId));
+  setState(manager, (state) => ({ active: withEntry(state.active, threadId, { task }) }));
 }
 
 /** Cancels the expected run of an active worker and holds its Story in the current Stage. */
-export async function cancelWorker(manager: ManagerState, id: string, expectedRunId: string): Promise<void> {
+export async function cancelWorker(manager: Manager, id: string, expectedRunId: string): Promise<void> {
   const session = await serial(manager, async () => {
     const thread = await getThread(id, manager.ctx);
     const lastRun = thread.runs.at(-1);
@@ -213,7 +212,7 @@ export async function cancelWorker(manager: ManagerState, id: string, expectedRu
       return undefined;
     }
 
-    if (!manager.active.has(id) || !isActiveStatus(thread.status)) {
+    if (!getState(manager).active.has(id) || !isActiveStatus(thread.status)) {
       throw new ConflictError("Worker is not active");
     }
 
@@ -232,7 +231,7 @@ export async function cancelWorker(manager: ManagerState, id: string, expectedRu
     );
     await changeThread(manager, id, "cancelled", { resumable: !!thread.session.file });
 
-    return manager.active.get(id)?.session;
+    return getState(manager).active.get(id)?.session;
   });
 
   await session?.session.abort();
@@ -240,7 +239,7 @@ export async function cancelWorker(manager: ManagerState, id: string, expectedRu
 
 /** Resumes a Thread with a new run. A repeated request for the same run does nothing. */
 export async function resumeWorker(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   expectedRunId: string,
   requestId: string,

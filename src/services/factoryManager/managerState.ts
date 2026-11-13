@@ -3,10 +3,10 @@ import { join } from "node:path";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { assertFactoryOwnership, type Owner } from "../factoryOwnership/factoryOwnership.js";
 import type { FactorySettings, ModelChoice } from "../factorySettings/factorySettings.js";
-import type { FactorySessionOptions } from "../piRuntime/factorySession.js";
 import type { PiSession } from "../piRuntime/piRuntime.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
+import { type Store, withEntry } from "./store.js";
 
 export interface FactoryDependencies {
   runtime: ModelRuntime;
@@ -21,105 +21,121 @@ export interface FactoryDependencies {
 }
 
 export interface Hold {
-  stage: string;
-  reason: string;
-  reconsiderAt: string;
+  readonly stage: string;
+  readonly reason: string;
+  readonly reconsiderAt: string;
 }
 
-interface Attention {
-  text: string;
-  storyId?: string;
+export interface Attention {
+  readonly text: string;
+  readonly storyId?: string;
 }
 
 export interface ProviderPause {
-  reason: string;
-  retryAt?: string;
+  readonly reason: string;
+  readonly retryAt?: string;
 }
 
-export interface ActiveWorker {
-  task: Promise<void>;
-  session?: PiSession;
+interface ActiveWorker {
+  readonly task: Promise<void>;
+  readonly session?: PiSession;
 }
 
-/** The mutable state of one factory manager. The manager modules share it in place of closures. */
+/** The state of one factory manager. Each change replaces the whole value in the store. */
 export interface ManagerState {
-  // Project and ownership
-  deps: FactoryDependencies;
-  paths: ProjectPaths;
-  ctx: ServiceContext;
-  owner: Owner;
-
   // Lifecycle
-  queue: Promise<unknown>;
-  phase: string;
-  revision: number;
-  stopping: boolean;
-  dirty: boolean;
-  loopStarted: boolean;
-  loopDone: Promise<void>;
-  finishLoop: () => void;
-  wake?: () => void;
-  shutdownTask?: Promise<void>;
+  readonly queue: Promise<unknown>;
+  readonly phase: string;
+  readonly revision: number;
+  readonly stopping: boolean;
+  readonly dirty: boolean;
+  readonly loopStarted: boolean;
+  readonly loopDone: Promise<void>;
+  readonly finishLoop: () => void;
+  readonly wake?: () => void;
+  readonly shutdownTask?: Promise<void>;
 
   // Settings
-  settings: FactorySettings;
-  limit: number;
-  authStamp: number;
+  readonly settings: FactorySettings;
+  readonly limit: number;
+  readonly authStamp: number;
 
   // Workers
-  active: Map<string, ActiveWorker>;
-  promptClaims: Map<string, string>;
-  requests: Map<string, string>;
+  readonly active: ReadonlyMap<string, ActiveWorker>;
+  readonly promptClaims: ReadonlyMap<string, string>;
+  readonly requests: ReadonlyMap<string, string>;
 
   // Supervisor
-  tools: FactorySessionOptions["tools"];
-  supervisor?: PiSession;
-  supervisorId?: string;
-  supervisorChoice?: ModelChoice;
-  supervisorBorn: number;
-  wakeCount: number;
+  readonly supervisor?: PiSession;
+  readonly supervisorId?: string;
+  readonly supervisorChoice?: ModelChoice;
+  readonly supervisorBorn: number;
+  readonly wakeCount: number;
 
   // Digest delivery
-  acknowledgedHash?: string;
-  attemptedHash?: string;
-  nextWakeAt: number;
-  unanswered: number;
-  deliveredReportIds: string[];
+  readonly acknowledgedHash?: string;
+  readonly attemptedHash?: string;
+  readonly nextWakeAt: number;
+  readonly unanswered: number;
+  readonly deliveredReportIds: readonly string[];
 
   // Status
-  holds: Map<string, Hold>;
-  attention: Map<string, Attention>;
-  providers: Map<string, ProviderPause>;
+  readonly holds: ReadonlyMap<string, Hold>;
+  readonly attention: ReadonlyMap<string, Attention>;
+  readonly providers: ReadonlyMap<string, ProviderPause>;
 
   // Timers
-  unwatch?: () => void;
-  timer?: NodeJS.Timeout;
-  heartbeat?: NodeJS.Timeout;
-  deadlineTimer?: NodeJS.Timeout;
+  readonly unwatch?: () => void;
+  readonly timer?: NodeJS.Timeout;
+  readonly heartbeat?: NodeJS.Timeout;
+  readonly deadlineTimer?: NodeJS.Timeout;
+}
+
+/** The fixed environment of one factory manager, and the store of its state. */
+export interface Manager {
+  readonly deps: FactoryDependencies;
+  readonly paths: ProjectPaths;
+  readonly ctx: ServiceContext;
+  readonly owner: Owner;
+  readonly store: Store<ManagerState>;
+}
+
+/** Gives the current state. Read it again after each `await`, because other tasks can replace it. */
+export function getState(manager: Manager): Readonly<ManagerState> {
+  return manager.store.current;
+}
+
+/** Replaces the state with a copy that has the changes from `change`. */
+export function setState(
+  manager: Manager,
+  change: (state: Readonly<ManagerState>) => Partial<ManagerState>,
+): Readonly<ManagerState> {
+  return manager.store.update(change);
 }
 
 /** Runs one lifecycle change at a time, and only while this manager owns the Project. */
-export function serial<T>(manager: ManagerState, call: () => Promise<T>): Promise<T> {
-  const next = manager.queue.then(async () => {
+export function serial<T>(manager: Manager, call: () => Promise<T>): Promise<T> {
+  const next = getState(manager).queue.then(async () => {
     await assertFactoryOwnership(manager.paths, manager.owner.token);
 
     return call();
   });
 
-  manager.queue = next.catch(() => {});
+  setState(manager, () => ({ queue: next.catch(() => {}) }));
 
   return next;
 }
 
 /** Marks the Project as changed and wakes the supervisor loop. */
-export function notify(manager: ManagerState): void {
-  manager.dirty = true;
-  manager.wake?.();
+export function notify(manager: Manager): void {
+  const { wake } = setState(manager, () => ({ dirty: true }));
+
+  wake?.();
 }
 
 /** Moves a Thread to a new status and projects the change into the policy state. */
 export async function changeThread(
-  manager: ManagerState,
+  manager: Manager,
   id: string,
   status: ThreadRecord["status"],
   patch?: Parameters<typeof transitionThread>[1]["patch"],
@@ -132,23 +148,33 @@ export async function changeThread(
   return next;
 }
 
-/** Pauses a provider when an error shows a quota or an authentication problem. */
-export function pauseForError(manager: ManagerState, provider: string | undefined, error: unknown): void {
+/** Gives the provider pauses with a new pause when an error shows a quota or an authentication problem. */
+export function pausedProviders(
+  providers: ReadonlyMap<string, ProviderPause>,
+  provider: string | undefined,
+  error: unknown,
+): ReadonlyMap<string, ProviderPause> {
   if (!provider) {
-    return;
+    return providers;
   }
 
   const message = error instanceof Error ? error.message : "";
 
   if (/quota|usage.limit|billing|429/i.test(message)) {
-    manager.providers.set(provider, { reason: "quota", retryAt: new Date(Date.now() + 15 * 60_000).toISOString() });
-  } else if (/oauth|unauthorized|authentication|401/i.test(message)) {
-    manager.providers.set(provider, { reason: "authentication" });
+    const retryAt = new Date(Date.now() + 15 * 60_000).toISOString();
+
+    return withEntry(providers, provider, { reason: "quota", retryAt });
   }
+
+  if (/oauth|unauthorized|authentication|401/i.test(message)) {
+    return withEntry(providers, provider, { reason: "authentication" });
+  }
+
+  return providers;
 }
 
-export function isProviderPaused(manager: ManagerState, provider: string): boolean {
-  const pause = manager.providers.get(provider);
+export function isProviderPaused(manager: Manager, provider: string): boolean {
+  const pause = getState(manager).providers.get(provider);
 
   return !!pause && (!pause.retryAt || Date.parse(pause.retryAt) > Date.now());
 }

@@ -14,117 +14,136 @@ import { promptHash, supervisorDigest } from "../supervisorDigest/supervisorDige
 import { createThread, getThread, listThreads } from "../thread/thread.js";
 import {
   changeThread,
+  getState,
   isActiveStatus,
+  type Manager,
   type ManagerState,
   notify,
-  pauseForError,
+  pausedProviders,
   readAuthStamp,
   serial,
+  setState,
 } from "./managerState.js";
 import { classifiedStages, persistStatus, scan } from "./managerStatus.js";
+import { withEntry, withoutEntries } from "./store.js";
+import { createSupervisorTools } from "./supervisorTools.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
 
 /** Runs the supervisor loop until the factory stops, then shuts the factory down. */
-export async function runFactory(manager: ManagerState): Promise<void> {
-  if (manager.stopping) {
+export async function runFactory(manager: Manager): Promise<void> {
+  const { stopping, loopStarted } = getState(manager);
+
+  if (stopping) {
     return;
   }
 
-  if (manager.loopStarted) {
+  if (loopStarted) {
     throw new ConflictError("Factory loop is already running");
   }
 
-  manager.loopStarted = true;
-  manager.loopDone = new Promise<void>((resolve) => {
-    manager.finishLoop = resolve;
+  const loopDone = new Promise<void>((resolve) => {
+    setState(manager, () => ({ finishLoop: resolve }));
   });
+
+  setState(manager, () => ({ loopStarted: true, loopDone }));
 
   try {
     await superviseUntilStopped(manager);
   } finally {
-    manager.finishLoop();
+    getState(manager).finishLoop();
     await shutdownFactory(manager);
   }
 }
 
-async function superviseUntilStopped(manager: ManagerState): Promise<void> {
+async function superviseUntilStopped(manager: Manager): Promise<void> {
   await openSupervisor(manager);
 
-  manager.phase = "ready";
-  manager.heartbeat = setInterval(() => {
+  const heartbeat = setInterval(() => {
     void serial(manager, () => persistStatus(manager)).catch(() => {});
   }, 5000);
-  manager.heartbeat.unref();
 
-  if (manager.stopping) {
+  heartbeat.unref();
+  setState(manager, () => ({ phase: "ready", heartbeat }));
+
+  if (getState(manager).stopping) {
     return;
   }
 
-  manager.unwatch = await watchStories(() => notify(manager), manager.ctx, { includeState: false });
-  manager.timer = setInterval(() => notify(manager), 30_000);
-  manager.timer.unref();
+  const unwatch = await watchStories(() => notify(manager), manager.ctx, { includeState: false });
+  const timer = setInterval(() => notify(manager), 30_000);
+
+  timer.unref();
+  setState(manager, () => ({ unwatch, timer }));
 
   await serial(manager, () => persistStatus(manager));
 
   const contract = await readFile(join((await bundledSkills()).dir, "factory/references/supervisor-native.md"), "utf8");
 
-  while (!manager.stopping) {
-    if (!manager.dirty) {
+  while (!getState(manager).stopping) {
+    if (!getState(manager).dirty) {
       await waitForWake(manager);
       continue;
     }
 
-    manager.dirty = false;
+    setState(manager, () => ({ dirty: false }));
 
     try {
       await superviseOnce(manager, contract);
     } catch {
-      if (!manager.stopping) {
-        manager.attention.set("reconcile", { text: "Project reconciliation failed; retry on the next scan" });
-        await serial(manager, () => persistStatus(manager)).catch(() => {});
-      }
+      await recordReconcileFailure(manager);
     }
   }
 }
 
-async function waitForWake(manager: ManagerState): Promise<void> {
+async function waitForWake(manager: Manager): Promise<void> {
   await new Promise<void>((resolve) => {
-    manager.wake = resolve;
+    const { dirty, stopping } = setState(manager, () => ({ wake: resolve }));
 
-    if (manager.dirty || manager.stopping) {
+    if (dirty || stopping) {
       resolve();
     }
   });
 
-  manager.wake = undefined;
+  setState(manager, () => ({ wake: undefined }));
+}
+
+async function recordReconcileFailure(manager: Manager): Promise<void> {
+  if (getState(manager).stopping) {
+    return;
+  }
+
+  const text = "Project reconciliation failed; retry on the next scan";
+
+  setState(manager, (state) => ({ attention: withEntry(state.attention, "reconcile", { text }) }));
+  await serial(manager, () => persistStatus(manager)).catch(() => {});
 }
 
 /** Reconciles the Project, then sends a digest to the supervisor when the digest has new material. */
-async function superviseOnce(manager: ManagerState, contract: string): Promise<void> {
+async function superviseOnce(manager: Manager, contract: string): Promise<void> {
   await reconcilePolicy(manager);
   await refreshSettings(manager);
   await clearProviderPauses(manager);
   await commitProject(manager);
 
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     return;
   }
 
   const delivery = await buildDigest(manager);
 
-  if (shouldSkipDigest(manager, delivery)) {
+  if (shouldSkipDigest(getState(manager), delivery)) {
     await serial(manager, () => persistStatus(manager));
     return;
   }
 
-  if (shouldRotateSupervisor(manager)) {
+  if (shouldRotateSupervisor(getState(manager))) {
     await rotateSupervisor(manager);
   }
 
   await deliverDigest(manager, contract, delivery);
 
-  if (manager.stopping) {
+  if (getState(manager).stopping) {
     return;
   }
 
@@ -132,7 +151,7 @@ async function superviseOnce(manager: ManagerState, contract: string): Promise<v
 }
 
 /** Writes the current policy decisions to the factory state, and gives them back. */
-export function reconcilePolicy(manager: ManagerState) {
+export function reconcilePolicy(manager: Manager) {
   return serial(manager, async () => {
     const policy = await scan(manager);
 
@@ -142,42 +161,43 @@ export function reconcilePolicy(manager: ManagerState) {
   });
 }
 
-async function refreshSettings(manager: ManagerState): Promise<void> {
-  manager.settings = await getFactorySettings(manager.ctx).catch(() => manager.settings);
-  manager.limit = manager.deps.maxWorkers ?? manager.settings.maxWorkers;
+async function refreshSettings(manager: Manager): Promise<void> {
+  const settings = await getFactorySettings(manager.ctx).catch(() => getState(manager).settings);
+
+  setState(manager, () => ({ settings, limit: manager.deps.maxWorkers ?? settings.maxWorkers }));
 }
 
 /** Clears authentication pauses after a credential change, and pauses whose retry time has passed. */
-async function clearProviderPauses(manager: ManagerState): Promise<void> {
-  const currentAuthStamp = await readAuthStamp(manager.deps.agentDir);
+async function clearProviderPauses(manager: Manager): Promise<void> {
+  const authStamp = await readAuthStamp(manager.deps.agentDir);
 
-  if (currentAuthStamp !== manager.authStamp) {
-    manager.authStamp = currentAuthStamp;
+  setState(manager, (state) => {
+    const credentialsChanged = authStamp !== state.authStamp;
+    const providers = withoutEntries(
+      state.providers,
+      (pause) =>
+        (credentialsChanged && pause.reason === "authentication") ||
+        (!!pause.retryAt && Date.parse(pause.retryAt) <= Date.now()),
+    );
 
-    for (const [provider, pause] of manager.providers) {
-      if (pause.reason === "authentication") {
-        manager.providers.delete(provider);
-      }
-    }
-  }
-
-  for (const [provider, pause] of manager.providers) {
-    if (pause.retryAt && Date.parse(pause.retryAt) <= Date.now()) {
-      manager.providers.delete(provider);
-    }
-  }
+    return { authStamp, providers };
+  });
 }
 
-async function commitProject(manager: ManagerState): Promise<void> {
+async function commitProject(manager: Manager): Promise<void> {
   const committed = await commitCanonicalProject(manager.paths.root);
 
-  if (!["clean", "committed"].includes(committed.status)) {
-    manager.attention.set("commit", { text: `Canonical commit: ${committed.status}` });
+  if (["clean", "committed"].includes(committed.status)) {
+    return;
   }
+
+  const text = `Canonical commit: ${committed.status}`;
+
+  setState(manager, (state) => ({ attention: withEntry(state.attention, "commit", { text }) }));
 }
 
 /** Builds the bounded supervisor digest from the policy, the workers, the reports and the notes. */
-async function buildDigest(manager: ManagerState) {
+async function buildDigest(manager: Manager) {
   const policy = await scan(manager);
   const state = await readFactoryState(manager.paths.root, manager.ctx);
   const stages = await classifiedStages(manager);
@@ -185,6 +205,7 @@ async function buildDigest(manager: ManagerState) {
   const { threads } = await listThreads({}, manager.ctx);
   const stories = await searchStories({}, manager.ctx);
 
+  const { settings, holds, providers, attention } = getState(manager);
   const candidates = policy.decisions.filter((d) => ["start", "retry"].includes(d.action));
   const unclassified = stages.filter(
     (s) => s.enabled && s.promptClass === "unclassified" && stories.some((story) => story.stage === s.key),
@@ -192,7 +213,7 @@ async function buildDigest(manager: ManagerState) {
   const material = candidates.length > 0 || unclassified.length > 0 || reports.length > 0;
 
   const digest = supervisorDigest({
-    settings: manager.settings,
+    settings,
     candidates: candidates.map((candidate) => {
       const story = stories.find((s) => s.id === candidate.story);
 
@@ -213,42 +234,41 @@ async function buildDigest(manager: ManagerState) {
       result: report.result === undefined ? undefined : JSON.stringify(report.result).slice(0, 1000),
     })),
     notes: state.notes ?? [],
-    holds: [...manager.holds.entries()],
-    providers: [...manager.providers.entries()],
-    attention: [...manager.attention.entries()],
+    holds: [...holds.entries()],
+    providers: [...providers.entries()],
+    attention: [...attention.entries()],
   });
 
   return { ...digest, reports: reports.slice(0, digest.deliveredCounts.reports ?? 0), material };
 }
 
 /** Skips a digest with no material, a paused supervisor provider, or a repeat before the backoff ends. */
-function shouldSkipDigest(manager: ManagerState, delivery: Delivery): boolean {
-  const supervisorProvider = manager.settings.supervisorModel?.provider ?? manager.supervisorChoice?.provider;
-  const supervisorPaused = !!supervisorProvider && manager.providers.has(supervisorProvider);
-  const repeated = delivery.hash === manager.attemptedHash && Date.now() < manager.nextWakeAt;
+function shouldSkipDigest(state: Readonly<ManagerState>, delivery: Delivery): boolean {
+  const supervisorProvider = state.settings.supervisorModel?.provider ?? state.supervisorChoice?.provider;
+  const supervisorPaused = !!supervisorProvider && state.providers.has(supervisorProvider);
+  const repeated = delivery.hash === state.attemptedHash && Date.now() < state.nextWakeAt;
 
   return !delivery.material || supervisorPaused || repeated;
 }
 
 /** Opens a new supervisor session after a model change, many wakes, one day, or a half-full context. */
-function shouldRotateSupervisor(manager: ManagerState): boolean {
-  const { supervisorModel } = manager.settings;
-  const modelChanged =
-    !!supervisorModel && JSON.stringify(supervisorModel) !== JSON.stringify(manager.supervisorChoice);
-  const contextPercent = manager.supervisor?.session.getContextUsage()?.percent ?? 0;
+function shouldRotateSupervisor(state: Readonly<ManagerState>): boolean {
+  const { supervisorModel } = state.settings;
+  const modelChanged = !!supervisorModel && JSON.stringify(supervisorModel) !== JSON.stringify(state.supervisorChoice);
+  const contextPercent = state.supervisor?.session.getContextUsage()?.percent ?? 0;
 
   return (
     modelChanged ||
-    manager.wakeCount >= 50 ||
-    Date.now() - manager.supervisorBorn >= 24 * 60 * 60_000 ||
+    state.wakeCount >= 50 ||
+    Date.now() - state.supervisorBorn >= 24 * 60 * 60_000 ||
     contextPercent > 50
   );
 }
 
-async function rotateSupervisor(manager: ManagerState): Promise<void> {
-  await manager.supervisor?.close();
+async function rotateSupervisor(manager: Manager): Promise<void> {
+  await getState(manager).supervisor?.close();
 
-  const previous = manager.supervisorId;
+  const previous = getState(manager).supervisorId;
 
   if (previous) {
     await serial(manager, () => changeThread(manager, previous, "completed"));
@@ -257,41 +277,56 @@ async function rotateSupervisor(manager: ManagerState): Promise<void> {
   await openSupervisor(manager, previous);
 }
 
-async function deliverDigest(manager: ManagerState, contract: string, delivery: Delivery): Promise<void> {
+async function deliverDigest(manager: Manager, contract: string, delivery: Delivery): Promise<void> {
   try {
-    manager.attemptedHash = delivery.hash;
-    manager.nextWakeAt = Date.now() + 60_000;
-    await serial(manager, () => persistStatus(manager));
-
-    const instructions = (await readFile(manager.paths.instructionsFile, "utf8").catch(() => "")).slice(0, 16_000);
-
-    await manager.supervisor?.sendDigest(`${contract}\n${instructions}\n${delivery.text}`);
-
-    manager.wakeCount++;
-    manager.unanswered = manager.acknowledgedHash === delivery.hash ? manager.unanswered + 1 : 0;
-    manager.acknowledgedHash = delivery.hash;
-    manager.deliveredReportIds.push(...delivery.reports.map((r) => promptHash(JSON.stringify(r))));
-    manager.deliveredReportIds.splice(0, Math.max(0, manager.deliveredReportIds.length - 100));
-
-    await serial(manager, () =>
-      updateFactoryState(
-        manager.paths.root,
-        (state) => delivery.reports.reduce((current, report) => markReported(current, report), state),
-        manager.ctx,
-      ),
-    );
-
-    manager.nextWakeAt = Date.now() + Math.min(30 * 60_000, 30_000 * 2 ** Math.min(manager.unanswered, 6));
+    await sendDigest(manager, contract, delivery);
   } catch (error) {
-    if (!manager.stopping) {
-      pauseForError(manager, manager.supervisorChoice?.provider, error);
-      manager.attention.set("supervisor", { text: "Supervisor turn failed; retry after backoff" });
-      manager.nextWakeAt = Date.now() + 60_000;
+    if (getState(manager).stopping) {
+      return;
     }
+
+    const text = "Supervisor turn failed; retry after backoff";
+
+    setState(manager, (state) => ({
+      providers: pausedProviders(state.providers, state.supervisorChoice?.provider, error),
+      attention: withEntry(state.attention, "supervisor", { text }),
+      nextWakeAt: Date.now() + 60_000,
+    }));
   }
 }
 
-async function openSupervisor(manager: ManagerState, parentThreadId?: string): Promise<void> {
+/** Sends the digest, records the delivered reports, and sets the next wake with a backoff. */
+async function sendDigest(manager: Manager, contract: string, delivery: Delivery): Promise<void> {
+  setState(manager, () => ({ attemptedHash: delivery.hash, nextWakeAt: Date.now() + 60_000 }));
+  await serial(manager, () => persistStatus(manager));
+
+  const instructions = (await readFile(manager.paths.instructionsFile, "utf8").catch(() => "")).slice(0, 16_000);
+
+  await getState(manager).supervisor?.sendDigest(`${contract}\n${instructions}\n${delivery.text}`);
+
+  const reportIds = delivery.reports.map((r) => promptHash(JSON.stringify(r)));
+
+  const { unanswered } = setState(manager, (state) => ({
+    wakeCount: state.wakeCount + 1,
+    unanswered: state.acknowledgedHash === delivery.hash ? state.unanswered + 1 : 0,
+    acknowledgedHash: delivery.hash,
+    deliveredReportIds: [...state.deliveredReportIds, ...reportIds].slice(-100),
+  }));
+
+  await serial(manager, () =>
+    updateFactoryState(
+      manager.paths.root,
+      (state) => delivery.reports.reduce((current, report) => markReported(current, report), state),
+      manager.ctx,
+    ),
+  );
+
+  setState(manager, () => ({
+    nextWakeAt: Date.now() + Math.min(30 * 60_000, 30_000 * 2 ** Math.min(unanswered, 6)),
+  }));
+}
+
+async function openSupervisor(manager: Manager, parentThreadId?: string): Promise<void> {
   const thread = await serial(manager, () =>
     createThread(
       { role: "supervisor", cwd: manager.paths.root, ownerToken: manager.owner.token, parentThreadId },
@@ -299,55 +334,61 @@ async function openSupervisor(manager: ManagerState, parentThreadId?: string): P
     ),
   );
 
-  manager.supervisorId = thread.id;
+  setState(manager, () => ({ supervisorId: thread.id }));
 
   const opened = await openFactorySession({
     thread,
     runtimeDir: manager.paths.runtimeDir,
     agentDir: manager.deps.agentDir,
     runtime: manager.deps.runtime,
-    choice: manager.settings.supervisorModel,
-    tools: manager.tools,
+    choice: getState(manager).settings.supervisorModel,
+    tools: createSupervisorTools(manager),
   });
 
-  manager.supervisor = opened.handle;
-  manager.supervisorChoice = opened.model;
+  setState(manager, () => ({ supervisor: opened.handle, supervisorChoice: opened.model }));
   manager.deps.onModel?.("supervisor", opened.model);
 
   await serial(manager, () =>
     changeThread(manager, thread.id, "running", { model: opened.model, session: { id: thread.id, file: opened.file } }),
   );
 
-  manager.supervisorBorn = Date.now();
-  manager.wakeCount = 0;
+  setState(manager, () => ({ supervisorBorn: Date.now(), wakeCount: 0 }));
 }
 
 /** Stops the factory one time. Later calls get the same task. */
-export function shutdownFactory(manager: ManagerState): Promise<void> {
-  manager.shutdownTask ??= stopFactory(manager);
+export function shutdownFactory(manager: Manager): Promise<void> {
+  const { shutdownTask } = getState(manager);
 
-  return manager.shutdownTask;
+  if (shutdownTask) {
+    return shutdownTask;
+  }
+
+  const task = stopFactory(manager);
+
+  setState(manager, () => ({ shutdownTask: task }));
+
+  return task;
 }
 
-async function stopFactory(manager: ManagerState): Promise<void> {
-  manager.stopping = true;
-  manager.unwatch?.();
-  clearInterval(manager.timer);
-  clearInterval(manager.heartbeat);
-  clearTimeout(manager.deadlineTimer);
-  manager.phase = "stopping";
-  manager.wake?.();
+async function stopFactory(manager: Manager): Promise<void> {
+  const state = setState(manager, () => ({ stopping: true, phase: "stopping" }));
 
-  const workers = [...manager.active.values()];
+  state.unwatch?.();
+  clearInterval(state.timer);
+  clearInterval(state.heartbeat);
+  clearTimeout(state.deadlineTimer);
+  state.wake?.();
 
-  await Promise.all([manager.supervisor?.session.abort(), ...workers.map((a) => a.session?.session.abort())]);
-  await manager.loopDone;
-  await Promise.all([...manager.active.values()].map((a) => a.task));
-  await manager.supervisor?.close();
+  const workers = [...state.active.values()];
+
+  await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.session?.session.abort())]);
+  await getState(manager).loopDone;
+  await Promise.all([...getState(manager).active.values()].map((a) => a.task));
+  await getState(manager).supervisor?.close();
 
   await serial(manager, async () => {
     await interruptSupervisor(manager);
-    manager.phase = "stopped";
+    setState(manager, () => ({ phase: "stopped" }));
     await persistStatus(manager);
   });
 
@@ -355,12 +396,14 @@ async function stopFactory(manager: ManagerState): Promise<void> {
   await releaseFactoryOwnership(manager.paths, manager.owner.token);
 }
 
-async function interruptSupervisor(manager: ManagerState): Promise<void> {
-  if (!manager.supervisorId) {
+async function interruptSupervisor(manager: Manager): Promise<void> {
+  const { supervisorId } = getState(manager);
+
+  if (!supervisorId) {
     return;
   }
 
-  const thread = await getThread(manager.supervisorId, manager.ctx);
+  const thread = await getThread(supervisorId, manager.ctx);
 
   if (isActiveStatus(thread.status)) {
     await changeThread(manager, thread.id, "interrupted", { resumable: !!thread.session.file });

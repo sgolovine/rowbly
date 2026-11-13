@@ -13,10 +13,19 @@ import { recoverFactory } from "../factoryRecovery/factoryRecovery.js";
 import { type FactorySettings, getFactorySettings } from "../factorySettings/factorySettings.js";
 import { runtimePath } from "../runtimeFiles/runtimeFiles.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
-import { type FactoryDependencies, type ManagerState, notify, readAuthStamp, serial } from "./managerState.js";
-import { buildSnapshot, loadStoredStatus, persistStatus } from "./managerStatus.js";
+import {
+  type Attention,
+  type FactoryDependencies,
+  type Manager,
+  type ManagerState,
+  notify,
+  readAuthStamp,
+  serial,
+  setState,
+} from "./managerState.js";
+import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./managerStatus.js";
+import { Store, withoutEntry } from "./store.js";
 import { reconcilePolicy, runFactory, shutdownFactory } from "./supervisorLoop.js";
-import { createSupervisorTools } from "./supervisorTools.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./workerReservation.js";
 
 export type { FactoryDependencies } from "./managerState.js";
@@ -38,60 +47,17 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
 
   await takeOwnership(deps, paths, owner);
 
-  let recovered: RecoveredFactory;
+  const recovered = await recoverOrRelease(deps, paths, ctx, owner, deadToken);
+  const authStamp = await readAuthStamp(deps.agentDir);
+  const stored = await loadStoredStatus(paths);
 
-  try {
-    recovered = await recoverAndConfigure(deps, ctx, owner, deadToken);
-  } catch (error) {
-    await releaseFactoryOwnership(paths, owner.token);
-    throw error;
-  }
-
-  const manager: ManagerState = {
+  const manager: Manager = {
     deps,
     paths,
     ctx,
     owner,
-
-    queue: Promise.resolve(),
-    phase: "starting",
-    revision: 0,
-    stopping: false,
-    dirty: true,
-    loopStarted: false,
-    loopDone: Promise.resolve(),
-    finishLoop: () => {},
-
-    settings: recovered.settings,
-    limit: recovered.limit,
-    authStamp: await readAuthStamp(deps.agentDir),
-
-    active: new Map(),
-    promptClaims: new Map(),
-    requests: new Map(),
-
-    tools: [],
-    supervisorBorn: Date.now(),
-    wakeCount: 0,
-
-    nextWakeAt: 0,
-    unanswered: 0,
-    deliveredReportIds: [],
-
-    holds: new Map(),
-    attention: new Map(),
-    providers: new Map(),
+    store: new Store(initialState(recovered, authStamp, stored)),
   };
-
-  manager.tools = createSupervisorTools(manager);
-
-  if (recovered.externalActive) {
-    manager.attention.set("external", {
-      text: `${recovered.externalActive} external attempts remain protected. Stop external workers before --adopt-external.`,
-    });
-  }
-
-  await loadStoredStatus(manager);
 
   return {
     owner,
@@ -104,6 +70,51 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     snapshot: () => serial(manager, () => buildSnapshot(manager)),
     reconcile: () => reconcilePolicy(manager),
     shutdown: () => shutdownFactory(manager),
+  };
+}
+
+/** Builds the first state. The attention of the status file replaces a new entry with the same key. */
+function initialState(recovered: RecoveredFactory, authStamp: number, stored: StoredStatus): ManagerState {
+  const external: [string, Attention][] = recovered.externalActive
+    ? [
+        [
+          "external",
+          {
+            text: `${recovered.externalActive} external attempts remain protected. Stop external workers before --adopt-external.`,
+          },
+        ],
+      ]
+    : [];
+
+  return {
+    queue: Promise.resolve(),
+    phase: "starting",
+    revision: 0,
+    stopping: false,
+    dirty: true,
+    loopStarted: false,
+    loopDone: Promise.resolve(),
+    finishLoop: () => {},
+
+    settings: recovered.settings,
+    limit: recovered.limit,
+    authStamp,
+
+    active: new Map(),
+    promptClaims: new Map(),
+    requests: new Map(),
+
+    supervisorBorn: Date.now(),
+    wakeCount: 0,
+
+    nextWakeAt: stored.nextWakeAt ?? 0,
+    unanswered: stored.unanswered ?? 0,
+    attemptedHash: stored.attemptedHash,
+    deliveredReportIds: stored.deliveredReportIds ?? [],
+
+    holds: stored.holds ?? new Map(),
+    attention: new Map([...external, ...(stored.attention ?? [])]),
+    providers: stored.providers ?? new Map(),
   };
 }
 
@@ -133,6 +144,22 @@ async function takeOwnership(deps: FactoryDependencies, paths: ProjectPaths, own
   }
 }
 
+/** Recovers the factory. A failure releases the new ownership before the error goes to the caller. */
+async function recoverOrRelease(
+  deps: FactoryDependencies,
+  paths: ProjectPaths,
+  ctx: ServiceContext,
+  owner: Owner,
+  deadToken: string | undefined,
+): Promise<RecoveredFactory> {
+  try {
+    return await recoverAndConfigure(deps, ctx, owner, deadToken);
+  } catch (error) {
+    await releaseFactoryOwnership(paths, owner.token);
+    throw error;
+  }
+}
+
 async function recoverAndConfigure(
   deps: FactoryDependencies,
   ctx: ServiceContext,
@@ -150,11 +177,13 @@ async function recoverAndConfigure(
   return { externalActive, settings, limit };
 }
 
-function retryProvider(manager: ManagerState, provider: string): Promise<void> {
+function retryProvider(manager: Manager, provider: string): Promise<void> {
   return serial(manager, async () => {
-    manager.providers.delete(provider);
-    manager.nextWakeAt = 0;
-    manager.attemptedHash = undefined;
+    setState(manager, (state) => ({
+      providers: withoutEntry(state.providers, provider),
+      nextWakeAt: 0,
+      attemptedHash: undefined,
+    }));
     await persistStatus(manager);
     notify(manager);
   });

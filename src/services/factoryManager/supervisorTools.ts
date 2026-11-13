@@ -5,8 +5,9 @@ import { releaseStory } from "../factoryPolicy/factoryPolicy.js";
 import { updateFactoryState } from "../factoryState/factoryState.js";
 import { getStory } from "../story/story.js";
 import { getThread } from "../thread/thread.js";
-import { changeThread, type ManagerState, notify, serial } from "./managerState.js";
+import { changeThread, getState, type Manager, notify, serial, setState } from "./managerState.js";
 import { buildSnapshot, classifiedStages, persistStatus } from "./managerStatus.js";
+import { withEntry, withoutEntry } from "./store.js";
 import { type ReserveWorkerInput, reserveWorker } from "./workerReservation.js";
 
 const MODEL_CHOICE_SCHEMA = Type.Object({
@@ -41,7 +42,7 @@ function textResult(value: unknown) {
 }
 
 /** The tools that the supervisor session uses to read the factory and to control workers. */
-export function createSupervisorTools(manager: ManagerState) {
+export function createSupervisorTools(manager: Manager) {
   return [
     {
       name: "factory_snapshot",
@@ -169,7 +170,7 @@ export function createSupervisorTools(manager: ManagerState) {
   ];
 }
 
-async function inspectWorker(manager: ManagerState, args: { threadId: string; history?: boolean; limit?: number }) {
+async function inspectWorker(manager: Manager, args: { threadId: string; history?: boolean; limit?: number }) {
   const thread = await getThread(args.threadId, manager.ctx);
 
   if (!args.history) {
@@ -181,7 +182,7 @@ async function inspectWorker(manager: ManagerState, args: { threadId: string; hi
   return { thread, history: JSON.stringify(log).slice(0, 4096) };
 }
 
-async function readStage(manager: ManagerState, key: string) {
+async function readStage(manager: Manager, key: string) {
   const stage = (await classifiedStages(manager)).find((s) => s.key === key);
 
   if (!stage) {
@@ -191,7 +192,7 @@ async function readStage(manager: ManagerState, key: string) {
   return { ...stage, prompt: stage.prompt.slice(0, 8192), truncated: stage.prompt.length > 8192 };
 }
 
-async function classifyStage(manager: ManagerState, args: { stage: string; promptHash: string; class: string }) {
+async function classifyStage(manager: Manager, args: { stage: string; promptHash: string; class: string }) {
   const stage = (await classifiedStages(manager)).find((s) => s.key === args.stage);
 
   if (!stage?.enabled || stage.promptHash !== args.promptHash) {
@@ -214,8 +215,8 @@ async function classifyStage(manager: ManagerState, args: { stage: string; promp
   return { classified: args.stage };
 }
 
-async function releaseHeldStory(manager: ManagerState, storyId: string) {
-  manager.holds.delete(storyId);
+async function releaseHeldStory(manager: Manager, storyId: string) {
+  setState(manager, (state) => ({ holds: withoutEntry(state.holds, storyId) }));
 
   await updateFactoryState(manager.paths.root, (state) => releaseStory(state, storyId), manager.ctx);
   notify(manager);
@@ -223,7 +224,7 @@ async function releaseHeldStory(manager: ManagerState, storyId: string) {
   return { released: storyId };
 }
 
-async function saveNote(manager: ManagerState, text: string) {
+async function saveNote(manager: Manager, text: string) {
   await updateFactoryState(
     manager.paths.root,
     (state) => ({
@@ -236,13 +237,13 @@ async function saveNote(manager: ManagerState, text: string) {
   return { saved: true };
 }
 
-async function clearNotes(manager: ManagerState) {
+async function clearNotes(manager: Manager) {
   await updateFactoryState(manager.paths.root, (state) => ({ ...state, notes: [] }), manager.ctx);
 
   return { cleared: true };
 }
 
-async function holdCandidate(manager: ManagerState, args: HoldInput) {
+async function holdCandidate(manager: Manager, args: HoldInput) {
   const deadline = Date.parse(args.reconsiderAt);
 
   if (!Number.isFinite(deadline) || deadline <= Date.now() || deadline > Date.now() + 30 * 60_000) {
@@ -253,34 +254,38 @@ async function holdCandidate(manager: ManagerState, args: HoldInput) {
     throw new ConflictError("Story Stage changed");
   }
 
-  manager.holds.set(args.storyId, args);
+  setState(manager, (state) => ({ holds: withEntry(state.holds, args.storyId, args) }));
   await persistStatus(manager);
 
   return { held: args.storyId };
 }
 
-async function raiseAttention(manager: ManagerState, args: { key: string; text: string; storyId?: string }) {
-  if (!manager.attention.has(args.key) && manager.attention.size >= 100) {
+async function raiseAttention(manager: Manager, args: { key: string; text: string; storyId?: string }) {
+  const { attention } = getState(manager);
+
+  if (!attention.has(args.key) && attention.size >= 100) {
     throw new ConflictError("Attention capacity is full");
   }
 
-  manager.attention.set(args.key, { text: args.text, storyId: args.storyId });
+  setState(manager, (state) => ({
+    attention: withEntry(state.attention, args.key, { text: args.text, storyId: args.storyId }),
+  }));
   await persistStatus(manager);
 
   return { saved: true };
 }
 
-async function stopWorker(manager: ManagerState, threadId: string, expectedRunId: string) {
+async function stopWorker(manager: Manager, threadId: string, expectedRunId: string) {
   const session = await serial(manager, async () => {
     const thread = await getThread(threadId, manager.ctx);
 
-    if (thread.runs.at(-1)?.id !== expectedRunId || !manager.active.has(thread.id)) {
+    if (thread.runs.at(-1)?.id !== expectedRunId || !getState(manager).active.has(thread.id)) {
       throw new ConflictError("Worker run changed");
     }
 
     await changeThread(manager, thread.id, "interrupted", { resumable: !!thread.session.file });
 
-    return manager.active.get(thread.id)?.session;
+    return getState(manager).active.get(thread.id)?.session;
   });
 
   await session?.session.abort();
