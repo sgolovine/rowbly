@@ -7,6 +7,7 @@ export const ScrollFocusContext = createContext<((node: DOMElement) => void) | n
 export function useScrollFocus(ref: RefObject<DOMElement | null>, focused: boolean): void {
   const reveal = useContext(ScrollFocusContext);
   const { hasMeasured } = useBoxMetrics(ref);
+
   useLayoutEffect(() => {
     if (focused && hasMeasured && ref.current) {
       reveal?.(ref.current);

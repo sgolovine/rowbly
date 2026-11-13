@@ -4,6 +4,7 @@ import type { LayerHost } from "../modal-layer.js";
 /** Draws the layers shown over a modal's body, in the order they opened. */
 export function LayerOutlet({ host }: { host: LayerHost }) {
   const layers = useSyncExternalStore(host.subscribe, host.layers);
+
   return (
     <>
       {[...layers].map(([id, node]) => (

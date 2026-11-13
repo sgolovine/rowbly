@@ -35,10 +35,12 @@ export function Modal(props: ModalProps) {
   const depth = useContext(ScreenDepthContext);
   const wrap = useContext(LayerWrapContext);
   const id = useId();
+
   useLayoutEffect(() => {
     if (!host) {
       return;
     }
+
     host.show(
       id,
       wrap(
@@ -51,5 +53,6 @@ export function Modal(props: ModalProps) {
     );
   });
   useLayoutEffect(() => (host ? () => host.hide(id) : undefined), [host, id]);
+
   return host ? null : <ModalFrame {...props} />;
 }

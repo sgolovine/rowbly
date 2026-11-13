@@ -14,7 +14,9 @@ export function FullScreenButton({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick }, useIsActive() && clickable);
+
   return (
     <Box ref={ref} flexShrink={0} gap={1} alignSelf="flex-start">
       <Text color={theme.accent} bold={focused}>

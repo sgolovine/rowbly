@@ -3,6 +3,15 @@ import { useRef } from "react";
 import { useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 
+/** The mark before the name: `›` while a row is over it, `▌` for the current entry. */
+function marker(dropTarget: boolean, selected: boolean): string {
+  if (dropTarget) {
+    return "› ";
+  }
+
+  return selected ? "▌ " : "  ";
+}
+
 /**
  * One entry, as a row as wide as the sidebar; the current one is filled. A Board shows its `1`–`9` key.
  * With `onEdit`, a click on the `✎` at its right edge calls `onEdit` instead of `onClick`. With `drag`,
@@ -37,12 +46,14 @@ export function SidebarItem({
 }) {
   const ref = useRef<DOMElement>(null);
   const edit = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick, drag, onDrop, onDragOver, onDragLeave }, clickable);
   useMouse(edit, { onClick: onEdit }, clickable && onEdit !== undefined);
+
   return (
     <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.selection : undefined}>
       <Box flexShrink={0}>
-        <Text color={theme.accent}>{dropTarget ? "› " : selected ? "▌ " : "  "}</Text>
+        <Text color={theme.accent}>{marker(dropTarget, selected)}</Text>
       </Box>
       <Box flexGrow={1} flexShrink={1}>
         <Text wrap="truncate-end" color={theme.ink} bold={selected}>

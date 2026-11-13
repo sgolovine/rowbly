@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import { GLOBAL_KEYS, type KeyHint } from "../../keymap.js";
 import { theme } from "../../theme.js";
 
+/** The keys of the screen and the global keys of the shell, one key on each row. */
 export function HelpOverlay({
   hints,
   globals = GLOBAL_KEYS,
@@ -13,6 +14,7 @@ export function HelpOverlay({
   // A screen's own meaning for a key (e.g. `/` on the board, `esc` in a form) replaces the global one.
   const rows = [...hints, ...globals.filter((global) => !hints.some((hint) => hint.key === global.key))];
   const width = Math.max(...rows.map((row) => row.key.length)) + 2;
+
   return (
     <Box flexDirection="column">
       {rows.map((row) => (

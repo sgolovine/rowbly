@@ -1,6 +1,6 @@
-import { Box, useInput } from "ink";
-import { type ReactNode, useContext, useState } from "react";
-import { ShellContext, useEscape, useIsActive, useKeyCapture } from "../../hooks/index.js";
+import { Box, type Key, useInput } from "ink";
+import { type Dispatch, type ReactNode, type SetStateAction, useContext, useState } from "react";
+import { ShellContext, type ShellRegistry, useEscape, useIsActive, useKeyCapture } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import { Button } from "../button/index.js";
 import { ConfirmDialog } from "../confirm-dialog/index.js";
@@ -33,6 +33,33 @@ export interface FormModalProps {
 
 const DELETE_HINTS: readonly KeyHint[] = [{ key: "ctrl+d", description: "delete" }];
 
+/** The confirmation that the modal shows over the form, if any. */
+type Confirming = "discard" | "delete" | null;
+
+type SetConfirming = Dispatch<SetStateAction<Confirming>>;
+
+/** Closes the modal, or asks first when the form has unsaved changes. */
+function closeModal(shell: ShellRegistry, setConfirming: SetConfirming, onClose: () => void): void {
+  if (shell.isDirty()) {
+    setConfirming("discard");
+
+    return;
+  }
+
+  onClose();
+}
+
+function deleteKey(setConfirming: SetConfirming, input: string, key: Key): void {
+  if (key.ctrl && input === "d") {
+    setConfirming("delete");
+  }
+}
+
+function confirmDelete(setConfirming: SetConfirming, onDelete: FormModalDelete): void {
+  setConfirming(null);
+  onDelete.onConfirm();
+}
+
 /**
  * A generic `Modal` that holds one `Form`, to create or edit a record. `esc` and the `✕` close it; with
  * unsaved changes, they first ask before the changes are discarded.
@@ -50,27 +77,17 @@ export function FormModal({
 }: FormModalProps) {
   const active = useIsActive();
   const shell = useContext(ShellContext);
-  const [confirming, setConfirming] = useState<"discard" | "delete" | null>(null);
-  const close = () => {
-    if (shell.isDirty()) {
-      setConfirming("discard");
-    } else {
-      onClose();
-    }
-  };
+  const [confirming, setConfirming] = useState<Confirming>(null);
+
+  const actions = { close: () => closeModal(shell, setConfirming, onClose) };
   const idle = active && confirming === null;
+
   useKeyCapture(active, { text: false, escape: true });
-  useEscape(idle, close);
-  useInput(
-    (input, key) => {
-      if (key.ctrl && input === "d") {
-        setConfirming("delete");
-      }
-    },
-    { isActive: idle && onDelete !== undefined },
-  );
+  useEscape(idle, actions.close);
+  useInput((input, key) => deleteKey(setConfirming, input, key), { isActive: idle && onDelete !== undefined });
+
   return (
-    <Modal title={title} hints={onDelete ? DELETE_HINTS : undefined} onClose={idle ? close : undefined}>
+    <Modal title={title} hints={onDelete ? DELETE_HINTS : undefined} onClose={idle ? actions.close : undefined}>
       {children}
       <Form
         extraHints={extraHints}
@@ -109,10 +126,7 @@ export function FormModal({
           confirmLabel="Delete"
           cancelLabel="Cancel"
           destructive
-          onConfirm={() => {
-            setConfirming(null);
-            onDelete.onConfirm();
-          }}
+          onConfirm={() => confirmDelete(setConfirming, onDelete)}
           onCancel={() => setConfirming(null)}
         />
       )}

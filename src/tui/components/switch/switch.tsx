@@ -17,7 +17,9 @@ export interface SwitchProps {
 /** An on/off control: a track with its knob (`━━●` on, `●──` off) and the label of its state. */
 export function Switch({ on, onLabel = "On", offLabel = "Off", onChange, clickable = true }: SwitchProps) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick: () => onChange?.(!on) }, clickable && onChange !== undefined);
+
   return (
     <Box ref={ref} gap={1} flexShrink={0}>
       <Text color={on ? theme.ink : theme.inkFaint}>{on ? "━━●" : "●──"}</Text>

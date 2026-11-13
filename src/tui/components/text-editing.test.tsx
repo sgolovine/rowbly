@@ -3,7 +3,9 @@ import { cleanup } from "ink-testing-library";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { keys, renderTui } from "../testing/index.js";
-import { editKey, follow, moveRow, rowOf, useEditState, WithCaret, wrapRows } from "./text-editing.js";
+import { editKey, follow, moveRow, rowOf, wrapRows } from "./text-editing.js";
+import { useEditState } from "./use-edit-state.js";
+import { WithCaret } from "./with-caret/index.js";
 
 afterEach(cleanup);
 

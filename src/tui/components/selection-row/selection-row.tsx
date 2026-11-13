@@ -32,12 +32,14 @@ export function SelectionRow({
   children: ReactNode;
 } & RowDragProps) {
   const ref = useRef<DOMElement>(null);
+
   useScrollFocus(ref, selected && active);
   useMouse(
     ref,
     { onClick, drag, onDrop, onDragOver, onDragLeave },
     active && (onClick !== undefined || drag !== undefined || onDrop !== undefined),
   );
+
   return (
     <Box ref={ref} backgroundColor={selected ? theme.selection : undefined}>
       <Box flexShrink={0}>

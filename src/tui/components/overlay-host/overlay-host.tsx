@@ -19,6 +19,7 @@ export function OverlayHost({ fullscreen = true, children }: { fullscreen?: bool
     }),
     [],
   );
+
   return (
     <MainOverlayContext.Provider value={mainOverlay}>
       <ActiveContext.Provider value={active && overlay === null}>{children}</ActiveContext.Provider>

@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext } from "react";
+import { Store, withEntry, withMember, withoutEntry, withoutMember } from "../../services/store/store.js";
 import type { KeyHint } from "../keymap.js";
 
 /** A nested task quiets the frame of the screen or task underneath it. */
@@ -16,31 +17,48 @@ export interface LayerHost {
   subscribe(listener: () => void): () => void;
 }
 
+/** The layers of a host and the listeners that it tells about a change. */
+interface LayerState {
+  /** Also the snapshot of `layers()`: a new map on each change, and the same map between changes. */
+  readonly nodes: ReadonlyMap<string, ReactNode>;
+  readonly listeners: ReadonlySet<() => void>;
+}
+
+function notify(state: Store<LayerState>): void {
+  for (const listener of state.current.listeners) {
+    listener();
+  }
+}
+
+function showLayer(state: Store<LayerState>, id: string, node: ReactNode): void {
+  state.update(({ nodes }) => ({ nodes: withEntry(nodes, id, node) }));
+  notify(state);
+}
+
+function hideLayer(state: Store<LayerState>, id: string): void {
+  if (!state.current.nodes.has(id)) {
+    return;
+  }
+
+  state.update(({ nodes }) => ({ nodes: withoutEntry(nodes, id) }));
+  notify(state);
+}
+
+function subscribeLayers(state: Store<LayerState>, listener: () => void): () => void {
+  state.update(({ listeners }) => ({ listeners: withMember(listeners, listener) }));
+
+  return () => state.update(({ listeners }) => ({ listeners: withoutMember(listeners, listener) }));
+}
+
+/** Makes the host of the layers of one modal. */
 export function createLayerHost(): LayerHost {
-  const nodes = new Map<string, ReactNode>();
-  let snapshot: ReadonlyMap<string, ReactNode> = new Map();
-  const listeners = new Set<() => void>();
-  const changed = () => {
-    snapshot = new Map(nodes);
-    for (const listener of listeners) {
-      listener();
-    }
-  };
+  const state = new Store<LayerState>({ nodes: new Map(), listeners: new Set() });
+
   return {
-    show(id, node) {
-      nodes.set(id, node);
-      changed();
-    },
-    hide(id) {
-      if (nodes.delete(id)) {
-        changed();
-      }
-    },
-    layers: () => snapshot,
-    subscribe(listener) {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
+    show: (id, node) => showLayer(state, id, node),
+    hide: (id) => hideLayer(state, id),
+    layers: () => state.current.nodes,
+    subscribe: (listener) => subscribeLayers(state, listener),
   };
 }
 

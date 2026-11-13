@@ -22,6 +22,7 @@ export function modalSize(
   const room = outer.height === undefined ? undefined : Math.max(8, outer.height - (size === "dialog" ? 0 : 2));
   // Border (the title sits in it), hint bar with its rule, body padding.
   const chrome = 2 + (footer ? 2 : 0) + (flush ? 0 : 2);
+
   return {
     width,
     room,

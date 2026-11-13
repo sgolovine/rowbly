@@ -22,6 +22,19 @@ export interface ButtonProps {
   note?: ReactNode;
 }
 
+function labelColor(busy: boolean, destructive: boolean, primary: boolean): string {
+  if (busy) {
+    return theme.inkMuted;
+  }
+
+  if (destructive) {
+    return theme.danger;
+  }
+
+  return primary ? theme.accent : theme.ink;
+}
+
+/** A clickable label with the key that does the same. It fills with `selection` while focused or under the mouse. */
 export function Button({
   label,
   keyName,
@@ -36,7 +49,9 @@ export function Button({
 }: ButtonProps) {
   const ref = useRef<DOMElement>(null);
   const [hovered, setHovered] = useState(false);
+
   useMouse(ref, { onClick, onEnter: () => setHovered(true), onLeave: () => setHovered(false) }, clickable);
+
   return (
     <Box
       ref={ref}
@@ -47,10 +62,7 @@ export function Button({
       gap={1}
       paddingX={1}
     >
-      <Text
-        bold={primary || focused}
-        color={busy ? theme.inkMuted : destructive ? theme.danger : primary ? theme.accent : theme.ink}
-      >
+      <Text bold={primary || focused} color={labelColor(busy, destructive, primary)}>
         {label}
       </Text>
       {note}
