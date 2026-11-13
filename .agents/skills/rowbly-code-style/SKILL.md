@@ -31,7 +31,8 @@ All files and folders use dash-case names: lower-case words with a `-` between t
 - Identifiers do not change. Components stay PascalCase. Functions, hooks and values stay camelCase.
 - Extensions follow the first dot: `story-row.test.tsx`, `commit-project.d.mts`, `vitest.config.ts`.
 
-`pnpm lint` checks the names. Biome `useFilenamingConvention` checks script files.
+`pnpm lint` checks the names. Biome `useFilenamingConvention` checks script files. The global
+`linter` settings of `biome.json` have this rule, so it also applies to tests and config files.
 `scripts/check-names.mjs` checks each path that Git tracks, also folders, Markdown and HTML.
 
 These names are exceptions. The script lists them.
@@ -55,7 +56,6 @@ These rules are in the strict override of `biome.json`.
 | `style/noUselessElse`                     | An `else` after a branch that returns or throws.                       |
 | `style/useReadonlyClassProperties`        | A class property that does not change and is not `readonly`.           |
 | `style/noExcessiveLinesPerFile`           | A file with more than 400 lines.                                       |
-| `style/useFilenamingConvention`           | A script file name that is not dash-case. This rule applies to all files. |
 | `complexity/noExcessiveLinesPerFunction`  | A function with more than 60 lines.                                    |
 | `complexity/noExcessiveCognitiveComplexity` | A function with too many branches and loops in it.                   |
 | `performance/noDelete`                    | The `delete` operator.                                                 |

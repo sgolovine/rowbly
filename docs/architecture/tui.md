@@ -32,7 +32,7 @@ src/tui/
   shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal, factory button
   screens/          # one folder per area, see below
   components/       # the shared component library: one folder per component (barrel: components/index.ts)
-  hooks/            # contexts and hooks: focus, key capture, hints, layout, mouse, toasts, useAsync, refs
+  hooks/            # contexts and hooks: see the table of shared hooks below
   testing/          # renderTui(): renders a component in TuiProviders for tests; keys for stdin
 ```
 
@@ -75,11 +75,28 @@ The screen areas in `screens/` are:
   - `hooks/`: contexts and hooks.
 - Put each pure helper or constant that more than one file uses in its own dash-case `.ts` file, for
   example `components/shell-layout.ts`.
-- Use the shared hooks before you write a new one: `useReportHints`, `stopOnAbort`, `showToast`,
-  `useAsync` and the ref helpers of `refs.ts`. Import them from `hooks/index.ts`.
+- Use the shared hooks before you write a new one. The table below gives each file of `hooks/`.
+  Import the hooks from `hooks/index.ts`.
 - Follow the React patterns of the
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.
+
+| File in `hooks/`        | Exports                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| `layout.ts`             | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
+| `mouse.ts`              | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
+| `refs.ts`               | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
+| `section-shell.ts`      | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
+| `shell.ts`              | `createShellRegistry`, focus (`useIsActive`), `useKeyCapture`, `useDirty`, `useKeyHints` and more. |
+| `stop-on-abort.ts`      | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
+| `toasts.ts`             | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
+| `use-async.ts`          | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
+| `use-cursor.ts`         | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
+| `use-escape.ts`         | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
+| `use-report-hints.ts`   | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
+| `use-story-changes.ts`  | `useStoryChanges`: calls a function when the files of the Stories change.                          |
+| `use-story-paste.ts`    | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
+| `use-thread-changes.ts` | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 
 ## Design rules in short
 

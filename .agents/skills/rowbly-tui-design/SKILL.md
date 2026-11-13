@@ -28,7 +28,7 @@ them.
 
 ## Components
 
-**Library** components are in `src/tui/components/`, and `src/tui/components/index.js` exports
+**Library** components are in `src/tui/components/`, and `src/tui/components/index.ts` exports
 them. **Pattern** entries have a guideline (and a preview) but no code. Build each pattern from the
 library parts that its row names. Follow the guideline of the pattern.
 
