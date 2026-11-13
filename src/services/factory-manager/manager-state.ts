@@ -173,12 +173,14 @@ export function pausedProviders(
   return providers;
 }
 
+/** Tells if a provider pause still holds: it has no retry time, or the retry time is in the future. */
 export function isProviderPaused(manager: Manager, provider: string): boolean {
   const pause = getState(manager).providers.get(provider);
 
   return !!pause && (!pause.retryAt || Date.parse(pause.retryAt) > Date.now());
 }
 
+/** Tells if a Thread status is active: pending or running. A final status is not active. */
 export function isActiveStatus(status: ThreadRecord["status"]): boolean {
   return status === "pending" || status === "running";
 }
