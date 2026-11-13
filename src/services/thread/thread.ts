@@ -348,11 +348,29 @@ export async function projectNativeAttempt(id: string, ctx: ServiceContext = {})
     ctx,
   );
 }
-export async function watchThreads(onChange: () => void, ctx: ServiceContext = {}): Promise<() => void> {
+/**
+ * Calls `onChange` after thread metadata changes, also from a different process. With `factory`, a change
+ * of the factory status or owner also calls it. Session histories and logs do not call it. The watch waits
+ * for 100 ms of quiet, and it does not keep the process alive. Returns the function that stops the watch.
+ */
+export async function watchThreads(
+  onChange: () => void,
+  ctx: ServiceContext = {},
+  options: { factory?: boolean } = {},
+): Promise<() => void> {
   const paths = await findProject(ctx);
+  let timer: NodeJS.Timeout | undefined;
   // Watch the Project too, so the first runtime directory is observable without writes.
-  const watcher = watch(paths.dir, { recursive: true }, (_event, file) => {
-    if (file?.toString().startsWith("runtime")) onChange();
+  const watcher = watch(paths.dir, { persistent: false, recursive: true }, (_event, file) => {
+    const name = file?.toString() ?? "";
+    const factory = name === "runtime/status.json" || name === "runtime/factory.lock" || name === "runtime";
+    if (!name.startsWith("runtime/threads") && !(options.factory && factory)) return;
+    clearTimeout(timer);
+    timer = setTimeout(onChange, 100);
   });
-  return () => watcher.close();
+  watcher.on("error", () => watcher.close());
+  return () => {
+    clearTimeout(timer);
+    watcher.close();
+  };
 }

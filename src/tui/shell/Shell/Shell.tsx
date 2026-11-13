@@ -1,5 +1,6 @@
 import { Box, type BoxProps, Text, useApp, useInput } from "ink";
 import { useContext, useEffect, useState } from "react";
+import { type FactoryLaunch, type FactoryStatus, getFactoryStatus } from "../../../services/factory/factory.js";
 import { getFactoryActivity } from "../../../services/factoryActivity/factoryActivity.js";
 import { recordProject } from "../../../services/knownProject/knownProject.js";
 import { getProject } from "../../../services/project/project.js";
@@ -27,12 +28,14 @@ import {
   LayoutContext,
   ShellContext,
   useAsync,
+  useFactoryChanges,
   useIsActive,
   useLayout,
   useStoryChanges,
   useToast,
 } from "../../hooks/index.js";
 import { groupDelta, type KeyHint, moveDelta, reorderDelta } from "../../keymap.js";
+import { FactoryModal } from "../../screens/factory/index.js";
 import { Onboarding } from "../../screens/onboarding/index.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
@@ -67,7 +70,8 @@ type Overlay =
   | { kind: "editStory"; story: Story }
   | { kind: "deleteStory"; story: Story }
   | { kind: "newStage" }
-  | { kind: "editStage"; stage: Stage };
+  | { kind: "editStage"; stage: Stage }
+  | { kind: "factory" };
 
 /** The region that takes `↑/↓`, `n` and the other keys of a list: the Stage sidebar or the Story list. */
 type Pane = "stages" | "stories";
@@ -83,9 +87,17 @@ type Pane = "stages" | "stories";
  * deletes the selected Story. The Modals that create and edit records open over the Story list. The Project
  * Button and `p` open the Project switcher, and each Project that opens is recorded in `~/.rowblyrc.json`.
  * Without a Project in the directory where Rowbly runs, the Story panel shows the onboarding steps, which create one
- * there. A Project in a parent directory does not open.
+ * there. A Project in a parent directory does not open. The Factory Button and `f` open the Factory controls. The
+ * header shows the state of the factory, which runs in a process of its own and continues after Rowbly quits.
  */
-export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
+export function Shell({
+  ctx: initialCtx = CWD,
+  launch,
+}: {
+  ctx?: ServiceContext;
+  /** How the Factory controls start the factory process. The CLI entry point supplies it. */
+  launch?: FactoryLaunch;
+}) {
   const { exit } = useApp();
   // The Project switcher changes where the services look.
   const [ctx, setCtx] = useState(initialCtx);
@@ -110,6 +122,19 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   const projectName = board?.project.projectName;
   // Agents change Stories from other processes.
   useStoryChanges(projectRoot, data.refresh);
+  // The factory is a status, not a part of the board: a problem with it never stops the board.
+  const factory = useAsync(
+    async (): Promise<FactoryStatus | undefined> =>
+      projectRoot === undefined
+        ? undefined
+        : getFactoryStatus({ ...ctx, cwd: projectRoot }).catch((error: unknown) => ({
+            version: 1,
+            phase: "unavailable" as const,
+            error: error instanceof Error ? error.message : "Factory status is unavailable",
+          })),
+    [projectRoot],
+  );
+  useFactoryChanges(projectRoot, factory.refresh);
 
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [onboardingHints, setOnboardingHints] = useState<readonly KeyHint[]>([]);
@@ -279,6 +304,7 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
       if (input === "p") return setOverlay({ kind: "projects" });
       if (!board) return;
       if (input === ",") return setOverlay({ kind: "settings" });
+      if (input === "f") return setOverlay({ kind: "factory" });
       if (key.tab && sidebar) return setPane(sidebarFocused ? "stories" : "stages");
       if (key.escape && sidebarFocused) return setPane("stories");
       if (input === "[" || input === "]") {
@@ -339,6 +365,7 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
           ...(sidebar ? [{ key: "tab", description: "Stages" }] : []),
           { key: "ctrl+p", description: "find" },
           { key: "p", description: "switch Project", secondary: true },
+          { key: "f", description: "factory", secondary: true },
           { key: ",", description: "settings", secondary: true },
           { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
           ...(stage ? [] : [{ key: "←/→", description: "collapse/expand", secondary: true }]),
@@ -361,8 +388,8 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
   // The border and the padding of the Panel take two columns on each side.
   const mainWidth = Math.max(20, layout.width - shownWidth - gap - 4);
   const listHeight = mainHeight === undefined ? undefined : mainHeight - stackedHeight;
-  // A problem with the factory state file takes one line below the list.
-  const statusLine = board && board.activity.status !== "ok" ? 1 : 0;
+  // A problem with the factory state file takes one line below the list. A missing file is no problem.
+  const statusLine = board && !["ok", "missing"].includes(board.activity.status) ? 1 : 0;
   const listInnerHeight = listHeight === undefined ? undefined : listHeight - 2 - statusLine;
   // Modals are centred over this area: the inside of the Story panel, and also the sidebar above it when stacked.
   const overlayHeight = mainHeight === undefined ? undefined : mainHeight - 2;
@@ -379,6 +406,7 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
           onClick: () => setOverlay({ kind: "projects" }),
         }}
         finder={board ? { onClick: () => setOverlay({ kind: "finder" }) } : undefined}
+        factory={board ? { status: factory.data, onClick: () => setOverlay({ kind: "factory" }) } : undefined}
         settings={board ? { onClick: () => setOverlay({ kind: "settings" }) } : undefined}
         newStory={board ? { onClick: () => setOverlay({ kind: "newStory" }), showKey: !sidebarFocused } : undefined}
         clickable={idle}
@@ -528,6 +556,15 @@ export function Shell({ ctx: initialCtx = CWD }: { ctx?: ServiceContext }) {
             )}
             {board && overlay?.kind === "settings" && (
               <SettingsModal ctx={ctx} projectName={projectName} onChange={reload} onClose={close} />
+            )}
+            {board && overlay?.kind === "factory" && (
+              <FactoryModal
+                ctx={ctx}
+                status={factory.data}
+                stages={Object.fromEntries(stages.map((s) => [s.key, s.label]))}
+                launch={launch}
+                onClose={close}
+              />
             )}
             {overlay?.kind === "projects" && (
               <ProjectSwitcher ctx={ctx} current={projectRoot} onSelect={switchProject} onClose={close} />

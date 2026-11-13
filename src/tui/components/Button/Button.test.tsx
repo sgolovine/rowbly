@@ -1,3 +1,4 @@
+import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderTui } from "../../testing/index.js";
@@ -31,5 +32,12 @@ describe("Button", () => {
       <Button label="Delete" keyName="ctrl+d" onClick={() => {}} clickable compact destructive />,
     );
     expect(tui.frame()).toContain("Delete");
+  });
+
+  it("shows a note between the label and the key", async () => {
+    const tui = await renderTui(
+      <Button label="Factory" note={<Text>2/4</Text>} keyName="f" onClick={() => {}} clickable compact />,
+    );
+    expect(tui.frame()).toMatch(/Factory 2\/4 {2}f/);
   });
 });

@@ -71,7 +71,7 @@ describe("StoryModalBody", () => {
   it("keeps a valid clipboard fallback across the Story tabs", async () => {
     vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({ reason: "no-display" });
     const { tui } = await setup();
-    for (const tab of ["General", "Specs 1", "Attachments"]) {
+    for (const tab of ["General", "Specs 1", "Attachments", "Threads"]) {
       await tui.click(tab);
       await tui.press(keys.ctrl("v"));
       const toast = tui.toasts.list().at(-1);
@@ -109,7 +109,7 @@ describe("StoryModalBody", () => {
   it("keeps the text of the form when the tab changes", async () => {
     const { tui } = await setup();
     await tui.type("!");
-    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab);
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.shiftTab);
     expect(tui.frame()).toContain("Login!");
   });
 
@@ -117,7 +117,7 @@ describe("StoryModalBody", () => {
     const { tui, confirmDelete } = await setup();
     await tui.press(keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).not.toContain("Delete it?");
-    await tui.press(keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).toContain("Delete it?");
     await tui.press("y");
     expect(confirmDelete).toHaveBeenCalledOnce();
@@ -129,5 +129,25 @@ describe("StoryModalBody", () => {
     expect(requestClose).not.toHaveBeenCalled();
     await tui.press(keys.escape);
     expect(requestClose).toHaveBeenCalledOnce();
+  });
+
+  it("shows the Threads tab last, reads it only on selection, and keeps the Specs and Attachments keys", async () => {
+    const { tui } = await setup();
+    expect(tui.frame()).toMatch(/General\s+Specs 1\s+Attachments\s+Threads/);
+    expect(tui.frame()).not.toContain("No Threads");
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Threads 0");
+    });
+    expect(tui.frame()).toContain("No Threads");
+    await tui.click("Specs 1");
+    expect(tui.frame()).toContain("The API text");
+    await tui.press("n");
+    expect(tui.frame()).toContain("New Spec");
+    await tui.press(keys.escape);
+    await tui.click("Attachments");
+    expect(tui.frame()).toContain("Attachments");
+    expect(tui.frame()).not.toContain("No Threads");
   });
 });

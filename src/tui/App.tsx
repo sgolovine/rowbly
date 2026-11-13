@@ -1,4 +1,5 @@
 import type { EventEmitter } from "node:events";
+import type { FactoryLaunch } from "../services/factory/factory.js";
 import type { ServiceContext } from "../services/workspace/workspace.js";
 import type { ToastStore } from "./hooks/index.js";
 import { Shell } from "./shell/index.js";
@@ -9,6 +10,7 @@ export function App({
   toasts,
   mouse,
   ctx,
+  launch,
   fullscreen = true,
 }: {
   toasts: ToastStore;
@@ -18,10 +20,12 @@ export function App({
   ctx?: ServiceContext;
   /** False in tests and piped output, where the app does not fill the terminal. */
   fullscreen?: boolean;
+  /** How the Factory controls start the factory process. */
+  launch?: FactoryLaunch;
 }) {
   return (
     <TuiProviders toasts={toasts} mouse={mouse} fullscreen={fullscreen}>
-      <Shell ctx={ctx} />
+      <Shell ctx={ctx} launch={launch} />
     </TuiProviders>
   );
 }

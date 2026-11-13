@@ -13,6 +13,7 @@ import { StoryModalBody, type StoryModalConfirm } from "../StoryModalBody/index.
 export function StoryModal({
   ctx,
   storyId,
+  stages,
   specs = true,
   title,
   fields,
@@ -23,6 +24,8 @@ export function StoryModal({
 }: {
   ctx: ServiceContext;
   storyId: string;
+  /** The names of the Stages by key, for the Threads tab. */
+  stages?: Readonly<Record<string, string>>;
   specs?: boolean;
   title: string;
   fields: readonly FormField[];
@@ -45,6 +48,7 @@ export function StoryModal({
         key={`${ctx.cwd}:${storyId}`}
         ctx={ctx}
         storyId={storyId}
+        stages={stages}
         specs={specs}
         fields={fields}
         initialValues={initialValues}

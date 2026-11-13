@@ -23,7 +23,16 @@ export type FactoryStatus = Partial<Omit<Awaited<ReturnType<FactoryManager["snap
   liveness?: "alive" | "dead" | "uncertain";
   responsive?: boolean;
   error?: string;
+  /** Queued work with its policy reasons: at most 50 Stories, without the Stories that wait for no worker. */
+  queue?: FactoryQueueEntry[];
 };
+export interface FactoryQueueEntry {
+  story: string;
+  stage: string;
+  action: "start" | "retry" | "skip";
+  reason: string;
+  retryAt?: string;
+}
 export async function getFactoryStatus(ctx: ServiceContext = {}): Promise<FactoryStatus> {
   const paths = await findProject(ctx);
   try {

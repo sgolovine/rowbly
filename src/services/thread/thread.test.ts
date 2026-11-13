@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { doctor } from "../doctor/doctor.js";
 import { readFactoryState } from "../factoryState/factoryState.js";
 import { useTestProject } from "../testProject/testProject.js";
@@ -12,6 +12,7 @@ import {
   projectNativeAttempt,
   type ThreadStatus,
   transitionThread,
+  watchThreads,
 } from "./thread.js";
 
 describe("thread", () => {
@@ -68,5 +69,22 @@ describe("thread", () => {
     await expect(transitionThread(t.id, { expectedRevision: 2, status: "running" }, p.ctx)).rejects.toThrow(
       "transition",
     );
+  });
+  it("watches thread metadata, and factory status only on request, but not session histories", async () => {
+    await create();
+    const threads = vi.fn();
+    const factory = vi.fn();
+    const stops = [await watchThreads(threads, p.ctx), await watchThreads(factory, p.ctx, { factory: true })];
+    try {
+      await mkdir(join(p.paths.runtimeDir, "sessions/x"), { recursive: true });
+      await writeFile(join(p.paths.runtimeDir, "sessions/x/history.jsonl"), "{}\n");
+      await writeFile(join(p.paths.runtimeDir, "status.json"), "{}\n");
+      await vi.waitFor(() => expect(factory).toHaveBeenCalled());
+      expect(threads).not.toHaveBeenCalled();
+      await create();
+      await vi.waitFor(() => expect(threads).toHaveBeenCalled());
+    } finally {
+      for (const stop of stops) stop();
+    }
   });
 });

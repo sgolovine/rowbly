@@ -52,6 +52,8 @@ export interface FactoryDependencies {
   beforeLaunch?: (thread: ThreadRecord) => Promise<void>;
   onModel?: (role: string, model: ModelChoice) => void;
 }
+/** Policy reasons for Stories that wait for no worker. The status file leaves them out of its queue. */
+const QUIET_REASONS = new Set(["hold stage", "stage unavailable"]);
 export type FactoryManager = Awaited<ReturnType<typeof createFactoryManager>>;
 /** Serializes lifecycle changes and reserves worker slots before asynchronous preparation. */
 export async function createFactoryManager(deps: FactoryDependencies, context: ServiceContext = {}) {
@@ -236,10 +238,19 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
       deadlineTimer = setTimeout(notify, Math.max(1, Math.min(...deadlines) - Date.now()));
       deadlineTimer.unref();
     }
-    await writeFileAtomic(await runtimePath(paths, "status.json"), `${JSON.stringify(await snapshot())}\n`, {
-      mode: 0o600,
-      durable: true,
-    });
+    // The TUI shows the queued work and its reasons. The supervisor reads decisions through its paged tool.
+    const queue = policy.decisions
+      .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
+      .slice(0, 50)
+      .map((d) => ({ story: d.story, stage: d.stage, action: d.action, reason: d.reason, retryAt: d.retryAt }));
+    await writeFileAtomic(
+      await runtimePath(paths, "status.json"),
+      `${JSON.stringify({ ...(await snapshot()), queue })}\n`,
+      {
+        mode: 0o600,
+        durable: true,
+      },
+    );
   }
   async function change(
     id: string,

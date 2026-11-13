@@ -1,5 +1,5 @@
 import { Box, type DOMElement, Text } from "ink";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 
@@ -18,6 +18,8 @@ export interface ButtonProps {
   busy?: boolean;
   /** It is the choice that `enter` picks: bold on the `selection` fill. */
   focused?: boolean;
+  /** A short state after the label, for example the counts of a header Button. It sets its own colours. */
+  note?: ReactNode;
 }
 
 export function Button({
@@ -30,6 +32,7 @@ export function Button({
   destructive = false,
   busy = false,
   focused = false,
+  note,
 }: ButtonProps) {
   const ref = useRef<DOMElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -50,6 +53,7 @@ export function Button({
       >
         {label}
       </Text>
+      {note}
       {keyName && (
         <Text backgroundColor={theme.keycap} color={primary ? theme.accent : theme.inkMuted}>
           {" "}
