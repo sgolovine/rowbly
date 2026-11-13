@@ -2,7 +2,8 @@ import type { Command } from "commander";
 import { authRuntime, listAvailableModels } from "../../services/agent-auth/agent-auth.js";
 import { run } from "../output/output.js";
 
-export function registerModelCommands(program: Command) {
+/** Registers the `rowbly model` subcommands on the `model` command. */
+export function registerModelCommands(program: Command): void {
   program
     .command("list")
     .option("--provider <id>", "provider ID")

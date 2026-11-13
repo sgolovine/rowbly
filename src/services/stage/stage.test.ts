@@ -4,9 +4,17 @@ import { readConfig } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { createStory, getStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { createStage, deleteStage, findStage, getStage, listStages, updateStage } from "./stage.js";
+import {
+  createStage,
+  deleteStage,
+  getStage,
+  listStages,
+  lookupStage,
+  unknownStageIssues,
+  updateStage,
+} from "./stage.js";
 
-describe("findStage", () => {
+describe("lookupStage and unknownStageIssues", () => {
   const config = {
     projectName: "R",
     projectKey: "R",
@@ -15,10 +23,12 @@ describe("findStage", () => {
   };
 
   it("finds a stage in any case and records an issue when it is missing", () => {
-    const issues: { path: (string | number)[]; message: string }[] = [];
-    expect(findStage(config, " backlog ", ["stage"], issues)?.key).toBe("BACKLOG");
-    expect(findStage(config, "NOPE", ["stage"], issues)).toBeUndefined();
-    expect(issues).toEqual([{ path: ["stage"], message: 'Unknown stage "NOPE". Stages: BACKLOG' }]);
+    expect(lookupStage(config, " backlog ")?.key).toBe("BACKLOG");
+    expect(unknownStageIssues(config, " backlog ", ["stage"])).toEqual([]);
+    expect(lookupStage(config, "NOPE")).toBeUndefined();
+    expect(unknownStageIssues(config, "NOPE", ["stage"])).toEqual([
+      { path: ["stage"], message: 'Unknown stage "NOPE". Stages: BACKLOG' },
+    ]);
   });
 });
 

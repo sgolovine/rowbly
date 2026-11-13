@@ -21,6 +21,7 @@ export function registerCommands(program: Command): void {
   program
     .option("--json", "print results and errors as JSON")
     .option("-C, --cwd <dir>", "run as if Rowbly was started in <dir>");
+
   registerAttachmentCommands(program);
   registerInit(program);
   registerProjectCommands(resource(program, "project", "Manage the project"));
@@ -36,15 +37,22 @@ export function registerCommands(program: Command): void {
   registerThreadCommands(resource(program, "thread", "Inspect agent threads"));
 }
 
+/** Prints the help when no action is given, and rejects an unknown action. `help` stops the command. */
+function resourceAction(command: Command): void {
+  const [action] = command.args;
+
+  if (action === undefined) {
+    command.help();
+  }
+
+  command.error(`error: unknown command '${action}'`, { code: "commander.unknownCommand" });
+}
+
 /** Creates a resource command that prints help when no action is given, and rejects an unknown action. */
 function resource(program: Command, name: string, description: string): Command {
   const command = program.command(name).description(description).argument("[action...]");
-  command.action(() => {
-    const [action] = command.args;
-    if (action === undefined) {
-      command.help();
-    }
-    command.error(`error: unknown command '${action}'`, { code: "commander.unknownCommand" });
-  });
+
+  command.action(() => resourceAction(command));
+
   return command;
 }

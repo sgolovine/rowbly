@@ -7,14 +7,17 @@ function parseType(value: string): CustomFieldType {
   if (!CUSTOM_FIELD_TYPES.includes(value as CustomFieldType)) {
     throw new InvalidArgumentError(`Expected one of ${CUSTOM_FIELD_TYPES.join(", ")}.`);
   }
+
   return value as CustomFieldType;
 }
 
 function describe(field: CustomField): string {
   const options = field.options ? ` [${field.options.join(", ")}]` : "";
+
   return `${field.key} (${field.label}, ${field.type}${options})`;
 }
 
+/** Registers the `rowbly custom-field` subcommands on the `custom-field` command. */
 export function registerCustomFieldCommands(program: Command): void {
   const types = CUSTOM_FIELD_TYPES.join(", ");
 
