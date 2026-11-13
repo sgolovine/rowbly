@@ -1,36 +1,8 @@
-import { Box, useInput } from "ink";
-import { useEffect, useState } from "react";
-import { type Attachment, listAttachments } from "../../../../services/attachment/attachment.js";
-import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { Button, ConfirmDialog, FormModal, useCovered } from "../../../components/index.js";
-import { useAsync, useIsActive, useLayout, useToast } from "../../../hooks/index.js";
-import type { KeyHint } from "../../../keymap.js";
+import { Box } from "ink";
+import { Button, ConfirmDialog, FormModal } from "../../../components/index.js";
 import { AttachmentList } from "../attachment-list/index.js";
-import {
-  type AttachmentsTabEnv,
-  type AttachmentTask,
-  attachFile,
-  confirmRemove,
-  handleKey,
-  openItem,
-} from "./attachments-tab-actions.js";
-
-const HINTS: readonly KeyHint[] = [
-  { key: "↑/↓", description: "select" },
-  { key: "n", description: "new PNG" },
-  { key: "o", description: "open" },
-  { key: "d", description: "remove" },
-];
-
-export interface AttachmentsTabProps {
-  readonly ctx: ServiceContext;
-  readonly storyId: string;
-  /** This tab is the tab on the screen, and takes the keys. */
-  readonly selected: boolean;
-  onHints(hints: readonly KeyHint[]): void;
-  /** The tab asks a question, so that the Modal leaves `esc` and the save key to it. */
-  onTask(value: boolean): void;
-}
+import { attachFile, confirmRemove, openItem } from "./attachments-tab-actions.js";
+import { type AttachmentsTabProps, useAttachmentsTab } from "./use-attachments-tab.js";
 
 /** The rows of the list: the layout height less the Buttons and the blank row above them. */
 function listHeight(height: number | undefined): number | undefined {
@@ -41,36 +13,9 @@ function listHeight(height: number | undefined): number | undefined {
  * The saved images of one Story. The arrows select an image, `n` attaches a PNG from a path, `o` opens the
  * selected image and `d` asks before it removes the image. The list reads again when the tab is selected.
  */
-export function AttachmentsTab({ ctx, storyId, selected, onHints, onTask }: AttachmentsTabProps) {
-  const active = useIsActive();
-  const covered = useCovered();
-  const toast = useToast();
-  const layout = useLayout();
-  const [task, setTask] = useState<AttachmentTask>(null);
-  const [cursor, setCursor] = useState(0);
-  const state = useAsync(() => listAttachments({ story: storyId }, ctx), [ctx, storyId, selected]);
-
-  const items: readonly Attachment[] = state.data ?? [];
-  const item = items[Math.min(cursor, items.length - 1)];
-  const idle = active && selected && !covered && task === null;
-  const env: AttachmentsTabEnv = {
-    ctx,
-    storyId,
-    toast,
-    count: items.length,
-    item,
-    setTask,
-    setCursor,
-    reload: state.reload,
-  };
-
-  useEffect(() => onHints(HINTS), [onHints]);
-  useEffect(() => {
-    onTask(task !== null);
-
-    return () => onTask(false);
-  }, [task, onTask]);
-  useInput((input, key) => handleKey(env, input, key), { isActive: idle });
+export function AttachmentsTab(props: AttachmentsTabProps) {
+  const { env, state, layout, items, task, idle } = useAttachmentsTab(props);
+  const { item, setTask, setCursor } = env;
 
   return (
     <Box flexDirection="column" height={layout.height}>
