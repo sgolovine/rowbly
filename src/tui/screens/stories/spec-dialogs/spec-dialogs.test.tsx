@@ -2,7 +2,7 @@ import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Spec } from "../../../../services/spec/spec.js";
 import { keys, renderTui } from "../../../testing/index.js";
-import { removeMessage, SpecDialogs, type SpecDialogsProps } from "./spec-dialogs.js";
+import { SpecDialogs, type SpecDialogsProps } from "./spec-dialogs.js";
 
 afterEach(cleanup);
 
@@ -19,15 +19,6 @@ function props(overrides: Partial<SpecDialogsProps>): SpecDialogsProps {
     ...overrides,
   };
 }
-
-describe("removeMessage", () => {
-  it("removes a shared spec from the Story, and deletes a spec of one Story", () => {
-    expect(removeMessage({ ...spec, stories: ["ROW-01", "ROW-02"] }, "ROW-01")).toBe(
-      "Remove API from ROW-01? It stays linked to ROW-02.",
-    );
-    expect(removeMessage(spec, "ROW-01")).toBe("Delete API? You cannot undo this.");
-  });
-});
 
 describe("SpecDialogs", () => {
   it("shows nothing in the list mode", async () => {
@@ -50,6 +41,12 @@ describe("SpecDialogs", () => {
     expect(tui.frame()).toContain("Delete API? You cannot undo this.");
     await tui.press("y");
     expect(onRemove).toHaveBeenCalledWith(spec);
+  });
+
+  it("removes a shared spec only from the Story", async () => {
+    const shared = { ...spec, stories: ["ROW-01", "ROW-02"] };
+    const tui = await renderTui(<SpecDialogs {...props({ mode: { kind: "remove", spec: shared } })} />);
+    expect(tui.frame()).toContain("Remove API from ROW-01? It stays linked to ROW-02.");
   });
 
   it("shows the old title in the rename form", async () => {

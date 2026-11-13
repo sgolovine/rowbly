@@ -21,7 +21,7 @@ export interface SpecDialogsProps {
 }
 
 /** The question that confirms the removal of `spec` from the Story `storyId`. */
-export function removeMessage(spec: Spec, storyId: string): string {
+function removeMessage(spec: Spec, storyId: string): string {
   const others = spec.stories.filter((id) => id !== storyId);
 
   return others.length > 0
