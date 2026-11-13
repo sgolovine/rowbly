@@ -146,7 +146,8 @@ Shell descendants started by a crashed daemon are not tracked. Normal stop relie
 
 Do not assume exactly-once shell effects. Examine uncertain external effects before a resume.
 Stop all relevant factory processes before offline repair of a lifecycle guard left after a crash.
-See [AGENTS.md](AGENTS.md) for the lock contract and recovery limits.
+See [runtime files and locks](docs/architecture/native-factory/runtime-and-locks.md) and
+[recovery](docs/architecture/native-factory/recovery.md) for the lock contract and recovery limits.
 
 ## Files and compatibility
 
@@ -227,7 +228,8 @@ pnpm test:factory
 Automated session tests use Pi's faux provider, in-memory credentials and no live provider requests.
 Daemon tests isolate HOME and Pi directories and block network access.
 These tests do not prove real provider entitlement, browser login or token refresh.
-Live provider validation is separate. See [AGENTS.md](AGENTS.md) for architecture and contribution rules.
+Live provider validation is separate. See [AGENTS.md](AGENTS.md) for contribution rules, and
+[docs/architecture](docs/architecture/README.md) for the architecture.
 
 ## License
 
