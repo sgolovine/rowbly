@@ -48,6 +48,7 @@ const themes = {
 
 /** COLORFGBG uses ANSI background indexes; pale backgrounds select the light palette. */
 const background = Number(process.env.COLORFGBG?.split(";").at(-1) ?? 0);
+/** The palette for the background of the terminal. */
 export const theme = themes[[7, 15].includes(background) ? "light" : "dark"];
 export const stageColors = { backlog: theme.stageBacklog, board: theme.stageBoard, done: theme.stageDone };
 

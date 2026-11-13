@@ -15,7 +15,9 @@ export function StoryFinderButton({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick }, clickable);
+
   return (
     <Box ref={ref} backgroundColor={theme.field} paddingX={1} flexShrink={0}>
       <Text color={theme.inkMuted}>{compact ? "🔎" : "🔎 Find Stories  "}</Text>

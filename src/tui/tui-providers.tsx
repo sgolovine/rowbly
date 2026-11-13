@@ -33,12 +33,15 @@ export function TuiProviders({
 }) {
   const shell = useMemo(createShellRegistry, []);
   const mouseRegistry = useMemo(createMouseRegistry, []);
+
   useMouseSource(mouseRegistry, mouse);
+
   const { columns, rows } = useWindowSize();
   const layout = useMemo(
     () => ({ width: columns, height: fullscreen ? rows : undefined }),
     [columns, rows, fullscreen],
   );
+
   return (
     <ToastContext.Provider value={toasts}>
       <ShellContext.Provider value={shell}>
