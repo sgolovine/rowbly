@@ -12,6 +12,7 @@ const resources = {
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
+  thread: ["list", "show"],
 };
 
 describe("registerCommands", () => {
@@ -66,6 +67,7 @@ describe("registerCommands", () => {
       "custom-field",
       "spec",
       "skill",
+      "thread",
     ]);
     for (const [resource, actions] of Object.entries(resources)) {
       expect(

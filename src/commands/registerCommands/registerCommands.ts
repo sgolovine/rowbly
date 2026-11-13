@@ -8,6 +8,7 @@ import { registerSkillCommands } from "../skill/skill.js";
 import { registerSpecCommands } from "../spec/spec.js";
 import { registerStageCommands } from "../stage/stage.js";
 import { registerStoryCommands } from "../story/story.js";
+import { registerThreadCommands } from "../thread/thread.js";
 
 /**
  * Registers every CLI subcommand on the root program.
@@ -26,6 +27,7 @@ export function registerCommands(program: Command): void {
   registerCustomFieldCommands(resource(program, "custom-field", "Manage custom fields"));
   registerSpecCommands(resource(program, "spec", "Manage specs"));
   registerSkillCommands(resource(program, "skill", "Manage agent skills"));
+  registerThreadCommands(resource(program, "thread", "Inspect agent threads"));
 }
 
 /** Creates a resource command that prints help when no action is given, and rejects an unknown action. */

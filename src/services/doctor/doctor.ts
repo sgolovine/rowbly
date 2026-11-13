@@ -24,6 +24,7 @@ import {
   writeSpecFile,
 } from "../specFiles/specFiles.js";
 import { formatStoryId, parseStoryFileName, type StoryFile, writeStoryFile } from "../storyFiles/storyFiles.js";
+import { listThreads } from "../thread/thread.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface DoctorIssue {
@@ -109,6 +110,18 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
   for (const file of tracked)
     await report({ severity: "warning", message: "Factory runtime file is tracked by Git", file });
 
+  const threads = await listThreads({}, ctx);
+  for (const issue of threads.issues)
+    await report({ severity: "warning", message: issue.message, file: `.rowbly/runtime/${issue.file}` });
+  for (const thread of threads.threads) {
+    if (thread.storyId && !(await pathExists(join(paths.storiesDir, `${thread.storyId}.md`)))) {
+      await report({
+        severity: "warning",
+        message: `Thread ${thread.id} links to a Story that does not exist`,
+        file: `.rowbly/runtime/threads/${thread.id}.json`,
+      });
+    }
+  }
   await checkStages(paths, config, rel, report);
   await checkStories(paths, config, rel, report);
   await checkSpecs(paths, config, rel, report);
