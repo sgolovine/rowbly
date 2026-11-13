@@ -6,6 +6,7 @@ import { listThreads, type ThreadRecord, watchThreads } from "../../../../servic
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   type Layout,
+  stopOnAbort,
   useAsync,
   useEscape,
   useIsActive,
@@ -131,17 +132,6 @@ function factoryActions(
   };
 }
 
-/** Stops a watch when the effect ends, also when the watch starts after the end. */
-function stopWhenAborted(signal: AbortSignal, stop: () => void): void {
-  if (signal.aborted) {
-    stop();
-
-    return;
-  }
-
-  signal.addEventListener("abort", stop, { once: true });
-}
-
 /** The supervisor Threads, read again when the phase or the supervisor changes, and on each Thread change. */
 function useSupervisorThreads(ctx: ServiceContext, status: FactoryStatus | undefined): readonly ThreadRecord[] {
   const supervisors = useAsync(
@@ -154,7 +144,7 @@ function useSupervisorThreads(ctx: ServiceContext, status: FactoryStatus | undef
     const live = new AbortController();
 
     void watchThreads(refresh, ctx)
-      .then((stop) => stopWhenAborted(live.signal, stop))
+      .then((stop) => stopOnAbort(live.signal, stop))
       .catch(() => {});
 
     return () => live.abort();

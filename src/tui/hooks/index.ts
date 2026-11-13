@@ -3,6 +3,7 @@ export * from "./mouse.js";
 export * from "./refs.js";
 export * from "./section-shell.js";
 export * from "./shell.js";
+export * from "./stop-on-abort.js";
 export * from "./toasts.js";
 export * from "./use-async.js";
 export * from "./use-cursor.js";
