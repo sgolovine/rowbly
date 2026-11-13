@@ -44,7 +44,7 @@ export function stagesHints(idle: boolean, current: Stage | undefined): KeyHint[
 }
 
 /** Reads the Stages again, also in the screens behind Settings. */
-export function stagesChanged(env: StagesEnv): void {
+function stagesChanged(env: StagesEnv): void {
   env.list.reload();
   env.onChange();
 }

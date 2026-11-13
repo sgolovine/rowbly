@@ -16,7 +16,7 @@ import { SECTION_NAV_WIDTH } from "../section-nav/index.js";
 import type { SettingsGroup, SettingsSection } from "../settings-sections.js";
 
 /** The region that has the focus: the section list or the section. */
-export type Focus = "nav" | "section";
+type Focus = "nav" | "section";
 
 /** The description of a section: one row and one blank row under it. */
 const DESCRIPTION_HEIGHT = 2;
