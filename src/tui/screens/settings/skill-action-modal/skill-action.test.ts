@@ -37,7 +37,9 @@ describe("skillAction", () => {
     await submitSkillForm(e, { codex: true, cursor: true });
 
     expect(skills.installSkill).toHaveBeenCalledWith({ name: "develop", harnesses: ["codex", "cursor"] }, {});
-    expect(e.toast.list().map((t) => t.message)).toEqual(["develop: codex: shared (folder kept); cursor: installed; gemini-cli: already missing"]);
+    expect(e.toast.list().map((t) => t.message)).toEqual([
+      "develop: codex: shared (folder kept); cursor: installed; gemini-cli: already missing",
+    ]);
     expect(e.setBusy).toHaveBeenLastCalledWith(false);
     expect(e.onSaved).toHaveBeenCalledOnce();
     expect(e.pending.current).toBe(false);
