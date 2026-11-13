@@ -4,67 +4,78 @@ export type ThreadStatus = "pending" | "running" | "completed" | "failed" | "can
 
 /** One run of a Thread. A resume adds a run; the last run has the status of the Thread. */
 export interface ThreadRun {
-  id: string;
-  ownerToken: string;
-  createdAt: string;
-  startedAt?: string;
-  endedAt?: string;
-  status: ThreadStatus;
-  reason?: string;
+  readonly id: string;
+  readonly ownerToken: string;
+  readonly createdAt: string;
+  readonly startedAt?: string;
+  readonly endedAt?: string;
+  readonly status: ThreadStatus;
+  readonly reason?: string;
 }
 
 export interface WorkerResult {
-  outcome: string;
-  summary: string;
-  branch?: string;
-  commits?: string[];
-  pullRequest?: string;
-  blockers: string[];
-  problems: string[];
+  readonly outcome: string;
+  readonly summary: string;
+  readonly branch?: string;
+  readonly commits?: readonly string[];
+  readonly pullRequest?: string;
+  readonly blockers: readonly string[];
+  readonly problems: readonly string[];
 }
 
 export interface ThreadRecord {
   // Identity
-  version: 1;
-  id: string;
-  revision: number;
-  role: "supervisor" | "worker";
-  storyId?: string;
-  stage?: string;
-  attemptNumber?: number;
-  parentThreadId?: string;
-  model?: ModelChoice;
+  readonly version: 1;
+  readonly id: string;
+  readonly revision: number;
+  readonly role: "supervisor" | "worker";
+  readonly storyId?: string;
+  readonly stage?: string;
+  readonly attemptNumber?: number;
+  readonly parentThreadId?: string;
+  readonly model?: ModelChoice;
 
   // Lifecycle
-  status: ThreadStatus;
-  createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  session: { id: string; file: string | null; formatVersion?: number; leafId?: string };
-  cwd: string;
-  worktree?: string;
-  branch?: string;
-  runs: ThreadRun[];
+  readonly status: ThreadStatus;
+  readonly createdAt: string;
+  readonly startedAt?: string;
+  readonly completedAt?: string;
+  readonly session: {
+    readonly id: string;
+    readonly file: string | null;
+    readonly formatVersion?: number;
+    readonly leafId?: string;
+  };
+  readonly cwd: string;
+  readonly worktree?: string;
+  readonly branch?: string;
+  readonly runs: readonly ThreadRun[];
 
   // Outcome
-  result?: WorkerResult;
-  error?: {
-    class: "auth" | "quota" | "transient" | "launch" | "storage" | "configuration" | "unknown";
-    code: string;
-    message: string;
-    retryAt?: string;
+  readonly result?: WorkerResult;
+  readonly error?: {
+    readonly class: "auth" | "quota" | "transient" | "launch" | "storage" | "configuration" | "unknown";
+    readonly code: string;
+    readonly message: string;
+    readonly retryAt?: string;
   };
-  resumable: boolean;
+  readonly resumable: boolean;
 
   // Activity
-  lastActivityAt?: string;
-  lastTool?: string;
-  usage?: { input: number; output: number; cacheRead: number; cacheWrite: number; cost: number };
+  readonly lastActivityAt?: string;
+  readonly lastTool?: string;
+  readonly usage?: {
+    readonly input: number;
+    readonly output: number;
+    readonly cacheRead: number;
+    readonly cacheWrite: number;
+    readonly cost: number;
+  };
 }
 
 export interface ThreadList {
-  threads: ThreadRecord[];
-  issues: { file: string; message: string }[];
+  readonly threads: readonly ThreadRecord[];
+  readonly issues: readonly { readonly file: string; readonly message: string }[];
 }
 
 /** The fields that a transition can change, in addition to the status. */

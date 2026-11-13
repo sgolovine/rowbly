@@ -12,9 +12,9 @@ import { writeRef } from "./refs.js";
 import { type ToastStore, useToast } from "./toasts.js";
 
 export interface AsyncState<T> {
-  loading: boolean;
-  error: unknown;
-  data: T | undefined;
+  readonly loading: boolean;
+  readonly error: unknown;
+  readonly data: T | undefined;
   /** Runs `fn` again. */
   reload(): void;
   /** Runs `fn` again in the background: `loading` stays false, and a failure keeps the data and shows no toast. */
