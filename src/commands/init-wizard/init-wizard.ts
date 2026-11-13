@@ -21,6 +21,7 @@ function answer<T>(value: T): Exclude<T, symbol> {
   if (isCancel(value)) {
     throw new SetupCancelled();
   }
+
   return value as Exclude<T, symbol>;
 }
 
@@ -51,6 +52,7 @@ async function askProject(options: OnboardingOptions): Promise<{ name: string; k
       validate: (value) => checkProjectKey((value ?? "").trim().toUpperCase())[0]?.message,
     }),
   ).trim();
+
   return { name, key };
 }
 
@@ -72,7 +74,19 @@ async function askStages(options: OnboardingOptions): Promise<string[]> {
       validate: checkCustomStages,
     }),
   );
+
   return withCustomStages(selected, splitNames(custom));
+}
+
+/** A required skill shows `(required)`. The factory skill also does, because the factory cannot run without it. */
+function skillOption(skill: string, required: readonly string[]): { value: string; label: string; hint?: string } {
+  if (required.includes(skill)) {
+    return { value: skill, label: `${skill} (required)`, hint: "always installed" };
+  }
+
+  return skill === FACTORY_SKILL
+    ? { value: skill, label: `${skill} (required)`, hint: "required to use the factory" }
+    : { value: skill, label: skill };
 }
 
 async function askSkills(options: OnboardingOptions, stages: string[]): Promise<string[]> {
@@ -80,17 +94,12 @@ async function askSkills(options: OnboardingOptions, stages: string[]): Promise<
   const selected = answer(
     await multiselect({
       message: "Which skills do you want to install?",
-      options: options.skills.map((skill) =>
-        required.includes(skill)
-          ? { value: skill, label: `${skill} (required)`, hint: "always installed" }
-          : skill === FACTORY_SKILL
-            ? { value: skill, label: `${skill} (required)`, hint: "required to use the factory" }
-            : { value: skill, label: skill },
-      ),
+      options: options.skills.map((skill) => skillOption(skill, required)),
       initialValues: options.skills,
       required: false,
     }),
   );
+
   return [...new Set([...required, ...selected])];
 }
 
@@ -109,20 +118,55 @@ async function askCustomized(options: OnboardingOptions): Promise<OnboardingInpu
   const project = await askProject(options);
   const stages = await askStages(options);
   const skills = await askSkills(options, stages);
+
   return { ...project, stages, skills, harnesses: skills.length > 0 ? await askHarnesses(options) : [] };
 }
 
 function rows(items: { label: string; value: string }[]): string {
   const width = Math.max(...items.map((item) => item.label.length)) + 2;
+
   return items.map((item) => `${item.label.padEnd(width)}${item.value}`).join("\n");
 }
 
 function showPlan(plan: OnboardingPlan): void {
   note(rows(summarizePlan(plan)), "Summary");
+
   for (const warning of plan.warnings) {
     log.warn(warning);
   }
+
   note(rows(plan.edits.map(({ what, where }) => ({ label: what, value: where }))), "Where to edit this later");
+}
+
+/** Asks the questions and shows the summary. A "no" at the last question gives `null`. */
+async function askChoices(options: OnboardingOptions, ctx: ServiceContext): Promise<OnboardingInput | null> {
+  const mode = answer(
+    await select({
+      message: "How do you want to set up this project?",
+      options: [
+        { value: "defaults", label: "Use defaults", hint: "the summary comes next" },
+        { value: "customize", label: "Customize", hint: "choose the name, stages and skills" },
+      ],
+    }),
+  );
+  const input = mode === "defaults" ? {} : await askCustomized(options);
+
+  showPlan(await planOnboarding(input, ctx));
+
+  return answer(await confirm({ message: "Create this project?" })) ? input : null;
+}
+
+/** `ctrl+c` in a prompt gives `null`, as a "no" does. */
+async function askOrCancel(options: OnboardingOptions, ctx: ServiceContext): Promise<OnboardingInput | null> {
+  try {
+    return await askChoices(options, ctx);
+  } catch (error) {
+    if (!(error instanceof SetupCancelled)) {
+      throw error;
+    }
+
+    return null;
+  }
 }
 
 /**
@@ -132,28 +176,16 @@ function showPlan(plan: OnboardingPlan): void {
 export async function askOnboarding(ctx: ServiceContext): Promise<OnboardingInput | null> {
   // An existing project stops here, before the first question.
   await planOnboarding({}, ctx);
+
   const options = await onboardingOptions(ctx);
+
   intro("Set up Rowbly");
-  try {
-    const mode = answer(
-      await select({
-        message: "How do you want to set up this project?",
-        options: [
-          { value: "defaults", label: "Use defaults", hint: "the summary comes next" },
-          { value: "customize", label: "Customize", hint: "choose the name, stages and skills" },
-        ],
-      }),
-    );
-    const input = mode === "defaults" ? {} : await askCustomized(options);
-    showPlan(await planOnboarding(input, ctx));
-    if (answer(await confirm({ message: "Create this project?" }))) {
-      return input;
-    }
-  } catch (error) {
-    if (!(error instanceof SetupCancelled)) {
-      throw error;
-    }
+
+  const input = await askOrCancel(options, ctx);
+
+  if (input === null) {
+    cancel("Setup cancelled. Rowbly changed nothing.");
   }
-  cancel("Setup cancelled. Rowbly changed nothing.");
-  return null;
+
+  return input;
 }

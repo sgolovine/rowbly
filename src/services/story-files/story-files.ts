@@ -15,27 +15,45 @@ export interface StoryFile {
   doc: MarkdownDocument;
 }
 
+/**
+ * A change to the frontmatter of one story. Return the new frontmatter, or `false` for no change. `true` means
+ * that the function changed `data`, which is a copy.
+ */
+export type StoryDataChange = (data: Record<string, unknown>, file: StoryFile) => Record<string, unknown> | boolean;
+
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
+
+/** The keys that come first in the frontmatter, before the custom fields. */
+const LEADING_KEYS = ["title", "stage", "position"];
+
+/** `ROW` and `1` → `ROW-01`. */
 export function formatStoryId(projectKey: string, number: number): string {
   return `${projectKey}-${String(number).padStart(2, "0")}`;
 }
 
+/** `ROW-01.md` → the project key and the number; `undefined` when the name is not a story file name. */
 export function parseStoryFileName(name: string): { projectKey: string; number: number } | undefined {
   const match = STORY_FILE_NAME.exec(name);
+
   return match ? { projectKey: match[1] as string, number: Number(match[2]) } : undefined;
 }
 
+/** The path of the story file with this project key and number. */
 export function storyPath(paths: ProjectPaths, projectKey: string, number: number): string {
   return join(paths.storiesDir, `${formatStoryId(projectKey, number)}.md`);
 }
 
+/** Reads and parses one story file. Throws when the name is not a story file name. */
 export async function readStoryFile(paths: ProjectPaths, fileName: string): Promise<StoryFile> {
   const parsed = parseStoryFileName(fileName);
+
   if (!parsed) {
     throw new Error(`Not a story file name: ${fileName}`);
   }
+
   const path = join(paths.storiesDir, fileName);
   const doc = parseMarkdown(await readFile(path, "utf8"), path);
+
   return { id: fileName.slice(0, -3), ...parsed, path, doc };
 }
 
@@ -43,7 +61,15 @@ export async function readStoryFile(paths: ProjectPaths, fileName: string): Prom
 export async function readStoryFiles(paths: ProjectPaths): Promise<StoryFile[]> {
   const names = (await listMarkdownFiles(paths.storiesDir)).filter((name) => parseStoryFileName(name));
   const files = await Promise.all(names.map((name) => readStoryFile(paths, name)));
-  return files.sort((a, b) => a.number - b.number);
+
+  return files.toSorted((a, b) => a.number - b.number);
+}
+
+/** The `position` of a story in its stage. A story with no valid `position` comes last. */
+function storyPosition(file: StoryFile): number {
+  const value = file.doc.data.position;
+
+  return typeof value === "number" && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
 }
 
 /**
@@ -51,31 +77,34 @@ export async function readStoryFiles(paths: ProjectPaths): Promise<StoryFile[]> 
  * valid `position` (for example, a new one) comes after the stories with one. The sort is stable.
  */
 export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
-  const position = (file: StoryFile) => {
-    const value = file.doc.data.position;
-    return typeof value === "number" && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
-  };
-  return [...files].sort((a, b) => position(a) - position(b) || a.number - b.number);
+  return files.toSorted((a, b) => storyPosition(a) - storyPosition(b) || a.number - b.number);
 }
 
 /** Frontmatter in a stable order: title, stage, position, the custom fields as configured, then anything else. */
 export function orderStoryData(config: ProjectConfig, data: Record<string, unknown>): Record<string, unknown> {
-  const ordered: Record<string, unknown> = {};
-  for (const key of ["title", "stage", "position", ...config.customFields.map((field) => field.key)]) {
-    if (key in data) {
-      ordered[key] = data[key];
-    }
-  }
-  for (const [key, value] of Object.entries(data)) {
-    if (!(key in ordered)) {
-      ordered[key] = value;
-    }
-  }
-  return ordered;
+  const leading = [...LEADING_KEYS, ...config.customFields.map((field) => field.key)].filter((key) => key in data);
+  const keys = new Set([...leading, ...Object.keys(data)]);
+
+  return Object.fromEntries([...keys].map((key) => [key, data[key]]));
 }
 
+/** Writes a story file, with the frontmatter in a stable order. */
 export async function writeStoryFile(config: ProjectConfig, path: string, doc: MarkdownDocument): Promise<void> {
   await writeFileAtomic(path, serializeMarkdown({ data: orderStoryData(config, doc.data), body: doc.body }));
+}
+
+/** Writes the story when `change` changes it. Gives 1 for a write and 0 for no change. */
+async function rewriteStory(config: ProjectConfig, file: StoryFile, change: StoryDataChange): Promise<number> {
+  const data = { ...file.doc.data };
+  const result = change(data, file);
+
+  if (result === false) {
+    return 0;
+  }
+
+  await writeStoryFile(config, file.path, { ...file.doc, data: result === true ? data : result });
+
+  return 1;
 }
 
 /**
@@ -85,15 +114,13 @@ export async function writeStoryFile(config: ProjectConfig, path: string, doc: M
 export async function rewriteStories(
   paths: ProjectPaths,
   config: ProjectConfig,
-  change: (data: Record<string, unknown>, file: StoryFile) => boolean,
+  change: StoryDataChange,
 ): Promise<number> {
-  let count = 0;
-  for (const file of await readStoryFiles(paths)) {
-    if (!change(file.doc.data, file)) {
-      continue;
-    }
-    await writeStoryFile(config, file.path, file.doc);
-    count++;
-  }
-  return count;
+  const files = await readStoryFiles(paths);
+
+  // Each step waits for the previous count, so the stories are written one at a time, in order.
+  return files.reduce(
+    async (count, file) => (await count) + (await rewriteStory(config, file, change)),
+    Promise.resolve(0),
+  );
 }

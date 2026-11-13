@@ -22,17 +22,22 @@ interface StoryOptions {
 async function formatStory(story: Story, ctx: ServiceContext): Promise<string> {
   const project = await getProject(ctx);
   const stage = project.stages.find((s) => s.key === story.stage);
-  const lines = [`${story.id}  ${story.title}`, `Stage: ${stage?.label ?? story.stage} (${story.stage})`];
-  for (const field of project.customFields) {
-    lines.push(`${field.label}: ${formatValue(story.fields[field.key] ?? null)}`);
-  }
-  if (story.description) {
-    lines.push("", story.description);
-  }
-  return lines.join("\n");
+
+  return [
+    `${story.id}  ${story.title}`,
+    `Stage: ${stage?.label ?? story.stage} (${story.stage})`,
+    ...project.customFields.map((field) => `${field.label}: ${formatValue(story.fields[field.key] ?? null)}`),
+    ...(story.description ? ["", story.description] : []),
+  ].join("\n");
 }
 
-export function registerStoryCommands(program: Command): void {
+function searchText(stories: readonly Story[]): string {
+  return stories.length === 0
+    ? "No stories found."
+    : stories.map((story) => `${story.id.padEnd(8)} ${story.stage.padEnd(14)} ${story.title}`).join("\n");
+}
+
+function registerCreate(program: Command): void {
   program
     .command("create")
     .description("Create a story")
@@ -56,7 +61,9 @@ export function registerStoryCommands(program: Command): void {
         (story) => `Created ${story.id} in ${story.stage}`,
       ),
     );
+}
 
+function registerUpdate(program: Command): void {
   program
     .command("update <id>")
     .description("Update a story")
@@ -87,7 +94,9 @@ export function registerStoryCommands(program: Command): void {
         (story) => `Updated ${story.id}`,
       ),
     );
+}
 
+function registerDelete(program: Command): void {
   program
     .command("delete <id>")
     .description("Delete a story")
@@ -98,14 +107,22 @@ export function registerStoryCommands(program: Command): void {
         (result) => `Deleted ${result.id}`,
       ),
     );
+}
 
+function registerGet(program: Command): void {
   program
     .command("get <id>")
     .description("Show a story")
     .action((id: string, _opts: unknown, command: Command) =>
-      run(command, (ctx) => getStory({ id }, ctx), formatStory),
+      run(
+        command,
+        (ctx) => getStory({ id }, ctx),
+        (story, ctx) => formatStory(story, ctx),
+      ),
     );
+}
 
+function registerSearch(program: Command): void {
   program
     .command("search [query]")
     .description("Find stories by text, stage or custom field values")
@@ -115,10 +132,16 @@ export function registerStoryCommands(program: Command): void {
       run(
         command,
         (ctx) => searchStories({ query, stage: opts.stage, fields: parseFieldFlags(opts.field) }, ctx),
-        (stories) =>
-          stories.length === 0
-            ? "No stories found."
-            : stories.map((story) => `${story.id.padEnd(8)} ${story.stage.padEnd(14)} ${story.title}`).join("\n"),
+        (stories) => searchText(stories),
       ),
     );
+}
+
+/** Registers the `rowbly story` subcommands on the `story` command. */
+export function registerStoryCommands(program: Command): void {
+  registerCreate(program);
+  registerUpdate(program);
+  registerDelete(program);
+  registerGet(program);
+  registerSearch(program);
 }

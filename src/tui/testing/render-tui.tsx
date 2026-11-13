@@ -41,18 +41,28 @@ export function settle(ms = 10): Promise<void> {
   return new Promise((resolve) => realSetTimeout(resolve, ms));
 }
 
+type Ink = ReturnType<typeof render>;
+
+/** Waits for two quiet steps in a row, for at most `steps` more steps. */
+async function quiet(ink: Ink, count: number, calm: number, steps: number): Promise<void> {
+  if (calm >= 2 || steps >= 50) {
+    return;
+  }
+
+  await settle(10);
+
+  const next = ink.frames.length;
+
+  await quiet(ink, next, next === count ? calm + 1 : 0, steps + 1);
+}
+
 /**
  * Waits at least `min` milliseconds, then until Ink writes no new frame for two steps. A key can open
  * an overlay or start a measurement, which takes a chain of renders and effects.
  */
-async function idle(ink: ReturnType<typeof render>, min: number): Promise<void> {
+async function idle(ink: Ink, min: number): Promise<void> {
   await settle(min);
-  let count = ink.frames.length;
-  for (let quiet = 0, steps = 0; quiet < 2 && steps < 50; steps++) {
-    await settle(10);
-    quiet = ink.frames.length === count ? quiet + 1 : 0;
-    count = ink.frames.length;
-  }
+  await quiet(ink, ink.frames.length, 0, 0);
 }
 
 export interface TuiTest {
@@ -75,6 +85,74 @@ export interface TuiTest {
   ink: ReturnType<typeof render>;
 }
 
+/** The last frame without colours and other escape codes. */
+function plainFrame(ink: Ink): string {
+  return stripVTControlCharacters(ink.lastFrame() ?? "");
+}
+
+function locateText(ink: Ink, text: string): { x: number; y: number } {
+  const lines = plainFrame(ink).split("\n");
+  const y = lines.findIndex((line) => line.includes(text));
+
+  if (y < 0) {
+    throw new Error(`"${text}" is not on screen:\n${plainFrame(ink)}`);
+  }
+
+  return { x: [...(lines[y] ?? "").slice(0, lines[y]?.indexOf(text))].length, y };
+}
+
+async function sendMouse(
+  ink: Ink,
+  source: EventEmitter,
+  kind: MouseEvent["kind"],
+  x: number,
+  y: number,
+): Promise<void> {
+  source.emit("mouse", { kind, x, y } satisfies MouseEvent);
+  await idle(ink, 0);
+}
+
+async function pressKeys(ink: Ink, inputs: readonly string[]): Promise<void> {
+  for (const input of inputs) {
+    ink.stdin.write(input);
+    await idle(ink, input === keys.escape ? 30 : 0);
+  }
+}
+
+async function typeText(ink: Ink, text: string): Promise<void> {
+  for (const char of text) {
+    ink.stdin.write(char);
+    await settle(5);
+  }
+
+  await idle(ink, 0);
+}
+
+async function clickText(ink: Ink, source: EventEmitter, text: string): Promise<void> {
+  const { x, y } = locateText(ink, text);
+
+  await sendMouse(ink, source, "press", x, y);
+  await sendMouse(ink, source, "release", x, y);
+}
+
+/** The providers of the app around one test node. */
+function Wrap({ toasts, mouse, children }: { toasts: ToastStore; mouse: EventEmitter; children: ReactElement }) {
+  return (
+    <TuiProviders toasts={toasts} mouse={mouse} fullscreen={false}>
+      {children}
+    </TuiProviders>
+  );
+}
+
+async function rerenderNode(ink: Ink, toasts: ToastStore, mouse: EventEmitter, node: ReactElement): Promise<void> {
+  ink.rerender(
+    <Wrap toasts={toasts} mouse={mouse}>
+      {node}
+    </Wrap>,
+  );
+  await idle(ink, 0);
+}
+
 /**
  * Renders `node` in the providers that the app uses (`TuiProviders`, not full screen) with a mouse
  * source, and waits for the first effects to run. The terminal is 100 columns wide.
@@ -82,52 +160,22 @@ export interface TuiTest {
 export async function renderTui(node: ReactElement, options: { toasts?: ToastStore } = {}): Promise<TuiTest> {
   const toasts = options.toasts ?? createToastStore();
   const mouseSource = new EventEmitter();
-  const wrap = (child: ReactElement) => (
-    <TuiProviders toasts={toasts} mouse={mouseSource} fullscreen={false}>
-      {child}
-    </TuiProviders>
+  const ink = render(
+    <Wrap toasts={toasts} mouse={mouseSource}>
+      {node}
+    </Wrap>,
   );
-  const ink = render(wrap(node));
+
   await idle(ink, 10);
-  const frame = () => stripVTControlCharacters(ink.lastFrame() ?? "");
-  const locate = (text: string) => {
-    const lines = frame().split("\n");
-    const y = lines.findIndex((line) => line.includes(text));
-    if (y < 0) {
-      throw new Error(`"${text}" is not on screen:\n${frame()}`);
-    }
-    return { x: [...(lines[y] ?? "").slice(0, lines[y]?.indexOf(text))].length, y };
-  };
-  const mouse = async (kind: MouseEvent["kind"], x: number, y: number) => {
-    mouseSource.emit("mouse", { kind, x, y } satisfies MouseEvent);
-    await idle(ink, 0);
-  };
+
   return {
-    frame,
-    async press(...inputs) {
-      for (const input of inputs) {
-        ink.stdin.write(input);
-        await idle(ink, input === keys.escape ? 30 : 0);
-      }
-    },
-    async type(text) {
-      for (const char of text) {
-        ink.stdin.write(char);
-        await settle(5);
-      }
-      await idle(ink, 0);
-    },
-    mouse,
-    async click(text) {
-      const { x, y } = locate(text);
-      await mouse("press", x, y);
-      await mouse("release", x, y);
-    },
-    locate,
-    async rerender(next) {
-      ink.rerender(wrap(next));
-      await idle(ink, 0);
-    },
+    frame: () => plainFrame(ink),
+    press: (...inputs) => pressKeys(ink, inputs),
+    type: (text) => typeText(ink, text),
+    mouse: (kind, x, y) => sendMouse(ink, mouseSource, kind, x, y),
+    click: (text) => clickText(ink, mouseSource, text),
+    locate: (text) => locateText(ink, text),
+    rerender: (next) => rerenderNode(ink, toasts, mouseSource, next),
     unmount: () => ink.unmount(),
     toasts,
     ink,

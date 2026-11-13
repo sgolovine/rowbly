@@ -3,24 +3,9 @@ import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button, Panel } from "../../components/index.js";
 import { useLayout } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
-import { FactoryButton, factoryButtonWidth } from "../factory-button/index.js";
+import { FactoryButton } from "../factory-button/index.js";
 import { StoryFinderButton } from "../story-finder-button/index.js";
-
-/** Below this width, the Story finder shows only its glyph, and only the Buttons that always stay remain. */
-const COMPACT_WIDTH = 60;
-
-/** The most columns the Project name takes, when there is room. */
-const PROJECT_NAME_WIDTH = 24;
-
-/** The most columns the Project name takes below `COMPACT_WIDTH`. */
-const PROJECT_NAME_NARROW_WIDTH = 12;
-
-/** The columns of the row without the Project name, with the full and with the compact Story finder. */
-const ROW_WIDTH_FULL = 73;
-const ROW_WIDTH_COMPACT = 51;
-
-/** The `|` after the Factory Button. */
-const SEPARATOR_WIDTH = 1;
+import { headerFit } from "./header-fit.js";
 
 /**
  * The top of the shell: one Panel, three rows tall, with no title. The Project Button is at the far left,
@@ -50,18 +35,12 @@ export function Header({
   clickable: boolean;
 }) {
   const { width } = useLayout();
-  const narrow = width < COMPACT_WIDTH;
-  const nameWidth = narrow ? PROJECT_NAME_NARROW_WIDTH : Math.min(PROJECT_NAME_WIDTH, width - ROW_WIDTH_COMPACT);
-  const name =
-    project && project.name.length > nameWidth ? `${project.name.slice(0, nameWidth - 1)}…` : (project?.name ?? "");
-  const factoryWidth = (withKey: boolean, short = false) =>
-    factory ? factoryButtonWidth(factory.status, withKey, short) + SEPARATOR_WIDTH : 0;
-  const fits = (row: number) => project === undefined || name.length + row <= width;
-  const compact = narrow || !fits(ROW_WIDTH_FULL + factoryWidth(true));
-  // After the Story finder, the Factory Button loses its pending count, then its key cap, then it goes.
-  const factoryShort = compact && !fits(ROW_WIDTH_COMPACT + factoryWidth(true));
-  const factoryKey = fits((compact ? ROW_WIDTH_COMPACT : ROW_WIDTH_FULL) + factoryWidth(true, factoryShort));
-  const factoryShown = factory !== undefined && !narrow && fits(ROW_WIDTH_COMPACT + factoryWidth(false, true));
+  const { narrow, name, compact, factoryShort, factoryKey, factoryShown } = headerFit({
+    width,
+    project: project?.name,
+    factory,
+  });
+
   return (
     <Panel height={3} paddingX={1} flexDirection="row" columnGap={2}>
       {project && (

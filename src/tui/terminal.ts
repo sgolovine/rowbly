@@ -2,6 +2,7 @@ import type { EventEmitter } from "node:events";
 import { render } from "ink";
 import type { ReactNode } from "react";
 import { RowblyError } from "../services/errors/errors.js";
+import { Store } from "../services/store/store.js";
 import type { ToastStore } from "./hooks/index.js";
 import { MOUSE_OFF, MOUSE_ON, MouseStdin } from "./mouse.js";
 
@@ -18,26 +19,44 @@ export interface TerminalIo {
 /** The parts of `process` the crash guards use, so tests can inject a fake. */
 export type GuardedProcess = Pick<NodeJS.Process, "on" | "off" | "exit">;
 
+/** Unmounts Ink and restores the terminal, one time only. */
+function restoreTerminal(done: Store<{ done: boolean }>, unmount: () => void, io: TerminalIo): void {
+  if (done.current.done) {
+    return;
+  }
+
+  done.update(() => ({ done: true }));
+
+  try {
+    unmount();
+  } finally {
+    if (io.stdin.isTTY) {
+      io.stdin.setRawMode?.(false);
+    }
+
+    io.stdout.write(RESTORE_SEQUENCE);
+  }
+}
+
 /**
  * Returns an idempotent function that unmounts Ink and puts the terminal back as it was: cooked
  * mode, visible cursor, primary screen.
  */
 function createTerminalCleanup(unmount: () => void, io: TerminalIo): () => void {
-  let done = false;
-  return () => {
-    if (done) {
-      return;
-    }
-    done = true;
-    try {
-      unmount();
-    } finally {
-      if (io.stdin.isTTY) {
-        io.stdin.setRawMode?.(false);
-      }
-      io.stdout.write(RESTORE_SEQUENCE);
-    }
-  };
+  const done = new Store({ done: false });
+
+  return () => restoreTerminal(done, unmount, io);
+}
+
+function crash(cleanup: () => void, proc: GuardedProcess, io: Pick<TerminalIo, "stderr">, err: unknown): void {
+  cleanup();
+  io.stderr.write(`${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`);
+  proc.exit(1);
+}
+
+function exitOnSignal(cleanup: () => void, proc: GuardedProcess, code: number): void {
+  cleanup();
+  proc.exit(code);
 }
 
 /**
@@ -50,32 +69,26 @@ function installCrashGuards(
   io: Pick<TerminalIo, "stderr">,
   toasts: ToastStore,
 ): () => void {
-  const crash = (err: unknown) => {
-    cleanup();
-    io.stderr.write(`${err instanceof Error ? (err.stack ?? err.message) : String(err)}\n`);
-    proc.exit(1);
-  };
   const handlers: Record<string, (arg: unknown) => void> = {
-    SIGINT: () => {
-      cleanup();
-      proc.exit(130);
-    },
-    SIGTERM: () => {
-      cleanup();
-      proc.exit(143);
-    },
-    uncaughtException: crash,
-    unhandledRejection: (reason: unknown) => (reason instanceof RowblyError ? toasts.error(reason) : crash(reason)),
+    SIGINT: () => exitOnSignal(cleanup, proc, 130),
+    SIGTERM: () => exitOnSignal(cleanup, proc, 143),
+    uncaughtException: (err: unknown) => crash(cleanup, proc, io, err),
+    unhandledRejection: (reason: unknown) =>
+      reason instanceof RowblyError ? toasts.error(reason) : crash(cleanup, proc, io, reason),
     exit: cleanup,
   };
+
   for (const [event, handler] of Object.entries(handlers)) {
     proc.on(event, handler);
   }
-  return () => {
-    for (const [event, handler] of Object.entries(handlers)) {
-      proc.off(event, handler);
-    }
-  };
+
+  return () => removeCrashGuards(proc, handlers);
+}
+
+function removeCrashGuards(proc: GuardedProcess, handlers: Record<string, (arg: unknown) => void>): void {
+  for (const [event, handler] of Object.entries(handlers)) {
+    proc.off(event, handler);
+  }
 }
 
 /**
@@ -99,11 +112,14 @@ export async function runFullScreen(
     alternateScreen: true,
     kittyKeyboard: { mode: "auto" },
   });
+
   if (stdin) {
     io.stdout.write(MOUSE_ON);
   }
+
   const cleanup = createTerminalCleanup(() => instance.unmount(), io);
   const uninstall = installCrashGuards(cleanup, proc, io, toasts);
+
   try {
     await instance.waitUntilExit();
   } finally {

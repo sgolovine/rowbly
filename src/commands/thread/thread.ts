@@ -4,19 +4,52 @@ import { sendFactoryCommand } from "../../services/factory/factory.js";
 import { getThread, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
-export function registerThreadCommands(program: Command): void {
-  for (const action of ["cancel", "resume"] as const) {
-    program
-      .command(`${action} <id>`)
-      .description(`${action} a worker through the running factory`)
-      .action((id: string, _opts: unknown, command: Command) =>
-        run(
-          command,
-          (ctx) => sendFactoryCommand(action, { threadId: id }, ctx),
-          (receipt) => JSON.stringify(receipt),
-        ),
-      );
+type ThreadLog = Awaited<ReturnType<typeof getThreadLog>>;
+type ThreadList = Awaited<ReturnType<typeof listThreads>>;
+
+function logText(page: ThreadLog): string {
+  if (page.status === "unsupported") {
+    return "Session format not supported.";
   }
+
+  if (page.status === "missing") {
+    return "No persisted conversation yet.";
+  }
+
+  return (
+    page.entries.map((e) => `${e.timestamp ?? ""} ${e.role ?? e.type}\n${e.text}`).join("\n\n") ||
+    "No conversation entries."
+  );
+}
+
+function threadLine(t: ThreadList["threads"][number]): string {
+  const model = t.model ? `${t.model.provider}/${t.model.modelId}` : "unresolved";
+
+  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}`;
+}
+
+function listText(result: ThreadList): string {
+  return (
+    [...result.threads.map((t) => threadLine(t)), ...result.issues.map((i) => `Warning: ${i.file}: ${i.message}`)].join(
+      "\n",
+    ) || "No threads found."
+  );
+}
+
+function registerControl(program: Command, action: "cancel" | "resume"): void {
+  program
+    .command(`${action} <id>`)
+    .description(`${action} a worker through the running factory`)
+    .action((id: string, _opts: unknown, command: Command) =>
+      run(
+        command,
+        (ctx) => sendFactoryCommand(action, { threadId: id }, ctx),
+        (receipt) => JSON.stringify(receipt),
+      ),
+    );
+}
+
+function registerLog(program: Command): void {
   program
     .command("log <id>")
     .description("Print a bounded conversation tail (at most 100 entries)")
@@ -25,15 +58,12 @@ export function registerThreadCommands(program: Command): void {
       run(
         command,
         (ctx) => getThreadLog(id, opts, ctx),
-        (page) =>
-          page.status === "unsupported"
-            ? "Session format not supported."
-            : page.status === "missing"
-              ? "No persisted conversation yet."
-              : page.entries.map((e) => `${e.timestamp ?? ""} ${e.role ?? e.type}\n${e.text}`).join("\n\n") ||
-                "No conversation entries.",
+        (page) => logText(page),
       ),
     );
+}
+
+function registerList(program: Command): void {
   program
     .command("list")
     .description("List historical and active threads")
@@ -42,16 +72,12 @@ export function registerThreadCommands(program: Command): void {
       run(
         command,
         (ctx) => listThreads(opts, ctx),
-        (result) =>
-          [
-            ...result.threads.map(
-              (t) =>
-                `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${t.model ? `${t.model.provider}/${t.model.modelId}` : "unresolved"}`,
-            ),
-            ...result.issues.map((i) => `Warning: ${i.file}: ${i.message}`),
-          ].join("\n") || "No threads found.",
+        (result) => listText(result),
       ),
     );
+}
+
+function registerShow(program: Command): void {
   program
     .command("show <id>")
     .description("Show thread metadata")
@@ -62,4 +88,13 @@ export function registerThreadCommands(program: Command): void {
         (t) => JSON.stringify(t, null, 2),
       ),
     );
+}
+
+/** Registers the `rowbly thread` subcommands on the `thread` command. */
+export function registerThreadCommands(program: Command): void {
+  registerControl(program, "cancel");
+  registerControl(program, "resume");
+  registerLog(program);
+  registerList(program);
+  registerShow(program);
 }

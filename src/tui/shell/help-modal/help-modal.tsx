@@ -1,22 +1,22 @@
-import { Box, Text, useInput } from "ink";
+import { Box, type Key, Text, useInput } from "ink";
 import { HelpOverlay, Modal } from "../../components/index.js";
 import { useIsActive } from "../../hooks/index.js";
 import { GLOBAL_KEYS, type KeyHint } from "../../keymap.js";
 import { theme } from "../../theme.js";
+
+function helpKey(onClose: () => void, input: string, key: Key): void {
+  if (key.escape || input === "?" || input === "q") {
+    onClose();
+  }
+}
 
 /**
  * The keys of the region in focus, then the other keys of the shell, then what the `▶` of a Story row means.
  * `esc`, `?` and `q` close it.
  */
 export function HelpModal({ hints, onClose }: { hints: readonly KeyHint[]; onClose(): void }) {
-  useInput(
-    (input, key) => {
-      if (key.escape || input === "?" || input === "q") {
-        onClose();
-      }
-    },
-    { isActive: useIsActive() },
-  );
+  useInput((input, key) => helpKey(onClose, input, key), { isActive: useIsActive() });
+
   return (
     <Modal title="Keys" size="dialog" onClose={onClose}>
       <HelpOverlay hints={hints} globals={GLOBAL_KEYS} />
