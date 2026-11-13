@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { theme } from "../../theme.js";
 
 interface DetailRow {
-  label: string;
-  value: ReactNode;
+  readonly label: string;
+  readonly value: ReactNode;
 }
 
 export interface DetailViewProps {
@@ -16,6 +16,7 @@ export interface DetailViewProps {
 /** Key/value rows with an optional markdown body underneath. */
 export function DetailView({ rows, body }: DetailViewProps) {
   const width = Math.max(0, ...rows.map((row) => row.label.length)) + 2;
+
   return (
     <Box flexDirection="column">
       {rows.map((row) => (

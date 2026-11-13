@@ -4,12 +4,16 @@ import { theme } from "../../theme.js";
 
 const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
+/** A braille spinner in `accent` that moves on every 80 ms. */
 export function Spinner() {
   const [frame, setFrame] = useState(0);
+
   useEffect(() => {
     const timer = setInterval(() => setFrame((f) => (f + 1) % FRAMES.length), 80);
+
     return () => clearInterval(timer);
   }, []);
+
   return <Text color={theme.accent}>{FRAMES[frame]}</Text>;
 }
 

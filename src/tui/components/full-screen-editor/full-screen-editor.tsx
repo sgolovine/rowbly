@@ -33,11 +33,12 @@ const UNBOUNDED_ROWS = 10;
 /** The row above the text that shows the mode and whether the text is saved, and a blank row under it. */
 const MODE_ROWS = 2;
 
-function editorHints(mode: EditorMode, onSave: unknown): KeyHint[] {
+/** The keys of the editor. `ctrl+s` saves when the editor can save, and otherwise closes it. */
+function editorHints(mode: EditorMode, saves: boolean): KeyHint[] {
   return [
     mode === "view" ? { key: "tab/e", description: "edit" } : { key: "tab", description: "view" },
     ...(mode === "view" ? [{ key: "↑/↓", description: "scroll" }] : []),
-    { key: "ctrl+s", description: onSave ? "save" : "close" },
+    { key: "ctrl+s", description: saves ? "save" : "close" },
     { key: "esc", description: "close" },
   ];
 }
@@ -67,7 +68,7 @@ export function FullScreenEditor({
   return (
     <Modal
       title={title}
-      hints={editorHints(mode, onSave)}
+      hints={editorHints(mode, onSave !== undefined)}
       size="screen"
       maxWidth={outer.width}
       onClose={editor.confirming ? undefined : editor.close}

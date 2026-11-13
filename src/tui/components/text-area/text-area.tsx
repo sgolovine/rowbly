@@ -116,20 +116,19 @@ export function TextArea({
 }: TextAreaProps) {
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
   const editor = useFullScreenEditor();
-  const expanded = editor.isOpen;
-  const editing = focus && !expanded;
-  useKeyCapture(editing);
   const top = useRef(0);
   const report = useLatest(onChange);
-  const wrapped = textRows(value, width);
 
+  const expanded = editor.isOpen;
+  const editing = focus && !expanded;
+  const wrapped = textRows(value, width);
+  const current = rowOf(wrapped, cursor);
   const actions = { expand: () => expandText(editor, title, latest, report) };
   const env: TextAreaEnv = { latest, apply, width, expandable, onLeave, expand: actions.expand };
 
+  useKeyCapture(editing);
   usePaste((text) => pasteText(env, text), { isActive: editing });
   useInput((input, key) => handleTextAreaKey(env, input, key), { isActive: editing });
-
-  const current = rowOf(wrapped, cursor);
 
   // The caret is followed only while editing, so a long text shows from its first line until then.
   if (editing) {

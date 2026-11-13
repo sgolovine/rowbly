@@ -16,7 +16,9 @@ export function EditorModeTab({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onClick }, active);
+
   return (
     <Box ref={ref} flexShrink={0}>
       <Text bold={selected} backgroundColor={selected ? theme.selection : undefined}>

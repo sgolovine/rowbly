@@ -9,6 +9,7 @@ import { fitHints } from "../fit-hints.js";
  */
 export function KeyHints({ hints, width }: { hints: readonly KeyHint[]; width?: number }) {
   const shown = width === undefined ? hints : fitHints(hints, width);
+
   return (
     <Text wrap="truncate-end">
       {shown.map((hint, i) => (

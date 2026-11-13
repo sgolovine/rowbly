@@ -39,7 +39,6 @@ function applyInput(env: TextInputEnv, input: string, key: Key): void {
  */
 export function TextInput({ value, onChange, focus = true, width, placeholder, mask = false }: TextInputProps) {
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
-  useKeyCapture(focus);
   const offset = useRef(0);
 
   const env: TextInputEnv = { latest, apply };
@@ -47,6 +46,7 @@ export function TextInput({ value, onChange, focus = true, width, placeholder, m
   const visible = mask ? "•".repeat(value.length) : value;
   const size = width ?? value.length + 1;
 
+  useKeyCapture(focus);
   usePaste((text) => applyInput(env, text, {} as Key), { isActive: focus });
   useInput((input, key) => applyInput(env, input, key), { isActive: focus });
 
