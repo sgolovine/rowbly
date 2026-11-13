@@ -17,8 +17,8 @@ The terminal UI and CLI use the same services.
 
 ## Prerequisites
 
-Rowbly requires Node >=22.19.0. Native factory execution also requires Linux, Git, local files and util-linux `flock`.
-The board and read-only history do not require provider credentials.
+Rowbly must run on Node >=22.19.0. Native factory execution must use Linux, Git, local files and util-linux `flock`.
+You can use the board and read-only history without provider credentials.
 Other platforms have no native execution guarantee. Multi-host, NFS and copied-runtime ownership are not supported.
 
 ## First start
@@ -91,7 +91,7 @@ rowbly factory restart
 ```
 
 Use `rowbly factory start --foreground` to run in the current terminal.
-Native execution requires a Git repository. Workers preserve existing branch work and dirty worktrees.
+Native execution must use a Git repository. Workers preserve existing branch work and dirty worktrees.
 The supervisor receives bounded worker summaries. It reads transcript excerpts only through explicit inspection.
 
 A Project without `state.json` remains valid and shows no activity status line below the Story list.
@@ -129,7 +129,14 @@ Press `x` in Factory controls and confirm to stop. The CLI equivalent is `rowbly
 Normal stop aborts Pi sessions and preserves histories and worktrees.
 Start again to let the supervisor select eligible interrupted Threads. A start does not automatically resume every Thread.
 
-Explicit resume requires an active factory, the original Story Stage, a session file, policy eligibility and the original worktree.
+Before an explicit resume, make sure that these conditions apply:
+
+- The factory is active.
+- The Story is in the original Stage.
+- The Thread has a session file.
+- The policy permits the resume.
+- The original worktree is present.
+
 Completed Threads cannot resume. Each Thread has at most three runs; retries create new Threads.
 Cancellation holds the Story and Stage until release, explicit resume or a material Story change.
 
@@ -138,7 +145,7 @@ An old heartbeat does not prove death. Live or uncertain owners prevent takeover
 Shell descendants started by a crashed daemon are not tracked. Normal stop relies on Pi abort for shell children.
 
 Do not assume exactly-once shell effects. Examine uncertain external effects before a resume.
-A lifecycle guard left after a crash requires offline repair after all relevant factory processes have stopped.
+Stop all relevant factory processes before offline repair of a lifecycle guard left after a crash.
 See [AGENTS.md](AGENTS.md) for the lock contract and recovery limits.
 
 ## Files and compatibility
