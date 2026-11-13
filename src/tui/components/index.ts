@@ -28,6 +28,7 @@ export * from "./select-list-row/index.js";
 export { type RowDragProps, SelectionRow } from "./selection-row/index.js";
 export * from "./shell-layout.js";
 export * from "./sidebar/index.js";
+export * from "./sidebar-row/index.js";
 export * from "./spinner/index.js";
 export * from "./stage-badge/index.js";
 export * from "./switch/index.js";
