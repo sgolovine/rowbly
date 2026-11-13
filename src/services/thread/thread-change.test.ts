@@ -49,6 +49,22 @@ describe("thread change", () => {
     );
   });
 
+  it("reads, checks and saves under one lock, so that one of two concurrent changes wins", async () => {
+    const input = { id: "same", role: "supervisor" as const, cwd: p.paths.root, ownerToken: "owner" };
+    const creates = await Promise.allSettled([createThread(input, p.ctx), createThread(input, p.ctx)]);
+
+    expect(creates.map((result) => result.status).toSorted()).toEqual(["fulfilled", "rejected"]);
+
+    const moves = await Promise.allSettled([
+      transitionThread("same", { expectedRevision: 1, status: "running" }, p.ctx),
+      transitionThread("same", { expectedRevision: 1, status: "interrupted" }, p.ctx),
+    ]);
+    const failures = moves.flatMap((result) => (result.status === "rejected" ? [String(result.reason)] : []));
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("Thread revision changed");
+  });
+
   it("refuses to resume a Thread without a session file", async () => {
     const t = await createThread({ role: "supervisor", cwd: p.paths.root, ownerToken: "owner" }, p.ctx);
 

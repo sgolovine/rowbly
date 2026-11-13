@@ -4,7 +4,7 @@ import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { loadFactoryState } from "../factory-state/factory-state.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
-import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { getThread, saveThread } from "./thread-files.js";
 import { isTerminal, type ThreadPatch, type ThreadRecord, type ThreadRun, type ThreadStatus } from "./thread-types.js";
 
@@ -53,36 +53,39 @@ async function assertAbsent(id: string, ctx: ServiceContext): Promise<void> {
   }
 }
 
+/** Saves a new pending Thread with its first run. The caller holds the state lock. */
+async function saveNewThread(input: CreateInput, ctx: ServiceContext): Promise<ThreadRecord> {
+  const id = input.id ?? randomUUID();
+
+  await assertAbsent(id, ctx);
+
+  const createdAt = nowText(ctx);
+  const { ownerToken, ...fields } = input;
+  const run: ThreadRun = { id: randomUUID(), ownerToken, createdAt, status: "pending" };
+
+  return saveThread(
+    {
+      ...fields,
+      version: 1,
+      id,
+      revision: 1,
+      status: "pending",
+      createdAt,
+      session: { id, file: null },
+      runs: [run],
+      resumable: false,
+    },
+    ctx,
+  );
+}
+
 /** Creates the metadata of a new pending Thread with its first run. */
 export async function createThread(input: CreateInput, ctx: ServiceContext = {}): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
 
   await prepareRuntime(paths);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, async () => {
-    const id = input.id ?? randomUUID();
-
-    await assertAbsent(id, ctx);
-
-    const createdAt = nowText(ctx);
-    const { ownerToken, ...fields } = input;
-    const run: ThreadRun = { id: randomUUID(), ownerToken, createdAt, status: "pending" };
-
-    return saveThread(
-      {
-        ...fields,
-        version: 1,
-        id,
-        revision: 1,
-        status: "pending",
-        createdAt,
-        session: { id, file: null },
-        runs: [run],
-        resumable: false,
-      },
-      ctx,
-    );
-  });
+  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveNewThread(input, ctx));
 }
 
 /** Gives the last run with the new status and the times that the status starts or ends. */
@@ -117,6 +120,21 @@ function transitioned(t: ThreadRecord, input: TransitionInput, now: string): Thr
   return status === "completed" ? withoutError(next) : next;
 }
 
+/** Checks the revision and the transition, then saves the Thread. The caller holds the state lock. */
+async function saveTransition(id: string, input: TransitionInput, ctx: ServiceContext): Promise<ThreadRecord> {
+  const t = await getThread(id, ctx);
+
+  if (t.revision !== input.expectedRevision) {
+    throw new ConflictError("Thread revision changed");
+  }
+
+  if ((isTerminal(t.status) && input.status !== t.status) || (t.status === "running" && input.status === "pending")) {
+    throw new ConflictError("Invalid thread transition");
+  }
+
+  return saveThread(transitioned(t, input, nowText(ctx)), ctx);
+}
+
 /** Moves a Thread to a new status. A final status cannot change, and a running Thread cannot become pending. */
 export async function transitionThread(
   id: string,
@@ -125,19 +143,7 @@ export async function transitionThread(
 ): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, async () => {
-    const t = await getThread(id, ctx);
-
-    if (t.revision !== input.expectedRevision) {
-      throw new ConflictError("Thread revision changed");
-    }
-
-    if ((isTerminal(t.status) && input.status !== t.status) || (t.status === "running" && input.status === "pending")) {
-      throw new ConflictError("Invalid thread transition");
-    }
-
-    return saveThread(transitioned(t, input, nowText(ctx)), ctx);
-  });
+  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveTransition(id, input, ctx));
 }
 
 function resumed(t: ThreadRecord, input: ResumeInput, now: string): ThreadRecord {
@@ -155,19 +161,27 @@ function resumed(t: ThreadRecord, input: ResumeInput, now: string): ThreadRecord
   return { ...rest, runs: [...previous, run], status: "pending", revision: t.revision + 1, resumable: false };
 }
 
+/** Checks that the Thread can resume, then saves its new run. The caller holds the state lock. */
+async function saveNewRun(
+  paths: ProjectPaths,
+  id: string,
+  input: ResumeInput,
+  ctx: ServiceContext,
+): Promise<ThreadRecord> {
+  const t = await getThread(id, ctx);
+
+  if (t.revision !== input.expectedRevision || !isTerminal(t.status) || !t.resumable || !t.session.file) {
+    throw new ConflictError("Thread cannot resume");
+  }
+
+  await stat(await runtimePath(paths, t.session.file));
+
+  return saveThread(resumed(t, input, nowText(ctx)), ctx);
+}
+
 /** Adds a pending run to a final, resumable Thread that still has its session file. */
 export async function appendThreadRun(id: string, input: ResumeInput, ctx: ServiceContext = {}): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, async () => {
-    const t = await getThread(id, ctx);
-
-    if (t.revision !== input.expectedRevision || !isTerminal(t.status) || !t.resumable || !t.session.file) {
-      throw new ConflictError("Thread cannot resume");
-    }
-
-    await stat(await runtimePath(paths, t.session.file));
-
-    return saveThread(resumed(t, input, nowText(ctx)), ctx);
-  });
+  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveNewRun(paths, id, input, ctx));
 }
