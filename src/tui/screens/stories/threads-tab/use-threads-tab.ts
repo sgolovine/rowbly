@@ -18,6 +18,7 @@ import {
 import type { KeyHint } from "../../../keymap.js";
 import { queueEntry } from "../../factory/index.js";
 import { type StageNames, sortThreads } from "../thread-text.js";
+import { useReportHints } from "../use-report-hints.js";
 import { handleListKey, handleThreadKey, type ThreadsTabEnv } from "./threads-tab-actions.js";
 import { type Focus, threadsHints } from "./threads-tab-view.js";
 
@@ -141,14 +142,6 @@ function useFocusReset(current: ThreadRecord | undefined, focus: Focus, setFocus
   }, [current, focus, setFocus]);
 }
 
-/** Tells the parent the key hints when they change. */
-function useHints(onHints: (hints: readonly KeyHint[]) => void, hints: readonly KeyHint[]): void {
-  const hintsKey = JSON.stringify(hints);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `hintsKey` stands in for `hints`, which is new on each render.
-  useEffect(() => onHints(hints), [hintsKey, onHints]);
-}
-
 /** The state, the effects and the keys of the Threads tab. */
 export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const { ctx, storyId, stages, selected, onHints } = props;
@@ -191,7 +184,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   useEscape(viewing, () => setFocus("list"));
   useInput((input, key) => handleThreadKey(env, input, key), { isActive: viewing });
   useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
-  useHints(onHints, hints);
+  useReportHints(onHints, hints);
 
   return {
     env,
