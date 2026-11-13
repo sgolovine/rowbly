@@ -16,6 +16,8 @@ export * from "./key-hints/index.js";
 export * from "./markdown.js";
 export * from "./markdown-view/index.js";
 export * from "./modal/index.js";
+export * from "./modal-body/index.js";
+export * from "./modal-footer/index.js";
 export { FormKeysContext, useCovered } from "./modal-layer.js";
 export * from "./overlay-host/index.js";
 export * from "./panel/index.js";
