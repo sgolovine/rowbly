@@ -5,9 +5,9 @@ import { findProject, type ProjectPaths, type ServiceContext } from "../workspac
 import { SKILL_FILE, skillPath } from "./skill-paths.js";
 
 export { bundledSkills, copySkill, packageDir } from "./bundled-skills.js";
-export { type InstallSkillInput, type InstallSkillResult, installSkill } from "./skill-install.js";
+export { type InstallSkillResult, installSkill } from "./skill-install.js";
 export { HARNESS_SKILL_DIRS, SKILL_FILE, skillPath } from "./skill-paths.js";
-export { type RemoveSkillInput, type RemoveSkillResult, removeSkill } from "./skill-remove.js";
+export { type RemoveSkillResult, removeSkill } from "./skill-remove.js";
 
 export interface SkillStatus {
   name: string;
