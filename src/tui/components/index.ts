@@ -2,6 +2,7 @@ export * from "./button/index.js";
 export * from "./close-button/index.js";
 export * from "./confirm-dialog/index.js";
 export * from "./conversation-entry/index.js";
+export * from "./conversation-notice/index.js";
 export * from "./conversation-view/index.js";
 export * from "./detail-view/index.js";
 export * from "./footer/index.js";
