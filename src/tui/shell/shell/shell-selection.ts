@@ -15,7 +15,7 @@ export function fold(env: ShellEnv, key: string, folded: boolean): void {
 }
 
 /** Shows the Story `story` in the list: it leaves a Stage filter that hides it and expands its section. */
-export function reveal(env: ShellEnv, story: Story): void {
+function reveal(env: ShellEnv, story: Story): void {
   if (env.stageKey !== null && story.stage !== env.stageKey) {
     env.setStageKey(null);
   }
@@ -40,7 +40,7 @@ export function filterStage(env: ShellEnv, id: string): void {
 }
 
 /** Opens the Story at `index` for editing, or expands or collapses the section of the heading at `index`. */
-export function activateRow(env: ShellEnv, index: number): void {
+function activateRow(env: ShellEnv, index: number): void {
   const at = env.view.rows[index];
 
   env.setSelectedId(at?.id ?? null);

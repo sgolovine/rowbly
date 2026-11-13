@@ -4,11 +4,11 @@ import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
 import { createShellRegistry, createToastStore } from "../../hooks/index.js";
 import {
-  activateRow,
+  clickRow,
   fold,
   openFoundStory,
-  reveal,
   showSavedStage,
+  showSavedStory,
   switchProject,
   toggleSidebar,
 } from "./shell-selection.js";
@@ -76,21 +76,24 @@ describe("shell selection", () => {
     expect([...before]).toEqual(["DONE"]);
   });
 
-  it("leaves a Stage filter that hides the Story that it shows", () => {
+  it("shows a saved Story: it leaves a Stage filter that hides the Story", () => {
     const shell = env({ stageKey: "DONE" });
 
-    reveal(shell, STORY);
+    showSavedStory(shell, STORY);
 
     expect(shell.setStageKey).toHaveBeenCalledWith(null);
     expect(shell.setSelectedId).toHaveBeenCalledWith("ROW-01");
+    expect(shell.setOverlay).toHaveBeenCalledWith(null);
+    expect(shell.reload).toHaveBeenCalledOnce();
   });
 
-  it("expands a heading, and opens a Story", () => {
+  it("expands a heading, and opens a Story, on a click", () => {
     const shell = env();
 
-    activateRow(shell, 0);
-    activateRow(shell, 1);
+    clickRow(shell, 0);
+    clickRow(shell, 1);
 
+    expect(shell.setPane).toHaveBeenCalledWith("stories");
     expect(shell.setCollapsed).toHaveBeenCalledOnce();
     expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "editStory", story: STORY });
   });

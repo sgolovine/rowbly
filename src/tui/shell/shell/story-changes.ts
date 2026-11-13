@@ -24,7 +24,7 @@ export function moveStage(env: ShellEnv, key: string, position: number): void {
 }
 
 /** Puts the Story `story` at the 1-based `position` in the Stage `key`. The selection stays on the Story. */
-export function placeStory(env: ShellEnv, story: Story, key: string, position: number): void {
+function placeStory(env: ShellEnv, story: Story, key: string, position: number): void {
   if (key === story.stage && position === story.position) {
     return;
   }
