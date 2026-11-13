@@ -1,10 +1,25 @@
-import { useContext, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { type FormField, type FormModalDelete, type FormValues, Modal } from "../../../components/index.js";
-import { ShellContext } from "../../../hooks/index.js";
+import { ShellContext, type ShellRegistry } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { StoryModalBody, type StoryModalConfirm } from "../story-modal-body/index.js";
+
+/** Closes the Modal, or asks first when the Story has unsaved text or images. */
+function requestClose(
+  shell: ShellRegistry,
+  setConfirming: Dispatch<SetStateAction<StoryModalConfirm>>,
+  onClose: () => void,
+) {
+  if (shell.isDirty()) {
+    setConfirming("discard");
+
+    return;
+  }
+
+  onClose();
+}
 
 /**
  * Edits one Story with General and Attachments tabs, plus Specs when the Project has Specs on.
@@ -38,15 +53,11 @@ export function StoryModal({
   const shell = useContext(ShellContext);
   const [hints, setHints] = useState<readonly KeyHint[]>([]);
   const [confirming, setConfirming] = useState<StoryModalConfirm>(null);
-  const close = () => {
-    if (shell.isDirty()) {
-      setConfirming("discard");
-    } else {
-      onClose();
-    }
-  };
+
+  const actions = { close: () => requestClose(shell, setConfirming, onClose) };
+
   return (
-    <Modal title={title} size="screen" flush hints={hints} onClose={confirming === null ? close : undefined}>
+    <Modal title={title} size="screen" flush hints={hints} onClose={confirming === null ? actions.close : undefined}>
       <StoryModalBody
         key={`${ctx.cwd}:${storyId}`}
         ctx={ctx}
@@ -57,7 +68,7 @@ export function StoryModal({
         initialValues={initialValues}
         onSubmit={onSubmit}
         onClose={onClose}
-        onRequestClose={close}
+        onRequestClose={actions.close}
         onDelete={onDelete}
         confirming={confirming}
         onConfirming={setConfirming}

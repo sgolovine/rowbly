@@ -8,10 +8,12 @@ import { theme } from "../../../theme.js";
  * missing file: a Project without a factory run has none, and the header shows the state of the factory.
  */
 export function FactoryStatusLine({ activity }: { activity: FactoryActivity }) {
+  const problem = activity.status === "incomplete" ? "is incomplete" : "is unavailable";
+
   if (activity.status === "ok" || activity.status === "missing") {
     return null;
   }
-  const problem = activity.status === "incomplete" ? "is incomplete" : "is unavailable";
+
   return (
     <Text wrap="truncate-end" color={theme.stageBoard}>
       ! Factory activity {problem}: {activity.path}: {activity.message}

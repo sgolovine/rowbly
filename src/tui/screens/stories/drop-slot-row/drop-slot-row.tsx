@@ -19,7 +19,9 @@ export function DropSlotRow({
   onDrop(value: unknown): void;
 }) {
   const ref = useRef<DOMElement>(null);
+
   useMouse(ref, { onDrop, onDragOver, onDragLeave }, clickable);
+
   return (
     <Box ref={ref} width="100%" backgroundColor={theme.dropTarget}>
       <Text> </Text>

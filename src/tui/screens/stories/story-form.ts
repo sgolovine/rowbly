@@ -28,17 +28,18 @@ export function customFormValue(field: CustomField, value: FieldValue): FormValu
   if (value === null) {
     return field.type === "boolean" || field.type === "select" ? NONE : "";
   }
+
   return String(value);
+}
+
+/** The input of one custom field: `null` for an empty or `NONE` value, otherwise the form value. */
+function fieldInput(value: FormValue | undefined): unknown {
+  return value === null || value === undefined || value === "" || value === NONE ? null : value;
 }
 
 /** Reads the form values of the custom fields. An unset field is `null`; the service parses the text by type. */
 export function customFieldInput(customFields: readonly CustomField[], values: FormValues): Record<string, unknown> {
-  const fields: Record<string, unknown> = {};
-  for (const field of customFields) {
-    const value = values[field.key];
-    fields[field.key] = value === null || value === undefined || value === "" || value === NONE ? null : value;
-  }
-  return fields;
+  return Object.fromEntries(customFields.map((field) => [field.key, fieldInput(values[field.key])]));
 }
 
 /** A form field for a custom field. Its text goes to the service, which parses it by the field's type. */

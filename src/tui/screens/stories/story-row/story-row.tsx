@@ -12,7 +12,9 @@ function activityLabel(activity: StoryActivity): string {
   if (activity.kind !== "active") {
     return activity.kind;
   }
+
   const chars = [...activity.label.replace(/\s+/g, " ")];
+
   return chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
 }
 
