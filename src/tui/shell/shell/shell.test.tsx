@@ -918,28 +918,128 @@ describe("Shell", () => {
       expect(tui.frame()).toContain("▾ Active Threads (0)  No Threads");
     });
 
-    it("opens the Thread Modal with enter, closes it with esc, and keeps the selection on the row", async () => {
-      await thread("ROW-01", "BACKLOG", 0, "completed");
-      await thread("ROW-02", "BACKLOG", 1, "running");
-      const tui = await open(project.ctx as { cwd: string });
+    /** Opens the Factory view and waits for the Thread of `story`. */
+    async function factoryView(story: string, layout: Layout = { width: 150, height: 40 }) {
+      const tui = await openSized(project.ctx as { cwd: string }, layout);
       await tui.press("t");
       await vi.waitFor(async () => {
         await tui.press();
-        expect(tui.frame()).toContain("ROW-01");
+        expect(tui.frame()).toContain(story);
       });
-      await tui.press(keys.down, keys.down);
-      expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
-      await tui.press(keys.enter);
+      return tui;
+    }
+
+    /** Waits until the Thread sidebar has read the conversation. */
+    async function threadShown(tui: Awaited<ReturnType<typeof open>>) {
       await vi.waitFor(async () => {
         await tui.press();
         expect(tui.frame()).toContain("ROW-01 › #1 Backlog");
         expect(tui.frame()).toContain("No conversation yet");
       });
-      expect(tui.frame()).toMatch(/Status\s+✓ completed/);
-      await tui.press(keys.escape);
-      expect(tui.frame()).not.toContain("ROW-01 › #1 Backlog");
+    }
+
+    const footer = (tui: Awaited<ReturnType<typeof open>>) => tui.frame().split("\n").at(-1) ?? "";
+
+    it("opens the Thread in the sidebar beside the list with enter, with no Modal", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      await thread("ROW-02", "BACKLOG", 1, "running");
+      const tui = await factoryView("ROW-01");
+      await tui.press(keys.down, keys.down);
       expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
+      await tui.press(keys.enter);
+      await threadShown(tui);
+      const sidebar = tui.locate("╭─ROW-01 › #1 Backlog");
+      // The same frame as the Story sidebar: beside the list, 40% of the terminal, with the ✕ in the top border.
+      expect(sidebar).toEqual({ x: 150 - 60, y: tui.locate("╭─Threads").y });
+      expect(tui.frame().split("\n")[sidebar.y]).toMatch(/╭─ROW-01 › #1 Backlog─+ ✕ ╮$/);
+      expect(tui.frame()).toMatch(/Status\s+✓ completed/);
+      expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
+      expect(tui.frame()).not.toContain("esc close");
+      expect(footer(tui)).toContain("↑/↓ scroll");
+      expect(footer(tui)).toContain("esc Thread list");
+    });
+
+    it("opens the Thread in the sidebar with a click on its row", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      const tui = await factoryView("ROW-01");
+      await tui.click("ROW-01 ✓ completed");
+      await tui.click("ROW-01 ✓ completed");
+      await threadShown(tui);
+      expect(tui.locate("╭─ROW-01 › #1 Backlog").y).toBe(tui.locate("╭─Threads").y);
+    });
+
+    it("moves the focus with esc and tab, and closes the Thread sidebar with esc in the list and the ✕", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      const tui = await factoryView("ROW-01");
+      await tui.press(keys.enter);
+      await threadShown(tui);
+      // esc in the Thread sidebar gives the focus to the list and keeps the sidebar open.
+      await tui.press(keys.escape);
+      expect(tui.frame()).toContain("╭─ROW-01 › #1 Backlog");
+      expect(footer(tui)).toContain("tab Thread");
+      expect(footer(tui)).toContain("esc close Thread");
+      // tab: the list, the Thread sidebar, the Stage sidebar, then the list again.
+      await tui.press(keys.tab);
+      expect(footer(tui)).toContain("esc Thread list");
+      await tui.press(keys.tab);
+      expect(footer(tui)).toContain("n new Stage");
+      await tui.press(keys.tab);
+      expect(footer(tui)).toContain("esc close Thread");
+      await tui.press(keys.shiftTab);
+      expect(footer(tui)).toContain("n new Stage");
+      await tui.press(keys.shiftTab);
+      expect(footer(tui)).toContain("esc Thread list");
+      await tui.press(keys.shiftTab);
+      expect(footer(tui)).toContain("esc close Thread");
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("╭─ROW-01 › #1 Backlog");
+      expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
+      await tui.press(keys.enter);
+      await threadShown(tui);
+      await tui.click("✕");
+      expect(tui.frame()).not.toContain("╭─ROW-01 › #1 Backlog");
+    });
+
+    it("changes the width of the Thread sidebar with a drag of its left edge", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      const tui = await factoryView("ROW-01");
+      await tui.press(keys.enter);
+      await threadShown(tui);
+      const before = tui.locate("╭─ROW-01 › #1 Backlog");
+      await tui.mouse("press", before.x, before.y + 1);
+      await tui.mouse("move", before.x - 10, before.y + 1);
+      await tui.mouse("release", before.x - 10, before.y + 1);
+      expect(tui.locate("╭─ROW-01 › #1 Backlog").x).toBe(before.x - 10);
+    });
+
+    it("gives the full main area to the Thread sidebar in a narrow terminal", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      const tui = await factoryView("ROW-01", { width: 60, height: 24 });
+      await tui.press(keys.enter);
+      await threadShown(tui);
+      expect(tui.locate("╭─ROW-01 › #1 Backlog")).toEqual({ x: 0, y: 3 });
+      expect(tui.frame()).not.toContain("╭─Threads");
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("╭─ROW-01 › #1 Backlog");
       expect(tui.frame()).toContain("╭─Threads");
+    });
+
+    it("asks before a Thread discards the unsaved changes of the Story sidebar", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      const tui = await factoryView("ROW-01");
+      await tui.press("t", "n");
+      await tui.type("Draft");
+      await tui.press(keys.escape, "t");
+      await tui.press();
+      expect(tui.frame()).toContain("╭─New Story");
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("n");
+      expect(tui.frame()).toContain("╭─New Story");
+      await tui.press(keys.enter);
+      await tui.press("y");
+      await threadShown(tui);
+      expect(tui.frame()).not.toContain("╭─New Story");
     });
 
     it("shows a new Thread from the factory without a reload", async () => {

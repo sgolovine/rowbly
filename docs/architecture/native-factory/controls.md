@@ -41,7 +41,8 @@ viewer or the AI section of Settings.
 - The detail view (`Factory › Attention › <title>`) shows the full text of the warning, its kind,
   its Story and its related Thread. A Thread file issue shows the file and the message.
   - `o` (or the `Story` button) closes the Factory controls and opens the Story in the Story sidebar.
-  - `t` (or the `Thread` button) opens the related Thread in the Thread Modal.
+  - `t` (or the `Thread` button) closes the Factory controls and opens the related Thread in the
+    Story sidebar.
   - `d` (or the `Dismiss` button) sends a `dismiss` command to the daemon. Only an attention entry
     has this action. If the command fails, an error toast shows and the warning stays.
   - `esc` goes back.
@@ -55,8 +56,9 @@ viewer or the AI section of Settings.
 - `t` or the Switch in the header changes the right Panel to the Factory view and back.
 - The view shows the worker Threads of all Stories in "Active Threads" and "Inactive Threads".
 - The Stage sidebar filters the Threads by their Stage.
-- `enter` or a click on a Thread opens the Thread Modal: the Thread metadata and its conversation.
-- The view and the Thread Modal are read-only. Use the Threads tab of a Story to interrupt or resume a Thread.
+- `enter` or a click on a Thread opens the Thread in the Story sidebar, on the right of the Thread
+  list: the Thread metadata and its conversation.
+- The view and the Thread in the Story sidebar are read-only. Use the Threads tab of a Story to interrupt or resume a Thread.
 
 See [../tui.md](../tui.md#the-factory-view) for the structure.
 

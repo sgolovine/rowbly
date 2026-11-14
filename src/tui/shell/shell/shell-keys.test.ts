@@ -145,6 +145,9 @@ describe("handleShellKey", () => {
     expect(cyclePane(env({ storyPane: open, pane: "stages" }).view, -1)).toBe("story");
     expect(cyclePane(env({ storyPane: open, sidebarShown: false }).view, 1)).toBe("story");
     expect(cyclePane(env({ storyPane: null, sidebarShown: false }).view, 1)).toBe("stories");
+    // From the Story sidebar, for example a Thread that takes tab.
+    expect(cyclePane(env({ storyPane: open, pane: "story" }).view, 1)).toBe("stages");
+    expect(cyclePane(env({ storyPane: open, pane: "story" }).view, -1)).toBe("stories");
   });
 
   it("closes the Story sidebar with esc in the Story list, and asks first when it has unsaved changes", () => {

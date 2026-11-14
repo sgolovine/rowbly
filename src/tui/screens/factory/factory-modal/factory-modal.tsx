@@ -33,7 +33,7 @@ interface FactoryModalProps {
   stories?: readonly Story[];
   /** Closes the Modal and opens the Story of a warning in the Story sidebar. */
   onOpenStory?(story: Story): void;
-  /** Opens the related Thread of a warning in the Thread Modal. */
+  /** Opens the related Thread of a warning in the Story sidebar. */
   onOpenThread?(thread: ThreadRecord): void;
 }
 

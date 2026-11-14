@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SIDEBAR_WIDTH } from "../../components/index.js";
 import type { KeyHint } from "../../keymap.js";
-import type { Overlay, StoryPane } from "../overlay.js";
+import type { Overlay, SidePane } from "../overlay.js";
 import type { Pane, ViewMode } from "./shell-state.js";
 
 /** The state of the shell that lasts until Rowbly quits: the overlay, the focus, the panes and the selection. */
@@ -16,7 +16,7 @@ export function useShellState() {
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
   const [sidebarShown, setSidebarShown] = useState(true);
   // What the Story sidebar shows, and its width after a drag (`null` for the default width).
-  const [storyPane, setStoryPane] = useState<StoryPane | null>(null);
+  const [storyPane, setStoryPane] = useState<SidePane | null>(null);
   const [storyWidth, setStoryWidth] = useState<number | null>(null);
   const [storyHints, setStoryHints] = useState<readonly KeyHint[]>([]);
   const [stageKey, setStageKey] = useState<string | null>(null);

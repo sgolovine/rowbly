@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { Story } from "../../../services/story/story.js";
+import type { ThreadRecord } from "../../../services/thread/thread.js";
 import { storyBodyLayout, storySidebarHints, storySidebarTitle } from "./story-sidebar-view.js";
 
 const STORY = { id: "ROW-07" } as Story;
+const THREAD = { id: "t1", storyId: "ROW-07", stage: "DEVELOP", attemptNumber: 2 } as ThreadRecord;
 
 describe("storySidebarTitle", () => {
   it("names the form as the Modals did", () => {
     expect(storySidebarTitle({ kind: "new" })).toBe("New Story");
     expect(storySidebarTitle({ kind: "edit", story: STORY })).toBe("Edit ROW-07");
+  });
+
+  it("names a Thread with its Story and its name, as the Thread Modal did", () => {
+    expect(storySidebarTitle({ kind: "thread", thread: THREAD }, { DEVELOP: "Develop" })).toBe("ROW-07 › #2 Develop");
   });
 });
 
@@ -16,6 +22,7 @@ describe("storyBodyLayout", () => {
     expect(storyBodyLayout({ kind: "edit", story: STORY }, 40, 20)).toEqual({ width: 38, height: 18 });
     expect(storyBodyLayout({ kind: "new" }, 40, 20)).toEqual({ width: 34, height: 16 });
     expect(storyBodyLayout({ kind: "new" }, 40, undefined)).toEqual({ width: 34, height: undefined });
+    expect(storyBodyLayout({ kind: "thread", thread: THREAD }, 40, 20)).toEqual({ width: 34, height: 16 });
   });
 });
 
