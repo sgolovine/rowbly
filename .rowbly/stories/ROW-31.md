@@ -3,7 +3,7 @@ title: Share one factory status read across TUI views
 stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-31
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/218
 ---
 
 ## Goal
