@@ -2,7 +2,7 @@
 title: Stop the Specs tab from re-reading every Story for each linked Story
 stage: IN_REFINEMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-28
 pull_request: null
 ---
 
