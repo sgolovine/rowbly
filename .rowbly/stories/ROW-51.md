@@ -1,7 +1,7 @@
 ---
 title: Build the closing landing sections and the install call to action
-stage: BACKLOG
-position: 9
+stage: IN_REFINEMENT
+position: 10
 worktree: null
 pull_request: null
 ---

@@ -1,7 +1,7 @@
 ---
 title: Build the How it works page
-stage: BACKLOG
-position: 10
+stage: IN_REFINEMENT
+position: 11
 worktree: null
 pull_request: null
 ---
