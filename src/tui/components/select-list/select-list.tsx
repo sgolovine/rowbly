@@ -22,7 +22,7 @@ function firstRow(index: number, limit: number, count: number): number {
 
 /**
  * A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. In single mode
- * a click on an item picks it, as `enter` does.
+ * a click on an item picks it, as `enter` does. With `clickToHighlight`, the first click only highlights it.
  * A wheel notch moves the highlight by `WHEEL_LINES` while the list is longer than `limit`.
  */
 export function SelectList<T>(props: SelectListProps<T>) {
