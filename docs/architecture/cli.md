@@ -32,6 +32,7 @@ test.
 | `project/`                                             | `project update`.                                                                |
 | `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
+| `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
 | `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                   |
 | `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.    |
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt. |
@@ -50,7 +51,7 @@ The native commands are in [native-factory/controls.md](native-factory/controls.
 
 Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `spec`,
 `skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
-its help. A resource command with an unknown action gives an error. `init`, `doctor` and the
+its help. A resource command with an unknown action gives an error. `init`, `doctor`, `status` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
 
 ## Output and errors
