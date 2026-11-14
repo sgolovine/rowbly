@@ -3,7 +3,7 @@ title: Check Story dependencies in rowbly doctor
 stage: IN_DEVELOPMENT
 position: 4
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-61
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/233
 ---
 
 ## Goal
