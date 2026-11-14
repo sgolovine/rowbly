@@ -154,7 +154,14 @@ async function unknownKeyIssues(
   repair: Store<DocRepair>,
   file: string,
 ): Promise<DoctorIssue[]> {
-  const known = new Set(["title", "stage", "position", "agentLock", ...config.customFields.map((field) => field.key)]);
+  const known = new Set([
+    "title",
+    "stage",
+    "position",
+    "dependsOn",
+    "agentLock",
+    ...config.customFields.map((field) => field.key),
+  ]);
   const unknown = Object.keys(repair.current.data).filter((key) => !known.has(key));
 
   return mapInOrder(unknown, (key) => unknownKeyIssue(run, repair, key, file));

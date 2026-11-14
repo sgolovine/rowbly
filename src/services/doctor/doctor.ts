@@ -10,6 +10,7 @@ import { checkSkills } from "./skill-checks.js";
 import { checkSpecs } from "./spec-checks.js";
 import { checkStages } from "./stage-checks.js";
 import { checkStories } from "./story-checks.js";
+import { checkStoryDependencies } from "./story-dependency-checks.js";
 
 export type { DoctorIssue } from "./doctor-run.js";
 
@@ -33,7 +34,8 @@ function configIssue(run: DoctorRun, issue: Issue): DoctorIssue {
 
 /**
  * Checks that the files in `.rowbly/` line up with its config: every stage has a file and every
- * file a stage, every story has a title, a known stage and exactly the project's custom fields, and
+ * file a stage, every story has a title, a known stage and exactly the project's custom fields, every
+ * `dependsOn` list names other Stories of the project with no cycle, and
  * every spec has a title and links to Stories that exist. A spec with no Story is an orphan: a warning.
  * Every skill in the config must be installed for each of its harnesses. Each user prompt must exist.
  * The `factory` section must be valid, and `--fix` moves an old `factory.json` into the config.
@@ -63,6 +65,8 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
     ...stages.issues,
     ...factory,
     ...(await checkStories(run, stages.config)),
+    // The dependency checks need the IDs of all Stories, and they read the Story files after the Story fixes.
+    ...(await checkStoryDependencies(run, stages.config)),
     ...(await checkSpecs(run, stages.config)),
     ...(await checkSkills(run, stages.config)),
     ...(await checkAttachments(run)),
