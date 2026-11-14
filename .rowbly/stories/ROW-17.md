@@ -1,9 +1,9 @@
 ---
 title: "Factory Git settings: commit author and message"
-stage: IN_DEVELOPMENT
-position: 2
+stage: DONE
+position: 16
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-17
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/200
 ---
 
 ## Goal

@@ -393,6 +393,41 @@ describe("foreground factory", () => {
     release();
     expect((await settled())?.error?.message).toContain("prompt changed");
   });
+  it("uses Story and Stage worker model overrides before the start_worker model", async () => {
+    const staged = await createStory({ title: "Stage override", stage: "WORK" }, { cwd: root });
+    const pinned = await createStory({ title: "Story override", stage: "WORK" }, { cwd: root });
+    await updateFactorySettings(
+      {
+        stageWorkerModels: { WORK: { provider: "supervisor", modelId: "faux-1" } },
+        storyWorkerModels: { [pinned.id]: { WORK: { provider: "worker", modelId: "faux-1" } } },
+      },
+      { cwd: root },
+    );
+    const f = await fixture();
+    expect(f.supervisor.getModel().id).toBe("faux-1");
+    f.supervisor.setResponses([fauxAssistantMessage("RESULT: complete")]);
+    await f.manager.reserveWorker({
+      storyId: staged.id,
+      stage: "WORK",
+      requestId: "stage-override",
+      model: { provider: f.worker.getModel().provider, modelId: f.worker.getModel().id },
+    });
+    expect((await settled())?.model).toEqual({ provider: "supervisor", modelId: "faux-1" });
+    f.worker.setResponses([fauxAssistantMessage("RESULT: complete")]);
+    // The slot of the first worker is free only after its launch task ends.
+    await vi.waitFor(
+      () => f.manager.reserveWorker({ storyId: pinned.id, stage: "WORK", requestId: "story-override" }),
+      {
+        timeout: 5000,
+        interval: 30,
+      },
+    );
+    await vi.waitFor(async () => {
+      const thread = (await listThreads({ story: pinned.id }, { cwd: root })).threads[0];
+      expect(thread?.model).toEqual({ provider: "worker", modelId: "faux-1" });
+      expect(["completed", "failed"]).toContain(thread?.status);
+    });
+  });
   it("quota pause does not block a worker with another provider", async () => {
     const story = await createStory({ title: "Quota", stage: "WORK" }, { cwd: root });
     const other = await createStory({ title: "Other provider", stage: "WORK" }, { cwd: root });

@@ -1,9 +1,9 @@
 ---
 title: Periodic Git push and pull in the factory
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 3
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-18
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/201
 ---
 
 Split from ROW-17. Add periodic Git sync to the native factory.

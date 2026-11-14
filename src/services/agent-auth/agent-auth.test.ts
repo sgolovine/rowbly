@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { configureFactory, getFactorySettings } from "../factory-settings/factory-settings.js";
 import { getDeviceId } from "../known-project/known-project.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
+import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import { getAuthStatus, listAvailableModels, loginProvider, logoutProvider } from "./agent-auth.js";
 
@@ -86,6 +87,34 @@ describe("agent auth", () => {
     });
     expect(await configureFactory({ worker: choice, workerThinking: "off" }, project.ctx, runtime)).toMatchObject({
       workerModel: { thinkingLevel: "off" },
+    });
+  });
+  it("validates override models before it writes Stage and Story overrides", async () => {
+    const { runtime, faux } = await fixture();
+    const choice = `${faux.provider.id}/${faux.getModel().id}`;
+    const model = { provider: faux.provider.id, modelId: faux.getModel().id };
+    const story = await createStory({ title: "Override" }, project.ctx);
+    await expect(configureFactory({ stage: "BACKLOG", worker: "absent/model" }, project.ctx, runtime)).rejects.toThrow(
+      "unavailable",
+    );
+    await expect(
+      configureFactory({ stage: "BACKLOG", worker: choice, workerThinking: "max" }, project.ctx, runtime),
+    ).rejects.toThrow("thinking");
+    expect(await getFactorySettings(project.ctx)).toEqual({
+      version: 1,
+      maxWorkers: 4,
+      git: { push: false, pull: false, syncIntervalSeconds: 300 },
+    });
+    await configureFactory({ worker: choice }, project.ctx, runtime);
+    await configureFactory({ stage: "backlog", worker: choice, workerThinking: "off" }, project.ctx, runtime);
+    await configureFactory({ stage: "DONE", story: story.id, worker: choice }, project.ctx, runtime);
+    expect(await getFactorySettings(project.ctx)).toEqual({
+      version: 1,
+      maxWorkers: 4,
+      workerModel: model,
+      stageWorkerModels: { BACKLOG: { ...model, thinkingLevel: "off" } },
+      storyWorkerModels: { [story.id]: { DONE: model } },
+      git: { push: false, pull: false, syncIntervalSeconds: 300 },
     });
   });
 });
