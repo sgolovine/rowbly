@@ -1,7 +1,7 @@
 ---
 title: Deploy the website to GitHub Pages
-stage: BACKLOG
-position: 4
+stage: IN_REFINEMENT
+position: 5
 worktree: null
 pull_request: null
 ---
