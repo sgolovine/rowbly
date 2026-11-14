@@ -1,6 +1,7 @@
 ---
 title: Tell workers about the upstream Stories of their Story
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 7
 worktree: null
 pull_request: null
 ---

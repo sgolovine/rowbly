@@ -1,6 +1,7 @@
 ---
 title: Check Story dependencies in rowbly doctor
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 4
 worktree: null
 pull_request: null
 ---

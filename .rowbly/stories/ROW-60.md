@@ -1,6 +1,7 @@
 ---
 title: Set and show Story dependencies in the CLI
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 3
 worktree: null
 pull_request: null
 ---

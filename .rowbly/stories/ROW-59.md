@@ -1,6 +1,7 @@
 ---
 title: Store Story dependencies in the Story service
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 2
 worktree: null
 pull_request: null
 ---

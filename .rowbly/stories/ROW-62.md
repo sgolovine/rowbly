@@ -1,6 +1,7 @@
 ---
 title: Hold blocked Stories in the factory policy and start upstream Stories first
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 5
 worktree: null
 pull_request: null
 ---

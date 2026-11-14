@@ -1,6 +1,7 @@
 ---
 title: Show dependencies to the supervisor and raise attention for a stuck upstream Story
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 6
 worktree: null
 pull_request: null
 ---
