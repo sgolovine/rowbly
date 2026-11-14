@@ -1,6 +1,6 @@
 ---
 title: items should be selectable in factory issues view
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-15
 pull_request: https://github.com/sgolovine/rowbly/pull/198
