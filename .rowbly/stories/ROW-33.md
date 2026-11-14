@@ -1,7 +1,7 @@
 ---
 title: Do not reload the board when only state.json changes
-stage: IN_DEVELOPMENT
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-33
 pull_request: https://github.com/sgolovine/rowbly/pull/221
 ---
