@@ -3,7 +3,7 @@ title: Load the TUI only when rowbly starts without a command
 stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-43
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/227
 ---
 
 ## Goal
