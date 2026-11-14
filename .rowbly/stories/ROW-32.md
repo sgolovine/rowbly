@@ -1,7 +1,7 @@
 ---
 title: Skip conversation polls when the session file did not change
 stage: BACKLOG
-position: 7
+position: 6
 worktree: null
 pull_request: null
 ---

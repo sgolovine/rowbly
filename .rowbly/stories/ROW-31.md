@@ -1,7 +1,7 @@
 ---
 title: Share one factory status read across TUI views
 stage: BACKLOG
-position: 6
+position: 5
 worktree: null
 pull_request: null
 ---
