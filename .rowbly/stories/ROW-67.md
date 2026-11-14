@@ -1,7 +1,7 @@
 ---
 title: Restart the factory daemon automatically after a crash
-stage: IN_REVIEW
-position: 1
+stage: IN_DEVELOPMENT
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
 pull_request: https://github.com/sgolovine/rowbly/pull/232
 ---
@@ -78,4 +78,6 @@ Files and modules:
 
 ## Review findings
 
-1. `src/commands/factory-runner/watchdog-runner.test.ts:112-120` ("sets the count to 0 when a daemon stays up for the stable period"). The CI `Test` check fails because of this test. It failed two times in a row on PR #232 (run 43654632520): `expected { phase: 'stopped', crashCount: 1 }`, received `crashCount: 0`. Cause: the injected `stableMs` is 50 ms. The 7th fake daemon (`{ code: 0 }`) needs more than 50 ms to start Node on CI, so the stable timer of `runDaemon` fires before the clean exit and writes `crashCount: 0`. The production code is correct; the test depends on timing. Fix: make the test independent of the start time of Node. For example, do not assert the exact final count after the clean exit (assert `phase: "stopped"`, not `failed`, and 7 starts, which prove that 6 crashes did not reach the limit of 5), or read the count from the state after the 6th crash, or use a `stableMs` that is larger than a Node start and smaller than the `sleepMs` of the crash steps (for example `stableMs: 500`, `sleepMs: 1000`). Then make sure that the CI `Test` check passes.
+The earlier finding (the timing of the stable period test in `watchdog-runner.test.ts`) is repaired.
+
+1. `src/commands/factory-runner/watchdog-runner.ts:270-283` (`runWatchdog`) and `src/services/factory/factory.ts:131` (`waitForReady`). Concurrent `factory start` calls can fail, and two watchdogs can run at the same time. The CI `Test` check failed on PR #232 run 43655324492 (head `aeaab07b`) in `src/services/factory/factory.test.ts` > "starts tsx after cwd changes, fences twenty clients, and recovers after SIGKILL", at line 131 (the 3 concurrent `startFactory` calls): `ConflictError: Factory exited before ready. Factory watchdog already-running.` A rerun passed, but the cause is a race in the code, not in the test. On `main`, the same concurrent start test passes, because the daemon takes ownership atomically in `factory.lock`. Cause: the watchdog claim is "check, write, then read back". It is not atomic. Two watchdogs can both read no active watchdog, both write, and both read their own token, so both continue and both start a daemon. The daemon that loses ownership exits with code 0, and its watchdog writes `phase: "stopped"` over `watchdog.json` while the other watchdog is still live. Then `watchdogLive` is false before the winning daemon writes its owner, so the `starting` guard in `waitForReady` does not apply, and a third start (whose watchdog returned `already-running`) throws "exited before ready". The same overwrite also hides the live watchdog from `stopFactory`, so a stop during its back-off does not cancel its restart. Fix: make the watchdog claim atomic. For example, take an exclusive claim (an `O_EXCL` lock file or the same lock pattern as `factory.lock`, with a dead-holder takeover through `probeOwner`) before the watchdog writes `watchdog.json`, and release it at the exit. A watchdog that does not get the claim returns `already-running` and never writes the file. Also make `waitForReady` not fail while a different live watchdog holds the claim. Then run `src/services/factory/factory.test.ts` many times (for example 20 runs) and make sure that the CI `Test` check passes.
