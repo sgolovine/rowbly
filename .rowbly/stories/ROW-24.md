@@ -1,7 +1,7 @@
 ---
 title: Add more space between active and inactive threads accordions
-stage: IN_REVIEW
-position: 2
+stage: IN_DEVELOPMENT
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-24
 pull_request: https://github.com/sgolovine/rowbly/pull/211
 ---
@@ -50,3 +50,9 @@ Not in scope:
 - The empty line also shows when the "Active Threads" section is collapsed or empty. Reason: the author asks for space "between the accordions"; a constant layout is simpler and the headings do not move when a section collapses.
 - The space is exactly one line. Reason: the author asks for "a line of empty space".
 - The change applies only to the Factory view, not to the Thread list of the Story sidebar. Reason: the screenshot and the text are about the Active and Inactive Threads sections of the Factory view.
+
+## Review findings
+
+1. `src/tui/screens/threads/factory-view/factory-view.tsx`, line 13 (JSDoc of `FactoryView`): the pull request has a merge conflict with `main`. Commit `13d7630a` (ROW-22, "scroll the Thread list with the wheel while the sidebar has the focus") changed the same doc comment and added `wheel={clickable}` to `ScrollBody`. Fix: merge `origin/main` into `story/ROW-24`, keep both doc sentences ("The wheel scrolls the rows while the view is `clickable`, also when it is not `active`." and "One empty line separates the two sections."), keep `wheel={clickable}` and `spaced={index > 0}`, then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again and push.
+
+Not blocking: the CI `Test` job failed one time in `src/tui/shell/shell/shell.test.tsx` ("saves an edit, shows a toast, selects the Story and closes the Story sidebar"). This test is not related to the change and passes locally. Examine the result of CI again after the merge.
