@@ -1,7 +1,7 @@
 ---
 title: Hold blocked Stories in the factory policy and start upstream Stories first
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 47
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-62
 pull_request: https://github.com/sgolovine/rowbly/pull/235
 ---
