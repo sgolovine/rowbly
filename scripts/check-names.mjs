@@ -13,7 +13,8 @@ const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "U
 // - `.agents/skills/agentic-tui/` is an unchanged copy of an upstream skill.
 // - `.rowbly/` is product data: stage keys (`IN_REVIEW.md`), story IDs (`ROW-01.md`) and `ROWBLY.md`.
 // - `stages/*.md` are the default stage prompts, and each name is a stage key (`BACKLOG.md`).
-const IGNORED_PATHS = [/^\.agents\/skills\/agentic-tui\//, /^\.rowbly\//, /^stages\/[^/]+\.md$/];
+// - `FOO.txt` is a test file of the factory workflow (ROW-10), and its author gives the exact name.
+const IGNORED_PATHS = [/^\.agents\/skills\/agentic-tui\//, /^\.rowbly\//, /^stages\/[^/]+\.md$/, /^FOO\.txt$/];
 
 /** Gives the part of a name before its first dot. A dotfile or a dotfolder loses its first dot. */
 function baseName(segment) {
