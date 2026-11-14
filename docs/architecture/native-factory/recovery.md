@@ -20,11 +20,33 @@ The command types are `stop`, `cancel`, `resume` and `dismiss`:
   rejects the command.
 - A command file is at most 4096 bytes.
 
+## Failures in the supervisor loop
+
+Each pass of the supervisor loop does these steps in this order:
+
+1. The scan (`reconcilePolicy`). It writes the policy decisions to the factory state.
+2. The steps that the digest does not need: the settings refresh (`settings`), the provider pause
+   check (`providers`), the canonical commit (`commit`) and the start of the Git sync (`sync`).
+3. The digest and its delivery to the supervisor.
+
+If the scan fails, the pass stops. The loop sets the `reconcile` attention entry, and the next scan
+tries again. A scan occurs at least each 30 seconds. A pass with a successful scan removes the
+`reconcile` entry.
+
+If a step of item 2 fails, the loop sets the attention entry of that step, and the pass continues
+to the digest. Thus a step that fails on each pass cannot stop the digests. For example, the
+supervisor continues to get the unclassified Stages. A step that does not fail removes its entry. A
+failed settings refresh keeps the current settings. While a Git sync runs, the commit does not run,
+and its entry does not change.
+
+The text of each entry has the error message, limited to 500 characters.
+
 ## Dismiss an attention entry
 
 The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
-them. The supervisor loop uses the keys `reconcile`, `commit`, `supervisor`, `pull` and `push`. A
-successful Git pull removes the `pull` entry, and a successful push removes the `push` entry. A
+them. The supervisor loop uses the keys `reconcile`, `settings`, `providers`, `commit`, `sync`,
+`supervisor`, `pull` and `push`. A successful Git pull removes the `pull` entry, and a successful push
+removes the `push` entry. A
 `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
 does not exist is not an error. The manager loads the attention entries from `status.json` when it
 starts, so a dismissed entry does not come back after a restart. If the factory records the same key

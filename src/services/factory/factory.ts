@@ -7,7 +7,7 @@ import {
   validAttentionKey,
 } from "../factory-control/factory-control.js";
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
-import { type Owner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
+import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
@@ -54,7 +54,8 @@ export async function getFactoryStatus(ctx: ServiceContext = {}): Promise<Factor
       return { ...status, phase: status.phase === "failed" ? "failed" : "stopped", owner: undefined };
     }
 
-    const liveness = await probeOwner(owner);
+    // The status is read often. The takeover and the commands below use the uncached probe.
+    const liveness = await probeOwnerCached(owner);
 
     if (liveness === "dead") {
       return { ...status, owner, phase: "stopped", liveness };

@@ -1,8 +1,9 @@
 # Storage
 
 Rowbly keeps each Project in a `.rowbly/` folder of ordinary files. Users can edit these files by
-hand, and `rowbly doctor` finds and repairs problems. Rowbly also keeps one file for each user,
-`~/.rowblyrc.json`. This page gives the layout and the rules for each file.
+hand, and `rowbly doctor` finds and repairs problems. Rowbly also keeps two files for each user,
+`~/.rowblyrc.json` and the model cache `~/.cache/rowbly/pi-catalog.json`. This page gives the layout
+and the rules for each file.
 
 Read this when you read or write a file in `.rowbly/`, when you change a rule of `rowbly doctor`, or
 when you change `~/.rowblyrc.json`.
@@ -236,6 +237,25 @@ it.
 
 Do not write the file if Rowbly cannot read it. A write would remove the data that the user has in the
 file.
+
+## `~/.cache/rowbly/pi-catalog.json`
+
+Rowbly keeps a cache of the Pi model list and of the provider status for each user. The
+`pi-catalog-cache` service reads, writes and deletes it. The service does not load Pi.
+
+```
+~/.cache/rowbly/pi-catalog.json   # version 1; key {auth, models, rowbly}; models; providers
+```
+
+- The key has the mtime (ms, or `null`) of `<agentDir>/auth.json` and of `<agentDir>/models.json`,
+  and the Rowbly package version. `<agentDir>` is `$PI_CODING_AGENT_DIR` or `~/.pi/agent`, as in Pi.
+- A cache with a different key is stale. A corrupt file or a file with a different format reads as
+  missing.
+- The Models tab of the Story Modal and the provider check of the Factory Modal read the cache first.
+  They load Pi only when the cache is stale or missing, and then write a new cache.
+- The AI section of Settings always loads Pi and writes the cache.
+- `loginProvider()` and `logoutProvider()` delete the cache after each attempt.
+- Rowbly writes the file atomically. You can delete the file at any time.
 
 ## Related
 

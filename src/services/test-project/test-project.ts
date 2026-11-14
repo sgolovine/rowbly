@@ -32,10 +32,14 @@ async function makeTempDir(dir: Store<TempDir>): Promise<void> {
 
 async function makeTestProject(
   project: Store<ProjectState>,
-  dir: { readonly path: string },
+  dirs: { readonly root: { readonly path: string }; readonly home: { readonly path: string } },
   input: InitProjectInput,
 ): Promise<void> {
-  const { ctx } = project.update(() => ({ ctx: { cwd: dir.path }, paths: projectPaths(dir.path) }));
+  const { root, home } = dirs;
+  const { ctx } = project.update(() => ({
+    ctx: { cwd: root.path, home: home.path },
+    paths: projectPaths(root.path),
+  }));
 
   await initProject(input, ctx);
 }
@@ -55,12 +59,16 @@ export function useTempDir(): { readonly path: string } {
   };
 }
 
-/** Runs `initProject` in a fresh temporary directory before each test. */
+/**
+ * Runs `initProject` in a fresh temporary directory before each test. The context has its own temporary home
+ * directory, so that the files of the user, for example the model cache, do not pass from one test to the next.
+ */
 export function useTestProject(input: InitProjectInput = { name: "Rowbly", key: "ROW" }): TestProject {
-  const dir = useTempDir();
+  const root = useTempDir();
+  const home = useTempDir();
   const project = new Store<ProjectState>({ ctx: {}, paths: projectPaths("") });
 
-  beforeEach(() => makeTestProject(project, dir, input));
+  beforeEach(() => makeTestProject(project, { root, home }, input));
 
   // The getters read the store when a test runs, after `beforeEach` made the project.
   return {

@@ -108,6 +108,23 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
   Thread.
 - Close the TUI without a stop to leave the daemon active.
 
+## The Checks view
+
+- When the live factory status has `checks`, the header shows the `Checks` Button after the view
+  mode Switch. The note of the Button is `<running>/<queued>`, for example `Checks 2/1`.
+- When the factory is not live, or its status has no `checks`, the Button does not show.
+- `c` or a click on the Button opens the Checks Modal (`Factory › Checks`). `c` is a global key of
+  the shell. When the Button does not show, `c` does nothing.
+- The Modal shows the summary line of the `Checks` row at the top. Then it shows one row for each
+  check job in the queue, for all Threads. The running jobs come first. Then the queued jobs come,
+  in the order of the queue.
+- Each row shows the Story ID, the Stage label, the check key, the scope (`full` or `narrow`), the
+  status (`running` or `queued`) and the time. The time of a running job starts at `startedAt`. The
+  time of a queued job starts at `queuedAt`.
+- When the queue has no jobs, the Modal shows `No checks run or wait.`
+- The Modal is read-only. It does not show the finished checks. `↑/↓` selects a row, `/` filters,
+  and `esc` or the `✕` closes the Modal.
+
 ## The Factory view
 
 - `t` or the Switch in the header changes the right Panel to the Factory view and back.

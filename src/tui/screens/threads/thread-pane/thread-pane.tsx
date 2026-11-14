@@ -10,7 +10,7 @@ import { type ThreadPaneProps, useThreadPane } from "./use-thread-pane.js";
 const FULL_DETAIL_MIN_HEIGHT = THREAD_DETAIL_ROWS + 10;
 
 /** The keys of the pane: the keys of the conversation, then `tab` and `esc`. */
-export function threadPaneHints(live: boolean): readonly KeyHint[] {
+function threadPaneHints(live: boolean): readonly KeyHint[] {
   return [
     ...conversationKeys(live),
     { key: "tab", description: "next pane", secondary: true },

@@ -52,7 +52,6 @@
     "@types/marked-terminal": "^6.1.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
-    "ink-testing-library": "^4.0.0",
     "knip": "^6.44.1",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",

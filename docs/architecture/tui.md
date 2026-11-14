@@ -11,7 +11,8 @@ code.
 
 ## Start-up
 
-1. `src/cli.ts` calls `renderTui()` from `src/tui/index.tsx` when there are no arguments.
+1. When there are no arguments, `src/cli-main.ts` loads `src/tui/index.tsx` with a dynamic `import()` and
+   calls `renderTui()`. Other commands do not load the TUI.
 2. `renderTui()` uses `runFullScreen()` from `terminal.ts`. This function turns on the alternate
    screen, mouse reports and the kitty keyboard protocol. It restores the terminal on exit, on
    signals and on crashes.
@@ -29,11 +30,10 @@ src/tui/
   theme.ts          # the design tokens as hex values, and date formatting
   keymap.ts         # KeyHint, GLOBAL_KEYS, FORM_KEYS, moveDelta (arrows + j/k)
   mouse.ts          # MouseStdin: takes SGR mouse reports out of stdin before Ink reads it
-  shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal, factory button
+  shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal, factory and checks buttons
   screens/          # one folder per area, see below
   components/       # the shared component library: one folder per component (barrel: components/index.ts)
   hooks/            # contexts and hooks: see the table of shared hooks below
-  testing/          # renderTui(): renders a component in TuiProviders for tests; keys for stdin
 ```
 
 The screen areas in `screens/` are:
@@ -111,10 +111,24 @@ quits.
   goes first. `ViewModeSwitch` and `headerFit` in `src/tui/shell/` control this.
 - **The key `t`.** The key `t` changes the view mode when the shell is idle. The key `f` opens the
   Factory controls in the two modes. `GLOBAL_KEYS` and the help Modal list `t`.
+- **The Checks Button.** When the live factory status has `checks` (`liveChecks` in
+  `src/tui/screens/factory/check-jobs.ts`), the Factory group of the header has a `Checks` Button
+  after the Switch, before the `|`. The note shows `<running>/<queued>` in `ink-muted`. When the
+  header is narrow, the Checks Button goes first, before the Switch. `ChecksButton` and `headerFit`
+  in `src/tui/shell/` control this.
+- **The Checks Modal.** A click on the Checks Button or the key `c` opens the `checks` overlay. The
+  key works only when the shell is idle and the Button condition is true. `ChecksModal` in
+  `src/tui/screens/factory/checks-modal/` is a generic Modal. It reads the factory status that the
+  shell already polls, so it updates when the factory writes its status. It shows the summary line
+  of `checksText`, then one `SelectList` row for each running or queued job. `esc` or the `✕`
+  closes it, and the focus goes back to the pane that had it. See
+  [native-factory/controls.md](native-factory/controls.md#the-checks-view) for the rows.
 - **The sections.** In the `threads` mode, the Panel has the title `Threads`. `FactoryView` shows
   the section "Active Threads" (`pending` and `running`) and the section "Inactive Threads"
   (`completed`, `failed`, `cancelled` and `interrupted`). Each heading shows `▾` or `▸`, the name and
-  the count. `enter`, a click or `←/→` expands or collapses a section.
+  the count. One empty line separates the two sections. This line shows also when the section
+  "Active Threads" is collapsed. You cannot select the empty line. `enter`, a click or `←/→`
+  expands or collapses a section.
 - **The rows.** Each row shows the Story id, the status, the Stage, the attempt, the model and the
   run time. The Threads in a section are newest first. Only worker Threads with a Story show.
   `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.
@@ -144,6 +158,9 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
   keys and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
+- The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
+  does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
+  wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
 - `t` on a factory warning closes the Factory controls and opens the Thread in the Story sidebar
   (`openThread` of `OverlayHandlers`).
 
@@ -153,19 +170,17 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   name of the component. For example, the `StoryRow` component is in `story-row/story-row.tsx`. Do
   not add a new component to a file that exists. A small private helper (a constant or a pure
   function) can stay in the file of the only component that uses it.
-- **One folder per component.** Put each component in its own folder, with its test and an
-  `index.ts` that exports it:
+- **One folder per component.** Put each component in its own folder, with an `index.ts` that
+  exports it:
 
   ```
   components/button/
     button.tsx
-    button.test.tsx
     index.ts          # export * from "./button.js";
   ```
 
   A component imports a different component through the folder (`'../button/index.js'`). Add each
-  component folder to `components/index.ts`. The dash-case `.ts` helpers stay in `components/`, with
-  their tests next to them.
+  component folder to `components/index.ts`. The dash-case `.ts` helpers stay in `components/`.
 - **Group by area, with a barrel.** Each folder has an `index.ts` that exports the items that the
   other parts of the app use. Import from the folder (`'../components/index.js'`). Do not import from
   the files in a different folder.
@@ -182,22 +197,39 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.
 
-| File in `hooks/`        | Exports                                                                                            |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| `layout.ts`             | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
-| `mouse.ts`              | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
-| `refs.ts`               | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
-| `section-shell.ts`      | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
-| `shell.ts`              | `createShellRegistry`, focus (`useIsActive`), `useKeyCapture`, `useDirty`, `useKeyHints` and more. |
-| `stop-on-abort.ts`      | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
-| `toasts.ts`             | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
-| `use-async.ts`          | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
-| `use-cursor.ts`         | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
-| `use-escape.ts`         | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
-| `use-report-hints.ts`   | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
-| `use-story-changes.ts`  | `useStoryChanges`: calls a function when the files of the Stories change.                          |
-| `use-story-paste.ts`    | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
-| `use-thread-changes.ts` | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
+| File in `hooks/`            | Exports                                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
+| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
+| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
+| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
+| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useKeyCapture`, `useDirty`, `useKeyHints` and more. |
+| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
+| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
+| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
+| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
+| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
+| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
+| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                          |
+| `use-story-paste.ts`        | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
+| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
+| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
+
+## Factory status
+
+The shell reads the factory status one time for all views (`useShellData`). `Shell` gives this
+status to the views in `FactoryStatusContext`. The header, the Factory controls, the Checks Modal and
+the Threads tab of a Story read the status from the shell. They do not read it again. Thus one write
+of `runtime/status.json` causes one call of `getFactoryStatus`.
+
+- `useFactoryChanges` reads the status again when `runtime/status.json` or `runtime/factory.lock`
+  changes.
+- A factory that stops without warning writes no file. Thus a timer also reads the status 5 s after
+  the last read. Each read starts the timer again, also a read from a file event.
+- The Threads tab reads its Threads again with `useThreadChanges`. A Thread file change does not read
+  the status.
+- Outside of the shell, for example in a test of the component, the Threads tab reads the status
+  itself.
 
 ## Story sidebar
 
@@ -215,6 +247,8 @@ visible.
   it the focus.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
   form keeps its draft. In the Story list, `esc` closes the Story sidebar.
+- The mouse wheel over the Story list moves the cursor also when the Story sidebar has the focus. The
+  wheel gives the focus to the Story list, and the Story sidebar stays open.
 - When the form has unsaved text or images, Rowbly asks before it closes the form or shows a
   different form (`discardStory` overlay).
 - A drag of the left edge changes the width (`ResizeEdge`). The default width is
@@ -264,9 +298,9 @@ the model that applies and its source, for example `Stage model: openai/gpt-sol`
 - The title of the picker is `<Story ID> › Model › <Stage label>`.
 - A save writes `storyWorkerModels[<story id>][<stage key>]`. `No override` removes that entry. When
   the Story has no other override, the Story key also goes away.
-- The tab loads Pi only when the person opens the tab for the first time. Until the models load, the
-  tab shows `Loading models…`. If Pi cannot load, an error toast shows. The `loadRuntime` prop
-  (default `authRuntime`) lets a test replace Pi.
+- The tab reads the models only when the person opens the tab for the first time. Until the models
+  load, the tab shows `Loading models…`. If Pi cannot load, an error toast shows. The `source` prop
+  (default `piWorkerSource()`, the Pi worker) lets a test replace Pi.
 - While the picker is open, the tab tells the Story sidebar. Then `esc` closes the picker, not the
   Story sidebar. `shift+tab` and `esc` work as on the other tabs when the picker is closed.
 
@@ -303,8 +337,7 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    loading state or a toast. `useStoryChanges` and `useThreadChanges` call a function when the files
    change.
 5. Declare the keys with `useKeyHints`.
-6. Add or update the test of the component. See [testing.md](testing.md).
-7. Examine the layout in a real terminal with the
+6. Examine the layout in a real terminal with the
    [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 
 If a CLI command also uses a part of the logic, put that logic in the service, not in the component.
@@ -313,5 +346,4 @@ If a CLI command also uses a part of the logic, put that logic in the service, n
 
 - [native-factory/controls.md](native-factory/controls.md): the keys of the Factory controls, the
   Threads tab and the AI section of Settings.
-- [testing.md](testing.md): `renderTui()` and the keys for tests.
 - [service-layer.md](service-layer.md): the errors that the TUI shows as toasts.

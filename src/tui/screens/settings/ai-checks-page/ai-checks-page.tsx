@@ -19,7 +19,7 @@ export interface AiChecksPageProps {
 }
 
 /** The text of the check limits: the number at the same time and the memory that stays free. */
-export function checkLimitsText(settings: FactorySettings | undefined): string {
+function checkLimitsText(settings: FactorySettings | undefined): string {
   if (!settings) {
     return "—";
   }

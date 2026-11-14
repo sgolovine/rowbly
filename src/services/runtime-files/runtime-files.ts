@@ -40,11 +40,35 @@ export async function ensureRuntimeIgnores(paths: ProjectPaths): Promise<void> {
   await writeFileAtomic(paths.ignoreFile, `${text}${text && !text.endsWith("\n") ? "\n" : ""}${missing.join("\n")}\n`);
 }
 
-/** Gives the runtime root and each path below it, down to the full path of `rel`. */
-function pathsToCheck(root: string, rel: string): string[] {
+/** A runtime folder that one operation checked. Do not keep it across operations. */
+export interface RuntimeDir {
+  readonly path: string;
+}
+
+/** Gives each path below `base`, down to the full path of `rel`. */
+function segmentPaths(base: string, rel: string): string[] {
   const parts = rel.split(sep);
 
-  return [root, ...parts.map((_, index) => resolve(root, ...parts.slice(0, index + 1)))];
+  return parts.map((_, index) => resolve(base, ...parts.slice(0, index + 1)));
+}
+
+/** Gives the runtime root and each path below it, down to the full path of `rel`. */
+function pathsToCheck(root: string, rel: string): string[] {
+  return [root, ...segmentPaths(root, rel)];
+}
+
+/** Tells if `reference` is empty, absolute, has a `..` segment or leaves `base`. */
+function isInvalidReference(base: string, reference: string): boolean {
+  const rel = relative(base, resolve(base, reference));
+
+  return (
+    !reference ||
+    isAbsolute(reference) ||
+    reference.split(/[\\/]/).includes("..") ||
+    !rel ||
+    rel === ".." ||
+    rel.startsWith(`..${sep}`)
+  );
 }
 
 /** Rejects a symlink at `path`. An absent path is accepted. */
@@ -78,6 +102,24 @@ export async function runtimePath(paths: ProjectPaths, reference: string): Promi
   }
 
   await mapInOrder(pathsToCheck(root, rel), (current) => assertNotSymlink(current));
+
+  return path;
+}
+
+/** Checks one runtime folder one time, with the same checks as `runtimePath`. */
+export async function checkRuntimeDir(paths: ProjectPaths, reference: string): Promise<RuntimeDir> {
+  return { path: await runtimePath(paths, reference) };
+}
+
+/** Gives the path of a child of a checked folder. It checks only the segments below the folder. */
+export async function runtimeChild(dir: RuntimeDir, reference: string): Promise<string> {
+  if (isInvalidReference(dir.path, reference)) {
+    throw new ValidationError("Invalid runtime path");
+  }
+
+  const path = resolve(dir.path, reference);
+
+  await mapInOrder(segmentPaths(dir.path, relative(dir.path, path)), (current) => assertNotSymlink(current));
 
   return path;
 }

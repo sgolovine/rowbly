@@ -16,6 +16,16 @@ export interface StoryFile {
   doc: MarkdownDocument;
 }
 
+/** A story file name in the Story folder, parsed without a read of the file. */
+export interface StoryFileName {
+  /** From the file name: `ROW-01`. */
+  id: string;
+  projectKey: string;
+  number: number;
+  /** `ROW-01.md`. */
+  fileName: string;
+}
+
 /**
  * A change to the frontmatter of one story. Return the new frontmatter, or `false` for no change. `true` means
  * that the function changed `data`, which is a copy.
@@ -58,10 +68,22 @@ export async function readStoryFile(paths: ProjectPaths, fileName: string): Prom
   return { id: fileName.slice(0, -3), ...parsed, path, doc };
 }
 
+/** `ROW-01.md` → its parsed name; an empty list when the name is not a story file name. */
+function toStoryFileName(fileName: string): StoryFileName[] {
+  const parsed = parseStoryFileName(fileName);
+
+  return parsed ? [{ id: fileName.slice(0, -3), ...parsed, fileName }] : [];
+}
+
+/** The names of the story files named like `<KEY>-<n>.md`, from one listing of the folder. No file is read. */
+export async function listStoryFileNames(paths: ProjectPaths): Promise<StoryFileName[]> {
+  return (await listMarkdownFiles(paths.storiesDir)).flatMap(toStoryFileName);
+}
+
 /** Every story file named like `<KEY>-<n>.md`, by number. Other files are left for `doctor` to report. */
 export async function readStoryFiles(paths: ProjectPaths): Promise<StoryFile[]> {
-  const names = (await listMarkdownFiles(paths.storiesDir)).filter((name) => parseStoryFileName(name));
-  const files = await Promise.all(names.map((name) => readStoryFile(paths, name)));
+  const names = await listStoryFileNames(paths);
+  const files = await Promise.all(names.map((name) => readStoryFile(paths, name.fileName)));
 
   return files.toSorted((a, b) => a.number - b.number);
 }

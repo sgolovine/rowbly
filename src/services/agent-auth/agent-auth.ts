@@ -3,6 +3,7 @@ import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import { ValidationError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { getDeviceId } from "../known-project/known-project.js";
+import { deletePiCatalog } from "../pi-catalog-cache/pi-catalog-cache.js";
 import { createFactoryRuntime } from "../pi-runtime/factory-runtime.js";
 import { Store } from "../store/store.js";
 import type { ServiceContext } from "../workspace/workspace.js";
@@ -17,9 +18,36 @@ export type AuthRuntime = Pick<
 // One login at a time for this process, because Pi prompts in the same terminal.
 const login = new Store<{ active: boolean }>({ active: false });
 
-/** Creates the Pi runtime that holds the credentials. */
-export async function authRuntime(): Promise<AuthRuntime> {
+// One Pi runtime for this process, so that all views see the same credential state.
+const shared = new Store<{ runtime?: Promise<AuthRuntime> }>({});
+
+async function createAuthRuntime(): Promise<AuthRuntime> {
   return (await createFactoryRuntime()).runtime;
+}
+
+function clearFailedRuntime(failed: Promise<AuthRuntime>): void {
+  shared.update((current) => (current.runtime === failed ? { runtime: undefined } : {}));
+}
+
+/** Gives the Pi runtime that holds the credentials. All callers in one process share one runtime. */
+export function authRuntime(): Promise<AuthRuntime> {
+  const cached = shared.current.runtime;
+
+  if (cached) {
+    return cached;
+  }
+
+  const created = createAuthRuntime();
+
+  shared.update(() => ({ runtime: created }));
+  created.catch(() => clearFailedRuntime(created));
+
+  return created;
+}
+
+/** Removes the shared runtime. The next call to `authRuntime()` creates a new runtime. */
+export function resetAuthRuntime(): void {
+  shared.update(() => ({ runtime: undefined }));
 }
 
 /** Lists the providers and the login methods of each provider. */
@@ -86,8 +114,17 @@ async function runLogin(
   } catch {
     throw new ValidationError("Provider login did not complete", { hint: "Retry login in an interactive terminal." });
   } finally {
-    await runtime.settleCredentialWrites().catch(() => {});
+    await settleAndForget(runtime, ctx);
   }
+}
+
+/**
+ * Waits for the credential writes, then deletes the model cache. An attempt that failed can still change
+ * `auth.json`, so the cache goes after each attempt. A failed delete does not change the result of the attempt.
+ */
+async function settleAndForget(runtime: AuthRuntime, ctx: ServiceContext): Promise<void> {
+  await runtime.settleCredentialWrites().catch(() => {});
+  await deletePiCatalog(ctx).catch(() => {});
 }
 
 /** Keeps credentials and credential-bearing errors inside the runtime boundary. */
@@ -116,7 +153,11 @@ export async function loginProvider(
 }
 
 /** Removes the stored credential of a provider. */
-export async function logoutProvider(runtime: AuthRuntime, provider: string): Promise<{ provider: string }> {
+export async function logoutProvider(
+  runtime: AuthRuntime,
+  provider: string,
+  ctx: ServiceContext = {},
+): Promise<{ provider: string }> {
   try {
     await runtime.logout(provider);
 
@@ -124,6 +165,6 @@ export async function logoutProvider(runtime: AuthRuntime, provider: string): Pr
   } catch {
     throw new ValidationError("Provider logout did not complete");
   } finally {
-    await runtime.settleCredentialWrites().catch(() => {});
+    await settleAndForget(runtime, ctx);
   }
 }

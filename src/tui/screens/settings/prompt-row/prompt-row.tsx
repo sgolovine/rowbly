@@ -15,7 +15,7 @@ export interface PromptRowProps {
 }
 
 /** The state of the prompt file: missing, empty, or its number of lines. */
-export function promptState(prompt: UserPrompt): string {
+function promptState(prompt: UserPrompt): string {
   if (!prompt.exists) {
     return "missing";
   }

@@ -11,6 +11,7 @@ export function App({
   mouse,
   ctx,
   launch,
+  preloadPi,
   fullscreen = true,
 }: {
   toasts: ToastStore;
@@ -22,10 +23,12 @@ export function App({
   fullscreen?: boolean;
   /** How the Factory controls start the factory process. */
   launch?: FactoryLaunch;
+  /** Imports the Pi SDK in the background after the board shows. Only the CLI entry point supplies it. */
+  preloadPi?: () => Promise<void>;
 }) {
   return (
     <TuiProviders toasts={toasts} mouse={mouse} fullscreen={fullscreen}>
-      <Shell ctx={ctx} launch={launch} />
+      <Shell ctx={ctx} launch={launch} preloadPi={preloadPi} />
     </TuiProviders>
   );
 }

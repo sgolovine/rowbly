@@ -68,14 +68,44 @@ The script lists the exceptions:
 ## Build
 
 `tsup.config.ts` bundles `src/cli.ts` into `dist/cli.js` as ESM for Node 22, with a
-`#!/usr/bin/env node` banner. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
+`#!/usr/bin/env node` banner. A second entry bundles `src/services/pi-runtime/pi-worker.ts` into
+`dist/pi-worker.js`, the [Pi worker](native-factory/pi-runtime-and-auth.md#the-pi-worker). The
+shared chunks are also in `dist/`, so the worker client finds `pi-worker.js` next to its chunk. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
 only on demand. The npm package contains `dist/`, `skills/` (without tests), `stages/` and
 `src/config/prompts/`, the system prompts of the factory agents.
 
+The TUI is in a separate chunk, `dist/tui-<hash>.js`. `src/cli-main.ts` loads `./tui/index.js` with a
+dynamic `import()` only when `rowbly` starts without arguments. tsup splits each dynamic `import()`
+into its own chunk by default, so `tsup.config.ts` has no chunk settings. Thus `dist/cli.js` and
+its CLI chunk have no static import of Ink or React, and CLI commands and the factory daemon do not
+load the TUI.
+`src/cli.test.ts` and `src/commands/tui-boundary.test.ts` make sure that the code obeys this rule.
+
+## Compile cache
+
+Rowbly turns on the Node compile cache as the first action of each process. Then the next start of
+the CLI, the TUI or the factory daemon compiles less JavaScript.
+
+- `src/cli.ts` is a small bootstrap entry. It calls `enableRowblyCompileCache()` from
+  `src/services/compile-cache/`. Then it loads `src/cli-main.ts` with a dynamic `import()`.
+- Node compiles all static imports before the code of a module runs. Thus `src/cli.ts` can only have
+  static imports of `node:` built-ins and of the compile cache module.
+- The cache directory is `<user cache dir>/rowbly/compile-cache`. The user cache directory is:
+  - `$XDG_CACHE_HOME`, if it is an absolute path.
+  - Otherwise, `~/Library/Caches` on macOS.
+  - Otherwise, `%LOCALAPPDATA%` on Windows, if it is set.
+  - Otherwise, `~/.cache`.
+- If `NODE_COMPILE_CACHE` is set, Rowbly does not give its own directory. Node uses the directory of
+  the variable.
+- If `NODE_DISABLE_COMPILE_CACHE` is set, Rowbly does not turn on the cache.
+- A failure is silent. The function does not throw and does not write to stdout or stderr. Rowbly
+  operates the same without the cache.
+- The factory daemon starts from the same entry, so it also gets the cache.
+
 ## Knip
 
-`knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/`,
-`src/services/test-project/` and `src/tui/testing/`) are not production code. `pnpm knip:production`
+`knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/` and
+`src/services/test-project/`) are not production code. `pnpm knip:production`
 also finds code that only the tests use.
 
 ## Screenshots

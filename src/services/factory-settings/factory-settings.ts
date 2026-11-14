@@ -34,7 +34,7 @@ import {
 } from "./worker-overrides.js";
 
 export type { CheckItem, CheckSpec } from "./check-settings.js";
-export type { GitInput, GitSettings, GitSync } from "./git-settings.js";
+export type { GitInput, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;

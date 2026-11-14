@@ -8,8 +8,6 @@ import { STORY_PADDING_X, StoryTabPanes } from "../story-tab-panes/index.js";
 import { submitStory } from "./story-modal-body-actions.js";
 import { type StoryModalBodyProps, useStoryModalBody } from "./use-story-modal-body.js";
 
-export type { StoryModalConfirm } from "./story-modal-body-view.js";
-
 /**
  * The edit form of a Story in the Story sidebar. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
  * change of tab keeps the text that is not saved. The Threads tab reads its data only after it is selected.

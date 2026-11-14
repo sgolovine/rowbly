@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
 import { createStory, updateStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
-import { watchStories } from "./story-watch.js";
+import { watchFactoryState, watchStories } from "./story-watch.js";
 
 describe("watchStories", () => {
   const project = useTestProject();
@@ -73,6 +73,53 @@ describe("watchStories", () => {
 
   it("fails without a project", async () => {
     await expect(watchStories(() => {}, { cwd: empty.path })).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("watchFactoryState", () => {
+  const project = useTestProject();
+  const empty = useTempDir();
+
+  it("calls back one time after a write of the state file", async () => {
+    const onChange = vi.fn();
+    const stop = await watchFactoryState(onChange, project.ctx);
+    try {
+      await writeFile(project.paths.stateFile, "{}");
+      await writeFile(project.paths.stateFile, '{"version":1}');
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+      await sleep(200);
+      expect(onChange).toHaveBeenCalledOnce();
+    } finally {
+      stop();
+    }
+  });
+
+  it("does not call back after a change to a Story file or to a runtime file", async () => {
+    await mkdir(project.paths.runtimeDir);
+    const onChange = vi.fn();
+    const stop = await watchFactoryState(onChange, project.ctx);
+    try {
+      await createStory({ title: "T" }, project.ctx);
+      await updateStory({ id: "ROW-01", title: "U" }, project.ctx);
+      await writeFile(join(project.paths.runtimeDir, "status.json"), "{}");
+      await sleep(200);
+      expect(onChange).not.toHaveBeenCalled();
+    } finally {
+      stop();
+    }
+  });
+
+  it("does not call back after the stop", async () => {
+    const onChange = vi.fn();
+    const stop = await watchFactoryState(onChange, project.ctx);
+    stop();
+    await writeFile(project.paths.stateFile, "{}");
+    await sleep(200);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("fails without a project", async () => {
+    await expect(watchFactoryState(() => {}, { cwd: empty.path })).rejects.toBeInstanceOf(NotFoundError);
   });
 });
 

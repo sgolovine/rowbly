@@ -33,8 +33,8 @@ export function specPath(paths: ProjectPaths, slug: string): string {
   return join(paths.specsDir, `${slug}.md`);
 }
 
-/** `row-1`, `ROW-01` or `1` → `ROW-01`; `undefined` when the value is not a story ID of the project. */
-export function canonicalStoryId(projectKey: string, value: unknown): string | undefined {
+/** `row-1`, `ROW-01` or `1` → `1`; `undefined` when the value is not a story ID of the project. */
+export function storyIdNumber(projectKey: string, value: unknown): number | undefined {
   if (typeof value !== "string" && typeof value !== "number") {
     return undefined;
   }
@@ -45,7 +45,14 @@ export function canonicalStoryId(projectKey: string, value: unknown): string | u
     return undefined;
   }
 
-  return formatStoryId(projectKey, Number(match[2]));
+  return Number(match[2]);
+}
+
+/** `row-1`, `ROW-01` or `1` → `ROW-01`; `undefined` when the value is not a story ID of the project. */
+export function canonicalStoryId(projectKey: string, value: unknown): string | undefined {
+  const number = storyIdNumber(projectKey, value);
+
+  return number === undefined ? undefined : formatStoryId(projectKey, number);
 }
 
 /** The names of the spec files with a valid slug. Other files are left for `doctor` to report. */

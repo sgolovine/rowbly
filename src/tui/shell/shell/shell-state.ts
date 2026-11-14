@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { FactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import type { Project } from "../../../services/project/project.js";
 import type { Stage } from "../../../services/stage/stage.js";
@@ -77,6 +78,8 @@ export interface ShellEnv {
   readonly view: ShellView;
   readonly stageKey: string | null;
   readonly sidebarShown: boolean;
+  /** The factory status that the shell polls; `undefined` until the first read completes. */
+  readonly factory?: FactoryStatus;
 
   // The app.
   readonly registry: ShellRegistry;

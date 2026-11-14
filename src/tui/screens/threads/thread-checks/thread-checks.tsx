@@ -18,7 +18,7 @@ export function threadCheckRows(checks: readonly ThreadCheck[] | undefined): num
 }
 
 /** The status and the duration of a check, for example `passed · 1m40s`. */
-export function checkStatusText(check: ThreadCheck): string {
+function checkStatusText(check: ThreadCheck): string {
   const status = check.status.replace("_", " ");
 
   if (check.durationSeconds === undefined || ["queued", "running"].includes(check.status)) {

@@ -10,11 +10,14 @@ Read this when you add or change a CLI command, a flag, the text or JSON output,
 
 `src/cli.ts` is the entry point. It builds the Commander program and selects the mode:
 
-- With no arguments, it starts the TUI through `renderTui()`. It gives the TUI the Node executable,
-  the Node flags and the entry file. The Factory controls use them to start the daemon.
+- With no arguments, it loads `src/tui/index.tsx` with a dynamic `import()` and starts the TUI through
+  `renderTui()`. It gives the TUI the Node executable, the Node flags and the entry file. The Factory
+  controls use them to start the daemon.
 - With arguments, Commander parses them and runs one command.
 
-Keep `src/cli.ts` small. It only connects the parts. `--version` (`-v`) reads the version from
+Keep `src/cli.ts` small. It only connects the parts. Do not import Ink, React or a module in
+`src/tui/` statically in `src/cli.ts`. The CLI commands must not load the TUI. tsup puts the TUI in a
+separate chunk in `dist/`. The test `src/cli.test.ts` makes sure of this. `--version` (`-v`) reads the version from
 `package.json`. Change the version only in that file.
 
 ## Layout of `src/commands/`
@@ -32,6 +35,7 @@ test.
 | `project/`                                             | `project update`.                                                                |
 | `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
+| `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
 | `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                   |
 | `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.    |
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt. |
@@ -50,7 +54,7 @@ The native commands are in [native-factory/controls.md](native-factory/controls.
 
 Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `spec`,
 `skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
-its help. A resource command with an unknown action gives an error. `init`, `doctor` and the
+its help. A resource command with an unknown action gives an error. `init`, `doctor`, `status` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
 
 ## Output and errors

@@ -3,6 +3,7 @@ import type { ProjectConfig } from "../config/config.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
   formatStoryId,
+  listStoryFileNames,
   orderStoryData,
   parseStoryFileName,
   readStoryFile,
@@ -68,6 +69,16 @@ describe("story file IO", () => {
     await project.write("stories/ROW-02.md", "---\ntitle: Two\n---\n");
     await project.write("stories/notes.md", "hello");
     expect((await readStoryFiles(project.paths)).map((file) => file.id)).toEqual(["ROW-02", "ROW-10"]);
+  });
+
+  it("listStoryFileNames parses the story file names without a read of the files", async () => {
+    await project.write("stories/ROW-10.md", "not frontmatter");
+    await project.write("stories/ROW-7.md", "");
+    await project.write("stories/notes.md", "hello");
+    expect(await listStoryFileNames(project.paths)).toEqual([
+      { id: "ROW-10", projectKey: "ROW", number: 10, fileName: "ROW-10.md" },
+      { id: "ROW-7", projectKey: "ROW", number: 7, fileName: "ROW-7.md" },
+    ]);
   });
 
   it("rewriteStories writes only the stories that changed", async () => {

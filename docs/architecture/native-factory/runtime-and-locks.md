@@ -30,6 +30,11 @@ take or change a lock.
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private
   folders and owns the ignore rules.
+- `runtimePath()` in `runtime-files/` checks each runtime path before a read or a write. It rejects
+  an absolute path, traversal and a symlink at each segment of the path, also at the runtime root.
+  `checkRuntimeDir()` does this check one time for a folder. Then `runtimeChild()` checks only the
+  segments below that folder. `listThreads()` uses these functions to check `threads/` and
+  `sessions/` one time. Use a checked folder only for one operation. Do not keep it across calls.
 - `state.json` uses version 1 of the policy format. The types are in
   `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
 - Without the `factory` key of the config, the worker limit is four and Pi selects default models. See
@@ -101,6 +106,12 @@ The factory uses three locks:
 1. **Ownership.** `runtime/factory.lock` holds daemon ownership. `lifecycle.guard` serializes owner
    creation, takeover and release.
    - The Linux boot ID and the process start ticks protect against PID reuse.
+   - Each process reads the boot ID one time, because it does not change while the machine runs.
+   - The status read (`getFactoryStatus`) uses `probeOwnerCached`. It sends signal 0 to the owner on
+     each probe, but it does not read `/proc/<pid>/stat` again for the same owner within 5 s of an
+     `alive` result. A process that exits shows as `dead` at once.
+   - The takeover (`acquireFactoryOwnership`), the start, the commands and the recovery use
+     `probeOwner`. It does not use the cache.
    - A live, foreign, corrupt or uncertain owner prevents takeover.
    - An old heartbeat does not prove death.
 2. **State.** `state.json.lock` serializes v1 state transactions and Thread metadata writes.

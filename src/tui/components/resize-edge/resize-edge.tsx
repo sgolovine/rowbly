@@ -3,10 +3,10 @@ import { type RefObject, useRef } from "react";
 import { useMouse } from "../../hooks/index.js";
 
 /** The edge of a box that a drag moves. */
-export type EdgeSide = "left" | "right";
+type EdgeSide = "left" | "right";
 
 /** The limits and the current width of a box that a drag resizes. */
-export interface ResizeBounds {
+interface ResizeBounds {
   readonly width: number;
   readonly minWidth: number;
   readonly maxWidth: number;
@@ -16,7 +16,7 @@ export interface ResizeBounds {
  * The width of a box at column `left` with `width` columns, after a pull of its `side` edge to column `x`.
  * The column of the pointer becomes the column of the border. The width stays between the limits.
  */
-export function pulledWidth(side: EdgeSide, left: number, bounds: ResizeBounds, x: number): number {
+function pulledWidth(side: EdgeSide, left: number, bounds: ResizeBounds, x: number): number {
   const wanted = side === "right" ? x - left + 1 : left + bounds.width - x;
 
   return Math.max(bounds.minWidth, Math.min(bounds.maxWidth, wanted));

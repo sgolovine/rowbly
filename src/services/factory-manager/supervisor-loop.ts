@@ -1,11 +1,9 @@
 import { ConflictError } from "../errors/errors.js";
 import { markReported, pendingReports, storyHash } from "../factory-policy/factory-policy.js";
-import { getFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { supervisorMessage } from "../messages/messages.js";
 import { openFactorySession } from "../pi-runtime/factory-session.js";
-import { commitCanonicalProject } from "../project-write/project-write.js";
-import { withEntry, withoutEntries } from "../store/store.js";
+import { withEntry, withoutEntry } from "../store/store.js";
 import { searchStories } from "../story/story.js";
 import { watchStories } from "../story-watch/story-watch.js";
 import { promptHash, supervisorDigest } from "../supervisor-digest/supervisor-digest.js";
@@ -18,12 +16,11 @@ import {
   type ManagerState,
   notify,
   pausedProviders,
-  readAuthStamp,
   serial,
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
-import { startProjectSync } from "./project-sync-step.js";
+import { failureText, runSideSteps } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 import { checkHistory } from "./worker-checks.js";
 
@@ -87,8 +84,8 @@ async function superviseUntilStopped(manager: Manager): Promise<void> {
 
     try {
       await superviseOnce(manager);
-    } catch {
-      await recordReconcileFailure(manager);
+    } catch (error) {
+      await recordReconcileFailure(manager, error);
     }
   }
 }
@@ -105,24 +102,25 @@ async function waitForWake(manager: Manager): Promise<void> {
   setState(manager, () => ({ wake: undefined }));
 }
 
-async function recordReconcileFailure(manager: Manager): Promise<void> {
+async function recordReconcileFailure(manager: Manager, error: unknown): Promise<void> {
   if (getState(manager).stopping) {
     return;
   }
 
-  const text = "Project reconciliation failed; retry on the next scan";
+  const text = failureText("Project reconciliation failed; retry on the next scan", error);
 
   setState(manager, (state) => ({ attention: withEntry(state.attention, "reconcile", { text }) }));
   await serial(manager, () => persistStatus(manager)).catch(() => {});
 }
 
-/** Reconciles the Project, then sends a digest to the supervisor when the digest has new material. */
+/**
+ * Reconciles the Project, then sends a digest to the supervisor when the digest has new material.
+ * Only a failed scan stops the pass. The steps that the digest does not need record their failures as attention.
+ */
 async function superviseOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
-  await refreshSettings(manager);
-  await clearProviderPauses(manager);
-  await commitProject(manager);
-  startProjectSync(manager);
+  setState(manager, (state) => ({ attention: withoutEntry(state.attention, "reconcile") }));
+  await runSideSteps(manager);
 
   if (getState(manager).stopping) {
     return;
@@ -157,46 +155,6 @@ export function reconcilePolicy(manager: Manager) {
 
     return policy.decisions;
   });
-}
-
-async function refreshSettings(manager: Manager): Promise<void> {
-  const settings = await getFactorySettings(manager.ctx).catch(() => getState(manager).settings);
-
-  setState(manager, () => ({ settings, limit: manager.deps.maxWorkers ?? settings.maxWorkers }));
-}
-
-/** Clears authentication pauses after a credential change, and pauses whose retry time has passed. */
-async function clearProviderPauses(manager: Manager): Promise<void> {
-  const authStamp = await readAuthStamp(manager.deps.agentDir);
-
-  setState(manager, (state) => {
-    const credentialsChanged = authStamp !== state.authStamp;
-    const providers = withoutEntries(
-      state.providers,
-      (pause) =>
-        (credentialsChanged && pause.reason === "authentication") ||
-        (!!pause.retryAt && Date.parse(pause.retryAt) <= Date.now()),
-    );
-
-    return { authStamp, providers };
-  });
-}
-
-/** Commits the canonical files. A running sync holds the write lock, so the commit waits for the next scan. */
-async function commitProject(manager: Manager): Promise<void> {
-  if (getState(manager).syncTask) {
-    return;
-  }
-
-  const committed = await commitCanonicalProject(manager.paths.root, getState(manager).settings.git);
-
-  if (["clean", "committed"].includes(committed.status)) {
-    return;
-  }
-
-  const text = `Canonical commit: ${committed.status}`;
-
-  setState(manager, (state) => ({ attention: withEntry(state.attention, "commit", { text }) }));
 }
 
 /** Builds the bounded supervisor digest from the policy, the workers, the reports and the notes. */

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { type FileHandle, open, readFile, unlink } from "node:fs/promises";
 import { hostname } from "node:os";
 import { setTimeout as sleep } from "node:timers/promises";
+import { Store } from "../store/store.js";
 
 export interface Owner {
   version: 1;
@@ -19,6 +20,25 @@ function errorCode(error: unknown): unknown {
   return error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
 }
 
+/** The boot ID does not change while the machine runs, so each process reads it one time. */
+const bootIdCache = new Store<{ boot?: Promise<string> }>({});
+
+/** Reads the boot ID one time. A failed read is not kept, so the next call reads again. */
+function bootId(): Promise<string> {
+  const cached = bootIdCache.current.boot;
+
+  if (cached) {
+    return cached;
+  }
+
+  const boot = readFile("/proc/sys/kernel/random/boot_id", "utf8").then((text) => text.trim());
+
+  bootIdCache.update(() => ({ boot }));
+  boot.catch(() => bootIdCache.update(() => ({ boot: undefined })));
+
+  return boot;
+}
+
 /** Gives the boot ID and the start time of a process on Linux. Other platforms give nothing. */
 async function processIdentity(pid: number): Promise<string | undefined> {
   if (process.platform !== "linux") {
@@ -26,13 +46,10 @@ async function processIdentity(pid: number): Promise<string | undefined> {
   }
 
   try {
-    const [boot, stat] = await Promise.all([
-      readFile("/proc/sys/kernel/random/boot_id", "utf8"),
-      readFile(`/proc/${pid}/stat`, "utf8"),
-    ]);
+    const [boot, stat] = await Promise.all([bootId(), readFile(`/proc/${pid}/stat`, "utf8")]);
     const ticks = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
 
-    return ticks ? `${boot.trim()}:${ticks}` : undefined;
+    return ticks ? `${boot}:${ticks}` : undefined;
   } catch {
     return undefined;
   }
@@ -70,7 +87,7 @@ export async function newOwner(): Promise<Owner> {
 }
 
 /** Tells if a process with the ID exists. A permission error is not proof of death. */
-function processExists(pid: number): boolean | undefined {
+export function processExists(pid: number): boolean | undefined {
   try {
     process.kill(pid, 0);
 

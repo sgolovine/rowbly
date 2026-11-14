@@ -51,7 +51,7 @@ See [domain-concepts.md](domain-concepts.md) for the full definitions.
 - **Zod** defines the parameter schemas of the Pi tools.
 - **gray-matter** and **yaml** parse and write the frontmatter of Story and Spec files.
 - **@mariozechner/clipboard** reads PNG images from the clipboard (with `wl-paste` on Wayland).
-- **Vitest** and **ink-testing-library** (dev) run the tests.
+- **Vitest** (dev) runs the tests.
 - **tsup** bundles the CLI. **tsx** runs the source during development.
 - **Biome** lints and formats. **Knip** (dev) finds dead code. **agentic-tui** (dev) runs the CLI in a
   PTY for screenshots.

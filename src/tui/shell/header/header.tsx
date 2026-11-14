@@ -2,7 +2,9 @@ import { Box, Text } from "ink";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button, Panel } from "../../components/index.js";
 import { useLayout } from "../../hooks/index.js";
+import { liveChecks } from "../../screens/factory/index.js";
 import { theme } from "../../theme.js";
+import { ChecksButton } from "../checks-button/index.js";
 import { FactoryButton } from "../factory-button/index.js";
 import { StoryFinderButton } from "../story-finder-button/index.js";
 import { ViewModeSwitch } from "../view-mode-switch/index.js";
@@ -12,8 +14,10 @@ import { headerFit } from "./header-fit.js";
  * The top of the shell: one Panel, three rows tall, with no title. The Project Button is at the far left,
  * and the Story finder follows it. The header Buttons are on the right: **Factory** (`f`), **Settings**
  * (`,`), then the primary **+ New Story**. The view mode switch (`t`) follows the Factory Button in the same
- * group: `Stories` shows the Story list, and `Threads` shows the Factory view. The Panel never takes the focus,
- * because it has no keys of its own. When the row is too narrow, the switch goes first. Then the Story finder
+ * group: `Stories` shows the Story list, and `Threads` shows the Factory view. When the live factory has a check
+ * queue, the **Checks** Button (`c`) follows the switch, with the running and the queued counts. The Panel never
+ * takes the focus, because it has no keys of its own. When the row is too narrow, the Checks Button goes first,
+ * then the switch. Then the Story finder
  * becomes its glyph, the Factory Button loses its pending count and its key cap, then the Factory Button goes.
  * Their keys still work.
  */
@@ -22,6 +26,7 @@ export function Header({
   finder,
   factory,
   viewSwitch,
+  checks,
   settings,
   newStory,
   clickable,
@@ -32,6 +37,8 @@ export function Header({
   factory?: { status: FactoryStatus | undefined; onClick(): void };
   /** The view mode: `threads` shows the Factory view. A click on the switch calls `onToggle`. */
   viewSwitch?: { threads: boolean; onToggle(): void };
+  /** Opens the Checks Modal. The Button shows only while the live factory status has `checks`. */
+  checks?: { onClick(): void };
   settings?: { onClick(): void };
   newStory?: {
     onClick(): void;
@@ -41,11 +48,13 @@ export function Header({
   clickable: boolean;
 }) {
   const { width } = useLayout();
-  const { narrow, name, compact, factoryShort, factoryKey, factoryShown, switchShown } = headerFit({
+  const queue = checks ? liveChecks(factory?.status) : undefined;
+  const { narrow, name, compact, factoryShort, factoryKey, factoryShown, switchShown, checksShown } = headerFit({
     width,
     project: project?.name,
     factory,
     viewSwitch: viewSwitch !== undefined,
+    checks: queue,
   });
 
   return (
@@ -82,6 +91,9 @@ export function Header({
                 onToggle={viewSwitch.onToggle}
                 clickable={clickable}
               />
+            )}
+            {checks && queue && checksShown && (
+              <ChecksButton checks={queue} showKey onClick={checks.onClick} clickable={clickable} />
             )}
             <Text color={theme.borderControl}>|</Text>
           </>

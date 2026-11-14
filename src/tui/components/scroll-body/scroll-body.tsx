@@ -16,7 +16,10 @@ import { clampOffset, wheelOffset } from "../scroll-offset.js";
 interface ScrollBodyProps {
   children: ReactNode;
   height?: number;
+  /** Page Up/Down scroll, and the wheel scrolls when `wheel` is not given. */
   active?: boolean;
+  /** The wheel scrolls; the default is `active`. A list can take the wheel while a different pane has the keys. */
+  wheel?: boolean;
 }
 
 /** The rows of the viewport and the setter of the first row in view. */
@@ -59,8 +62,10 @@ function pageKey(env: RevealEnv, start: number, key: Key): void {
 }
 
 /** A bounded viewport; Page Up/Down and the mouse wheel scroll without taking a screen's selection keys. */
-export function ScrollBody({ children, height, active: enabled = true }: ScrollBodyProps) {
-  const active = useIsActive() && enabled;
+export function ScrollBody({ children, height, active: enabled = true, wheel }: ScrollBodyProps) {
+  const shown = useIsActive();
+  const active = shown && enabled;
+  const wheelOn = shown && (wheel ?? enabled);
   const ref = useRef<DOMElement>(null);
   const frame = useRef<DOMElement>(null);
   const viewport = useRef<DOMElement>(null);
@@ -82,7 +87,7 @@ export function ScrollBody({ children, height, active: enabled = true }: ScrollB
   useMouse(
     frame,
     { onWheel: (direction) => setOffset((current) => wheelOffset(current, max, direction)) },
-    active && max > 0,
+    wheelOn && max > 0,
   );
 
   return (
