@@ -13,6 +13,25 @@ The CLI and the TUI send guarded commands to the daemon. `factory-control/` writ
 immutable file in `runtime/control/`. The daemon writes a receipt in `runtime/receipts/`: accepted,
 completed or rejected.
 
+The command types are `stop`, `cancel`, `resume` and `dismiss`:
+
+- `cancel` and `resume` must have a `threadId` and an `expectedRunId`.
+- `dismiss` must have an `attentionKey` of 1 to 128 characters. If the key is missing, the daemon
+  rejects the command.
+- A command file is at most 4096 bytes.
+
+## Dismiss an attention entry
+
+The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
+them. A `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
+does not exist is not an error. The manager loads the attention entries from `status.json` when it
+starts, so a dismissed entry does not come back after a restart. If the factory records the same key
+again, the entry comes back.
+
+`dismissFactoryAttention(key)` in `src/services/factory/factory.ts` sends the command and waits for
+the receipt. It does not load Pi. You cannot dismiss the heartbeat warning, a provider pause or a
+Thread file issue. The factory makes these warnings again from the live state on each snapshot.
+
 ## Normal stop and restart
 
 - Normal stop aborts the Pi sessions and keeps the histories and the worktrees.

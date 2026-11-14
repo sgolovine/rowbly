@@ -10,11 +10,13 @@ import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { initProject } from "../project/project.js";
+import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, getStory, updateStory } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
+import { projectPaths } from "../workspace/workspace.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
 
 const exec = promisify(execFile);
@@ -351,6 +353,36 @@ describe("foreground factory", () => {
     );
     await f.manager.retryProvider("worker");
     expect((await f.manager.snapshot()).providers.worker).toBeUndefined();
+  });
+  it("dismisses an attention entry, and the entry does not come back after a restart", async () => {
+    const paths = projectPaths(root);
+    await prepareRuntime(paths);
+    const statusFile = await runtimePath(paths, "status.json");
+    await writeFile(
+      statusFile,
+      JSON.stringify({
+        version: 1,
+        phase: "stopped",
+        attention: [
+          ["commit", { text: "Canonical commit: failed" }],
+          ["check", { text: "Check is pending", storyId: "TST-1" }],
+        ],
+      }),
+    );
+    const keys = (attention: unknown) => (attention as [string, unknown][]).map((entry) => entry[0]);
+    const f = await fixture();
+    expect(keys((await f.manager.snapshot()).attention)).toEqual(["commit", "check"]);
+
+    await f.manager.dismissAttention("commit");
+    await f.manager.dismissAttention("missing");
+
+    expect(keys((await f.manager.snapshot()).attention)).toEqual(["check"]);
+    expect(keys(JSON.parse(await readFile(statusFile, "utf8")).attention)).toEqual(["check"]);
+
+    await f.manager.shutdown();
+    manager = undefined;
+    const again = await fixture();
+    expect(keys((await again.manager.snapshot()).attention)).toEqual(["check"]);
   });
   it("holds a candidate and saves notes and attention through real Pi tools", async () => {
     const story = await createStory({ title: "Hold", stage: "WORK" }, { cwd: root });

@@ -14,6 +14,7 @@ function handlers(): OverlayHandlers {
   return {
     close: vi.fn(),
     openStory: vi.fn(),
+    openThread: vi.fn(),
     discardStory: vi.fn(),
     removeStory: vi.fn(),
     stageSaved: vi.fn(),

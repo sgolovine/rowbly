@@ -18,7 +18,7 @@ change a lock.
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
     status.json       # heartbeat, workers, queue, holds, provider pauses and attention
-    control/<id>.json # immutable stop, cancel or resume request
+    control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
     sessions/<id>/<pi-name>.jsonl # native Pi history; file reference starts as null

@@ -1,5 +1,5 @@
 import { cleanup } from "ink-testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import { renderTui } from "../../../testing/index.js";
 import { FactoryOverview, type FactoryOverviewProps } from "./factory-overview.js";
@@ -53,5 +53,16 @@ describe("FactoryOverview", () => {
     expect(tui.frame()).toContain("Pi default");
     expect(tui.frame()).toContain("Canonical commit: failed");
     expect(tui.frame()).toContain("ROW-02 Develop · waiting for a worker slot");
+  });
+
+  it("opens a warning with a click on its row", async () => {
+    const onProblem = vi.fn();
+    const tui = await renderTui(
+      <FactoryOverview {...props({ status: running, live: true, clickable: true, onProblem })} />,
+    );
+
+    await tui.click("Canonical commit");
+
+    expect(onProblem).toHaveBeenCalledWith("attention:commit");
   });
 });

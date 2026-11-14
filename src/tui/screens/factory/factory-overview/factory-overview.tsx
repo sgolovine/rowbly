@@ -21,6 +21,10 @@ export interface FactoryOverviewProps {
   readonly aiSettings: boolean;
   /** The names of the Stages by key. */
   readonly stages: Readonly<Record<string, string>>;
+  /** False while a dialog or a different view has the keys; then the warnings do not take a click. */
+  readonly clickable?: boolean;
+  /** Opens the detail view of the warning with this key. */
+  readonly onProblem?: (key: string) => void;
 }
 
 function failed(status: FactoryStatus | undefined): boolean {
@@ -37,6 +41,8 @@ export function FactoryOverview({
   canLaunch,
   aiSettings,
   stages,
+  clickable = false,
+  onProblem,
 }: FactoryOverviewProps) {
   const queue = live ? (status?.queue ?? []) : [];
 
@@ -70,8 +76,10 @@ export function FactoryOverview({
       )}
       <FactoryList
         title="Attention"
+        clickable={clickable}
         rows={factoryProblems(status).map((problem) => ({
           key: problem.key,
+          onClick: onProblem && (() => onProblem(problem.key)),
           node: (
             <Text wrap="truncate-end">
               <Text color={theme.stageBoard}>! </Text>

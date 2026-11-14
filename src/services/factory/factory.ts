@@ -1,6 +1,11 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import { ConflictError } from "../errors/errors.js";
-import { publishCommand, readReceipt } from "../factory-control/factory-control.js";
+import { ConflictError, ValidationError } from "../errors/errors.js";
+import {
+  type FactoryCommandType,
+  publishCommand,
+  readReceipt,
+  validAttentionKey,
+} from "../factory-control/factory-control.js";
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
 import { type Owner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
@@ -115,8 +120,8 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
 
 /** Publishes a command to the live daemon and waits for its receipt. A stop also waits for the owner release. */
 export async function sendFactoryCommand(
-  type: "stop" | "cancel" | "resume",
-  input: { threadId?: string; timeoutMs?: number } = {},
+  type: FactoryCommandType,
+  input: { threadId?: string; attentionKey?: string; timeoutMs?: number } = {},
   ctx: ServiceContext = {},
 ) {
   const paths = await findProject(ctx);
@@ -134,6 +139,7 @@ export async function sendFactoryCommand(
     type,
     threadId: thread?.id,
     expectedRunId: thread?.runs.at(-1)?.id,
+    attentionKey: input.attentionKey,
   });
   const deadline = Date.now() + (input.timeoutMs ?? 30_000);
 
@@ -155,6 +161,19 @@ export async function sendFactoryCommand(
   }
 
   throw new ConflictError(`Factory command timed out: ${command.id}`);
+}
+
+/** Asks the live daemon to remove the attention entry `key` from its state and from the status file. */
+export async function dismissFactoryAttention(
+  key: string,
+  input: { timeoutMs?: number } = {},
+  ctx: ServiceContext = {},
+) {
+  if (!validAttentionKey(key)) {
+    throw new ValidationError("An attention key of 1 to 128 characters is necessary");
+  }
+
+  return sendFactoryCommand("dismiss", { ...input, attentionKey: key }, ctx);
 }
 
 /** Stops the daemon. A factory that is already stopped gives `stopped` without a command. */

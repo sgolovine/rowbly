@@ -32,8 +32,22 @@ viewer or the AI section of Settings.
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
   - `enter` opens the supervisor conversation.
+  - `w` opens the list of all warnings (`Factory › Attention`). The key works only when the live
+    factory has warnings.
+  - A click on a row of the `Attention` list opens the detail view of that warning.
   - `h` opens the history.
   - `a` opens Settings at the AI section.
+- In the list of the warnings, `↑/↓` selects a row, `enter` opens the detail view and `esc` goes back.
+- The detail view (`Factory › Attention › <title>`) shows the full text of the warning, its kind,
+  its Story and its related Thread. A Thread file issue shows the file and the message.
+  - `o` (or the `Story` button) closes the Factory controls and opens the Story in the Story sidebar.
+  - `t` (or the `Thread` button) opens the related Thread in the Thread Modal.
+  - `d` (or the `Dismiss` button) sends a `dismiss` command to the daemon. Only an attention entry
+    has this action. If the command fails, an error toast shows and the warning stays.
+  - `esc` goes back.
+- The related Thread of the `supervisor` entry is the supervisor Thread of the status file. The
+  related Thread of an entry with a Story is the newest Thread of that Story. Other warnings have no
+  Thread.
 - Close the TUI without a stop to leave the daemon active.
 
 ## The Factory view
@@ -73,6 +87,6 @@ Settings has a Factory group with an AI section for providers, role models and t
 
 ## Related
 
-- [recovery.md](recovery.md): what stop, cancel and resume do.
+- [recovery.md](recovery.md): what stop, cancel, resume and dismiss do.
 - [pi-runtime-and-auth.md](pi-runtime-and-auth.md): authentication and model rules.
 - [../tui.md](../tui.md): the structure of the TUI.

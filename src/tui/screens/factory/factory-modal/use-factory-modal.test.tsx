@@ -18,6 +18,9 @@ function Probe({ ctx, status, onClose }: { ctx: ServiceContext; status: FactoryS
     onClose,
     onAiSettings: undefined,
     checkProvider: async () => true,
+    stories: [],
+    onOpenStory: undefined,
+    onOpenThread: undefined,
   });
 
   return (
