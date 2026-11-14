@@ -1,7 +1,7 @@
 ---
 title: Check Story dependencies in rowbly doctor
-stage: IN_DEVELOPMENT
-position: 4
+stage: CHANGELOG
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-61
 pull_request: https://github.com/sgolovine/rowbly/pull/233
 ---
