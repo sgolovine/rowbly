@@ -11,7 +11,7 @@ describe("AiModelsPage", () => {
     const onModel = vi.fn();
     const tui = await renderTui(
       <AiModelsPage
-        settings={{ version: 1, maxWorkers: 4, supervisorModel: { provider: "acme", modelId: "deep-1" } }}
+        settings={{ maxWorkers: 4, supervisorModel: { provider: "acme", modelId: "deep-1" } }}
         ready
         idle
         onModel={onModel}
@@ -37,7 +37,6 @@ describe("AiModelsPage", () => {
     const tui = await renderTui(
       <AiModelsPage
         settings={{
-          version: 1,
           maxWorkers: 4,
           stageWorkerModels: { DONE: { provider: "acme", modelId: "fast-1", thinkingLevel: "low" } },
         }}

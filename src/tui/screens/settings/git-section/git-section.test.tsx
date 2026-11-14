@@ -13,14 +13,15 @@ vi.mock("../../../../services/agent-auth/agent-auth.js", () => {
 
 afterEach(cleanup);
 
-const OTHER = { version: 1, maxWorkers: 3, workerModel: { provider: "faux", modelId: "test" } };
+const OTHER = { maxWorkers: 3, workerModel: { provider: "faux", modelId: "test" } };
 
 describe("GitSection", () => {
   const project = useTestProject();
 
   async function open(settings?: unknown) {
     if (settings) {
-      await project.write("factory.json", JSON.stringify(settings));
+      const config = JSON.parse(await project.read("rowbly.config.json"));
+      await project.write("rowbly.config.json", JSON.stringify({ ...config, factory: settings }));
     }
     const onChange = vi.fn();
     const tui = await renderTui(<GitSection ctx={project.ctx} onChange={onChange} />);
@@ -33,7 +34,7 @@ describe("GitSection", () => {
   }
 
   async function saved() {
-    return JSON.parse(await project.read("factory.json"));
+    return JSON.parse(await project.read("rowbly.config.json")).factory;
   }
 
   function toasts(tui: Awaited<ReturnType<typeof open>>["tui"]) {
@@ -93,13 +94,13 @@ describe("GitSection", () => {
 
   it("shows the error of an author that is not Name <email>, and does not change the file", async () => {
     const { tui, onChange } = await open({ ...OTHER, git: { push: true } });
-    const before = await project.read("factory.json");
+    const before = await project.read("rowbly.config.json");
     await tui.press("a");
     await tui.type("Factory Bot");
     await tui.press(keys.enter);
     await vi.waitFor(() => expect(tui.frame()).toContain('Use "Name <email>" for the commit author'));
     expect(tui.frame()).toContain("Git › Commit author");
-    expect(await project.read("factory.json")).toBe(before);
+    expect(await project.read("rowbly.config.json")).toBe(before);
     expect(onChange).not.toHaveBeenCalled();
   });
 
@@ -145,7 +146,7 @@ describe("GitSection", () => {
 
   it("saves the sync interval, and rejects a value out of range or not whole", async () => {
     const { tui } = await open({ ...OTHER, git: { push: true } });
-    const before = await project.read("factory.json");
+    const before = await project.read("rowbly.config.json");
     await tui.press("i");
     await backspace(tui, 3);
     await tui.type("59");
@@ -159,7 +160,7 @@ describe("GitSection", () => {
     await tui.type("86401");
     await tui.press(keys.enter);
     await vi.waitFor(() => expect(tui.frame()).toContain("must be a whole number from 60 to 86400"));
-    expect(await project.read("factory.json")).toBe(before);
+    expect(await project.read("rowbly.config.json")).toBe(before);
 
     await backspace(tui, 5);
     await tui.type("600");

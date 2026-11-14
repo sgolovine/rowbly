@@ -21,7 +21,7 @@ export interface ModelsTabEnv {
   readonly setCursor: Dispatch<SetStateAction<number>>;
   /** The Stage of the open model picker, or `null` for none. */
   readonly setTask: Dispatch<SetStateAction<Stage | null>>;
-  /** Reads `factory.json` again after a change. */
+  /** Reads the factory settings again after a change. */
   readonly reload: () => void;
 }
 

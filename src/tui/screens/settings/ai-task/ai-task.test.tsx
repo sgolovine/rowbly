@@ -16,7 +16,7 @@ function props(overrides: Partial<AiTaskViewProps> = {}): AiTaskViewProps {
     runtime: undefined,
     provider,
     status: { providers: [provider], models: [] },
-    settings: { version: 1, maxWorkers: 2 } as AiTaskViewProps["settings"],
+    settings: { maxWorkers: 2 } as AiTaskViewProps["settings"],
     onSignInDone: vi.fn(),
     onSignOut: vi.fn(),
     onSaveModel: vi.fn(async () => {}),
@@ -64,7 +64,6 @@ describe("AiTaskView", () => {
         models: [{ provider: "acme", modelId: "fast-1", name: "", thinkingLevels: [] }],
       },
       settings: {
-        version: 1,
         maxWorkers: 2,
         workerModel: { provider: "acme", modelId: "deep-1" },
         stageWorkerModels: { BACKLOG: { provider: "acme", modelId: "fast-1" } },

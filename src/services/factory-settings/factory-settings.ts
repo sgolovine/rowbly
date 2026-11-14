@@ -1,7 +1,5 @@
-import { readFile } from "node:fs/promises";
-import { readConfig } from "../config/config.js";
+import { type ProjectConfig, readConfig, writeConfig } from "../config/config.js";
 import { ValidationError } from "../errors/errors.js";
-import { writeFileAtomic } from "../files/files.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
@@ -37,8 +35,8 @@ export interface ModelChoice {
   thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 }
 
+/** The `factory` section of `rowbly.config.json`. */
 export interface FactorySettings {
-  version: 1;
   maxWorkers: number;
   supervisorModel?: ModelChoice;
   workerModel?: ModelChoice;
@@ -50,7 +48,7 @@ export interface FactorySettings {
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
-export type FactorySettingsInput = Partial<Omit<FactorySettings, "version">>;
+export type FactorySettingsInput = Partial<FactorySettings>;
 
 interface ConfigureInput extends GitInput {
   maxWorkers?: number;
@@ -71,7 +69,7 @@ interface RoleChoice {
 }
 
 const THINKING_LEVELS: readonly unknown[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
-const DEFAULT_SETTINGS: FactorySettings = { version: 1, maxWorkers: 4 };
+const DEFAULT_SETTINGS: FactorySettings = { maxWorkers: 4 };
 
 /** Tells if a value is a model choice with a provider, a model and an optional known thinking level. */
 export function validModel(value: unknown): value is ModelChoice {
@@ -107,24 +105,35 @@ function validOverrides(settings: FactorySettings): boolean {
   );
 }
 
-function validate(value: unknown): FactorySettings {
-  const settings = value as FactorySettings;
+/** Gives the stored section with the default limit of four workers when `maxWorkers` is absent. */
+function withLimit(section: Record<string, unknown>): FactorySettings {
+  return { ...DEFAULT_SETTINGS, ...section } as FactorySettings;
+}
 
-  if (
-    settings?.version !== 1 ||
-    !Number.isSafeInteger(settings.maxWorkers) ||
-    settings.maxWorkers < 1 ||
-    (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
-    (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
-    !validOverrides(settings) ||
-    (settings.git !== undefined && !validGit(settings.git))
-  ) {
+function validSettings(settings: FactorySettings): boolean {
+  return (
+    Number.isSafeInteger(settings.maxWorkers) &&
+    settings.maxWorkers >= 1 &&
+    (settings.supervisorModel === undefined || validModel(settings.supervisorModel)) &&
+    (settings.workerModel === undefined || validModel(settings.workerModel)) &&
+    validOverrides(settings) &&
+    (settings.git === undefined || validGit(settings.git))
+  );
+}
+
+/** Tells if a value is a valid `factory` section. It does not throw, so `rowbly doctor` can use it. */
+export function validFactorySettings(value: unknown): boolean {
+  return isRecord(value) && validSettings(withLimit(value));
+}
+
+function validate(value: unknown): FactorySettings {
+  if (!validFactorySettings(value)) {
     throw new ValidationError("Invalid factory settings", {
       hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
     });
   }
 
-  return settings;
+  return withLimit(value as Record<string, unknown>);
 }
 
 /** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
@@ -137,50 +146,39 @@ export function gitSettings(settings: FactorySettings): GitSync {
   return gitSync(settings.git);
 }
 
-function readProblem(error: unknown): FactorySettings {
-  if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-    return { ...DEFAULT_SETTINGS };
-  }
-
-  if (error instanceof SyntaxError) {
-    throw new ValidationError("Invalid factory settings JSON");
-  }
-
-  throw error;
-}
-
-/** Reads `factory.json` as it is on disk. Without the file, the limit is four workers. */
-async function readSettings(file: string): Promise<FactorySettings> {
-  return readFile(file, "utf8")
-    .then((text) => validate(JSON.parse(text)))
-    .catch(readProblem);
+/** Gives the `factory` section of the config as it is on disk. Without the section, the limit is four workers. */
+function storedSettings(config: ProjectConfig): FactorySettings {
+  return config.factory === undefined ? { ...DEFAULT_SETTINGS } : validate(config.factory);
 }
 
 /**
- * Reads the factory settings of the Project. Without `factory.json`, the limit is four workers.
+ * Reads the factory settings of the Project. Without a `factory` section in the config, the limit is four workers.
  * The absent Git sync keys have their defaults: push and pull are off, and the interval is 300 seconds.
  */
 export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
   const paths = await findProject(ctx);
 
-  return withDefaults(await readSettings(paths.factorySettingsFile));
+  return withDefaults(storedSettings(await readConfig(paths)));
 }
 
-/** Validates and writes the settings that `change` makes from the settings on disk. The defaults are not written. */
+/**
+ * Validates the settings that `change` makes from the settings on disk, and writes them to the `factory`
+ * section of the config. The other config keys stay. The defaults are not written.
+ */
 async function writeSettings(
   change: (current: FactorySettings) => FactorySettings,
   ctx: ServiceContext,
 ): Promise<FactorySettings> {
   const paths = await findProject(ctx);
-  const current = await readSettings(paths.factorySettingsFile);
-  const settings = validate({ ...change(current), version: 1 });
+  const config = await readConfig(paths);
+  const settings = validate(change(storedSettings(config)));
 
-  await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
+  await writeConfig(paths, { ...config, factory: { ...settings } });
 
   return withDefaults(settings);
 }
 
-/** Merges the input into the factory settings and writes `factory.json`. The `git` keys merge one level deep. */
+/** Merges the input into the factory settings and writes them to the config. The `git` keys merge one level deep. */
 export async function updateFactorySettings(
   input: FactorySettingsInput,
   ctx: ServiceContext = {},
@@ -335,8 +333,8 @@ function checkGitInput(input: ConfigureInput): void {
 }
 
 /**
- * Applies only Git values to `factory.json`. It does not load `agent-auth` or Pi, so the TUI can use it
- * without the auth runtime. An invalid author or sync interval fails before the file changes.
+ * Applies only Git values to the factory settings. It does not load `agent-auth` or Pi, so the TUI can use it
+ * without the auth runtime. An invalid author or sync interval fails before the config changes.
  */
 export async function configureGit(input: GitInput, ctx: ServiceContext = {}): Promise<FactorySettings> {
   checkGitInput(input);
@@ -344,7 +342,7 @@ export async function configureGit(input: GitInput, ctx: ServiceContext = {}): P
   return writeSettings((current) => ({ ...current, git: mergeGit(current.git, input) }), ctx);
 }
 
-/** Validates explicit model choices and Git values before the settings file changes. A `stage` sets an override. */
+/** Validates explicit model choices and Git values before the config changes. A `stage` sets an override. */
 export async function configureFactory(
   input: ConfigureInput,
   ctx: ServiceContext = {},

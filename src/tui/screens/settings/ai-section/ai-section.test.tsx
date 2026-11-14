@@ -157,8 +157,7 @@ describe("AiSection", () => {
     });
     expect(tui.frame()).not.toContain("AI › Worker model ›");
     expect(tui.frame()).toMatch(/● Done\s+acme\/deep-1 · thinking low/);
-    expect(JSON.parse(await project.read("factory.json"))).toEqual({
-      version: 1,
+    expect(JSON.parse(await project.read("rowbly.config.json")).factory).toEqual({
       maxWorkers: 3,
       workerModel: { provider: "acme", modelId: "fast-1" },
       stageWorkerModels: { DONE: { provider: "acme", modelId: "deep-1", thinkingLevel: "low" } },
@@ -169,8 +168,7 @@ describe("AiSection", () => {
     await tui.type("No override");
     await tui.press(keys.enter);
     await vi.waitFor(async () => {
-      expect(JSON.parse(await project.read("factory.json"))).toEqual({
-        version: 1,
+      expect(JSON.parse(await project.read("rowbly.config.json")).factory).toEqual({
         maxWorkers: 3,
         workerModel: { provider: "acme", modelId: "fast-1" },
       });

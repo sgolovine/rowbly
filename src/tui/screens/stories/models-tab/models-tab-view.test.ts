@@ -11,7 +11,6 @@ const stages = [
 describe("modelsTabView", () => {
   it("gives the Story override, else the Stage model, else the worker model of each Stage", () => {
     const settings = {
-      version: 1 as const,
       maxWorkers: 4,
       workerModel: { provider: "acme", modelId: "deep-1" },
       stageWorkerModels: { DONE: { provider: "openai", modelId: "gpt-sol" }, REVIEW: { provider: "x", modelId: "y" } },
