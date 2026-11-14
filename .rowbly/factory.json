@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "maxWorkers": 4,
+  "supervisorModel": {
+    "provider": "anthropic",
+    "modelId": "claude-opus-5-5",
+    "thinkingLevel": "medium"
+  },
+  "workerModel": {
+    "provider": "anthropic",
+    "modelId": "claude-opus-5-5",
+    "thinkingLevel": "medium"
+  }
+}
