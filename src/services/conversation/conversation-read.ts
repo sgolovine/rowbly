@@ -1,6 +1,6 @@
 import { ValidationError } from "../errors/errors.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
-import { getThread } from "../thread/thread.js";
+import { getThread, type ThreadRecord } from "../thread/thread.js";
 import { assertOpen, type ConversationEnv, type ReadInput } from "./conversation-state.js";
 import { SessionIndex } from "./session-index.js";
 import type { ConversationPage } from "./session-types.js";
@@ -31,10 +31,17 @@ async function currentIndex(env: ConversationEnv, file: string): Promise<Session
   return index;
 }
 
-async function readThreadPage(env: ConversationEnv, input: ReadInput): Promise<ConversationPage> {
+/** Reads the Thread record for one page read. A watch gives its own reader, which can reuse a cached record. */
+export type ThreadLoader = (env: ConversationEnv) => Promise<ThreadRecord>;
+
+function loadThread(env: ConversationEnv): Promise<ThreadRecord> {
+  return getThread(env.threadId, env.ctx);
+}
+
+async function readThreadPage(env: ConversationEnv, input: ReadInput, load: ThreadLoader): Promise<ConversationPage> {
   assertOpen(env);
 
-  const thread = await getThread(env.threadId, env.ctx);
+  const thread = await load(env);
 
   assertOpen(env);
   followReference(env, thread.session.file);
@@ -57,7 +64,7 @@ async function readThreadPage(env: ConversationEnv, input: ReadInput): Promise<C
 }
 
 /** Gives a short error for a file system failure. Other errors stay as they are. */
-function fileProblem(error: unknown): never {
+export function fileProblem(error: unknown): never {
   const code = (error as NodeJS.ErrnoException)?.code;
 
   if (typeof code === "string" && /^E[A-Z]+$/.test(code)) {
@@ -68,8 +75,12 @@ function fileProblem(error: unknown): never {
 }
 
 /** Reads one page after the earlier reads of this conversation complete. */
-export function queueRead(env: ConversationEnv, input: ReadInput): Promise<ConversationPage> {
-  const pending = env.store.current.queue.then(() => readThreadPage(env, input)).catch(fileProblem);
+export function queueRead(
+  env: ConversationEnv,
+  input: ReadInput,
+  load: ThreadLoader = loadThread,
+): Promise<ConversationPage> {
+  const pending = env.store.current.queue.then(() => readThreadPage(env, input, load)).catch(fileProblem);
 
   env.store.update(() => ({ queue: pending.catch(() => {}) }));
 
