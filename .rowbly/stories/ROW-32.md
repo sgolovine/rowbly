@@ -1,7 +1,7 @@
 ---
 title: Skip conversation polls when the session file did not change
-stage: IN_REVIEW
-position: 3
+stage: DONE
+position: 33
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-32
 pull_request: https://github.com/sgolovine/rowbly/pull/219
 ---
@@ -63,9 +63,3 @@ Not in scope:
 - Explicit `read()` calls are not changed. Reason: the problem is the idle poll. An explicit read is a user action and must give fresh data.
 - The `runtimePath` validation stays on each poll. Reason: it protects against symlinks in the private runtime tree, and its cost is small compared to a Thread read and a page read.
 - The new digest does not include the entry text. Reason: session files are append-only. A rewrite changes `ino`, `size`, `mtimeMs` or `ctimeMs` and resets the index, which gives new entry IDs or a different page.
-
-## Review findings
-
-1. `src/services/thread/thread-files.ts` (lines 8-25 of the branch): pull request #219 has a merge conflict with `main`. Since the branch was made, `main` changed this file (ROW-31 / PR #218, "check shared runtime folders once"). `threadPath` is now private, and `getThread` reads through `checkThreadDirs` / `threadFileIn` (`ThreadDirs`, `runtimeChild`). The new `threadReference` export of the branch conflicts with this change. Fix: merge `origin/main` into `story/ROW-32` and resolve the conflict. Keep the `ThreadDirs` structure of `main`. Add `threadReference(id)` again (or let `conversation-signature.ts` use `threadFileIn` with `checkThreadDirs`). Keep the `runtimePath`/`runtimeChild` symlink checks before each `stat`. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again and push.
-
-No other blocking findings. The skip logic, the digest, the failed-poll reset and the new tests satisfy the acceptance criteria. The conversation tests pass on the branch (35 tests). GitHub reported no CI checks for this pull request.
