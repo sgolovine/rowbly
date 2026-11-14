@@ -1,5 +1,5 @@
 ---
-title: Reduce the cost of runtimePath checks on hot runtime reads
+title: Share one factory status read across TUI views
 stage: BACKLOG
 worktree: null
 pull_request: null
