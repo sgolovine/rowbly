@@ -67,6 +67,7 @@ describe("registerCommands", () => {
       "project",
       "prompt",
       "doctor",
+      "status",
       "story",
       "stage",
       "custom-field",
@@ -86,7 +87,7 @@ describe("registerCommands", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("--json");
     expect(result.stdout).toContain("-C, --cwd <dir>");
-    for (const name of ["init", "doctor", ...Object.keys(resources)]) expect(result.stdout).toContain(name);
+    for (const name of ["init", "doctor", "status", ...Object.keys(resources)]) expect(result.stdout).toContain(name);
     expect(result.stdout).not.toContain("create-story");
   });
 

@@ -186,6 +186,37 @@ describe("Shell", () => {
       expect(tui.frame()).not.toContain("Loading");
     });
 
+    it("reads the factory status one time for one status write, also with the Threads tab of a Story open", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 150, height: 40 });
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Edit ROW-01");
+      await tui.press(keys.shiftTab, keys.shiftTab);
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("No Threads");
+      });
+      await settle(300);
+      vi.mocked(factory.getFactoryStatus).mockClear();
+      vi.mocked(factory.getFactoryStatus).mockResolvedValue({
+        version: 1,
+        phase: "ready",
+        liveness: "alive",
+        responsive: true,
+        workers: { running: 0, pending: 1, waiting: 0, limit: 4 },
+        queue: [{ story: "ROW-01", stage: "BACKLOG", action: "skip", reason: "worker limit" }],
+      } as FactoryStatus);
+      await mkdir(join(project.paths.dir, "runtime"), { recursive: true });
+      await writeFile(join(project.paths.dir, "runtime/status.json"), "{}\n");
+      // The Threads tab shows the queue entry of its Story from the one status read of the shell.
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("Waiting for a worker slot");
+      });
+      await settle(300);
+      expect(factory.getFactoryStatus).toHaveBeenCalledTimes(1);
+    });
+
     describe("Checks", () => {
       type Job = NonNullable<FactoryStatus["checks"]>["jobs"][number];
       const job = (id: string, storyId: string): Job => ({

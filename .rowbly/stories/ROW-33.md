@@ -1,7 +1,7 @@
 ---
 title: Do not reload the board when only state.json changes
 stage: IN_DEVELOPMENT
-position: 2
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-33
 pull_request: null
 ---
