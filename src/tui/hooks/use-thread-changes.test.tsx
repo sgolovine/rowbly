@@ -4,9 +4,15 @@ import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useTestProject } from "../../services/test-project/test-project.js";
+import * as thread from "../../services/thread/thread.js";
 import { createThread } from "../../services/thread/thread.js";
 import { renderTui, settle } from "../testing/index.js";
 import { useFactoryChanges, useThreadChanges } from "./use-thread-changes.js";
+
+vi.mock("../../services/thread/thread.js", async (original) => {
+  const actual = await original<typeof import("../../services/thread/thread.js")>();
+  return { ...actual, watchThreads: vi.fn(actual.watchThreads) };
+});
 
 afterEach(() => {
   cleanup();
@@ -47,11 +53,41 @@ describe("useThreadChanges", () => {
     expect(onThreads).not.toHaveBeenCalled();
   });
 
-  it("reads the factory status again on a timer, because a crash writes no file", async () => {
-    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  it("reads the factory status again 5 s after the last read, because a crash writes no file", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const onFactory = vi.fn();
     await renderTui(<Probe root={project.paths.root} onThreads={() => {}} onFactory={onFactory} />);
-    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(4999);
+    expect(onFactory).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
     expect(onFactory).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(5000);
+    expect(onFactory).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts the timer again after a read from a file event", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const events: Array<() => void> = [];
+    vi.mocked(thread.watchThreads).mockImplementation(async (onChange) => {
+      events.push(onChange);
+      return () => {};
+    });
+    const onFactory = vi.fn();
+    await renderTui(<FactoryProbe root={project.paths.root} onFactory={onFactory} />);
+    await vi.waitFor(() => expect(events).toHaveLength(1));
+    vi.advanceTimersByTime(3000);
+    events[0]?.();
+    expect(onFactory).toHaveBeenCalledOnce();
+    // The timer read does not occur 5 s after the start, only 5 s after the file event read.
+    vi.advanceTimersByTime(4999);
+    expect(onFactory).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(1);
+    expect(onFactory).toHaveBeenCalledTimes(2);
+    vi.mocked(thread.watchThreads).mockReset();
   });
 });
+
+function FactoryProbe({ root, onFactory }: { root: string; onFactory(): void }) {
+  useFactoryChanges(root, onFactory);
+  return <Text>watching</Text>;
+}

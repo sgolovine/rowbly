@@ -11,6 +11,7 @@ import { registerPromptCommands } from "../prompt/prompt.js";
 import { registerSkillCommands } from "../skill/skill.js";
 import { registerSpecCommands } from "../spec/spec.js";
 import { registerStageCommands } from "../stage/stage.js";
+import { registerStatus } from "../status/status.js";
 import { registerStoryCommands } from "../story/story.js";
 import { registerThreadCommands } from "../thread/thread.js";
 
@@ -28,6 +29,7 @@ export function registerCommands(program: Command): void {
   registerProjectCommands(resource(program, "project", "Manage the project"));
   registerPromptCommands(resource(program, "prompt", "Manage the user prompts of the factory agents"));
   registerDoctor(program);
+  registerStatus(program);
   registerStoryCommands(resource(program, "story", "Manage stories"));
   registerStageCommands(resource(program, "stage", "Manage stages"));
   registerCustomFieldCommands(resource(program, "custom-field", "Manage custom fields"));
