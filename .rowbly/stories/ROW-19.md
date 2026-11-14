@@ -1,7 +1,7 @@
 ---
 title: Factory Git settings in the TUI
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-19
 pull_request: null
 ---
 
