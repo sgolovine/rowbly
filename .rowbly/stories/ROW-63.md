@@ -1,9 +1,9 @@
 ---
 title: Show dependencies to the supervisor and raise attention for a stuck upstream Story
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-63
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/237
 ---
 
 ## Goal
