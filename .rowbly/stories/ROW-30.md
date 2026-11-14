@@ -1,5 +1,5 @@
 ---
-title: Read only changed Threads when a worker writes its activity
+title: Reduce the cost of runtimePath checks on hot runtime reads
 stage: BACKLOG
 worktree: null
 pull_request: null
