@@ -13,6 +13,8 @@ const providers = [
 
 function props(overrides: Partial<AiProvidersProps> = {}): AiProvidersProps {
   return {
+    title: "Signed in",
+    emptyText: "No provider is signed in.",
     loading: false,
     ready: true,
     providers,
@@ -40,6 +42,7 @@ describe("AiProviders", () => {
     const p = props();
     const tui = await renderTui(<AiProviders {...p} />);
 
+    expect(tui.frame()).toContain("Signed in");
     expect(tui.frame()).toContain("acme signed in with an API key");
     expect(tui.frame()).toContain("zeta not signed in");
 
@@ -48,5 +51,19 @@ describe("AiProviders", () => {
 
     expect(p.onHighlight).toHaveBeenLastCalledWith("zeta");
     expect(p.onSelect).toHaveBeenCalledWith("zeta");
+  });
+
+  it("shows the empty text, and only highlights without onSelect", async () => {
+    const empty = await renderTui(<AiProviders {...props({ providers: [] })} />);
+
+    expect(empty.frame()).toContain("No provider is signed in.");
+
+    const p = props({ onSelect: undefined });
+    const tui = await renderTui(<AiProviders {...p} />);
+
+    await tui.press(keys.down);
+    await tui.press(keys.enter);
+
+    expect(p.onHighlight).toHaveBeenLastCalledWith("zeta");
   });
 });

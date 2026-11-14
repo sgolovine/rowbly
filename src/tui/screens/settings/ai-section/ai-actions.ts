@@ -15,7 +15,7 @@ import {
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
 import { type AsyncState, showToast, type ToastStore } from "../../../hooks/index.js";
-import { type AiProvider, type AiStatus, type AiTask, modelText, type Role } from "../ai-view.js";
+import { type AiPage, type AiProvider, type AiStatus, type AiTask, modelText, nextTab, type Role } from "../ai-view.js";
 
 /** What the handlers of the AI settings read and change. */
 export interface AiEnv {
@@ -24,9 +24,12 @@ export interface AiEnv {
   readonly runtime: AsyncState<AuthRuntime>;
   readonly status: AsyncState<AiStatus | undefined>;
   readonly settings: AsyncState<FactorySettings>;
+  /** The providers of the page. */
   readonly providers: readonly AiProvider[];
+  readonly page: AiPage;
   readonly ready: boolean;
   readonly canSignOut: boolean;
+  readonly setPage: Dispatch<SetStateAction<AiPage>>;
   readonly setTask: Dispatch<SetStateAction<AiTask>>;
   readonly setSelected: Dispatch<SetStateAction<string | undefined>>;
   readonly onChange: () => void;
@@ -57,6 +60,15 @@ export function finishTask(env: AiEnv, changed: boolean): void {
     env.status.reload();
     env.settings.reload();
     env.onChange();
+  }
+}
+
+/** Closes the sign-in. A completed sign-in goes back to the signed-in providers, where the new one shows. */
+export function finishSignIn(env: AiEnv, signedIn: boolean): void {
+  finishTask(env, signedIn);
+
+  if (signedIn) {
+    openPage(env, "providers");
   }
 }
 
@@ -104,6 +116,12 @@ function signOutFailed(env: AiEnv, error: unknown): void {
   env.setTask(null);
 }
 
+/** Opens a page. The highlight starts again on the first provider of the page. */
+export function openPage(env: AiEnv, page: AiPage): void {
+  env.setSelected(undefined);
+  env.setPage(page);
+}
+
 /** Selects a provider from the list. A provider with a sign-in method starts it. */
 export function pickProvider(env: AiEnv, id: string): void {
   const chosen = env.providers.find((p) => p.id === id);
@@ -115,14 +133,17 @@ export function pickProvider(env: AiEnv, id: string): void {
   }
 }
 
-/** The keys of the AI settings. The provider list takes `enter`: its `onSelect` starts the sign-in. */
+/**
+ * The keys of the AI settings. `←/→` change the tab. `s`, `w` and `l` work on each page, so that the keys of
+ * the earlier screen stay. The list of the sign-in page takes `enter`: its `onSelect` starts the sign-in.
+ */
 export function handleAiKey(env: AiEnv, input: string, key: Key): void {
   if (key.ctrl || key.meta) {
     return;
   }
 
-  if (input === "d" && env.canSignOut) {
-    env.setTask({ kind: "signOut" });
+  if ((key.leftArrow || key.rightArrow) && env.page !== "addProvider") {
+    openPage(env, nextTab(env.page, key.leftArrow ? -1 : 1));
 
     return;
   }
@@ -133,7 +154,23 @@ export function handleAiKey(env: AiEnv, input: string, key: Key): void {
     return;
   }
 
+  if (env.page === "providers") {
+    handleProvidersKey(env, input);
+  }
+
   handleOtherKey(env, input);
+}
+
+function handleProvidersKey(env: AiEnv, input: string): void {
+  if (input === "d" && env.canSignOut) {
+    env.setTask({ kind: "signOut" });
+
+    return;
+  }
+
+  if (input === "n" && env.ready) {
+    openPage(env, "addProvider");
+  }
 }
 
 function handleOtherKey(env: AiEnv, input: string): void {

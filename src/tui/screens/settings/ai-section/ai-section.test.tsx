@@ -51,22 +51,35 @@ describe("AiSection", () => {
     return { tui, runtime, onChange };
   }
 
-  it("shows the models, the worker limit and the status of each provider", async () => {
+  it("shows the signed-in providers first, the models and the limits on their own tabs", async () => {
     await updateFactorySettings(
       { supervisorModel: { provider: "acme", modelId: "deep-1", thinkingLevel: "high" } },
       project.ctx,
     );
     const { tui } = await open();
-    expect(tui.frame()).toMatch(/Supervisor\s+acme\/deep-1 · thinking high/);
-    expect(tui.frame()).toMatch(/Workers\s+Pi default/);
-    expect(tui.frame()).toMatch(/Worker limit\s+4/);
+    expect(tui.frame()).toMatch(/Providers\s+Models\s+Limits/);
     expect(tui.frame()).toMatch(/acme\s+signed in with an API key/);
-    expect(tui.frame()).toMatch(/zeta\s+not signed in/);
+    expect(tui.frame()).not.toContain("zeta");
+    expect(tui.frame()).toContain("+ Sign in to another provider");
+    await tui.press(keys.right);
+    expect(tui.frame()).toContain("Supervisor model");
+    expect(tui.frame()).toContain("acme/deep-1 · thinking high");
+    expect(tui.frame()).toMatch(/Worker model[\s\S]*Pi default/);
+    await tui.press(keys.right);
+    expect(tui.frame()).toContain("Worker limit");
+    expect(tui.frame()).toContain("4 workers");
+    expect(tui.frame()).toMatch(/Edit\s+l/);
+    await tui.press(keys.right);
+    expect(tui.frame()).toContain("+ Sign in to another provider");
   });
 
-  it("signs in with enter, and a cancelled sign-in gives the keys back to the section", async () => {
+  it("signs in on the page of the other providers, and esc goes back to the signed-in providers", async () => {
     const { tui, runtime } = await open();
-    await tui.press(keys.down, keys.enter);
+    await tui.press("n");
+    expect(tui.frame()).toContain("Sign in to another provider");
+    expect(tui.frame()).toMatch(/zeta\s+not signed in/);
+    expect(tui.frame()).not.toContain("acme");
+    await tui.press(keys.enter);
     await vi.waitFor(async () => {
       await tui.press();
       expect(tui.frame()).toContain("AI › Sign in › zeta");
@@ -78,6 +91,9 @@ describe("AiSection", () => {
       await tui.press();
       expect(tui.frame()).not.toContain("AI › Sign in");
     });
+    expect(tui.frame()).toMatch(/zeta\s+not signed in/);
+    await tui.press(keys.escape);
+    expect(tui.frame()).toMatch(/acme\s+signed in with an API key/);
     await tui.press("l");
     expect(tui.frame()).toContain("AI › Worker limit");
   });
@@ -115,5 +131,10 @@ describe("AiSection", () => {
     await tui.type("2");
     await tui.press(keys.enter);
     await vi.waitFor(async () => expect((await getFactorySettings(project.ctx)).maxWorkers).toBe(2));
+    await tui.press(keys.left);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("2 workers");
+    });
   });
 });
