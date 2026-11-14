@@ -1,9 +1,10 @@
 import { ConflictError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
-import { createResultTool, workerMessage } from "../factory-worker/factory-worker.js";
+import { createResultTool, findStageSkill, readProjectInstructions } from "../factory-worker/factory-worker.js";
+import { workerPrompt } from "../factory-worker/worker-prompt.js";
 import { openFactorySession } from "../pi-runtime/factory-session.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
-import { projectWrite } from "../project-write/project-write.js";
+import { projectWrite, projectWriteLockPath } from "../project-write/project-write.js";
 import { listStages } from "../stage/stage.js";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { getStory, type Story, updateStory } from "../story/story.js";
@@ -203,15 +204,19 @@ async function buildWorkerPrompt(
     throw new ConflictError("Stage is disabled");
   }
 
-  return workerMessage({
-    root: manager.paths.root,
+  const { root } = manager.paths;
+
+  return workerPrompt({
     story: story.id,
     stage: story.stage,
-    prompt: stage.prompt,
-    shim: manager.deps.shim,
+    root,
     worktree: worktreePath,
     model: `${model.provider}/${model.modelId}`,
-    skillsDir: manager.deps.skillsDir,
+    skill: await findStageSkill(root, story.stage, manager.deps.skillsDir),
+    projectInstructions: await readProjectInstructions(root),
+    stagePrompt: stage.prompt,
+    shim: manager.deps.shim,
+    lock: await projectWriteLockPath(root),
   });
 }
 
