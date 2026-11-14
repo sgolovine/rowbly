@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { ConflictError, ValidationError } from "../errors/errors.js";
+import { formatAuthor, type GitSettings } from "../factory-settings/git-settings.js";
 import { bundledSkills } from "../skill/skill.js";
 import { Store } from "../store/store.js";
 
@@ -99,14 +100,21 @@ export async function projectWrite<T>(root: string, action: () => Promise<T>, wa
   }
 }
 
-/** Commits canonical files while projectWrite holds the shared kernel lock. */
-export async function commitCanonicalProject(root: string) {
+/** The `commit-project.mjs` flags of the message and the author. A value that is not set keeps the default. */
+function commitFlags(git: GitSettings | undefined): string[] {
+  const author = formatAuthor(git);
+
+  return [...(git?.commitMessage ? ["--message", git.commitMessage] : []), ...(author ? ["--author", author] : [])];
+}
+
+/** Commits canonical files while projectWrite holds the shared kernel lock. The Git settings set the message and the author. */
+export async function commitCanonicalProject(root: string, git?: GitSettings) {
   const { dir } = await bundledSkills();
 
   return projectWrite(root, async () => {
     const { stdout } = await promisify(execFile)(
       process.execPath,
-      [join(dir, "factory/scripts/commit-project.mjs"), "--root", root, "--locked"],
+      [join(dir, "factory/scripts/commit-project.mjs"), "--root", root, "--locked", ...commitFlags(git)],
       { timeout: 60_000 },
     );
 

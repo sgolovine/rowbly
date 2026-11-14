@@ -19,6 +19,8 @@ interface ConfigureOptions {
   worker?: string;
   supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
+  commitMessage?: string;
+  commitAuthor?: string;
 }
 
 interface StartOptions {
@@ -125,12 +127,14 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
 function registerConfigure(program: Command): void {
   program
     .command("configure")
-    .description("Set factory models and worker limit")
+    .description("Set factory models, worker limit and Git commit settings")
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
     .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
+    .option("--commit-message <text>", 'subject of the canonical commits ("" clears it)')
+    .option("--commit-author <identity>", 'Name <email> of the canonical commits ("" clears it)')
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,

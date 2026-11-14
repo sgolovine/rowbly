@@ -28,7 +28,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, git
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; native factory or external supervisor writes it
   runtime/            # private, ignored; see native-factory/runtime-and-locks.md
@@ -38,6 +38,20 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 The files of `runtime/`, `state.json` and `factory.json` belong to the native factory. See
 [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md).
+
+The optional `git` section of `factory.json` sets the canonical commits of the factory:
+
+```json
+{
+  "version": 1,
+  "maxWorkers": 4,
+  "git": { "commitMessage": "chore(rowbly): sync board", "authorName": "Rowbly Bot", "authorEmail": "bot@example.com" }
+}
+```
+
+- Each value is optional. Each value that is set must be a string that is not empty.
+- Set `authorName` and `authorEmail` together, or do not set them.
+- A `git` section that is not valid makes the settings not valid.
 
 ## Config
 

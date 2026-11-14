@@ -281,6 +281,28 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("commits canonical files with the configured message and author", async () => {
+    const f = await fixture();
+    f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
+    await updateFactorySettings(
+      { git: { commitMessage: "chore: board sync", authorName: "Rowbly Bot", authorEmail: "bot@example.com" } },
+      { cwd: root },
+    );
+    await writeFile(join(root, ".rowbly/ROWBLY.md"), "# Changed");
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const log = await exec("git", ["-C", root, "log", "-1", "--format=%s|%an <%ae>|%cn <%ce>"]);
+          expect(log.stdout.trim()).toBe("chore: board sync|Rowbly Bot <bot@example.com>|Rowbly Bot <bot@example.com>");
+        },
+        { timeout: 10000, interval: 50 },
+      );
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
   it("classifies the fresh prompt through real Pi tools before a reservation", async () => {
     const story = await createStory({ title: "Classify me", stage: "WORK" }, { cwd: root });
     const f = await fixture(undefined, false);

@@ -9,18 +9,18 @@ viewer or the AI section of Settings.
 
 ## CLI commands
 
-| Commands                                                                  | Purpose                                                                      |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.            |
-| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential.        |
-| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                        |
-| `factory configure`                                                       | Set `--max-workers`, `--supervisor`, `--worker` and the role thinking flags. |
-| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                         |
-| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                        |
-| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.                      |
-| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                         |
-| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.           |
-| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                                  |
+| Commands                                                                  | Purpose                                                               |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.     |
+| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential. |
+| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                 |
+| `factory configure`                                                       | Set the model, thinking, `--max-workers` and `--commit-*` flags.      |
+| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                  |
+| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                 |
+| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.               |
+| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                  |
+| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.    |
+| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                           |
 
 `factory run` is a hidden command. `factory start` uses it to start the detached daemon.
 
