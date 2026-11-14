@@ -128,12 +128,12 @@ async function placeStory(
 async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
-  const file = await findStoryFile(paths, config, input.id);
+  const files = await readStoryFiles(paths);
+  const file = await findStoryFile(paths, config, input.id, files);
   const data = updatedStoryData(config, file, input);
 
   const moved = data.stage !== file.doc.data.stage;
   const updated = { ...file, doc: { data, body: input.description ?? file.doc.body } };
-  const files = await readStoryFiles(paths);
 
   // Checked before writing, so an update never leaves a story invalid.
   toStory(config, updated);

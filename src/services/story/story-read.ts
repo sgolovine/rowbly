@@ -1,3 +1,4 @@
+import { basename } from "node:path";
 import { attachmentDir, readAttachments } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
@@ -10,7 +11,14 @@ import {
 import { NotFoundError } from "../errors/errors.js";
 import { type FieldValue, fieldValueError } from "../fields/fields.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
-import { formatStoryId, readStoryFiles, type StoryFile, sortStoryFiles } from "../story-files/story-files.js";
+import {
+  formatStoryId,
+  readStoryFile,
+  readStoryFiles,
+  type StoryFile,
+  sortStoryFiles,
+  storyPath,
+} from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { fieldUpdates } from "./story-input.js";
 import type { SearchStoriesInput, Story } from "./story-types.js";
@@ -74,10 +82,56 @@ function parseStoryId(config: ProjectConfig, id: string): number {
   return Number(match[2]);
 }
 
-/** Finds the file of the story with the ID. Throws a `NotFoundError` when there is none. */
-export async function findStoryFile(paths: ProjectPaths, config: ProjectConfig, id: string): Promise<StoryFile> {
+/** The first file of the story with this number, in number order. */
+function matchStoryFile(config: ProjectConfig, files: readonly StoryFile[], number: number): StoryFile | undefined {
+  return files.find((f) => f.projectKey === config.projectKey && f.number === number);
+}
+
+/**
+ * Reads the story file at its canonical path. A missing file gives `undefined`, because a story file can have a
+ * name that is not canonical, for example `ROW-1.md`.
+ */
+async function readCanonicalStoryFile(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  number: number,
+): Promise<StoryFile | undefined> {
+  const fileName = basename(storyPath(paths, config.projectKey, number));
+
+  try {
+    return await readStoryFile(paths, fileName);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+/** The story file with this number. Reads the canonical path first, and the folder only when that file is missing. */
+async function locateStoryFile(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  number: number,
+): Promise<StoryFile | undefined> {
+  const canonical = await readCanonicalStoryFile(paths, config, number);
+
+  return canonical ?? matchStoryFile(config, await readStoryFiles(paths), number);
+}
+
+/**
+ * Finds the file of the story with the ID. With `files`, it searches only that list and reads nothing. Throws a
+ * `NotFoundError` when there is none.
+ */
+export async function findStoryFile(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  id: string,
+  files?: readonly StoryFile[],
+): Promise<StoryFile> {
   const number = parseStoryId(config, id);
-  const file = (await readStoryFiles(paths)).find((f) => f.projectKey === config.projectKey && f.number === number);
+  const file = files ? matchStoryFile(config, files, number) : await locateStoryFile(paths, config, number);
 
   if (!file) {
     throw new NotFoundError(`Story ${formatStoryId(config.projectKey, number)} not found`);
@@ -102,8 +156,9 @@ export async function countAttachments(paths: ProjectPaths, id: string): Promise
 export async function getStory(input: { id: string }, ctx: ServiceContext = {}): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
-  const file = await findStoryFile(paths, config, input.id);
-  const story = toStory(config, file, positionIn(await readStoryFiles(paths), file));
+  const files = await readStoryFiles(paths);
+  const file = await findStoryFile(paths, config, input.id, files);
+  const story = toStory(config, file, positionIn(files, file));
 
   return { ...story, attachmentCount: await countAttachments(paths, story.id) };
 }
