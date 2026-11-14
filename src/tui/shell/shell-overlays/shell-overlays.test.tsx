@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
 import { useTestProject } from "../../../services/test-project/test-project.js";
+import { createThread } from "../../../services/thread/thread.js";
 import { keys, renderTui } from "../../testing/index.js";
 import type { Overlay, OverlayBoard, OverlayHandlers } from "../overlay.js";
 import { ShellOverlays } from "./shell-overlays.js";
@@ -20,8 +21,8 @@ function handlers(): OverlayHandlers {
   return {
     close: vi.fn(),
     openStory: vi.fn(),
-    storySaved: vi.fn(),
-    storyDeleted: vi.fn(),
+    openThread: vi.fn(),
+    discardStory: vi.fn(),
     removeStory: vi.fn(),
     stageSaved: vi.fn(),
     openAiSettings: vi.fn(),
@@ -46,7 +47,6 @@ describe("ShellOverlays", () => {
         launch={undefined}
         factory={{ version: 1, phase: "stopped" }}
         hints={[{ key: "n", description: "new Story" }]}
-        cursorStage={undefined}
         on={on}
       />,
     );
@@ -94,5 +94,29 @@ describe("ShellOverlays", () => {
     const factory = await open({ kind: "factory" });
 
     expect(factory.tui.frame()).toContain("Factory");
+  });
+
+  it("opens the Thread Modal of a Project, and closes it on esc", async () => {
+    const thread = await createThread(
+      {
+        role: "worker",
+        storyId: "ROW-01",
+        stage: "BACKLOG",
+        attemptNumber: 1,
+        cwd: project.paths.root,
+        ownerToken: "o",
+      },
+      project.ctx,
+    );
+    const without = await open({ kind: "thread", thread }, false);
+
+    expect(without.tui.frame().trim()).toBe("");
+    cleanup();
+
+    const { tui, on } = await open({ kind: "thread", thread });
+
+    expect(tui.frame()).toContain("ROW-01 › #1 Backlog");
+    await tui.press(keys.escape);
+    expect(on.close).toHaveBeenCalled();
   });
 });

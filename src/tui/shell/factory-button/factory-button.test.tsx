@@ -30,6 +30,15 @@ describe("FactoryButton", () => {
     expect(tui.frame().trim().length + 2).toBe(factoryButtonWidth(ready, false));
   });
 
+  it("counts one problem less after a dismiss removes an attention entry", async () => {
+    const two = { ...ready, attention: [...(ready.attention ?? []), ["check", { text: "Check" }]] } as FactoryStatus;
+    const tui = await renderTui(<FactoryButton status={two} showKey={false} onClick={() => {}} clickable />);
+    expect(tui.frame()).toContain("! 2");
+    await tui.rerender(<FactoryButton status={ready} showKey={false} onClick={() => {}} clickable />);
+    expect(tui.frame()).toContain("! 1");
+    expect(factoryButtonWidth(two, false)).toBe(factoryButtonWidth(ready, false));
+  });
+
   it("calls onClick on a click", async () => {
     const onClick = vi.fn();
     const tui = await renderTui(<FactoryButton status={undefined} showKey onClick={onClick} clickable />);

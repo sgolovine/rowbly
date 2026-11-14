@@ -12,9 +12,9 @@ that owns a feature.
 The two front ends call the same service functions.
 
 ```
- rowbly story create --title foobar         TUI "New story" modal
+ rowbly story create --title foobar         TUI "New Story" form
               │                                       │
-   src/commands/story/                     src/tui/screens/stories/new-story-modal/
+   src/commands/story/                     src/tui/screens/stories/new-story-form/
               │                                       │
               └────────► src/services/story/ ◄────────┘
                            createStory({ title }, ctx)

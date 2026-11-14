@@ -11,7 +11,7 @@ import { type StoryModalBodyProps, useStoryModalBody } from "./use-story-modal-b
 export type { StoryModalConfirm } from "./story-modal-body-view.js";
 
 /**
- * The inside of the `StoryModal`. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
+ * The edit form of a Story in the Story sidebar. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
  * change of tab keeps the text that is not saved. The Threads tab reads its data only after it is selected.
  * The Delete Button and `ctrl+d` of the General tab ask before they delete the Story.
  */
@@ -62,12 +62,7 @@ export function StoryModalBody(props: StoryModalBodyProps) {
         generalLayout={generalLayout}
         reports={body.reports}
       />
-      <StoryConfirmDialogs
-        confirming={confirming}
-        onDelete={props.onDelete}
-        onClose={props.onClose}
-        onConfirming={onConfirming}
-      />
+      <StoryConfirmDialogs confirming={confirming} onDelete={props.onDelete} onConfirming={onConfirming} />
     </Box>
   );
 }

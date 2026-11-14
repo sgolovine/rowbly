@@ -1,7 +1,9 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ConflictError } from "../../../../services/errors/errors.js";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
+import type { Story } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../../../services/thread/thread.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
@@ -11,6 +13,7 @@ vi.mock("../../../../services/factory/factory.js", async (original) => ({
   ...(await original<typeof import("../../../../services/factory/factory.js")>()),
   startFactory: vi.fn(async () => ({})),
   stopFactory: vi.fn(async () => ({ phase: "stopped" })),
+  dismissFactoryAttention: vi.fn(async () => ({ status: "completed" })),
 }));
 
 afterEach(() => {
@@ -187,5 +190,152 @@ describe("FactoryModal", () => {
     await settle(50);
     await tui.press();
     expect(tui.frame()).toContain("Press a to sign in");
+  });
+
+  describe("warnings", () => {
+    const long = Array.from({ length: 30 }, (_, i) => `part${i}`).join(" ");
+    const warned = {
+      ...running,
+      attention: [
+        ["commit", { text: "Canonical commit: failed", storyId: "ROW-01" }],
+        ...Array.from({ length: 6 }, (_, i) => [`k${i}`, { text: `Extra warning ${i}` }]),
+        ["long", { text: long }],
+      ],
+    } as unknown as FactoryStatus;
+    const story = { id: "ROW-01", title: "Fix the commit" } as Story;
+
+    async function openWarned(status: FactoryStatus = warned) {
+      const onOpenStory = vi.fn();
+      const onOpenThread = vi.fn();
+      const props = {
+        ctx: project.ctx,
+        launch,
+        onClose: vi.fn(),
+        checkProvider: async () => true,
+        stories: [story],
+        onOpenStory,
+        onOpenThread,
+      };
+      const tui = await renderTui(<FactoryModal {...props} status={status} />);
+      await settle(50);
+      await tui.press();
+      return { tui, props, onOpenStory, onOpenThread };
+    }
+
+    it("lists all warnings with w, opens one with enter, and goes back with esc", async () => {
+      const { tui } = await openWarned();
+      expect(tui.frame()).toMatch(/w warnings/);
+      expect(tui.frame()).toContain("↓ 4 more");
+
+      await tui.press("w");
+      expect(tui.frame()).toContain("Factory › Attention");
+      expect(tui.frame()).toMatch(/enter open/);
+      expect(tui.frame()).toContain("Extra warning 5");
+      expect(tui.frame()).not.toContain("more");
+
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Factory › Attention › commit");
+      expect(tui.frame()).toContain("ROW-01 · Fix the commit");
+      expect(tui.frame()).toMatch(/d dismiss/);
+
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("Factory › Attention › commit");
+      expect(tui.frame()).toContain("Factory › Attention");
+
+      await tui.press(keys.escape);
+      expect(tui.frame()).toContain("2 running · 1 pending");
+    });
+
+    it("shows the full text of a long warning with wrap", async () => {
+      const { tui } = await openWarned();
+      await tui.press("w");
+      await tui.press("/");
+      await tui.press("part0");
+      await tui.press(keys.enter);
+      await tui.press(keys.enter);
+
+      expect(long.length).toBeGreaterThan(100);
+      expect(tui.frame()).toContain("Factory › Attention › long");
+      expect(tui.frame()).toContain("part0");
+      expect(tui.frame()).toContain("part29");
+    });
+
+    it("selects a warning with a click on its row in the overview, and opens it with a second click", async () => {
+      const { tui } = await openWarned();
+      await tui.click("Canonical commit: failed");
+      expect(tui.frame()).toContain("▌ ! ROW-01: Canonical commit: failed");
+      expect(tui.frame()).not.toContain("Factory › Attention › commit");
+
+      await tui.click("Canonical commit: failed");
+      expect(tui.frame()).toContain("Factory › Attention › commit");
+
+      await tui.press(keys.escape);
+      expect(tui.frame()).toContain("2 running · 1 pending");
+    });
+
+    it("opens the Story with o and the newest Thread of the Story with t", async () => {
+      await createThread(
+        { role: "worker", storyId: "ROW-01", stage: "DEVELOP", cwd: project.paths.root, ownerToken: "t" },
+        project.ctx,
+      );
+      const newest = await createThread(
+        { role: "worker", storyId: "ROW-01", stage: "DEVELOP", cwd: project.paths.root, ownerToken: "t" },
+        project.ctx,
+      );
+      const { tui, onOpenStory, onOpenThread } = await openWarned();
+      await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain(`${newest.id} · pending`);
+      });
+      expect(tui.frame()).toMatch(/o open Story/);
+      expect(tui.frame()).toMatch(/t open Thread/);
+
+      await tui.press("o");
+      expect(onOpenStory).toHaveBeenCalledWith(story);
+
+      await tui.press("t");
+      expect(onOpenThread).toHaveBeenCalledWith(expect.objectContaining({ id: newest.id }));
+    });
+
+    it("dismisses an attention entry with d, and the warning goes away after the receipt", async () => {
+      const { tui, props } = await openWarned();
+      await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
+      await tui.press("d");
+      await settle(20);
+
+      expect(factory.dismissFactoryAttention).toHaveBeenCalledWith("commit", {}, project.ctx);
+      expect(tui.toasts.list().map((t) => t.message)).toContain("Dismissed the warning");
+
+      const after = { ...warned, attention: (warned.attention ?? []).slice(1) } as FactoryStatus;
+      await tui.rerender(<FactoryModal {...props} status={after} />);
+      expect(tui.frame()).not.toContain("Canonical commit: failed");
+      expect(tui.frame()).not.toContain("Factory › Attention › commit");
+    });
+
+    it("keeps the warning and shows an error when the dismiss fails", async () => {
+      vi.mocked(factory.dismissFactoryAttention).mockRejectedValueOnce(new ConflictError("Factory is not running"));
+      const { tui } = await openWarned();
+      await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
+      await tui.press("d");
+      await settle(20);
+
+      expect(tui.toasts.list().map((t) => [t.kind, t.message])).toContainEqual(["error", "Factory is not running"]);
+      expect(tui.frame()).toContain("Factory › Attention › commit");
+    });
+
+    it("offers no dismiss for a provider warning", async () => {
+      const { tui } = await openWarned({ ...running, attention: [] } as unknown as FactoryStatus);
+      await tui.click("Provider anthropic");
+      await tui.click("Provider anthropic");
+      expect(tui.frame()).toContain("Factory › Attention › Provider anthropic");
+      expect(tui.frame()).not.toContain("Dismiss");
+
+      await tui.press("d");
+      expect(factory.dismissFactoryAttention).not.toHaveBeenCalled();
+    });
   });
 });

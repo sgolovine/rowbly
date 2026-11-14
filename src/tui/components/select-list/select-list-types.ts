@@ -15,6 +15,11 @@ export interface SelectListProps<T> {
   items: readonly SelectItem<T>[];
   /** Single mode: `enter` picks the highlighted item. */
   onSelect?(item: SelectItem<T>): void;
+  /**
+   * Single mode: a click on an item that is not highlighted only highlights it, and a click on the
+   * highlighted item picks it. Without it, each click picks the item.
+   */
+  clickToHighlight?: boolean;
   /** Called with the highlighted item whenever it changes, so a screen's own keys can act on it. */
   onHighlight?(item: SelectItem<T> | undefined): void;
   /** Reports whether the list is capturing filter text; false when filtering ends or it unmounts. */

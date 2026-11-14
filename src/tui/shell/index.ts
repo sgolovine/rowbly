@@ -9,3 +9,4 @@ export * from "./story-finder/index.js";
 export * from "./story-finder-button/index.js";
 export * from "./story-overlays/index.js";
 export * from "./story-panel/index.js";
+export * from "./view-mode-switch/index.js";

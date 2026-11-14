@@ -36,14 +36,12 @@ export interface StoryModalBodyProps {
   readonly fields: readonly FormField[];
   readonly initialValues: FormValues;
   onSubmit(values: FormValues, attachments?: readonly PendingImage[]): void | Promise<void>;
-  /** Closes the Modal now. */
-  onClose(): void;
-  /** Closes the Modal, or asks first if there are unsaved changes. */
+  /** `esc` outside a region of a tab that takes `esc`: the Story sidebar gives the focus to the Story list. */
   onRequestClose(): void;
   readonly onDelete: FormModalDelete;
   readonly confirming: StoryConfirm;
   onConfirming(confirm: StoryConfirm): void;
-  /** The keys of the tab on the screen, for the hint strip of the Modal. */
+  /** The keys of the tab on the screen, for the footer. */
   onHints(hints: readonly KeyHint[]): void;
 }
 

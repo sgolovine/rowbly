@@ -43,18 +43,17 @@ when you change a bundled skill or a file in `stages/`:
 
 ## Factory skill files
 
-| File in `skills/factory/`             | Function                                                                            |
-| ------------------------------------- | ----------------------------------------------------------------------------------- |
-| `scripts/factory.mjs`                 | The tool of the external supervisor. Each command prints the next actions as JSON.  |
-| `scripts/supervisor-policy.mjs`       | The assignment rules: new workers, delays, the limit of workers and parked Stories. |
-| `scripts/factory-state.mjs`           | Reads and replaces `.rowbly/state.json` under the state lock.                       |
-| `scripts/commit-project.mjs`          | Commits the changed files of `.rowbly/` under the shared write lock.                |
-| `scripts/ownership-lock.mjs`          | The shared local ownership protocol of the native and external factory.             |
-| `scripts/worker-message.mjs`          | Fills the fields of a worker message template.                                      |
-| `references/supervisor-policy.md`     | The v1 policy and the `state.json` format.                                          |
-| `references/worker-message.md`        | The template of the first message that each external worker gets.                   |
-| `references/supervisor-native.md`     | The prompt of the native supervisor.                                                |
-| `references/worker-message-native.md` | The template of the first message that each native worker gets.                     |
+| File in `skills/factory/`         | Function                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `scripts/factory.mjs`             | The tool of the external supervisor. Each command prints the next actions as JSON.  |
+| `scripts/supervisor-policy.mjs`   | The assignment rules: new workers, delays, the limit of workers and parked Stories. |
+| `scripts/factory-state.mjs`       | Reads and replaces `.rowbly/state.json` under the state lock.                       |
+| `scripts/commit-project.mjs`      | Commits the changed files of `.rowbly/` under the shared write lock.                |
+| `scripts/ownership-lock.mjs`      | The shared local ownership protocol of the native and external factory.             |
+| `scripts/worker-message.mjs`      | Fills the fields of a worker message template.                                      |
+| `references/supervisor-policy.md` | The v1 policy and the `state.json` format.                                          |
+| `references/worker-message.md`    | The template of the first message that each external worker gets.                   |
+| `references/supervisor-native.md` | The prompt of the native supervisor.                                                |
 
 The `.d.mts` files give TypeScript types for the scripts, because `src/` imports some of them. The
 tests of these scripts use `node:test`. Run them with `pnpm test:factory`.

@@ -68,6 +68,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     resumeWorker: (id: string, expectedRunId: string, requestId: string) =>
       resumeWorker(manager, id, expectedRunId, requestId),
     retryProvider: (provider: string) => retryProvider(manager, provider),
+    dismissAttention: (key: string) => dismissAttention(manager, key),
     snapshot: () => serial(manager, () => buildSnapshot(manager)),
     reconcile: () => reconcilePolicy(manager),
     shutdown: () => shutdownFactory(manager),
@@ -187,6 +188,14 @@ function retryProvider(manager: Manager, provider: string): Promise<void> {
     }));
     await persistStatus(manager);
     notify(manager);
+  });
+}
+
+/** Removes one attention entry and writes the status file. A key that does not exist changes nothing. */
+function dismissAttention(manager: Manager, key: string): Promise<void> {
+  return serial(manager, async () => {
+    setState(manager, (state) => ({ attention: withoutEntry(state.attention, key) }));
+    await persistStatus(manager);
   });
 }
 

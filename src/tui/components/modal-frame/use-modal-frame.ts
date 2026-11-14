@@ -1,32 +1,12 @@
-import { type Dispatch, type SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { uniqueKeys, useIsActive, useLayout } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import type { ModalProps } from "../modal/index.js";
-import { createLayerHost, ModalLayerContext } from "../modal-layer.js";
+import { ModalLayerContext } from "../modal-layer.js";
 import { modalSize } from "../modal-size.js";
-
-/** The keys of one Form in the content of the modal. */
-interface FormLead {
-  readonly keys: readonly KeyHint[];
-}
+import { type FormLead, useModalLayers } from "../use-modal-layers.js";
 
 const FORM_ESC = { key: "esc", description: "cancel" };
-
-/** Counts a layer over the body until the returned call. */
-function countLayer(setNested: Dispatch<SetStateAction<number>>): () => void {
-  setNested((count) => count + 1);
-
-  return () => setNested((count) => count - 1);
-}
-
-/** Shows the keys of a Form first in the hint strip until the returned call. */
-function addLead(setLeads: Dispatch<SetStateAction<readonly FormLead[]>>, keys: readonly KeyHint[]): () => void {
-  const entry = { keys };
-
-  setLeads((list) => [...list, entry]);
-
-  return () => setLeads((list) => list.filter((other) => other !== entry));
-}
 
 /** The modal's own hints. A titled modal without hints still says how to close it. */
 function ownHints(hints: readonly KeyHint[] | undefined, title: string | undefined): readonly KeyHint[] | undefined {
@@ -70,16 +50,11 @@ export function useModalFrame({
 }: ModalProps) {
   const parentLayer = useContext(ModalLayerContext);
   const active = useIsActive();
-  const [nested, setNested] = useState(0);
-  const registerLayer = useCallback(() => countLayer(setNested), []);
-  const [leads, setLeads] = useState<readonly FormLead[]>([]);
-  const registerForm = useCallback((keys: readonly KeyHint[]) => addLead(setLeads, keys), []);
-  const [host] = useState(createLayerHost);
+  const { host, registerLayer, registerForm, covered, leads } = useModalLayers();
   const outer = useLayout();
 
   const screen = size === "screen";
   const overlay = outer.height !== undefined;
-  const covered = nested > 0;
   // Only the top layer, the one in focus, shows its frame in accent, its `✕` and its keys.
   const top = focused && active && !covered;
   const footer = footerHints(leads, ownHints(hints, title));

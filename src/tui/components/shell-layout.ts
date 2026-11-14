@@ -2,6 +2,10 @@
 export const SIDEBAR_WIDTH = 22;
 /** The narrowest a sidebar can be dragged: room for its `+ New …` button. */
 export const SIDEBAR_MIN_WIDTH = 16;
+/** The default width of the Story sidebar, as a part of the terminal width. */
+export const STORY_SIDEBAR_WIDTH = 0.4;
+/** The narrowest the Story sidebar can be, including its border: room for the tabs of a Story. */
+export const STORY_SIDEBAR_MIN_WIDTH = 40;
 /** The narrowest the main panel can be, including its border. */
 export const MAIN_MIN_WIDTH = 24;
 /** Below this terminal width, the Stage sidebar goes above the Story list. */

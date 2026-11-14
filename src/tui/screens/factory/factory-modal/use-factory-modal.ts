@@ -2,6 +2,7 @@ import { useInput } from "ink";
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import type { FactoryLaunch, FactoryStatus } from "../../../../services/factory/factory.js";
 import { getFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
+import type { Story } from "../../../../services/story/story.js";
 import { listThreads, type ThreadRecord, watchThreads } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
@@ -16,9 +17,13 @@ import {
 } from "../../../hooks/index.js";
 import { factoryLive } from "../factory-status.js";
 import { type FactoryKeyEnv, type FactoryRunKind, handleFactoryKey, runFactory } from "./factory-run.js";
+import { type FactoryAttention, useFactoryAttention } from "./use-factory-attention.js";
 
-/** The part of the Factory controls on screen: the overview, the supervisor conversation or the history. */
-type FactoryView = "main" | "supervisor" | "history";
+/**
+ * The part of the Factory controls on screen: the overview, the supervisor conversation, the history, the list
+ * of the warnings or the detail view of one warning.
+ */
+type FactoryView = "main" | "supervisor" | "history" | "attention" | "problem";
 
 /** The inputs of the Factory controls. */
 export interface FactoryModalInput {
@@ -28,6 +33,10 @@ export interface FactoryModalInput {
   readonly onClose: () => void;
   readonly onAiSettings: (() => void) | undefined;
   readonly checkProvider: () => Promise<boolean>;
+  /** The Stories of the board, to find the Story of a warning. */
+  readonly stories: readonly Story[];
+  readonly onOpenStory: ((story: Story) => void) | undefined;
+  readonly onOpenThread: ((thread: ThreadRecord) => void) | undefined;
 }
 
 /** What the Factory controls can do now. */
@@ -35,6 +44,8 @@ interface FactoryAbilities {
   readonly start: boolean;
   readonly stop: boolean;
   readonly inspect: boolean;
+  /** The live factory has warnings, so `w` can open their list. */
+  readonly warnings: boolean;
 }
 
 /** The handlers of the buttons, the history and the stop confirmation. */
@@ -54,7 +65,7 @@ interface FactoryModalActions {
 /** The state of the Factory controls for one render. */
 export interface FactoryModalModel {
   readonly active: boolean;
-  /** True when no dialog, conversation or history has the keys. */
+  /** True when no dialog, conversation, history or warning view has the keys. */
   readonly idle: boolean;
   readonly view: FactoryView;
   readonly live: boolean;
@@ -70,12 +81,21 @@ export interface FactoryModalModel {
   readonly limit: number | undefined;
   readonly layout: Layout;
   readonly actions: FactoryModalActions;
+  readonly attention: FactoryAttention;
 }
 
-/** The view that has the screen. The supervisor conversation comes before the history. */
-function factoryView(inspecting: boolean, history: boolean): FactoryView {
+/** The view that has the screen. The supervisor conversation comes first, then the views of the warnings. */
+function factoryView(inspecting: boolean, history: boolean, attention: FactoryAttention): FactoryView {
   if (inspecting) {
     return "supervisor";
+  }
+
+  if (attention.problem) {
+    return "problem";
+  }
+
+  if (attention.listOpen) {
+    return "attention";
   }
 
   return history ? "history" : "main";
@@ -85,6 +105,7 @@ interface AbilityInput {
   readonly busy: FactoryRunKind | null;
   readonly launch: FactoryLaunch | undefined;
   readonly supervisorId: string | undefined;
+  readonly warnings: number;
 }
 
 function abilities(status: FactoryStatus | undefined, input: AbilityInput): FactoryAbilities {
@@ -94,6 +115,7 @@ function abilities(status: FactoryStatus | undefined, input: AbilityInput): Fact
     start: !live && input.busy === null && input.launch !== undefined,
     stop: live && status?.phase !== "stopping" && input.busy === null,
     inspect: input.supervisorId !== undefined,
+    warnings: input.warnings > 0,
   };
 }
 
@@ -132,13 +154,13 @@ function factoryActions(
   };
 }
 
-/** The supervisor Threads, read again when the phase or the supervisor changes, and on each Thread change. */
-function useSupervisorThreads(ctx: ServiceContext, status: FactoryStatus | undefined): readonly ThreadRecord[] {
-  const supervisors = useAsync(
-    () => listThreads({ role: "supervisor" }, ctx),
-    [ctx, status?.phase, status?.supervisorThreadId],
-  );
-  const refresh = supervisors.refresh;
+/**
+ * All Threads of the Project, the oldest first: the supervisors for the history, and the Threads of the
+ * warnings. They are read again when the phase or the supervisor changes, and on each Thread change.
+ */
+function useProjectThreads(ctx: ServiceContext, status: FactoryStatus | undefined): readonly ThreadRecord[] {
+  const threads = useAsync(() => listThreads({}, ctx), [ctx, status?.phase, status?.supervisorThreadId]);
+  const refresh = threads.refresh;
 
   useEffect(() => {
     const live = new AbortController();
@@ -150,15 +172,28 @@ function useSupervisorThreads(ctx: ServiceContext, status: FactoryStatus | undef
     return () => live.abort();
   }, [ctx, refresh]);
 
-  return supervisors.data?.threads ?? [];
+  return threads.data?.threads ?? [];
+}
+
+/** The supervisor Threads, and the supervisor that the person selected, or the current or the last one. */
+function supervisorOf(all: readonly ThreadRecord[], selectedId: string | undefined, status: FactoryStatus | undefined) {
+  const threads = all.filter((thread) => thread.role === "supervisor");
+  const supervisorId = selectedId ?? status?.supervisorThreadId ?? threads.at(-1)?.id;
+
+  return { threads, supervisorId, supervisor: threads.find((thread) => thread.id === supervisorId) };
+}
+
+/** The abilities in the form that the keys read. */
+function keyAbilities(can: FactoryAbilities) {
+  return { canStart: can.start, canStop: can.stop, canInspect: can.inspect, canWarnings: can.warnings };
 }
 
 /**
  * The state, the keys and the handlers of the Factory controls. `esc` closes the conversation first, then
- * the history, then the Modal.
+ * the history or the views of the warnings, then the Modal.
  */
 export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
-  const { ctx, status, launch, onClose, onAiSettings, checkProvider } = input;
+  const { ctx, status, launch, onClose } = input;
   const active = useIsActive();
   const toast = useToast();
   const [confirm, setConfirm] = useState(false);
@@ -169,45 +204,45 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
   const [selectedId, setSelectedId] = useState<string>();
   const [history, setHistory] = useState(false);
   const [filtering, setFiltering] = useState(false);
-  const threads = useSupervisorThreads(ctx, status);
+  const allThreads = useProjectThreads(ctx, status);
   const settings = useAsync(() => getFactorySettings(ctx), [ctx]);
   const [provider, setProvider] = useState<boolean>();
 
   const live = factoryLive(status);
-  const supervisorId = selectedId ?? status?.supervisorThreadId ?? threads.at(-1)?.id;
-  const supervisor = threads.find((thread) => thread.id === supervisorId);
-  const can = abilities(status, { busy, launch, supervisorId });
-  const inspecting = inspect && can.inspect;
-  const idle = active && !confirm && !inspecting && !history;
-  const limit = status?.workers?.limit ?? settings.data?.maxWorkers;
+  const { threads, supervisorId, supervisor } = supervisorOf(allThreads, selectedId, status);
+  const inspecting = inspect && supervisorId !== undefined;
+  const attention = useFactoryAttention({
+    ...input,
+    threads: allThreads,
+    active: active && !confirm && !inspecting && !history,
+  });
+  const can = abilities(status, { busy, launch, supervisorId, warnings: attention.problems.length });
+  const view = factoryView(inspecting, history, attention);
+  const idle = active && !confirm && view === "main";
 
   const env: FactoryKeyEnv = {
-    ctx,
-    launch,
+    ...input,
+    ...keyAbilities(can),
     toast,
     working,
-    checkProvider,
     setBusy,
     setProvider,
-    canStart: can.start,
-    canStop: can.stop,
-    canInspect: can.inspect,
+    openWarnings: attention.actions.openList,
     setConfirm,
     setInspect,
     setHistory,
-    onAiSettings,
   };
 
   useKeyCapture(active, { text: false, escape: true });
   useEscape(idle, onClose);
-  useEscape(active && inspecting, () => setInspect(false));
-  useEscape(active && history && !inspecting && !filtering, () => setHistory(false));
+  useEscape(active && view === "supervisor", () => setInspect(false));
+  useEscape(active && view === "history" && !filtering, () => setHistory(false));
   useInput((text, key) => handleFactoryKey(env, text, key), { isActive: idle });
 
   return {
     active,
     idle,
-    view: factoryView(inspecting, history),
+    view,
     live,
     busy,
     confirm,
@@ -216,8 +251,9 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
     threads,
     supervisorId,
     supervisor,
-    limit,
+    limit: status?.workers?.limit ?? settings.data?.maxWorkers,
     layout,
     actions: factoryActions(env, setSelectedId, setFiltering),
+    attention,
   };
 }

@@ -128,7 +128,7 @@ Keep a `while` or `for` loop with `await` only when a condition, not a list, end
   `src/services/factory/factory.ts`.
 - A read that stops at the end of a file, for example `scanChunks` in
   `src/services/conversation/session-index.ts`.
-- A search that stops at the first match, for example `findSkillPath` in
+- A search that stops at the first match, for example `findStageSkill` in
   `src/services/factory-worker/factory-worker.ts`.
 
 A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the

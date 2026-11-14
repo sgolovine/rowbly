@@ -3,6 +3,7 @@ import { deleteStory, type Story, updateStory } from "../../../services/story/st
 import { showToast } from "../../hooks/index.js";
 import { closeOverlay, fold } from "./shell-selection.js";
 import type { ShellEnv, ShellView } from "./shell-state.js";
+import { closeDeletedStory } from "./story-pane.js";
 
 /** A Stage and a 1-based position in it. */
 interface Place {
@@ -113,7 +114,10 @@ export function dropStory(env: ShellEnv, id: string, gap: number): void {
   placeStory(env, story, place.key, place.position);
 }
 
-/** After the Story `id` is deleted, selects the row below it (or above it, at the end of the list). */
+/**
+ * After the Story `id` is deleted, selects the row below it (or above it, at the end of the list). The Story
+ * sidebar closes when it edits that Story.
+ */
 export function afterDelete(env: ShellEnv, id: string): void {
   const { rows } = env.view;
   const at = rows.findIndex((r) => r.id === id);
@@ -121,6 +125,7 @@ export function afterDelete(env: ShellEnv, id: string): void {
 
   env.setSelectedId(at >= 0 && next ? next.id : null);
   closeOverlay(env);
+  closeDeletedStory(env, id);
   env.reload();
 }
 

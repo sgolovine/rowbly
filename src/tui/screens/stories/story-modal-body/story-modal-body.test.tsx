@@ -40,7 +40,6 @@ function Host({
       fields={[{ name: "title", label: "Title", kind: "text", required: true }]}
       initialValues={{ title: "Login" }}
       onSubmit={calls.submit}
-      onClose={calls.close}
       onRequestClose={calls.requestClose}
       onDelete={{ title: "Delete Story", message: "Delete it?", onConfirm: calls.confirmDelete }}
       confirming={confirming}
@@ -132,7 +131,7 @@ describe("StoryModalBody", () => {
     expect(confirmDelete).toHaveBeenCalledOnce();
   });
 
-  it("asks to close with esc, but esc in the spec text goes back to the list", async () => {
+  it("calls onRequestClose with esc, but esc in the spec text goes back to the list", async () => {
     const { tui, requestClose } = await setup();
     await tui.press(keys.shiftTab, keys.enter, keys.escape);
     expect(requestClose).not.toHaveBeenCalled();

@@ -2,16 +2,16 @@ import { useApp, useInput } from "ink";
 import { useContext, useState } from "react";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
-import { SIDEBAR_WIDTH } from "../../components/index.js";
 import { type Layout, ShellContext, useIsActive, useLayout, useToast } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import type { Overlay } from "../overlay.js";
 import { type ShellFrame, shellFrame } from "./shell-frame.js";
 import { shellHints } from "./shell-hints.js";
 import { handleShellKey } from "./shell-keys.js";
-import type { Pane, ShellEnv } from "./shell-state.js";
+import type { ShellEnv } from "./shell-state.js";
 import { shellView } from "./shell-view.js";
 import { useShellData } from "./use-shell-data.js";
+import { useShellState } from "./use-shell-state.js";
 
 /** What the shell renders. */
 export interface ShellModel {
@@ -32,48 +32,21 @@ export function useShell(initialCtx: ServiceContext): ShellModel {
   const registry = useContext(ShellContext);
   const layout = useLayout();
   const { data, factory, reload } = useShellData(ctx);
-  const [overlay, setOverlay] = useState<Overlay | null>(null);
-  const [onboardingHints, setOnboardingHints] = useState<readonly KeyHint[]>([]);
-  const [pane, setPane] = useState<Pane>("stories");
-  // Dragged with the mouse and toggled with `ctrl+b`; both last until Rowbly quits.
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
-  const [sidebarShown, setSidebarShown] = useState(true);
-  const [stageKey, setStageKey] = useState<string | null>(null);
-  // The id of the selected row: a Story id, or the `stageRowId` of a section heading.
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  // The Stage sections that are collapsed in All Stages; they last until Rowbly quits.
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const { values, setters } = useShellState();
+  const { overlay, sidebarShown, stageKey } = values;
   const toast = useToast();
 
-  const view = shellView({ data, active, overlay, pane, sidebarShown, stageKey, selectedId, collapsed });
-  const env: ShellEnv = {
-    ctx,
-    view,
-    stageKey,
-    sidebarShown,
-    registry,
-    toast,
-    exit,
-    reload,
-    setCtx,
-    setOverlay,
-    setOnboardingHints,
-    setPane,
-    setSidebarWidth,
-    setSidebarShown,
-    setStageKey,
-    setSelectedId,
-    setCollapsed,
-  };
+  const view = shellView({ data, active, ...values });
+  const env: ShellEnv = { ctx, view, stageKey, sidebarShown, registry, toast, exit, reload, setCtx, ...setters };
 
-  useInput((input, key) => handleShellKey(env, input, key), { isActive: view.idle });
+  useInput((input, key) => handleShellKey(env, input, key), { isActive: view.shellKeys });
 
   return {
     env,
     overlay,
     factory: factory.data,
     layout,
-    frame: shellFrame(layout, view, sidebarWidth),
-    hints: shellHints(view, sidebarShown, onboardingHints),
+    frame: shellFrame(layout, view, values.sidebarWidth, values.storyWidth),
+    hints: shellHints(view, sidebarShown, values.onboardingHints, values.storyHints, values.threadHints),
   };
 }

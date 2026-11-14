@@ -6,7 +6,8 @@ import { LayoutContext } from "../../hooks/index.js";
 import { Header } from "../header/index.js";
 import { ShellOverlays } from "../shell-overlays/index.js";
 import { StoryPanel } from "../story-panel/index.js";
-import { headerProps, overlayHandlers, stageSidebarProps, storyPanelProps } from "./shell-props.js";
+import { StorySidebar } from "../story-sidebar/index.js";
+import { headerProps, overlayHandlers, stageSidebarProps, storyPanelProps, storySidebarProps } from "./shell-props.js";
 import { useShell } from "./use-shell.js";
 
 /** The project in the directory where Rowbly runs. */
@@ -26,26 +27,36 @@ interface ShellProps {
  * or a click on a Story opens it for editing, and so does a pick in the Story finder. `shift+↑/↓` moves the
  * selected Story up or down its Stage, and past either end into the next Stage. `ctrl+shift+↑/↓` moves it
  * to the previous or next Stage. A drag of a Story to another row moves it there. `d` asks before it
- * deletes the selected Story. The Modals that create and edit records open over the Story list. The Project
+ * deletes the selected Story. `n`, **+ New Story**, `enter` and a click on a Story open the new Story form or
+ * the edit form in the Story sidebar on the right of the list. `tab` moves the focus from the Stage sidebar to
+ * the list and then to the Story sidebar. In the Story sidebar, `esc` gives the focus back to the list and keeps
+ * the draft. In the list, `esc` and the `✕` close the Story sidebar, and ask first about unsaved changes. Drag
+ * the left edge of the Story sidebar to change its width. In a narrow terminal, the Story sidebar takes the full
+ * main area. The Modals that create and edit Stages and the other Modals open over the Story list. The Project
  * Button and `p` open the Project switcher, and each Project that opens is recorded in `~/.rowblyrc.json`.
  * Without a Project in the directory where Rowbly runs, the Story panel shows the onboarding steps, which create one
  * there. A Project in a parent directory does not open. The Factory Button and `f` open the Factory controls. The
  * header shows the state of the factory, which runs in a process of its own and continues after Rowbly quits.
+ * The Switch beside the Factory Button and `t` change the list to the Factory view: the worker Threads of all
+ * Stories, filtered by the Stage of the sidebar. `enter` or a click on a Thread opens the Thread Modal.
  */
 export function Shell({ ctx: initialCtx = CWD, launch }: ShellProps) {
   const { env, overlay, factory, layout, frame, hints } = useShell(initialCtx);
   const { view } = env;
+  const story = storySidebarProps(env, frame);
+  const cover = frame.story.cover;
 
   return (
     <Box flexDirection="column" width={layout.width} height={layout.height}>
       <Header {...headerProps(env, factory)} />
       <Box flexGrow={1} flexDirection="column">
         <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
-          {view.sidebar && <Sidebar {...stageSidebarProps(env, frame)} />}
-          <StoryPanel {...storyPanelProps(env, frame)} />
+          {view.sidebar && !cover && <Sidebar {...stageSidebarProps(env, frame)} />}
+          {!cover && <StoryPanel {...storyPanelProps(env, frame)} />}
+          {story && <StorySidebar {...story} />}
         </Box>
         <Box flexDirection="column" {...frame.overlayBox}>
-          <LayoutContext.Provider value={{ width: frame.mainWidth, height: frame.overlayHeight }}>
+          <LayoutContext.Provider value={{ width: frame.overlayWidth, height: frame.overlayHeight }}>
             <ShellOverlays
               overlay={overlay}
               board={view.board}
@@ -53,7 +64,6 @@ export function Shell({ ctx: initialCtx = CWD, launch }: ShellProps) {
               launch={launch}
               factory={factory}
               hints={hints}
-              cursorStage={view.cursorStage}
               on={overlayHandlers(env)}
             />
           </LayoutContext.Provider>

@@ -14,8 +14,8 @@ function handlers(): OverlayHandlers {
   return {
     close: vi.fn(),
     openStory: vi.fn(),
-    storySaved: vi.fn(),
-    storyDeleted: vi.fn(),
+    openThread: vi.fn(),
+    discardStory: vi.fn(),
     removeStory: vi.fn(),
     stageSaved: vi.fn(),
     openAiSettings: vi.fn(),
@@ -35,9 +35,7 @@ describe("StoryOverlays", () => {
       stories: await searchStories({}, project.ctx),
     };
     const on = handlers();
-    const tui = await renderTui(
-      <StoryOverlays overlay={overlay(story)} board={board} ctx={project.ctx} cursorStage={undefined} on={on} />,
-    );
+    const tui = await renderTui(<StoryOverlays overlay={overlay(story)} board={board} on={on} />);
 
     return { tui, on, story };
   }
@@ -64,14 +62,14 @@ describe("StoryOverlays", () => {
     expect(on.removeStory).toHaveBeenCalledWith(story);
   });
 
-  it("opens the Modals that create and edit a Story", async () => {
-    const created = await open(() => ({ kind: "newStory" }));
+  it("asks before it discards the changes of the Story sidebar", async () => {
+    const { tui, on } = await open(() => ({ kind: "discardStory", next: { kind: "new" } }));
 
-    expect(created.tui.frame()).toContain("New Story");
-    cleanup();
-
-    const edited = await open((story) => ({ kind: "editStory", story }));
-
-    expect(edited.tui.frame()).toContain("First story");
+    expect(tui.frame()).toContain("Close and discard unsaved changes?");
+    await tui.press("n");
+    expect(on.close).toHaveBeenCalledOnce();
+    expect(on.discardStory).not.toHaveBeenCalled();
+    await tui.press("y");
+    expect(on.discardStory).toHaveBeenCalledWith({ kind: "new" });
   });
 });

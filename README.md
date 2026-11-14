@@ -103,6 +103,10 @@ A Project without `state.json` remains valid and shows no activity status line b
 
 ## Threads and conversations
 
+Press `t`, or click the `Stories`/`Threads` Switch in the header, to see the worker Threads of all Stories.
+The Factory view shows the sections "Active Threads" and "Inactive Threads". The Stage sidebar filters the Threads.
+Press `enter` on a Thread to see its metadata and its conversation.
+
 Open a Story and select its Threads tab. The tab shows active and historical worker attempts.
 A pending Thread is a durable reservation that occupies a worker slot.
 A Story that waits for capacity has a queue note, without a fictitious Thread.

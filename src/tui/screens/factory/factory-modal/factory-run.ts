@@ -24,6 +24,8 @@ export interface FactoryKeyEnv extends FactoryRunEnv {
   readonly canStart: boolean;
   readonly canStop: boolean;
   readonly canInspect: boolean;
+  readonly canWarnings: boolean;
+  readonly openWarnings: () => void;
   readonly setConfirm: Dispatch<SetStateAction<boolean>>;
   readonly setInspect: Dispatch<SetStateAction<boolean>>;
   readonly setHistory: Dispatch<SetStateAction<boolean>>;
@@ -90,8 +92,14 @@ export function handleFactoryKey(env: FactoryKeyEnv, input: string, key: Key): v
   openOther(env, input);
 }
 
-/** `h` shows the supervisor history and `a` opens the AI settings. */
+/** `w` shows the warnings, `h` shows the supervisor history and `a` opens the AI settings. */
 function openOther(env: FactoryKeyEnv, input: string): void {
+  if (input === "w" && env.canWarnings) {
+    env.openWarnings();
+
+    return;
+  }
+
   if (input === "h") {
     env.setHistory(true);
 

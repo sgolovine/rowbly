@@ -1,5 +1,5 @@
 import { cleanup } from "ink-testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import { renderTui } from "../../../testing/index.js";
 import { FactoryOverview, type FactoryOverviewProps } from "./factory-overview.js";
@@ -53,5 +53,68 @@ describe("FactoryOverview", () => {
     expect(tui.frame()).toContain("Pi default");
     expect(tui.frame()).toContain("Canonical commit: failed");
     expect(tui.frame()).toContain("ROW-02 Develop · waiting for a worker slot");
+  });
+
+  it("selects a warning with the first click and opens it with a click on the selected row", async () => {
+    const onProblem = vi.fn();
+    const tui = await renderTui(
+      <FactoryOverview {...props({ status: running, live: true, clickable: true, onProblem })} />,
+    );
+
+    expect(tui.frame()).not.toContain("▌");
+
+    await tui.click("Canonical commit");
+
+    expect(onProblem).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("▌ ! Canonical commit: failed");
+
+    await tui.click("Canonical commit");
+
+    expect(onProblem).toHaveBeenCalledOnce();
+    expect(onProblem).toHaveBeenCalledWith("attention:commit");
+  });
+
+  it("moves the selection to a different warning without opening it", async () => {
+    const two = {
+      ...running,
+      attention: [
+        ["commit", { text: "Canonical commit: failed" }],
+        ["push", { text: "Push: rejected" }],
+      ],
+    } as unknown as FactoryStatus;
+    const onProblem = vi.fn();
+    const tui = await renderTui(
+      <FactoryOverview {...props({ status: two, live: true, clickable: true, onProblem })} />,
+    );
+
+    await tui.click("Canonical commit");
+    await tui.click("Push: rejected");
+
+    expect(onProblem).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("▌ ! Push: rejected");
+    expect(tui.frame()).not.toContain("▌ ! Canonical commit");
+  });
+
+  it("keeps no selection when the selected warning goes away", async () => {
+    const onProblem = vi.fn();
+    const tui = await renderTui(
+      <FactoryOverview {...props({ status: running, live: true, clickable: true, onProblem })} />,
+    );
+
+    await tui.click("Canonical commit");
+    await tui.rerender(
+      <FactoryOverview {...props({ status: { ...running, attention: [] }, live: true, clickable: true, onProblem })} />,
+    );
+
+    expect(tui.frame()).not.toContain("Canonical commit");
+    expect(tui.frame()).not.toContain("▌");
+
+    await tui.rerender(<FactoryOverview {...props({ status: running, live: true, clickable: true, onProblem })} />);
+
+    expect(tui.frame()).not.toContain("▌");
+
+    await tui.click("Canonical commit");
+
+    expect(onProblem).not.toHaveBeenCalled();
   });
 });

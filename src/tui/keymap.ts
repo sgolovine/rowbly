@@ -11,7 +11,8 @@ export interface KeyHint {
 /** The keys the shell handles on every screen, as the help overlay lists them. */
 export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "↑/↓", description: "move" },
-  { key: "tab", description: "move the focus between the Stages and the Stories" },
+  { key: "tab", description: "focus the next pane: Stages, Story list, Story sidebar" },
+  { key: "shift+tab", description: "focus the previous pane (in the Story list)" },
   { key: "[/]", description: "previous/next Stage" },
   { key: "enter", description: "expand or collapse the Stage section (in All Stages)" },
   { key: "←/→", description: "collapse/expand the Stage section (in All Stages)" },
@@ -26,9 +27,12 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "p", description: "switch Project" },
   { key: "ctrl+b", description: "show or hide the Stage sidebar" },
   { key: "f", description: "factory controls" },
+  { key: "t", description: "show the Stories or the Threads of the factory" },
   { key: ",", description: "settings" },
   { key: "ctrl+f", description: "edit a text field full screen" },
   { key: "esc", description: "back" },
+  { key: "esc", description: "focus the Story list (in the Story sidebar)" },
+  { key: "esc", description: "close the Story sidebar (in the Story list)" },
   { key: "?", description: "help" },
   { key: "q", description: "quit" },
   { key: "j/k", description: "move (vim keys)", secondary: true },

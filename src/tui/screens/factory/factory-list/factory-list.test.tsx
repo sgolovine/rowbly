@@ -1,6 +1,6 @@
 import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderTui } from "../../../testing/index.js";
 import { FactoryList } from "./factory-list.js";
 
@@ -22,5 +22,59 @@ describe("FactoryList", () => {
     expect(tui.frame()).toContain("row 4");
     expect(tui.frame()).not.toContain("row 5");
     expect(tui.frame()).toContain("↓ 2 more");
+  });
+
+  it("selects and opens a row only while it is clickable", async () => {
+    const onClick = vi.fn();
+    const row = [{ key: "a", node: <Text>row a</Text>, onClick }];
+    const tui = await renderTui(<FactoryList title="Attention" rows={row} />);
+
+    await tui.click("row a");
+    await tui.click("row a");
+
+    expect(onClick).not.toHaveBeenCalled();
+    expect(tui.frame()).not.toContain("▌");
+
+    await tui.rerender(<FactoryList title="Attention" rows={row} clickable />);
+    await tui.click("row a");
+
+    expect(onClick).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("▌ row a");
+
+    await tui.click("row a");
+
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it("moves the selection to a different row without its action", async () => {
+    const onA = vi.fn();
+    const onB = vi.fn();
+    const two = [
+      { key: "a", node: <Text>row a</Text>, onClick: onA },
+      { key: "b", node: <Text>row b</Text>, onClick: onB },
+    ];
+    const tui = await renderTui(<FactoryList title="Attention" rows={two} clickable />);
+
+    await tui.click("row a");
+    await tui.click("row b");
+
+    expect(onA).not.toHaveBeenCalled();
+    expect(onB).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("▌ row b");
+    expect(tui.frame()).not.toContain("▌ row a");
+
+    await tui.click("row b");
+
+    expect(onB).toHaveBeenCalledOnce();
+    expect(onA).not.toHaveBeenCalled();
+  });
+
+  it("shows no selection bar for rows without an action", async () => {
+    const tui = await renderTui(<FactoryList title="Queue" rows={rows(2)} clickable />);
+
+    await tui.click("row 0");
+
+    expect(tui.frame()).not.toContain("▌");
+    expect(tui.frame()).toContain("\nrow 0");
   });
 });

@@ -4,6 +4,7 @@ import type { KeyHint } from "../../keymap.js";
 import { FactoryModal } from "../../screens/factory/index.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
+import { ThreadModal } from "../../screens/threads/index.js";
 import { HelpModal } from "../help-modal/index.js";
 import type { Overlay, OverlayBoard, OverlayHandlers } from "../overlay.js";
 import { ProjectSwitcher } from "../project-switcher/index.js";
@@ -18,7 +19,6 @@ interface ShellOverlaysProps {
   readonly factory: FactoryStatus | undefined;
   /** The keys that the help Modal shows. */
   readonly hints: readonly KeyHint[];
-  readonly cursorStage: string | undefined;
   readonly on: OverlayHandlers;
 }
 
@@ -28,10 +28,10 @@ function stageLabels(board: OverlayBoard): Record<string, string> {
 }
 
 /** The overlay of the shell that is open, if there is one. */
-export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, cursorStage, on }: ShellOverlaysProps) {
+export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on }: ShellOverlaysProps) {
   return (
     <>
-      {board && <StoryOverlays overlay={overlay} board={board} ctx={ctx} cursorStage={cursorStage} on={on} />}
+      {board && <StoryOverlays overlay={overlay} board={board} on={on} />}
       {board && (overlay?.kind === "newStage" || overlay?.kind === "editStage") && (
         <StageFormModal
           ctx={ctx}
@@ -57,6 +57,18 @@ export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, cur
           launch={launch}
           onClose={on.close}
           onAiSettings={on.openAiSettings}
+          stories={board.stories}
+          onOpenStory={on.openStory}
+          onOpenThread={on.openThread}
+        />
+      )}
+      {board && overlay?.kind === "thread" && (
+        <ThreadModal
+          ctx={ctx}
+          root={board.project.root}
+          thread={overlay.thread}
+          stages={stageLabels(board)}
+          onClose={on.close}
         />
       )}
       {overlay?.kind === "projects" && (

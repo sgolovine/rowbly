@@ -1,21 +1,32 @@
 import { describe, expect, it } from "vitest";
 import type { ThreadRecord } from "../../../services/thread/thread.js";
-import { factoryHints, historyModel, providerNotice, supervisorText, workersText } from "./factory-modal-text.js";
+import {
+  factoryHints,
+  historyModel,
+  problemHints,
+  providerNotice,
+  supervisorText,
+  workersText,
+} from "./factory-modal-text.js";
 
 describe("factoryModalText", () => {
+  it("offers only the actions of a warning that it has", () => {
+    expect(problemHints({ story: true, thread: true, dismiss: true }).map((h) => h.key)).toEqual([
+      "o",
+      "t",
+      "d",
+      "esc",
+    ]);
+    expect(problemHints({ story: false, thread: false, dismiss: false }).map((h) => h.key)).toEqual(["esc"]);
+  });
+
   it("offers only the keys that work now", () => {
-    expect(factoryHints({ start: true, stop: false, inspect: false, aiSettings: false }).map((h) => h.key)).toEqual([
-      "s",
-      "h",
-      "esc",
-    ]);
-    expect(factoryHints({ start: false, stop: true, inspect: true, aiSettings: true }).map((h) => h.key)).toEqual([
-      "x",
-      "enter",
-      "h",
-      "a",
-      "esc",
-    ]);
+    expect(
+      factoryHints({ start: true, stop: false, inspect: false, warnings: false, aiSettings: false }).map((h) => h.key),
+    ).toEqual(["s", "h", "esc"]);
+    expect(
+      factoryHints({ start: false, stop: true, inspect: true, warnings: true, aiSettings: true }).map((h) => h.key),
+    ).toEqual(["x", "enter", "w", "h", "a", "esc"]);
   });
 
   it("names the supervisor model, the Pi default of a live factory, or nothing", () => {

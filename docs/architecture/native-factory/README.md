@@ -33,7 +33,7 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Stage classes.** The supervisor classifies each Stage prompt as `work`, `hold` or `invalid`. Only
   `work` Stages get workers.
 - **Workers.** Each worker is an independent Pi session for one Story in one Stage. It gets the first
-  message from `skills/factory/references/worker-message-native.md`. It works in one worktree for the
+  message from `src/services/factory-worker/worker-prompt.ts`. It works in one worktree for the
   Story (`worker-worktree/`). It makes canonical Project changes only through the CLI shim
   `runtime/bin/rowbly`, under the Project write lock.
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and

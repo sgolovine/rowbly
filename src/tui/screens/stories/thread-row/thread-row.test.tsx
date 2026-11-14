@@ -36,6 +36,13 @@ describe("ThreadRow", () => {
     expect(tui.frame()).toContain("Provider quota reached");
   });
 
+  it("shows the Story id before the status when storyId is set", async () => {
+    const tui = await renderTui(
+      <ThreadRow thread={thread} storyId="ROW-01" now={0} selected={false} clickable onClick={() => {}} />,
+    );
+    expect(tui.frame()).toMatch(/ROW-01 ✕ failed #2 DEVELOP\s+4m 12s/);
+  });
+
   it("calls onClick on a click", async () => {
     const onClick = vi.fn();
     const tui = await renderTui(<ThreadRow thread={thread} now={0} selected={false} clickable onClick={onClick} />);

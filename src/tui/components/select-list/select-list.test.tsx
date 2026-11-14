@@ -68,6 +68,30 @@ describe("SelectList", () => {
     expect(onSelect).toHaveBeenCalledWith(ITEMS[2]);
   });
 
+  it("with clickToHighlight, highlights a clicked item first and picks it on a click on the highlight", async () => {
+    const { tui, onSelect } = setup({ clickToHighlight: true });
+    await (await tui).click("Gamma");
+    expect(onSelect).not.toHaveBeenCalled();
+    expect((await tui).frame()).toContain("▌ Gamma");
+
+    await (await tui).click("Gamma");
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(onSelect).toHaveBeenCalledWith(ITEMS[2]);
+  });
+
+  it("with clickToHighlight, moves the highlight to a different clicked item without a pick", async () => {
+    const { tui, onSelect } = setup({ clickToHighlight: true });
+    await (await tui).click("Gamma");
+    await (await tui).click("Beta");
+    expect(onSelect).not.toHaveBeenCalled();
+    expect((await tui).frame()).toContain("▌ Beta");
+
+    await (await tui).click("Alpha");
+    expect(onSelect).not.toHaveBeenCalled();
+    await (await tui).press(keys.enter);
+    expect(onSelect).toHaveBeenCalledWith(ITEMS[0]);
+  });
+
   it("toggles with space and submits the checked values on enter in multi mode", async () => {
     const onChange = vi.fn();
     const onSubmit = vi.fn();

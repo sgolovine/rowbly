@@ -12,12 +12,13 @@ import {
 } from "../thread-text.js";
 
 /**
- * One thread in the Threads tab of a Story. Row 1: the status glyph and text, the attempt and the Stage, and the
- * run time on the right. Row 2: the model id and the creation time. Row 3, if there is one: the error in `danger`,
+ * One thread in the Threads tab of a Story, or in the Factory view. Row 1: the Story id when `storyId` is set, the
+ * status glyph and text, the attempt and the Stage, and the run time on the right. Row 2: the model id and the creation time. Row 3, if there is one: the error in `danger`,
  * or the summary of the result.
  */
 export function ThreadRow({
   thread,
+  storyId,
   stages,
   now,
   selected,
@@ -25,6 +26,8 @@ export function ThreadRow({
   onClick,
 }: {
   thread: ThreadRecord;
+  /** The Story of the thread, for a list with the threads of more than one Story. */
+  storyId?: string;
   stages?: StageNames;
   /** The time for the run time of a running thread. */
   now: number;
@@ -42,6 +45,11 @@ export function ThreadRow({
       <Box paddingRight={1}>
         <Box flexGrow={1} flexShrink={1}>
           <Text wrap="truncate-end">
+            {storyId && (
+              <Text color={theme.ink} bold>
+                {storyId}{" "}
+              </Text>
+            )}
             <Text color={color}>{glyph} </Text>
             <Text color={thread.status === "failed" ? theme.danger : theme.ink} bold={selected}>
               {thread.status}
