@@ -32,6 +32,9 @@ export interface AiEnv {
   /** The index of the highlighted Stage on the Models tab. */
   readonly stageCursor: number;
   readonly setStageCursor: Dispatch<SetStateAction<number>>;
+  /** The index of the highlighted check on the Checks tab. */
+  readonly checkCursor: number;
+  readonly setCheckCursor: Dispatch<SetStateAction<number>>;
   /** The providers of the page. */
   readonly providers: readonly AiProvider[];
   readonly page: AiPage;

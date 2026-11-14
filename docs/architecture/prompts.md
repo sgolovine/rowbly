@@ -52,7 +52,8 @@ Do not build a message in a different module. Each section starts with a `# ` he
 6. `Digest` for the supervisor, or `Run` for a worker
 
 The `Run` section gives the Story, the Stage, the canonical Project root, the worktree, the model and
-the `flock` command prefix. A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
+the `flock` command prefix. When the Project has checks, it also lists the checks, and the worker
+system prompt keeps its check rules. See [native-factory/checks.md](native-factory/checks.md#prompts-and-the-digest). A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
 each user prompt at 16000 characters (`USER_PROMPT_LIMIT`).
 
 ## Read and write the user prompts

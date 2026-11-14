@@ -25,6 +25,7 @@ import {
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { startProjectSync } from "./project-sync-step.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
+import { checkHistory } from "./worker-checks.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
 
@@ -230,6 +231,7 @@ async function buildDigest(manager: Manager) {
         stage: t.stage,
         status: t.status,
         result: t.result ? { ...t.result, summary: t.result.summary.slice(0, 1000) } : undefined,
+        ...(t.checks?.length ? { checks: checkHistory(t.checks) } : {}),
       })),
     reports: reports.map((report) => ({
       ...report,

@@ -1,9 +1,10 @@
 import { Box } from "ink";
 import { type AuthRuntime, authRuntime } from "../../../../services/agent-auth/agent-auth.js";
-import type { ModelChoice } from "../../../../services/factory-settings/factory-settings.js";
+import type { CheckSpec, ModelChoice } from "../../../../services/factory-settings/factory-settings.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { type FormValues, Tabs } from "../../../components/index.js";
 import { AiAddProviderPage } from "../ai-add-provider-page/index.js";
+import { AiChecksPage, type AiChecksPageProps } from "../ai-checks-page/index.js";
 import { AiLimitsPage } from "../ai-limits-page/index.js";
 import { AiModelsPage } from "../ai-models-page/index.js";
 import { AiProvidersPage } from "../ai-providers-page/index.js";
@@ -22,6 +23,7 @@ import {
   saveStageModel,
   signOut,
 } from "./ai-actions.js";
+import { openCheck, removeCheckItem, saveCheck, saveCheckLimits } from "./check-actions.js";
 import { useAiSection } from "./use-ai-section.js";
 
 /** The handlers of the task on top of the AI settings. */
@@ -32,17 +34,34 @@ function taskHandlers(env: AiEnv) {
     onSaveModel: (role: Role, choice: ModelChoice | null) => saveModel(env, role, choice),
     onSaveStageModel: (stage: Stage, choice: ModelChoice | null) => saveStageModel(env, stage, choice),
     onSaveLimit: (values: FormValues) => saveLimit(env, values),
+    onSaveCheckLimits: (values: FormValues) => saveCheckLimits(env, values),
+    onSaveCheck: (check: CheckSpec | undefined, values: FormValues) => saveCheck(env, check, values),
+    onRemoveCheck: (check: CheckSpec) => removeCheckItem(env, check),
     onCancel: () => env.setTask(null),
   };
 }
 
+/** The props of the Checks tab. */
+function checksPageProps(env: AiEnv, idle: boolean): AiChecksPageProps {
+  return {
+    settings: env.settings.data,
+    idle,
+    cursor: env.checkCursor,
+    onLimits: () => env.setTask({ kind: "checkLimits" }),
+    onAdd: () => env.setTask({ kind: "check" }),
+    onCheck: (index) => openCheck(env, index),
+  };
+}
+
 /**
- * The AI settings of the factory, in three tabs. `←/→` or a click changes the tab.
+ * The AI settings of the factory, in four tabs. `←/→` or a click changes the tab.
  * - Providers: the signed-in providers of Pi. `d` asks before it signs out, and `n` opens the page that signs in
  *   to another provider. On that page, `enter` signs in and `esc` goes back.
  * - Models: the models of the supervisor and of the workers. `s` and `w` change them. Under them, `↑/↓` select a
  *   Stage, and `enter` or a click changes the worker model override of the Stage.
  * - Limits: the worker limit. `l` changes it.
+ * - Checks: the check limits and the checks that the factory runs for its workers. `c` changes the limits, `n` adds
+ *   a check, `↑/↓` select a check, `enter` or a click edits it, and `d` asks before it removes it.
  *
  * The sign-in is for this computer: Pi keeps the credentials, and the Project keeps no secret. The section
  * loads Pi only when it opens. The board does not need it.
@@ -110,6 +129,7 @@ export function AiSection({
       {page === "limits" && (
         <AiLimitsPage settings={settings.data} idle={idle} onLimit={() => env.setTask({ kind: "limit" })} />
       )}
+      {page === "checks" && <AiChecksPage {...checksPageProps(env, idle)} />}
       <AiTaskView
         task={model.task}
         ctx={ctx}

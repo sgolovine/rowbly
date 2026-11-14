@@ -27,6 +27,7 @@ import {
 } from "./manager-state.js";
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
+import { openCheckQueue } from "./worker-checks.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
 
 export type { FactoryDependencies } from "./manager-state.js";
@@ -52,11 +53,13 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
   const authStamp = await readAuthStamp(deps.agentDir);
   const stored = await loadStoredStatus(paths);
 
+  const checks = await openCheckQueue(paths, owner.token, () => manager, deps.checkDeps);
   const manager: Manager = {
     deps,
     paths,
     ctx,
     owner,
+    checks,
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 
