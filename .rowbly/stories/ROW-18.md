@@ -1,7 +1,7 @@
 ---
 title: Periodic Git push and pull in the factory
-stage: IN_DEVELOPMENT
-position: 2
+stage: DONE
+position: 18
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-18
 pull_request: https://github.com/sgolovine/rowbly/pull/201
 ---
@@ -78,8 +78,5 @@ Not in scope:
 - A success removes the attention entry of the same key. Reason: an old failure must not stay after the problem is solved. The `commit` entry keeps its current behaviour.
 - The flag names are `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and `--git-sync-interval`. Reason: they agree with the `git` section name and the Commander negation pattern.
 
-## Review findings
-
-1. **Merge conflict with `main`.** PR #201 cannot merge. ROW-17 (PR #200, commit `cbb51324`) merged into `main` after this branch was made. It adds the `git` section with its own `GitSettings` type, `validGit`, `mergeGit`, `hasGitInput` and `GitInput` in `src/services/factory-settings/git-settings.ts`. Git reports conflicts in `docs/architecture/native-factory/controls.md`, `docs/architecture/native-factory/pi-runtime-and-auth.md`, `src/commands/factory/factory.ts`, `src/services/factory-manager/factory-manager.test.ts` and `src/services/factory-settings/factory-settings.ts` (also `supervisor-loop.ts` and `factory-settings.test.ts` changed on both sides). Fix: merge `origin/main` into `story/ROW-18`. As the technical notes say, extend the ROW-17 `git` section, its type and its validation in `git-settings.ts` with `push`, `pull` and `syncIntervalSeconds`. Do not make a second `GitSettings` type or a second `validGit`. Keep the ROW-17 author and message keys and the ROW-17 `configure` flags. Make sure that the unit test for other `git` keys uses the real ROW-17 keys. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again.
-
-The code review found no other blocking problem. Before the conflict, all acceptance criteria were satisfied, CI passed, and the local checks passed. The non-blocking findings are in a comment on PR #201.
+- After the merge of ROW-17, `getFactorySettings` gives the sync defaults in the returned `git` object, but a write does not add the defaults to `factory.json`. Reason: AC 1 asks for the default values, and the ROW-17 rule that an empty `git` section goes away from the file stays true.
+- `updateFactorySettings` merges `git` one level deep. `configureFactory` uses the ROW-17 `mergeGit`, so that `--commit-message ""` removes the key and the old value does not come back. Reason: one merge function for the configure flags.
