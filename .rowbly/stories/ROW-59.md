@@ -1,7 +1,7 @@
 ---
 title: Store Story dependencies in the Story service
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 44
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-59
 pull_request: https://github.com/sgolovine/rowbly/pull/231
 ---
