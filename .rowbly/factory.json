@@ -12,6 +12,7 @@
     "thinkingLevel": "medium"
   },
   "git": {
-    "push": true
+    "push": true,
+    "pull": true
   }
 }
