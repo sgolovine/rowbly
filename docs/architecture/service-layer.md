@@ -120,7 +120,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 
 | Module                              | Function                                                           |
 | ----------------------------------- | ------------------------------------------------------------------ |
-| `pi-runtime/`                       | Lazy Pi imports, session adapter, runtime and model catalog.       |
+| `pi-runtime/`                       | Lazy Pi imports, sessions, runtime, model catalog and Pi worker.   |
 | `agent-auth/`                       | Provider status, model checks, login and logout.                   |
 | `factory-settings/`                 | The optional `factory.json`, the role models, Git sync and checks. |
 | `factory/`                          | Daemon client, status, controls and operational logs.              |

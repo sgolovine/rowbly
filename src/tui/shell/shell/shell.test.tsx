@@ -27,6 +27,15 @@ vi.mock("../../../services/agent-auth/agent-auth.js", async (original) => ({
   }),
 }));
 
+// The Pi worker must not start in this test: the Factory controls and the Models tab read Pi through it.
+vi.mock("../../../services/pi-runtime/pi-worker-client.js", () => {
+  const fail = async () => {
+    throw new Error("Pi is not loaded in this test");
+  };
+  const source = { listAvailableModels: fail, getAuthStatus: fail };
+  return { piWorkerSource: () => source };
+});
+
 afterEach(() => {
   cleanup();
   vi.mocked(factory.getFactoryStatus).mockReset();

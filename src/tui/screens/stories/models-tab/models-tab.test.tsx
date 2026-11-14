@@ -1,10 +1,12 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import * as agentAuth from "../../../../services/agent-auth/agent-auth.js";
 import { ValidationError } from "../../../../services/errors/errors.js";
 import * as factorySettings from "../../../../services/factory-settings/factory-settings.js";
 import { updateFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
 import { piCatalogKey, readPiCatalog, writePiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-cache.js";
+import { type PiCatalogSource, runtimeSource } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import { createStage } from "../../../../services/stage/stage.js";
 import { createStory } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
@@ -29,6 +31,14 @@ const runtime = {
   listCredentials: async () => [],
 } as unknown as AuthRuntime;
 
+/** A faux source. `load` gives the runtime that it reads, as the Pi worker reads a new runtime. */
+function fauxSource(load: () => Promise<AuthRuntime> = async () => runtime) {
+  const models = vi.fn(async () => runtimeSource(await load()).listAvailableModels());
+  const status = vi.fn(async () => runtimeSource(await load()).getAuthStatus());
+  const source: PiCatalogSource = { listAvailableModels: models, getAuthStatus: status };
+  return { source, models };
+}
+
 const fast = { provider: "acme", modelId: "fast-1" };
 const sol = { provider: "openai", modelId: "gpt-sol" };
 
@@ -40,40 +50,33 @@ describe("ModelsTab", () => {
     await createStage({ label: "Review", key: "REVIEW" }, project.ctx);
   });
 
-  async function open(loadRuntime = vi.fn(async () => runtime)) {
+  async function open({ source } = fauxSource()) {
     const onTask = vi.fn();
     const tui = await renderTui(
-      <ModelsTab
-        ctx={project.ctx}
-        storyId="ROW-01"
-        selected
-        onHints={vi.fn()}
-        onTask={onTask}
-        loadRuntime={loadRuntime}
-      />,
+      <ModelsTab ctx={project.ctx} storyId="ROW-01" selected onHints={vi.fn()} onTask={onTask} source={source} />,
     );
     await vi.waitFor(async () => {
       await tui.press();
       expect(tui.frame()).toContain("● Backlog");
       expect(tui.frame()).not.toContain("Loading models");
     });
-    return { tui, loadRuntime, onTask };
+    return { tui, onTask };
   }
 
   it("does not load Pi before the tab is shown, and loads it the first time it is shown", async () => {
-    const loadRuntime = vi.fn(async () => runtime);
-    const props = { ctx: project.ctx, storyId: "ROW-01", onHints: vi.fn(), onTask: vi.fn(), loadRuntime };
+    const { source, models } = fauxSource();
+    const props = { ctx: project.ctx, storyId: "ROW-01", onHints: vi.fn(), onTask: vi.fn(), source };
     const tui = await renderTui(<ModelsTab {...props} selected={false} />);
     await vi.waitFor(async () => {
       await tui.press();
       expect(tui.frame()).toContain("● Backlog");
     });
-    expect(loadRuntime).not.toHaveBeenCalled();
+    expect(models).not.toHaveBeenCalled();
     await tui.rerender(<ModelsTab {...props} selected />);
-    await vi.waitFor(() => expect(loadRuntime).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(models).toHaveBeenCalledOnce());
     await tui.rerender(<ModelsTab {...props} selected={false} />);
     await tui.rerender(<ModelsTab {...props} selected />);
-    expect(loadRuntime).toHaveBeenCalledOnce();
+    expect(models).toHaveBeenCalledOnce();
   });
 
   it("shows a loading text until the models load, and an error toast when Pi does not load", async () => {
@@ -84,7 +87,7 @@ describe("ModelsTab", () => {
         selected
         onHints={vi.fn()}
         onTask={vi.fn()}
-        loadRuntime={() => new Promise<AuthRuntime>(() => {})}
+        source={fauxSource(() => new Promise<AuthRuntime>(() => {})).source}
       />,
     );
     await vi.waitFor(async () => {
@@ -98,9 +101,11 @@ describe("ModelsTab", () => {
         selected
         onHints={vi.fn()}
         onTask={vi.fn()}
-        loadRuntime={async () => {
-          throw new Error("Pi did not load");
-        }}
+        source={
+          fauxSource(async () => {
+            throw new Error("Pi did not load");
+          }).source
+        }
       />,
     );
     await vi.waitFor(() => expect(failed.toasts.list().some((t) => t.message.includes("Pi did not load"))).toBe(true));
@@ -180,16 +185,9 @@ describe("ModelsTab", () => {
       await writePiCatalog({ models: [cached], providers: [] }, key, project.ctx);
     }
 
-    function render(loadRuntime: () => Promise<AuthRuntime>) {
+    function render(source: PiCatalogSource) {
       return renderTui(
-        <ModelsTab
-          ctx={project.ctx}
-          storyId="ROW-01"
-          selected
-          onHints={vi.fn()}
-          onTask={vi.fn()}
-          loadRuntime={loadRuntime}
-        />,
+        <ModelsTab ctx={project.ctx} storyId="ROW-01" selected onHints={vi.fn()} onTask={vi.fn()} source={source} />,
       );
     }
 
@@ -208,11 +206,11 @@ describe("ModelsTab", () => {
 
     it("shows the models of a fresh cache and never loads Pi", async () => {
       await writeCache();
-      const loadRuntime = vi.fn(async () => runtime);
-      const tui = await render(loadRuntime);
+      const { source, models } = fauxSource();
+      const tui = await render(source);
       await pickerShows(tui, "cached-1");
       expect(tui.frame()).not.toContain("Loading models");
-      expect(loadRuntime).not.toHaveBeenCalled();
+      expect(models).not.toHaveBeenCalled();
     });
 
     it("shows the models of a stale cache first, then the refreshed models, and writes them to the cache", async () => {
@@ -221,10 +219,10 @@ describe("ModelsTab", () => {
       const loaded = new Promise<AuthRuntime>((resolve) => {
         pending.resolve = resolve;
       });
-      const loadRuntime = vi.fn(() => loaded);
-      const tui = await render(loadRuntime);
+      const { source, models } = fauxSource(() => loaded);
+      const tui = await render(source);
       await pickerShows(tui, "cached-1");
-      expect(loadRuntime).toHaveBeenCalledOnce();
+      expect(models).toHaveBeenCalledOnce();
       pending.resolve(runtime);
       await vi.waitFor(async () =>
         expect((await readPiCatalog(project.ctx))?.models.map((m) => m.modelId)).toEqual(["deep-1", "fast-1"]),
@@ -232,24 +230,26 @@ describe("ModelsTab", () => {
       await pickerShows(tui, "fast-1");
       expect(tui.frame()).not.toContain("cached-1");
       expect((await readPiCatalog(project.ctx))?.fresh).toBe(true);
-      expect(loadRuntime).toHaveBeenCalledOnce();
+      expect(models).toHaveBeenCalledOnce();
     });
 
-    it("loads Pi when the cache is missing, and writes the cache", async () => {
-      const loadRuntime = vi.fn(async () => runtime);
-      const tui = await render(loadRuntime);
+    it("reads the source when the cache is missing, writes the cache and never loads Pi in this thread", async () => {
+      const authRuntime = vi.spyOn(agentAuth, "authRuntime");
+      const { source, models } = fauxSource();
+      const tui = await render(source);
       await pickerShows(tui, "fast-1");
-      expect(loadRuntime).toHaveBeenCalledOnce();
+      expect(models).toHaveBeenCalledOnce();
       expect((await readPiCatalog(project.ctx))?.fresh).toBe(true);
+      expect(authRuntime).not.toHaveBeenCalled();
     });
 
     it("keeps the cached models without an error toast when the refresh fails", async () => {
       await writeCache("0.0.1-old");
-      const loadRuntime = vi.fn(async (): Promise<AuthRuntime> => {
+      const { source, models } = fauxSource(async (): Promise<AuthRuntime> => {
         throw new Error("Pi did not load");
       });
-      const tui = await render(loadRuntime);
-      await vi.waitFor(() => expect(loadRuntime).toHaveBeenCalledOnce());
+      const tui = await render(source);
+      await vi.waitFor(() => expect(models).toHaveBeenCalledOnce());
       await pickerShows(tui, "cached-1");
       expect(tui.toasts.list()).toEqual([]);
     });

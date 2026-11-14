@@ -1,10 +1,12 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import * as agentAuth from "../../../../services/agent-auth/agent-auth.js";
 import { ConflictError } from "../../../../services/errors/errors.js";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
 import { piCatalogKey, readPiCatalog, writePiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-cache.js";
+import { type PiCatalogSource, runtimeSource } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import type { Story } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../../../services/thread/thread.js";
@@ -205,7 +207,17 @@ describe("FactoryModal", () => {
       getAvailable: async () => [{ provider: "acme", id: "fast-1", name: "Fast One", reasoning: false }],
     } as unknown as AuthRuntime;
 
-    async function start(loadRuntime: () => Promise<AuthRuntime>) {
+    /** A faux source of the configured runtime, as the Pi worker gives. */
+    function fauxSource() {
+      const status = vi.fn(() => runtimeSource(configured).getAuthStatus());
+      const source: PiCatalogSource = {
+        listAvailableModels: () => runtimeSource(configured).listAvailableModels(),
+        getAuthStatus: status,
+      };
+      return { source, status };
+    }
+
+    async function start(source: PiCatalogSource) {
       const tui = await renderTui(
         <FactoryModal
           ctx={project.ctx}
@@ -213,7 +225,7 @@ describe("FactoryModal", () => {
           launch={launch}
           onClose={() => {}}
           onAiSettings={() => {}}
-          loadRuntime={loadRuntime}
+          source={source}
         />,
       );
       await settle(50);
@@ -224,7 +236,7 @@ describe("FactoryModal", () => {
       return tui;
     }
 
-    it("answers provider ready from a fresh cache without a call to the Pi loader", async () => {
+    it("answers provider ready from a fresh cache without a read of the source", async () => {
       const providers = [
         {
           id: "acme",
@@ -235,16 +247,18 @@ describe("FactoryModal", () => {
         },
       ];
       await writePiCatalog({ models: [], providers }, await piCatalogKey(project.ctx), project.ctx);
-      const loadRuntime = vi.fn(async () => configured);
-      const tui = await start(loadRuntime);
+      const { source, status } = fauxSource();
+      const tui = await start(source);
       expect(tui.frame()).not.toContain("Press a to sign in");
-      expect(loadRuntime).not.toHaveBeenCalled();
+      expect(status).not.toHaveBeenCalled();
     });
 
-    it("calls the loader when the cache is missing, and writes the cache", async () => {
-      const loadRuntime = vi.fn(async () => configured);
-      const tui = await start(loadRuntime);
-      expect(loadRuntime).toHaveBeenCalledOnce();
+    it("reads the source when the cache is missing, writes the cache and never loads Pi in this thread", async () => {
+      const authRuntime = vi.spyOn(agentAuth, "authRuntime");
+      const { source, status } = fauxSource();
+      const tui = await start(source);
+      expect(status).toHaveBeenCalledOnce();
+      expect(authRuntime).not.toHaveBeenCalled();
       expect(tui.frame()).not.toContain("Press a to sign in");
       expect(await readPiCatalog(project.ctx)).toMatchObject({
         fresh: true,
@@ -255,10 +269,10 @@ describe("FactoryModal", () => {
 
     it("asks to sign in when a fresh cache has no configured provider", async () => {
       await writePiCatalog({ models: [], providers: [] }, await piCatalogKey(project.ctx), project.ctx);
-      const loadRuntime = vi.fn(async () => configured);
-      const tui = await start(loadRuntime);
+      const { source, status } = fauxSource();
+      const tui = await start(source);
       expect(tui.frame()).toContain("Press a to sign in");
-      expect(loadRuntime).not.toHaveBeenCalled();
+      expect(status).not.toHaveBeenCalled();
     });
   });
 

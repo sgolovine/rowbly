@@ -1,6 +1,6 @@
-import { type AuthRuntime, authRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import type { FactoryLaunch, FactoryStatus } from "../../../../services/factory/factory.js";
-import { piProviderReady } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
+import { type PiCatalogSource, piProviderReady } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
+import { piWorkerSource } from "../../../../services/pi-runtime/pi-worker-client.js";
 import type { Story } from "../../../../services/story/story.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -25,11 +25,11 @@ interface FactoryModalProps {
   onAiSettings?(): void;
   /**
    * Tells if an AI provider is ready. Tests replace it, so that they do not load Pi. The default reads the model
-   * cache, and loads Pi only when the cache is stale or missing.
+   * cache, and reads Pi in the Pi worker only when the cache is stale or missing.
    */
   checkProvider?: () => Promise<boolean>;
-  /** Loads the Pi model runtime for the default provider check. Tests replace it. */
-  loadRuntime?: () => Promise<AuthRuntime>;
+  /** Reads the providers from Pi for the default provider check. The default is the Pi worker; tests replace it. */
+  source?: PiCatalogSource;
   /** The Stories of the board, to show the Story of a warning. */
   stories?: readonly Story[];
   /** Closes the Modal and opens the Story of a warning in the Story sidebar. */
@@ -46,7 +46,7 @@ function modalInput(props: FactoryModalProps): FactoryModalInput {
     ...props,
     launch: props.launch,
     onAiSettings: props.onAiSettings,
-    checkProvider: props.checkProvider ?? (() => piProviderReady(props.loadRuntime ?? authRuntime, props.ctx)),
+    checkProvider: props.checkProvider ?? (() => piProviderReady(props.source ?? piWorkerSource(), props.ctx)),
     stories: props.stories ?? NO_STORIES,
     onOpenStory: props.onOpenStory,
     onOpenThread: props.onOpenThread,

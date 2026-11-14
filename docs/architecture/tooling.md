@@ -69,7 +69,9 @@ The script lists the exceptions:
 ## Build
 
 `tsup.config.ts` bundles `src/cli.ts` into `dist/cli.js` as ESM for Node 22, with a
-`#!/usr/bin/env node` banner. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
+`#!/usr/bin/env node` banner. A second entry bundles `src/services/pi-runtime/pi-worker.ts` into
+`dist/pi-worker.js`, the [Pi worker](native-factory/pi-runtime-and-auth.md#the-pi-worker). The
+shared chunks are also in `dist/`, so the worker client finds `pi-worker.js` next to its chunk. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
 only on demand. The npm package contains `dist/`, `skills/` (without tests), `stages/` and
 `src/config/prompts/`, the system prompts of the factory agents.
 
