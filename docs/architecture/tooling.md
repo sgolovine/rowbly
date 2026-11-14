@@ -73,6 +73,27 @@ The script lists the exceptions:
 only on demand. The npm package contains `dist/`, `skills/` (without tests), `stages/` and
 `src/config/prompts/`, the system prompts of the factory agents.
 
+## Compile cache
+
+Rowbly turns on the Node compile cache as the first action of each process. Then the next start of
+the CLI, the TUI or the factory daemon compiles less JavaScript.
+
+- `src/cli.ts` is a small bootstrap entry. It calls `enableRowblyCompileCache()` from
+  `src/services/compile-cache/`. Then it loads `src/cli-main.ts` with a dynamic `import()`.
+- Node compiles all static imports before the code of a module runs. Thus `src/cli.ts` can only have
+  static imports of `node:` built-ins and of the compile cache module.
+- The cache directory is `<user cache dir>/rowbly/compile-cache`. The user cache directory is:
+  - `$XDG_CACHE_HOME`, if it is an absolute path.
+  - Otherwise, `~/Library/Caches` on macOS.
+  - Otherwise, `%LOCALAPPDATA%` on Windows, if it is set.
+  - Otherwise, `~/.cache`.
+- If `NODE_COMPILE_CACHE` is set, Rowbly does not give its own directory. Node uses the directory of
+  the variable.
+- If `NODE_DISABLE_COMPILE_CACHE` is set, Rowbly does not turn on the cache.
+- A failure is silent. The function does not throw and does not write to stdout or stderr. Rowbly
+  operates the same without the cache.
+- The factory daemon starts from the same entry, so it also gets the cache.
+
 ## Knip
 
 `knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/`,

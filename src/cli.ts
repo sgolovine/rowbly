@@ -1,25 +1,8 @@
-import { resolve } from "node:path";
-import { Command } from "commander";
-import pkg from "../package.json" with { type: "json" };
-import { registerCommands } from "./commands/register-commands/register-commands.js";
+// The bootstrap entry of Rowbly. Node compiles all static imports before the code of a module runs, so this
+// file turns on the compile cache first and then loads the CLI with a dynamic import. Keep its static imports
+// to `node:` built-ins and the compile cache module.
+import { enableRowblyCompileCache } from "./services/compile-cache/compile-cache.js";
 
-const program = new Command().name("rowbly").description(pkg.description).version(pkg.version, "-v, --version");
+enableRowblyCompileCache();
 
-registerCommands(program);
-
-// `rowbly` with no arguments launches the TUI; anything else is a CLI invocation.
-if (process.argv.length <= 2) {
-  // Load the TUI only here, so that CLI commands do not load Ink, React or the TUI screens.
-  const { renderTui } = await import("./tui/index.js");
-
-  // The Factory controls start the factory with the same Node, loader flags and entry file as this process.
-  await renderTui({
-    launch: {
-      executable: process.execPath,
-      execArgv: [...process.execArgv],
-      entry: resolve(process.argv[1] as string),
-    },
-  });
-} else {
-  await program.parseAsync(process.argv);
-}
+await import("./cli-main.js");
