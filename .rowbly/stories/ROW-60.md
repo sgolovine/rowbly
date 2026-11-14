@@ -1,9 +1,9 @@
 ---
 title: Set and show Story dependencies in the CLI
-stage: IN_DEVELOPMENT
-position: 1
+stage: CHANGELOG
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-60
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/234
 ---
 
 ## Goal
