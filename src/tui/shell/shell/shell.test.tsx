@@ -185,6 +185,81 @@ describe("Shell", () => {
       expect(tui.frame()).toContain("Factory 1/4 · 1 pending");
       expect(tui.frame()).not.toContain("Loading");
     });
+
+    describe("Checks", () => {
+      type Job = NonNullable<FactoryStatus["checks"]>["jobs"][number];
+      const job = (id: string, storyId: string): Job => ({
+        ...{ id, threadId: `t-${id}`, storyId, stage: "BACKLOG", key: "test", scope: "full" },
+        ...{ status: "queued", queuedAt: new Date().toISOString() },
+      });
+      const live = (jobs: Job[]): FactoryStatus =>
+        ({
+          version: 1,
+          phase: "ready",
+          liveness: "alive",
+          responsive: true,
+          workers: { running: 1, pending: 0, waiting: 0, limit: 4 },
+          checks: { running: 0, queued: jobs.length, maxConcurrent: 2, jobs },
+        }) as FactoryStatus;
+
+      /** Opens a wide shell with a live factory that has the queued checks `jobs`. */
+      async function openLive(jobs: Job[]) {
+        await createStory({ title: "First story" }, project.ctx);
+        vi.mocked(factory.getFactoryStatus).mockResolvedValue(live(jobs));
+        const tui = await openSized(project.ctx as { cwd: string }, { width: 150, height: 40 });
+        for (let i = 0; i < 40 && !tui.frame().includes("Checks"); i++) await settle(25);
+        return tui;
+      }
+
+      it("opens the Checks Modal from the header Button, and esc gives the focus back to the list", async () => {
+        const tui = await openLive([job("a", "ROW-07")]);
+        // The test terminal has 100 columns, so the wide header draws its parts close together.
+        expect(tui.frame()).toMatch(/Checks ?0\/1 {1,2}c/);
+        await tui.click("Checks");
+        await settle(20);
+        await tui.press();
+        expect(tui.frame()).toContain("Factory › Checks");
+        expect(tui.frame()).toContain("ROW-07 · Backlog · test full · queued");
+        await tui.press(keys.escape);
+        expect(tui.frame()).not.toContain("Factory › Checks");
+        // The Story list has the focus again: n opens the new Story form.
+        await tui.press("n");
+        expect(tui.frame()).toContain("New Story");
+      });
+
+      it("opens the Modal with c and shows new rows when the factory writes a new status", async () => {
+        const tui = await openLive([job("a", "ROW-07")]);
+        await tui.press("c");
+        expect(tui.frame()).toContain("ROW-07");
+        expect(tui.frame()).not.toContain("ROW-08");
+        vi.mocked(factory.getFactoryStatus).mockResolvedValue(live([job("a", "ROW-07"), job("b", "ROW-08")]));
+        await mkdir(join(project.paths.dir, "runtime"), { recursive: true });
+        await writeFile(join(project.paths.dir, "runtime/status.json"), `{"n":${Date.now()}}\n`);
+        for (let i = 0; i < 40 && !tui.frame().includes("ROW-08"); i++) await settle(25);
+        expect(tui.frame()).toContain("ROW-08 · Backlog · test");
+        expect(tui.frame()).toContain("0 running · 2 queued");
+      });
+
+      it("does not open the Modal on c while a text field or another overlay has the focus", async () => {
+        const tui = await openLive([job("a", "ROW-07")]);
+        await tui.press("n");
+        await tui.type("c");
+        expect(tui.frame()).not.toContain("Factory › Checks");
+        await tui.press(keys.escape);
+        await tui.press(",");
+        await settle(50);
+        await tui.press("c");
+        expect(tui.frame()).not.toContain("Factory › Checks");
+      });
+
+      it("does nothing on c while the factory is off", async () => {
+        await createStory({ title: "First story" }, project.ctx);
+        const tui = await open(project.ctx as { cwd: string });
+        expect(tui.frame()).not.toContain("Checks");
+        await tui.press("c");
+        expect(tui.frame()).not.toContain("Factory › Checks");
+      });
+    });
   });
 
   describe("factory state file", () => {

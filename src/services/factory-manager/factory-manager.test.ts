@@ -6,10 +6,11 @@ import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialSto
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import { pendingReports } from "../factory-policy/factory-policy.js";
-import { updateFactorySettings } from "../factory-settings/factory-settings.js";
+import { getFactorySettings, updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { initProject } from "../project/project.js";
+import { commitCanonicalProject } from "../project-write/project-write.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, getStory, updateStory } from "../story/story.js";
@@ -18,8 +19,35 @@ import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
+import { readAuthStamp } from "./manager-state.js";
+import { scan } from "./manager-status.js";
+import { startProjectSync } from "./project-sync-step.js";
+
+vi.mock("../project-write/project-write.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../project-write/project-write.js")>();
+  return { ...actual, commitCanonicalProject: vi.fn(actual.commitCanonicalProject) };
+});
+vi.mock("./manager-state.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./manager-state.js")>();
+  return { ...actual, readAuthStamp: vi.fn(actual.readAuthStamp) };
+});
+vi.mock("./manager-status.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./manager-status.js")>();
+  return { ...actual, scan: vi.fn(actual.scan) };
+});
+vi.mock("./project-sync-step.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./project-sync-step.js")>();
+  return { ...actual, startProjectSync: vi.fn(actual.startProjectSync) };
+});
+vi.mock("../factory-settings/factory-settings.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../factory-settings/factory-settings.js")>();
+  return { ...actual, getFactorySettings: vi.fn(actual.getFactorySettings) };
+});
 
 const exec = promisify(execFile);
+const fail = (): never => {
+  throw new Error("y".repeat(1000));
+};
 const tool = (name: string, args: Parameters<typeof fauxToolCall>[1]) =>
   fauxAssistantMessage(fauxToolCall(name, args), { stopReason: "toolUse" });
 describe("foreground factory", () => {
@@ -60,6 +88,8 @@ describe("foreground factory", () => {
   afterEach(async () => {
     await manager?.shutdown();
     manager = undefined;
+    for (const mocked of [commitCanonicalProject, readAuthStamp, scan, startProjectSync, getFactorySettings])
+      vi.mocked(mocked).mockReset();
     expect(fetch).not.toHaveBeenCalled();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -569,6 +599,97 @@ describe("foreground factory", () => {
       });
     } finally {
       date.mockRestore();
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  async function attentionOf(f: { manager: FactoryManager }) {
+    return new Map((await f.manager.snapshot()).attention as [string, { text: string }][]);
+  }
+  it("delivers a digest with the unclassified Stage while the commit step throws on each pass", async () => {
+    const hash = promptHash("Move this Story to Done. Report complete.");
+    await createStory({ title: "Unclassified", stage: "WORK" }, { cwd: root });
+    const long = `Project write lock is unavailable ${"x".repeat(1000)}`;
+    vi.mocked(commitCanonicalProject).mockRejectedValue(new Error(long));
+    const f = await fixture(undefined, false);
+    const digests: string[] = [];
+    f.supervisor.setResponses([
+      (context) => {
+        digests.push(JSON.stringify(context.messages.at(-1)));
+        return fauxAssistantMessage("Wait");
+      },
+    ]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(() => expect(digests).toHaveLength(1), { timeout: 10000, interval: 20 });
+      expect(digests[0]).toContain("unclassified");
+      expect(digests[0]).toContain(hash);
+      const commit = (await attentionOf(f)).get("commit");
+      expect(commit?.text).toContain("Canonical commit failed: Project write lock is unavailable");
+      expect(commit?.text.length).toBeLessThanOrEqual(500);
+      expect(commitCanonicalProject).toHaveBeenCalled();
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it.each([
+    ["sync", "Git sync start failed", () => vi.mocked(startProjectSync).mockImplementation(() => fail())],
+    ["providers", "Provider pause check failed", () => vi.mocked(readAuthStamp).mockImplementation(async () => fail())],
+    [
+      "settings",
+      "Factory settings refresh failed",
+      () => vi.mocked(getFactorySettings).mockImplementation(async () => fail()),
+    ],
+  ])("delivers the digest when the %s step throws, and records the error", async (key, label, breakStep) => {
+    await createStory({ title: "Step failure", stage: "WORK" }, { cwd: root });
+    const f = await fixture(undefined, false);
+    const digests: string[] = [];
+    f.supervisor.setResponses([
+      (context) => {
+        digests.push(JSON.stringify(context.messages.at(-1)));
+        return fauxAssistantMessage("Wait");
+      },
+    ]);
+    breakStep();
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(() => expect(digests).toHaveLength(1), { timeout: 10000, interval: 20 });
+      expect(digests[0]).toContain("unclassified");
+      const text = (await attentionOf(f)).get(key)?.text ?? "";
+      expect(text).toBe(`${label}: ${"y".repeat(500)}`.slice(0, 500));
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("records the scan error, then removes the reconcile entry after a pass that succeeds", async () => {
+    const story = await createStory({ title: "Scan", stage: "WORK" }, { cwd: root });
+    vi.mocked(scan).mockRejectedValueOnce(new Error(`Scan exploded ${"z".repeat(1000)}`));
+    const f = await fixture();
+    f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
+    const statusFile = await runtimePath(projectPaths(root), "status.json");
+    const statusKeys = async () =>
+      (JSON.parse(await readFile(statusFile, "utf8")).attention as [string, unknown][]).map((entry) => entry[0]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const text = (await attentionOf(f)).get("reconcile")?.text ?? "";
+          expect(text).toContain("Project reconciliation failed; retry on the next scan: Scan exploded");
+          expect(text.length).toBeLessThanOrEqual(500);
+        },
+        { timeout: 10000, interval: 20 },
+      );
+      await updateStory({ id: story.id, title: "Scan again" }, { cwd: root });
+      await vi.waitFor(
+        async () => {
+          expect((await attentionOf(f)).has("reconcile")).toBe(false);
+          expect(await statusKeys()).not.toContain("reconcile");
+        },
+        { timeout: 10000, interval: 20 },
+      );
+    } finally {
       await f.manager.shutdown();
       await run;
     }

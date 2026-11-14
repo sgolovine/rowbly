@@ -37,7 +37,19 @@ export function useShell(initialCtx: ServiceContext): ShellModel {
   const toast = useToast();
 
   const view = shellView({ data, active, ...values });
-  const env: ShellEnv = { ctx, view, stageKey, sidebarShown, registry, toast, exit, reload, setCtx, ...setters };
+  const env: ShellEnv = {
+    ctx,
+    view,
+    stageKey,
+    sidebarShown,
+    factory: factory.data,
+    registry,
+    toast,
+    exit,
+    reload,
+    setCtx,
+    ...setters,
+  };
 
   useInput((input, key) => handleShellKey(env, input, key), { isActive: view.shellKeys });
 

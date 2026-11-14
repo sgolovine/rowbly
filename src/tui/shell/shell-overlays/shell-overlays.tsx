@@ -1,7 +1,7 @@
 import type { FactoryLaunch, FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
-import { FactoryModal } from "../../screens/factory/index.js";
+import { ChecksModal, FactoryModal } from "../../screens/factory/index.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
 import { HelpModal } from "../help-modal/index.js";
@@ -21,7 +21,7 @@ interface ShellOverlaysProps {
   readonly on: OverlayHandlers;
 }
 
-/** The labels of the Stages by key, for the Factory controls. */
+/** The labels of the Stages by key, for the Factory controls and the Checks Modal. */
 function stageLabels(board: OverlayBoard): Record<string, string> {
   return Object.fromEntries(board.stages.map((s) => [s.key, s.label]));
 }
@@ -60,6 +60,9 @@ export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on 
           onOpenStory={on.openStory}
           onOpenThread={on.openThread}
         />
+      )}
+      {board && overlay?.kind === "checks" && (
+        <ChecksModal status={factory} stages={stageLabels(board)} onClose={on.close} />
       )}
       {overlay?.kind === "projects" && (
         <ProjectSwitcher ctx={ctx} current={board?.project.root} onSelect={on.switchProject} onClose={on.close} />

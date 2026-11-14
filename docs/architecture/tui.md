@@ -29,7 +29,7 @@ src/tui/
   theme.ts          # the design tokens as hex values, and date formatting
   keymap.ts         # KeyHint, GLOBAL_KEYS, FORM_KEYS, moveDelta (arrows + j/k)
   mouse.ts          # MouseStdin: takes SGR mouse reports out of stdin before Ink reads it
-  shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal, factory button
+  shell/            # the frame: Shell, Header, ProjectSwitcher, StoryFinder, HelpModal, factory and checks buttons
   screens/          # one folder per area, see below
   components/       # the shared component library: one folder per component (barrel: components/index.ts)
   hooks/            # contexts and hooks: see the table of shared hooks below
@@ -110,6 +110,18 @@ quits.
   goes first. `ViewModeSwitch` and `headerFit` in `src/tui/shell/` control this.
 - **The key `t`.** The key `t` changes the view mode when the shell is idle. The key `f` opens the
   Factory controls in the two modes. `GLOBAL_KEYS` and the help Modal list `t`.
+- **The Checks Button.** When the live factory status has `checks` (`liveChecks` in
+  `src/tui/screens/factory/check-jobs.ts`), the Factory group of the header has a `Checks` Button
+  after the Switch, before the `|`. The note shows `<running>/<queued>` in `ink-muted`. When the
+  header is narrow, the Checks Button goes first, before the Switch. `ChecksButton` and `headerFit`
+  in `src/tui/shell/` control this.
+- **The Checks Modal.** A click on the Checks Button or the key `c` opens the `checks` overlay. The
+  key works only when the shell is idle and the Button condition is true. `ChecksModal` in
+  `src/tui/screens/factory/checks-modal/` is a generic Modal. It reads the factory status that the
+  shell already polls, so it updates when the factory writes its status. It shows the summary line
+  of `checksText`, then one `SelectList` row for each running or queued job. `esc` or the `✕`
+  closes it, and the focus goes back to the pane that had it. See
+  [native-factory/controls.md](native-factory/controls.md#the-checks-view) for the rows.
 - **The sections.** In the `threads` mode, the Panel has the title `Threads`. `FactoryView` shows
   the section "Active Threads" (`pending` and `running`) and the section "Inactive Threads"
   (`completed`, `failed`, `cancelled` and `interrupted`). Each heading shows `▾` or `▸`, the name and

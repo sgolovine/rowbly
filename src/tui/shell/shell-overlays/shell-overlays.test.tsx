@@ -1,5 +1,6 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
 import { useTestProject } from "../../../services/test-project/test-project.js";
@@ -33,7 +34,11 @@ function handlers(): OverlayHandlers {
 describe("ShellOverlays", () => {
   const project = useTestProject();
 
-  async function open(overlay: Overlay | null, withBoard = true) {
+  async function open(
+    overlay: Overlay | null,
+    withBoard = true,
+    factory: FactoryStatus = { version: 1, phase: "stopped" },
+  ) {
     const board: OverlayBoard | undefined = withBoard
       ? { project: await getProject(project.ctx), stages: await listStages(project.ctx), stories: [] }
       : undefined;
@@ -44,7 +49,7 @@ describe("ShellOverlays", () => {
         board={board}
         ctx={project.ctx}
         launch={undefined}
-        factory={{ version: 1, phase: "stopped" }}
+        factory={factory}
         hints={[{ key: "n", description: "new Story" }]}
         on={on}
       />,
@@ -93,5 +98,32 @@ describe("ShellOverlays", () => {
     const factory = await open({ kind: "factory" });
 
     expect(factory.tui.frame()).toContain("Factory");
+  });
+
+  it("opens the Checks Modal with the Stage labels of the board, and closes it on esc", async () => {
+    const stages = await listStages(project.ctx);
+    const stage = stages[0];
+    const factory = {
+      version: 1,
+      phase: "ready",
+      liveness: "alive",
+      checks: {
+        running: 1,
+        queued: 0,
+        maxConcurrent: 2,
+        jobs: [
+          {
+            ...{ id: "j1", threadId: "t1", storyId: "ROW-01", stage: stage?.key ?? "", key: "test", scope: "full" },
+            ...{ status: "running", queuedAt: new Date().toISOString(), startedAt: new Date().toISOString() },
+          },
+        ],
+      },
+    } as FactoryStatus;
+    const { tui, on } = await open({ kind: "checks" }, true, factory);
+
+    expect(tui.frame()).toContain("Factory › Checks");
+    expect(tui.frame()).toContain(`ROW-01 · ${stage?.label} · test`);
+    await tui.press(keys.escape);
+    expect(on.close).toHaveBeenCalled();
   });
 });
