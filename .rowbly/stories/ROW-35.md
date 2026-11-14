@@ -1,7 +1,7 @@
 ---
 title: Load the TUI lazily so CLI commands do not pay for Ink
 stage: IN_DEVELOPMENT
-position: 2
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-35
 pull_request: null
 ---
