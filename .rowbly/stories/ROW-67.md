@@ -1,6 +1,6 @@
 ---
 title: Restart the factory daemon automatically after a crash
-stage: IN_REVIEW
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
 pull_request: https://github.com/sgolovine/rowbly/pull/232
@@ -75,3 +75,7 @@ Files and modules:
 - An exit with code 0 is always a clean exit, also for `already-running`. Reason: `factory run` returns code 0 for a requested stop and for `already-running`, and a restart in these cases is not necessary.
 - The crash-limit attention entry is not dismissible. The next `factory start` clears it. Reason: the dismiss command needs a live daemon.
 - If the watchdog itself dies, nothing restarts it. Reason: smallest scope. The daemon then works as now, without a watchdog.
+
+## Review findings
+
+1. `src/commands/factory-runner/watchdog-runner.test.ts:112-120` ("sets the count to 0 when a daemon stays up for the stable period"). The CI `Test` check fails because of this test. It failed two times in a row on PR #232 (run 43654632520): `expected { phase: 'stopped', crashCount: 1 }`, received `crashCount: 0`. Cause: the injected `stableMs` is 50 ms. The 7th fake daemon (`{ code: 0 }`) needs more than 50 ms to start Node on CI, so the stable timer of `runDaemon` fires before the clean exit and writes `crashCount: 0`. The production code is correct; the test depends on timing. Fix: make the test independent of the start time of Node. For example, do not assert the exact final count after the clean exit (assert `phase: "stopped"`, not `failed`, and 7 starts, which prove that 6 crashes did not reach the limit of 5), or read the count from the state after the 6th crash, or use a `stableMs` that is larger than a Node start and smaller than the `sleepMs` of the crash steps (for example `stableMs: 500`, `sleepMs: 1000`). Then make sure that the CI `Test` check passes.

@@ -2,7 +2,7 @@
 title: Hold blocked Stories in the factory policy and start upstream Stories first
 stage: IN_REFINEMENT
 position: 5
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-62
 pull_request: null
 ---
 
