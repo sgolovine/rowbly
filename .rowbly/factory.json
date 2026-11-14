@@ -10,5 +10,8 @@
     "provider": "anthropic",
     "modelId": "claude-opus-5-5",
     "thinkingLevel": "medium"
+  },
+  "git": {
+    "push": true
   }
 }
