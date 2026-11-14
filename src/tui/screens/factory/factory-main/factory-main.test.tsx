@@ -31,7 +31,7 @@ function model(): FactoryModalModel {
 }
 
 describe("FactoryMain", () => {
-  it("shows the overview and the buttons, and opens a warning with a click", async () => {
+  it("shows the overview and the buttons, and opens a warning with a second click on its row", async () => {
     const m = model();
     const tui = await renderTui(
       <FactoryMain model={m} status={running} canLaunch stages={{}} onAiSettings={undefined} />,
@@ -39,6 +39,10 @@ describe("FactoryMain", () => {
 
     expect(tui.frame()).toContain("Running");
     expect(tui.frame()).toContain("Warnings");
+
+    await tui.click("Canonical commit");
+
+    expect(m.attention.actions.pick).not.toHaveBeenCalled();
 
     await tui.click("Canonical commit");
 

@@ -42,7 +42,7 @@ describe("FactoryAttention", () => {
     expect(tui.frame()).not.toContain("x".repeat(64));
   });
 
-  it("opens a warning with a click", async () => {
+  it("highlights a warning with the first click and opens it with a click on the highlighted row", async () => {
     const onPick = vi.fn();
     const tui = await renderTui(
       <FactoryAttention problems={problems} height={30} active onFilteringChange={vi.fn()} onPick={onPick} />,
@@ -50,6 +50,24 @@ describe("FactoryAttention", () => {
 
     await tui.click("Warning number 3");
 
+    expect(onPick).not.toHaveBeenCalled();
+    expect(tui.frame()).toContain("▌ Warning number 3");
+
+    await tui.click("Warning number 3");
+
+    expect(onPick).toHaveBeenCalledOnce();
     expect(onPick).toHaveBeenCalledWith("attention:k3");
+  });
+
+  it("opens the highlighted warning with enter after a click highlights it", async () => {
+    const onPick = vi.fn();
+    const tui = await renderTui(
+      <FactoryAttention problems={problems} height={30} active onFilteringChange={vi.fn()} onPick={onPick} />,
+    );
+
+    await tui.click("Warning number 2");
+    await tui.press(keys.enter);
+
+    expect(onPick).toHaveBeenCalledWith("attention:k2");
   });
 });
