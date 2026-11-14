@@ -25,7 +25,7 @@ import {
   withWorkerOverride,
 } from "./worker-overrides.js";
 
-export type { GitSettings, GitSync } from "./git-settings.js";
+export type { GitInput, GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
@@ -332,6 +332,16 @@ function checkGitInput(input: ConfigureInput): void {
   if (input.commitAuthor?.trim()) {
     parseAuthor(input.commitAuthor);
   }
+}
+
+/**
+ * Applies only Git values to `factory.json`. It does not load `agent-auth` or Pi, so the TUI can use it
+ * without the auth runtime. An invalid author or sync interval fails before the file changes.
+ */
+export async function configureGit(input: GitInput, ctx: ServiceContext = {}): Promise<FactorySettings> {
+  checkGitInput(input);
+
+  return writeSettings((current) => ({ ...current, git: mergeGit(current.git, input) }), ctx);
 }
 
 /** Validates explicit model choices and Git values before the settings file changes. A `stage` sets an override. */

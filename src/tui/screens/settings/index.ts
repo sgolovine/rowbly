@@ -12,6 +12,7 @@ export * from "./custom-field-row/index.js";
 export * from "./custom-fields-section/index.js";
 export * from "./doctor-report/index.js";
 export * from "./doctor-section/index.js";
+export * from "./git-section/index.js";
 export * from "./project-section/index.js";
 export * from "./section-nav/index.js";
 export * from "./settings-body/index.js";

@@ -3,7 +3,13 @@ import { ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { createStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { configureFactory, getFactorySettings, setWorkerOverride, updateFactorySettings } from "./factory-settings.js";
+import {
+  configureFactory,
+  configureGit,
+  getFactorySettings,
+  setWorkerOverride,
+  updateFactorySettings,
+} from "./factory-settings.js";
 
 const model = { provider: "faux", modelId: "test" };
 const git = { push: false, pull: false, syncIntervalSeconds: 300 };
@@ -205,6 +211,36 @@ describe("factorySettings", () => {
       ValidationError,
     );
     await expect(configureFactory({ gitSyncInterval: 10 }, p.ctx)).rejects.toBeInstanceOf(ValidationError);
+    expect(await p.read("factory.json")).toBe(before);
+  });
+  it("configures only the git section, and keeps the other keys", async () => {
+    await p.write(
+      "factory.json",
+      JSON.stringify({ version: 1, maxWorkers: 3, workerModel: { provider: "faux", modelId: "test" }, git: { x: 1 } }),
+    );
+    await configureGit({ commitAuthor: "Factory Bot <bot@example.com>", commitMessage: "chore: board" }, p.ctx);
+    await configureGit({ gitPush: true, gitSyncInterval: 120 }, p.ctx);
+    expect(JSON.parse(await p.read("factory.json"))).toEqual({
+      version: 1,
+      maxWorkers: 3,
+      workerModel: { provider: "faux", modelId: "test" },
+      git: {
+        x: 1,
+        authorName: "Factory Bot",
+        authorEmail: "bot@example.com",
+        commitMessage: "chore: board",
+        push: true,
+        syncIntervalSeconds: 120,
+      },
+    });
+    await configureGit({ commitAuthor: "", commitMessage: "" }, p.ctx);
+    expect(JSON.parse(await p.read("factory.json")).git).toEqual({ x: 1, push: true, syncIntervalSeconds: 120 });
+  });
+  it("does not write an invalid author or interval with configureGit", async () => {
+    await configureGit({ gitPull: true }, p.ctx);
+    const before = await p.read("factory.json");
+    await expect(configureGit({ commitAuthor: "Bot" }, p.ctx)).rejects.toThrow("Name <email>");
+    await expect(configureGit({ gitSyncInterval: 86_401 }, p.ctx)).rejects.toBeInstanceOf(ValidationError);
     expect(await p.read("factory.json")).toBe(before);
   });
 });
