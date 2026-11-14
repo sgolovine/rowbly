@@ -1,6 +1,7 @@
 ---
 title: Add syntax highlighting to agent output.
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 worktree: null
 pull_request: null
 ---
