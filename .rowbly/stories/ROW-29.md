@@ -1,5 +1,5 @@
 ---
-title: Stop the Specs tab from re-reading every Story for each linked Story
+title: Read only changed Threads when a worker writes its activity
 stage: BACKLOG
 worktree: null
 pull_request: null
