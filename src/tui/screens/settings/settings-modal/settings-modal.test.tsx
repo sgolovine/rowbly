@@ -20,6 +20,7 @@ describe("SettingsModal", () => {
       "Project",
       "General",
       "Stages",
+      "Prompts",
       "Custom Fields",
       "Skills",
       "Factory",
@@ -46,7 +47,7 @@ describe("SettingsModal", () => {
   });
   it.each(["keyboard", "mouse"])("opens Skills with the %s", async (input) => {
     const tui = await renderTui(<SettingsModal ctx={project.ctx} onChange={() => {}} onClose={() => {}} />);
-    if (input === "keyboard") await tui.press(keys.down, keys.down, keys.down, keys.enter);
+    if (input === "keyboard") await tui.press(keys.down, keys.down, keys.down, keys.down, keys.enter);
     else await tui.click("Skills");
     await vi.waitFor(() => expect(tui.frame()).toContain("not installed"));
     await tui.press("i");

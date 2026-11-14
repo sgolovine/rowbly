@@ -4,6 +4,7 @@ import { AiSection } from "./ai-section/index.js";
 import { CustomFieldsSection } from "./custom-fields-section/index.js";
 import { DoctorSection } from "./doctor-section/index.js";
 import { ProjectSection } from "./project-section/index.js";
+import { PromptsSection } from "./prompts-section/index.js";
 import { SkillsSection } from "./skills-section/index.js";
 import { SpecsSection } from "./specs-section/index.js";
 import { StagesSection } from "./stages-section/index.js";
@@ -49,6 +50,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Stages",
         description: "The Stages of the board, in board order.",
         Component: StagesSection,
+      },
+      {
+        id: "prompts",
+        label: "Prompts",
+        description: "The prompts of the factory agents, in .rowbly/prompts/.",
+        Component: PromptsSection,
       },
       {
         id: "custom-fields",
