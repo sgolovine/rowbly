@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, rm, stat } from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CheckLimits } from "../factory-settings/check-settings.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
@@ -204,6 +204,21 @@ describe("check queue", () => {
     expect((await stat(outcome.log)).mode & 0o777).toBe(0o600);
     await stopCheckQueue(queue);
     expect((await readCheckJobs(project.paths)).at(-1)).toMatchObject({ status: "failed", exitCode: 2 });
+  });
+
+  it("gives the result also when the log cannot be written", async () => {
+    const queue = await open();
+    await rm(`${project.paths.runtimeDir}/checks`, { recursive: true });
+    const result = submitCheck(queue, request());
+    await vi.waitFor(() => expect(machine.processes).toHaveLength(1));
+    machine.processes[0]?.output("ok\n");
+    machine.processes[0]?.exit(0);
+
+    const outcome = await result;
+
+    expect(outcome.job.status).toBe("passed");
+    expect(outcome.output).toBe("ok");
+    await stopCheckQueue(queue);
   });
 
   it("stops a check after its timeout with SIGTERM, then SIGKILL", async () => {

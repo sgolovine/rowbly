@@ -17,7 +17,12 @@ function patchLive(queue: CheckQueue, id: string, patch: Partial<LiveJob>): void
   });
 }
 
+/** Closes the log. A log that failed is already closed. */
 function closeLog(log: WriteStream): Promise<void> {
+  if (log.destroyed) {
+    return Promise.resolve();
+  }
+
   return new Promise((resolve) => log.end(() => resolve()));
 }
 
@@ -147,6 +152,10 @@ async function runJob(queue: CheckQueue, job: CheckJob): Promise<void> {
   }
 
   const log = createWriteStream(await checkLogPath(queue.paths, job.id), { mode: 0o600 });
+
+  // A log that cannot be written must not stop the daemon. The tail in memory still goes to the worker.
+  log.on("error", () => {});
+
   const child = queue.deps.spawn(job.command, { cwd: job.cwd, env: { ...ticket?.env, ROWBLY_CHECK: "1" } });
 
   child.onOutput((chunk) => receiveOutput(queue, job.id, log, chunk));
