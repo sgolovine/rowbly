@@ -1,8 +1,8 @@
 ---
 title: Add syntax highlighting to agent output.
 stage: IN_REFINEMENT
-position: 1
-worktree: null
+position: 2
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-38
 pull_request: null
 ---
 
