@@ -1,7 +1,7 @@
 ---
 title: Load the TUI lazily so CLI commands do not pay for Ink
-stage: BACKLOG
-position: 9
+stage: IN_REFINEMENT
+position: 8
 worktree: null
 pull_request: null
 ---

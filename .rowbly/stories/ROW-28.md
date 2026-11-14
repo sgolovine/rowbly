@@ -1,7 +1,7 @@
 ---
 title: Stop the Specs tab from re-reading every Story for each linked Story
-stage: BACKLOG
-position: 2
+stage: IN_REFINEMENT
+position: 1
 worktree: null
 pull_request: null
 ---

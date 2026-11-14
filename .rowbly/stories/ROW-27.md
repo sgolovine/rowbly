@@ -1,8 +1,8 @@
 ---
 title: Make getStory read one Story file instead of the whole folder twice
 stage: IN_REFINEMENT
-position: 1
-worktree: null
+position: 9
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-27
 pull_request: null
 ---
 
