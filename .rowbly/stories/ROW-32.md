@@ -1,5 +1,5 @@
 ---
-title: Share one factory status read across TUI views
+title: Skip conversation polls when the session file did not change
 stage: BACKLOG
 worktree: null
 pull_request: null
