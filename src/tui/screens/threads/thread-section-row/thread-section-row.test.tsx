@@ -32,6 +32,32 @@ describe("ThreadSectionRow", () => {
     expect(tui.frame()).toContain("▾ Active Threads (0)  No Threads");
   });
 
+  it("puts one empty line above a spaced heading, outside the highlight", async () => {
+    const tui = await renderTui(
+      <ThreadSectionRow
+        label="Inactive Threads"
+        count={1}
+        collapsed={false}
+        selected
+        clickable
+        spaced
+        onClick={() => {}}
+      />,
+    );
+    const lines = tui.frame().split("\n");
+    const at = lines.findIndex((line) => line.includes("Inactive Threads"));
+    expect(at).toBe(1);
+    expect(lines[0]?.trim()).toBe("");
+    expect(lines[1]).toContain("▌ ▾ Inactive Threads (1)");
+  });
+
+  it("puts no empty line above a heading that is not spaced", async () => {
+    const tui = await renderTui(
+      <ThreadSectionRow label="Active Threads" count={1} collapsed={false} selected clickable onClick={() => {}} />,
+    );
+    expect(tui.frame().split("\n")[0]).toContain("Active Threads");
+  });
+
   it("calls onClick on a click", async () => {
     const onClick = vi.fn();
     const tui = await renderTui(

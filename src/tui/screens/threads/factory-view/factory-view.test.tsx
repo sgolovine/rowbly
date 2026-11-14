@@ -98,6 +98,28 @@ describe("FactoryView", () => {
       expect(frame).toContain("claude ·");
     });
 
+    it("puts one empty line above Inactive Threads and none above Active Threads", async () => {
+      const { tui } = await open();
+      const lineAbove = (heading: string) => {
+        const lines = tui.frame().split("\n");
+        return lines[lines.findIndex((line) => line.includes(heading)) - 1];
+      };
+      expect(tui.frame().split("\n")[0]).toContain("▾ Active Threads (2)");
+      expect(lineAbove("▾ Inactive Threads (4)")?.trim()).toBe("");
+      expect(lineAbove("ROW-05 ▶ running")?.trim()).not.toBe("");
+      expect(
+        tui
+          .frame()
+          .split("\n")
+          .filter((line) => line.trim() === ""),
+      ).toHaveLength(1);
+      await tui.press(keys.up, keys.enter);
+      expect(tui.frame().split("\n")[0]).toContain("▸ Active Threads (2)");
+      expect(lineAbove("▾ Inactive Threads (4)")?.trim()).toBe("");
+      await tui.press(keys.down);
+      expect(tui.frame()).toContain("▌ ▾ Inactive Threads (4)");
+    });
+
     it("shows only the Threads of the selected Stage", async () => {
       const { tui } = await open({ stage: "REVIEW" });
       expect(tui.frame()).toContain("▾ Active Threads (0)  No Threads");
