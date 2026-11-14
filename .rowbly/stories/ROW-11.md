@@ -1,6 +1,6 @@
 ---
 title: Move New/Edit story modal to sidebar
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-11
 pull_request: https://github.com/sgolovine/rowbly/pull/195
