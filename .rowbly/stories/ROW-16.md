@@ -1,6 +1,7 @@
 ---
 title: "Threads View: Open in sidebar instead of modal"
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 worktree: null
 pull_request: null
 ---
