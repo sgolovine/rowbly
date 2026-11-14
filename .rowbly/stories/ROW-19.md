@@ -1,7 +1,7 @@
 ---
 title: Factory Git settings in the TUI
 stage: DONE
-position: 20
+position: 21
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-19
 pull_request: https://github.com/sgolovine/rowbly/pull/203
 ---
