@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { promisify } from "node:util";
+import { stopOrphanChecks } from "../check-queue/check-orphans.js";
 import { ConflictError } from "../errors/errors.js";
 import { assertFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import type { PolicyAttempt, PolicyState } from "../factory-policy/factory-policy.js";
@@ -93,6 +94,7 @@ export async function recoverFactory(
   // Exclusive ownership proves that all other native generations are abandoned.
   // Each durable transition and projection can repeat after another crash.
   await mapInOrder(threads, (thread) => recoverThread(paths, token, thread, ctx));
+  await stopOrphanChecks(paths, token);
 
   return { externalActive: adoptExternal ? 0 : external.length };
 }

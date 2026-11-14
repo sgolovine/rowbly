@@ -84,7 +84,7 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
       {
         id: "ai",
         label: "AI",
-        description: "AI providers, the models of the factory and the worker limit.",
+        description: "AI providers, the models of the factory, the worker limit and the checks.",
         Component: AiSection,
       },
       {

@@ -1,6 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthInteraction, AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import { listChecks } from "../../../../services/factory-settings/check-items.js";
 import { getFactorySettings, updateFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
@@ -57,7 +58,7 @@ describe("AiSection", () => {
       project.ctx,
     );
     const { tui } = await open();
-    expect(tui.frame()).toMatch(/Providers\s+Models\s+Limits/);
+    expect(tui.frame()).toMatch(/Providers\s+Models\s+Limits\s+Checks/);
     expect(tui.frame()).toMatch(/acme\s+signed in with an API key/);
     expect(tui.frame()).not.toContain("zeta");
     expect(tui.frame()).toContain("+ Sign in to another provider");
@@ -69,6 +70,9 @@ describe("AiSection", () => {
     expect(tui.frame()).toContain("Worker limit");
     expect(tui.frame()).toContain("4 workers");
     expect(tui.frame()).toMatch(/Edit\s+l/);
+    await tui.press(keys.right);
+    expect(tui.frame()).toContain("Check limits");
+    expect(tui.frame()).toContain("No checks. The workers run their checks in the shell.");
     await tui.press(keys.right);
     expect(tui.frame()).toContain("+ Sign in to another provider");
   });
@@ -131,11 +135,49 @@ describe("AiSection", () => {
     await tui.type("2");
     await tui.press(keys.enter);
     await vi.waitFor(async () => expect((await getFactorySettings(project.ctx)).maxWorkers).toBe(2));
-    await tui.press(keys.left);
+    await tui.press(keys.left, keys.left);
     await vi.waitFor(async () => {
       await tui.press();
       expect(tui.frame()).toContain("2 workers");
     });
+  });
+
+  it("adds, edits and removes a check, and sets the check limits on the Checks tab", async () => {
+    const { tui } = await open();
+    await tui.press(keys.left);
+    expect(tui.frame()).toContain("2 checks at the same time · keep 2048 MB free");
+
+    await tui.press("n");
+    expect(tui.frame()).toContain("AI › New check");
+    await tui.type("test");
+    await tui.press(keys.tab, keys.tab);
+    await tui.type("pnpm test");
+    await tui.press(keys.ctrl("s"));
+    await vi.waitFor(async () => expect(await listChecks(project.ctx)).toHaveLength(1));
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toMatch(/test\s+full\s+pnpm test/);
+    });
+
+    await tui.press(keys.enter);
+    expect(tui.frame()).toContain("AI › Check › test");
+    await tui.type("Tests");
+    await tui.press(keys.ctrl("s"));
+    await vi.waitFor(async () => expect((await listChecks(project.ctx))[0]?.label).toBe("Tests"));
+
+    await settle(30);
+    await tui.press("c");
+    expect(tui.frame()).toContain("AI › Check limits");
+    await tui.press(keys.backspace);
+    await tui.type("3");
+    await tui.press(keys.ctrl("s"));
+    await vi.waitFor(async () => expect((await getFactorySettings(project.ctx)).checks?.maxConcurrent).toBe(3));
+
+    await settle(30);
+    await tui.press("d");
+    expect(tui.frame()).toContain("Remove the check test?");
+    await tui.press("y");
+    await vi.waitFor(async () => expect(await listChecks(project.ctx)).toEqual([]));
   });
 
   it("lists the Stages under the worker model, and sets and removes the override of a Stage", async () => {

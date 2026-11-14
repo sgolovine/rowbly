@@ -56,6 +56,8 @@ describe("aiView", () => {
     expect(keysOf(aiHints("models", { ...all, stages: true }))).toEqual(["s", "w", "↑/↓", "enter", "←/→"]);
     expect(keysOf(aiHints("models", { ...none, stages: true }))).toEqual(["←/→"]);
     expect(keysOf(aiHints("limits", none))).toEqual(["l", "←/→"]);
+    expect(keysOf(aiHints("checks", none))).toEqual(["n", "c", "←/→"]);
+    expect(keysOf(aiHints("checks", { ...none, checks: true }))).toEqual(["↑/↓", "enter", "d", "n", "c", "←/→"]);
   });
 
   it("puts the sign-in page under the Providers tab, and wraps the tabs at the ends", () => {
@@ -63,8 +65,9 @@ describe("aiView", () => {
     expect(tabIndex("limits")).toBe(2);
     expect(nextTab("providers", 1)).toBe("models");
     expect(nextTab("addProvider", 1)).toBe("models");
-    expect(nextTab("limits", 1)).toBe("providers");
-    expect(nextTab("providers", -1)).toBe("limits");
+    expect(nextTab("limits", 1)).toBe("checks");
+    expect(nextTab("checks", 1)).toBe("providers");
+    expect(nextTab("providers", -1)).toBe("checks");
   });
 
   it("splits the providers into the signed-in providers and the other providers", () => {

@@ -3,8 +3,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
+import { readCheckJobs, writeCheckJobs } from "../check-queue/check-records.js";
+import type { CheckJob } from "../check-queue/check-types.js";
+import { readStartTicks, spawnCheck } from "../check-queue/proc-readers.js";
 import { acquireFactoryOwnership, newOwner } from "../factory-ownership/factory-ownership.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
+import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { createStory, updateStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createThread, getThread, projectNativeAttempt, transitionThread } from "../thread/thread.js";
@@ -12,6 +16,22 @@ import { preflightFactory, recoverFactory } from "./factory-recovery.js";
 
 describe("factory recovery", () => {
   const project = useTestProject();
+  it.runIf(process.platform === "linux")("stops the orphan check processes of a dead owner", async () => {
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    await prepareRuntime(project.paths);
+    const child = spawnCheck("sleep 60 & sleep 60; wait", { cwd: project.paths.root, env: process.env });
+    const pid = child.pid as number;
+    const startTicks = await readStartTicks(pid);
+    const job = { id: "orphan", ownerToken: "dead", key: "test", status: "running", pgid: pid, startTicks };
+    await writeCheckJobs(project.paths, [job as CheckJob], []);
+
+    await recoverFactory(owner.token, "dead", false, project.ctx);
+
+    expect(await child.exited).toBeNull();
+    expect(await readStartTicks(pid)).toBeUndefined();
+    expect((await readCheckJobs(project.paths))[0]?.status).toBe("cancelled");
+  });
   it.each(["intent", "preparing", "worktree", "session"])(
     "recovers a crash after %s without duplicate attempts",
     async (boundary) => {

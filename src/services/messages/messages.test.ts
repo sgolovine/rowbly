@@ -2,7 +2,14 @@ import { rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { readSystemPrompt } from "../prompts/prompts.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { composeMessage, runSection, supervisorMessage, USER_PROMPT_LIMIT, workerMessage } from "./messages.js";
+import {
+  composeMessage,
+  runSection,
+  supervisorMessage,
+  USER_PROMPT_LIMIT,
+  workerMessage,
+  workerSystemPrompt,
+} from "./messages.js";
 
 const run = {
   story: "WEB-42",
@@ -40,6 +47,31 @@ describe("runSection", () => {
   });
 });
 
+describe("checks", () => {
+  it("lists the checks in the Run section only when the Project has checks", () => {
+    expect(runSection(run)).not.toContain("Checks");
+    expect(
+      runSection({
+        ...run,
+        checks: [
+          { key: "test", label: "Tests", narrow: true },
+          { key: "lint", label: "lint", narrow: false },
+        ],
+      }),
+    ).toContain(
+      "Checks (run each one only with `run_check`):\n- `test`: Tests (narrow form with files)\n- `lint`: lint",
+    );
+  });
+
+  it("keeps the check rules of the worker system prompt only with checks", async () => {
+    const text = "A\n<!-- checks -->\nUse run_check.\n<!-- /checks -->\nB";
+
+    expect(workerSystemPrompt(text, false)).toBe("A\nB");
+    expect(workerSystemPrompt(text, true)).toBe("A\nUse run_check.\nB");
+    expect(await readSystemPrompt("worker")).toContain("<!-- checks -->");
+  });
+});
+
 describe("factory messages", () => {
   const project = useTestProject();
 
@@ -58,7 +90,8 @@ describe("factory messages", () => {
       "# Stage prompt (IN_DEVELOPMENT)",
       "# Run",
     ]);
-    expect(message).toContain(await readSystemPrompt("worker"));
+    expect(message).toContain(workerSystemPrompt(await readSystemPrompt("worker"), false));
+    expect(message).not.toContain("run_check");
     expect(message).toContain("# Project prompt\n\nUse pnpm.");
     expect(message).toContain("# Worker prompt\n\nWrite small commits.");
     expect(message).toContain("Story: WEB-42");
@@ -81,6 +114,16 @@ describe("factory messages", () => {
     expect(message).toContain("# Supervisor prompt\n\nStart one worker.");
     expect(message).toMatch(/# Digest\n\nDigest text\.$/);
     expect(message).not.toContain("Not for the supervisor.");
+  });
+
+  it("gives a worker the check rules when the Project has checks", async () => {
+    const message = await workerMessage(project.paths, {
+      ...run,
+      checks: [{ key: "test", label: "Tests", narrow: false }],
+    });
+
+    expect(message).toContain("Run each listed check only with the `run_check` tool.");
+    expect(message).not.toContain("<!-- checks -->");
   });
 
   it("works when the project has no user prompts", async () => {

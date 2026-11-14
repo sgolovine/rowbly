@@ -38,9 +38,13 @@ Thread file issue. The factory makes these warnings again from the live state on
 
 - Normal stop aborts the Pi sessions and keeps the histories and the worktrees.
 - Normal stop relies on Pi abort for shell children.
+- Normal stop cancels the queued checks and stops the process group of each running check. See
+  [checks.md](checks.md#status-stop-and-recovery).
 - A restart waits for the stop and for the release of ownership.
 
 ## Cancel
+
+A cancel also cancels the queued and running checks of the worker.
 
 A cancellation holds the Story and the Stage until one of these events:
 
@@ -70,7 +74,8 @@ After definite owner death, recovery (`factory-recovery/`) marks active runs as 
 repairs missing native state projections.
 
 - An old heartbeat does not prove death. A live or uncertain owner prevents takeover.
-- Shell descendants that a crashed daemon started are not tracked.
+- Shell descendants that a crashed daemon started are not tracked. Check processes are an exception.
+  Recovery stops each check process group whose leader still has the recorded start ticks.
 - Do not assume exactly-once shell effects. Examine uncertain external effects before a resume.
 - Dirty worktrees and malformed runtime files stay on disk.
 - Before an offline repair, make sure that all relevant factory processes have stopped.

@@ -11,19 +11,21 @@ take or change a lock.
 
 ```
 .rowbly/
-  rowbly.config.json  # the optional factory key: maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git
+  rowbly.config.json  # the optional factory key: maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git, checks
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; directories use mode 0700
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
-    status.json       # heartbeat, workers, queue, holds, provider pauses and attention
+    status.json       # heartbeat, workers, queue, holds, provider pauses, attention and checks
     control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
     sessions/<id>/<pi-name>.jsonl # native Pi history; file reference starts as null
     bin/rowbly        # exact-version CLI shim for workers
     logs/<id>.jsonl   # operational logs; no transcript bodies
+    checks/jobs.json  # the records of the last 500 check jobs, with process group and start ticks
+    checks/<id>.log   # the full output of one check job
 ```
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private

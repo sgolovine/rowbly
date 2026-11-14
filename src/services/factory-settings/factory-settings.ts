@@ -5,6 +5,15 @@ import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import {
+  assertChecks,
+  type CheckInput,
+  type CheckSettings,
+  checkLimits,
+  hasCheckInput,
+  mergeChecks,
+  validChecks,
+} from "./check-settings.js";
+import {
   type GitInput,
   type GitSettings,
   type GitSync,
@@ -24,6 +33,7 @@ import {
   withWorkerOverride,
 } from "./worker-overrides.js";
 
+export type { CheckItem, CheckSpec } from "./check-settings.js";
 export type { GitInput, GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
@@ -46,12 +56,13 @@ export interface FactorySettings {
   /** Worker model overrides by Story ID, then by Stage key. */
   storyWorkerModels?: StoryWorkerModels;
   git?: GitSettings;
+  checks?: CheckSettings;
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
 export type FactorySettingsInput = Partial<FactorySettings>;
 
-interface ConfigureInput extends GitInput {
+interface ConfigureInput extends GitInput, CheckInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -118,7 +129,8 @@ function validSettings(settings: FactorySettings): boolean {
     (settings.supervisorModel === undefined || validModel(settings.supervisorModel)) &&
     (settings.workerModel === undefined || validModel(settings.workerModel)) &&
     validOverrides(settings) &&
-    (settings.git === undefined || validGit(settings.git))
+    (settings.git === undefined || validGit(settings.git)) &&
+    (settings.checks === undefined || validChecks(settings.checks))
   );
 }
 
@@ -128,6 +140,8 @@ export function validFactorySettings(value: unknown): boolean {
 }
 
 function validate(value: unknown): FactorySettings {
+  assertChecks(isRecord(value) ? value.checks : undefined);
+
   if (!validFactorySettings(value)) {
     throw new ValidationError("Invalid factory settings", {
       hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
@@ -139,7 +153,9 @@ function validate(value: unknown): FactorySettings {
 
 /** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
 function withDefaults(settings: FactorySettings): FactorySettings {
-  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) } };
+  const checks = checkLimits(settings.checks);
+
+  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) }, ...(checks ? { checks } : {}) };
 }
 
 /** Gives the Git sync settings. Settings without a `git` section use the defaults. */
@@ -178,7 +194,7 @@ export async function getFactorySettings(ctx: ServiceContext = {}): Promise<Fact
  * Validates the settings that `change` makes from the settings on disk, and writes them to the `factory`
  * section of the config. The other config keys stay. The defaults are not written.
  */
-async function writeSettings(
+export async function writeSettings(
   change: (current: FactorySettings) => FactorySettings,
   ctx: ServiceContext,
 ): Promise<FactorySettings> {
@@ -259,7 +275,8 @@ function overrideProblem(input: ConfigureInput): string | undefined {
     input.supervisor !== undefined ||
     input.supervisorThinking !== undefined ||
     input.maxWorkers !== undefined ||
-    hasGitInput(input)
+    hasGitInput(input) ||
+    hasCheckInput(input)
   ) {
     return "A Stage override sets only the worker model";
   }
@@ -378,6 +395,7 @@ export async function configureFactory(
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
       ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
+      ...(hasCheckInput(input) ? { checks: mergeChecks(current.checks, input) } : {}),
     }),
     ctx,
   );

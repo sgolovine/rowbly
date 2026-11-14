@@ -99,6 +99,25 @@ describe("ThreadPane", () => {
     expect(lastHints().map((hint) => hint.key)).not.toContain("f");
   });
 
+  it("shows the checks of the Thread when they change", async () => {
+    const { tui, thread } = await open();
+    expect(tui.frame()).not.toContain("Check test");
+    await transitionThread(
+      thread.id,
+      {
+        expectedRevision: 2,
+        status: "running",
+        patch: { checks: [{ id: "j1", key: "test", scope: "full", status: "failed", durationSeconds: 75 }] },
+      },
+      project.ctx,
+    );
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("Check test full · failed · 1m15s");
+    });
+    expect(tui.frame()).toContain("No conversation yet");
+  });
+
   it("shows the compact detail in a short body", async () => {
     const { tui } = await open(12);
     expect(tui.frame()).not.toMatch(/Status\s+▶ running/);
