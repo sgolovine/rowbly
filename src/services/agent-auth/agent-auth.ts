@@ -17,9 +17,36 @@ export type AuthRuntime = Pick<
 // One login at a time for this process, because Pi prompts in the same terminal.
 const login = new Store<{ active: boolean }>({ active: false });
 
-/** Creates the Pi runtime that holds the credentials. */
-export async function authRuntime(): Promise<AuthRuntime> {
+// One Pi runtime for this process, so that all views see the same credential state.
+const shared = new Store<{ runtime?: Promise<AuthRuntime> }>({});
+
+async function createAuthRuntime(): Promise<AuthRuntime> {
   return (await createFactoryRuntime()).runtime;
+}
+
+function clearFailedRuntime(failed: Promise<AuthRuntime>): void {
+  shared.update((current) => (current.runtime === failed ? { runtime: undefined } : {}));
+}
+
+/** Gives the Pi runtime that holds the credentials. All callers in one process share one runtime. */
+export function authRuntime(): Promise<AuthRuntime> {
+  const cached = shared.current.runtime;
+
+  if (cached) {
+    return cached;
+  }
+
+  const created = createAuthRuntime();
+
+  shared.update(() => ({ runtime: created }));
+  created.catch(() => clearFailedRuntime(created));
+
+  return created;
+}
+
+/** Removes the shared runtime. The next call to `authRuntime()` creates a new runtime. */
+export function resetAuthRuntime(): void {
+  shared.update(() => ({ runtime: undefined }));
 }
 
 /** Lists the providers and the login methods of each provider. */
