@@ -1,5 +1,5 @@
 ---
-title: Make getStory read one Story file instead of the whole folder twice
+title: Stop the Specs tab from re-reading every Story for each linked Story
 stage: BACKLOG
 worktree: null
 pull_request: null
