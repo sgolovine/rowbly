@@ -1,6 +1,6 @@
 ---
 title: Factory Git settings in the TUI
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-19
 pull_request: https://github.com/sgolovine/rowbly/pull/203
@@ -65,3 +65,8 @@ Not in scope:
 - An empty author or message clears the value. Reason: ROW-17 defines `""` as the clear operation of the CLI.
 - The defaults that the cards show are the defaults of ROW-17 and ROW-18 (Git config identity, the fixed message, push off, pull off, 300 seconds). Reason: those Stories define them. If they change in development, the cards show the merged values.
 - This Story waits for ROW-17 and ROW-18 in development order but is not blocked. Reason: both are refined and in development, and their settings shape is fixed in their descriptions and in the ROW-17 worktree.
+- (Development) The branch `story/ROW-19` merges `origin/story/ROW-18`, because ROW-18 was not merged to `main`. The Story permits a rebase on ROW-17 and ROW-18. Merge PR #201 (ROW-18) before PR #203.
+- (Development) A new Git-only service function `configureGit(input, ctx)` in `factory-settings` saves the Git values. It does not import `agent-auth`. `configureFactory` and the CLI did not change. Reason: this is the smallest change that keeps the auth runtime off the TUI save path.
+- (Development) The default commit message is `DEFAULT_COMMIT_MESSAGE` in `git-settings.ts`. A test compares it with the text of `commit-project.mjs`.
+- (Development) The hints are `a author`, `m message`, `p toggle push`, `u toggle pull`, `i interval`. Reason: with longer text, the strip did not show all five hints at 100 columns.
+- (Development) The push and pull cards have a `Toggle` Button. The other cards have an `Edit` Button. The section uses `AiSettingCard` from its `index.ts`.
