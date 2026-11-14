@@ -55,9 +55,8 @@ describe("Onboarding", () => {
     expect(tui.frame()).toContain("Agent skills");
     expect(tui.frame()).toMatch(/review \(required\)/);
     expect(tui.frame()).not.toMatch(/develop \(required\)/);
-    expect(tui.frame()).toContain("factory (required to use the factory)");
-    // Drop develop, factory and refine; review stays.
-    await step(tui, keys.space, keys.down, keys.space, keys.down, keys.space, keys.enter);
+    // Drop develop and refine; review stays.
+    await step(tui, keys.space, keys.down, keys.space, keys.enter);
     expect(tui.frame()).toContain("Harnesses");
 
     // Keep only codex.
@@ -74,7 +73,6 @@ describe("Onboarding", () => {
       keys.enter,
     );
     expect(tui.frame()).toContain("Summary");
-    expect(tui.frame()).toContain('companion skill "factory"');
     await step(tui, keys.enter);
     await settle(200);
     expect(onCreated).toHaveBeenCalled();

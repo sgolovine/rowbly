@@ -42,35 +42,5 @@
   ],
   "features": {
     "specs": true
-  },
-  "skills": [
-    {
-      "name": "develop",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    },
-    {
-      "name": "factory",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    },
-    {
-      "name": "refine",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    },
-    {
-      "name": "review",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    }
-  ]
+  }
 }

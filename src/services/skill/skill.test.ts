@@ -41,7 +41,7 @@ describe("skill service", () => {
     });
 
     it("finds the skills of the Rowbly package by default", async () => {
-      expect((await bundledSkills()).names).toEqual(["develop", "factory", "refine", "review"]);
+      expect((await bundledSkills()).names).toEqual(["develop", "refine", "review"]);
     });
   });
 

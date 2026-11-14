@@ -10,6 +10,7 @@
     "dist",
     "skills",
     "stages",
+    "src/config/prompts",
     "!skills/**/*.test.*"
   ],
   "engines": {
@@ -26,8 +27,7 @@
     "knip": "knip",
     "knip:production": "knip --production",
     "test": "vitest run && node --test scripts/*.test.mjs",
-    "test:watch": "vitest",
-    "test:factory": "node --test skills/factory/scripts/*.test.mjs"
+    "test:watch": "vitest"
   },
   "license": "MIT",
   "dependencies": {
