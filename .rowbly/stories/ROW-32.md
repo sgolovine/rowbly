@@ -1,7 +1,7 @@
 ---
 title: Skip conversation polls when the session file did not change
 stage: IN_DEVELOPMENT
-position: 2
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-32
 pull_request: null
 ---
