@@ -1,5 +1,14 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { formatAuthor, gitSync, hasGitInput, mergeGit, parseAuthor, validGit } from "./git-settings.js";
+import {
+  DEFAULT_COMMIT_MESSAGE,
+  formatAuthor,
+  gitSync,
+  hasGitInput,
+  mergeGit,
+  parseAuthor,
+  validGit,
+} from "./git-settings.js";
 
 describe("gitSettings", () => {
   it("accepts non-empty strings and an author with both name and email", () => {
@@ -75,5 +84,12 @@ describe("gitSettings", () => {
     expect(mergeGit(current, { gitPush: false })).toEqual({ ...current, push: false });
     expect(hasGitInput({ gitPush: false })).toBe(true);
     expect(hasGitInput({ gitSyncInterval: 60 })).toBe(true);
+  });
+  it("names the same default commit message as commit-project.mjs", async () => {
+    const script = await readFile(
+      new URL("../../../skills/factory/scripts/commit-project.mjs", import.meta.url),
+      "utf8",
+    );
+    expect(script).toContain(`const DEFAULT_MESSAGE = "${DEFAULT_COMMIT_MESSAGE}";`);
   });
 });
