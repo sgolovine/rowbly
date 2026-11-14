@@ -50,6 +50,18 @@ export interface UpdateStoryInput {
   fields?: FieldInput;
   /** Replaces the list of upstream Stories. `[]` removes all of them. `undefined` keeps the old list. */
   dependsOn?: readonly string[];
+  /** Upstream Stories to add to the old list. Not together with `dependsOn`. */
+  addDependsOn?: readonly string[];
+  /** Upstream Stories to remove from the old list. Not together with `dependsOn`. */
+  removeDependsOn?: readonly string[];
+}
+
+/** A Story with its dependency state. */
+export interface StoryDetails extends Story {
+  /** The IDs of the downstream Stories. */
+  blocks: string[];
+  /** The IDs of the upstream Stories that are not complete. The Story is blocked when the list is not empty. */
+  waitingFor: string[];
 }
 
 /** The result of a delete: the ID, and a warning for each downstream Story that lost the dependency. */
@@ -64,4 +76,6 @@ export interface SearchStoriesInput {
   stage?: string;
   /** Stories whose fields equal these values. */
   fields?: FieldInput;
+  /** Only blocked Stories, or only ready Stories. */
+  dependency?: "blocked" | "ready";
 }

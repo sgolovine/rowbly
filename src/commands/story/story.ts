@@ -1,15 +1,16 @@
-import type { Command } from "commander";
+import { type Command, Option } from "commander";
 import { getProject } from "../../services/project/project.js";
 import {
   createStory,
   deleteStory,
-  getStory,
+  getStoryDetails,
   type Story,
+  type StoryDetails,
   searchStories,
   updateStory,
 } from "../../services/story/story.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
-import { collect, formatValue, parseFieldFlags, parsePosition, run } from "../output/output.js";
+import { collect, formatValue, parseFieldFlags, parseIdList, parsePosition, run } from "../output/output.js";
 
 interface StoryOptions {
   title?: string;
@@ -17,15 +18,40 @@ interface StoryOptions {
   position?: number;
   description?: string;
   field?: string[];
+  dependsOn?: string[];
+  addDependency?: string[];
+  removeDependency?: string[];
 }
 
-async function formatStory(story: Story, ctx: ServiceContext): Promise<string> {
+interface SearchOptions {
+  stage?: string;
+  field?: string[];
+  blocked?: boolean;
+  ready?: boolean;
+}
+
+/** A list of Story IDs, or `none`. */
+function formatIds(ids: readonly string[]): string {
+  return ids.length === 0 ? "none" : ids.join(", ");
+}
+
+/** The dependency lines of `story get`. */
+function dependencyLines(story: StoryDetails): string[] {
+  return [
+    `Depends on: ${formatIds(story.dependsOn)}`,
+    `Blocks: ${formatIds(story.blocks)}`,
+    story.waitingFor.length === 0 ? "Blocked: no" : `Blocked: yes (${story.waitingFor.join(", ")})`,
+  ];
+}
+
+async function formatStory(story: StoryDetails, ctx: ServiceContext): Promise<string> {
   const project = await getProject(ctx);
   const stage = project.stages.find((s) => s.key === story.stage);
 
   return [
     `${story.id}  ${story.title}`,
     `Stage: ${stage?.label ?? story.stage} (${story.stage})`,
+    ...dependencyLines(story),
     ...project.customFields.map((field) => `${field.label}: ${formatValue(story.fields[field.key] ?? null)}`),
     ...(story.description ? ["", story.description] : []),
   ].join("\n");
@@ -45,6 +71,7 @@ function registerCreate(program: Command): void {
     .option("--stage <stage>", "stage key (default: the first enabled stage)")
     .option("--description <markdown>", "story description")
     .option("--field <key=value>", "set a custom field (repeatable)", collect)
+    .option("--depends-on <ids>", "upstream Story IDs, comma-separated (repeatable)", collect)
     .action((opts: StoryOptions & { title: string }, command: Command) =>
       run(
         command,
@@ -55,6 +82,7 @@ function registerCreate(program: Command): void {
               stage: opts.stage,
               description: opts.description,
               fields: parseFieldFlags(opts.field),
+              dependsOn: parseIdList(opts.dependsOn),
             },
             ctx,
           ),
@@ -76,6 +104,13 @@ function registerUpdate(program: Command): void {
     )
     .option("--description <markdown>", "replace the description")
     .option("--field <key=value>", "set a custom field; an empty value clears it (repeatable)", collect)
+    .addOption(
+      new Option("--depends-on <ids>", 'replace the upstream Story IDs, comma-separated; "" removes all (repeatable)')
+        .argParser(collect)
+        .conflicts(["addDependency", "removeDependency"]),
+    )
+    .option("--add-dependency <id>", "add an upstream Story (repeatable)", collect)
+    .option("--remove-dependency <id>", "remove an upstream Story (repeatable)", collect)
     .action((id: string, opts: StoryOptions, command: Command) =>
       run(
         command,
@@ -88,6 +123,9 @@ function registerUpdate(program: Command): void {
               position: opts.position,
               description: opts.description,
               fields: parseFieldFlags(opts.field),
+              dependsOn: parseIdList(opts.dependsOn),
+              addDependsOn: parseIdList(opts.addDependency),
+              removeDependsOn: parseIdList(opts.removeDependency),
             },
             ctx,
           ),
@@ -116,10 +154,19 @@ function registerGet(program: Command): void {
     .action((id: string, _opts: unknown, command: Command) =>
       run(
         command,
-        (ctx) => getStory({ id }, ctx),
+        (ctx) => getStoryDetails({ id }, ctx),
         (story, ctx) => formatStory(story, ctx),
       ),
     );
+}
+
+/** The dependency filter of `story search`. Commander refuses `--blocked` together with `--ready`. */
+function dependencyFilter(opts: SearchOptions): "blocked" | "ready" | undefined {
+  if (opts.blocked) {
+    return "blocked";
+  }
+
+  return opts.ready ? "ready" : undefined;
 }
 
 function registerSearch(program: Command): void {
@@ -128,10 +175,16 @@ function registerSearch(program: Command): void {
     .description("Find stories by text, stage or custom field values")
     .option("--stage <stage>", "only stories in this stage")
     .option("--field <key=value>", "only stories with this field value (repeatable)", collect)
-    .action((query: string | undefined, opts: StoryOptions, command: Command) =>
+    .addOption(new Option("--blocked", "only blocked stories").conflicts("ready"))
+    .option("--ready", "only ready stories")
+    .action((query: string | undefined, opts: SearchOptions, command: Command) =>
       run(
         command,
-        (ctx) => searchStories({ query, stage: opts.stage, fields: parseFieldFlags(opts.field) }, ctx),
+        (ctx) =>
+          searchStories(
+            { query, stage: opts.stage, fields: parseFieldFlags(opts.field), dependency: dependencyFilter(opts) },
+            ctx,
+          ),
         (stories) => searchText(stories),
       ),
     );
