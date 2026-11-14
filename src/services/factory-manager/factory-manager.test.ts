@@ -426,6 +426,17 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("refuses to reserve a worker for a blocked Story", async () => {
+    const upstream = await createStory({ title: "Upstream", stage: "BACKLOG" }, { cwd: root });
+    const blocked = await createStory({ title: "Blocked", stage: "WORK", dependsOn: [upstream.id] }, { cwd: root });
+    const f = await fixture();
+    await expect(f.manager.reserveWorker({ storyId: blocked.id, stage: "WORK", requestId: "blocked" })).rejects.toThrow(
+      `Story is not eligible: waiting for ${upstream.id}`,
+    );
+    expect((await f.manager.snapshot()).workers.pending).toBe(0);
+    expect((await readFactoryState(root)).attempts).toEqual([]);
+    expect((await listThreads({ role: "worker" }, { cwd: root })).threads).toEqual([]);
+  });
   it("rejects a changed prompt after durable reservation", async () => {
     let release = () => {};
     const barrier = new Promise<void>((resolve) => {
