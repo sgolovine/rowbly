@@ -1,6 +1,7 @@
 ---
 title: Build the website layout, header, footer and shared components
 stage: BACKLOG
+position: 5
 worktree: null
 pull_request: null
 ---

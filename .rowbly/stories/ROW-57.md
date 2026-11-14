@@ -1,6 +1,7 @@
 ---
 title: Link the website from the README and package metadata
 stage: BACKLOG
+position: 15
 worktree: null
 pull_request: null
 ---
@@ -11,14 +12,14 @@ Point users from the repository and the npm package to the new website.
 
 ## Scope
 
-- Add a website link near the top of `README.md` (under the badges).
-- Set `homepage` in the root `package.json` to the website URL.
-- Set the GitHub repository website field to the site URL (`gh repo edit --homepage`). Ask the owner before this step; it is a public change.
+- Add a link to `https://rowbly.com` near the top of `README.md` (under the badges).
+- Set `homepage` in the root `package.json` to `https://rowbly.com`.
+- Set the GitHub repository website field to `https://rowbly.com` (`gh repo edit --homepage https://rowbly.com`). Ask the owner before this step; it is a public change.
 
 ## Acceptance criteria
 
 - [ ] The README shows the website link.
-- [ ] `package.json` `homepage` is the website URL.
+- [ ] `package.json` `homepage` is `https://rowbly.com`.
 - [ ] The root `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
 
 ## Technical notes

@@ -1,6 +1,7 @@
 ---
 title: Build the Install page
 stage: BACKLOG
+position: 11
 worktree: null
 pull_request: null
 ---
@@ -24,7 +25,7 @@ Each step is a numbered card with a copyable command.
 
 ## Acceptance criteria
 
-- [ ] The page is at `/rowbly/install` and loads directly from a deep link.
+- [ ] The page is at `https://rowbly.com/install` and loads directly from a deep link.
 - [ ] Every command on the page runs on the current `rowbly` version (check with `rowbly --help` and each subcommand `--help`).
 - [ ] The Linux requirement is in the first section.
 - [ ] Each command has a copy button.

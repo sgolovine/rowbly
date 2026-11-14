@@ -14,22 +14,24 @@ stories:
   - ROW-55
   - ROW-56
   - ROW-57
+  - ROW-58
 ---
 
 # Rowbly website: content plan
 
 This plan is the source of the copy and the design of the Rowbly marketing website. Fable 5.1 drafted it from the README, the brand assets and the screenshot in `assets/`. The site is for consumers: it sells what Rowbly does and how it feels to use. It does not explain internals.
 
-Stack: TanStack Start (static prerender), Tailwind CSS, shadcn/ui, GitHub Pages at `https://sgolovine.github.io/rowbly/`.
+Stack: TanStack Start (static prerender), Tailwind CSS, shadcn/ui, GitHub Pages with the custom domain `https://rowbly.com` (base path `/`).
 
 ## Stories and order
 
-1. ROW-45 Scaffold (blocks all other website Stories)
-2. ROW-46 GitHub Pages deploy · ROW-47 Layout and shared components · ROW-55 Real TUI screenshots (can run in parallel)
-3. ROW-48 Hero and proof strip · ROW-49 Animated board · ROW-50 How it works and Watch live · ROW-51 Closing sections
-4. ROW-52 How it works page · ROW-53 Install page · ROW-54 SEO and OG image
-5. ROW-56 Accessibility and performance check
-6. ROW-57 Link the site from the README and package
+1. ROW-58 Lint rules that accept TanStack Router file names
+2. ROW-45 Scaffold (blocks all other website Stories)
+3. ROW-46 GitHub Pages deploy · ROW-47 Layout and shared components · ROW-55 Real TUI screenshots (can run in parallel)
+4. ROW-48 Hero and proof strip · ROW-49 Animated board · ROW-50 How it works and Watch live · ROW-51 Closing sections
+5. ROW-52 How it works page · ROW-53 Install page · ROW-54 SEO and OG image
+6. ROW-56 Accessibility and performance check
+7. ROW-57 Link the site from the README and package
 
 ## 1. Positioning
 
@@ -138,11 +140,12 @@ Requirements, Install, First run, Sign in to a provider, Start the factory, Cost
 - Title: Rowbly: a software factory manager in your terminal
 - Description: Keep a Kanban board of Stories in your Git repo. Give each Stage a prompt. Start the factory and a team of AI agents refines, builds and reviews in parallel.
 - OG image 1200x630: wordmark and headline on the left, board crop on the right, amber line at the bottom.
-- `SoftwareApplication` JSON-LD. Canonical URLs with the `/rowbly/` base path.
+- `SoftwareApplication` JSON-LD. Canonical URLs on `https://rowbly.com`.
 
 ## 9. Open questions for the owner
 
-1. Custom domain or `/rowbly/` on github.io? The base path is one setting (ROW-45), but OG and canonical URLs follow it.
-2. Provider logos or plain names? Logos can need brand approval.
-3. Show a version badge? It is honest but signals an early product.
-4. "26 agents" comes from one demo run. The site calls it "a real Rowbly board", not a typical result.
+Decided: the site uses the custom domain `https://rowbly.com`.
+
+1. Provider logos or plain names? Logos can need brand approval.
+2. Show a version badge? It is honest but signals an early product.
+3. "26 agents" comes from one demo run. The site calls it "a real Rowbly board", not a typical result.

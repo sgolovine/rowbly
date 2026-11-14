@@ -1,6 +1,7 @@
 ---
 title: Build the landing page Hero and proof strip
 stage: BACKLOG
+position: 6
 worktree: null
 pull_request: null
 ---

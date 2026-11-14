@@ -1,6 +1,7 @@
 ---
 title: Build the How it works page
 stage: BACKLOG
+position: 10
 worktree: null
 pull_request: null
 ---
@@ -26,7 +27,7 @@ Reuse the landing components (animated board, `AgentTag`, `TerminalFrame`) where
 
 ## Acceptance criteria
 
-- [ ] The page is at `/rowbly/how-it-works` and loads directly from a deep link.
+- [ ] The page is at `https://rowbly.com/how-it-works` and loads directly from a deep link.
 - [ ] No internal terms (daemon, worktree, lock, flock, Pi SDK, runtime, state file) appear.
 - [ ] Every claim is true for the current Rowbly version (check against `README.md`).
 - [ ] The copy matches the Spec `website-content-plan`, section 5.

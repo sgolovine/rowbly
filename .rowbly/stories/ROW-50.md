@@ -1,6 +1,7 @@
 ---
 title: Build the How it works and Watch everything live landing sections
 stage: BACKLOG
+position: 8
 worktree: null
 pull_request: null
 ---
