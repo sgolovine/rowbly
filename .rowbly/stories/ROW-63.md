@@ -2,7 +2,7 @@
 title: Show dependencies to the supervisor and raise attention for a stuck upstream Story
 stage: IN_REFINEMENT
 position: 6
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-63
 pull_request: null
 ---
 

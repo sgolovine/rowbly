@@ -1,11 +1,13 @@
 import { readFile, rm, writeFile } from "node:fs/promises";
 import { attachmentDir, prepareImages, withAttachments } from "../attachment-files/attachment-files.js";
 import { type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
+import { ValidationError } from "../errors/errors.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import type { MarkdownDocument } from "../markdown/markdown.js";
 import { rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import {
+  dependsOnOf,
   formatStoryId,
   readStoryFiles,
   type StoryFile,
@@ -15,12 +17,12 @@ import {
   writeStoryFile,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
-import { checkedDependsOn, removeDependencies } from "./story-dependencies.js";
+import { changedDependsOn, checkedDependsOn, removeDependencies } from "./story-dependencies.js";
 import { fieldUpdates, positionIssues, titleIssues } from "./story-input.js";
 import { countAttachments, findStoryFile, getStory, positionIn, toStory } from "./story-read.js";
 import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
-export { getStory, searchStories } from "./story-read.js";
+export { getStory, getStoryDetails, searchStories } from "./story-read.js";
 export * from "./story-types.js";
 
 /** The bytes of a story file before an update, so that a failed save of the images can restore it. */
@@ -83,14 +85,46 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   );
 }
 
-/** The frontmatter after an update of the `dependsOn` list. Without a list in the input, the old value stays. */
+/**
+ * The new `dependsOn` list of the update, or `undefined` when the list does not change. Throws a `ValidationError`
+ * when the input has a full list together with an addition or a removal.
+ */
+function requestedDependsOn(
+  config: ProjectConfig,
+  file: StoryFile,
+  input: UpdateStoryInput,
+): readonly string[] | undefined {
+  const { dependsOn, addDependsOn, removeDependsOn } = input;
+
+  if (addDependsOn === undefined && removeDependsOn === undefined) {
+    return dependsOn;
+  }
+
+  if (dependsOn !== undefined) {
+    throw new ValidationError("Give a full dependsOn list or the changes to the list, not both", {
+      details: {
+        issues: [{ path: ["dependsOn"], message: "dependsOn cannot be used with addDependsOn or removeDependsOn" }],
+      },
+    });
+  }
+
+  const current = dependsOnOf(file.doc.data);
+  const changed = changedDependsOn(config, current, addDependsOn ?? [], removeDependsOn ?? []);
+
+  // An addition of an ID in the list, or a removal of a missing ID, does not write or validate the list.
+  return changed.join("\n") === current.join("\n") ? undefined : changed;
+}
+
+/** The frontmatter after an update of the `dependsOn` list. Without a change of the list, the old value stays. */
 function updatedDependsOn(
   config: ProjectConfig,
   files: readonly StoryFile[],
   file: StoryFile,
   data: Record<string, unknown>,
-  dependsOn: readonly string[] | undefined,
+  input: UpdateStoryInput,
 ): Record<string, unknown> {
+  const dependsOn = requestedDependsOn(config, file, input);
+
   return dependsOn === undefined ? data : withDependsOn(data, checkedDependsOn(config, files, file.id, dependsOn));
 }
 
@@ -118,7 +152,7 @@ function updatedStoryData(
     ...fields.values,
   };
 
-  return updatedDependsOn(config, files, file, data, input.dependsOn);
+  return updatedDependsOn(config, files, file, data, input);
 }
 
 /** Writes the story at `position` in its stage. The moved story is always written. */

@@ -11,6 +11,7 @@ import {
 import { NotFoundError } from "../errors/errors.js";
 import { type FieldValue, fieldValueError } from "../fields/fields.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
+import { blocksOf, isBlocked, waitingFor } from "../story-dependency/story-dependency.js";
 import {
   dependsOnOf,
   formatStoryId,
@@ -21,8 +22,9 @@ import {
   storyPath,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
+import { dependencyStories } from "./story-dependencies.js";
 import { fieldUpdates } from "./story-input.js";
-import type { SearchStoriesInput, Story } from "./story-types.js";
+import type { SearchStoriesInput, Story, StoryDetails } from "./story-types.js";
 
 const INVALID_STORY_HINT = "Run `rowbly doctor` to find and fix problems in story files.";
 
@@ -165,6 +167,24 @@ export async function getStory(input: { id: string }, ctx: ServiceContext = {}):
   return { ...story, attachmentCount: await countAttachments(paths, story.id) };
 }
 
+/** Gives the story with the ID, with its downstream Stories and the upstream Stories that are not complete. */
+export async function getStoryDetails(input: { id: string }, ctx: ServiceContext = {}): Promise<StoryDetails> {
+  const paths = await findProject(ctx);
+  const config = await readConfig(paths);
+  const files = await readStoryFiles(paths);
+  const file = await findStoryFile(paths, config, input.id, files);
+
+  const story = toStory(config, file, positionIn(files, file));
+  const dependencies = dependencyStories(files);
+
+  return {
+    ...story,
+    attachmentCount: await countAttachments(paths, story.id),
+    blocks: blocksOf(dependencies, story.id),
+    waitingFor: waitingFor(dependencies, config.stages, story.id),
+  };
+}
+
 function matchesQuery(story: Story, words: string[], names: string[]): boolean {
   const text = [
     ...names,
@@ -228,6 +248,16 @@ function matchesFilter(
   );
 }
 
+/** Whether the story agrees with the dependency filter. Without a filter, each story agrees. */
+function matchesDependency(
+  stories: readonly Story[],
+  stages: readonly StageConfig[],
+  story: Story,
+  dependency: SearchStoriesInput["dependency"],
+): boolean {
+  return dependency === undefined || isBlocked(stories, stages, story.id) === (dependency === "blocked");
+}
+
 /** Gives the field filter of a search as values of the field types. Throws when a field or a value is invalid. */
 function searchFilter(
   config: ProjectConfig,
@@ -253,7 +283,10 @@ export async function searchStories(input: SearchStoriesInput = {}, ctx: Service
   const sorted = sortStoryFiles(files).toSorted((a, b) => stageIndex(config, a) - stageIndex(config, b));
   const positions = stagePositions(sorted);
   const stories = sorted.map((file) => toStory(config, file, positions.get(file.id)));
-  const filtered = stories.filter((story) => matchesFilter(story, stage, fields));
+  const filtered = stories.filter(
+    (story) =>
+      matchesFilter(story, stage, fields) && matchesDependency(stories, config.stages, story, input.dependency),
+  );
   const owners = new Set(await attachmentOwners(paths));
   const found = await Promise.all(filtered.map((story) => withAttachmentNames(paths, owners, story)));
 

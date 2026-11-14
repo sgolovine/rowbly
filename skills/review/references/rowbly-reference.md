@@ -152,10 +152,10 @@ A Prompt record has this shape. `exists` is `false` and `text` is empty if the f
 
 | Command                                                                                             | JSON result     |
 | --------------------------------------------------------------------------------------------------- | --------------- |
-| `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat)` | Story           |
-| `rowbly story get <id>`                                                                             | Story           |
-| `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat)`                            | Array of Story  |
-| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat)` | Story |
+| `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids>] (repeat)` | Story |
+| `rowbly story get <id>`                                                                             | Story, with `blocks` and `waitingFor` |
+| `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat) [--blocked \| --ready]`      | Array of Story  |
+| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids> \| --add-dependency <id> --remove-dependency <id>] (repeat)` | Story |
 | `rowbly story delete <id>`                                                                          | `{ "id": … }`   |
 
 A Story record has this shape:
@@ -167,6 +167,7 @@ A Story record has this shape:
   "title": "Login page",
   "stage": "BACKLOG",
   "position": 1,
+  "dependsOn": ["APP-02"],
   "description": "Markdown text",
   "fields": { "priority": "P1", "story_points": null },
   "path": "/abs/path/.rowbly/stories/APP-01.md"
@@ -182,6 +183,16 @@ A Story record has this shape:
 - **Search.** With no filters, `story search` shows all Stories. A Story must agree with all filters.
 - **Search text.** Each word of `query` must occur in the ID, title, description or a field value. Case has no effect.
 - **Search order.** The results are in the order of the Stages, then in the order of the positions.
+- **Dependencies.** `dependsOn` has the IDs of the upstream Stories. A Story is complete only in the last Stage.
+  A Story is blocked when one or more upstream Stories are not complete. Otherwise it is ready.
+- **Set dependencies.** `--depends-on` takes a comma-separated list, and you can repeat it. On update, the
+  list replaces the old list. `--depends-on ""` removes all dependencies.
+- **Change one dependency.** `--add-dependency` and `--remove-dependency` change one ID. You can repeat them.
+  You cannot use them together with `--depends-on`.
+- **Bad dependencies.** An unknown ID, a self reference or a cycle gives `VALIDATION`. `details.unknown`,
+  `details.self` or `details.cycle` has the IDs. Nothing is saved.
+- **Dependency state.** `story get` adds `blocks` (the downstream Stories) and `waitingFor` (the upstream
+  Stories that are not complete). `story search --blocked` or `--ready` filters by this state.
 
 Do not keep a Story ID after you delete the Story. Each new Story gets the highest number plus one,
 so Rowbly can give the deleted ID to a new Story.

@@ -68,6 +68,32 @@ attachment commands are at the top level. Commander gives `--help` for each subc
 
 A value that is not `on` or `off` gives a Commander error and exit code 1.
 
+### Story dependencies
+
+`rowbly story create` and `rowbly story update` set the upstream Stories of a Story. The words
+(Upstream Story, Downstream Story, Complete, Blocked and Ready) are in
+[domain-concepts.md](domain-concepts.md).
+
+- `--depends-on <ids>` gives a comma-separated list of Story IDs. You can use the flag more than one
+  time. Rowbly ignores the spaces around a comma and removes the empty items. On update, the list
+  replaces the old list. `--depends-on ""` removes all dependencies.
+- `--add-dependency <id>` and `--remove-dependency <id>` change one item of the list on update. You can
+  use each flag more than one time. An add of an ID that is in the list, or a remove of an ID that is not
+  in the list, changes nothing. The command sends these flags to `updateStory` as `addDependsOn` and
+  `removeDependsOn`, so the change occurs in one service call.
+- `--depends-on` with `--add-dependency` or `--remove-dependency` gives a Commander error and exit code 1.
+- An unknown ID, an ID of a different Project, a self reference or a cycle gives a `VALIDATION` error
+  and exit code 1. With `--json`, `details` has the IDs, for example `details.cycle` or
+  `details.unknown`. No file changes.
+
+`rowbly story get` calls `getStoryDetails`. The text output has the lines `Depends on`, `Blocks` and
+`Blocked` (`yes` with the IDs of the upstream Stories that are not complete, or `no`). An empty list
+shows `none`. The JSON result has the arrays `dependsOn`, `blocks` and `waitingFor`.
+
+`rowbly story search --blocked` shows only the blocked Stories, and `--ready` shows only the ready
+Stories. The two flags together give a Commander error and exit code 1. Each flag works together with
+the query, `--stage` and `--field`.
+
 ## Output and errors
 
 `run(command, call, text)` in `src/commands/output/` connects a command to a service:

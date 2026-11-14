@@ -242,6 +242,57 @@ describe("story", () => {
     });
   });
 
+  describe("addDependsOn and removeDependsOn", () => {
+    async function seed(count: number): Promise<void> {
+      for (let i = 1; i <= count; i++) {
+        await createStory({ title: `S${i}` }, project.ctx);
+      }
+    }
+
+    it("adds and removes only the given IDs, and removes the key with the last ID", async () => {
+      await seed(3);
+      await createStory({ title: "Four", dependsOn: ["ROW-01"] }, project.ctx);
+      const added = await updateStory({ id: "ROW-04", addDependsOn: ["3", "row-2"] }, project.ctx);
+      expect(added.dependsOn).toEqual(["ROW-01", "ROW-03", "ROW-02"]);
+      const removed = await updateStory({ id: "ROW-04", removeDependsOn: ["ROW-03", "ROW-01"] }, project.ctx);
+      expect(removed.dependsOn).toEqual(["ROW-02"]);
+      await updateStory({ id: "ROW-04", removeDependsOn: ["ROW-02"] }, project.ctx);
+      expect(await project.read("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
+    });
+
+    it("changes nothing for an add of an ID in the list or a remove of a missing ID", async () => {
+      await seed(2);
+      await createStory({ title: "Three", dependsOn: ["ROW-01"] }, project.ctx);
+      const before = await project.read("stories/ROW-03.md");
+      await updateStory({ id: "ROW-03", addDependsOn: ["ROW-01"], removeDependsOn: ["ROW-02"] }, project.ctx);
+      expect(await project.read("stories/ROW-03.md")).toBe(before);
+    });
+
+    it("validates the result as for dependsOn and saves nothing", async () => {
+      await seed(2);
+      await updateStory({ id: "ROW-01", dependsOn: ["ROW-02"] }, project.ctx);
+      const before = await project.read("stories/ROW-02.md");
+      const cycle = await updateStory({ id: "ROW-02", addDependsOn: ["ROW-01"] }, project.ctx).catch((e: unknown) => e);
+      expect((cycle as ValidationError).details).toMatchObject({ cycle: ["ROW-02", "ROW-01", "ROW-02"] });
+      const unknown = await updateStory({ id: "ROW-02", addDependsOn: ["ROW-09"] }, project.ctx).catch(
+        (e: unknown) => e,
+      );
+      expect((unknown as ValidationError).details).toMatchObject({ unknown: ["ROW-09"] });
+      expect(await project.read("stories/ROW-02.md")).toBe(before);
+    });
+
+    it("rejects dependsOn together with addDependsOn or removeDependsOn", async () => {
+      await seed(2);
+      await expect(
+        updateStory({ id: "ROW-02", dependsOn: ["ROW-01"], addDependsOn: ["ROW-01"] }, project.ctx),
+      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(
+        updateStory({ id: "ROW-02", dependsOn: [], removeDependsOn: ["ROW-01"] }, project.ctx),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect((await getStory({ id: "ROW-02" }, project.ctx)).dependsOn).toEqual([]);
+    });
+  });
+
   describe("searchStories", () => {
     async function seed(): Promise<void> {
       await addFields();
