@@ -2,7 +2,7 @@
 title: Reduce the cost of runtimePath checks on hot runtime reads
 stage: IN_REFINEMENT
 position: 3
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-30
 pull_request: null
 ---
 
