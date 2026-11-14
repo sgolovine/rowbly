@@ -6,7 +6,7 @@ import { type DependencyStory, dependencyError } from "../story-dependency/story
 import { dependsOnOf, type StoryFile, withDependsOn, writeStoryFile } from "../story-files/story-files.js";
 
 /** The dependency fields of each story file. */
-function dependencyStories(files: readonly StoryFile[]): DependencyStory[] {
+export function dependencyStories(files: readonly StoryFile[]): DependencyStory[] {
   return files.map((file) => ({
     id: file.id,
     stage: String(file.doc.data.stage),
@@ -19,6 +19,22 @@ function normalizeDependsOn(config: ProjectConfig, dependsOn: readonly string[])
   const ids = dependsOn.map((id) => canonicalStoryId(config.projectKey, id) ?? id.trim().toUpperCase());
 
   return [...new Set(ids)];
+}
+
+/**
+ * The `dependsOn` list after the removal of each ID of `remove` and the addition of each ID of `add`, in this
+ * order. An addition of an ID in the list, or a removal of an ID that is not in the list, changes nothing.
+ */
+export function changedDependsOn(
+  config: ProjectConfig,
+  current: readonly string[],
+  add: readonly string[],
+  remove: readonly string[],
+): string[] {
+  const removed = new Set(normalizeDependsOn(config, remove));
+  const kept = normalizeDependsOn(config, current).filter((id) => !removed.has(id));
+
+  return normalizeDependsOn(config, [...kept, ...add]);
 }
 
 /**

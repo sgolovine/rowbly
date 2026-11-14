@@ -96,6 +96,14 @@ export function parseFieldFlags(flags: string[] | undefined): Record<string, str
   return Object.fromEntries(flags.map((flag) => fieldFlag(flag)));
 }
 
+/**
+ * Repeatable comma-separated ID flags as one list. Each item is trimmed, and empty items are removed, so `""`
+ * gives `[]`. Without a flag, `undefined`.
+ */
+export function parseIdList(values: string[] | undefined): string[] | undefined {
+  return values?.flatMap((value) => value.split(",").map((item) => item.trim())).filter(Boolean);
+}
+
 /** Parses a positive whole number option. */
 export function parsePosition(value: string): number {
   const number = Number(value);

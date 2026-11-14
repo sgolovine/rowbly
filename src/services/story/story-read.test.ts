@@ -6,8 +6,8 @@ import { addCustomField } from "../custom-field/custom-field.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { readStoryFiles } from "../story-files/story-files.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { updateStory } from "./story.js";
-import { findStoryFile, getStory, searchStories } from "./story-read.js";
+import { createStory, updateStory } from "./story.js";
+import { findStoryFile, getStory, getStoryDetails, searchStories } from "./story-read.js";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs/promises")>();
@@ -270,6 +270,46 @@ describe("story-read", () => {
       expect((await getStory({ id: "ROW-01" }, project.ctx)).dependsOn).toEqual([]);
       expect((await getStory({ id: "ROW-02" }, project.ctx)).dependsOn).toEqual([]);
       expect((await getStory({ id: "ROW-03" }, project.ctx)).dependsOn).toEqual(["ROW-01"]);
+    });
+  });
+
+  describe("dependency state", () => {
+    async function seed(): Promise<void> {
+      await createStory({ title: "Done upstream", stage: "DONE" }, project.ctx);
+      await createStory({ title: "Open upstream" }, project.ctx);
+      await createStory({ title: "Blocked", dependsOn: ["ROW-01", "ROW-02"] }, project.ctx);
+      await createStory({ title: "Ready", dependsOn: ["ROW-01"] }, project.ctx);
+    }
+
+    it("gives blocks and waitingFor with the story", async () => {
+      await seed();
+      expect(await getStoryDetails({ id: "ROW-03" }, project.ctx)).toMatchObject({
+        id: "ROW-03",
+        dependsOn: ["ROW-01", "ROW-02"],
+        blocks: [],
+        waitingFor: ["ROW-02"],
+        attachmentCount: 0,
+      });
+      expect(await getStoryDetails({ id: "ROW-01" }, project.ctx)).toMatchObject({
+        blocks: ["ROW-03", "ROW-04"],
+        waitingFor: [],
+      });
+    });
+
+    it("filters the search by blocked or ready, together with the other filters", async () => {
+      await seed();
+      const ids = (stories: { id: string }[]) => stories.map((s) => s.id);
+      expect(ids(await searchStories({ dependency: "blocked" }, project.ctx))).toEqual(["ROW-03"]);
+      expect(ids(await searchStories({ dependency: "ready" }, project.ctx))).toEqual(["ROW-02", "ROW-04", "ROW-01"]);
+      expect(ids(await searchStories({ dependency: "ready", stage: "BACKLOG" }, project.ctx))).toEqual([
+        "ROW-02",
+        "ROW-04",
+      ]);
+      expect(ids(await searchStories({ dependency: "ready", query: "upstream" }, project.ctx))).toEqual([
+        "ROW-02",
+        "ROW-01",
+      ]);
+      expect(await searchStories({ dependency: "blocked", query: "upstream" }, project.ctx)).toEqual([]);
     });
   });
 });
