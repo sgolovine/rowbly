@@ -1,5 +1,5 @@
 ---
-title: Skip conversation polls when the session file did not change
+title: Do not reload the board when only state.json changes
 stage: BACKLOG
 worktree: null
 pull_request: null
