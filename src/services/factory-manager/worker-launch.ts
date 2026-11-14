@@ -1,7 +1,7 @@
 import { ConflictError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
-import { createResultTool, findStageSkill, readProjectInstructions } from "../factory-worker/factory-worker.js";
-import { workerPrompt } from "../factory-worker/worker-prompt.js";
+import { createResultTool } from "../factory-worker/factory-worker.js";
+import { workerMessage } from "../messages/messages.js";
 import { openFactorySession } from "../pi-runtime/factory-session.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import { projectWrite, projectWriteLockPath } from "../project-write/project-write.js";
@@ -206,15 +206,13 @@ async function buildWorkerPrompt(
 
   const { root } = manager.paths;
 
-  return workerPrompt({
+  return workerMessage(manager.paths, {
     story: story.id,
     stage: story.stage,
+    stagePrompt: stage.prompt,
     root,
     worktree: worktreePath,
     model: `${model.provider}/${model.modelId}`,
-    skill: await findStageSkill(root, story.stage, manager.deps.skillsDir),
-    projectInstructions: await readProjectInstructions(root),
-    stagePrompt: stage.prompt,
     shim: manager.deps.shim,
     lock: await projectWriteLockPath(root),
   });

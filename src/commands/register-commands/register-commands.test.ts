@@ -6,7 +6,8 @@ import { useTempDir, useTestProject } from "../../services/test-project/test-pro
 import { createProgram, runCli } from "../test-cli/test-cli.js";
 
 const resources = {
-  project: ["update", "get-instructions"],
+  project: ["update"],
+  prompt: ["list", "get", "set"],
   story: ["create", "update", "delete", "get", "search"],
   stage: ["create", "update", "delete", "get"],
   "custom-field": ["add", "update", "remove"],
@@ -64,6 +65,7 @@ describe("registerCommands", () => {
       "remove-attachment",
       "init",
       "project",
+      "prompt",
       "doctor",
       "story",
       "stage",

@@ -1,6 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import * as clipboard from "../../../../services/clipboard/clipboard.js";
 import { updateProject } from "../../../../services/project/project.js";
 import { createSpec } from "../../../../services/spec/spec.js";
@@ -9,6 +10,15 @@ import { useTestProject } from "../../../../services/test-project/test-project.j
 import type { KeyHint } from "../../../keymap.js";
 import { keys, renderTui } from "../../../testing/index.js";
 import { StoryModalBody, type StoryModalConfirm } from "./story-modal-body.js";
+
+vi.mock("@earendil-works/pi-coding-agent", () => {
+  throw new Error("The Story Modal test must not load Pi");
+});
+
+vi.mock("../../../../services/agent-auth/agent-auth.js", async (original) => ({
+  ...(await original<typeof import("../../../../services/agent-auth/agent-auth.js")>()),
+  authRuntime: vi.fn(async () => ({ getAvailable: async () => [] }) as unknown as AuthRuntime),
+}));
 
 afterEach(() => {
   cleanup();
@@ -117,7 +127,7 @@ describe("StoryModalBody", () => {
   it("keeps the text of the form when the tab changes", async () => {
     const { tui } = await setup();
     await tui.type("!");
-    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.shiftTab);
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.shiftTab);
     expect(tui.frame()).toContain("Login!");
   });
 
@@ -125,7 +135,7 @@ describe("StoryModalBody", () => {
     const { tui, confirmDelete } = await setup();
     await tui.press(keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).not.toContain("Delete it?");
-    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
+    await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.shiftTab, keys.ctrl("d"));
     expect(tui.frame()).toContain("Delete it?");
     await tui.press("y");
     expect(confirmDelete).toHaveBeenCalledOnce();
@@ -139,7 +149,7 @@ describe("StoryModalBody", () => {
     expect(requestClose).toHaveBeenCalledOnce();
   });
 
-  it("shows the Threads tab last, reads it only on selection, and keeps the Specs and Attachments keys", async () => {
+  it("shows the Threads tab after Attachments, reads it only on selection, and keeps the Specs and Attachments keys", async () => {
     const { tui } = await setup();
     expect(tui.frame()).toMatch(/General\s+Specs 1\s+Attachments\s+Threads/);
     expect(tui.frame()).not.toContain("No Threads");
@@ -157,6 +167,39 @@ describe("StoryModalBody", () => {
     await tui.click("Attachments");
     expect(tui.frame()).toContain("Attachments");
     expect(tui.frame()).not.toContain("No Threads");
+  });
+
+  it("shows the Models tab last, with its keys, and esc closes only when the picker is not open", async () => {
+    let hints: readonly KeyHint[] = [];
+    const calls = { submit: vi.fn(), close: vi.fn(), requestClose: vi.fn(), confirmDelete: vi.fn() };
+    const tui = await renderTui(
+      <Host
+        cwd={project.ctx.cwd as string}
+        calls={calls}
+        onHints={(next) => {
+          hints = next;
+        }}
+      />,
+    );
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toMatch(/General\s+Specs 1\s+Attachments\s+Threads\s+Models/);
+    });
+    await tui.click("Models");
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toMatch(/● Backlog\s+Worker model: Pi default/);
+      expect(hints.map((hint) => hint.key)).toEqual(["↑/↓", "enter", "ctrl+s", expect.any(String), "shift+tab", "esc"]);
+    });
+    await tui.press(keys.enter);
+    expect(tui.frame()).toContain("ROW-01 › Model › Backlog");
+    await tui.press(keys.escape);
+    expect(tui.frame()).not.toContain("ROW-01 › Model");
+    expect(calls.requestClose).not.toHaveBeenCalled();
+    await tui.press(keys.escape);
+    expect(calls.requestClose).toHaveBeenCalledOnce();
+    await tui.press(keys.shiftTab);
+    expect(tui.frame()).toContain("Title");
   });
 
   it("puts the esc of a tab region last in the hints, where a narrow strip keeps it", async () => {

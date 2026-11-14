@@ -1,11 +1,8 @@
-import { type ChildProcessWithoutNullStreams, execFile, spawn } from "node:child_process";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { promisify } from "node:util";
+import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { formatAuthor, type GitSettings } from "../factory-settings/git-settings.js";
-import { bundledSkills } from "../skill/skill.js";
 import { Store } from "../store/store.js";
+import { type CommitResult, commitProjectFiles, lockPath } from "./project-commit.js";
 
 /** The output of the flock helper that the event listeners collect. */
 interface LockState {
@@ -18,14 +15,9 @@ interface LockState {
 const LOCK_HELPER =
   'process.stdout.write("locked\\n"); process.stdin.resume(); process.stdin.on("end", () => process.exit(0));';
 
-/** Uses the same Git common-directory path as commit-project.mjs. */
+/** The shared write lock in the Git common directory, or next to a Project without Git. */
 export async function projectWriteLockPath(root: string): Promise<string> {
-  const { dir } = await bundledSkills();
-  const module: typeof import("../../../skills/factory/scripts/commit-project.mjs") = await import(
-    pathToFileURL(join(dir, "factory", "scripts", "commit-project.mjs")).href
-  );
-
-  return module.lockPath(root);
+  return lockPath(root);
 }
 
 /** Keeps only the last 2000 characters, because flock can write without a limit. */
@@ -100,24 +92,9 @@ export async function projectWrite<T>(root: string, action: () => Promise<T>, wa
   }
 }
 
-/** The `commit-project.mjs` flags of the message and the author. A value that is not set keeps the default. */
-function commitFlags(git: GitSettings | undefined): string[] {
-  const author = formatAuthor(git);
-
-  return [...(git?.commitMessage ? ["--message", git.commitMessage] : []), ...(author ? ["--author", author] : [])];
-}
-
 /** Commits canonical files while projectWrite holds the shared kernel lock. The Git settings set the message and the author. */
-export async function commitCanonicalProject(root: string, git?: GitSettings) {
-  const { dir } = await bundledSkills();
+export async function commitCanonicalProject(root: string, git?: GitSettings): Promise<CommitResult> {
+  const options = { message: git?.commitMessage || undefined, author: formatAuthor(git) };
 
-  return projectWrite(root, async () => {
-    const { stdout } = await promisify(execFile)(
-      process.execPath,
-      [join(dir, "factory/scripts/commit-project.mjs"), "--root", root, "--locked", ...commitFlags(git)],
-      { timeout: 60_000 },
-    );
-
-    return JSON.parse(stdout) as { status: string; detail?: string };
-  });
+  return projectWrite(root, () => commitProjectFiles(root, options));
 }

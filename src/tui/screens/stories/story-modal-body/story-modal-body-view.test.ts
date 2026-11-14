@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { IMAGE_PASTE_HINT } from "../../../hooks/index.js";
 import {
   generalLayoutOf,
   nextTabId,
@@ -8,18 +9,19 @@ import {
   storyTabLabels,
 } from "./story-modal-body-view.js";
 
-const noTabHints = { specHints: [], threadHints: [], attachmentHints: [], tabOwnsKeys: false };
+const noTabHints = { specHints: [], threadHints: [], attachmentHints: [], modelHints: [], tabOwnsKeys: false };
 
 describe("storyTabIds and storyTabLabels", () => {
   it("has a Specs tab only when the Project has Specs on, and counts the specs and threads", () => {
-    expect(storyTabIds(true)).toEqual(["general", "specs", "attachments", "threads"]);
-    expect(storyTabIds(false)).toEqual(["general", "attachments", "threads"]);
-    expect(storyTabLabels(true, 2, undefined)).toEqual(["General", "Specs 2", "Attachments", "Threads"]);
-    expect(storyTabLabels(false, undefined, 3)).toEqual(["General", "Attachments", "Threads 3"]);
+    expect(storyTabIds(true)).toEqual(["general", "specs", "attachments", "threads", "models"]);
+    expect(storyTabIds(false)).toEqual(["general", "attachments", "threads", "models"]);
+    expect(storyTabLabels(true, 2, undefined)).toEqual(["General", "Specs 2", "Attachments", "Threads", "Models"]);
+    expect(storyTabLabels(false, undefined, 3)).toEqual(["General", "Attachments", "Threads 3", "Models"]);
   });
 
   it("goes from the last tab to the first tab", () => {
-    expect(nextTabId(storyTabIds(false), 2)).toBe("general");
+    expect(nextTabId(storyTabIds(false), 2)).toBe("models");
+    expect(nextTabId(storyTabIds(false), 3)).toBe("general");
     expect(nextTabId(storyTabIds(false), 0)).toBe("attachments");
   });
 });
@@ -44,6 +46,15 @@ describe("storyModalHints", () => {
     const keys = storyModalHints("specs", { ...noTabHints, tabOwnsKeys: true }).map((hint) => hint.key);
     expect(keys).not.toContain("esc");
     expect(storyModalHints("attachments", noTabHints).at(-1)).toEqual({ key: "esc", description: "Story list" });
+  });
+
+  it("gives the keys of the Models tab, then the keys of the Modal", () => {
+    const modelHints = [
+      { key: "↑/↓", description: "select Stage" },
+      { key: "enter", description: "change model" },
+    ];
+    const keys = storyModalHints("models", { ...noTabHints, modelHints }).map((hint) => hint.key);
+    expect(keys).toEqual(["↑/↓", "enter", "ctrl+s", IMAGE_PASTE_HINT.key, "shift+tab", "esc"]);
   });
 });
 

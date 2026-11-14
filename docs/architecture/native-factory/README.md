@@ -25,7 +25,8 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Daemon.** `rowbly factory start` starts a detached `rowbly factory run` process. `--foreground`
   runs the same daemon code in the current terminal (`src/commands/factory-runner/`). Close the TUI
   without a stop to leave the daemon active.
-- **Supervisor.** One Pi session with the prompt in `skills/factory/references/supervisor-native.md`.
+- **Supervisor.** One Pi session. Its message comes from `supervisorMessage()` in
+  `src/services/messages/messages.ts`.
   It decides which Stories get a worker. It uses only the manager tools, for example
   `factory_snapshot`, `stage_get`, `classify_stage`, `story_get`, `start_worker`, `stop_worker`,
   `hold_candidate`, `release_story`, `inspect_worker`, `save_note` and `raise_attention`. It receives
@@ -33,16 +34,16 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Stage classes.** The supervisor classifies each Stage prompt as `work`, `hold` or `invalid`. Only
   `work` Stages get workers.
 - **Workers.** Each worker is an independent Pi session for one Story in one Stage. It gets the first
-  message from `src/services/factory-worker/worker-prompt.ts`. It works in one worktree for the
+  message from `workerMessage()` in `src/services/messages/messages.ts`. It works in one worktree for the
   Story (`worker-worktree/`). It makes canonical Project changes only through the CLI shim
   `runtime/bin/rowbly`, under the Project write lock.
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
-  parked Stories. The native factory and the external skill share these rules and `state.json`.
+  parked Stories. The policy state is in `state.json`.
 - **Git sync.** When the user turns it on, the factory pulls the upstream branch and pushes the
   canonical branch at an interval (`project-sync/`). See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
-- **Project instructions.** Each worker gets the text of `ROWBLY.md`. The supervisor also gets it
-  with each digest.
+- **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
+  Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 
 ## Prerequisites and limits
 
@@ -54,11 +55,11 @@ Read this page when you start a task on the factory. Then read only the sub-page
 
 ## The external supervisor
 
-The external factory skill (`skills/factory/`) stays available when the native factory is off.
+Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
+of the `factory` skill.
 
-- Never run native and external supervisors together.
-- Updated external scripts refuse a live or uncertain native owner.
-- Old external skill copies do not honor native ownership.
+- Never run that copy and the native factory together.
+- Old copies of the external skill can ignore native ownership.
 - Native start preserves external active attempts. See [recovery.md](recovery.md#adopt-external-attempts).
 
 ## Map of the sub-pages
@@ -75,5 +76,5 @@ The external factory skill (`skills/factory/`) stays available when the native f
 ## Related
 
 - [../service-layer.md](../service-layer.md#native-factory): the index of the factory modules.
-- [../skills-and-stages.md](../skills-and-stages.md): the external factory skill and its scripts.
+- [../prompts.md](../prompts.md): the prompts and the messages of the supervisor and the workers.
 - [../testing.md](../testing.md#native-factory-tests): the faux provider and daemon tests.

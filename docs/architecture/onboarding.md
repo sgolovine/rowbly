@@ -24,7 +24,8 @@ are:
 | Stages       | All files in `stages/`, in the order of `DEFAULT_STAGES` | Remove other default stages, or add custom stages |
 | Agent skills | All folders in `skills/`, for all harnesses              | Select the skills and the harnesses               |
 
-The last step is always a summary. It also tells the user where to edit each item.
+The last step is always a summary. It also tells the user where to edit each item. The "Agent
+prompts" row points to `.rowbly/prompts/`, Settings › Prompts and `rowbly prompt set`.
 
 `DEFAULT_STAGES` is `BACKLOG`, `IN_REFINEMENT`, `IN_DEVELOPMENT`, `IN_REVIEW` and `DONE`.
 
@@ -34,12 +35,11 @@ The last step is always a summary. It also tells the user where to edit each ite
   Rowbly adds it.
 - A custom Stage gets a placeholder prompt. A default Stage gets its file from `stages/`.
 - A skill that a selected default Stage uses shows `(required)`. The user cannot remove it.
-- The `factory` skill also shows `(required)`, because the factory cannot run without it. The user can
-  remove it. Then the summary and the output of `rowbly init` show a warning.
 - The custom fields of the skills (`worktree`, `pull_request`) are added with the skills that use them.
 - If a skill install fails, `applyOnboarding()` removes the new Project and the skills that it
   installed.
-- Initialization creates `ROWBLY.md` and `.rowbly/.gitignore`. See [storage.md](storage.md).
+- Initialization creates `.rowbly/.gitignore` and the three user prompts in `.rowbly/prompts/`, with no
+  text. See [storage.md](storage.md) and [prompts.md](prompts.md).
 
 ## `rowbly init` input
 

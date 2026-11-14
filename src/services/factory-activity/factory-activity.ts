@@ -34,7 +34,7 @@ export interface GetFactoryActivityInput {
   stories: readonly { id: string; stage: string }[];
 }
 
-/** The attempt statuses of `skills/factory/scripts/factory-state.mjs`. */
+/** The active attempt statuses of the factory state (`src/services/factory-state/state-file.ts`). */
 const ACTIVE_STATUSES = new Set(["preparing", "running"]);
 const STATUSES = new Set([...ACTIVE_STATUSES, "completed", "failed", "blocked", "interrupted"]);
 /** The mandatory attempt fields after `story`. */

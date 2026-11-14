@@ -1,3 +1,6 @@
+import { ConflictError } from "../errors/errors.js";
+import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
+import { type ProjectPaths, runtimePaths } from "../workspace/workspace.js";
 import {
   acquireOwner,
   newOwner,
@@ -6,10 +9,7 @@ import {
   probeOwner,
   readOwner,
   releaseOwner,
-} from "../../../skills/factory/scripts/ownership-lock.mjs";
-import { ConflictError } from "../errors/errors.js";
-import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
-import { type ProjectPaths, runtimePaths } from "../workspace/workspace.js";
+} from "./ownership-lock.js";
 
 export type { Owner, OwnerProbe };
 export { newOwner, probeOwner };

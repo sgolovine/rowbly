@@ -4,6 +4,7 @@ import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { checkAttachments } from "./attachment-checks.js";
 import { type DoctorIssue, type DoctorRun, noted, rel } from "./doctor-run.js";
 import { folderIssues, ignoreIssues, threadIssues, trackedRuntimeIssues } from "./project-checks.js";
+import { checkPrompts } from "./prompt-checks.js";
 import { checkSkills } from "./skill-checks.js";
 import { checkSpecs } from "./spec-checks.js";
 import { checkStages } from "./stage-checks.js";
@@ -33,7 +34,7 @@ function configIssue(run: DoctorRun, issue: Issue): DoctorIssue {
  * Checks that the files in `.rowbly/` line up with its config: every stage has a file and every
  * file a stage, every story has a title, a known stage and exactly the project's custom fields, and
  * every spec has a title and links to Stories that exist. A spec with no Story is an orphan: a warning.
- * Every skill in the config must be installed for each of its harnesses.
+ * Every skill in the config must be installed for each of its harnesses. Each user prompt must exist.
  */
 export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}): Promise<DoctorReport> {
   const paths = await findProject(ctx);
@@ -49,6 +50,7 @@ export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}):
     ...(await ignoreIssues(run)),
     ...(await trackedRuntimeIssues(run)),
     ...(await threadIssues(run)),
+    ...(await checkPrompts(run)),
   ];
   // A fix can add stages to the config. The later checks use the changed config, as before.
   const stages = await checkStages(run, parsed.config);

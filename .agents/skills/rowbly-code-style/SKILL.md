@@ -29,7 +29,7 @@ All files and folders use dash-case names: lower-case words with a `-` between t
 - A component file has the dash-case form of the component name. The `StoryRow` component is in
   `story-row/story-row.tsx`.
 - Identifiers do not change. Components stay PascalCase. Functions, hooks and values stay camelCase.
-- Extensions follow the first dot: `story-row.test.tsx`, `commit-project.d.mts`, `vitest.config.ts`.
+- Extensions follow the first dot: `story-row.test.tsx`, `check-names.test.mjs`, `vitest.config.ts`.
 
 `pnpm lint` checks the names. Biome `useFilenamingConvention` checks script files. The global
 `linter` settings of `biome.json` have this rule, so it also applies to tests and config files.
@@ -128,8 +128,7 @@ Keep a `while` or `for` loop with `await` only when a condition, not a list, end
   `src/services/factory/factory.ts`.
 - A read that stops at the end of a file, for example `scanChunks` in
   `src/services/conversation/session-index.ts`.
-- A search that stops at the first match, for example `findStageSkill` in
-  `src/services/factory-worker/factory-worker.ts`.
+- A search that stops at the first match.
 
 A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
 state that the caller read.

@@ -1,7 +1,10 @@
-import { Box } from "ink";
+import { Box, Text } from "ink";
 import type { FactorySettings } from "../../../../services/factory-settings/factory-settings.js";
+import type { Stage } from "../../../../services/stage/stage.js";
+import { theme } from "../../../theme.js";
 import { AiSettingCard } from "../ai-setting-card/index.js";
-import { modelText, type Role } from "../ai-view.js";
+import { modelText, type Role, stageModelItems } from "../ai-view.js";
+import { StageModelList } from "../stage-model-list/index.js";
 
 /** The props of `AiModelsPage`. */
 export interface AiModelsPageProps {
@@ -11,6 +14,11 @@ export interface AiModelsPageProps {
   /** False while a task on top has the keys. */
   readonly idle: boolean;
   readonly onModel: (role: Role) => void;
+  /** The Stages of the Project in board order, or `undefined` before they load. */
+  readonly stages?: readonly Stage[];
+  /** The index of the highlighted Stage. */
+  readonly stageCursor?: number;
+  readonly onStage?: (index: number) => void;
 }
 
 function roleModel(settings: FactorySettings | undefined, role: Role): string {
@@ -21,8 +29,19 @@ function roleModel(settings: FactorySettings | undefined, role: Role): string {
   return modelText(role === "supervisor" ? settings.supervisorModel : settings.workerModel);
 }
 
-/** The Models tab: the model of the supervisor and the model of the workers, each in its own card. */
-export function AiModelsPage({ settings, ready, idle, onModel }: AiModelsPageProps) {
+/**
+ * The Models tab: the model of the supervisor and the model of the workers, each in its own card. Under them,
+ * one row for each Stage shows the worker model override of the Stage.
+ */
+export function AiModelsPage({
+  settings,
+  ready,
+  idle,
+  onModel,
+  stages = [],
+  stageCursor = 0,
+  onStage = () => undefined,
+}: AiModelsPageProps) {
   const action = ready ? "Change" : undefined;
 
   return (
@@ -45,6 +64,25 @@ export function AiModelsPage({ settings, ready, idle, onModel }: AiModelsPagePro
         clickable={idle}
         onEdit={() => onModel("worker")}
       />
+      {stages.length > 0 && (
+        <Box flexDirection="column" marginTop={1} paddingX={1}>
+          <Text bold color={theme.ink}>
+            Stage worker models
+          </Text>
+          <Text color={theme.inkFaint} wrap="wrap">
+            A Stage override replaces the worker model in that Stage. A Story override has priority.
+          </Text>
+          <Box marginTop={1}>
+            <StageModelList
+              items={stageModelItems(settings, stages)}
+              cursor={stageCursor}
+              active={idle}
+              clickable={idle && ready}
+              onPick={onStage}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

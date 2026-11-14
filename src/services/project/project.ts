@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { moveAttachmentDirs } from "../attachment-files/attachment-files.js";
 import {
@@ -15,6 +15,7 @@ import {
 import { ConflictError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { createUserPrompts } from "../prompts/prompts.js";
 import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { formatStoryId, readStoryFiles, storyPath } from "../story-files/story-files.js";
@@ -23,13 +24,6 @@ import { findProject, type ProjectPaths, projectPaths, type ServiceContext } fro
 export interface Project extends ProjectConfig {
   /** The directory that contains `.rowbly/`. */
   root: string;
-}
-
-export interface ProjectInstructions {
-  /** The absolute path of `ROWBLY.md`, also when the file does not exist. */
-  path: string;
-  /** Top-level instructions for every agent that works on the project. Empty when there is no `ROWBLY.md`. */
-  instructions: string;
 }
 
 export interface InitProjectInput {
@@ -110,7 +104,7 @@ export async function initProject(input: InitProjectInput = {}, ctx: ServiceCont
   await mkdir(paths.storiesDir, { recursive: true });
   await writeStagePrompts(paths, stages);
   await ensureRuntimeIgnores(paths);
-  await writeFileAtomic(paths.instructionsFile, "# ROWBLY INSTRUCTIONS\n");
+  await createUserPrompts(paths);
   await writeConfig(paths, config);
 
   return { ...config, root };
@@ -121,13 +115,6 @@ export async function getProject(ctx: ServiceContext = {}): Promise<Project> {
   const paths = await findProject(ctx);
 
   return { ...(await readConfig(paths)), root: paths.root };
-}
-
-/** Reads `.rowbly/ROWBLY.md`. Rowbly does not parse the text; agents obey it. */
-export async function getInstructions(ctx: ServiceContext = {}): Promise<ProjectInstructions> {
-  const { instructionsFile: path } = await findProject(ctx);
-
-  return { path, instructions: (await pathExists(path)) ? (await readFile(path, "utf8")).trim() : "" };
 }
 
 /** The ID of a spec link with the new key. A link that does not use the old key stays the same. */

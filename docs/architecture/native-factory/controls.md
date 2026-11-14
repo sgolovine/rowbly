@@ -101,6 +101,11 @@ See [../tui.md](../tui.md#the-factory-view) for the structure.
 - `x` interrupts an active Thread, with confirmation.
 - `r` resumes an eligible Thread through the active factory.
 
+## The Models tab of a Story
+
+The Models tab shows the worker model of the Story in each Stage. Enter sets or removes the Story
+override of the selected Stage. See [../tui.md](../tui.md#worker-model-overrides).
+
 ## The conversation viewer
 
 - Arrows or `j`/`k`, Page Up, Page Down, Home, End and the mouse wheel move the view.
@@ -115,9 +120,13 @@ Settings has a Factory group with an AI section. The section has three tabs: Pro
 - The Providers tab shows only the signed-in providers. `d` signs out, with confirmation. `r` reloads.
 - `n` opens the page of the other providers. On that page, Enter signs in and Escape goes back to the Providers tab.
 - The Models tab shows each role model in its own card. `s` and `w` select the supervisor and worker models.
+- Under the cards, the Models tab shows one row for each Stage, with the worker model override of the Stage.
+  `↑/↓` select a Stage. Enter or a click opens the model picker of the Stage.
+  See [../tui.md](../tui.md#worker-model-overrides).
 - The Limits tab shows each limit in its own card. `l` sets the worker limit.
 - `s`, `w` and `l` also work on the other tabs.
-- The model picker offers the supported thinking levels and `Pi default`.
+- The model picker offers the supported thinking levels and `Pi default`. The picker of an override offers
+  `No override` in place of `Pi default`.
 - Escape cancels authentication and restores the focus.
 
 ## Related

@@ -54,7 +54,7 @@ export interface OnboardingOptions {
 
 interface PlannedSkill {
   name: string;
-  /** A selected default stage uses the skill, or the skill is the factory skill. */
+  /** A selected default stage uses the skill. */
   required: boolean;
 }
 
@@ -73,7 +73,7 @@ export interface OnboardingPlan {
   harnesses: SkillHarness[];
   customFields: CustomField[];
   edits: EditLocation[];
-  /** The problems that do not stop the setup, for example a missing factory skill. */
+  /** The problems that do not stop the setup. */
   warnings: string[];
 }
 
@@ -88,11 +88,6 @@ interface InstallProgress {
   readonly installed: readonly InstallSkillResult[];
 }
 
-/** The companion skill that runs the factory supervisor. Onboarding marks it as required, but the user can leave it out. */
-export const FACTORY_SKILL = "factory";
-
-export const FACTORY_SKILL_WARNING = `The factory requires the companion skill "${FACTORY_SKILL}". Without it, you cannot run the factory. To install it later, run \`rowbly skill install ${FACTORY_SKILL} --harness <id>\`.`;
-
 /** The custom fields that the bundled skills read and write. */
 const SKILL_FIELDS: readonly { field: CustomField; skills: readonly string[] }[] = [
   { field: { key: "worktree", label: "Worktree", type: "string" }, skills: ["develop"] },
@@ -103,6 +98,7 @@ const EDIT_LOCATIONS: readonly EditLocation[] = [
   { what: "Name and key", where: "Settings › Project, or rowbly project update" },
   { what: "Stages", where: "Settings › Stages, or rowbly stage create, stage update and stage delete" },
   { what: "Stage prompts", where: ".rowbly/stages/<KEY>.md, or Settings › Stages" },
+  { what: "Agent prompts", where: ".rowbly/prompts/, Settings › Prompts, or rowbly prompt set" },
   { what: "Custom fields", where: "Settings › Custom fields, or rowbly custom-field add" },
   { what: "Skills", where: "rowbly skill install and rowbly skill remove" },
 ];
@@ -151,11 +147,6 @@ function harnessIssues(skills: readonly string[], harnesses: readonly string[]):
   ];
 }
 
-/** The warning for a setup that leaves out the factory skill, if the Rowbly package has the skill. */
-function factorySkillWarnings(skills: readonly string[], bundled: readonly string[]): string[] {
-  return bundled.includes(FACTORY_SKILL) && !skills.includes(FACTORY_SKILL) ? [FACTORY_SKILL_WARNING] : [];
-}
-
 /** Checks the choices and resolves the defaults. It writes nothing. */
 export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceContext = {}): Promise<OnboardingPlan> {
   const options = await onboardingOptions(ctx);
@@ -193,15 +184,13 @@ export async function planOnboarding(input: OnboardingInput = {}, ctx: ServiceCo
     key,
     root,
     stages: planned.stages,
-    skills: skills
-      .toSorted()
-      .map((skill) => ({ name: skill, required: skill === FACTORY_SKILL || required.includes(skill) })),
+    skills: skills.toSorted().map((skill) => ({ name: skill, required: required.includes(skill) })),
     harnesses: harnesses as SkillHarness[],
     customFields: SKILL_FIELDS.filter(({ skills: users }) => users.some((skill) => skills.includes(skill))).map(
       ({ field }) => field,
     ),
     edits: [...EDIT_LOCATIONS],
-    warnings: factorySkillWarnings(skills, options.skills),
+    warnings: [],
   };
 }
 

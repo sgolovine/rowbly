@@ -3,6 +3,7 @@ import type { ServiceContext } from "../../../../services/workspace/workspace.js
 import { type Layout, LayoutContext } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { AttachmentsTab } from "../attachments-tab/index.js";
+import { ModelsTab } from "../models-tab/index.js";
 import { SpecsTab } from "../specs-tab/index.js";
 import type { StageNames } from "../thread-text.js";
 import { ThreadsTab } from "../threads-tab/index.js";
@@ -11,7 +12,7 @@ import { ThreadsTab } from "../threads-tab/index.js";
 export const STORY_PADDING_X = 2;
 
 /** The tabs of the Story Modal. The position of a tab depends on the tabs before it, so the Modal uses these ids. */
-export type StoryTabId = "general" | "specs" | "attachments" | "threads";
+export type StoryTabId = "general" | "specs" | "attachments" | "threads" | "models";
 
 /** The setters that the tabs call to tell the Modal their counts, their key hints and their editing state. */
 export interface StoryTabReports {
@@ -23,6 +24,8 @@ export interface StoryTabReports {
   readonly setThreadHints: (hints: readonly KeyHint[]) => void;
   readonly setAttachmentHints: (hints: readonly KeyHint[]) => void;
   readonly setAttachmentTask: (task: boolean) => void;
+  readonly setModelHints: (hints: readonly KeyHint[]) => void;
+  readonly setModelTask: (task: boolean) => void;
 }
 
 export interface StoryTabPanesProps {
@@ -44,7 +47,7 @@ export interface StoryTabPanesProps {
 }
 
 /**
- * The Specs, Threads and Attachments tabs of the Story Modal. All of them stay mounted, so that a change of
+ * The Specs, Threads, Attachments and Models tabs of the Story Modal. All of them stay mounted, so that a change of
  * tab keeps the text that is not saved. Only the tab on the screen is visible.
  */
 export function StoryTabPanes({
@@ -98,6 +101,20 @@ export function StoryTabPanes({
             selected={shown === "attachments" && open}
             onHints={reports.setAttachmentHints}
             onTask={reports.setAttachmentTask}
+          />
+        </Box>
+        <Box
+          display={shown === "models" ? "flex" : "none"}
+          flexDirection="column"
+          paddingX={STORY_PADDING_X}
+          paddingY={1}
+        >
+          <ModelsTab
+            ctx={ctx}
+            storyId={storyId}
+            selected={shown === "models" && open}
+            onHints={reports.setModelHints}
+            onTask={reports.setModelTask}
           />
         </Box>
       </LayoutContext.Provider>

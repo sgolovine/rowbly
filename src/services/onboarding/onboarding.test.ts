@@ -6,7 +6,6 @@ import { pathExists } from "../files/files.js";
 import { useTempDir } from "../test-project/test-project.js";
 import {
   applyOnboarding,
-  FACTORY_SKILL_WARNING,
   isAlwaysEnabledStage,
   onboardingOptions,
   parseOnboardingInput,
@@ -24,7 +23,7 @@ describe("onboarding", () => {
     const options = await onboardingOptions(ctx());
     expect(options.name).toBe(basename(dir.path));
     expect(options.stages).toEqual(["Backlog", "In Refinement", "In Development", "In Review", "Done"]);
-    expect(options.skills).toEqual(["develop", "factory", "refine", "review"]);
+    expect(options.skills).toEqual(["develop", "refine", "review"]);
     expect(options.harnesses.map((harness) => harness.id)).toEqual([
       "claude-code",
       "codex",
@@ -39,21 +38,13 @@ describe("onboarding", () => {
     const plan = await planOnboarding({}, ctx());
     expect(plan.skills.filter((skill) => skill.required).map((skill) => skill.name)).toEqual([
       "develop",
-      "factory",
       "refine",
       "review",
     ]);
     expect(summarizePlan(plan).find((row) => row.label === "Skills")?.value).toContain(
-      "develop (required), factory (required)",
+      "develop (required), refine (required)",
     );
     expect(plan.warnings).toEqual([]);
-  });
-
-  it("lets the user leave out the factory skill, with a warning", async () => {
-    const plan = await planOnboarding({ stages: [], skills: [] }, ctx());
-    expect(plan.skills).toEqual([]);
-    expect(plan.warnings).toEqual([FACTORY_SKILL_WARNING]);
-    expect(FACTORY_SKILL_WARNING).toContain("rowbly skill install factory");
   });
 
   it("always creates Backlog and Done", async () => {
@@ -74,10 +65,10 @@ describe("onboarding", () => {
   it("creates the default stages from the top-level folder and installs the skills", async () => {
     const project = await applyOnboarding({ name: "App", harnesses: ["codex"] }, ctx());
     expect(project.stages).toHaveLength(5);
-    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
+    expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("");
     expect(await readFile(join(dir.path, ".rowbly/stages/IN_DEVELOPMENT.md"), "utf8")).toContain("`develop` skill");
     expect(await pathExists(join(dir.path, ".agents/skills/develop/SKILL.md"))).toBe(true);
-    expect(project.skills).toContainEqual({ name: "factory", harnesses: ["codex"] });
+    expect(project.skills?.map((skill) => skill.name)).toEqual(["develop", "refine", "review"]);
     expect(project.customFields.map((field) => field.key)).toEqual(["worktree", "pull_request"]);
   });
 
@@ -111,7 +102,7 @@ describe("onboarding", () => {
     await writeFile(join(dir.path, ".agents/skills/review/notes.md"), "mine");
     await expect(applyOnboarding({ harnesses: ["codex"] }, ctx())).rejects.toBeInstanceOf(ConflictError);
     expect(await pathExists(join(dir.path, ".rowbly"))).toBe(false);
-    expect(await pathExists(join(dir.path, ".rowbly/ROWBLY.md"))).toBe(false);
+    expect(await pathExists(join(dir.path, ".rowbly/prompts"))).toBe(false);
     expect(await pathExists(join(dir.path, ".agents/skills/develop"))).toBe(false);
     expect(await readFile(join(dir.path, ".agents/skills/review/notes.md"), "utf8")).toBe("mine");
   });

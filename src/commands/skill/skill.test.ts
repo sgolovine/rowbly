@@ -31,9 +31,9 @@ describe("skill commands", () => {
     ]);
   });
 
-  it("copies the scripts of a skill", async () => {
-    expect((await cli("skill", "install", "factory", "--harness", "codex")).exitCode).toBe(0);
-    expect(await pathExists(at(".agents/skills/factory/scripts/factory.mjs"))).toBe(true);
+  it("copies the reference files of a skill", async () => {
+    expect((await cli("skill", "install", "review", "--harness", "codex")).exitCode).toBe(0);
+    expect(await pathExists(at(".agents/skills/review/references/rowbly-reference.md"))).toBe(true);
   });
 
   it("says when a skill is already installed", async () => {
@@ -52,7 +52,7 @@ describe("skill commands", () => {
   it("gives the bundled names for an unknown skill", async () => {
     expect(await cli("skill", "install", "../x", "--harness", "codex")).toEqual({
       stdout: "",
-      stderr: 'Error: Unknown skill "../x"\nHint: Bundled skills: develop, factory, refine, review',
+      stderr: 'Error: Unknown skill "../x"\nHint: Bundled skills: develop, refine, review',
       exitCode: 1,
     });
   });

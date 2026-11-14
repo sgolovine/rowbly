@@ -33,7 +33,7 @@ picture.
 
 Obey these rules. If you do not obey them, you can cause damage to user data or to a live factory.
 
-- Never run the native factory and an external factory supervisor together.
+- Never run the native factory and an old copy of the external `factory` skill together.
   They both write `.rowbly/state.json` and start workers.
 - Do not commit `.rowbly/state.json*`, `.rowbly/runtime/` or credentials.
   Runtime files hold private sessions and process identity.
@@ -44,8 +44,8 @@ Obey these rules. If you do not obey them, you can cause damage to user data or 
 - Keep the Pi SDK behind the lazy boundary in `src/services/pi-runtime/`.
   The board, help, doctor, status and history paths must not load Pi.
 - Keep live credentials out of tests. Do not add a production faux-provider flag.
-- After a change in `skills/<name>/`, copy the folder to `.agents/skills/<name>` and
-  `.claude/skills/<name>`. A test compares the `factory` copies.
+- Do not read or import a file in `skills/` from the code in `src/`. The bundled skills are for users only.
+- After a change to `skills/rowbly-reference.md`, copy it to each `skills/<name>/references/rowbly-reference.md`.
 - Do not change `.agents/skills/agentic-tui/`. It is an unchanged copy of an upstream skill.
 
 ## Checks before you complete a change
@@ -57,10 +57,25 @@ pnpm lint        # Biome, the strict style and the dash-case name check
 pnpm typecheck
 pnpm test        # Vitest, then the node:test suite of scripts/
 pnpm build
-pnpm test:factory # only if you change a script in skills/factory/scripts/
 ```
 
 If a check fails and you cannot repair the problem, tell the user.
+
+## Prompts
+
+The factory agents get prompts at two levels. See [prompts.md](docs/architecture/prompts.md) for the full rules.
+
+- **System prompts** are in `src/config/prompts/` of the package: `SYSTEM.md` (the supervisor and all
+  workers), `SUPERVISOR.md` (the supervisor only) and `WORKER.md` (all workers). Users cannot change them.
+- **User prompts** are in `.rowbly/prompts/` of each Project, with the same three file names. They are
+  the Project prompt, the Supervisor prompt and the Worker prompt.
+- **Stage prompts** are in `.rowbly/stages/<KEY>.md`. Only the workers of that Stage get them.
+- **Priority.** The system prompts come first. A user prompt cannot remove a system rule. Then the
+  Stage prompt, the Supervisor or Worker prompt, and the Project prompt follow, in this order.
+- `src/services/messages/messages.ts` is the only place that builds the messages of the factory agents.
+  Do not build a message in a different module.
+- Never assume that a user prompt exists. A missing file has no text. `rowbly doctor` shows a warning
+  for each missing user prompt, and `--fix` creates an empty file.
 
 ## Commits
 
@@ -79,6 +94,7 @@ See [commit rules](docs/contributing/commits.md) for the full rules.
 | An overview of the system, or you do not know where to start | [docs/architecture/README.md](docs/architecture/README.md)               |
 | Project, Story, Stage, Spec, Factory or Thread               | [domain-concepts.md](docs/architecture/domain-concepts.md)               |
 | Files in `.rowbly/`, config, positions, attachments, doctor  | [storage.md](docs/architecture/storage.md)                               |
+| A prompt, `rowbly prompt` or the message of a factory agent  | [prompts.md](docs/architecture/prompts.md)                               |
 | A new or changed service, errors, `ServiceContext`           | [service-layer.md](docs/architecture/service-layer.md)                   |
 | A CLI command, flags, `--json` or exit codes                 | [cli.md](docs/architecture/cli.md)                                       |
 | A TUI screen, component, hook, keys or mouse                 | [tui.md](docs/architecture/tui.md) and the `rowbly-tui-design` skill     |

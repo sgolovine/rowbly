@@ -2,6 +2,7 @@ import { useInput } from "ink";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import { type FactorySettings, getFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
+import { listStages, type Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   type AsyncState,
@@ -14,7 +15,15 @@ import {
   useLayout,
   useToast,
 } from "../../../hooks/index.js";
-import { type AiPage, type AiProvider, type AiStatus, type AiTask, aiHints, pageProviders } from "../ai-view.js";
+import {
+  type AiAbilities,
+  type AiPage,
+  type AiProvider,
+  type AiStatus,
+  type AiTask,
+  aiHints,
+  pageProviders,
+} from "../ai-view.js";
 import { type AiEnv, handleAiKey, loadStatus, openPage } from "./ai-actions.js";
 
 /** The inputs of the AI settings. */
@@ -42,7 +51,30 @@ interface AiSectionModel {
   readonly runtime: AsyncState<AuthRuntime>;
   readonly status: AsyncState<AiStatus | undefined>;
   readonly settings: AsyncState<FactorySettings>;
+  readonly stages: AsyncState<readonly Stage[]>;
   readonly setFiltering: Dispatch<SetStateAction<boolean>>;
+}
+
+/** The inputs of `pageAbilities`. */
+interface PageInput {
+  readonly page: AiPage;
+  readonly idle: boolean;
+  readonly ready: boolean;
+  readonly providers: readonly AiProvider[];
+  readonly provider: AiProvider | undefined;
+  readonly stages: readonly Stage[] | undefined;
+}
+
+/** What works now on the page: the sign-in and the sign-out need the highlighted provider. */
+function pageAbilities({ page, idle, ready, providers, provider, stages }: PageInput): AiAbilities {
+  return {
+    idle,
+    list: providers.length > 0,
+    signIn: ready && page === "addProvider" && provider !== undefined && provider.methods.length > 0,
+    signOut: ready && page === "providers" && provider?.credentialType !== undefined,
+    ready,
+    stages: (stages?.length ?? 0) > 0,
+  };
 }
 
 /**
@@ -60,31 +92,35 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
   const runtime = useAsync(loadRuntime, [loadRuntime]);
   const status = useAsync(() => loadStatus(runtime.data), [runtime.data]);
   const settings = useAsync(() => getFactorySettings(ctx), [ctx]);
+  const stages = useAsync<readonly Stage[]>(() => listStages(ctx), [ctx]);
+  const [stageCursor, setStageCursor] = useState(0);
 
   const providers = pageProviders(page, status.data?.providers ?? []);
   const provider = providers.find((p) => p.id === selected) ?? providers[0];
   const ready = runtime.data !== undefined && status.data !== undefined;
   const idle = active && task === null;
   const keysOwn = idle && !filtering;
-  const canSignIn = ready && page === "addProvider" && provider !== undefined && provider.methods.length > 0;
-  const canSignOut = ready && page === "providers" && provider?.credentialType !== undefined;
+  const can = pageAbilities({ page, idle, ready, providers, provider, stages: stages.data });
   const env: AiEnv = {
     ctx,
     toast,
     runtime,
     status,
     settings,
+    stages,
+    stageCursor,
+    setStageCursor,
     providers,
     page,
     ready,
-    canSignOut,
+    canSignOut: can.signOut,
     setPage,
     setTask,
     setSelected,
     onChange,
   };
 
-  useKeyHints(aiHints(page, { idle, list: providers.length > 0, signIn: canSignIn, signOut: canSignOut, ready }));
+  useKeyHints(aiHints(page, can));
   useKeyCapture(idle && page === "addProvider", { text: false, escape: true });
   useEscape(keysOwn && page === "addProvider", () => openPage(env, "providers"));
   useInput((input, key) => handleAiKey(env, input, key), { isActive: keysOwn });
@@ -98,11 +134,12 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
     ready,
     loading: runtime.loading || (runtime.data !== undefined && status.loading),
     provider,
-    canSignIn,
-    canSignOut,
+    canSignIn: can.signIn,
+    canSignOut: can.signOut,
     runtime,
     status,
     settings,
+    stages,
     setFiltering,
   };
 }

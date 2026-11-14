@@ -45,30 +45,20 @@
   },
   "skills": [
     {
-      "name": "develop",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    },
-    {
-      "name": "factory",
-      "harnesses": [
-        "claude-code",
-        "codex"
-      ]
-    },
-    {
       "name": "refine",
       "harnesses": [
-        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "name": "develop",
+      "harnesses": [
         "codex"
       ]
     },
     {
       "name": "review",
       "harnesses": [
-        "claude-code",
         "codex"
       ]
     }

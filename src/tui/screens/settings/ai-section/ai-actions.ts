@@ -10,11 +10,14 @@ import { ValidationError } from "../../../../services/errors/errors.js";
 import {
   type FactorySettings,
   type ModelChoice,
+  setWorkerOverride,
   updateFactorySettings,
 } from "../../../../services/factory-settings/factory-settings.js";
+import type { Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
 import { type AsyncState, showToast, type ToastStore } from "../../../hooks/index.js";
+import { moveDelta } from "../../../keymap.js";
 import { type AiPage, type AiProvider, type AiStatus, type AiTask, modelText, nextTab, type Role } from "../ai-view.js";
 
 /** What the handlers of the AI settings read and change. */
@@ -24,6 +27,11 @@ export interface AiEnv {
   readonly runtime: AsyncState<AuthRuntime>;
   readonly status: AsyncState<AiStatus | undefined>;
   readonly settings: AsyncState<FactorySettings>;
+  /** The Stages of the Project in board order, for the Stage worker models. */
+  readonly stages: AsyncState<readonly Stage[]>;
+  /** The index of the highlighted Stage on the Models tab. */
+  readonly stageCursor: number;
+  readonly setStageCursor: Dispatch<SetStateAction<number>>;
   /** The providers of the page. */
   readonly providers: readonly AiProvider[];
   readonly page: AiPage;
@@ -50,6 +58,7 @@ export async function loadStatus(runtime: AuthRuntime | undefined): Promise<AiSt
 export function reloadAll(env: AiEnv): void {
   env.runtime.reload();
   env.settings.reload();
+  env.stages.reload();
 }
 
 /** Closes the task. A change reads the providers and the settings again, also behind Settings. */
@@ -77,6 +86,28 @@ export async function saveModel(env: AiEnv, role: Role, choice: ModelChoice | nu
   await updateFactorySettings({ [`${role}Model`]: choice ?? undefined }, env.ctx);
   showToast(env.toast, "info", `Saved the ${role} model: ${modelText(choice ?? undefined)}`);
   finishTask(env, true);
+}
+
+/** Saves the worker model override of a Stage. `null` removes the override, so that the worker model applies. */
+export async function saveStageModel(env: AiEnv, stage: Stage, choice: ModelChoice | null): Promise<void> {
+  await setWorkerOverride({ stage: stage.key }, choice ?? undefined, env.ctx);
+  showToast(
+    env.toast,
+    "info",
+    choice ? `Saved the ${stage.label} worker model: ${modelText(choice)}` : `Removed the ${stage.label} worker model`,
+  );
+  finishTask(env, true);
+}
+
+/** Opens the model picker of the Stage at the index, when Pi has loaded. */
+export function openStageModel(env: AiEnv, index: number): void {
+  const stage = env.stages.data?.[index];
+
+  env.setStageCursor(index);
+
+  if (stage && env.ready) {
+    env.setTask({ kind: "stageModel", stage });
+  }
 }
 
 /** Saves the worker limit: a whole number from one. */
@@ -158,6 +189,10 @@ export function handleAiKey(env: AiEnv, input: string, key: Key): void {
     handleProvidersKey(env, input);
   }
 
+  if (env.page === "models") {
+    handleModelsKey(env, input, key);
+  }
+
   handleOtherKey(env, input);
 }
 
@@ -170,6 +205,22 @@ function handleProvidersKey(env: AiEnv, input: string): void {
 
   if (input === "n" && env.ready) {
     openPage(env, "addProvider");
+  }
+}
+
+/** `↑/↓` select a Stage of the Models tab, and `enter` opens the model picker of the Stage. */
+function handleModelsKey(env: AiEnv, input: string, key: Key): void {
+  const count = env.stages.data?.length ?? 0;
+  const delta = moveDelta(input, key);
+
+  if (delta && count > 0) {
+    env.setStageCursor((n) => Math.max(0, Math.min(count - 1, n + delta)));
+
+    return;
+  }
+
+  if (key.return) {
+    openStageModel(env, env.stageCursor);
   }
 }
 

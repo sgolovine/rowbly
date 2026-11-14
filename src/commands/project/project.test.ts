@@ -1,4 +1,3 @@
-import { rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { getProject } from "../../services/project/project.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
@@ -30,37 +29,6 @@ describe("project commands", () => {
       const result = await runCli(["project", "update", "--name", "X"], "/");
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toMatch(/^Error: /);
-    });
-  });
-
-  describe("project get-instructions", () => {
-    const project = useTestProject();
-    const cli = (...args: string[]) => runCli(args, project.ctx.cwd);
-
-    it("prints the text of ROWBLY.md", async () => {
-      await project.write("ROWBLY.md", "Run the tests first.\n");
-      expect(await cli("project", "get-instructions")).toEqual({
-        stdout: "Run the tests first.",
-        stderr: "",
-        exitCode: 0,
-      });
-    });
-
-    it("says so when there is no ROWBLY.md", async () => {
-      await rm(project.paths.instructionsFile);
-      expect((await cli("project", "get-instructions")).stdout).toBe("(no instructions)");
-    });
-
-    it("prints the path and the text with --json", async () => {
-      await project.write("ROWBLY.md", "Run the tests first.\n");
-      expect(JSON.parse((await cli("project", "get-instructions", "--json")).stdout)).toEqual({
-        path: project.paths.instructionsFile,
-        instructions: "Run the tests first.",
-      });
-    });
-
-    it("fails outside a project", async () => {
-      expect((await runCli(["project", "get-instructions"], "/")).exitCode).toBe(1);
     });
   });
 });

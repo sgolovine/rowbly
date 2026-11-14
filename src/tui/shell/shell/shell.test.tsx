@@ -349,6 +349,7 @@ describe("Shell", () => {
       await tui.press(keys.enter);
       expect(tui.frame()).toContain("Edit ROW-01");
       expect(tui.frame()).toMatch(/General\s+Attachments\s+Threads/);
+      expect(tui.frame()).toMatch(/│\s+Models\s+│/);
       expect(tui.frame()).toContain("ROW-02 Bravo");
       await tui.click("Bravo");
       await tui.click("Bravo");
@@ -398,7 +399,7 @@ describe("Shell", () => {
       expect(tui.frame()).toMatch(/› Stage\*/);
       await tui.press(keys.shiftTab);
       expect(tui.frame()).toContain("No attachments");
-      await tui.press(keys.shiftTab, keys.shiftTab);
+      await tui.press(keys.shiftTab, keys.shiftTab, keys.shiftTab);
       expect(tui.frame()).toMatch(/› Stage\*/);
     });
 

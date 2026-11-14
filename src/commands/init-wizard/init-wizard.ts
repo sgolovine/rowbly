@@ -1,7 +1,6 @@
 import { cancel, confirm, intro, isCancel, log, multiselect, note, select, text } from "@clack/prompts";
 import { checkProjectKey, checkStageKey, toProjectKey, toStageKey } from "../../services/config/config.js";
 import {
-  FACTORY_SKILL,
   isAlwaysEnabledStage,
   type OnboardingInput,
   type OnboardingOptions,
@@ -78,15 +77,13 @@ async function askStages(options: OnboardingOptions): Promise<string[]> {
   return withCustomStages(selected, splitNames(custom));
 }
 
-/** A required skill shows `(required)`. The factory skill also does, because the factory cannot run without it. */
+/** A skill that a selected default stage uses shows `(required)`. */
 function skillOption(skill: string, required: readonly string[]): { value: string; label: string; hint?: string } {
   if (required.includes(skill)) {
     return { value: skill, label: `${skill} (required)`, hint: "always installed" };
   }
 
-  return skill === FACTORY_SKILL
-    ? { value: skill, label: `${skill} (required)`, hint: "required to use the factory" }
-    : { value: skill, label: skill };
+  return { value: skill, label: skill };
 }
 
 async function askSkills(options: OnboardingOptions, stages: string[]): Promise<string[]> {

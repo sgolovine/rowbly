@@ -88,7 +88,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | ---------------- | -------------------------------------------------------------------------------------- |
 | `workspace/`     | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`. |
 | `config/`        | `ProjectConfig` types, checks, key rules, and read and write of the config.            |
-| `project/`       | `initProject()`, `getProject()`, `updateProject()`, `getInstructions()`.               |
+| `project/`       | `initProject()`, `getProject()`, `updateProject()`.                                    |
 | `story/`         | Create, update, delete, get and search Stories, and positions.                         |
 | `stage/`         | List, create, update, delete and get Stages and their prompts.                         |
 | `custom-field/`  | Add, update and remove custom fields.                                                  |
@@ -97,6 +97,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `doctor/`        | Compare the files with the config, and repair problems.                                |
 | `onboarding/`    | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.            |
 | `skill/`         | Install, list and remove the bundled skills for each harness.                          |
+| `prompts/`       | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`. |
 | `known-project/` | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.       |
 | `story-watch/`   | `watchStories()`: calls a function when the files of `stories/` change.                |
 
@@ -127,14 +128,15 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `factory-ownership/`                | Daemon ownership and process identity.                            |
 | `factory-control/`                  | Durable commands and receipts.                                    |
 | `factory-recovery/`                 | Reconciliation after owner death, and resume eligibility.         |
-| `factory-policy/`, `factory-state/` | Shared v1 policy and state transactions.                          |
+| `factory-policy/`, `factory-state/` | The v1 policy rules and the `state.json` transactions.            |
 | `factory-activity/`                 | The factory activity of each Story, from `state.json`.            |
-| `project-write/`                    | The shared kernel `flock` for canonical factory writes.           |
+| `project-write/`                    | The kernel `flock` and the commits of canonical factory writes.   |
 | `project-sync/`                     | The Git pull and push of the canonical checkout.                  |
 | `runtime-files/`                    | Private runtime paths and ignore rules.                           |
 | `thread/`                           | Thread metadata, runs, state projection and watches.              |
 | `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.     |
 | `supervisor-digest/`                | Bounded operational facts, without worker transcripts.            |
+| `messages/`                         | The only builder of the supervisor and worker messages.           |
 | `worker-worktree/`                  | One worktree for each Story. Existing work stays.                 |
 | `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.            |
 

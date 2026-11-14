@@ -10,9 +10,18 @@ import {
   useToast,
 } from "../../../hooks/index.js";
 import { ThinkingPicker } from "../thinking-picker/index.js";
-import { DEFAULT, levelChoice, modelLabels, type PickerModel, pickerHints, pickerId } from "./model-picker-text.js";
+import {
+  DEFAULT,
+  levelChoice,
+  modelLabels,
+  PI_DEFAULT_LABEL,
+  type PickerModel,
+  pickerHints,
+  pickerId,
+} from "./model-picker-text.js";
 
 export type { PickerModel } from "./model-picker-text.js";
+export { NO_OVERRIDE_LABEL } from "./model-picker-text.js";
 
 /** What a save of the picker reads and changes. */
 interface PickerEnv {
@@ -50,19 +59,22 @@ function pickModel(env: PickerEnv, id: string): void {
 
 /**
  * Selects the model of one factory role in two steps, in a generic Modal: a model from a search of the
- * available models (or the Pi default), then one of the thinking levels that the model supports. `esc` goes
- * back one step, then closes. `onSave` gets `null` for the Pi default.
+ * available models (or the first option, `Pi default` or `No override`), then one of the thinking levels that the model supports. `esc` goes
+ * back one step, then closes. `onSave` gets `null` for the first option.
  */
 export function ModelPickerModal({
   title,
   models,
   current,
+  defaultLabel = PI_DEFAULT_LABEL,
   onSave,
   onClose,
 }: {
   title: string;
   models: readonly PickerModel[];
   current?: ModelChoice;
+  /** The label of the first option, which saves `null`. An override picker uses `No override`. */
+  defaultLabel?: string;
   /** May throw: the error shows as a toast, and the Modal stays open. */
   onSave(choice: ModelChoice | null): Promise<void>;
   onClose(): void;
@@ -90,7 +102,7 @@ export function ModelPickerModal({
       ) : (
         <SearchableSelectPicker
           options={[DEFAULT, ...models.map(pickerId)]}
-          labels={modelLabels(models)}
+          labels={modelLabels(models, defaultLabel)}
           initialQuery=""
           value={current ? pickerId(current) : DEFAULT}
           onSelect={(id) => pickModel(env, id)}
