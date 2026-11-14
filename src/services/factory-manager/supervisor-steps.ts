@@ -10,7 +10,7 @@ const ATTENTION_LIMIT = 500;
 type StepResult = string | undefined | "keep";
 
 /** Gives the message of an error. */
-export function errorMessage(error: unknown): string {
+function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
