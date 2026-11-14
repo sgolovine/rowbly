@@ -2,7 +2,7 @@
 title: Create a "status" command for humans
 stage: IN_REFINEMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-36
 pull_request: null
 ---
 
