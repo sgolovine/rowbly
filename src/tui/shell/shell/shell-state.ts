@@ -7,12 +7,12 @@ import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { ShellRegistry, ToastStore } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import type { storyListRows } from "../../screens/stories/index.js";
-import type { Overlay, StoryPane } from "../overlay.js";
+import type { Overlay, SidePane } from "../overlay.js";
 
 /** The id of the first sidebar entry, which shows the Stories of every Stage. */
 export const ALL_STAGES = "*";
 
-/** The region that has the focus: the Stage sidebar, the Story list or the Story sidebar. */
+/** The region that has the focus: the Stage sidebar, the list, or the sidebar on the right (a Story or a Thread). */
 export type Pane = "stages" | "stories" | "story";
 
 /** What the right Panel shows: the Story list, or the worker Threads of the Factory view. */
@@ -53,9 +53,9 @@ export interface ShellView {
   /** The selected sidebar entry. Entry 0 is All Stages. */
   readonly stageIndex: number;
 
-  // The Story sidebar.
+  // The Story sidebar. It also shows a Thread of the Factory view.
   /** What the Story sidebar shows, or `null` when it is closed. */
-  readonly storyPane: StoryPane | null;
+  readonly storyPane: SidePane | null;
   /** The Story sidebar is open and is the selected pane, also while an overlay is open. */
   readonly storyActive: boolean;
 
@@ -95,7 +95,7 @@ export interface ShellEnv {
   readonly setPane: Dispatch<SetStateAction<Pane>>;
   readonly setSidebarWidth: Dispatch<SetStateAction<number>>;
   readonly setSidebarShown: Dispatch<SetStateAction<boolean>>;
-  readonly setStoryPane: Dispatch<SetStateAction<StoryPane | null>>;
+  readonly setStoryPane: Dispatch<SetStateAction<SidePane | null>>;
   /** The width of the Story sidebar after a drag, or `null` for the default width. */
   readonly setStoryWidth: Dispatch<SetStateAction<number | null>>;
   readonly setStoryHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
