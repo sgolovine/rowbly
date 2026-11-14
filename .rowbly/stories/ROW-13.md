@@ -80,3 +80,7 @@ Not in scope:
 - The Stage sidebar filters the Threads by `thread.stage`. Reason: the author asks that the sidebar "still shows stages"; a filter by Stage is the same function that it has for Stories.
 - The Thread Modal is read-only and shows `ThreadDetail` and the live conversation. Reason: "shows what it's doing" asks for a view, not for actions. The Threads tab of a Story already shows the same data.
 - The view mode is not saved between runs. Reason: smallest scope; nothing in the request asks for it.
+- The view mode Switch is the first header part that goes when the header is narrow. It shows only when the full header fits with it (about 114 columns with a short Project name). Reason: the Story says that the Switch can go before the Factory Button goes, and the current header tests at 100 columns must pass without a change. The key `t` works at each width.
+- In the `stories` mode, the footer hints do not change and do not show `t`. `GLOBAL_KEYS` and the help Modal list `t`. In the `threads` mode, the footer shows `t Stories`. Reason: the Story list must not change in the `stories` mode, and its hint tests must pass.
+- A click on a Thread row selects the row and opens the Thread Modal at once. Reason: the acceptance criteria say that a click on a Thread row opens the Modal.
+- The Thread rows reuse `ThreadRow` with a new `storyId` prop. Reason: the row already shows the status, the Stage and attempt, the model and the run time.
