@@ -31,11 +31,15 @@ function collect(value: string, previous: string[] = []): string[] {
   return [...previous, value];
 }
 
+function nameText(check: CheckSpec): string {
+  return check.label === check.key ? check.key : `${check.key} (${check.label})`;
+}
+
 function checkText(check: CheckSpec): string {
   const narrow = check.narrowCommand ? `\n  narrow: ${check.narrowCommand}` : "";
   const block = check.block.length ? `\n  block: ${check.block.join(", ")}` : "";
 
-  return `${check.key} (${check.label}): ${check.command}${narrow}\n  memory: ${check.memoryMb} MB, timeout: ${check.timeoutMinutes} min${block}`;
+  return `${nameText(check)}: ${check.command}${narrow}\n  memory: ${check.memoryMb} MB, timeout: ${check.timeoutMinutes} min${block}`;
 }
 
 function listText(checks: readonly CheckSpec[]): string {

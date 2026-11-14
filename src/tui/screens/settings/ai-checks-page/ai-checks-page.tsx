@@ -42,7 +42,7 @@ export function AiChecksPage({ settings, idle, cursor, onLimits, onAdd, onCheck 
       <AiSettingCard
         title="Check limits"
         value={checkLimitsText(settings)}
-        description="The factory starts a check only when a slot is free and the free memory covers the estimate of the check."
+        description="A check starts only when a slot is free and the free memory covers its estimate."
         action={settings ? "Edit" : undefined}
         keyName="c"
         clickable={idle}

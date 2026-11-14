@@ -178,15 +178,15 @@ function modelsHints(can: AiAbilities): KeyHint[] {
 
 function checksHints(can: AiAbilities): KeyHint[] {
   return [
-    { key: "c", description: "edit check limits" },
-    { key: "n", description: "add check" },
     ...(can.checks
       ? [
-          { key: "↑/↓", description: "select check" },
-          { key: "enter", description: "edit check" },
-          { key: "d", description: "remove check" },
+          { key: "↑/↓", description: "select" },
+          { key: "enter", description: "edit" },
+          { key: "d", description: "remove" },
         ]
       : []),
+    { key: "n", description: "add check" },
+    { key: "c", description: "check limits" },
     TAB_HINT,
   ];
 }

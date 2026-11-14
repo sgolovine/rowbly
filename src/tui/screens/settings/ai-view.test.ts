@@ -57,8 +57,8 @@ describe("aiView", () => {
     expect(keysOf(aiHints("models", { ...all, stages: true }))).toEqual(["s", "w", "↑/↓", "enter", "←/→"]);
     expect(keysOf(aiHints("models", { ...none, stages: true }))).toEqual(["←/→"]);
     expect(keysOf(aiHints("limits", none))).toEqual(["l", "←/→"]);
-    expect(keysOf(aiHints("checks", none))).toEqual(["c", "n", "←/→"]);
-    expect(keysOf(aiHints("checks", { ...none, checks: true }))).toEqual(["c", "n", "↑/↓", "enter", "d", "←/→"]);
+    expect(keysOf(aiHints("checks", none))).toEqual(["n", "c", "←/→"]);
+    expect(keysOf(aiHints("checks", { ...none, checks: true }))).toEqual(["↑/↓", "enter", "d", "n", "c", "←/→"]);
   });
 
   it("puts the sign-in page under the Providers tab, and wraps the tabs at the ends", () => {
