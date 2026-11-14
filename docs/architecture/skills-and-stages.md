@@ -30,7 +30,9 @@ The skills in `skills/` are for the users of Rowbly. Rowbly itself does not use 
 - A worker does not get the path of a skill. A Stage prompt can tell the worker to use a skill, for
   example "Use the `develop` skill". The user must install that skill for the harness with
   `rowbly skill install`.
-- This repository does not keep installed copies of the bundled skills in `.agents/skills/`.
+- This repository has installed copies of `refine`, `develop` and `review` in `.agents/skills/`, for
+  the `codex` harness. The Stage prompts in `.rowbly/stages/` give their paths. After a change in
+  `skills/<name>/`, run `rowbly skill remove <name> --harness codex` and then `rowbly skill install`.
 
 ## Rules for a change to a skill or a stage prompt
 

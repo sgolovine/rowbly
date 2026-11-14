@@ -42,5 +42,25 @@
   ],
   "features": {
     "specs": true
-  }
+  },
+  "skills": [
+    {
+      "name": "refine",
+      "harnesses": [
+        "codex"
+      ]
+    },
+    {
+      "name": "develop",
+      "harnesses": [
+        "codex"
+      ]
+    },
+    {
+      "name": "review",
+      "harnesses": [
+        "codex"
+      ]
+    }
+  ]
 }

@@ -99,8 +99,8 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
 | `rowbly-code-style`  | The TypeScript style: top-level functions, immutable state, layout and files             |
 | `agentic-tui`        | The PTY tool. This is an unchanged copy from `@codebolt/agentic-tui` (see `UPSTREAM.md`) |
 
-This repository does not keep installed copies of the bundled skills in `.agents/skills/` or `.claude/`. The bundled skills
-are for the users of Rowbly only.
+The `refine`, `develop` and `review` folders in `.agents/skills/` are installed copies of the bundled skills. The Rowbly
+project of this repository uses them through its Stage prompts in `.rowbly/stages/`. Rowbly code does not read them.
 
 ## CI
 
