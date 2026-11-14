@@ -1,7 +1,7 @@
 ---
 title: Allow overriding AI worker model
-stage: IN_REVIEW
-position: 1
+stage: IN_DEVELOPMENT
+position: 3
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-20
 pull_request: https://github.com/sgolovine/rowbly/pull/202
 ---
@@ -78,3 +78,9 @@ Not in scope:
 - The CLI uses `rowbly factory configure` with `--stage`, `--story` and `--clear-worker`, and no new command. Reason: `factory configure` already sets the worker model. This is the smallest change.
 - An override for a deleted or renamed Story or Stage stays in the file and is ignored. Reason: smallest scope. Removal on delete or rename can be a later Story.
 - The TUI part is split to ROW-21. Reason: one pull request for the services, the factory, the CLI and the TUI is too large.
+
+## Review findings
+
+1. The pull request has merge conflicts with `main` (GitHub: `mergeable: CONFLICTING`). `main` merged ROW-16, ROW-17 and ROW-18 (the `git` section of `factory.json`, `git-settings.ts` and the `--git-*` flags of `factory configure`). These files conflict: `src/services/factory-settings/factory-settings.ts`, `src/services/factory-settings/factory-settings.test.ts`, `src/commands/factory/factory.ts`, `src/commands/factory/factory.test.ts`, `docs/architecture/native-factory/controls.md`, `docs/architecture/native-factory/pi-runtime-and-auth.md`, `docs/architecture/native-factory/runtime-and-locks.md` and `docs/architecture/storage.md`. Fix: merge `origin/main` into `story/ROW-20` and resolve the conflicts. Keep the `git` keys, `FactorySettingsInput`, `withDefaults` and the validation hint of `main`, and add `stageWorkerModels` and `storyWorkerModels`. In `overrideProblem` (`factory-settings.ts`), also reject the Git flags of `ConfigureInput` (`GitInput`) together with `--stage`, so that an override path does not ignore them silently. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again and write the results in the pull request.
+
+Not blocking: the branch has 11 `chore(rowbly)` commits that change `.rowbly/stories/ROW-16.md` to `ROW-20.md`. They are not part of this Story. If possible, remove them from the branch when you merge `main`.
