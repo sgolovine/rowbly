@@ -1,3 +1,4 @@
+import { compactThreads } from "../../../services/config/config.js";
 import type { Story } from "../../../services/story/story.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
@@ -61,6 +62,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, ...on }: Story
       stages={board.stages}
       customFields={board.project.customFields}
       specs={board.project.features?.specs === true}
+      compactThreads={compactThreads(board.project)}
       onSaved={on.onSaved}
       onDeleted={on.onDeleted}
       onBack={on.onBack}

@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { compactThreads } from "../../../services/config/config.js";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Sidebar } from "../../components/index.js";
 import type { FactoryView } from "../../screens/threads/index.js";
@@ -98,6 +99,7 @@ function factoryViewProps(env: ShellEnv, board: Board): ComponentProps<typeof Fa
     stages: Object.fromEntries(board.stages.map((s) => [s.key, s.label])),
     active: listFocused,
     clickable: idle,
+    compact: compactThreads(board.project),
     emptyText: `No Threads${stage ? ` in ${stage.label}` : ""}. The factory adds a Thread when it starts a worker.`,
     onOpen: (thread) => openThread(env, thread),
     onHints: env.setThreadHints,

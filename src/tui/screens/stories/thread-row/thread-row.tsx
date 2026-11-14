@@ -14,7 +14,7 @@ import {
 /**
  * One thread in the Threads tab of a Story, or in the Factory view. Row 1: the Story id when `storyId` is set, the
  * status glyph and text, the attempt and the Stage, and the run time on the right. Row 2: the model id and the creation time. Row 3, if there is one: the error in `danger`,
- * or the summary of the result.
+ * or the summary of the result. When `compact` is true, only row 1 shows.
  */
 export function ThreadRow({
   thread,
@@ -23,6 +23,7 @@ export function ThreadRow({
   now,
   selected,
   clickable,
+  compact = false,
   onClick,
 }: {
   thread: ThreadRecord;
@@ -33,6 +34,8 @@ export function ThreadRow({
   now: number;
   selected: boolean;
   clickable: boolean;
+  /** Shows only row 1, so that the list has one line for each thread. */
+  compact?: boolean;
   onClick(): void;
 }) {
   const { glyph, color } = THREAD_GLYPHS[thread.status];
@@ -61,12 +64,14 @@ export function ThreadRow({
           <Text color={secondary}>{threadDuration(thread, now)}</Text>
         </Box>
       </Box>
-      <Box paddingLeft={2} paddingRight={1}>
-        <Text wrap="truncate-end" color={secondary}>
-          {thread.model?.modelId ?? threadModel(thread)} · {formatDateTime(thread.createdAt)}
-        </Text>
-      </Box>
-      {outcome && (
+      {!compact && (
+        <Box paddingLeft={2} paddingRight={1}>
+          <Text wrap="truncate-end" color={secondary}>
+            {thread.model?.modelId ?? threadModel(thread)} · {formatDateTime(thread.createdAt)}
+          </Text>
+        </Box>
+      )}
+      {!compact && outcome && (
         <Box paddingLeft={2} paddingRight={1}>
           <Text wrap="truncate-end" color={outcome.error ? theme.danger : secondary}>
             {outcome.text}

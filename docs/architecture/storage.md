@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, display? {compactThreads}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -44,7 +44,7 @@ The files of `runtime/` and `state.json` belong to the native factory. See
 ## Config
 
 `rowbly.config.json` holds the Project name and key, the custom fields, the Stages, the features, the
-installed skills and the factory settings. The `config` service reads, checks and writes it.
+display options, the installed skills and the factory settings. The `config` service reads, checks and writes it.
 
 - The order of `stages` in the config is the order of the board.
 - The custom field types are `string`, `number`, `boolean`, `url`, `date` (YYYY-MM-DD) and `select`
@@ -53,6 +53,12 @@ installed skills and the factory settings. The `config` service reads, checks an
   use it. This keeps the files consistent.
 - The `skills` list holds the bundled skills that the Project has installed. Each entry has the `name`
   of a skill and the `harnesses` that have a copy. See [skills-and-stages.md](skills-and-stages.md).
+- The optional `display` key holds the display options of the TUI. It has one boolean key,
+  `compactThreads`. When `compactThreads` is `true` or is not set, each Thread in the Threads view
+  and in the Threads tab of a Story uses one line. When it is `false`, each Thread uses up to three
+  lines. Set it with `rowbly project update --compact-threads <on|off>` or in Settings › Display. A
+  `display` value that is not an object, an unknown key or a value that is not a boolean gives a
+  config issue.
 - The `factory` key holds the factory settings. See [Factory settings](#factory-settings). Each write
   of the config keeps this key.
 

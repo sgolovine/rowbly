@@ -31,7 +31,19 @@ export interface ProjectConfig {
   skills?: InstalledSkill[];
   /** The settings of the native factory. The factory-settings service checks the keys. */
   factory?: Record<string, unknown>;
+  /** The display options of the TUI. */
+  display?: DisplayConfig;
 }
+
+/** The display options of the TUI for a project. */
+export interface DisplayConfig {
+  /** Shows each Thread on one line. A value that is not set is `true`. */
+  compactThreads?: boolean;
+}
+
+/** The names of the display options. */
+export const DISPLAY_OPTIONS = ["compactThreads"] as const;
+export type DisplayOption = (typeof DISPLAY_OPTIONS)[number];
 
 /** The optional features of a project, by name. */
 export interface FeatureConfig {
