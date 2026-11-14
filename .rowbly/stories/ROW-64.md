@@ -1,7 +1,7 @@
 ---
 title: Tell workers about the upstream Stories of their Story
-stage: IN_REVIEW
-position: 2
+stage: CHANGELOG
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-64
 pull_request: https://github.com/sgolovine/rowbly/pull/236
 ---
