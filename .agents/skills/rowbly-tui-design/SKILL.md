@@ -67,7 +67,7 @@ The library also contains other code that has no guideline of its own:
 | `FullScreenEditor`, `useFullScreenEditor` | Markdown text on the full terminal, with View and Edit modes and an optional save. |
 | `SearchableSelect`, `SearchableSelectPicker`, `fuzzySearch` | The fuzzy picker that a searchable select field opens. |
 | `MarkdownView`, `markdown.ts` | Markdown that is rendered for the terminal (`marked-terminal`), in a viewport that scrolls. |
-| `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. |
+| `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. `active` controls the keys. `wheel` controls the wheel, and its default is `active`. |
 | `Spinner`, `Loading` | The braille spinner, alone or with a label. |
 | `CloseButton` | The clickable `✕` in the top edge of a Modal. |
 | `OverlayHost` | Supplies `useMainOverlay()`, and draws the items that it opens. `TuiProviders` contains it. |

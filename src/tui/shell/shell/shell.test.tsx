@@ -403,6 +403,27 @@ describe("Shell", () => {
       expect(tui.frame()).toMatch(/› Stage\*/);
     });
 
+    it("moves the Story list with the wheel while the Story sidebar has the focus", async () => {
+      for (const n of Array.from({ length: 30 }, (_, i) => i + 1)) {
+        await createStory({ title: `Story ${n}` }, project.ctx);
+      }
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 150, height: 24 });
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Edit ROW-01");
+      expect(focusedOn(tui)).toBe("story");
+      expect(tui.frame()).not.toMatch(/↑ \d+ more/);
+      const panel = tui.locate("Rowbly › All Stages");
+      // The wheel moves the cursor; the rows move when the cursor passes the last row in view.
+      await tui.mouse("wheelDown", panel.x + 4, panel.y + 3);
+      expect(tui.frame()).toMatch(/▌ {3}ROW-04 Story 4/);
+      for (const _ of Array.from({ length: 5 })) {
+        await tui.mouse("wheelDown", panel.x + 4, panel.y + 3);
+      }
+      expect(tui.frame()).toMatch(/↑ \d+ more/);
+      expect(tui.frame()).toMatch(/▌ {3}ROW-19 Story 19/);
+      expect(tui.frame()).toContain("Edit ROW-01");
+    });
+
     it("closes with esc in the list, and asks first when the form has unsaved changes", async () => {
       const tui = await open(project.ctx as { cwd: string });
       await tui.press("n", keys.escape, keys.escape);
@@ -1054,6 +1075,62 @@ describe("Shell", () => {
       await vi.waitFor(async () => {
         await tui.press();
         expect(tui.frame()).toContain("ROW-03 ▶ running");
+      });
+    });
+
+    describe("with more Threads than the Panel shows", () => {
+      const position = (tui: Awaited<ReturnType<typeof open>>) => tui.frame().match(/↑↓ (\d+)–\d+ of \d+/)?.[1];
+
+      /** 30 Threads, the Factory view in a short terminal, and the point of the wheel over the Thread list. */
+      async function longList() {
+        for (const minute of Array.from({ length: 30 }, (_, i) => i)) {
+          await thread(`ROW-${String(minute + 1).padStart(2, "0")}`, "BACKLOG", minute, "completed");
+        }
+        const tui = await factoryView("ROW-30", { width: 150, height: 24 });
+        const panel = tui.locate("╭─Threads");
+        return { tui, at: { x: panel.x + 4, y: panel.y + 3 } };
+      }
+
+      it("scrolls the Thread list with the wheel while the sidebar is closed", async () => {
+        const { tui, at } = await longList();
+        expect(position(tui)).toBe("1");
+        await tui.mouse("wheelDown", at.x, at.y);
+        expect(position(tui)).toBe("4");
+        await tui.mouse("wheelUp", at.x, at.y);
+        expect(position(tui)).toBe("1");
+      });
+
+      it("scrolls the Thread list with the wheel, but not with pgdn, while the Thread sidebar has the focus", async () => {
+        const { tui, at } = await longList();
+        await tui.press(keys.enter);
+        await vi.waitFor(async () => {
+          await tui.press();
+          expect(tui.frame()).toContain("╭─ROW-30 › #1 Backlog");
+        });
+        expect(footer(tui)).toContain("esc Thread list");
+        await tui.press(keys.pageDown);
+        expect(position(tui)).toBe("1");
+        await tui.mouse("wheelDown", at.x, at.y);
+        expect(position(tui)).toBe("4");
+        await tui.mouse("wheelUp", at.x, at.y);
+        expect(position(tui)).toBe("1");
+        // The wheel does not move the focus.
+        expect(footer(tui)).toContain("esc Thread list");
+      });
+
+      it("does not scroll the Thread list with the wheel while an overlay is open", async () => {
+        const { tui, at } = await longList();
+        await tui.press(keys.enter);
+        await vi.waitFor(async () => {
+          await tui.press();
+          expect(tui.frame()).toContain("╭─ROW-30 › #1 Backlog");
+        });
+        await tui.click("Find Stories");
+        expect(tui.frame()).toMatch(/\d+ Stories/);
+        await tui.mouse("wheelDown", at.x, at.y);
+        await tui.press(keys.escape);
+        expect(tui.frame()).not.toMatch(/\d+ Stories/);
+        expect(position(tui)).toBe("1");
       });
     });
 
