@@ -1,19 +1,18 @@
 # Tests
 
-Rowbly has three test suites. Vitest runs the tests of `src/`. `node:test` runs the tests of
-`scripts/` and of the factory skill scripts. Each service and each component has a test next to it.
+Rowbly has two test suites. Vitest runs the tests of `src/`. `node:test` runs the tests of
+`scripts/`. Each service and each component has a test next to it.
 
 Read this when you write or change a test, or when a test fails and you must know how the suite is
 set up.
 
 ## Suites
 
-| Command             | Runner      | Tests                                                                 |
-| ------------------- | ----------- | --------------------------------------------------------------------- |
-| `pnpm test`         | Vitest      | `src/**/*.test.ts` and `src/**/*.test.tsx`.                           |
-|                     | `node:test` | Then `scripts/*.test.mjs`, for example the dash-case name check.      |
-| `pnpm test:watch`   | Vitest      | The Vitest tests again after each change.                             |
-| `pnpm test:factory` | `node:test` | `skills/factory/scripts/*.test.mjs`. The lint job of CI also runs it. |
+| Command           | Runner      | Tests                                                            |
+| ----------------- | ----------- | ---------------------------------------------------------------- |
+| `pnpm test`       | Vitest      | `src/**/*.test.ts` and `src/**/*.test.tsx`.                      |
+|                   | `node:test` | Then `scripts/*.test.mjs`, for example the dash-case name check. |
+| `pnpm test:watch` | Vitest      | The Vitest tests again after each change.                        |
 
 ## General rules
 
@@ -62,12 +61,6 @@ the exit code, stdout and stderr. `createProgram()` builds the program without a
 - Live provider validation is separate from the automated checks.
 - The `import-boundary` test makes sure that help and `factory status` do not load Pi. See
   [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md).
-
-## Factory script tests
-
-The tests of `skills/factory/scripts/` are separate from the Vitest tests. They use `node:test`. Run
-them with `pnpm test:factory`. One of these tests compares the installed `factory` copies in
-`.agents/skills/` and `.claude/skills/` with the bundled files.
 
 ## Related
 

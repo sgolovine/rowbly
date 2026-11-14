@@ -15,7 +15,6 @@ import { preflightFactory, recoverFactory } from "../../services/factory-recover
 import { writeFileAtomic } from "../../services/files/files.js";
 import { createFactoryRuntime } from "../../services/pi-runtime/factory-runtime.js";
 import { runtimePath } from "../../services/runtime-files/runtime-files.js";
-import { bundledSkills } from "../../services/skill/skill.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../../services/workspace/workspace.js";
 import { createCliShim } from "./cli-shim.js";
 import { type ControlPoller, createControlPoller, pollControl, settledControl } from "./control-poller.js";
@@ -101,7 +100,6 @@ async function createManager(run: ForegroundRun, factory: FactoryRuntime): Promi
     { executable: process.execPath, execArgv: process.execArgv, entry: resolve(process.argv[1] as string) },
     run.ctx,
   );
-  const skillsDir = (await bundledSkills(run.ctx)).dir;
 
   return createFactoryManager(
     {
@@ -110,7 +108,6 @@ async function createManager(run: ForegroundRun, factory: FactoryRuntime): Promi
       adoptExternal: run.input.adoptExternal,
       agentDir: factory.agentDir,
       shim,
-      skillsDir,
       maxWorkers: run.input.maxWorkers,
       onModel: (role, model) => console.error(`${role}: ${model.provider}/${model.modelId}`),
     },

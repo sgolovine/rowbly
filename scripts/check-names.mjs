@@ -11,9 +11,15 @@ const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "U
 
 // Paths that keep their names:
 // - `.agents/skills/agentic-tui/` is an unchanged copy of an upstream skill.
-// - `.rowbly/` is product data: stage keys (`IN_REVIEW.md`), story IDs (`ROW-01.md`) and `ROWBLY.md`.
+// - `.rowbly/` is product data: stage keys (`IN_REVIEW.md`), story IDs (`ROW-01.md`) and prompts (`SYSTEM.md`).
 // - `stages/*.md` are the default stage prompts, and each name is a stage key (`BACKLOG.md`).
-const IGNORED_PATHS = [/^\.agents\/skills\/agentic-tui\//, /^\.rowbly\//, /^stages\/[^/]+\.md$/];
+// - `src/config/prompts/*.md` are the system prompts, with the names of the user prompts (`SYSTEM.md`).
+const IGNORED_PATHS = [
+  /^\.agents\/skills\/agentic-tui\//,
+  /^\.rowbly\//,
+  /^stages\/[^/]+\.md$/,
+  /^src\/config\/prompts\/[^/]+\.md$/,
+];
 
 /** Gives the part of a name before its first dot. A dotfile or a dotfolder loses its first dot. */
 function baseName(segment) {

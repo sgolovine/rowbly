@@ -29,7 +29,8 @@ test.
 | `test-cli/`                                            | `runCli()`, `createProgram()`: run commands in tests.                            |
 | `init/`                                                | The `rowbly init` command: flags and JSON input.                                 |
 | `init-wizard/`                                         | `askOnboarding()`: the `@clack/prompts` questions of `rowbly init`.              |
-| `project/`                                             | `project update`, `project get-instructions`.                                    |
+| `project/`                                             | `project update`.                                                                |
+| `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
 | `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                   |
 | `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.    |
@@ -48,7 +49,7 @@ The native commands are in [native-factory/controls.md](native-factory/controls.
 - `-C, --cwd <dir>` runs as if Rowbly started in `<dir>`.
 
 Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `spec`,
-`skill`, `project`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
+`skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
 its help. A resource command with an unknown action gives an error. `init`, `doctor` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
 

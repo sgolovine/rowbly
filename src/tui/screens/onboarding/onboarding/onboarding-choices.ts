@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { checkStageKey, toStageKey } from "../../../../services/config/config.js";
 import {
-  FACTORY_SKILL,
   isAlwaysEnabledStage,
   type OnboardingInput,
   type OnboardingOptions,
@@ -106,11 +105,7 @@ function stageDescription(stage: string, custom: readonly string[]): string | un
 }
 
 function skillDescription(skill: string, required: readonly string[]): string | undefined {
-  if (required.includes(skill)) {
-    return "(required)";
-  }
-
-  return skill === FACTORY_SKILL ? "(required to use the factory)" : undefined;
+  return required.includes(skill) ? "(required)" : undefined;
 }
 
 /** Adds a custom Stage. A Stage with the key of a row that exists checks that row. */
@@ -152,7 +147,7 @@ function stagesChecklist(env: OnboardingEnv, view: OnboardingView): ChecklistPro
 function skillsChecklist(env: OnboardingEnv, view: OnboardingView): ChecklistProps {
   return {
     heading: "Agent skills",
-    description: `Your default Stages use the required skills. The factory requires the companion skill "${FACTORY_SKILL}".`,
+    description: "Your default Stage prompts use the required skills. Skills are for your agents, not for Rowbly.",
     items: view.defaults.skills.map((skill) => ({
       value: skill,
       label: skill,

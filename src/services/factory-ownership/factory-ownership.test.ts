@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { hostname } from "node:os";
 import { describe, expect, it } from "vitest";
-import { withLifecycleGuard } from "../../../skills/factory/scripts/ownership-lock.mjs";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { runtimePaths } from "../workspace/workspace.js";
@@ -13,6 +12,7 @@ import {
   probeOwner,
   releaseFactoryOwnership,
 } from "./factory-ownership.js";
+import { withLifecycleGuard } from "./ownership-lock.js";
 
 describe("factory ownership", () => {
   const project = useTestProject();

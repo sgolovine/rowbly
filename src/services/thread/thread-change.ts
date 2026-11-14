@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { stat } from "node:fs/promises";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
-import { loadFactoryState } from "../factory-state/factory-state.js";
+import { withStateLock } from "../factory-state/factory-state.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { getThread, saveThread } from "./thread-files.js";
@@ -85,7 +85,7 @@ export async function createThread(input: CreateInput, ctx: ServiceContext = {})
 
   await prepareRuntime(paths);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveNewThread(input, ctx));
+  return withStateLock(paths.root, () => saveNewThread(input, ctx));
 }
 
 /** Gives the last run with the new status and the times that the status starts or ends. */
@@ -143,7 +143,7 @@ export async function transitionThread(
 ): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveTransition(id, input, ctx));
+  return withStateLock(paths.root, () => saveTransition(id, input, ctx));
 }
 
 function resumed(t: ThreadRecord, input: ResumeInput, now: string): ThreadRecord {
@@ -183,5 +183,5 @@ async function saveNewRun(
 export async function appendThreadRun(id: string, input: ResumeInput, ctx: ServiceContext = {}): Promise<ThreadRecord> {
   const paths = await findProject(ctx);
 
-  return (await loadFactoryState(ctx)).withStateLock(paths.root, () => saveNewRun(paths, id, input, ctx));
+  return withStateLock(paths.root, () => saveNewRun(paths, id, input, ctx));
 }

@@ -18,7 +18,7 @@ separate daemon process that uses the same services and the Pi SDK.
                                     │        │
                     .rowbly/ files ◄┘        └► native factory daemon
                     (Stories, Stages,            (Pi supervisor and workers,
-                     Specs, config)               .rowbly/runtime/, state.json)
+                     Specs, prompts, config)      .rowbly/runtime/, state.json)
 ```
 
 | Command                            | Mode | Result                                          |
@@ -67,6 +67,7 @@ See [domain-concepts.md](domain-concepts.md) for the full definitions.
 | [cli.md](cli.md)                                     | You add or change a CLI command.                                                |
 | [tui.md](tui.md)                                     | You add or change a TUI screen, component or hook.                              |
 | [native-factory/README.md](native-factory/README.md) | You work on the daemon, locks, recovery, Threads, Pi, auth or models.           |
+| [prompts.md](prompts.md)                             | You change a prompt, the `prompt` commands or the message of a factory agent.   |
 | [onboarding.md](onboarding.md)                       | You change `rowbly init` or the onboarding steps of the TUI.                    |
 | [skills-and-stages.md](skills-and-stages.md)         | You change a bundled skill, a stage prompt or the `skill` commands.             |
 | [testing.md](testing.md)                             | You write or change a test.                                                     |

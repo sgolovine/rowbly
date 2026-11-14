@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { ConflictError } from "../errors/errors.js";
 import { markReported, pendingReports, storyHash } from "../factory-policy/factory-policy.js";
 import { getFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
+import { supervisorMessage } from "../messages/messages.js";
 import { openFactorySession } from "../pi-runtime/factory-session.js";
 import { commitCanonicalProject } from "../project-write/project-write.js";
-import { bundledSkills } from "../skill/skill.js";
 import { withEntry, withoutEntries } from "../store/store.js";
 import { searchStories } from "../story/story.js";
 import { watchStories } from "../story-watch/story-watch.js";
@@ -78,8 +76,6 @@ async function superviseUntilStopped(manager: Manager): Promise<void> {
 
   await serial(manager, () => persistStatus(manager));
 
-  const contract = await readFile(join((await bundledSkills()).dir, "factory/references/supervisor-native.md"), "utf8");
-
   while (!getState(manager).stopping) {
     if (!getState(manager).dirty) {
       await waitForWake(manager);
@@ -89,7 +85,7 @@ async function superviseUntilStopped(manager: Manager): Promise<void> {
     setState(manager, () => ({ dirty: false }));
 
     try {
-      await superviseOnce(manager, contract);
+      await superviseOnce(manager);
     } catch {
       await recordReconcileFailure(manager);
     }
@@ -120,7 +116,7 @@ async function recordReconcileFailure(manager: Manager): Promise<void> {
 }
 
 /** Reconciles the Project, then sends a digest to the supervisor when the digest has new material. */
-async function superviseOnce(manager: Manager, contract: string): Promise<void> {
+async function superviseOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
   await refreshSettings(manager);
   await clearProviderPauses(manager);
@@ -142,7 +138,7 @@ async function superviseOnce(manager: Manager, contract: string): Promise<void> 
     await rotateSupervisor(manager);
   }
 
-  await deliverDigest(manager, contract, delivery);
+  await deliverDigest(manager, delivery);
 
   if (getState(manager).stopping) {
     return;
@@ -283,9 +279,9 @@ async function rotateSupervisor(manager: Manager): Promise<void> {
   await openSupervisor(manager, previous);
 }
 
-async function deliverDigest(manager: Manager, contract: string, delivery: Delivery): Promise<void> {
+async function deliverDigest(manager: Manager, delivery: Delivery): Promise<void> {
   try {
-    await sendDigest(manager, contract, delivery);
+    await sendDigest(manager, delivery);
   } catch (error) {
     if (getState(manager).stopping) {
       return;
@@ -302,13 +298,11 @@ async function deliverDigest(manager: Manager, contract: string, delivery: Deliv
 }
 
 /** Sends the digest, records the delivered reports, and sets the next wake with a backoff. */
-async function sendDigest(manager: Manager, contract: string, delivery: Delivery): Promise<void> {
+async function sendDigest(manager: Manager, delivery: Delivery): Promise<void> {
   setState(manager, () => ({ attemptedHash: delivery.hash, nextWakeAt: Date.now() + 60_000 }));
   await serial(manager, () => persistStatus(manager));
 
-  const instructions = (await readFile(manager.paths.instructionsFile, "utf8").catch(() => "")).slice(0, 16_000);
-
-  await getState(manager).supervisor?.sendDigest(`${contract}\n${instructions}\n${delivery.text}`);
+  await getState(manager).supervisor?.sendDigest(await supervisorMessage(manager.paths, delivery.text));
 
   const reportIds = delivery.reports.map((r) => promptHash(JSON.stringify(r)));
 

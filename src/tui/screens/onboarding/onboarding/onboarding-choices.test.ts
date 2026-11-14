@@ -12,7 +12,7 @@ const defaults: OnboardingOptions = {
   name: "app",
   key: "APP",
   stages: ["Backlog", "Develop", "Done"],
-  skills: ["develop", "factory", "refine"],
+  skills: ["develop", "refine", "review"],
   harnesses: [{ id: "codex", dir: ".agents/skills" }],
 } as OnboardingOptions;
 
@@ -65,12 +65,12 @@ describe("onboardingChoices", () => {
     expect(props.add?.onAdd("!!!")).toHaveProperty("error");
   });
 
-  it("marks the required skills and needs a harness", () => {
+  it("marks no skill as required without a default Stage, and needs a harness", () => {
     const view = onboardingView(defaults, { custom: [] }, true);
     const skills = checklistProps(env(), view, "skills");
     const harnesses = checklistProps(env(), view, "harnesses");
 
-    expect(skills.items.find((item) => item.value === "factory")?.description).toMatch(/required/);
+    expect(skills.items.find((item) => item.value === "develop")?.description).toBeUndefined();
     expect(harnesses.emptyError).toBe("Choose at least one harness");
     expect(harnesses.items).toEqual([{ value: "codex", label: "codex", description: ".agents/skills" }]);
   });

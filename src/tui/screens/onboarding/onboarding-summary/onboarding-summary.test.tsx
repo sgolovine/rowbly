@@ -27,7 +27,7 @@ describe("OnboardingSummary", () => {
       await tui.press(keys.enter);
       await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
       expect((await getProject(ctx)).projectName).toBe(input.name ?? dir.path.split("/").at(-1));
-      expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
+      expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("");
     },
   );
 

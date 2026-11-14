@@ -38,14 +38,14 @@ src/tui/
 
 The screen areas in `screens/` are:
 
-| Area          | Contents                                                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads, Models). |
-| `stages/`     | The Stage form modal.                                                                                                                          |
-| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                   |
-| `settings/`   | The Settings modal and its sections, the AI section, the Git section, the model picker and the list of Stage worker models.                    |
-| `factory/`    | The Factory controls modal and the factory status helpers.                                                                                     |
-| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                           |
+| Area          | Contents                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads, Models).   |
+| `stages/`     | The Stage form modal.                                                                                                                            |
+| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                     |
+| `settings/`   | The Settings modal and its sections, the Prompts section, the AI section, the Git section, the model picker and the list of Stage worker models. |
+| `factory/`    | The Factory controls modal and the factory status helpers.                                                                                       |
+| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                             |
 
 ## The Factory controls
 

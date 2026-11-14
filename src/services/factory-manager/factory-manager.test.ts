@@ -102,7 +102,7 @@ describe("foreground factory", () => {
       { cwd: root },
     );
     manager = await createFactoryManager(
-      { runtime, agentDir: join(dir.path, "agent"), shim, skillsDir: resolve("skills"), beforeLaunch },
+      { runtime, agentDir: join(dir.path, "agent"), shim, beforeLaunch },
       { cwd: root },
     );
     return { supervisor, worker, shim, manager };

@@ -1,4 +1,4 @@
-Use the `develop` skill (`skills/develop/SKILL.md`) on this story.
+Use the `develop` skill (`.agents/skills/develop/SKILL.md`) on this story.
 
 If the result is `complete`, do these steps:
 

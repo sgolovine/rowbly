@@ -7,6 +7,7 @@ import { registerFactoryCommands } from "../factory/factory.js";
 import { registerInit } from "../init/init.js";
 import { registerModelCommands } from "../model/model.js";
 import { registerProjectCommands } from "../project/project.js";
+import { registerPromptCommands } from "../prompt/prompt.js";
 import { registerSkillCommands } from "../skill/skill.js";
 import { registerSpecCommands } from "../spec/spec.js";
 import { registerStageCommands } from "../stage/stage.js";
@@ -25,6 +26,7 @@ export function registerCommands(program: Command): void {
   registerAttachmentCommands(program);
   registerInit(program);
   registerProjectCommands(resource(program, "project", "Manage the project"));
+  registerPromptCommands(resource(program, "prompt", "Manage the user prompts of the factory agents"));
   registerDoctor(program);
   registerStoryCommands(resource(program, "story", "Manage stories"));
   registerStageCommands(resource(program, "stage", "Manage stages"));

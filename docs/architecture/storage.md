@@ -23,14 +23,16 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 ```
 .rowbly/
   rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}]
-  ROWBLY.md           # optional; the whole file is the instructions for all agents of the project
+  prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
+  prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
+  prompts/WORKER.md   # the Worker prompt: all workers get it
   stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
   factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git
   .gitignore          # /state.json* and /runtime/; existing text stays
-  state.json          # v1 policy state; native factory or external supervisor writes it
+  state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; see native-factory/runtime-and-locks.md
 ```
 
@@ -115,14 +117,18 @@ with a `manifest.json` file and one `<id>.png` file for each image.
 - `rowbly doctor` reports a manifest entry without a PNG, a PNG without an entry, and a malformed
   manifest. It keeps an orphan PNG for recovery.
 
-## `ROWBLY.md`
+## User prompts
 
-`ROWBLY.md` holds the top-level instructions of a Project, as a `CLAUDE.md` or `AGENTS.md` file does.
+`prompts/` holds the three user prompts of a Project: `SYSTEM.md`, `SUPERVISOR.md` and `WORKER.md`.
+The whole file is the prompt. Rowbly does not parse or enforce its text.
 
-- Initialization creates the file with only `# ROWBLY INSTRUCTIONS` and a final newline.
-- Existing Projects can omit the file. Rowbly does not parse or enforce its text.
-- `rowbly project get-instructions` shows the text.
-- A supervisor gives the text to each worker that it starts.
+- Initialization creates the three files with no text.
+- Rowbly never assumes that a user prompt exists. A missing file has no text.
+- `rowbly prompt get` and `rowbly prompt set` read and write the files. The TUI edits them in
+  Settings › Prompts.
+
+Older versions of Rowbly kept the instructions of a Project in `.rowbly/ROWBLY.md`. Rowbly does not
+read this file now. See [prompts.md](prompts.md) for the prompt levels and the rules of `doctor`.
 
 ## `rowbly doctor`
 
@@ -131,6 +137,7 @@ with a `manifest.json` file and one `<id>.png` file for each image.
 
 - Folders, Stage files, Story files, Spec files and attachments.
 - Tracked skills. See [skills-and-stages.md](skills-and-stages.md#doctor-and-skills).
+- User prompts and an old `ROWBLY.md`. See [prompts.md](prompts.md#doctor-and-prompts).
 - Runtime ignore rules, runtime files that Git tracks, and corrupt or orphan Threads. Doctor does not
   repair Thread histories and does not take over a live daemon.
 

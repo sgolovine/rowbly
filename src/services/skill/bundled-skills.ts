@@ -1,33 +1,12 @@
 import type { Dirent } from "node:fs";
 import { cp, mkdir, readdir, rename, rm } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { isSkillName } from "../config/config.js";
-import { ConflictError, NotFoundError } from "../errors/errors.js";
-import { pathExists } from "../files/files.js";
+import { ConflictError } from "../errors/errors.js";
+import { packageDir, pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import type { ServiceContext } from "../workspace/workspace.js";
 import { isMissing, SKILL_FILE } from "./skill-paths.js";
-
-/** Walks up from `dir` to the first folder with a `package.json`. */
-async function findPackageDir(dir: string): Promise<string> {
-  if (await pathExists(join(dir, "package.json"))) {
-    return dir;
-  }
-
-  const parent = dirname(dir);
-
-  if (parent === dir) {
-    throw new NotFoundError("Rowbly cannot find its package folder");
-  }
-
-  return findPackageDir(parent);
-}
-
-/** The folder of the first `package.json` above this file, in both `src/` and `dist/`. */
-export async function packageDir(): Promise<string> {
-  return findPackageDir(dirname(fileURLToPath(import.meta.url)));
-}
 
 /** The entries of the bundled skills folder. An absent folder has no entries. */
 async function readSkillEntries(dir: string): Promise<Dirent[]> {

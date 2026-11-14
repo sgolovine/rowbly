@@ -11,12 +11,12 @@ Read `references/rowbly-reference.md` before you run a `rowbly` command.
 
 Run each `rowbly` command as `rowbly -C <root> --json ...`.
 
-- A factory worker uses the `<root>` value of its first message.
+- A native factory worker uses the canonical Project root of the Run section of its first message.
 - Other agents use the main checkout as `<root>`. It is the first entry of `git worktree list`.
 
 ## Procedure
 
-1. Read the Project instructions (`rowbly -C <root> --json project get-instructions`), the Story and its Specs.
+1. Read the Project prompt and the Worker prompt (`rowbly -C <root> --json prompt get system` and `rowbly -C <root> --json prompt get worker`). A native factory worker already has them in its first message. Read the Story and its Specs.
 2. Read the code and the repository instructions that apply to the Story.
 3. Write the description again with the sections below. Keep all the facts and the intent of the author.
 4. Answer each question that the code can answer.
@@ -28,7 +28,7 @@ Run each `rowbly` command as `rowbly -C <root> --json ...`.
 
 A question must not stop a Story. For each question that the code cannot answer, do these steps:
 
-1. Look for the answer in the Story, its Specs, the Project instructions and the Git history.
+1. Look for the answer in the Story, its Specs, the Project prompt, the Worker prompt and the Git history.
 2. If a person started you and answers in this conversation, ask the person one time.
 3. If you are a factory worker, do not ask. No person will answer.
 4. If you have no answer, make the decision yourself.

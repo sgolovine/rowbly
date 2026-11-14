@@ -1,5 +1,3 @@
-import { access, readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { z } from "zod";
 import { ConflictError } from "../errors/errors.js";
 import { Store } from "../store/store.js";
@@ -10,12 +8,6 @@ import { toolParameters } from "../tool-schema/tool-schema.js";
 interface ResultState {
   readonly previous: string | undefined;
 }
-
-const STAGE_SKILLS: Record<string, string> = {
-  IN_REFINEMENT: "refine",
-  IN_DEVELOPMENT: "develop",
-  IN_REVIEW: "review",
-};
 
 async function recordOnce(
   state: Store<ResultState>,
@@ -61,39 +53,4 @@ export function createResultTool(record: (result: WorkerResult) => Promise<void>
       return recordOnce(state, record, result);
     },
   };
-}
-
-/** Reads `.rowbly/ROWBLY.md`. A missing file gives an empty string. */
-export async function readProjectInstructions(root: string): Promise<string> {
-  return readFile(join(root, ".rowbly/ROWBLY.md"), "utf8").catch((e: NodeJS.ErrnoException) => {
-    if (e.code === "ENOENT") {
-      return "";
-    }
-
-    throw e;
-  });
-}
-
-/** Finds the `SKILL.md` of a Stage. An installed project copy wins over the bundled copy. */
-export async function findStageSkill(root: string, stage: string, skillsDir: string): Promise<string> {
-  const skill = STAGE_SKILLS[stage];
-
-  if (!skill) {
-    return "Use the Stage prompt.";
-  }
-
-  for (const base of [join(root, ".agents/skills"), join(root, ".claude/skills"), skillsDir]) {
-    const candidate = join(base, skill, "SKILL.md");
-
-    if (
-      await access(candidate).then(
-        () => true,
-        () => false,
-      )
-    ) {
-      return candidate;
-    }
-  }
-
-  return "Use the Stage prompt.";
 }

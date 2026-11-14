@@ -31,7 +31,7 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 | Story        | One item of work. It has a title, a description, custom field values and one Stage. |
 | Stage        | A step of the workflow. Each Stage can have a prompt.                               |
 | Stage prompt | Instructions that tell agents what to do with a Story in that Stage.                |
-| Instructions | The text of `.rowbly/ROWBLY.md`. It applies to all agents and all work in a Project. |
+| User prompts | The Project prompt, the Supervisor prompt and the Worker prompt in `.rowbly/prompts/`. |
 | Custom field | A field that you define one time. It applies to all Stories of the Project.         |
 | Spec         | A Markdown document that describes work. It links to one or more Stories.           |
 
@@ -103,7 +103,7 @@ Each command has `--help`. These options apply to all commands:
 | `-v, --version`   | Shows the version.                                     |
 
 Resource commands use `<resource> <action>`.
-The resources are `project`, `story`, `stage`, `custom-field`, `spec` and `skill`.
+The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `spec` and `skill`.
 Run `rowbly <resource>` or `rowbly <resource> --help` to see its actions.
 Run `rowbly <resource> <action> --help` to see its arguments and options.
 The old flat resource commands do not work.
@@ -118,12 +118,20 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly init [--defaults] [--name <name>] [--key <key>] [--stage <stage>] [--skill <name>] [--no-skills] [--harness <id>] [--input <json\|file\|->]` | Project, `installed`, `edits` | Creates `.rowbly/`, the Stages and the skills. Always adds Backlog and Done. Gives `CONFLICT` if `.rowbly/` exists. |
 | `rowbly project update [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
 | `rowbly project update --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
-| `rowbly project get-instructions`                             | Instructions | Reads `.rowbly/ROWBLY.md`. Works if the file does not exist. |
 
-An Instructions record has this shape. `instructions` is empty if the file does not exist:
+### Prompt
+
+| Command                                                         | JSON result     | Notes                                                    |
+| --------------------------------------------------------------- | --------------- | -------------------------------------------------------- |
+| `rowbly prompt list`                                            | Array of Prompt | Shows the three user prompts.                            |
+| `rowbly prompt get <system\|supervisor\|worker>`                | Prompt          | Works if the file does not exist.                        |
+| `rowbly prompt set <name> --text <md>`                          | Prompt          | Replaces the full prompt. An empty value clears it.      |
+| `rowbly prompt set <name> --file <path\|->`                     | Prompt          | Reads the text from a file. `-` reads stdin.             |
+
+A Prompt record has this shape. `exists` is `false` and `text` is empty if the file does not exist:
 
 ```json
-{ "path": "/abs/path/.rowbly/ROWBLY.md", "instructions": "Markdown text" }
+{ "name": "worker", "label": "Worker", "path": "/abs/path/.rowbly/prompts/WORKER.md", "exists": true, "text": "Markdown text" }
 ```
 
 ### Story
@@ -292,8 +300,8 @@ changes in it, and does not ask for confirmation.
 
 ### Long text
 
-Only Specs have a file flag. `--description` and `--prompt` take the text as an argument. To send
-the contents of a file, use command substitution:
+Only Specs and user prompts have a file flag. `--description` and `--prompt` take the text as an
+argument. To send the contents of a file, use command substitution:
 
 ```sh
 rowbly story update APP-01 --description "$(cat notes.md)" --json
@@ -301,10 +309,11 @@ rowbly story update APP-01 --description "$(cat notes.md)" --json
 
 ## 6. Work on a Story
 
-1. Read the instructions of the Project (section 7):
+1. Read the Project prompt and the Worker prompt (section 7):
 
    ```sh
-   rowbly project get-instructions --json
+   rowbly prompt get system --json
+   rowbly prompt get worker --json
    ```
 
 2. Find the Stories of a Stage. They are in the order of their positions:
@@ -344,19 +353,29 @@ a Stage can tell you to do no work.
 Rowbly does not move Stories and does not start agents. A Story stays in its Stage until a command
 or a person moves it.
 
-## 7. Project instructions
+## 7. Prompts
 
-`.rowbly/ROWBLY.md` holds the top-level instructions for all agents of a Project. It operates as a
-`CLAUDE.md` or `AGENTS.md` file does. Initialization creates the file with only `# ROWBLY INSTRUCTIONS` and a final newline.
-Existing Projects can omit the file. Rowbly does not parse or enforce its text.
+A Project has three user prompts in `.rowbly/prompts/`. They operate as a `CLAUDE.md` or `AGENTS.md`
+file does. Rowbly does not parse or enforce their text.
 
-- **Read.** Read the instructions before you do work or change data in a Project.
-- **Supervisors.** Give the full text of `instructions` to each worker in its first message.
-- **Workers.** If the first message does not have the instructions, read them with `project get-instructions`.
-- **Order.** Obey the user first. Then obey the Stage prompt, because it is more specific. Then obey `ROWBLY.md`.
-- **Skills.** `ROWBLY.md` has priority over the steps of a skill.
-- **Limits.** `ROWBLY.md` does not remove the rules in section 1.
-- **Changes.** Edit the file only if the user tells you to do it.
+| File            | Prompt            | Who gets it                    | Command                   |
+| --------------- | ----------------- | ------------------------------ | ------------------------- |
+| `SYSTEM.md`     | Project prompt    | The supervisor and all workers | `rowbly prompt get system` |
+| `SUPERVISOR.md` | Supervisor prompt | The supervisor only            | `rowbly prompt get supervisor` |
+| `WORKER.md`     | Worker prompt     | All workers, in all Stages     | `rowbly prompt get worker` |
+
+The Stage prompt in `.rowbly/stages/<KEY>.md` goes only to the workers of that Stage. Rowbly also has
+system prompts in its package. A user cannot change them.
+
+- **Read.** Read the Project prompt and the Worker prompt before you do work or change data in a Project.
+- **Native factory.** The first message of a native factory worker already has the prompts. Do not read them again.
+- **Missing prompts.** A prompt file can be missing. A missing prompt has no text. Continue without it.
+- **Order.** Obey the user first. Then obey the Rowbly system prompts, the Stage prompt, the Worker prompt and the Project prompt, in this order.
+- **Skills.** The user prompts have priority over the steps of a skill.
+- **Limits.** A user prompt does not remove the rules in section 1.
+- **Changes.** Change a prompt only if the user tells you to do it.
+
+Older versions of Rowbly kept the instructions in `.rowbly/ROWBLY.md`. Rowbly does not read this file now.
 
 ## 8. Files
 
@@ -365,7 +384,9 @@ Read these files if a command does not give the data. Users can edit these files
 ```
 .rowbly/
   rowbly.config.json   # Project name and key, custom fields, Stages, features, installed skills
-  ROWBLY.md            # optional; the full file is the instructions for all agents
+  prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
+  prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
+  prompts/WORKER.md    # the Worker prompt, for all workers
   stories/APP-01.md    # frontmatter: title, stage, position, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
@@ -428,6 +449,10 @@ One invalid Story file makes `story search` fail for the full Project.
 | Installed skill is missing, and the Rowbly package does not have the skill       | No repair      |
 | Installed skill folder exists but has no `SKILL.md`                              | No repair      |
 | Spec is an orphan (warning)                                                      | No repair      |
+| User prompt file is not there (warning)                                          | Creates an empty file |
+| Old `ROWBLY.md` with no text or only `# ROWBLY INSTRUCTIONS` (warning)           | Deletes it     |
+| Old `ROWBLY.md`, and the Project prompt has no text (warning)                    | Moves it to `prompts/SYSTEM.md` |
+| Old `ROWBLY.md`, and the Project prompt has text (warning)                       | No repair. Merge them by hand. |
 | Story is in a disabled Stage (warning)                                           | No repair      |
 
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
@@ -458,3 +483,4 @@ Older skills and notes can show commands that do not exist now. Do not use the i
 | Tasks, Epics, Comments, Assignees, Attachments            | No replacement                                                |
 | Automatic Git commits, GitHub integration                 | No replacement. Rowbly does not run Git.                      |
 | Exit codes 2 to 6                                         | Exit code 1 and `error.code`                                  |
+| `rowbly project get-instructions`, `.rowbly/ROWBLY.md`    | `rowbly prompt get system`, `.rowbly/prompts/SYSTEM.md`       |

@@ -40,13 +40,13 @@ describe("askOnboarding", () => {
     prompts.text.mockResolvedValueOnce("My App").mockResolvedValueOnce("APP").mockResolvedValueOnce("QA");
     prompts.multiselect
       .mockResolvedValueOnce(["In Review"])
-      .mockResolvedValueOnce(["factory"])
+      .mockResolvedValueOnce(["develop"])
       .mockResolvedValueOnce(["codex"]);
     expect(await askOnboarding({ cwd: dir.path })).toEqual({
       name: "My App",
       key: "APP",
       stages: ["Backlog", "In Review", "QA", "Done"],
-      skills: ["review", "factory"],
+      skills: ["review", "develop"],
       harnesses: ["codex"],
     });
     expect(prompts.multiselect.mock.calls[0]?.[0].options.map((option: { value: string }) => option.value)).toEqual([
@@ -59,20 +59,8 @@ describe("askOnboarding", () => {
       label: "review (required)",
       hint: "always installed",
     });
-    expect(prompts.multiselect.mock.calls[1]?.[0].options).toContainEqual({
-      value: "factory",
-      label: "factory (required)",
-      hint: "required to use the factory",
-    });
+    expect(prompts.multiselect.mock.calls[1]?.[0].options).toContainEqual({ value: "develop", label: "develop" });
     expect(prompts.log.warn).not.toHaveBeenCalled();
-  });
-
-  it("warns when the user leaves out the factory skill", async () => {
-    prompts.select.mockResolvedValue("customize");
-    prompts.text.mockResolvedValueOnce("My App").mockResolvedValueOnce("APP").mockResolvedValueOnce("");
-    prompts.multiselect.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
-    expect(await askOnboarding({ cwd: dir.path })).toMatchObject({ skills: [], harnesses: [] });
-    expect(prompts.log.warn).toHaveBeenCalledWith(expect.stringContaining('companion skill "factory"'));
   });
 
   it("gives null when the user cancels", async () => {

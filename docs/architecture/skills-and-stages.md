@@ -1,34 +1,38 @@
 # Bundled skills and stage prompts
 
 The skills in `skills/` and the stage prompts in `stages/` are a part of the product. Onboarding and
-`rowbly skill install` copy them into a user Project. The external factory runs them with no person
-present, so changes to them have strict rules.
+`rowbly skill install` copy them into a user Project. The factory runs them with no person present,
+so changes to them have strict rules.
 
-Read this when you change a bundled skill, a default stage prompt, the `skill` commands, or the
-shared factory scripts.
+Read this when you change a bundled skill, a default stage prompt or the `skill` commands.
 
 ## Bundled skills
 
-| Skill     | Function                                                                      |
-| --------- | ----------------------------------------------------------------------------- |
-| `factory` | Starts the native factory, or supervises workers through an external harness. |
-| `refine`  | Makes a Story ready for development without source code changes.              |
-| `develop` | Builds a refined Story in a Git worktree, or repairs review findings.         |
-| `review`  | Examines a Story pull request and reports if it is ready to merge.            |
+| Skill     | Function                                                              |
+| --------- | --------------------------------------------------------------------- |
+| `refine`  | Makes a Story ready for development without source code changes.      |
+| `develop` | Builds a refined Story in a Git worktree, or repairs review findings. |
+| `review`  | Examines a Story pull request and reports if it is ready to merge.    |
 
 `rowbly skill install` copies them into a Project. The default stage prompts in `stages/` use them.
 
 `skills/rowbly-reference.md` is a shared reference that tells an agent how to use the `rowbly` CLI.
-Each skill has a copy in `references/rowbly-reference.md`. The `factory` copy adds text about the
-native factory and Threads.
+Each skill has a copy in `references/rowbly-reference.md`. After a change to the shared reference,
+copy it to the three `references/rowbly-reference.md` files.
 
-## The installed copies in this repository
+## Skills are for users only
 
-The folders `.agents/skills/<name>` and `.claude/skills/<name>` of this repository are installed
-copies of the bundled skills.
+The skills in `skills/` are for the users of Rowbly. Rowbly itself does not use them.
 
-- After a change in `skills/<name>/`, copy the folder to the two installed copies.
-- A test in `pnpm test:factory` compares the `factory` copies with the bundled files.
+- Do not read or import a file in `skills/` from the code in `src/`.
+- The factory rules are TypeScript services, for example `factory-policy/`, `factory-state/`,
+  `factory-ownership/` and `project-write/`. See [service-layer.md](service-layer.md#native-factory).
+- A worker does not get the path of a skill. A Stage prompt can tell the worker to use a skill, for
+  example "Use the `develop` skill". The user must install that skill for the harness with
+  `rowbly skill install`.
+- This repository has installed copies of `refine`, `develop` and `review` in `.agents/skills/`, for
+  the `codex` harness. The Stage prompts in `.rowbly/stages/` give their paths. After a change in
+  `skills/<name>/`, run `rowbly skill remove <name> --harness codex` and then `rowbly skill install`.
 
 ## Rules for a change to a skill or a stage prompt
 
@@ -38,25 +42,8 @@ when you change a bundled skill or a file in `stages/`:
 - Do not add a step that asks a person a question or that waits for a person.
 - Do not add a condition that stops the factory because of one Story, one Stage, one worker or one check.
 - Give each problem an action that lets the work continue: a fallback, a new worker or a record in the Story.
-- Put each rule that has no judgement in a script of `skills/factory/scripts/`, not in the text of a skill.
+- Put each rule that has no judgement in a service and a CLI command, not in the text of a skill.
 - Give the exact command line for each step of a skill.
-
-## Factory skill files
-
-| File in `skills/factory/`         | Function                                                                            |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| `scripts/factory.mjs`             | The tool of the external supervisor. Each command prints the next actions as JSON.  |
-| `scripts/supervisor-policy.mjs`   | The assignment rules: new workers, delays, the limit of workers and parked Stories. |
-| `scripts/factory-state.mjs`       | Reads and replaces `.rowbly/state.json` under the state lock.                       |
-| `scripts/commit-project.mjs`      | Commits the changed files of `.rowbly/` under the shared write lock.                |
-| `scripts/ownership-lock.mjs`      | The shared local ownership protocol of the native and external factory.             |
-| `scripts/worker-message.mjs`      | Fills the fields of a worker message template.                                      |
-| `references/supervisor-policy.md` | The v1 policy and the `state.json` format.                                          |
-| `references/worker-message.md`    | The template of the first message that each external worker gets.                   |
-| `references/supervisor-native.md` | The prompt of the native supervisor.                                                |
-
-The `.d.mts` files give TypeScript types for the scripts, because `src/` imports some of them. The
-tests of these scripts use `node:test`. Run them with `pnpm test:factory`.
 
 ## Default stage prompts
 
@@ -108,5 +95,5 @@ harness.
 ## Related
 
 - [onboarding.md](onboarding.md): how a new Project selects Stages and skills.
-- [native-factory/README.md](native-factory/README.md): the native factory, which uses the shared scripts.
-- [testing.md](testing.md#factory-script-tests): the `node:test` suite.
+- [native-factory/README.md](native-factory/README.md): the native factory.
+- [prompts.md](prompts.md): the prompt levels, and where the Stage prompt goes in a worker message.

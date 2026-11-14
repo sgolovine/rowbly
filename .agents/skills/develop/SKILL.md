@@ -13,7 +13,7 @@ Read `references/rowbly-reference.md` before you run a `rowbly` command.
 
 Run each `rowbly` command as `rowbly -C <root> --json ...`.
 
-- A factory worker uses the `<root>` value of its first message.
+- A native factory worker uses the canonical Project root of the Run section of its first message.
 - Other agents use the main checkout as `<root>`. It is the first entry of `git worktree list`.
 
 Do not run `rowbly` in a linked worktree without `-C <root>`. The worktree has its own copy of `.rowbly/`.
@@ -36,7 +36,7 @@ If a command gives `CONFLICT`, the field exists. Continue.
 
 ## Procedure
 
-1. Read the Project instructions (`rowbly -C <root> --json project get-instructions`), the Story and its Specs.
+1. Read the Project prompt and the Worker prompt (`rowbly -C <root> --json prompt get system` and `rowbly -C <root> --json prompt get worker`). A native factory worker already has them in its first message. Read the Story and its Specs.
 2. If the Story has no acceptance criteria or has open questions, do "A Story that is not refined".
 3. Read the repository instructions and obey them.
 4. Select the branch:

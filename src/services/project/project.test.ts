@@ -1,11 +1,11 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import { projectPaths } from "../workspace/workspace.js";
-import { defaultProjectName, getInstructions, getProject, initProject, updateProject } from "./project.js";
+import { defaultProjectName, getProject, initProject, updateProject } from "./project.js";
 
 describe("initProject", () => {
   const dir = useTempDir();
@@ -29,8 +29,8 @@ describe("initProject", () => {
     const paths = projectPaths(dir.path);
     expect(await readdir(paths.stagesDir)).toEqual(["BACKLOG.md", "DONE.md"]);
     expect(await readdir(paths.storiesDir)).toEqual([]);
-    expect(await readFile(paths.instructionsFile, "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
-    expect((await getInstructions({ cwd: dir.path })).instructions).toBe("# ROWBLY INSTRUCTIONS");
+    expect(await readdir(paths.promptsDir)).toEqual(["SUPERVISOR.md", "SYSTEM.md", "WORKER.md"]);
+    expect(await readFile(join(paths.promptsDir, "SYSTEM.md"), "utf8")).toBe("");
   });
 
   it("defaults the name to the folder name", async () => {
@@ -38,7 +38,6 @@ describe("initProject", () => {
     const project = await initProject({}, { cwd });
     expect(project.projectName).toBe("widgets");
     expect(project.projectKey).toBe("WID");
-    expect(await readFile(projectPaths(cwd).instructionsFile, "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
   });
 
   it("uppercases and trims the key and the name", async () => {
@@ -55,7 +54,7 @@ describe("initProject", () => {
 
   it("refuses to run twice", async () => {
     await initProject({ name: "A" }, { cwd: dir.path });
-    const instructions = projectPaths(dir.path).instructionsFile;
+    const instructions = join(projectPaths(dir.path).promptsDir, "SYSTEM.md");
     await writeFile(instructions, "Keep my instructions.\n");
     await expect(initProject({ name: "A" }, { cwd: dir.path })).rejects.toBeInstanceOf(ConflictError);
     expect(await readFile(instructions, "utf8")).toBe("Keep my instructions.\n");
@@ -67,18 +66,6 @@ describe("getProject and updateProject", () => {
 
   it("getProject reads the config", async () => {
     expect(await getProject(project.ctx)).toMatchObject({ projectName: "Rowbly", projectKey: "ROW" });
-  });
-
-  it("getInstructions is empty when the project has no ROWBLY.md", async () => {
-    await rm(project.paths.instructionsFile);
-    expect(await getInstructions(project.ctx)).toEqual({ path: project.paths.instructionsFile, instructions: "" });
-  });
-
-  it("getInstructions reads ROWBLY.md from a directory below the project", async () => {
-    await project.write("ROWBLY.md", "\nRun the tests first.\n\n");
-    const below = { cwd: join(project.paths.root, "src") };
-    await mkdir(below.cwd);
-    expect((await getInstructions(below)).instructions).toBe("Run the tests first.");
   });
 
   it("updates the name", async () => {
