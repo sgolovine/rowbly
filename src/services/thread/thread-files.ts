@@ -42,6 +42,13 @@ async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
   return runtimePath(await findProject(ctx), `threads/${id}.json`);
 }
 
+/** Gives the checked absolute path of the metadata file of a Thread below the checked `threads/` folder. */
+export function threadFileIn(id: string, dirs: ThreadDirs): Promise<string> {
+  assertValidId(id);
+
+  return runtimeChild(dirs.threads, `${id}.json`);
+}
+
 /** Checks that the session reference stays in the session folder of the Thread. */
 async function checkSession(t: ThreadRecord, ctx: ServiceContext): Promise<void> {
   if (t.session.file === null) {
@@ -53,7 +60,7 @@ async function checkSession(t: ThreadRecord, ctx: ServiceContext): Promise<void>
 }
 
 /** Checks the session reference below the checked `sessions/` folder. */
-async function checkSessionIn(t: ThreadRecord, dirs: ThreadDirs): Promise<void> {
+export async function checkSessionIn(t: ThreadRecord, dirs: ThreadDirs): Promise<void> {
   if (t.session.file === null) {
     return;
   }
@@ -62,10 +69,17 @@ async function checkSessionIn(t: ThreadRecord, dirs: ThreadDirs): Promise<void> 
   await runtimeChild(dirs.sessions, t.session.file.slice(SESSIONS_PREFIX.length));
 }
 
-async function readThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
-  const file = await runtimeChild(dirs.threads, `${id}.json`);
-
-  if ((await stat(file)).size > MAX_METADATA_BYTES) {
+/**
+ * Reads and validates a Thread file. The caller gives the size from its own `stat` before the read.
+ * Give a failure to `readProblem`.
+ */
+export async function readThreadFile(
+  id: string,
+  file: string,
+  size: number | bigint,
+  dirs: ThreadDirs,
+): Promise<ThreadRecord> {
+  if (size > MAX_METADATA_BYTES) {
     throw new ValidationError("Thread metadata is too large");
   }
 
@@ -80,7 +94,14 @@ async function readThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
   return t;
 }
 
-function readProblem(id: string, error: unknown): never {
+async function readThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
+  const file = await threadFileIn(id, dirs);
+
+  return readThreadFile(id, file, (await stat(file)).size, dirs);
+}
+
+/** Maps a read error of a Thread file to a service error. */
+export function readProblem(id: string, error: unknown): never {
   if ((error as NodeJS.ErrnoException).code === "ENOENT") {
     throw new NotFoundError(`Thread ${id} not found`);
   }
@@ -93,7 +114,7 @@ function readProblem(id: string, error: unknown): never {
 }
 
 /** Reads one Thread with the folders that the caller checked for this operation. */
-export async function readThreadIn(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
+async function readThreadIn(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
   assertValidId(id);
 
   return readThread(id, dirs).catch((error: unknown) => readProblem(id, error));

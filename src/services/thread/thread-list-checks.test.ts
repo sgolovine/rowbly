@@ -71,6 +71,26 @@ describe("thread list path checks", () => {
     expect(list.issues.every((issue) => /symlink/.test(issue.message))).toBe(true);
   });
 
+  it("gives an issue for a symlink in the session path of a cached Thread on the next list", async () => {
+    await addThreads(2);
+    const outside = join(p.paths.root, "outside");
+    await mkdir(outside);
+    const sessions = join(p.paths.runtimeDir, "sessions");
+
+    expect((await listThreads({}, p.ctx)).threads).toHaveLength(2);
+
+    await rename(join(sessions, "t0"), join(outside, "t0"));
+    await symlink(join(outside, "t0"), join(sessions, "t0"));
+    await rename(join(sessions, "t1/s.jsonl"), join(outside, "s.jsonl"));
+    await symlink(join(outside, "s.jsonl"), join(sessions, "t1/s.jsonl"));
+
+    const list = await listThreads({}, p.ctx);
+
+    expect(list.threads).toEqual([]);
+    expect(list.issues.map((issue) => issue.file)).toEqual(["threads/t0.json", "threads/t1.json"]);
+    expect(list.issues.every((issue) => /symlink/.test(issue.message))).toBe(true);
+  });
+
   it.each(["", "threads", "sessions"])("fails for a symlink at the runtime folder %j", async (name) => {
     await addThreads(1);
     const target = join(p.paths.runtimeDir, name);

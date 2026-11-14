@@ -1,7 +1,9 @@
 import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { mapInOrder } from "../in-order/in-order.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { checkThreadDirs, readThreadIn, type ThreadDirs } from "./thread-files.js";
+import { cachedThread, pruneThreadCache } from "./thread-cache.js";
+import { checkThreadDirs, type ThreadDirs } from "./thread-files.js";
 import type { ThreadList, ThreadRecord, ThreadStatus } from "./thread-types.js";
 
 interface ListFilter {
@@ -16,7 +18,7 @@ interface ReadOutcome {
 }
 
 function readOutcome(file: string, dirs: ThreadDirs): Promise<ReadOutcome> {
-  return readThreadIn(file.slice(0, -".json".length), dirs).then(
+  return cachedThread(file.slice(0, -".json".length), dirs).then(
     (thread) => ({ thread }),
     (error: unknown) => ({
       issue: { file: `threads/${file}`, message: error instanceof Error ? error.message : "Thread unavailable" },
@@ -48,14 +50,18 @@ function listedFiles(dir: string): Promise<string[]> {
 }
 
 /**
- * Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue.
+ * Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue. A file
+ * with no change since the last list is not read again. See `thread-cache.ts`.
  * It checks the shared runtime folders one time, and then only the path segments of each Thread.
  */
 export async function listThreads(input: ListFilter = {}, ctx: ServiceContext = {}): Promise<ThreadList> {
   const dirs = await checkThreadDirs(await findProject(ctx));
-  const files = await listedFiles(dirs.threads.path);
+  const dir = dirs.threads.path;
+  const files = (await listedFiles(dir)).filter((file) => file.endsWith(".json")).toSorted();
 
-  const outcomes = await readInOrder(files.filter((file) => file.endsWith(".json")).toSorted(), dirs);
+  pruneThreadCache(dir, new Set(files.map((file) => join(dir, file))));
+
+  const outcomes = await readInOrder(files, dirs);
   const threads = outcomes.flatMap(({ thread }) => (thread && matches(thread, input) ? [thread] : []));
   const issues = outcomes.flatMap(({ issue }) => (issue ? [issue] : []));
 
