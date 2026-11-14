@@ -1,15 +1,4 @@
 ---
-<<<<<<< HEAD
-title: "Factory check queue: run worker checks through a shared, memory-aware queue"
-stage: BACKLOG
-worktree: null
-pull_request: null
----
-
-The native factory runs the deterministic checks of its workers (for example `pnpm test`) through one queue. The queue has a limit and uses the free memory of the machine. Workers ask for a check with the `run_check` tool and get the result back. The worker `bash` tool rejects a configured check.
-
-See the linked spec "Factory check queue" for the design and the acceptance criteria.
-=======
 title: Scroll does not work when a sidebar is open
 stage: IN_DEVELOPMENT
 position: 1
@@ -60,4 +49,3 @@ Not in scope:
 - "Scrolling" means the mouse wheel over the main Panel. Reason: the screenshot marks the Thread list while the sidebar has the focus, and the keyboard keys go to the focused pane by design.
 - The fix does not change the keyboard focus when the wheel scrolls the Thread list. Reason: the smallest change; the user can continue to read the Thread in the sidebar with the keys.
 - The wheel over the sidebar content while the list has the focus is not in scope. Reason: the Story reports the main list only. A person can add a new Story for it.
->>>>>>> 5b88b06ddbaeb4860c5c6ae3d4483ee27f740c3a
