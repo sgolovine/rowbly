@@ -54,6 +54,7 @@ export function StoryModalBody(props: StoryModalBodyProps) {
         storyId={storyId}
         stages={stages}
         specs={specs}
+        compactThreads={props.compactThreads}
         shown={env.shown}
         open={confirming === null}
         specsLayout={body.specsLayout}

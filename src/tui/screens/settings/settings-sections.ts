@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { AiSection } from "./ai-section/index.js";
 import { CustomFieldsSection } from "./custom-fields-section/index.js";
+import { DisplaySection } from "./display-section/index.js";
 import { DoctorSection } from "./doctor-section/index.js";
 import { GitSection } from "./git-section/index.js";
 import { ProjectSection } from "./project-section/index.js";
@@ -75,6 +76,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Specs",
         description: "Markdown documents that are linked to Stories.",
         Component: SpecsSection,
+      },
+      {
+        id: "display",
+        label: "Display",
+        description: "How the screens show the data of the project.",
+        Component: DisplaySection,
       },
     ],
   },

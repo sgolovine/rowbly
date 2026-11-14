@@ -4,6 +4,7 @@ import { moveAttachmentDirs } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
   checkProjectKey,
+  type DisplayConfig,
   type FeatureConfig,
   type Issue,
   type ProjectConfig,
@@ -49,6 +50,8 @@ export interface UpdateProjectInput {
   key?: string;
   /** Turns optional features on (`true`) or off (`false`). The features that are not named do not change. */
   features?: FeatureConfig;
+  /** Changes the display options. The options that are not named do not change. */
+  display?: DisplayConfig;
 }
 
 /** The stages of a project when `initProject` gets no list. */
@@ -142,7 +145,7 @@ async function renameStoryKey(paths: ProjectPaths, oldKey: string, newKey: strin
   await rewriteSpecLinks(paths, (stories) => stories.map((id) => renamedLink(id, oldKey, newKey)));
 }
 
-/** Changes the name, the key or the features of the project. A new key renames every story. */
+/** Changes the name, the key, the features or the display options of the project. A new key renames every story. */
 export async function updateProject(input: UpdateProjectInput, ctx: ServiceContext = {}): Promise<Project> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
@@ -159,7 +162,14 @@ export async function updateProject(input: UpdateProjectInput, ctx: ServiceConte
   }
 
   const features = input.features === undefined ? config.features : { ...config.features, ...input.features };
-  const updated = { ...config, projectName, projectKey, ...(features === undefined ? {} : { features }) };
+  const display = input.display === undefined ? config.display : { ...config.display, ...input.display };
+  const updated = {
+    ...config,
+    projectName,
+    projectKey,
+    ...(features === undefined ? {} : { features }),
+    ...(display === undefined ? {} : { display }),
+  };
 
   await writeConfig(paths, updated);
 

@@ -91,4 +91,25 @@ describe("getProject and updateProject", () => {
   it("rejects an invalid key", async () => {
     await expect(updateProject({ key: "w-b" }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("updates the display options and keeps the other config keys", async () => {
+    const config = JSON.parse(await project.read("rowbly.config.json"));
+    const skills = [{ name: "develop", harnesses: ["codex"] }];
+    const factory = { maxWorkers: 3 };
+    await project.write(
+      "rowbly.config.json",
+      JSON.stringify({ ...config, features: { specs: true }, skills, factory }),
+    );
+
+    const updated = await updateProject({ display: { compactThreads: false } }, project.ctx);
+    expect(updated.display).toEqual({ compactThreads: false });
+
+    const raw = JSON.parse(await project.read("rowbly.config.json"));
+    expect(raw).toMatchObject({ features: { specs: true }, skills, factory, display: { compactThreads: false } });
+
+    await updateProject({ name: "Renamed" }, project.ctx);
+    expect((await getProject(project.ctx)).display).toEqual({ compactThreads: false });
+    await updateProject({ display: { compactThreads: true } }, project.ctx);
+    expect((await getProject(project.ctx)).display).toEqual({ compactThreads: true });
+  });
 });

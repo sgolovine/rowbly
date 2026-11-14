@@ -3,7 +3,7 @@ import { writeFileAtomic } from "../files/files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 import { configIssues } from "./config-issues.js";
 import { throwIfIssues } from "./config-keys.js";
-import { FEATURES, type Feature, type Issue, type ProjectConfig } from "./config-types.js";
+import { DISPLAY_OPTIONS, FEATURES, type Feature, type Issue, type ProjectConfig } from "./config-types.js";
 
 export { configIssues } from "./config-issues.js";
 export * from "./config-keys.js";
@@ -12,6 +12,11 @@ export * from "./config-types.js";
 /** Tells if the optional feature is on in the config. */
 export function featureEnabled(config: ProjectConfig, feature: Feature): boolean {
   return config.features?.[feature] === true;
+}
+
+/** Tells if the TUI shows each Thread on one line. The compact mode is on when the config does not set it. */
+export function compactThreads(config: ProjectConfig): boolean {
+  return config.display?.compactThreads !== false;
 }
 
 /** Gives the parsed JSON, or the message of the syntax error. */
@@ -55,6 +60,13 @@ function normalizeConfig(config: ProjectConfig): ProjectConfig {
     ...(config.skills === undefined
       ? {}
       : { skills: config.skills.map(({ name, harnesses }) => ({ name, harnesses: [...harnesses] })) }),
+    ...(config.display === undefined
+      ? {}
+      : {
+          display: Object.fromEntries(
+            DISPLAY_OPTIONS.filter((o) => o in (config.display ?? {})).map((o) => [o, config.display?.[o]]),
+          ),
+        }),
     ...(config.factory === undefined ? {} : { factory: config.factory }),
   };
 }

@@ -33,6 +33,8 @@ export interface StoryModalBodyProps {
   /** The names of the Stages by key, for the Threads tab. */
   readonly stages?: StageNames;
   readonly specs?: boolean;
+  /** Each thread of the Threads tab uses one line. */
+  readonly compactThreads?: boolean;
   readonly fields: readonly FormField[];
   readonly initialValues: FormValues;
   onSubmit(values: FormValues, attachments?: readonly PendingImage[]): void | Promise<void>;

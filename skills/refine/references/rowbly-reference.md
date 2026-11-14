@@ -118,6 +118,7 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly init [--defaults] [--name <name>] [--key <key>] [--stage <stage>] [--skill <name>] [--no-skills] [--harness <id>] [--input <json\|file\|->]` | Project, `installed`, `edits` | Creates `.rowbly/`, the Stages and the skills. Always adds Backlog and Done. Gives `CONFLICT` if `.rowbly/` exists. |
 | `rowbly project update [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
 | `rowbly project update --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
+| `rowbly project update --compact-threads <on\|off>`   | Project     | Shows each Thread on one line in the TUI. The default is on. |
 | `rowbly status`                                       | Status      | Shows the factory phase, the Thread counts and the Story count of each Stage. |
 
 `rowbly status --json` gives this object. `stages` is in config order and includes the disabled Stages.

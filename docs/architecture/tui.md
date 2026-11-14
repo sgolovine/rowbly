@@ -129,8 +129,11 @@ quits.
   the count. One empty line separates the two sections. This line shows also when the section
   "Active Threads" is collapsed. You cannot select the empty line. `enter`, a click or `←/→`
   expands or collapses a section.
-- **The rows.** Each row shows the Story id, the status, the Stage, the attempt, the model and the
-  run time. The Threads in a section are newest first. Only worker Threads with a Story show.
+- **The rows.** Each row shows the Story id, the status, the Stage, the attempt and the run time.
+  When `display.compactThreads` of the config is off, `ThreadRow` also shows the model, the creation
+  time and the error or the summary of the result on two more lines. When it is on (the default),
+  each Thread uses one line. A failed Thread shows `failed` in `danger` colour also in one line.
+  The Threads tab of a Story uses the same setting. Settings › Display has a `Switch` for it. The Threads in a section are newest first. Only worker Threads with a Story show.
   `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.
 - **The filter.** The Stage sidebar stays. When you select a Stage, only the Threads with that
   `stage` show. "All Stages" shows all Threads.
@@ -151,6 +154,10 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 - `ThreadPane` (`screens/threads/thread-pane/`) shows `ThreadDetail` and the `ConversationView` of
   the Thread. Its size comes from the body of the Story sidebar. In a short body, the detail is
   compact. The conversation follows the new entries while the Thread is `running`.
+- The conversation shows JSON with syntax highlighting: the arguments of each tool call, and each tool
+  result that is not an error and that starts with `{` or `[`. `jsonTokens` in
+  `src/services/conversation/json-tokens.ts` finds the tokens. Keys are `accent`, strings are `ink`,
+  numbers and literals are `ink-muted`, and punctuation is `ink-faint`.
 - `ThreadPane` reads the Thread again when the worker writes its file (`useThreadChanges`).
 - The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
   Thread replaces it (`discardStory` overlay).
