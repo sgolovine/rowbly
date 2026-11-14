@@ -60,3 +60,7 @@ Not in scope:
 - The factory warning `t` action also opens the Thread in the sidebar. Reason: it uses the same `thread` overlay, and if the overlay is removed there is one consistent way to show a Thread.
 - The Threads tab inside the Story form does not change. Reason: it is not a Modal, and the author names only the Threads view.
 - The Thread sidebar has no width of its own; it uses the same dragged width as the Story sidebar. Reason: smallest scope, and it is the same component.
+- In the Thread sidebar, `tab` and `shift+tab` move the focus to the next or the previous pane (the Thread pane takes these keys, because the shell keys are off while the sidebar has the focus). Reason: the acceptance criterion asks that `tab` moves the focus between the Stage sidebar, the list and the Thread sidebar; a Story form keeps `tab` for its fields.
+- The `esc` hint of the Thread sidebar is `esc Thread list`, and the list hints say `tab Thread` and `esc close Thread` while the sidebar shows a Thread. Reason: the hints name what the sidebar shows.
+- The type of the sidebar state is `SidePane = StoryPane | { kind: "thread" }`. The state names (`storyPane`, `StorySidebar`) do not change. Reason: smallest change; `StoryPane` stays the type of the Story form.
+- The test of the factory warning `t` action is a unit test of `overlayHandlers.openThread` (`shell-props.test.ts`) together with the existing Factory Modal test that `t` calls `onOpenThread`. Reason: a full shell test needs a live factory status with a warning.
