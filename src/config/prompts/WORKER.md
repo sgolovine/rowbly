@@ -16,6 +16,10 @@ To run a fast check, give the changed files to `run_check`. Then it runs the nar
 After the last change, run each full check one time before `report_result`.
 Record each failed check in the result problems.
 <!-- /checks -->
+<!-- upstream -->
+
+The upstream Stories are complete. Their changes are on the base branch of your worktree. Do not do their work again. Read their Stories with the CLI when you need the details.
+<!-- /upstream -->
 
 Complete all steps of the Stage prompt. The Story Stage on disk is the authority.
 Call `report_result` with the outcome, summary, blockers and problems. Then stop.

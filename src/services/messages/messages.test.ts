@@ -1,12 +1,14 @@
 import { rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { readSystemPrompt } from "../prompts/prompts.js";
+import type { Story } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
   composeMessage,
   runSection,
   supervisorMessage,
   USER_PROMPT_LIMIT,
+  upstreamOf,
   workerMessage,
   workerSystemPrompt,
 } from "./messages.js";
@@ -66,9 +68,80 @@ describe("checks", () => {
   it("keeps the check rules of the worker system prompt only with checks", async () => {
     const text = "A\n<!-- checks -->\nUse run_check.\n<!-- /checks -->\nB";
 
-    expect(workerSystemPrompt(text, false)).toBe("A\nB");
-    expect(workerSystemPrompt(text, true)).toBe("A\nUse run_check.\nB");
+    expect(workerSystemPrompt(text, { checks: false, upstream: false })).toBe("A\nB");
+    expect(workerSystemPrompt(text, { checks: true, upstream: false })).toBe("A\nUse run_check.\nB");
     expect(await readSystemPrompt("worker")).toContain("<!-- checks -->");
+  });
+});
+
+function story(id: string, overrides: Partial<Story> = {}): Story {
+  return {
+    id,
+    number: Number(id.split("-")[1]),
+    title: `Title of ${id}`,
+    stage: "DONE",
+    position: 1,
+    dependsOn: [],
+    description: "",
+    fields: {},
+    path: `/repo/.rowbly/stories/${id}.md`,
+    ...overrides,
+  };
+}
+
+const UPSTREAM_RULE = "The upstream Stories are complete.";
+
+describe("upstream Stories", () => {
+  const stories = [
+    story("WEB-07", { title: "Second", stage: "IN_REVIEW", fields: { pull_request: null, priority: "P1" } }),
+    story("WEB-03", {
+      title: "First",
+      fields: { pull_request: "https://github.com/o/r/pull/3", design: "", priority: "P2" },
+    }),
+  ];
+
+  it("maps dependsOn to upstream Stories in order, with the url fields that have a value", () => {
+    const current = story("WEB-42", { dependsOn: ["WEB-03", "WEB-07"] });
+
+    expect(upstreamOf(current, stories, ["pull_request", "design"])).toEqual([
+      {
+        id: "WEB-03",
+        title: "First",
+        stage: "DONE",
+        links: [{ key: "pull_request", value: "https://github.com/o/r/pull/3" }],
+      },
+      { id: "WEB-07", title: "Second", stage: "IN_REVIEW", links: [] },
+    ]);
+  });
+
+  it("skips an upstream ID that does not exist, without an error", () => {
+    const current = story("WEB-42", { dependsOn: ["WEB-99", "WEB-07"] });
+
+    expect(upstreamOf(current, stories, ["pull_request"]).map((s) => s.id)).toEqual(["WEB-07"]);
+    expect(upstreamOf(story("WEB-42", { dependsOn: ["WEB-99"] }), stories, [])).toEqual([]);
+  });
+
+  it("lists the upstream Stories in the Run section in dependsOn order", () => {
+    const current = story("WEB-42", { dependsOn: ["WEB-07", "WEB-03"] });
+    const section = runSection({ ...run, upstream: upstreamOf(current, stories, ["pull_request", "design"]) });
+
+    expect(section).toContain(
+      [
+        "Upstream Stories (read each one with `story get`):",
+        "- WEB-07: Second (IN_REVIEW)",
+        "- WEB-03: First (DONE), pull_request: https://github.com/o/r/pull/3",
+      ].join("\n"),
+    );
+    expect(section).not.toContain("priority");
+    expect(section).not.toContain("design");
+  });
+
+  it("keeps the upstream rule of the worker system prompt only with upstream Stories", async () => {
+    const text = "A\n<!-- upstream -->\nRead them.\n<!-- /upstream -->\nB";
+
+    expect(workerSystemPrompt(text, { checks: false, upstream: false })).toBe("A\nB");
+    expect(workerSystemPrompt(text, { checks: false, upstream: true })).toBe("A\nRead them.\nB");
+    expect(await readSystemPrompt("worker")).toContain("<!-- upstream -->");
   });
 });
 
@@ -90,7 +163,7 @@ describe("factory messages", () => {
       "# Stage prompt (IN_DEVELOPMENT)",
       "# Run",
     ]);
-    expect(message).toContain(workerSystemPrompt(await readSystemPrompt("worker"), false));
+    expect(message).toContain(workerSystemPrompt(await readSystemPrompt("worker"), { checks: false, upstream: false }));
     expect(message).not.toContain("run_check");
     expect(message).toContain("# Project prompt\n\nUse pnpm.");
     expect(message).toContain("# Worker prompt\n\nWrite small commits.");
@@ -124,6 +197,30 @@ describe("factory messages", () => {
 
     expect(message).toContain("Run each listed check only with the `run_check` tool.");
     expect(message).not.toContain("<!-- checks -->");
+  });
+
+  it("gives a worker the upstream Stories and the upstream rule when the Story has dependencies", async () => {
+    const message = await workerMessage(project.paths, {
+      ...run,
+      upstream: [{ id: "WEB-03", title: "First", stage: "DONE", links: [] }],
+    });
+
+    expect(message).toContain(UPSTREAM_RULE);
+    expect(message).toContain("Do not do their work again.");
+    expect(message).toContain("- WEB-03: First (DONE)");
+    expect(message).not.toContain("<!-- upstream -->");
+    expect(message).not.toContain("<!-- /upstream -->");
+  });
+
+  it("gives a worker without dependencies the same message as before upstream Stories", async () => {
+    const message = await workerMessage(project.paths, { ...run, upstream: [] });
+    const legacy = (await readSystemPrompt("worker")).replace(/<!-- checks -->[\s\S]*?<!-- \/upstream -->\n/, "");
+
+    expect(message).toBe(await workerMessage(project.paths, run));
+    expect(message).toContain(`# Rowbly worker system prompt\n\n${legacy.trim()}`);
+    expect(message).not.toContain(UPSTREAM_RULE);
+    expect(message).not.toContain("Upstream Stories");
+    expect(message).not.toContain("upstream -->");
   });
 
   it("works when the project has no user prompts", async () => {
