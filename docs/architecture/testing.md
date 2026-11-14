@@ -40,8 +40,9 @@ set up.
 ## Service tests
 
 Each service has a test. Use `useTestProject()` or `useTempDir()` from `src/services/test-project/`.
-They give each test a new Project in a temporary directory. Pass the paths through the
-`ServiceContext`, for example `cwd` and `home`.
+They give each test a new Project in a temporary directory. The context of `useTestProject()` also has
+a temporary `home`, so that user files such as the model cache do not go from one test to a different
+test. Pass the paths through the `ServiceContext`, for example `cwd` and `home`.
 
 ## CLI tests
 

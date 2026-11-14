@@ -1,5 +1,6 @@
-import { authRuntime, getAuthStatus } from "../../../../services/agent-auth/agent-auth.js";
+import { type AuthRuntime, authRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import type { FactoryLaunch, FactoryStatus } from "../../../../services/factory/factory.js";
+import { piProviderReady } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import type { Story } from "../../../../services/story/story.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -10,11 +11,6 @@ import { FactorySupervisor } from "../factory-supervisor/index.js";
 import { FactoryWarnings } from "../factory-warnings/index.js";
 import { modalFrame } from "./factory-modal-frame.js";
 import { type FactoryModalInput, useFactoryModal } from "./use-factory-modal.js";
-
-/** True when Pi has a provider with credentials or a key. It loads Pi, so call it only on request. */
-async function providerReady(): Promise<boolean> {
-  return (await getAuthStatus(await authRuntime())).some((provider) => provider.configured);
-}
 
 /** The props of `FactoryModal`. */
 interface FactoryModalProps {
@@ -27,8 +23,13 @@ interface FactoryModalProps {
   onClose(): void;
   /** Opens the AI section of Settings: providers, models and the worker limit. */
   onAiSettings?(): void;
-  /** Tells if an AI provider is ready. Tests replace it, so that they do not load Pi. */
+  /**
+   * Tells if an AI provider is ready. Tests replace it, so that they do not load Pi. The default reads the model
+   * cache, and loads Pi only when the cache is stale or missing.
+   */
   checkProvider?: () => Promise<boolean>;
+  /** Loads the Pi model runtime for the default provider check. Tests replace it. */
+  loadRuntime?: () => Promise<AuthRuntime>;
   /** The Stories of the board, to show the Story of a warning. */
   stories?: readonly Story[];
   /** Closes the Modal and opens the Story of a warning in the Story sidebar. */
@@ -45,7 +46,7 @@ function modalInput(props: FactoryModalProps): FactoryModalInput {
     ...props,
     launch: props.launch,
     onAiSettings: props.onAiSettings,
-    checkProvider: props.checkProvider ?? providerReady,
+    checkProvider: props.checkProvider ?? (() => piProviderReady(props.loadRuntime ?? authRuntime, props.ctx)),
     stories: props.stories ?? NO_STORIES,
     onOpenStory: props.onOpenStory,
     onOpenThread: props.onOpenThread,

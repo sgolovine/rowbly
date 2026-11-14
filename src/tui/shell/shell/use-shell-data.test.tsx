@@ -54,7 +54,9 @@ describe("useShellData", () => {
     expect(tui.frame()).toContain("Rowbly: 0");
     // The hook records the Project after the board shows.
     await vi.waitFor(async () =>
-      expect((await listKnownProjects({})).some((known) => known.path === project.ctx.cwd)).toBe(true),
+      expect(
+        (await listKnownProjects({ home: project.ctx.home })).some((known) => known.path === project.ctx.cwd),
+      ).toBe(true),
     );
 
     await createStory({ title: "One" }, project.ctx);

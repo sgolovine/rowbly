@@ -17,7 +17,14 @@ vi.mock("@earendil-works/pi-coding-agent", () => {
 
 vi.mock("../../../../services/agent-auth/agent-auth.js", async (original) => ({
   ...(await original<typeof import("../../../../services/agent-auth/agent-auth.js")>()),
-  authRuntime: vi.fn(async () => ({ getAvailable: async () => [] }) as unknown as AuthRuntime),
+  authRuntime: vi.fn(
+    async () =>
+      ({
+        getAvailable: async () => [],
+        getProviders: () => [],
+        listCredentials: async () => [],
+      }) as unknown as AuthRuntime,
+  ),
 }));
 
 afterEach(() => {
