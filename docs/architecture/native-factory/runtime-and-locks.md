@@ -38,6 +38,15 @@ change a lock.
 - Initialization creates `.rowbly/.gitignore` with `/state.json*` and `/runtime/`.
 - Native start and `doctor --fix` add missing runtime ignore rules. Existing text stays.
 - Canonical factory commits exclude runtime files, also when Git already tracks them.
+- The factory commits the canonical files after each scan. The subject of the commit is
+  `git.commitMessage` of `factory.json`. If it is not set, the subject is
+  `chore(rowbly): record project changes after scan`. The body lists the changed paths.
+- If `git.authorName` and `git.authorEmail` are set, they are the author and the committer of the
+  commit. `commit-project.mjs --author "Name <email>"` sets them through the Git identity variables.
+  Thus the commit works also when Git has no identity. If they are not set, Git uses its own
+  identity.
+- These settings apply only to the canonical commits. They do not apply to the commits of workers
+  on Story branches.
 - `rowbly doctor` reports runtime files that Git tracks.
 
 Do not commit runtime files or credentials. Runtime files hold private sessions and process identity.
@@ -53,8 +62,9 @@ The native factory can pull the upstream branch and push the canonical branch at
 | `pull`                | boolean | `false` | Pull the commits of the upstream branch.              |
 | `syncIntervalSeconds` | integer | `300`   | The time between two syncs. The range is 60 to 86400. |
 
-- `factory-settings/` fills the keys that are not in the file with the defaults. An update keeps the
-  other keys of the `git` section.
+- `getFactorySettings` gives the default of each key that is not in the file. A write does not add
+  the defaults to the file. An update keeps the other keys of the `git` section, for example
+  `commitMessage`, `authorName` and `authorEmail`.
 - `project-sync/` (`syncCanonicalProject`) does one sync. With `push` and `pull` off, it runs no Git
   command.
 - The sync runs Git commands while it holds the Project write lock (`projectWrite`). It does not

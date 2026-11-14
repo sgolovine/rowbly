@@ -1,4 +1,4 @@
-import { type GitSettings, gitSettings } from "../factory-settings/factory-settings.js";
+import { type GitSync, gitSettings } from "../factory-settings/factory-settings.js";
 import { type SyncResult, type SyncStep, syncCanonicalProject } from "../project-sync/project-sync.js";
 import { withEntry, withoutEntry } from "../store/store.js";
 import { type Attention, getState, type Manager, type ManagerState, serial, setState } from "./manager-state.js";
@@ -33,7 +33,7 @@ export function startProjectSync(manager: Manager): void {
   setState(manager, () => ({ lastSyncAt: Date.now(), syncTask: task }));
 }
 
-async function runSync(manager: Manager, git: GitSettings): Promise<void> {
+async function runSync(manager: Manager, git: GitSync): Promise<void> {
   // The sync must not start in the same tick, because the caller records the task first.
   await Promise.resolve();
 

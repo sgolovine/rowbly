@@ -39,6 +39,20 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 The files of `runtime/`, `state.json` and `factory.json` belong to the native factory. See
 [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md).
 
+The optional `git` section of `factory.json` sets the canonical commits of the factory:
+
+```json
+{
+  "version": 1,
+  "maxWorkers": 4,
+  "git": { "commitMessage": "chore(rowbly): sync board", "authorName": "Rowbly Bot", "authorEmail": "bot@example.com" }
+}
+```
+
+- Each value is optional. Each value that is set must be a string that is not empty.
+- Set `authorName` and `authorEmail` together, or do not set them.
+- A `git` section that is not valid makes the settings not valid.
+
 ## Config
 
 `rowbly.config.json` holds the Project name and key, the custom fields, the Stages, the features and

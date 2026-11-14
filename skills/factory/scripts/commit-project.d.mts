@@ -7,4 +7,4 @@ export interface CommitResult {
   detail?: string;
   lock?: string;
 }
-export function commitProject(root: string, options?: { message?: string; lock?: string; lockWaitSeconds?: number }): Promise<CommitResult>;
+export function commitProject(root: string, options?: { message?: string; author?: string; lock?: string; lockWaitSeconds?: number }): Promise<CommitResult>;

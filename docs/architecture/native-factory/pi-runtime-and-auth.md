@@ -33,14 +33,27 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 ## Factory settings
 
 The `factory-settings/` service reads and writes the optional `.rowbly/factory.json`:
-`version`, `maxWorkers`, `supervisorModel`, `workerModel` and the `git` section.
+`version`, `maxWorkers`, `supervisorModel`, `workerModel` and `git`.
 
 - Without `factory.json`, the worker limit is four and Pi selects default models.
 - An explicit model choice must be available and must support the selected thinking level.
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model
   supports only some of them.
 - `rowbly factory configure` sets `--max-workers`, `--supervisor`, `--worker`,
-  `--supervisor-thinking` and `--worker-thinking`. It also sets the Git sync flags. See
+  `--supervisor-thinking` and `--worker-thinking`.
+- The `git` section has `commitMessage`, `authorName` and `authorEmail`. They set the canonical
+  commits of the factory. See [runtime-and-locks.md](runtime-and-locks.md#git-and-the-runtime-files).
+- `rowbly factory configure --commit-message "<text>"` sets `git.commitMessage`.
+- `rowbly factory configure --commit-author "Name <email>"` sets `git.authorName` and
+  `git.authorEmail`. A value in a different form gives a `VALIDATION` error, and `factory.json` does
+  not change.
+- An empty value, for example `--commit-message ""`, removes the setting. Then the factory uses the
+  default again.
+- The service keeps the other keys of `factory.json`. Git flags without a model flag do not start
+  the Pi runtime.
+- The `git` section also has `push`, `pull` and `syncIntervalSeconds`. They set the Git sync of
+  the canonical checkout. The `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and
+  `--git-sync-interval` flags set them. See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - The model picker of the TUI offers the supported thinking levels and `Pi default`.
 

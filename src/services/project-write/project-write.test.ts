@@ -20,6 +20,23 @@ describe("projectWrite", () => {
     const tracked = await run("git", ["-C", dir.path, "ls-files"]);
     expect(tracked.stdout).toBe(".rowbly/ROWBLY.md\n");
   });
+  it("commits with the configured message and author, or with the defaults", async () => {
+    await run("git", ["init", dir.path]);
+    await run("git", ["-C", dir.path, "config", "user.name", "Test"]);
+    await run("git", ["-C", dir.path, "config", "user.email", "test@example.com"]);
+    await mkdir(join(dir.path, ".rowbly"), { recursive: true });
+    const last = async () =>
+      (await run("git", ["-C", dir.path, "log", "-1", "--format=%s|%an <%ae>|%cn <%ce>"])).stdout.trim();
+
+    await writeFile(join(dir.path, ".rowbly/ROWBLY.md"), "one");
+    expect(await commitCanonicalProject(dir.path)).toMatchObject({ status: "committed" });
+    expect(await last()).toMatch(/^chore\(rowbly\): record project changes after scan\|/);
+
+    await writeFile(join(dir.path, ".rowbly/ROWBLY.md"), "two");
+    const git = { commitMessage: "chore: board sync", authorName: "Rowbly Bot", authorEmail: "bot@example.com" };
+    expect(await commitCanonicalProject(dir.path, git)).toMatchObject({ status: "committed" });
+    expect(await last()).toBe("chore: board sync|Rowbly Bot <bot@example.com>|Rowbly Bot <bot@example.com>");
+  });
   it("uses the external commit lock path and excludes worker writes", async () => {
     await run("git", ["init", dir.path]);
     const lock = await projectWriteLockPath(dir.path);

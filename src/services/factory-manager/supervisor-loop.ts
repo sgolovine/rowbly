@@ -191,7 +191,7 @@ async function commitProject(manager: Manager): Promise<void> {
     return;
   }
 
-  const committed = await commitCanonicalProject(manager.paths.root);
+  const committed = await commitCanonicalProject(manager.paths.root, getState(manager).settings.git);
 
   if (["clean", "committed"].includes(committed.status)) {
     return;

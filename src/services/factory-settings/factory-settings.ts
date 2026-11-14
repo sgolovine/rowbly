@@ -2,6 +2,20 @@ import { readFile } from "node:fs/promises";
 import { ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import {
+  type GitInput,
+  type GitSettings,
+  type GitSync,
+  gitSync,
+  hasGitInput,
+  MAX_SYNC_SECONDS,
+  MIN_SYNC_SECONDS,
+  mergeGit,
+  parseAuthor,
+  validGit,
+} from "./git-settings.js";
+
+export type { GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
@@ -13,13 +27,6 @@ export interface ModelChoice {
   thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 }
 
-/** The Git sync of the canonical checkout. Other keys of the `git` section stay in the file. */
-export interface GitSettings {
-  readonly push: boolean;
-  readonly pull: boolean;
-  readonly syncIntervalSeconds: number;
-}
-
 export interface FactorySettings {
   version: 1;
   maxWorkers: number;
@@ -29,19 +36,14 @@ export interface FactorySettings {
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
-export type FactorySettingsInput = Partial<Omit<FactorySettings, "version" | "git">> & {
-  git?: Partial<GitSettings>;
-};
+export type FactorySettingsInput = Partial<Omit<FactorySettings, "version">>;
 
-interface ConfigureInput {
+interface ConfigureInput extends GitInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
   supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
-  gitPush?: boolean;
-  gitPull?: boolean;
-  gitSyncInterval?: number;
 }
 
 /** The model choice of one role, and the runtime that the next role can use again. */
@@ -51,10 +53,7 @@ interface RoleChoice {
 }
 
 const THINKING_LEVELS: readonly unknown[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
-const DEFAULT_GIT: GitSettings = { push: false, pull: false, syncIntervalSeconds: 300 };
-const DEFAULT_SETTINGS: FactorySettings = { version: 1, maxWorkers: 4, git: DEFAULT_GIT };
-const MIN_SYNC_SECONDS = 60;
-const MAX_SYNC_SECONDS = 86_400;
+const DEFAULT_SETTINGS: FactorySettings = { version: 1, maxWorkers: 4 };
 
 /** Tells if a value is a model choice with a provider, a model and an optional known thinking level. */
 export function validModel(value: unknown): value is ModelChoice {
@@ -73,31 +72,6 @@ export function validModel(value: unknown): value is ModelChoice {
   );
 }
 
-/** Tells if a sync interval is a whole number of seconds in the permitted range. */
-function validInterval(value: unknown): boolean {
-  return Number.isSafeInteger(value) && (value as number) >= MIN_SYNC_SECONDS && (value as number) <= MAX_SYNC_SECONDS;
-}
-
-/** Tells if a `git` section is absent, or an object with valid sync keys. A key can be absent. */
-function validGit(value: unknown): boolean {
-  if (value === undefined) {
-    return true;
-  }
-
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  const git = value as Partial<GitSettings>;
-
-  return (
-    (git.push === undefined || typeof git.push === "boolean") &&
-    (git.pull === undefined || typeof git.pull === "boolean") &&
-    (git.syncIntervalSeconds === undefined || validInterval(git.syncIntervalSeconds))
-  );
-}
-
-/** Validates the settings, then fills the absent `git` keys with their defaults. */
 function validate(value: unknown): FactorySettings {
   const settings = value as FactorySettings;
 
@@ -107,19 +81,24 @@ function validate(value: unknown): FactorySettings {
     settings.maxWorkers < 1 ||
     (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
     (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
-    !validGit(settings.git)
+    (settings.git !== undefined && !validGit(settings.git))
   ) {
     throw new ValidationError("Invalid factory settings", {
       hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
     });
   }
 
-  return { ...settings, git: { ...DEFAULT_GIT, ...settings.git } };
+  return settings;
+}
+
+/** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
+function withDefaults(settings: FactorySettings): FactorySettings {
+  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) } };
 }
 
 /** Gives the Git sync settings. Settings without a `git` section use the defaults. */
-export function gitSettings(settings: FactorySettings): GitSettings {
-  return { ...DEFAULT_GIT, ...settings.git };
+export function gitSettings(settings: FactorySettings): GitSync {
+  return gitSync(settings.git);
 }
 
 function readProblem(error: unknown): FactorySettings {
@@ -134,27 +113,46 @@ function readProblem(error: unknown): FactorySettings {
   throw error;
 }
 
-/** Reads the factory settings of the Project. Without `factory.json`, the limit is four workers and sync is off. */
-export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
-  const paths = await findProject(ctx);
-
-  return readFile(paths.factorySettingsFile, "utf8")
+/** Reads `factory.json` as it is on disk. Without the file, the limit is four workers. */
+async function readSettings(file: string): Promise<FactorySettings> {
+  return readFile(file, "utf8")
     .then((text) => validate(JSON.parse(text)))
     .catch(readProblem);
 }
 
-/** Merges the input into the factory settings and writes `factory.json`. */
+/**
+ * Reads the factory settings of the Project. Without `factory.json`, the limit is four workers.
+ * The absent Git sync keys have their defaults: push and pull are off, and the interval is 300 seconds.
+ */
+export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
+  const paths = await findProject(ctx);
+
+  return withDefaults(await readSettings(paths.factorySettingsFile));
+}
+
+/** Validates and writes the settings that `change` makes from the settings on disk. The defaults are not written. */
+async function writeSettings(
+  change: (current: FactorySettings) => FactorySettings,
+  ctx: ServiceContext,
+): Promise<FactorySettings> {
+  const paths = await findProject(ctx);
+  const current = await readSettings(paths.factorySettingsFile);
+  const settings = validate({ ...change(current), version: 1 });
+
+  await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
+
+  return withDefaults(settings);
+}
+
+/** Merges the input into the factory settings and writes `factory.json`. The `git` keys merge one level deep. */
 export async function updateFactorySettings(
   input: FactorySettingsInput,
   ctx: ServiceContext = {},
 ): Promise<FactorySettings> {
-  const paths = await findProject(ctx);
-  const current = await getFactorySettings(ctx);
-  const settings = validate({ ...current, ...input, git: { ...current.git, ...input.git }, version: 1 });
-
-  await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
-
-  return settings;
+  return writeSettings(
+    (current) => ({ ...current, ...input, ...(input.git ? { git: { ...current.git, ...input.git } } : {}) }),
+    ctx,
+  );
 }
 
 /** Parses `provider/model`. The provider and the model must not be empty. */
@@ -198,33 +196,33 @@ async function chooseRole(
   return { runtime: resolved, choice: await auth.validateModelChoice(resolved, choice) };
 }
 
-/** Gives only the Git sync keys that the input sets. */
-function gitInput(input: ConfigureInput): Partial<GitSettings> {
-  return {
-    ...(input.gitPush !== undefined ? { push: input.gitPush } : {}),
-    ...(input.gitPull !== undefined ? { pull: input.gitPull } : {}),
-    ...(input.gitSyncInterval !== undefined ? { syncIntervalSeconds: input.gitSyncInterval } : {}),
-  };
+/** Rejects an invalid commit author before the runtime starts. */
+function checkGitInput(input: ConfigureInput): void {
+  if (input.commitAuthor?.trim()) {
+    parseAuthor(input.commitAuthor);
+  }
 }
 
-/** Validates explicit model choices before the settings file changes. */
+/** Validates explicit model choices and Git values before the settings file changes. */
 export async function configureFactory(
   input: ConfigureInput,
   ctx: ServiceContext = {},
   runtime?: AuthRuntime,
 ): Promise<FactorySettings> {
-  const auth = await import("../agent-auth/agent-auth.js");
+  checkGitInput(input);
 
+  const auth = await import("../agent-auth/agent-auth.js");
   const supervisor = await chooseRole(auth, "supervisor", input, runtime);
   const worker = await chooseRole(auth, "worker", input, supervisor.runtime);
 
-  return updateFactorySettings(
-    {
+  return writeSettings(
+    (current) => ({
+      ...current,
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
-      git: gitInput(input),
-    },
+      ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
+    }),
     ctx,
   );
 }

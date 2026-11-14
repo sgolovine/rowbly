@@ -19,6 +19,8 @@ interface ConfigureOptions {
   worker?: string;
   supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
+  commitMessage?: string;
+  commitAuthor?: string;
   gitPush?: boolean;
   gitPull?: boolean;
   gitSyncInterval?: number;
@@ -128,12 +130,14 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
 function registerConfigure(program: Command): void {
   program
     .command("configure")
-    .description("Set factory models, worker limit and Git sync")
+    .description("Set factory models, worker limit, Git commit settings and Git sync")
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
     .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
+    .option("--commit-message <text>", 'subject of the canonical commits ("" clears it)')
+    .option("--commit-author <identity>", 'Name <email> of the canonical commits ("" clears it)')
     .option("--git-push", "push the canonical branch at each sync")
     .option("--no-git-push", "do not push the canonical branch")
     .option("--git-pull", "pull the upstream at each sync")

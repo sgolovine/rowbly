@@ -75,6 +75,49 @@ it("uses a default message that lists the paths", async () => {
   assert.equal(git("log", "-1", "--format=%B").trim(), "chore(rowbly): record project changes after scan\n\n.rowbly/stories/ROW-01.md");
 });
 
+const withoutIdentityEnv = async (action) => {
+  const saved = { ...process.env };
+  for (const key of Object.keys(identity)) delete process.env[key];
+  try {
+    return await action();
+  } finally {
+    Object.assign(process.env, saved);
+  }
+};
+const lastIdentity = () => git("log", "-1", "--format=%an <%ae>|%cn <%ce>").trim();
+
+it("uses the Git config identity without an author", async () => {
+  git("config", "user.name", "Config User");
+  git("config", "user.email", "config@example.com");
+  await write(".rowbly/stories/ROW-01.md", "changed");
+  const result = await withoutIdentityEnv(() => commitProject(root));
+  assert.equal(result.status, "committed");
+  assert.equal(lastIdentity(), "Config User <config@example.com>|Config User <config@example.com>");
+});
+
+it("sets the author and the committer from --author, also without a Git identity", async () => {
+  await write(".rowbly/stories/ROW-01.md", "changed");
+  const result = await withoutIdentityEnv(() =>
+    commitProject(root, { message: "chore: custom", author: "Rowbly Bot <bot@example.com>" }),
+  );
+  assert.equal(result.status, "committed", result.detail);
+  assert.equal(lastIdentity(), "Rowbly Bot <bot@example.com>|Rowbly Bot <bot@example.com>");
+  assert.equal(git("log", "-1", "--format=%s").trim(), "chore: custom");
+
+  await write(".rowbly/stories/ROW-02.md", "changed");
+  const cli = spawnSync(process.execPath, [script, "--root", root, "--author", "CLI Bot <cli@example.com>"], { encoding: "utf8" });
+  assert.equal(JSON.parse(cli.stdout).status, "committed");
+  assert.equal(lastIdentity(), "CLI Bot <cli@example.com>|CLI Bot <cli@example.com>");
+});
+
+it("reports an author that is not in the Name <email> form and makes no commit", async () => {
+  await write(".rowbly/stories/ROW-01.md", "changed");
+  const result = await commitProject(root, { author: "no email" });
+  assert.equal(result.status, "failed");
+  assert.match(result.detail, /Name <email>/);
+  assert.equal(commits(), "1");
+});
+
 it("keeps a file that has a staged version and a later edit, and commits the other files", async () => {
   await write(".rowbly/stories/ROW-01.md", "staged version");
   git("add", ".rowbly/stories/ROW-01.md");
