@@ -1,11 +1,6 @@
 import type { Key } from "ink";
 import type { Dispatch, SetStateAction } from "react";
-import {
-  type AuthRuntime,
-  getAuthStatus,
-  listAvailableModels,
-  logoutProvider,
-} from "../../../../services/agent-auth/agent-auth.js";
+import { type AuthRuntime, logoutProvider } from "../../../../services/agent-auth/agent-auth.js";
 import { ValidationError } from "../../../../services/errors/errors.js";
 import {
   type FactorySettings,
@@ -13,6 +8,7 @@ import {
   setWorkerOverride,
   updateFactorySettings,
 } from "../../../../services/factory-settings/factory-settings.js";
+import { refreshPiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
@@ -46,13 +42,16 @@ export interface AiEnv {
   readonly onChange: () => void;
 }
 
-/** Reads the providers and the models. Without a runtime, there is nothing to read. */
-export async function loadStatus(runtime: AuthRuntime | undefined): Promise<AiStatus | undefined> {
+/**
+ * Reads the providers and the models, and writes them to the model cache for the Models tab and the Factory
+ * controls. Without a runtime, there is nothing to read.
+ */
+export async function loadStatus(runtime: AuthRuntime | undefined, ctx: ServiceContext): Promise<AiStatus | undefined> {
   if (!runtime) {
     return undefined;
   }
 
-  const [providers, models] = await Promise.all([getAuthStatus(runtime), listAvailableModels(runtime)]);
+  const { providers, models } = await refreshPiCatalog(runtime, ctx);
 
   return { providers, models };
 }
@@ -134,7 +133,7 @@ export function signOut(env: AiEnv, id: string): void {
     return;
   }
 
-  logoutProvider(env.runtime.data, id).then(
+  logoutProvider(env.runtime.data, id, env.ctx).then(
     () => signedOut(env, id),
     (error: unknown) => signOutFailed(env, error),
   );

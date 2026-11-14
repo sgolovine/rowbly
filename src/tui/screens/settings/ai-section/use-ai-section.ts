@@ -106,7 +106,7 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
   // The latest `loadRuntime`, so that a new function on each render does not load Pi again on each render.
   const load = useLatest(loadRuntime);
   const runtime = useAsync(() => load.current(), []);
-  const status = useAsync(() => loadStatus(runtime.data), [runtime.data]);
+  const status = useAsync(() => loadStatus(runtime.data, ctx), [runtime.data, ctx]);
   const settings = useAsync(() => getFactorySettings(ctx), [ctx]);
   const stages = useAsync<readonly Stage[]>(() => listStages(ctx), [ctx]);
   const cursors = useCursors();
