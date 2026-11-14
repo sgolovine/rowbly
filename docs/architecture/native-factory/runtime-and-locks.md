@@ -11,7 +11,7 @@ change a lock.
 
 ```
 .rowbly/
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, git
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; native factory or external supervisor writes it
   runtime/            # private, ignored; directories use mode 0700
@@ -38,6 +38,15 @@ change a lock.
 - Initialization creates `.rowbly/.gitignore` with `/state.json*` and `/runtime/`.
 - Native start and `doctor --fix` add missing runtime ignore rules. Existing text stays.
 - Canonical factory commits exclude runtime files, also when Git already tracks them.
+- The factory commits the canonical files after each scan. The subject of the commit is
+  `git.commitMessage` of `factory.json`. If it is not set, the subject is
+  `chore(rowbly): record project changes after scan`. The body lists the changed paths.
+- If `git.authorName` and `git.authorEmail` are set, they are the author and the committer of the
+  commit. `commit-project.mjs --author "Name <email>"` sets them through the Git identity variables.
+  Thus the commit works also when Git has no identity. If they are not set, Git uses its own
+  identity.
+- These settings apply only to the canonical commits. They do not apply to the commits of workers
+  on Story branches.
 - `rowbly doctor` reports runtime files that Git tracks.
 
 Do not commit runtime files or credentials. Runtime files hold private sessions and process identity.
