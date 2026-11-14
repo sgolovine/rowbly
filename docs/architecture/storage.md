@@ -246,6 +246,29 @@ rules:
 | `factory.json` has the same settings as the `factory` key.               | warning  | Deletes the file.                                            |
 | `factory.json` has different settings from the `factory` key.            | warning  | None. Merge them by hand, then delete the file.              |
 
+The Story dependency check runs after the Story check, because it needs the IDs of all Stories. It
+reads the frontmatter after the fixes of the Story check. It does not examine a Story file with
+frontmatter that is not valid, because the Story check already shows an error for that file. These are
+its rules, in the order of the check:
+
+| Problem                                                       | Severity | `--fix`                         |
+| ------------------------------------------------------------- | -------- | ------------------------------- |
+| `dependsOn` is not a list of strings.                         | error    | None. Repair the key by hand.   |
+| An ID has a different form, for example `row-1` for `ROW-01`. | error    | Changes it to the canonical ID. |
+| An ID is not a Story of the Project.                          | error    | Removes the ID.                 |
+| The Story depends on itself.                                  | error    | Removes the ID.                 |
+| The list has the same ID two or more times.                   | warning  | Removes the duplicates.         |
+| The `dependsOn` list is empty.                                | warning  | Removes the key.                |
+| The dependencies make a cycle.                                | error    | None. See below.                |
+
+- A fix keeps the other IDs in their order. It keeps all other frontmatter keys and the description.
+- If the fixes make a list empty, `--fix` also removes the key.
+- The cycle check runs last, over all Stories. It ignores each ID that an earlier row reports.
+- Doctor shows one error for each cycle, not one error for each Story in the cycle. The error names
+  the cycle, for example `ROW-03 → ROW-01 → ROW-03`, and the file of the first Story of the cycle.
+- Only a person can select the dependency to remove. Use
+  `rowbly story update <id> --remove-dependency <id>`.
+
 ## `~/.rowblyrc.json`
 
 Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` service reads and writes

@@ -95,7 +95,7 @@ describe("story commands", () => {
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
       await cli("story", "create", "--title", "First", "--description", "Some *text*", "--field", "points=5");
       expect((await cli("story", "get", "ROW-01")).stdout).toBe(
-        "ROW-01  First\nStage: Backlog (BACKLOG)\nPoints: 5\nOwner: —\n\nSome *text*",
+        "ROW-01  First\nStage: Backlog (BACKLOG)\nDepends on: none\nBlocks: none\nBlocked: no\nPoints: 5\nOwner: —\n\nSome *text*",
       );
     });
 
@@ -129,6 +129,117 @@ describe("story commands", () => {
     });
   });
 
+  describe("story dependencies", () => {
+    async function seed(count: number): Promise<void> {
+      for (let i = 1; i <= count; i++) {
+        await createStory({ title: `S${i}` }, project.ctx);
+      }
+    }
+
+    const dependsOn = async (id: string) => (await getStory({ id }, project.ctx)).dependsOn;
+
+    it("saves --depends-on in order on create", async () => {
+      await seed(2);
+      const result = await cli("story", "create", "--title", "X", "--depends-on", "ROW-02,ROW-01");
+      expect(result.exitCode).toBe(0);
+      expect(await dependsOn("ROW-03")).toEqual(["ROW-02", "ROW-01"]);
+    });
+
+    it("gives the same list for repeated flags and ignores spaces around a comma", async () => {
+      await seed(3);
+      await cli("story", "create", "--title", "X", "--depends-on", "ROW-01", "--depends-on", "ROW-02");
+      await cli("story", "create", "--title", "Y", "--depends-on", " ROW-01 , ROW-02 ");
+      expect(await dependsOn("ROW-04")).toEqual(["ROW-01", "ROW-02"]);
+      expect(await dependsOn("ROW-05")).toEqual(["ROW-01", "ROW-02"]);
+      expect(
+        (await cli("story", "update", "ROW-01", "--depends-on", "ROW-03", "--depends-on", "ROW-02")).exitCode,
+      ).toBe(0);
+      expect(await dependsOn("ROW-01")).toEqual(["ROW-03", "ROW-02"]);
+    });
+
+    it("adds and removes one item with repeatable flags", async () => {
+      await seed(4);
+      await cli("story", "update", "ROW-04", "--depends-on", "ROW-01");
+      await cli("story", "update", "ROW-04", "--add-dependency", "ROW-02", "--add-dependency", "ROW-03");
+      expect(await dependsOn("ROW-04")).toEqual(["ROW-01", "ROW-02", "ROW-03"]);
+      await cli("story", "update", "ROW-04", "--remove-dependency", "ROW-01", "--remove-dependency", "ROW-03");
+      expect(await dependsOn("ROW-04")).toEqual(["ROW-02"]);
+      const same = await cli(
+        "story",
+        "update",
+        "ROW-04",
+        "--add-dependency",
+        "ROW-02",
+        "--remove-dependency",
+        "ROW-01",
+      );
+      expect(same.exitCode).toBe(0);
+      expect(await dependsOn("ROW-04")).toEqual(["ROW-02"]);
+    });
+
+    it.each(["--add-dependency", "--remove-dependency"])("refuses --depends-on with %s", async (flag) => {
+      await seed(2);
+      const result = await cli("story", "update", "ROW-02", "--depends-on", "ROW-01", flag, "ROW-01");
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain("cannot be used with option");
+      expect(await dependsOn("ROW-02")).toEqual([]);
+    });
+
+    it('removes the dependsOn key with --depends-on ""', async () => {
+      await seed(1);
+      await cli("story", "create", "--title", "Two", "--depends-on", "ROW-01");
+      expect((await cli("story", "update", "ROW-02", "--depends-on", "")).exitCode).toBe(0);
+      expect(await project.read("stories/ROW-02.md")).toBe("---\ntitle: Two\nstage: BACKLOG\n---\n\n");
+    });
+
+    it("gives exit 1 and the details of a cycle or an unknown ID, and changes no file", async () => {
+      await seed(2);
+      await cli("story", "update", "ROW-01", "--depends-on", "ROW-02");
+      const before = await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/${id}.md`)));
+      const cycle = await cli("--json", "story", "update", "ROW-02", "--add-dependency", "ROW-01");
+      expect(cycle.exitCode).toBe(1);
+      expect(JSON.parse(cycle.stderr).error).toMatchObject({
+        code: "VALIDATION",
+        message: expect.stringContaining("ROW-02 → ROW-01 → ROW-02"),
+        details: { cycle: ["ROW-02", "ROW-01", "ROW-02"] },
+      });
+      const unknown = await cli("--json", "story", "update", "ROW-02", "--depends-on", "ROW-09");
+      expect(unknown.exitCode).toBe(1);
+      expect(JSON.parse(unknown.stderr).error.details).toMatchObject({ unknown: ["ROW-09"] });
+      expect(await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/${id}.md`)))).toEqual(before);
+    });
+
+    it("shows the dependency state in story get", async () => {
+      await createStory({ title: "Done", stage: "DONE" }, project.ctx);
+      await createStory({ title: "Open" }, project.ctx);
+      await createStory({ title: "Down", dependsOn: ["ROW-01", "ROW-02"] }, project.ctx);
+      expect((await cli("story", "get", "ROW-03")).stdout).toBe(
+        "ROW-03  Down\nStage: Backlog (BACKLOG)\nDepends on: ROW-01, ROW-02\nBlocks: none\nBlocked: yes (ROW-02)",
+      );
+      expect((await cli("story", "get", "ROW-01")).stdout).toContain("Depends on: none\nBlocks: ROW-03\nBlocked: no");
+      const json = JSON.parse((await cli("--json", "story", "get", "ROW-03")).stdout);
+      expect(json).toMatchObject({ dependsOn: ["ROW-01", "ROW-02"], blocks: [], waitingFor: ["ROW-02"] });
+    });
+
+    it("filters story search with --blocked or --ready", async () => {
+      await addCustomField({ label: "Owner", type: "string" }, project.ctx);
+      await createStory({ title: "Open upstream", fields: { owner: "sam" } }, project.ctx);
+      await createStory({ title: "Blocked one", dependsOn: ["ROW-01"], fields: { owner: "sam" } }, project.ctx);
+      await createStory({ title: "Ready one", stage: "DONE" }, project.ctx);
+      expect((await cli("story", "search", "--blocked")).stdout).toBe("ROW-02   BACKLOG        Blocked one");
+      expect((await cli("story", "search", "--ready", "--stage", "DONE")).stdout).toBe(
+        "ROW-03   DONE           Ready one",
+      );
+      expect((await cli("story", "search", "one", "--ready")).stdout).toBe("ROW-03   DONE           Ready one");
+      expect((await cli("story", "search", "--ready", "--field", "owner=sam")).stdout).toBe(
+        "ROW-01   BACKLOG        Open upstream",
+      );
+      const both = await cli("story", "search", "--blocked", "--ready");
+      expect(both.exitCode).toBe(1);
+      expect(both.stderr).toContain("cannot be used with option");
+    });
+  });
+
   describe("removed agent locks", () => {
     it.each(["lock", "unlock"])("gives an unknown-command error for story %s", async (name) => {
       await cli("story", "create", "--title", "First");
@@ -142,6 +253,7 @@ describe("story commands", () => {
       const story = JSON.parse((await cli("story", "get", "ROW-01", "--json")).stdout);
       expect(Object.keys(story).sort()).toEqual([
         "attachmentCount",
+        "blocks",
         "dependsOn",
         "description",
         "fields",
@@ -151,6 +263,7 @@ describe("story commands", () => {
         "position",
         "stage",
         "title",
+        "waitingFor",
       ]);
     });
   });
