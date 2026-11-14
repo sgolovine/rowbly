@@ -1,5 +1,6 @@
 import { ValidationError } from "../errors/errors.js";
 import type { Store } from "../store/store.js";
+import type { ThreadRecord } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import type { SessionIndex } from "./session-index.js";
 import type { ConversationPage } from "./session-types.js";
@@ -14,12 +15,25 @@ export interface ReadInput {
   maxBytes?: number;
 }
 
-/** The state of one watch. `busy` prevents a second poll while a read is in progress. */
+/**
+ * The state of one watch. `busy` prevents a second poll while a read is in progress.
+ * The cached Thread and the file signatures let a poll stop early when no file changed.
+ */
 export interface WatchState {
   readonly active: boolean;
   readonly busy: boolean;
+  /** The digest of the last page that the watch gave. */
   readonly previous: string;
   readonly timer?: NodeJS.Timeout;
+
+  // Change check
+  /** The Thread record of the last full read, and the signature of the Thread file before that read. */
+  readonly thread?: ThreadRecord;
+  readonly threadSignature?: string;
+  /** The signature that the full read in progress records when it succeeds. */
+  readonly pending?: string;
+  /** The signature of the last successful poll. A failed poll removes it. */
+  readonly signature?: string;
 }
 
 /** One watch of a conversation, with its callbacks and the store of its state. */

@@ -36,10 +36,15 @@ function assertSessionReference(t: ThreadRecord, file: string): void {
   }
 }
 
-async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+/** Gives the runtime reference of the metadata file of a Thread, relative to the runtime folder. */
+export function threadReference(id: string): string {
   assertValidId(id);
 
-  return runtimePath(await findProject(ctx), `threads/${id}.json`);
+  return `threads/${id}.json`;
+}
+
+async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+  return runtimePath(await findProject(ctx), threadReference(id));
 }
 
 /** Gives the checked absolute path of the metadata file of a Thread below the checked `threads/` folder. */
