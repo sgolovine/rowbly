@@ -34,7 +34,6 @@ src/tui/
   screens/          # one folder per area, see below
   components/       # the shared component library: one folder per component (barrel: components/index.ts)
   hooks/            # contexts and hooks: see the table of shared hooks below
-  testing/          # renderTui(): renders a component in TuiProviders for tests; keys for stdin
 ```
 
 The screen areas in `screens/` are:
@@ -170,19 +169,17 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   name of the component. For example, the `StoryRow` component is in `story-row/story-row.tsx`. Do
   not add a new component to a file that exists. A small private helper (a constant or a pure
   function) can stay in the file of the only component that uses it.
-- **One folder per component.** Put each component in its own folder, with its test and an
-  `index.ts` that exports it:
+- **One folder per component.** Put each component in its own folder, with an `index.ts` that
+  exports it:
 
   ```
   components/button/
     button.tsx
-    button.test.tsx
     index.ts          # export * from "./button.js";
   ```
 
   A component imports a different component through the folder (`'../button/index.js'`). Add each
-  component folder to `components/index.ts`. The dash-case `.ts` helpers stay in `components/`, with
-  their tests next to them.
+  component folder to `components/index.ts`. The dash-case `.ts` helpers stay in `components/`.
 - **Group by area, with a barrel.** Each folder has an `index.ts` that exports the items that the
   other parts of the app use. Import from the folder (`'../components/index.js'`). Do not import from
   the files in a different folder.
@@ -338,8 +335,7 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    loading state or a toast. `useStoryChanges` and `useThreadChanges` call a function when the files
    change.
 5. Declare the keys with `useKeyHints`.
-6. Add or update the test of the component. See [testing.md](testing.md).
-7. Examine the layout in a real terminal with the
+6. Examine the layout in a real terminal with the
    [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 
 If a CLI command also uses a part of the logic, put that logic in the service, not in the component.
@@ -348,5 +344,4 @@ If a CLI command also uses a part of the logic, put that logic in the service, n
 
 - [native-factory/controls.md](native-factory/controls.md): the keys of the Factory controls, the
   Threads tab and the AI section of Settings.
-- [testing.md](testing.md): `renderTui()` and the keys for tests.
 - [service-layer.md](service-layer.md): the errors that the TUI shows as toasts.

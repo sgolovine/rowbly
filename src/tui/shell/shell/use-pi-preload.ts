@@ -2,7 +2,7 @@ import { type RefObject, useEffect, useRef } from "react";
 import { writeRef } from "../../hooks/refs.js";
 
 /** The wait after the board first shows, so that Ink paints the board before the import blocks the thread. */
-export const PI_PRELOAD_DELAY_MS = 500;
+const PI_PRELOAD_DELAY_MS = 500;
 
 function ignoreFailure(): undefined {
   return undefined;

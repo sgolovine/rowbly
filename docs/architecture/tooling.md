@@ -16,7 +16,6 @@ pnpm build            # bundle to dist/
 pnpm start            # run the built bundle
 pnpm typecheck        # tsc --noEmit
 pnpm test             # vitest run: run all tests one time; then the node:test suite of scripts/
-pnpm test:ci          # the same as pnpm test, but with vitest.ci.config.ts: CI does not run the local-only tests
 pnpm test:watch       # vitest: run the tests again when a file changes
 pnpm lint             # biome check: lint, formatting and import order; then the dash-case name check
 pnpm lint:fix         # biome check --write: apply safe fixes and format
@@ -83,8 +82,8 @@ static import of Ink or React, and CLI commands and the factory daemon do not lo
 
 ## Knip
 
-`knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/`,
-`src/services/test-project/` and `src/tui/testing/`) are not production code. `pnpm knip:production`
+`knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/` and
+`src/services/test-project/`) are not production code. `pnpm knip:production`
 also finds code that only the tests use.
 
 ## Screenshots

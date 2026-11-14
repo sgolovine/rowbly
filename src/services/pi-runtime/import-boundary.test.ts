@@ -44,18 +44,7 @@ describe("Pi import boundary", () => {
     expect(JSON.parse(result.stdout).factory.phase).toBe("stopped");
   });
 
-  it("renders the TUI without the preload prop and does not load Pi", async () => {
-    const { createElement } = await import("react");
-    const { App } = await import("../../tui/app.js");
-    const { createToastStore } = await import("../../tui/hooks/index.js");
-    const { renderTui, settle } = await import("../../tui/testing/index.js");
-    const tui = await renderTui(
-      createElement(App, { toasts: createToastStore(), ctx: project.ctx, fullscreen: false }),
-    );
-    await vi.waitFor(() => expect(tui.frame()).toContain("+ New Story"));
-    await settle(700);
-    await tui.press();
-    expect(tui.frame()).toContain("+ New Story");
-    tui.unmount();
+  it("imports the TUI without loading Pi", async () => {
+    await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });
 });

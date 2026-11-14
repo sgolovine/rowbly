@@ -36,7 +36,7 @@ export function orderedCheckJobs(checks: Checks): CheckQueueJob[] {
 }
 
 /** The time since a running job started, or since a queued job was queued. */
-export function checkJobTime(job: CheckQueueJob, now: number): string {
+function checkJobTime(job: CheckQueueJob, now: number): string {
   const since = job.status === "running" && job.startedAt ? job.startedAt : job.queuedAt;
   const at = Date.parse(since);
 

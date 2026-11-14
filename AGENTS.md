@@ -23,8 +23,8 @@ picture.
 3. **TUI design.** Read [`.agents/skills/rowbly-tui-design/SKILL.md`](.agents/skills/rowbly-tui-design/SKILL.md)
    before you build or change TUI code. Build from `src/tui/components/`. Use only the colours in
    `theme`.
-4. **Tests.** Each service and each component has a test next to it. Update the test when you change
-   the code. See [testing](docs/architecture/testing.md).
+4. **Tests.** Each service has a test next to it. Update the test when you change the code. Do not
+   write tests for the TUI. See [testing](docs/architecture/testing.md).
 5. **Imports.** Use `.js` extensions in relative imports, also for `.ts` and `.tsx` sources.
 6. **Documentation language.** Write all Markdown in ASD-STE100 Simplified Technical English (STE).
    See [the STE rules](docs/contributing/documentation-language.md).
@@ -101,7 +101,7 @@ See [commit rules](docs/contributing/commits.md) for the full rules.
 | The native factory, daemon, locks, recovery, Threads, Pi     | [native-factory/README.md](docs/architecture/native-factory/README.md)   |
 | `rowbly init` or the onboarding steps of the TUI             | [onboarding.md](docs/architecture/onboarding.md)                         |
 | A bundled skill in `skills/` or a stage prompt in `stages/`  | [skills-and-stages.md](docs/architecture/skills-and-stages.md)           |
-| Tests, `renderTui`, `useTestProject`, faux provider          | [testing.md](docs/architecture/testing.md)                               |
+| Tests, `useTestProject`, faux provider                       | [testing.md](docs/architecture/testing.md)                               |
 | Scripts, Biome, Knip, tsup, CI                               | [tooling.md](docs/architecture/tooling.md)                               |
 | Screenshots or a check of the TUI in a real terminal         | [`rowbly-screenshots` skill](.agents/skills/rowbly-screenshots/SKILL.md) |
 | TypeScript style, `Store`, React handler patterns            | [`rowbly-code-style` skill](.agents/skills/rowbly-code-style/SKILL.md)   |

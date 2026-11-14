@@ -1,10 +1,6 @@
 import { IMAGE_PASTE_HINT, type Layout } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
-import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import { STORY_PADDING_X, type StoryTabId } from "../story-tab-panes/index.js";
-
-/** Which confirmation is on top of the Story form. */
-export type StoryModalConfirm = StoryConfirm;
 
 /** The blank row above the Tabs and the row of the Tabs. */
 const TABS_HEIGHT = 2;

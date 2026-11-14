@@ -10,8 +10,7 @@ description: >
 # Rowbly screenshots
 
 Make each screenshot of Rowbly from the real built CLI. Run the CLI in a PTY and operate it with
-[agentic-tui](../agentic-tui/SKILL.md). Do not draw screens by hand. Do not show an
-`ink-testing-library` frame as a screenshot.
+[agentic-tui](../agentic-tui/SKILL.md). Do not draw screens by hand.
 
 ## Setup
 

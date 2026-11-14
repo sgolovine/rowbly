@@ -1,7 +1,12 @@
 # Tests
 
 Rowbly has two test suites. Vitest runs the tests of `src/`. `node:test` runs the tests of
-`scripts/`. Each service and each component has a test next to it.
+`scripts/`. Each service has a test next to it.
+
+The tests examine only the core functions: the services, the commands, the scripts and the import
+boundaries. Do not write tests for the TUI. Do not render a component or a screen in a test, and do
+not examine how the TUI looks. Examine the TUI in a real terminal with the
+[`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 
 Read this when you write or change a test, or when a test fails and you must know how the suite is
 set up.
@@ -12,30 +17,20 @@ set up.
 | ----------------- | ----------- | ---------------------------------------------------------------- |
 | `pnpm test`       | Vitest      | `src/**/*.test.ts` and `src/**/*.test.tsx`.                      |
 |                   | `node:test` | Then `scripts/*.test.mjs`, for example the dash-case name check. |
-| `pnpm test:ci`    | Vitest      | The same tests, but without the local-only tests. CI uses it.    |
-|                   | `node:test` | Then `scripts/*.test.mjs`.                                       |
 | `pnpm test:watch` | Vitest      | The Vitest tests again after each change.                        |
 
 ## General rules
 
-- Put the tests in `*.test.ts` and `*.test.tsx` files, next to the file that they test.
-- A component test is in the folder of its component.
+- Put the tests in `*.test.ts` files, next to the file that they test.
+- Do not put a test in `src/tui/`.
 - Test files use only the recommended rules of Biome, not the strict style.
 - Keep live credentials out of tests.
-- `vitest.config.ts` sets `HOME` to a temporary folder. A test that renders the shell records its
-  Project, and it must not write to the real home directory.
+- `vitest.config.ts` sets `HOME` to a temporary folder. A test must not write to the real home
+  directory.
 - `vitest.config.ts` sets `maxWorkers` to 4. Each fork uses approximately 200 MB, and factory workers
   can run the tests at the same time. To change the limit, set `VITEST_MAX_WORKERS` or use
   `--maxWorkers`.
-- `vitest.ci.config.ts` extends `vitest.config.ts` for CI. It does not run the local-only tests in
-  its `exclude` list. There are two groups of local-only tests:
-  - `failInCi`: `src/tui/shell/shell/shell.test.tsx` fails in CI. Run `pnpm test` on your machine
-    before you complete a change to the shell.
-  - `nonCritical`: the tests that only render a small, presentational part of the TUI, for example a
-    button, a row or a badge. These tests do not read or write Project data. They do not test a
-    service, a command or a workflow.
-- CI runs all service, command, script, hook and logic tests, and the tests of the screens that change
-  Project data. Do not add one of these tests to `nonCritical`.
+- CI runs `pnpm test`, the same tests that you run on your machine.
 
 ## Service tests
 
@@ -49,19 +44,6 @@ test. Pass the paths through the `ServiceContext`, for example `cwd` and `home`.
 Use `runCli(args, cwd)` from `src/commands/test-cli/`. It runs the program in the process and gives
 the exit code, stdout and stderr. `createProgram()` builds the program without a run.
 
-## Component tests
-
-- **Each component has a test.** When you add a component, add `<name>.test.tsx` in the same folder.
-  When you change a component, update its test.
-- **Render through `renderTui`.** `renderTui` from `src/tui/testing/` renders a component in
-  `TuiProviders`, through ink-testing-library.
-  - Use `press` and `keys` to send keys.
-  - Use `click` and `mouse` to send mouse events.
-  - Use `frame` to read the screen without colours.
-- **Test the behaviour.** Examine the text, the keys and the mouse actions. Do not examine the
-  colours.
-- Call `cleanup` from ink-testing-library in `afterEach`.
-
 ## Native factory tests
 
 - Native session tests use the faux provider of Pi and in-memory credentials. They make no live
@@ -73,6 +55,7 @@ the exit code, stdout and stderr. `createProgram()` builds the program without a
 - Live provider validation is separate from the automated checks.
 - The `import-boundary` test makes sure that help and `factory status` do not load Pi. See
   [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md).
+- `import-boundary` also makes sure that an import of the TUI does not load Pi.
 - The TUI import boundary test `src/cli.test.ts` makes sure that help, `story get` and `status` do
   not load Ink or React. It also makes sure that `src/cli.ts` has no static import of Ink, React or
   `src/tui/`.
