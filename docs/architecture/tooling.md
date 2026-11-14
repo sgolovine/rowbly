@@ -73,6 +73,12 @@ The script lists the exceptions:
 only on demand. The npm package contains `dist/`, `skills/` (without tests), `stages/` and
 `src/config/prompts/`, the system prompts of the factory agents.
 
+The TUI is in a separate chunk, `dist/tui-<hash>.js`. `src/cli.ts` loads `./tui/index.js` with a
+dynamic `import()` only when `rowbly` starts without arguments. tsup splits each dynamic `import()`
+into its own chunk by default, so `tsup.config.ts` has no chunk settings. Thus `dist/cli.js` has no
+static import of Ink or React, and CLI commands and the factory daemon do not load the TUI.
+`src/cli.test.ts` and `src/commands/tui-boundary.test.ts` make sure that the code obeys this rule.
+
 ## Knip
 
 `knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/`,
