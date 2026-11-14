@@ -151,6 +151,10 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 - `ThreadPane` (`screens/threads/thread-pane/`) shows `ThreadDetail` and the `ConversationView` of
   the Thread. Its size comes from the body of the Story sidebar. In a short body, the detail is
   compact. The conversation follows the new entries while the Thread is `running`.
+- The conversation shows JSON with syntax highlighting: the arguments of each tool call, and each tool
+  result that is not an error and that starts with `{` or `[`. `jsonTokens` in
+  `src/services/conversation/json-tokens.ts` finds the tokens. Keys are `accent`, strings are `ink`,
+  numbers and literals are `ink-muted`, and punctuation is `ink-faint`.
 - `ThreadPane` reads the Thread again when the worker writes its file (`useThreadChanges`).
 - The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
   Thread replaces it (`discardStory` overlay).

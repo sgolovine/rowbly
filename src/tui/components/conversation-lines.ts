@@ -1,4 +1,5 @@
 import type { ConversationEntry } from "../../services/conversation/conversation.js";
+import { type JsonToken, jsonTokenRows } from "../../services/conversation/json-tokens.js";
 import { formatDateTime } from "../theme.js";
 import { type MarkdownRenderer, plainMarkdownRows } from "./markdown.js";
 import { safeText } from "./safe-text.js";
@@ -15,6 +16,8 @@ export interface ConversationLine {
   readonly meta?: string;
   /** Text after the label, in `danger`, for example `error` on a failed tool result. */
   readonly alert?: string;
+  /** The text of the row in JSON tokens, for syntax highlighting. Their text, in order, is `text`. */
+  readonly spans?: readonly JsonToken[];
 }
 
 /** The columns of the indent before the body of an entry. */
@@ -27,20 +30,32 @@ const TOOL_CALL_ROWS = 3;
 const ENTRY_ROWS = 400;
 
 /** `rows` cut at `max`, with a last row that counts the rows that it leaves out. */
-function capped(rows: readonly string[], max: number, tone: ConversationTone): ConversationLine[] {
+function capped(rows: readonly ConversationLine[], max: number): ConversationLine[] {
   const over = rows.length > max;
   const shown = over ? rows.slice(0, max - 1) : rows;
   const more: ConversationLine[] = over ? [{ text: `… ${rows.length - shown.length} more lines`, tone: "quiet" }] : [];
 
-  return [...shown.map((text) => ({ text, tone })), ...more];
+  return [...shown, ...more];
 }
 
 function toned(rows: readonly string[], tone: ConversationTone): ConversationLine[] {
   return rows.map((text) => ({ text, tone }));
 }
 
+/** The rows of JSON text, with the tokens of each row. The rows have the same text as `plainRows`. */
+function jsonRows(text: string, width: number, tone: ConversationTone): ConversationLine[] {
+  return jsonTokenRows(text, width).map((spans) => ({ text: spans.map((span) => span.text).join(""), tone, spans }));
+}
+
+function indentLine(line: ConversationLine): ConversationLine {
+  const pad = " ".repeat(INDENT);
+  const spans: readonly JsonToken[] | undefined = line.spans && [{ text: pad, kind: "plain" }, ...line.spans];
+
+  return { ...line, text: `${pad}${line.text}`, ...(spans ? { spans } : {}) };
+}
+
 function indent(lines: readonly ConversationLine[]): ConversationLine[] {
-  return lines.map((line) => ({ ...line, text: `${" ".repeat(INDENT)}${line.text}` }));
+  return lines.map(indentLine);
 }
 
 /** How a line of a message shows: a tool call, thinking or an error on rows of their own, or a line of prose. */
@@ -67,7 +82,7 @@ function specialRows(line: string, kind: LineKind, width: number): ConversationL
   if (kind === "tool" && tool) {
     return [
       { text: "Tool call", tone: "label", meta: tool[1] },
-      ...capped(plainRows(tool[2] ?? "", width), TOOL_CALL_ROWS, "quiet"),
+      ...capped(jsonRows(tool[2] ?? "", width, "quiet"), TOOL_CALL_ROWS),
     ];
   }
 
@@ -115,15 +130,21 @@ function messageLabel(role: string | undefined): string {
   return role === "assistant" ? "Agent" : (role ?? "Message");
 }
 
+/** The rows of the body of a tool result. A result that is not an error and starts with `{` or `[` is JSON. */
+function toolResultRows(body: string, error: boolean, width: number): ConversationLine[] {
+  return !error && /^[{[]/.test(body.trim()) ? jsonRows(body, width, "body") : toned(plainRows(body, width), "body");
+}
+
 function toolResultParts(first: string, rest: readonly string[], width: number): EntryParts {
   const head = /^\[tool result ?([^\]]*?)( error)?\]$/.exec(first);
   const lines = head ? rest : [first, ...rest];
+  const error = Boolean(head?.[2]);
 
   return {
     label: "Tool result",
     meta: head?.[1] || undefined,
-    alert: head?.[2] ? "error" : undefined,
-    body: capped(plainRows(lines.join("\n"), width), TOOL_RESULT_ROWS, "body"),
+    alert: error ? "error" : undefined,
+    body: capped(toolResultRows(lines.join("\n"), error, width), TOOL_RESULT_ROWS),
   };
 }
 
@@ -138,7 +159,7 @@ function messageParts(entry: ConversationEntry, text: string, width: number, ren
     return {
       label: "Shell",
       meta: first.replace(/^\[bash\] ?/, ""),
-      body: capped(plainRows(rest.join("\n"), width), TOOL_RESULT_ROWS, "body"),
+      body: capped(toned(plainRows(rest.join("\n"), width), "body"), TOOL_RESULT_ROWS),
     };
   }
 
@@ -174,15 +195,14 @@ function parts(entry: ConversationEntry, width: number, render: MarkdownRenderer
   return { label: entry.type.replaceAll("_", " "), body: [] };
 }
 
+/** A row of a cut body: its text and its tokens, in the body tone. */
+function bodyLine({ text, spans }: ConversationLine): ConversationLine {
+  return { text, tone: "body", ...(spans ? { spans } : {}) };
+}
+
 /** The body cut at `ENTRY_ROWS`, so one long message cannot fill the memory. */
 function boundedBody(body: readonly ConversationLine[]): readonly ConversationLine[] {
-  return body.length > ENTRY_ROWS
-    ? capped(
-        body.map((line) => line.text),
-        ENTRY_ROWS,
-        "body",
-      )
-    : body;
+  return body.length > ENTRY_ROWS ? capped(body.map(bodyLine), ENTRY_ROWS) : body;
 }
 
 function entryTime(entry: ConversationEntry): string | undefined {
