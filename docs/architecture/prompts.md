@@ -56,6 +56,19 @@ the `flock` command prefix. When the Project has checks, it also lists the check
 system prompt keeps its check rules. See [native-factory/checks.md](native-factory/checks.md#prompts-and-the-digest). A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
 each user prompt at 16000 characters (`USER_PROMPT_LIMIT`).
 
+## Dependency rules of the supervisor
+
+The supervisor system prompt (`src/config/prompts/SUPERVISOR.md`) has these rules for Story dependencies:
+
+- Do not start a worker for a blocked Story. The manager refuses it.
+- Start the upstream Stories first when you must choose.
+- Do not use `hold_candidate` for a blocked Story. The policy already holds it.
+
+The digest, `factory_snapshot` and `story_get` give the dependency lists. The manager also raises an
+`upstream-stuck:<ID>` attention entry for an upstream Story that cannot progress. These rules only help
+the model. The manager is the guard. See
+[native-factory/README.md](native-factory/README.md).
+
 ## Read and write the user prompts
 
 `src/services/prompts/prompts.ts` reads and writes the user prompts. Its functions are `listPrompts()`,

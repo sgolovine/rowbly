@@ -8,6 +8,7 @@ import { searchStories } from "../story/story.js";
 import { watchStories } from "../story-watch/story-watch.js";
 import { promptHash, supervisorDigest } from "../supervisor-digest/supervisor-digest.js";
 import { createThread, listThreads } from "../thread/thread.js";
+import { blockedItems } from "./dependency-facts.js";
 import { shutdownFactory } from "./factory-shutdown.js";
 import {
   changeThread,
@@ -22,6 +23,7 @@ import {
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { failureText, runSideSteps } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
+import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
 import { checkHistory } from "./worker-checks.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
@@ -119,6 +121,7 @@ async function recordReconcileFailure(manager: Manager, error: unknown): Promise
  */
 async function superviseOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
+  await refreshUpstreamAttention(manager);
   setState(manager, (state) => ({ attention: withoutEntry(state.attention, "reconcile") }));
   await runSideSteps(manager);
 
@@ -157,6 +160,17 @@ export function reconcilePolicy(manager: Manager) {
   });
 }
 
+/** Replaces the `upstream-stuck:` attention entries with the upstream Stories that cannot progress now. */
+async function refreshUpstreamAttention(manager: Manager): Promise<void> {
+  const stories = await searchStories({}, manager.ctx);
+  const stages = await classifiedStages(manager);
+  const state = await readFactoryState(manager.paths.root, manager.ctx);
+
+  const entries = upstreamAttention(stories, stages, state.parked ?? {});
+
+  setState(manager, (current) => ({ attention: withUpstreamAttention(current.attention, entries) }));
+}
+
 /** Builds the bounded supervisor digest from the policy, the workers, the reports and the notes. */
 async function buildDigest(manager: Manager) {
   const policy = await scan(manager);
@@ -171,6 +185,7 @@ async function buildDigest(manager: Manager) {
   const unclassified = stages.filter(
     (s) => s.enabled && s.promptClass === "unclassified" && stories.some((story) => story.stage === s.key),
   );
+  // A blocked Story needs no action from the supervisor, so the `blocked` section is not material.
   const material = candidates.length > 0 || unclassified.length > 0 || reports.length > 0;
 
   const digest = supervisorDigest({
@@ -195,6 +210,7 @@ async function buildDigest(manager: Manager) {
       ...report,
       result: report.result === undefined ? undefined : JSON.stringify(report.result).slice(0, 1000),
     })),
+    blocked: blockedItems(stories, stages),
     notes: state.notes ?? [],
     holds: [...holds.entries()],
     providers: [...providers.entries()],
