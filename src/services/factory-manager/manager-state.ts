@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
@@ -17,6 +18,8 @@ export interface FactoryDependencies {
   maxWorkers?: number;
   beforeLaunch?: (thread: ThreadRecord) => Promise<void>;
   onModel?: (role: string, model: ModelChoice) => void;
+  /** The readers, spawn and clock of the check queue. Tests give fakes. */
+  checkDeps?: CheckQueueDeps;
 }
 
 export interface Hold {
@@ -100,6 +103,7 @@ export interface Manager {
   readonly paths: ProjectPaths;
   readonly ctx: ServiceContext;
   readonly owner: Owner;
+  readonly checks: CheckQueue;
   readonly store: Store<ManagerState>;
 }
 

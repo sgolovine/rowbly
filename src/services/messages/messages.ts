@@ -71,14 +71,45 @@ export interface WorkerRun {
   readonly shim: string;
   /** The absolute path of the Project write lock. */
   readonly lock: string;
+  /** The configured checks of the Project. Without checks, the worker gets no check rules. */
+  readonly checks?: readonly RunCheck[];
 }
+
+/** One configured check: its key, its label and whether it has a narrow form. */
+export interface RunCheck {
+  readonly key: string;
+  readonly label: string;
+  readonly narrow: boolean;
+}
+
+/** The text between these markers of `WORKER.md` goes in only when the Project has checks. */
+const CHECKS_MARKER = /<!-- \/?checks -->\n?/g;
+const CHECKS_BLOCK = /<!-- checks -->[\s\S]*?<!-- \/checks -->\n?/g;
 
 /** Quotes a value for a POSIX shell. */
 function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
-/** The Run section: the Story, the Stage, the paths and the command prefix for canonical Project changes. */
+function checkLine(check: RunCheck): string {
+  return `- \`${check.key}\`: ${check.label}${check.narrow ? " (narrow form with files)" : ""}`;
+}
+
+/** The checks of the Run section, or nothing without checks. */
+function checkLines(checks: readonly RunCheck[] | undefined): string[] {
+  return checks?.length ? ["Checks (run each one only with `run_check`):", ...checks.map(checkLine)] : [];
+}
+
+/** Keeps the check rules of the worker system prompt only when the Project has checks. */
+export function workerSystemPrompt(text: string, hasChecks: boolean): string {
+  if (!hasChecks) {
+    return text.replace(CHECKS_BLOCK, "");
+  }
+
+  return text.replace(CHECKS_MARKER, "");
+}
+
+/** The Run section: the Story, the Stage, the paths, the command prefix for canonical Project changes and the checks. */
 export function runSection(run: WorkerRun): string {
   return [
     `Story: ${run.story}`,
@@ -87,13 +118,19 @@ export function runSection(run: WorkerRun): string {
     `Worktree: \`${run.worktree}\``,
     `Model: ${run.model}`,
     `Command prefix: \`flock -w 60 ${shellQuote(run.lock)} ${shellQuote(run.shim)} -C ${shellQuote(run.root)} --json\``,
+    ...checkLines(run.checks),
   ].join("\n");
 }
 
 /** The first message of a worker. */
 export async function workerMessage(paths: ProjectPaths, run: WorkerRun): Promise<string> {
+  const [system, roleSystem, ...user] = await promptSections(paths, "worker");
+  const hasChecks = !!run.checks?.length;
+
   return composeMessage([
-    ...(await promptSections(paths, "worker")),
+    system as MessageSection,
+    { ...(roleSystem as MessageSection), text: workerSystemPrompt(roleSystem?.text ?? "", hasChecks) },
+    ...user,
     { title: `Stage prompt (${run.stage})`, text: run.stagePrompt },
     { title: "Run", text: runSection(run) },
   ]);

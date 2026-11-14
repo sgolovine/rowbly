@@ -1,3 +1,4 @@
+import { cancelThreadChecks } from "../check-queue/check-queue.js";
 import { ConflictError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { createResultTool } from "../factory-worker/factory-worker.js";
@@ -24,6 +25,7 @@ import {
   setState,
 } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
+import { configuredChecks, workerChecks } from "./worker-checks.js";
 
 type WorkerWorktree = Awaited<ReturnType<typeof prepareWorkerWorktree>>;
 type OpenedSession = Awaited<ReturnType<typeof openFactorySession>>;
@@ -131,14 +133,15 @@ async function openWorkerSession(
   worktreePath: string,
 ): Promise<OpenedSession> {
   const resultTool = createResultTool((result) => serial(manager, () => recordResult(manager, run, result)));
+  const checks = workerChecks(manager, intent, worktreePath);
   const opened = await openFactorySession({
     thread: intent,
     runtimeDir: manager.paths.runtimeDir,
     runtime: manager.deps.runtime,
     agentDir: manager.deps.agentDir,
     choice: intent.model ?? getState(manager).settings.workerModel,
-    worker: { cwd: worktreePath, root: manager.paths.root, shim: manager.deps.shim },
-    tools: [resultTool],
+    worker: { cwd: worktreePath, root: manager.paths.root, shim: manager.deps.shim, checks: checks.checks },
+    tools: [resultTool, ...checks.tools],
   });
 
   run.update(() => ({ handle: opened.handle, assignedProvider: opened.model.provider }));
@@ -215,6 +218,7 @@ async function buildWorkerPrompt(
     model: `${model.provider}/${model.modelId}`,
     shim: manager.deps.shim,
     lock: await projectWriteLockPath(root),
+    checks: configuredChecks(manager).map((c) => ({ key: c.key, label: c.label, narrow: !!c.narrowCommand })),
   });
 }
 
@@ -346,6 +350,7 @@ async function failWorker(manager: Manager, run: WorkerRun, error: unknown): Pro
 async function finishWorker(manager: Manager, run: WorkerRun): Promise<void> {
   clearInterval(run.activityTimer);
   run.unsubscribe?.();
+  await cancelThreadChecks(manager.checks, run.id);
 
   if (run.handle) {
     const stats = run.handle.session.getSessionStats();
