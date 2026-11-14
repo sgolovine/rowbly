@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { doctor } from "../doctor/doctor.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { ensureRuntimeIgnores, prepareRuntime, runtimePath } from "./runtime-files.js";
+import { checkRuntimeDir, ensureRuntimeIgnores, prepareRuntime, runtimeChild, runtimePath } from "./runtime-files.js";
 
 describe("runtime files", () => {
   const project = useTestProject();
@@ -40,6 +40,18 @@ describe("runtime files", () => {
         fixed: false,
       }),
     );
+  });
+  it("gives a checked folder and its children, and rejects bad children", async () => {
+    await prepareRuntime(project.paths);
+    const dir = await checkRuntimeDir(project.paths, "sessions");
+    expect(dir.path).toBe(join(project.paths.runtimeDir, "sessions"));
+    expect(await runtimeChild(dir, "a/b.jsonl")).toBe(join(project.paths.runtimeDir, "sessions/a/b.jsonl"));
+    for (const ref of ["", "/tmp/a", "..", "../threads/a.json", "a/../b", "."]) {
+      await expect(runtimeChild(dir, ref)).rejects.toThrow("Invalid runtime path");
+    }
+    await symlink(project.paths.storiesDir, join(dir.path, "escape"));
+    await expect(runtimeChild(dir, "escape/a.jsonl")).rejects.toThrow(/symlink/);
+    await expect(checkRuntimeDir(project.paths, "sessions/escape")).rejects.toThrow(/symlink/);
   });
   it("rejects a symlink at the runtime root", async () => {
     await mkdir(join(project.paths.root, "outside"));
