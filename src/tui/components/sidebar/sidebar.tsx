@@ -1,9 +1,10 @@
-import { Box, type DOMElement, measureElement, Text } from "ink";
-import { type RefObject, useRef, useState } from "react";
+import { Box, type DOMElement, Text } from "ink";
+import { useRef, useState } from "react";
 import { useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import { Button, type ButtonProps } from "../button/index.js";
 import { Panel } from "../panel/index.js";
+import { ResizeEdge } from "../resize-edge/index.js";
 import { SIDEBAR_CHROME_HEIGHT, SIDEBAR_MIN_WIDTH } from "../shell-layout.js";
 import { type SidebarEntry, SidebarRow, type SidebarRowEnv } from "../sidebar-row/index.js";
 
@@ -25,22 +26,6 @@ interface SidebarProps {
   /** The entry `id` was dropped on the row at `index`. */
   onMove?(id: string, index: number): void;
   button?: Pick<ButtonProps, "label" | "onClick">;
-}
-
-/** Gives the sidebar the width where the pointer is. The pointer's column becomes the column of the right border. */
-function resizeTo(
-  sidebar: RefObject<DOMElement | null>,
-  width: number,
-  maxWidth: number,
-  onResize: ((width: number) => void) | undefined,
-  x: number,
-): void {
-  const left = sidebar.current ? measureElement(sidebar.current).x : 0;
-  const next = Math.max(SIDEBAR_MIN_WIDTH, Math.min(maxWidth, x - left + 1));
-
-  if (next !== width) {
-    onResize?.(next);
-  }
 }
 
 /** A wheel notch selects the entry before or after the current one. */
@@ -91,7 +76,6 @@ export function Sidebar({
   button,
 }: SidebarProps) {
   const ref = useRef<DOMElement>(null);
-  const edge = useRef<DOMElement>(null);
   // Tells this sidebar's drags from the drags of other components.
   const self = useRef({}).current;
   const [over, setOver] = useState<string | null>(null);
@@ -104,8 +88,6 @@ export function Sidebar({
   const below = entries.length - start - limit;
   const env: SidebarRowEnv = { self, onFocus, onSelect, onEdit, onMove, setOver };
 
-  // The edge is the right border and the gap after it.
-  useMouse(edge, { onPull: (x) => resizeTo(ref, width, maxWidth, onResize, x) }, clickable && onResize !== undefined);
   useMouse(ref, { onWheel: (direction) => wheelSelect(entries, current, onSelect, direction) }, clickable && overflow);
 
   // The outer box is the Panel's size, so the edge is at its right border and as tall as it, in any parent.
@@ -136,7 +118,17 @@ export function Sidebar({
         <Box flexGrow={1} />
         {button && <Button {...button} keyName={focused ? "n" : undefined} clickable={clickable} />}
       </Panel>
-      {onResize && <Box ref={edge} position="absolute" top={0} right={-1} width={2} height="100%" />}
+      {onResize && (
+        <ResizeEdge
+          target={ref}
+          side="right"
+          width={width}
+          minWidth={SIDEBAR_MIN_WIDTH}
+          maxWidth={maxWidth}
+          active={clickable}
+          onResize={onResize}
+        />
+      )}
     </Box>
   );
 }

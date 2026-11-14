@@ -43,7 +43,7 @@ describe("storyModalHints", () => {
   it("gives no esc while a region of a tab takes the keys and has no esc", () => {
     const keys = storyModalHints("specs", { ...noTabHints, tabOwnsKeys: true }).map((hint) => hint.key);
     expect(keys).not.toContain("esc");
-    expect(storyModalHints("attachments", noTabHints).at(-1)).toEqual({ key: "esc", description: "close" });
+    expect(storyModalHints("attachments", noTabHints).at(-1)).toEqual({ key: "esc", description: "Story list" });
   });
 });
 

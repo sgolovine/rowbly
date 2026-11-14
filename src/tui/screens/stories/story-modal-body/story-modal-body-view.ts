@@ -3,7 +3,7 @@ import type { KeyHint } from "../../../keymap.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import { STORY_PADDING_X, type StoryTabId } from "../story-tab-panes/index.js";
 
-/** Which confirmation is on top of the Modal. */
+/** Which confirmation is on top of the Story form. */
 export type StoryModalConfirm = StoryConfirm;
 
 /** The blank row above the Tabs and the row of the Tabs. */
@@ -11,7 +11,7 @@ const TABS_HEIGHT = 2;
 /** The blank row under the Tabs and the blank row at the bottom of the General tab. */
 const GENERAL_PADDING_Y = 2;
 const GENERAL_HINTS: readonly KeyHint[] = [{ key: "ctrl+d", description: "delete" }];
-const CLOSE_HINT: KeyHint = { key: "esc", description: "close" };
+const CLOSE_HINT: KeyHint = { key: "esc", description: "Story list" };
 
 /** The key hints that the tabs reported, and whether a region of a tab takes `esc` and `tab`. */
 export interface TabHints {

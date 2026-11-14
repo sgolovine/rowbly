@@ -29,6 +29,7 @@ function env(change: Partial<ShellViewInput> = {}, sidebarShown = true): ShellEn
     active: true,
     overlay: null,
     pane: "stories",
+    storyPane: null,
     sidebarShown,
     stageKey: null,
     selectedId: null,
@@ -51,6 +52,9 @@ function env(change: Partial<ShellViewInput> = {}, sidebarShown = true): ShellEn
     setPane: vi.fn(),
     setSidebarWidth: vi.fn(),
     setSidebarShown: vi.fn(),
+    setStoryPane: vi.fn(),
+    setStoryWidth: vi.fn(),
+    setStoryHints: vi.fn(),
     setStageKey: vi.fn(),
     setSelectedId: vi.fn(),
     setCollapsed: vi.fn(),
@@ -83,7 +87,7 @@ describe("shell selection", () => {
 
     expect(shell.setStageKey).toHaveBeenCalledWith(null);
     expect(shell.setSelectedId).toHaveBeenCalledWith("ROW-01");
-    expect(shell.setOverlay).toHaveBeenCalledWith(null);
+    expect(shell.setStoryPane).toHaveBeenCalledWith(null);
     expect(shell.reload).toHaveBeenCalledOnce();
   });
 
@@ -95,7 +99,7 @@ describe("shell selection", () => {
 
     expect(shell.setPane).toHaveBeenCalledWith("stories");
     expect(shell.setCollapsed).toHaveBeenCalledOnce();
-    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "editStory", story: STORY });
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "edit", story: STORY });
   });
 
   it("opens a Story from the finder in the list", () => {
@@ -103,8 +107,8 @@ describe("shell selection", () => {
 
     openFoundStory(shell, STORY);
 
-    expect(shell.setPane).toHaveBeenCalledWith("stories");
-    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "editStory", story: STORY });
+    expect(shell.setOverlay).toHaveBeenCalledWith(null);
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "edit", story: STORY });
   });
 
   it("gives the focus to the list when it hides the sidebar", () => {

@@ -4,7 +4,7 @@ import type { Project } from "../../../services/project/project.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
 import { createShellRegistry, createToastStore } from "../../hooks/index.js";
-import { handleShellKey } from "./shell-keys.js";
+import { cyclePane, handleShellKey } from "./shell-keys.js";
 import type { Board, ShellEnv } from "./shell-state.js";
 import { type ShellViewInput, shellView } from "./shell-view.js";
 
@@ -32,6 +32,7 @@ function env(change: Partial<ShellViewInput> = {}): ShellEnv {
     active: true,
     overlay: null,
     pane: "stories",
+    storyPane: null,
     sidebarShown: true,
     stageKey: null,
     selectedId: "ROW-01",
@@ -54,6 +55,9 @@ function env(change: Partial<ShellViewInput> = {}): ShellEnv {
     setPane: vi.fn(),
     setSidebarWidth: vi.fn(),
     setSidebarShown: vi.fn(),
+    setStoryPane: vi.fn(),
+    setStoryWidth: vi.fn(),
+    setStoryHints: vi.fn(),
     setStageKey: vi.fn(),
     setSelectedId: vi.fn(),
     setCollapsed: vi.fn(),
@@ -125,8 +129,32 @@ describe("handleShellKey", () => {
     handleShellKey(sidebar, "n", key());
 
     expect(list.setPane).toHaveBeenCalledWith("stages");
-    expect(list.setOverlay).toHaveBeenCalledWith({ kind: "newStory" });
+    expect(list.setStoryPane).toHaveBeenCalledWith({ kind: "new" });
     expect(sidebar.setOverlay).toHaveBeenCalledWith({ kind: "newStage" });
+  });
+
+  it("moves the focus in the order Stage sidebar, Story list, Story sidebar", () => {
+    const open = { kind: "new" } as const;
+
+    expect(cyclePane(env({ storyPane: open }).view, 1)).toBe("story");
+    expect(cyclePane(env({ storyPane: open }).view, -1)).toBe("stages");
+    expect(cyclePane(env({ storyPane: open, pane: "stages" }).view, 1)).toBe("stories");
+    expect(cyclePane(env({ storyPane: open, pane: "stages" }).view, -1)).toBe("story");
+    expect(cyclePane(env({ storyPane: open, sidebarShown: false }).view, 1)).toBe("story");
+    expect(cyclePane(env({ storyPane: null, sidebarShown: false }).view, 1)).toBe("stories");
+  });
+
+  it("closes the Story sidebar with esc in the Story list, and asks first when it has unsaved changes", () => {
+    const clean = env({ storyPane: { kind: "new" } });
+    const dirty = env({ storyPane: { kind: "new" } });
+
+    dirty.registry.setDirty(-1, "form", true);
+    handleShellKey(clean, "", key({ escape: true }));
+    handleShellKey(dirty, "", key({ escape: true }));
+
+    expect(clean.setStoryPane).toHaveBeenCalledWith(null);
+    expect(dirty.setStoryPane).not.toHaveBeenCalled();
+    expect(dirty.setOverlay).toHaveBeenCalledWith({ kind: "discardStory", next: null });
   });
 
   it("opens and deletes the selected Story, and selects the next Stage with ]", () => {
@@ -136,9 +164,19 @@ describe("handleShellKey", () => {
     handleShellKey(shell, "d", key());
     handleShellKey(shell, "]", key());
 
-    expect(shell.setOverlay).toHaveBeenNthCalledWith(1, { kind: "editStory", story: STORY });
-    expect(shell.setOverlay).toHaveBeenNthCalledWith(2, { kind: "deleteStory", story: STORY });
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "edit", story: STORY });
+    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "deleteStory", story: STORY });
     expect(shell.setStageKey).toHaveBeenCalledWith("BACKLOG");
+  });
+
+  it("asks before it opens a different Story over unsaved changes in the Story sidebar", () => {
+    const shell = env({ storyPane: { kind: "new" } });
+
+    shell.registry.setDirty(-1, "form", true);
+    handleShellKey(shell, "", key({ return: true }));
+
+    expect(shell.setStoryPane).not.toHaveBeenCalled();
+    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "discardStory", next: { kind: "edit", story: STORY } });
   });
 
   it("collapses the section of the Story on ←, and selects its heading", () => {

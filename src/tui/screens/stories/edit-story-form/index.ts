@@ -1,1 +1,1 @@
-export * from "./edit-story-modal.js";
+export * from "./edit-story-form.js";

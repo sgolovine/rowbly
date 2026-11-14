@@ -283,10 +283,214 @@ describe("Shell", () => {
 
     it("opens a Modal over the whole main area when the terminal is narrow", async () => {
       const tui = await openSized(project.ctx as { cwd: string }, { width: 60, height: 24 });
-      await tui.press("n");
-      expect(tui.frame()).toContain("New Story");
+      const list = tui.locate("╭─Rowbly › All Stages").y;
+      await tui.press(",");
       // The Modal starts above the top edge of the Story list, so it is not limited to the list.
-      expect(tui.locate("╭─New Story").y).toBeLessThan(tui.locate("╭─R").y);
+      expect(tui.locate("╭─Rowbly › Settings").y).toBeLessThan(list);
+    });
+
+    it("gives the full main area to the Story sidebar in a narrow terminal, and keeps the draft behind the list", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 60, height: 24 });
+      await tui.press("n");
+      expect(tui.locate("╭─New Story")).toEqual({ x: 0, y: 3 });
+      expect(tui.frame()).not.toContain("Rowbly › All Stages");
+      expect(tui.frame()).not.toContain("╭─Stages");
+      await tui.type("Draft");
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("╭─New Story");
+      expect(tui.frame()).toContain("First story");
+      await tui.press(keys.tab);
+      expect(tui.frame()).toContain("Draft");
+      expect(tui.frame()).not.toContain("First story");
+    });
+
+    it("puts the Story sidebar beside the list in a wide terminal", async () => {
+      const tui = await openSized(project.ctx as { cwd: string }, { width: 120, height: 30 });
+      await tui.press("n");
+      const sidebar = tui.locate("╭─New Story");
+      expect(sidebar.y).toBe(tui.locate("Rowbly › All Stages").y);
+      // 40% of 120 columns, and the ✕ is at the right end of the top border.
+      expect(sidebar.x).toBe(120 - 48);
+      expect(tui.frame().split("\n")[sidebar.y]).toMatch(/╭─New Story─+ ✕ ╮$/);
+      expect(tui.frame().split("\n")[3 + 26 - 1]).toMatch(/╰─+╯$/);
+    });
+  });
+
+  describe("Story sidebar", () => {
+    const focusedOn = (tui: Awaited<ReturnType<typeof open>>) => {
+      const footer = tui.frame().split("\n").at(-1) ?? "";
+      if (footer.includes("ctrl+s save")) return "story";
+      if (footer.includes("n new Stage")) return "stages";
+      if (footer.includes("n new Story")) return "stories";
+      return footer;
+    };
+
+    it("opens the new Story form with n and with + New Story beside the Story list, with no Modal", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      expect(tui.locate("╭─New Story").y).toBe(tui.locate("Rowbly › All Stages").y);
+      expect(tui.frame()).toContain("ROW-01 First");
+      expect(tui.frame()).not.toContain("esc cancel");
+      expect(focusedOn(tui)).toBe("story");
+      await tui.click("✕");
+      expect(tui.frame()).not.toContain("╭─New Story");
+      await tui.click("+ New Story");
+      expect(tui.locate("╭─New Story").y).toBe(tui.locate("Rowbly › All Stages").y);
+      expect(tui.frame()).toContain("ROW-01 First");
+    });
+
+    it("opens the edit form with enter, with a click and from the finder, with its tabs", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      await createStory({ title: "Bravo" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Edit ROW-01");
+      expect(tui.frame()).toMatch(/General\s+Attachments\s+Threads/);
+      expect(tui.frame()).toContain("ROW-02 Bravo");
+      await tui.click("Bravo");
+      await tui.click("Bravo");
+      expect(tui.frame()).toContain("Edit ROW-02");
+      expect(tui.frame()).not.toContain("Edit ROW-01");
+      await tui.press(keys.escape, keys.ctrl("p"));
+      await tui.type("alph");
+      await tui.press(keys.enter);
+      expect(tui.frame()).toContain("Edit ROW-01");
+      expect(focusedOn(tui)).toBe("story");
+    });
+
+    it("moves the focus with tab from the Stage sidebar to the list and to the Story sidebar, and with a click", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      expect(focusedOn(tui)).toBe("story");
+      await tui.type("Draft");
+      // esc gives the focus to the list and keeps the Story sidebar with its draft.
+      await tui.press(keys.escape);
+      expect(focusedOn(tui)).toBe("stories");
+      expect(tui.frame()).toContain("Draft");
+      await tui.press(keys.tab);
+      expect(focusedOn(tui)).toBe("story");
+      await tui.press(keys.escape, keys.shiftTab);
+      expect(focusedOn(tui)).toBe("stages");
+      await tui.press(keys.tab);
+      expect(focusedOn(tui)).toBe("stories");
+      await tui.click("Draft");
+      expect(focusedOn(tui)).toBe("story");
+      await tui.click("Rowbly › All Stages");
+      await tui.click("Draft");
+      // A click on the selected Story opens it, so the form asks before it discards the draft.
+      await tui.click("ROW-01 Alpha");
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("n");
+      await tui.click("+ New Stage");
+      await tui.press(keys.escape);
+      expect(tui.frame()).toContain("Draft");
+    });
+
+    it("keeps tab, shift+tab and ctrl+s of the form while the Story sidebar has the focus", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.enter);
+      await tui.press(keys.tab);
+      expect(tui.frame()).toMatch(/› Stage\*/);
+      await tui.press(keys.shiftTab);
+      expect(tui.frame()).toContain("No attachments");
+      await tui.press(keys.shiftTab, keys.shiftTab);
+      expect(tui.frame()).toMatch(/› Stage\*/);
+    });
+
+    it("closes with esc in the list, and asks first when the form has unsaved changes", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n", keys.escape, keys.escape);
+      expect(tui.frame()).not.toContain("╭─New Story");
+      await tui.press("n");
+      await tui.type("Draft");
+      await tui.press(keys.escape, keys.escape);
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("n");
+      expect(tui.frame()).toContain("Draft");
+      await tui.press(keys.escape);
+      await tui.press("y");
+      expect(tui.frame()).not.toContain("╭─New Story");
+      expect(tui.frame()).not.toContain("Draft");
+    });
+
+    it("asks before the ✕ discards unsaved changes", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      await tui.type("Draft");
+      await tui.click("✕");
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("y");
+      expect(tui.frame()).not.toContain("Draft");
+      expect(focusedOn(tui)).toBe("stories");
+    });
+
+    it("asks before it shows a different Story over unsaved changes, and shows it at once without them", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      await createStory({ title: "Bravo" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.enter, keys.escape, keys.down, keys.enter);
+      expect(tui.frame()).toContain("Edit ROW-02");
+      await tui.type("!");
+      await tui.press(keys.escape, keys.up, keys.enter);
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("n");
+      expect(tui.frame()).toContain("Edit ROW-02");
+      expect(tui.frame()).toContain("Bravo!");
+      await tui.press("n");
+      expect(tui.frame()).toContain("Close and discard unsaved changes?");
+      await tui.press("y");
+      expect(tui.frame()).toContain("╭─New Story");
+      expect(focusedOn(tui)).toBe("story");
+    });
+
+    it("saves an edit, shows a toast, selects the Story and closes the Story sidebar", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      await createStory({ title: "Bravo" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.down, keys.enter);
+      await tui.type(" two");
+      await tui.press(keys.up);
+      await tui.press(keys.ctrl("s"));
+      await settle(50);
+      await tui.press();
+      expect(tui.toasts.list().map((t) => t.message)).toContain("Saved ROW-02");
+      expect(tui.frame()).not.toContain("Edit ROW-02");
+      expect(tui.frame()).toMatch(/▌ {3}ROW-02 Bravo two/);
+      expect(focusedOn(tui)).toBe("stories");
+    });
+
+    it("changes its width with a drag of its left edge, and keeps the width", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("n");
+      const before = tui.locate("╭─New Story");
+      await tui.mouse("press", before.x, before.y + 1);
+      await tui.mouse("move", before.x - 10, before.y + 1);
+      await tui.mouse("release", before.x - 10, before.y + 1);
+      expect(tui.locate("╭─New Story").x).toBe(before.x - 10);
+      // The list keeps MAIN_MIN_WIDTH columns.
+      await tui.mouse("press", before.x - 10, before.y + 1);
+      await tui.mouse("move", 0, before.y + 1);
+      await tui.mouse("release", 0, before.y + 1);
+      expect(tui.locate("╭─New Story").x).toBe(22 + 1 + 24 + 1);
+      await tui.click("✕");
+      await tui.press("n");
+      expect(tui.locate("╭─New Story").x).toBe(22 + 1 + 24 + 1);
+    });
+
+    it("keeps the confirmation of a delete from the list", async () => {
+      await createStory({ title: "Alpha" }, project.ctx);
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press(keys.enter, keys.escape, "d");
+      expect(tui.frame()).toContain("Delete ROW-01 Alpha?");
+      await tui.press("y");
+      await settle(50);
+      await tui.press();
+      expect(await searchStories({}, project.ctx)).toEqual([]);
+      expect(tui.frame()).not.toContain("Edit ROW-01");
     });
   });
 
@@ -349,7 +553,7 @@ describe("Shell", () => {
     expect(tui.frame()).toContain("╭─Stages");
   });
 
-  it("creates a Story in the New Story modal", async () => {
+  it("creates a Story in the Story sidebar", async () => {
     const tui = await open(project.ctx as { cwd: string });
     await tui.press("n");
     expect(tui.frame()).toContain("New Story");
@@ -533,7 +737,7 @@ describe("Shell", () => {
     await tui.press(keys.enter);
     expect(tui.frame()).not.toContain("1 Story");
     expect(tui.frame()).toContain("Edit ROW-02");
-    await tui.press(keys.escape);
+    await tui.press(keys.escape, keys.escape);
     expect(tui.frame()).not.toContain("Edit ROW-02");
     expect(tui.frame()).toMatch(/▌ {3}ROW-02 Bravo/);
   });
@@ -556,12 +760,14 @@ describe("Shell", () => {
     expect(tui.frame()).toMatch(/▌ {3}ROW-02 Bravo/);
   });
 
-  it("deletes the open Story with ctrl+d", async () => {
+  it("deletes the open Story with ctrl+d after a confirmation", async () => {
     await createStory({ title: "Alpha" }, project.ctx);
     const tui = await open(project.ctx as { cwd: string });
     await tui.press(keys.enter);
     expect(tui.frame()).toContain("Edit ROW-01");
-    await tui.press(keys.ctrl("d"), "y");
+    await tui.press(keys.ctrl("d"));
+    expect(tui.frame()).toContain("Delete ROW-01 Alpha? You");
+    await tui.press("y");
     await settle(50);
     await tui.press();
     expect(await searchStories({}, project.ctx)).toEqual([]);
@@ -639,6 +845,9 @@ describe("Shell", () => {
     const tui = await open(project.ctx as { cwd: string });
     await tui.press("?");
     expect(tui.frame()).toContain("edit a text field full screen");
+    expect(tui.frame()).toContain("focus the previous pane (in the Story list)");
+    expect(tui.frame()).toContain("focus the Story list (in the Story sidebar)");
+    expect(tui.frame()).toContain("close the Story sidebar (in the Story list)");
     await tui.press("?");
     expect(tui.frame()).not.toContain("edit a text field full screen");
   });

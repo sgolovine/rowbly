@@ -3,11 +3,14 @@ import type { CustomField } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { createStory, type Story } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { FormModal, type FormValues } from "../../../components/index.js";
+import { Form, type FormValues, useCovered } from "../../../components/index.js";
 import {
   IMAGE_PASTE_HINT,
   showToast,
   type ToastStore,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
   type useStoryPaste,
   useToast,
   writeRef,
@@ -16,6 +19,9 @@ import { NewStoryImages } from "../new-story-images/index.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 
 type StoryPaste = ReturnType<typeof useStoryPaste>;
+
+/** One list for all renders, so that the Form does not report its keys again on each render. */
+const EXTRA_HINTS = [IMAGE_PASTE_HINT];
 
 /** The environment of the creation of the Story. */
 interface NewStoryEnv {
@@ -69,16 +75,17 @@ function initialValues(stages: readonly Stage[], customFields: readonly CustomFi
 }
 
 /**
- * Creates a Story in a generic Modal: its title, its Stage, its description in a Markdown `TextArea`
- * (`ctrl+f` opens it full screen) and the custom fields of the project.
+ * The form that creates a Story in the Story sidebar: its title, its Stage, its description in a Markdown
+ * `TextArea` (`ctrl+f` opens it full screen) and the custom fields of the project. `ctrl+v` pastes an image.
+ * `esc` calls `onBack`, and the form keeps its text.
  */
-export function NewStoryModal({
+export function NewStoryForm({
   ctx,
   stages,
   customFields,
   stage,
   onCreated,
-  onClose,
+  onBack,
 }: {
   ctx: ServiceContext;
   stages: readonly Stage[];
@@ -86,24 +93,29 @@ export function NewStoryModal({
   /** The Stage the form starts with. Defaults to the first Stage. */
   stage?: string;
   onCreated(story: Story): void;
-  onClose(): void;
+  /** `esc`: the Story sidebar gives the focus to the Story list. */
+  onBack(): void;
 }) {
   const toast = useToast();
+  const active = useIsActive();
+  const covered = useCovered();
   const [saving, setSaving] = useState(false);
   const paste = useRef<StoryPaste | null>(null);
 
   const env: NewStoryEnv = { ctx, customFields, toast, paste, setSaving, onCreated };
 
+  useKeyCapture(active, { text: false, escape: true });
+  useEscape(active && !covered, onBack);
+
   return (
-    <FormModal
-      title="New Story"
-      fields={storyFormFields(stages, customFields)}
-      initialValues={initialValues(stages, customFields, stage)}
-      onSubmit={(values) => createNewStory(env, values)}
-      onClose={onClose}
-      extraHints={[IMAGE_PASTE_HINT]}
-    >
+    <>
       <NewStoryImages enabled={!saving} onPaste={(value) => writeRef(paste, value)} />
-    </FormModal>
+      <Form
+        extraHints={EXTRA_HINTS}
+        fields={storyFormFields(stages, customFields)}
+        initialValues={initialValues(stages, customFields, stage)}
+        onSubmit={(values) => createNewStory(env, values)}
+      />
+    </>
   );
 }
