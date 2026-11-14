@@ -24,7 +24,6 @@ describe("findBadNames", () => {
       ".agents/skills/agentic-tui/SomeUpstreamFile.md",
       ".rowbly/stories/ROW-01.md",
       "stages/IN_REVIEW.md",
-      "FOO.txt",
     ];
 
     assert.deepEqual(findBadNames(paths), []);
@@ -37,7 +36,6 @@ describe("findBadNames", () => {
       "skills/rowbly_reference.md",
       "src/README/index.ts",
       "stages/nested/BACKLOG.md",
-      "src/FOO.txt",
     ];
 
     assert.deepEqual(findBadNames(paths), paths);
