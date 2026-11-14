@@ -1,7 +1,7 @@
 ---
 title: Cache Pi model list and provider auth status on disk
-stage: IN_DEVELOPMENT
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-39
 pull_request: https://github.com/sgolovine/rowbly/pull/225
 ---
