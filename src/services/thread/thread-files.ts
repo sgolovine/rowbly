@@ -8,13 +8,20 @@ import { validateThread, validId } from "./thread-validate.js";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
 
-/** Gives the checked absolute path of the metadata file of a Thread. */
-export async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+/** Gives the runtime reference of the metadata file of a Thread, relative to the runtime folder. */
+export function threadReference(id: string): string {
   if (!validId(id)) {
     throw new ValidationError("Invalid thread ID");
   }
 
-  return runtimePath(await findProject(ctx), `threads/${id}.json`);
+  return `threads/${id}.json`;
+}
+
+/** Gives the checked absolute path of the metadata file of a Thread. */
+export async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+  const reference = threadReference(id);
+
+  return runtimePath(await findProject(ctx), reference);
 }
 
 /** Checks that the session reference stays in the session folder of the Thread. */

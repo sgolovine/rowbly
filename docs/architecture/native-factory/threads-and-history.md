@@ -43,6 +43,8 @@ Peek.
 - Only finalized messages appear. Token deltas do not appear.
 - Reads use bounded pages. Metadata lists do not load transcripts.
 - Read-only history works while the factory is off.
+- A watch polls every 500 ms. If the `stat` of the Thread file and of the session file did not change
+  since the last successful poll, the poll stops before it reads the Thread or a page.
 - `rowbly thread log <id> --tail <n>` reads a bounded tail: default 20, maximum 100 entries.
 
 ## The supervisor digest
