@@ -1,5 +1,5 @@
 ---
-title: Load the TUI lazily so CLI commands do not pay for Ink
+title: Make getStory read one Story file instead of the whole folder twice
 stage: BACKLOG
 worktree: null
 pull_request: null
