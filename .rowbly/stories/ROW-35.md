@@ -2,7 +2,7 @@
 title: Load the TUI lazily so CLI commands do not pay for Ink
 stage: IN_REFINEMENT
 position: 6
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-35
 pull_request: null
 ---
 
