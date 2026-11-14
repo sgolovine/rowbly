@@ -62,11 +62,16 @@ API keys use masked prompts. Do not put secrets in command arguments or Project 
 A model list does not prove provider access, quota or credential health.
 Use `rowbly auth logout <provider>` to remove a stored credential.
 
-In the TUI, open Settings and select AI in the Factory group.
-Enter signs in to the selected provider. The `d` key signs out with confirmation.
-The `s` and `w` keys select supervisor and worker models. The picker offers supported thinking levels and `Pi default`.
+In the TUI, open Settings and select AI in the Factory group. The section has three tabs: Providers,
+Models and Limits. Use `←` and `→` to change the tab.
 
-Use `l` for the worker limit and `r` to reload. Escape cancels sign-in and returns focus.
+- **Providers** shows the signed-in providers. The `d` key signs out with confirmation, and `r` reloads.
+  The `n` key opens a page with the other providers. On that page, Enter signs in and Escape goes back.
+- **Models** shows the supervisor model and the worker model. The `s` and `w` keys change them. The picker
+  offers supported thinking levels and `Pi default`.
+- **Limits** shows the worker limit. The `l` key edits it.
+
+Escape cancels sign-in and returns focus.
 
 ## Factory controls
 

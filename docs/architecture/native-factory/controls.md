@@ -51,13 +51,14 @@ viewer or the AI section of Settings.
 
 ## The AI section of Settings
 
-Settings has a Factory group with an AI section for providers, role models and the worker limit.
+Settings has a Factory group with an AI section. The section has three tabs: Providers, Models and Limits.
+`←` and `→` change the tab.
 
-- Enter signs in to the selected provider.
-- `d` signs out, with confirmation.
-- `s` and `w` select the supervisor and worker models.
-- `l` sets the worker limit.
-- `r` reloads.
+- The Providers tab shows only the signed-in providers. `d` signs out, with confirmation. `r` reloads.
+- `n` opens the page of the other providers. On that page, Enter signs in and Escape goes back to the Providers tab.
+- The Models tab shows each role model in its own card. `s` and `w` select the supervisor and worker models.
+- The Limits tab shows each limit in its own card. `l` sets the worker limit.
+- `s`, `w` and `l` also work on the other tabs.
 - The model picker offers the supported thinking levels and `Pi default`.
 - Escape cancels authentication and restores the focus.
 
