@@ -4,7 +4,7 @@ import type { Story } from "../../services/story/story.js";
 import type { ThreadRecord } from "../../services/thread/thread.js";
 
 /** What the Story sidebar shows: the form of a new Story, or the edit form of a Story. */
-export type StoryPane = { readonly kind: "new" } | { readonly kind: "edit"; readonly story: Story };
+type StoryPane = { readonly kind: "new" } | { readonly kind: "edit"; readonly story: Story };
 
 /** What the sidebar on the right of the list shows: a Story form, or a worker Thread of the Factory view. */
 export type SidePane = StoryPane | { readonly kind: "thread"; readonly thread: ThreadRecord };
