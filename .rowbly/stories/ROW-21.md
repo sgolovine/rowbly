@@ -1,7 +1,7 @@
 ---
 title: Edit worker model overrides in the TUI
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-21
 pull_request: null
 ---
 
