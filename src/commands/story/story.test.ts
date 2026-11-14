@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addCustomField } from "../../services/custom-field/custom-field.js";
-import { getStory } from "../../services/story/story.js";
+import { createStory, getStory } from "../../services/story/story.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { runCli } from "../test-cli/test-cli.js";
 
@@ -78,6 +78,17 @@ describe("story commands", () => {
     expect((await cli("story", "get", "ROW-01")).exitCode).toBe(1);
   });
 
+  it("story delete prints a warning for each downstream story", async () => {
+    await createStory({ title: "Upstream" }, project.ctx);
+    await createStory({ title: "Downstream", dependsOn: ["ROW-01"] }, project.ctx);
+    expect((await cli("story", "delete", "ROW-01")).stdout).toBe(
+      "Deleted ROW-01\nRemoved the dependency on ROW-01 from ROW-02",
+    );
+    await createStory({ title: "Again" }, project.ctx);
+    const json = JSON.parse((await cli("story", "delete", "ROW-03", "--json")).stdout);
+    expect(json).toEqual({ id: "ROW-03", warnings: [] });
+  });
+
   describe("story get", () => {
     it("shows the stage label, every field and the description", async () => {
       await addCustomField({ label: "Points", type: "number" }, project.ctx);
@@ -131,6 +142,7 @@ describe("story commands", () => {
       const story = JSON.parse((await cli("story", "get", "ROW-01", "--json")).stdout);
       expect(Object.keys(story).sort()).toEqual([
         "attachmentCount",
+        "dependsOn",
         "description",
         "fields",
         "id",

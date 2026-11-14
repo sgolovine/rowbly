@@ -10,6 +10,8 @@ export interface Story {
   stage: string;
   /** The 1-based place of the story in its stage. */
   position: number;
+  /** The IDs of the upstream Stories, in the saved order. `[]` when the story has no dependencies. */
+  dependsOn: string[];
   /** The Markdown body. */
   description: string;
   /** A value for every custom field in the project, `null` when unset. */
@@ -32,6 +34,8 @@ export interface CreateStoryInput {
   stage?: string;
   description?: string;
   fields?: FieldInput;
+  /** The IDs of the upstream Stories. `row-1` and `1` are saved as `ROW-01`. */
+  dependsOn?: readonly string[];
 }
 
 export interface UpdateStoryInput {
@@ -44,6 +48,14 @@ export interface UpdateStoryInput {
   description?: string;
   /** Only the fields to change; `null` or `""` clears one. */
   fields?: FieldInput;
+  /** Replaces the list of upstream Stories. `[]` removes all of them. `undefined` keeps the old list. */
+  dependsOn?: readonly string[];
+}
+
+/** The result of a delete: the ID, and a warning for each downstream Story that lost the dependency. */
+export interface DeleteStoryResult {
+  id: string;
+  warnings: string[];
 }
 
 export interface SearchStoriesInput {
