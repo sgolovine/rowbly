@@ -79,7 +79,11 @@ describe("agent auth", () => {
     await expect(configureFactory({ worker: choice, workerThinking: "max" }, project.ctx, runtime)).rejects.toThrow(
       "thinking",
     );
-    expect(await getFactorySettings(project.ctx)).toEqual({ version: 1, maxWorkers: 4 });
+    expect(await getFactorySettings(project.ctx)).toEqual({
+      version: 1,
+      maxWorkers: 4,
+      git: { push: false, pull: false, syncIntervalSeconds: 300 },
+    });
     expect(await configureFactory({ worker: choice, workerThinking: "off" }, project.ctx, runtime)).toMatchObject({
       workerModel: { thinkingLevel: "off" },
     });

@@ -120,7 +120,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | ----------------------------------- | ----------------------------------------------------------------- |
 | `pi-runtime/`                       | Lazy Pi imports, session adapter, runtime and model catalog.      |
 | `agent-auth/`                       | Provider status, model checks, login and logout.                  |
-| `factory-settings/`                 | The optional `factory.json` and the role model choices.           |
+| `factory-settings/`                 | The optional `factory.json`, the role models and the Git sync.    |
 | `factory/`                          | Daemon client, status, controls and operational logs.             |
 | `factory-manager/`                  | Serial supervisor loop, tools, reservations and worker lifecycle. |
 | `factory-worker/`                   | Independent worker session, result and activity.                  |
@@ -130,6 +130,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `factory-policy/`, `factory-state/` | Shared v1 policy and state transactions.                          |
 | `factory-activity/`                 | The factory activity of each Story, from `state.json`.            |
 | `project-write/`                    | The shared kernel `flock` for canonical factory writes.           |
+| `project-sync/`                     | The Git pull and push of the canonical checkout.                  |
 | `runtime-files/`                    | Private runtime paths and ignore rules.                           |
 | `thread/`                           | Thread metadata, runs, state projection and watches.              |
 | `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.     |

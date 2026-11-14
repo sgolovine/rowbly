@@ -2,9 +2,20 @@ import { readFile } from "node:fs/promises";
 import { ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { type GitInput, type GitSettings, hasGitInput, mergeGit, validGit } from "./git-settings.js";
+import {
+  type GitInput,
+  type GitSettings,
+  type GitSync,
+  gitSync,
+  hasGitInput,
+  MAX_SYNC_SECONDS,
+  MIN_SYNC_SECONDS,
+  mergeGit,
+  parseAuthor,
+  validGit,
+} from "./git-settings.js";
 
-export type { GitSettings } from "./git-settings.js";
+export type { GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
@@ -23,6 +34,9 @@ export interface FactorySettings {
   workerModel?: ModelChoice;
   git?: GitSettings;
 }
+
+/** The changes of an update. The `git` keys merge into the current `git` section. */
+export type FactorySettingsInput = Partial<Omit<FactorySettings, "version">>;
 
 interface ConfigureInput extends GitInput {
   maxWorkers?: number;
@@ -69,10 +83,22 @@ function validate(value: unknown): FactorySettings {
     (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
     (settings.git !== undefined && !validGit(settings.git))
   ) {
-    throw new ValidationError("Invalid factory settings");
+    throw new ValidationError("Invalid factory settings", {
+      hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
+    });
   }
 
   return settings;
+}
+
+/** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
+function withDefaults(settings: FactorySettings): FactorySettings {
+  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) } };
+}
+
+/** Gives the Git sync settings. Settings without a `git` section use the defaults. */
+export function gitSettings(settings: FactorySettings): GitSync {
+  return gitSync(settings.git);
 }
 
 function readProblem(error: unknown): FactorySettings {
@@ -87,26 +113,46 @@ function readProblem(error: unknown): FactorySettings {
   throw error;
 }
 
-/** Reads the factory settings of the Project. Without `factory.json`, the limit is four workers. */
-export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
-  const paths = await findProject(ctx);
-
-  return readFile(paths.factorySettingsFile, "utf8")
+/** Reads `factory.json` as it is on disk. Without the file, the limit is four workers. */
+async function readSettings(file: string): Promise<FactorySettings> {
+  return readFile(file, "utf8")
     .then((text) => validate(JSON.parse(text)))
     .catch(readProblem);
 }
 
-/** Merges the input into the factory settings and writes `factory.json`. */
-export async function updateFactorySettings(
-  input: Partial<Omit<FactorySettings, "version">>,
-  ctx: ServiceContext = {},
+/**
+ * Reads the factory settings of the Project. Without `factory.json`, the limit is four workers.
+ * The absent Git sync keys have their defaults: push and pull are off, and the interval is 300 seconds.
+ */
+export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
+  const paths = await findProject(ctx);
+
+  return withDefaults(await readSettings(paths.factorySettingsFile));
+}
+
+/** Validates and writes the settings that `change` makes from the settings on disk. The defaults are not written. */
+async function writeSettings(
+  change: (current: FactorySettings) => FactorySettings,
+  ctx: ServiceContext,
 ): Promise<FactorySettings> {
   const paths = await findProject(ctx);
-  const settings = validate({ ...(await getFactorySettings(ctx)), ...input, version: 1 });
+  const current = await readSettings(paths.factorySettingsFile);
+  const settings = validate({ ...change(current), version: 1 });
 
   await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
 
-  return settings;
+  return withDefaults(settings);
+}
+
+/** Merges the input into the factory settings and writes `factory.json`. The `git` keys merge one level deep. */
+export async function updateFactorySettings(
+  input: FactorySettingsInput,
+  ctx: ServiceContext = {},
+): Promise<FactorySettings> {
+  return writeSettings(
+    (current) => ({ ...current, ...input, ...(input.git ? { git: { ...current.git, ...input.git } } : {}) }),
+    ctx,
+  );
 }
 
 /** Parses `provider/model`. The provider and the model must not be empty. */
@@ -150,15 +196,11 @@ async function chooseRole(
   return { runtime: resolved, choice: await auth.validateModelChoice(resolved, choice) };
 }
 
-/** The new Git section, or nothing when the input has no Git values. An invalid author fails here. */
-async function chooseGit(input: ConfigureInput, ctx: ServiceContext): Promise<Pick<FactorySettings, "git">> {
-  if (!hasGitInput(input)) {
-    return {};
+/** Rejects an invalid commit author before the runtime starts. */
+function checkGitInput(input: ConfigureInput): void {
+  if (input.commitAuthor?.trim()) {
+    parseAuthor(input.commitAuthor);
   }
-
-  const current = await getFactorySettings(ctx);
-
-  return { git: mergeGit(current.git, input) };
 }
 
 /** Validates explicit model choices and Git values before the settings file changes. */
@@ -167,19 +209,20 @@ export async function configureFactory(
   ctx: ServiceContext = {},
   runtime?: AuthRuntime,
 ): Promise<FactorySettings> {
-  const git = await chooseGit(input, ctx);
-  const auth = await import("../agent-auth/agent-auth.js");
+  checkGitInput(input);
 
+  const auth = await import("../agent-auth/agent-auth.js");
   const supervisor = await chooseRole(auth, "supervisor", input, runtime);
   const worker = await chooseRole(auth, "worker", input, supervisor.runtime);
 
-  return updateFactorySettings(
-    {
+  return writeSettings(
+    (current) => ({
+      ...current,
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
-      ...git,
-    },
+      ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
+    }),
     ctx,
   );
 }

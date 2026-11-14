@@ -11,7 +11,7 @@ import {
 import { configureFactory, type ModelChoice } from "../../services/factory-settings/factory-settings.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
 import { type LaunchDescriptor, runFactoryForeground } from "../factory-runner/factory-runner.js";
-import { parsePosition, run } from "../output/output.js";
+import { parseInteger, parsePosition, run } from "../output/output.js";
 
 interface ConfigureOptions {
   maxWorkers?: number;
@@ -21,6 +21,9 @@ interface ConfigureOptions {
   workerThinking?: ModelChoice["thinkingLevel"];
   commitMessage?: string;
   commitAuthor?: string;
+  gitPush?: boolean;
+  gitPull?: boolean;
+  gitSyncInterval?: number;
 }
 
 interface StartOptions {
@@ -127,7 +130,7 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
 function registerConfigure(program: Command): void {
   program
     .command("configure")
-    .description("Set factory models, worker limit and Git commit settings")
+    .description("Set factory models, worker limit, Git commit settings and Git sync")
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
@@ -135,6 +138,11 @@ function registerConfigure(program: Command): void {
     .option("--worker-thinking <level>", "supported thinking level")
     .option("--commit-message <text>", 'subject of the canonical commits ("" clears it)')
     .option("--commit-author <identity>", 'Name <email> of the canonical commits ("" clears it)')
+    .option("--git-push", "push the canonical branch at each sync")
+    .option("--no-git-push", "do not push the canonical branch")
+    .option("--git-pull", "pull the upstream at each sync")
+    .option("--no-git-pull", "do not pull the upstream")
+    .option("--git-sync-interval <seconds>", "seconds between syncs, 60 to 86400", parseInteger)
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,
