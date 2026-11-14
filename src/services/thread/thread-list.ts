@@ -1,8 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { mapInOrder } from "../in-order/in-order.js";
-import { runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { getThread } from "./thread-files.js";
+import { checkThreadDirs, readThreadIn, type ThreadDirs } from "./thread-files.js";
 import type { ThreadList, ThreadRecord, ThreadStatus } from "./thread-types.js";
 
 interface ListFilter {
@@ -16,8 +15,8 @@ interface ReadOutcome {
   readonly issue?: { file: string; message: string };
 }
 
-function readOutcome(file: string, ctx: ServiceContext): Promise<ReadOutcome> {
-  return getThread(file.slice(0, -".json".length), ctx).then(
+function readOutcome(file: string, dirs: ThreadDirs): Promise<ReadOutcome> {
+  return readThreadIn(file.slice(0, -".json".length), dirs).then(
     (thread) => ({ thread }),
     (error: unknown) => ({
       issue: { file: `threads/${file}`, message: error instanceof Error ? error.message : "Thread unavailable" },
@@ -26,8 +25,8 @@ function readOutcome(file: string, ctx: ServiceContext): Promise<ReadOutcome> {
 }
 
 /** Reads one file at a time, in name order. Parallel reads of many files could use all file handles. */
-function readInOrder(files: readonly string[], ctx: ServiceContext): Promise<ReadOutcome[]> {
-  return mapInOrder(files, (file) => readOutcome(file, ctx));
+function readInOrder(files: readonly string[], dirs: ThreadDirs): Promise<ReadOutcome[]> {
+  return mapInOrder(files, (file) => readOutcome(file, dirs));
 }
 
 function matches(thread: ThreadRecord, input: ListFilter): boolean {
@@ -48,13 +47,15 @@ function listedFiles(dir: string): Promise<string[]> {
   });
 }
 
-/** Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue. */
+/**
+ * Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue.
+ * It checks the shared runtime folders one time, and then only the path segments of each Thread.
+ */
 export async function listThreads(input: ListFilter = {}, ctx: ServiceContext = {}): Promise<ThreadList> {
-  const paths = await findProject(ctx);
-  const dir = await runtimePath(paths, "threads");
-  const files = await listedFiles(dir);
+  const dirs = await checkThreadDirs(await findProject(ctx));
+  const files = await listedFiles(dirs.threads.path);
 
-  const outcomes = await readInOrder(files.filter((file) => file.endsWith(".json")).toSorted(), ctx);
+  const outcomes = await readInOrder(files.filter((file) => file.endsWith(".json")).toSorted(), dirs);
   const threads = outcomes.flatMap(({ thread }) => (thread && matches(thread, input) ? [thread] : []));
   const issues = outcomes.flatMap(({ issue }) => (issue ? [issue] : []));
 

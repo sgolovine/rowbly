@@ -30,6 +30,11 @@ change a lock.
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private
   folders and owns the ignore rules.
+- `runtimePath()` in `runtime-files/` checks each runtime path before a read or a write. It rejects
+  an absolute path, traversal and a symlink at each segment of the path, also at the runtime root.
+  `checkRuntimeDir()` does this check one time for a folder. Then `runtimeChild()` checks only the
+  segments below that folder. `listThreads()` uses these functions to check `threads/` and
+  `sessions/` one time. Use a checked folder only for one operation. Do not keep it across calls.
 - `state.json` uses version 1 of the policy format. The types are in
   `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
 - Without `factory.json`, the worker limit is four and Pi selects default models. See

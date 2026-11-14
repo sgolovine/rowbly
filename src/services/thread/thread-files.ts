@@ -1,17 +1,43 @@
 import { readFile, stat } from "node:fs/promises";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
-import { runtimePath } from "../runtime-files/runtime-files.js";
-import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { checkRuntimeDir, type RuntimeDir, runtimeChild, runtimePath } from "../runtime-files/runtime-files.js";
+import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import type { ThreadRecord } from "./thread-types.js";
 import { validateThread, validId } from "./thread-validate.js";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
 
-async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+const SESSIONS_PREFIX = "sessions/";
+
+/** The checked `threads/` and `sessions/` folders of one read operation. */
+export interface ThreadDirs {
+  readonly threads: RuntimeDir;
+  readonly sessions: RuntimeDir;
+}
+
+/** Checks the `threads/` and `sessions/` folders one time for one read operation. */
+export async function checkThreadDirs(paths: ProjectPaths): Promise<ThreadDirs> {
+  const threads = await checkRuntimeDir(paths, "threads");
+  const sessions = await checkRuntimeDir(paths, "sessions");
+
+  return { threads, sessions };
+}
+
+function assertValidId(id: string): void {
   if (!validId(id)) {
     throw new ValidationError("Invalid thread ID");
   }
+}
+
+function assertSessionReference(t: ThreadRecord, file: string): void {
+  if (!file.startsWith(`${SESSIONS_PREFIX}${t.id}/`) || !file.endsWith(".jsonl")) {
+    throw new ValidationError("Invalid thread session reference");
+  }
+}
+
+async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+  assertValidId(id);
 
   return runtimePath(await findProject(ctx), `threads/${id}.json`);
 }
@@ -22,14 +48,23 @@ async function checkSession(t: ThreadRecord, ctx: ServiceContext): Promise<void>
     return;
   }
 
-  if (!t.session.file.startsWith(`sessions/${t.id}/`) || !t.session.file.endsWith(".jsonl")) {
-    throw new ValidationError("Invalid thread session reference");
-  }
-
+  assertSessionReference(t, t.session.file);
   await runtimePath(await findProject(ctx), t.session.file);
 }
 
-async function readThread(id: string, file: string, ctx: ServiceContext): Promise<ThreadRecord> {
+/** Checks the session reference below the checked `sessions/` folder. */
+async function checkSessionIn(t: ThreadRecord, dirs: ThreadDirs): Promise<void> {
+  if (t.session.file === null) {
+    return;
+  }
+
+  assertSessionReference(t, t.session.file);
+  await runtimeChild(dirs.sessions, t.session.file.slice(SESSIONS_PREFIX.length));
+}
+
+async function readThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
+  const file = await runtimeChild(dirs.threads, `${id}.json`);
+
   if ((await stat(file)).size > MAX_METADATA_BYTES) {
     throw new ValidationError("Thread metadata is too large");
   }
@@ -40,7 +75,7 @@ async function readThread(id: string, file: string, ctx: ServiceContext): Promis
     throw new ValidationError("Thread ID does not match its file");
   }
 
-  await checkSession(t, ctx);
+  await checkSessionIn(t, dirs);
 
   return t;
 }
@@ -57,11 +92,18 @@ function readProblem(id: string, error: unknown): never {
   throw error;
 }
 
+/** Reads one Thread with the folders that the caller checked for this operation. */
+export async function readThreadIn(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
+  assertValidId(id);
+
+  return readThread(id, dirs).catch((error: unknown) => readProblem(id, error));
+}
+
 /** Reads and validates the metadata of one Thread. */
 export async function getThread(id: string, ctx: ServiceContext = {}): Promise<ThreadRecord> {
-  const file = await threadPath(id, ctx);
+  assertValidId(id);
 
-  return readThread(id, file, ctx).catch((error: unknown) => readProblem(id, error));
+  return readThreadIn(id, await checkThreadDirs(await findProject(ctx)));
 }
 
 /** Validates the metadata of a Thread and writes it durably. */
