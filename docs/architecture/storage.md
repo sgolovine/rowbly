@@ -68,9 +68,11 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | `stageWorkerModels` | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels` | object  | none               | The worker model overrides for each Story ID.          |
 | `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
+| `checks`            | object  | none               | The check queue and the named checks of the workers.   |
 
 A model choice has `provider`, `modelId` and an optional `thinkingLevel`. Without the `factory` key,
-the worker limit is four and Pi selects the default models.
+the worker limit is four and Pi selects the default models. Without the `checks` key, the factory has
+no checks. See [native-factory/checks.md](native-factory/checks.md#settings) for the keys of `checks`.
 
 The config check of the board examines only that `factory` is an object. The `factory-settings`
 service examines all keys. Thus a `factory` section that is not valid stops the factory commands,
@@ -124,7 +126,8 @@ Rowbly does not read this file now. To upgrade a Project, do these steps:
 
 1. Stop the factory with `rowbly factory stop`.
 2. Upgrade Rowbly.
-3. Run `rowbly doctor --fix`. It moves the settings into the `factory` key and deletes the file.
+3. Run `rowbly doctor --fix`. It moves the settings into the `factory` key and deletes the file. The
+   `checks` section moves with no change.
 4. Start the factory again with `rowbly factory start`.
 
 A factory start fails with a `CONFLICT` error while `factory.json` exists. The hint tells you to run

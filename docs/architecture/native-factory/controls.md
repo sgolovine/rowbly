@@ -61,7 +61,7 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 
 ### The check commands
 
-| Flag                          | Key in `factory.json`    | Effect                                                  |
+| Flag                          | Key in `factory`         | Effect                                                  |
 | ----------------------------- | ------------------------ | ------------------------------------------------------- |
 | `--max-checks <n>`            | `checks.maxConcurrent`   | Set the number of checks at the same time. Use 1 to 32. |
 | `--check-memory-reserve <mb>` | `checks.reserveMemoryMb` | Set the memory that the check queue always keeps free.  |
@@ -77,7 +77,7 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
   `--clear-block` removes all block text.
 
 A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out of range gives
-`VALIDATION`. In each case, `factory.json` does not change. See [checks.md](checks.md#settings).
+`VALIDATION`. In each case, `rowbly.config.json` does not change. See [checks.md](checks.md#settings).
 
 ## Factory controls in the TUI
 

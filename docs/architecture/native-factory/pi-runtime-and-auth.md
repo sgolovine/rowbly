@@ -66,7 +66,7 @@ The `factory-settings/` service reads and writes the optional `factory` key of
 
 ### Checks
 
-The `checks` section sets the checks that the factory runs for its workers. See
+The `checks` key of the `factory` section sets the checks that the factory runs for its workers. See
 [checks.md](checks.md#settings) for all keys and their defaults.
 
 - `maxConcurrent` is the maximum number of checks at the same time. Use 1 to 32. The default is 2.
@@ -75,7 +75,7 @@ The `checks` section sets the checks that the factory runs for its workers. See
 - `rowbly factory configure --max-checks <n>` sets `checks.maxConcurrent`.
 - `rowbly factory configure --check-memory-reserve <mb>` sets `checks.reserveMemoryMb`.
 - `rowbly factory check add|update|remove|list` changes and shows the items.
-- A `checks` section that is not valid gives a `ValidationError`, and `factory.json` does not change.
+- A `checks` section that is not valid gives a `ValidationError`, and the config does not change.
 - Without a `checks` section, the factory has no checks, and the workers get no `run_check` tool.
 
 ### Worker model overrides

@@ -45,6 +45,22 @@ describe("doctor factory checks", () => {
     expect(await factoryIssues()).toEqual([]);
   });
 
+  it("moves a factory.json with a checks section intact", async () => {
+    const checks = {
+      maxConcurrent: 1,
+      reserveMemoryMb: 512,
+      items: [{ key: "test", command: "pnpm test", narrowCommand: "pnpm vitest related --run {files}", memoryMb: 900 }],
+    };
+    await project.write("factory.json", JSON.stringify({ ...LEGACY, checks }));
+
+    expect(await factoryIssues(true)).toEqual([expect.objectContaining({ fixed: true })]);
+    expect(await pathExists(project.paths.legacyFactorySettingsFile)).toBe(false);
+    expect((await readConfig(project.paths)).factory).toEqual({ ...MOVED, checks });
+    expect((await getFactorySettings(project.ctx)).checks?.items).toEqual([
+      expect.objectContaining({ key: "test", label: "test", memoryMb: 900, timeoutMinutes: 30 }),
+    ]);
+  });
+
   it("deletes a factory.json that has the same settings as the config", async () => {
     await project.write("factory.json", JSON.stringify(LEGACY));
     await setFactory({ git: { syncIntervalSeconds: 120, push: true }, maxWorkers: 2 });
@@ -71,6 +87,7 @@ describe("doctor factory checks", () => {
     ["invalid JSON", "{broken"],
     ["a value that is not an object", "[1]"],
     ["invalid settings", JSON.stringify({ version: 1, maxWorkers: 0 })],
+    ["an invalid checks section", JSON.stringify({ version: 1, maxWorkers: 2, checks: { maxConcurrent: 0 } })],
   ])("reports a factory.json with %s as an error, and keeps the file", async (_name, text) => {
     await project.write("factory.json", text);
 
