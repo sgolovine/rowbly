@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { access, type FileHandle, lstat, mkdir, open, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { NotFoundError } from "../errors/errors.js";
 
 /** Whether `path` is accessible. A broken symlink does not count. */
 export async function pathExists(path: string): Promise<boolean> {
@@ -124,4 +126,24 @@ export async function writeFileAtomic(path: string, content: string, options: At
   } finally {
     await rm(temp, { force: true });
   }
+}
+
+/** Walks up from `dir` to the first folder with a `package.json`. */
+async function findPackageDir(dir: string): Promise<string> {
+  if (await pathExists(join(dir, "package.json"))) {
+    return dir;
+  }
+
+  const parent = dirname(dir);
+
+  if (parent === dir) {
+    throw new NotFoundError("Rowbly cannot find its package folder");
+  }
+
+  return findPackageDir(parent);
+}
+
+/** The folder of the first `package.json` above this file, in both `src/` and `dist/`. */
+export async function packageDir(): Promise<string> {
+  return findPackageDir(dirname(fileURLToPath(import.meta.url)));
 }

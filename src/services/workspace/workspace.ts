@@ -22,7 +22,10 @@ export interface ProjectPaths {
   root: string;
   dir: string;
   configFile: string;
-  instructionsFile: string;
+  /** The user prompts: `SYSTEM.md`, `SUPERVISOR.md` and `WORKER.md`. */
+  promptsDir: string;
+  /** The old place of the Project prompt. `rowbly doctor --fix` moves it to `prompts/SYSTEM.md`. */
+  legacyInstructionsFile: string;
   storiesDir: string;
   stagesDir: string;
   specsDir: string;
@@ -40,7 +43,8 @@ export function projectPaths(root: string): ProjectPaths {
     root,
     dir,
     configFile: join(dir, "rowbly.config.json"),
-    instructionsFile: join(dir, "ROWBLY.md"),
+    promptsDir: join(dir, "prompts"),
+    legacyInstructionsFile: join(dir, "ROWBLY.md"),
     storiesDir: join(dir, "stories"),
     stagesDir: join(dir, "stages"),
     specsDir: join(dir, "specs"),

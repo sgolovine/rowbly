@@ -14,7 +14,6 @@ export interface FactoryDependencies {
   adoptExternal?: boolean;
   agentDir: string;
   shim: string;
-  skillsDir: string;
   maxWorkers?: number;
   beforeLaunch?: (thread: ThreadRecord) => Promise<void>;
   onModel?: (role: string, model: ModelChoice) => void;

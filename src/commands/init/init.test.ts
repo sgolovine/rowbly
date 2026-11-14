@@ -11,10 +11,10 @@ describe("init", () => {
   it("uses the defaults without a terminal and says where to edit them", async () => {
     const result = await runCli(["init", "--name", "Web App", "--key", "web"], dir.path);
     expect(result.exitCode).toBe(0);
-    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
+    expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("");
     expect(result.stdout).toContain(`Created Web App (WEB) in ${dir.path}`);
     expect(result.stdout).toContain("Stages: BACKLOG, IN_REFINEMENT, IN_DEVELOPMENT, IN_REVIEW, DONE");
-    expect(result.stdout).toContain("Skills: develop, factory, refine, review");
+    expect(result.stdout).toContain("Skills: develop, refine, review");
     expect(result.stdout).toContain("Where to edit this later:");
     expect(result.stdout).not.toContain("Warning:");
     expect((await getProject({ cwd: dir.path })).customFields.map((field) => field.key)).toEqual([
@@ -29,19 +29,19 @@ describe("init", () => {
   });
 
   it("takes the choices from flags", async () => {
-    const args = ["init", "--stage", "Backlog", "--stage", "QA", "--skill", "factory", "--harness", "codex"];
+    const args = ["init", "--stage", "Backlog", "--stage", "QA", "--skill", "develop", "--harness", "codex"];
     expect((await runCli(args, dir.path)).exitCode).toBe(0);
     const project = await getProject({ cwd: dir.path });
     expect(project.stages.map((stage) => stage.key)).toEqual(["BACKLOG", "QA", "DONE"]);
-    expect(project.skills).toEqual([{ name: "factory", harnesses: ["codex"] }]);
-    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
+    expect(project.skills).toEqual([{ name: "develop", harnesses: ["codex"] }]);
+    expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("");
   });
 
   it("installs no skills with --no-skills when no stage requires one", async () => {
     const result = await runCli(["init", "--stage", "QA", "--no-skills"], dir.path);
     expect((await getProject({ cwd: dir.path })).skills).toBeUndefined();
-    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("# ROWBLY INSTRUCTIONS\n");
-    expect(result.stdout).toContain('Warning: The factory requires the companion skill "factory"');
+    expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("");
+    expect(result.stdout).not.toContain("Warning:");
   });
 
   it("takes inline JSON, and a flag has priority over it", async () => {
@@ -73,10 +73,10 @@ describe("init", () => {
 
   it("fails with a hint when a project exists", async () => {
     await runCli(["init"], dir.path);
-    await writeFile(join(dir.path, ".rowbly/ROWBLY.md"), "Keep my instructions.\n");
+    await writeFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "Keep my instructions.\n");
     const result = await runCli(["init"], dir.path);
     expect(result.exitCode).toBe(1);
-    expect(await readFile(join(dir.path, ".rowbly/ROWBLY.md"), "utf8")).toBe("Keep my instructions.\n");
+    expect(await readFile(join(dir.path, ".rowbly/prompts/SYSTEM.md"), "utf8")).toBe("Keep my instructions.\n");
     expect(result.stderr).toMatch(/^Error: .*\.rowbly already exists\nHint: Run `rowbly doctor`/);
   });
 });
