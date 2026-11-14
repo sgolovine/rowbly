@@ -10,6 +10,7 @@ import {
   type Layout,
   useAsync,
   useIsActive,
+  useLatest,
   useLayout,
   useReportHints,
   useToast,
@@ -66,7 +67,9 @@ export function useModelsTab({ ctx, storyId, selected, onHints, onTask, loadRunt
   const [shown, setShown] = useState(false);
   const [task, setTask] = useState<Stage | null>(null);
   const [cursor, setCursor] = useState(0);
-  const runtime = useAsync(() => loadAfterShown(shown, loadRuntime), [shown, loadRuntime]);
+  // The latest `loadRuntime`, so that a new function on each render does not load Pi again on each render.
+  const load = useLatest(loadRuntime);
+  const runtime = useAsync(() => loadAfterShown(shown, load.current), [shown]);
   const models = useAsync(() => loadModels(runtime.data), [runtime.data]);
   const settings = useAsync(() => getFactorySettings(ctx), [ctx, selected]);
   const stages = useAsync<readonly Stage[]>(() => listStages(ctx), [ctx, selected]);
