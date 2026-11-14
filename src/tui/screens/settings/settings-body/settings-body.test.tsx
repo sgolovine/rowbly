@@ -1,7 +1,7 @@
 import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useIsActive, useKeyHints } from "../../../hooks/index.js";
+import { useIsActive, useKeyCapture, useKeyHints } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { keys, renderTui } from "../../../testing/index.js";
 import type { SettingsGroup } from "../settings-sections.js";
@@ -14,9 +14,22 @@ function Alpha() {
   return <Text>{useIsActive() ? "alpha in focus" : "alpha content"}</Text>;
 }
 const Beta = () => <Text>beta content</Text>;
+/** A section with a page inside it: the page takes `esc` and names it. */
+function Gamma() {
+  const active = useIsActive();
+  useKeyHints([{ key: "esc", description: "back to the list of gamma" }]);
+  useKeyCapture(active, { text: false, escape: true });
+  return <Text>{active ? "gamma in focus" : "gamma content"}</Text>;
+}
 const GROUPS: SettingsGroup[] = [
   { title: "One", sections: [{ id: "alpha", label: "Alpha", description: "About alpha.", Component: Alpha }] },
-  { title: "Two", sections: [{ id: "beta", label: "Beta", description: "About beta.", Component: Beta }] },
+  {
+    title: "Two",
+    sections: [
+      { id: "beta", label: "Beta", description: "About beta.", Component: Beta },
+      { id: "gamma", label: "Gamma", description: "About gamma.", Component: Gamma },
+    ],
+  },
 ];
 
 async function setup(section?: string) {
@@ -91,5 +104,13 @@ describe("SettingsBody", () => {
     expect(tui.frame()).toContain("▌ Beta");
     expect(tui.frame()).toContain("beta content");
     expect(hints()).toContain("esc back to sections");
+  });
+
+  it("shows the esc hint of a section that takes esc itself, and keeps the focus in it on esc", async () => {
+    const { tui, hints, onClose } = await setup("gamma");
+    expect(hints()).toEqual(["esc back to the list of gamma"]);
+    await tui.press(keys.escape);
+    expect(tui.frame()).toContain("gamma in focus");
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

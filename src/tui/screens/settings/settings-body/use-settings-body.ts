@@ -60,7 +60,10 @@ interface SettingsBodyModel {
   readonly openSection: (id: string) => void;
 }
 
-/** The keys of the region in focus. In a section, the keys of the section come first. */
+/**
+ * The keys of the region in focus. In a section, the keys of the section come first. A section that takes
+ * `esc` itself, for example a page inside the section, gives its own `esc` hint, and `tab` does not leave it.
+ */
 function bodyHints(focus: Focus, sectionHints: readonly KeyHint[]): readonly KeyHint[] {
   if (focus === "nav") {
     return [
@@ -70,8 +73,16 @@ function bodyHints(focus: Focus, sectionHints: readonly KeyHint[]): readonly Key
     ];
   }
 
+  const sectionEscape = sectionHints.find((hint) => hint.key === "esc");
+  const own = sectionHints.filter((hint) => hint.key !== "esc" && hint.key !== "tab");
+
+  // While the section takes `esc`, it also keeps `tab`: see `handleSectionKey`.
+  if (sectionEscape) {
+    return [...own, sectionEscape];
+  }
+
   return [
-    ...sectionHints.filter((hint) => hint.key !== "esc" && hint.key !== "tab"),
+    ...own,
     { key: "tab", description: "sections", secondary: true },
     { key: "esc", description: "back to sections" },
   ];
