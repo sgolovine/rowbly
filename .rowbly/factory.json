@@ -12,6 +12,8 @@
     "thinkingLevel": "medium"
   },
   "git": {
+    "authorName": "Rowbly",
+    "authorEmail": "rowbly@sunny.gg",
     "push": true,
     "pull": true
   }
