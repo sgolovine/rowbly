@@ -28,8 +28,14 @@ set up.
   can run the tests at the same time. To change the limit, set `VITEST_MAX_WORKERS` or use
   `--maxWorkers`.
 - `vitest.ci.config.ts` extends `vitest.config.ts` for CI. It does not run the local-only tests in
-  its `exclude` list. At this time, `src/tui/hooks/shell.test.ts` is local only, because it fails in
-  CI. Run `pnpm test` on your machine before you complete a change to the shell.
+  its `exclude` list. There are two groups of local-only tests:
+  - `failInCi`: `src/tui/shell/shell/shell.test.tsx` fails in CI. Run `pnpm test` on your machine
+    before you complete a change to the shell.
+  - `nonCritical`: the tests that only render a small, presentational part of the TUI, for example a
+    button, a row or a badge. These tests do not read or write Project data. They do not test a
+    service, a command or a workflow.
+- CI runs all service, command, script, hook and logic tests, and the tests of the screens that change
+  Project data. Do not add one of these tests to `nonCritical`.
 
 ## Service tests
 
