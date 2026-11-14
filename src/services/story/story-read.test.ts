@@ -2,11 +2,12 @@ import * as fs from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readConfig } from "../config/config.js";
+import { addCustomField } from "../custom-field/custom-field.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { readStoryFiles } from "../story-files/story-files.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { updateStory } from "./story.js";
-import { findStoryFile, getStory } from "./story-read.js";
+import { findStoryFile, getStory, searchStories } from "./story-read.js";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs/promises")>();
@@ -123,6 +124,106 @@ describe("story-read", () => {
       await expect(findStoryFile(project.paths, config, "ROW-09", files)).rejects.toBeInstanceOf(NotFoundError);
       expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
       expect(storiesDirListed()).toBe(false);
+    });
+  });
+
+  describe("searchStories", () => {
+    function manifest(names: string[]): string {
+      const records = names.map((name, index) => ({
+        id: `a0000000${index}-0000-4000-8000-000000000000`,
+        name,
+        type: "image/png",
+        size: 8,
+        createdAt: "2024-01-01T00:00:00.000Z",
+      }));
+      return JSON.stringify(records);
+    }
+
+    async function writeManifest(id: string, text: string): Promise<void> {
+      await fs.mkdir(join(project.paths.dir, "attachments", id), { recursive: true });
+      await project.write(`attachments/${id}/manifest.json`, text);
+    }
+
+    /** The paths of the manifest reads since the last clear. */
+    function manifestReads(): string[] {
+      return vi
+        .mocked(fs.readFile)
+        .mock.calls.map(([path]) => String(path))
+        .filter((path) => path.endsWith("manifest.json"));
+    }
+
+    it("does not read the manifest of a story that the stage filter removes", async () => {
+      await writeBoard();
+      await writeManifest("ROW-03", "not json");
+
+      const backlog = await searchStories({ stage: "BACKLOG" }, project.ctx);
+
+      expect(backlog.map((s) => s.id)).toEqual(["ROW-01", "ROW-02", "ROW-04"]);
+      await expect(searchStories({}, project.ctx)).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("does not read the manifest of a story that a field filter removes", async () => {
+      await writeBoard();
+      await writeManifest("ROW-03", "not json");
+      await writeManifest("ROW-02", manifest(["shot.png"]));
+      await addCustomField({ label: "Owner", type: "string" }, project.ctx);
+      await project.write(
+        "stories/ROW-02.md",
+        `---\ntitle: Two\nstage: BACKLOG\nposition: 2\nowner: ann\n---\n\nBody\n`,
+      );
+      vi.mocked(fs.readFile).mockClear();
+
+      const found = await searchStories({ fields: { owner: "ann" } }, project.ctx);
+
+      expect(found.map((s) => [s.id, s.attachmentCount])).toEqual([["ROW-02", 1]]);
+      expect(manifestReads()).toEqual([join(project.paths.dir, "attachments", "ROW-02", "manifest.json")]);
+    });
+
+    it("reads no manifest for a story without an attachment folder", async () => {
+      await writeBoard();
+      await writeManifest("ROW-02", manifest(["a.png", "b.png"]));
+      vi.mocked(fs.readFile).mockClear();
+      vi.mocked(fs.readdir).mockClear();
+
+      const found = await searchStories({}, project.ctx);
+
+      expect(found.map((s) => [s.id, s.position, s.attachmentCount])).toEqual([
+        ["ROW-01", 1, 0],
+        ["ROW-02", 2, 2],
+        ["ROW-04", 3, 0],
+        ["ROW-03", 1, 0],
+      ]);
+      expect(manifestReads()).toEqual([join(project.paths.dir, "attachments", "ROW-02", "manifest.json")]);
+      const attachmentLists = vi
+        .mocked(fs.readdir)
+        .mock.calls.filter(([path]) => String(path) === join(project.paths.dir, "attachments"));
+      expect(attachmentLists).toHaveLength(1);
+    });
+
+    it("matches the attachment names of a story with the query words", async () => {
+      await writeBoard();
+      await writeManifest("ROW-04", manifest(["diagram.png"]));
+
+      const found = await searchStories({ query: "diagram" }, project.ctx);
+
+      expect(found.map((s) => [s.id, s.attachmentCount])).toEqual([["ROW-04", 1]]);
+    });
+
+    it("throws a ValidationError for a symlink at the attachments folder", async () => {
+      await writeBoard();
+      await fs.mkdir(join(project.paths.root, "elsewhere"));
+      await fs.symlink(join(project.paths.root, "elsewhere"), join(project.paths.dir, "attachments"));
+
+      await expect(searchStories({}, project.ctx)).rejects.toBeInstanceOf(ValidationError);
+    });
+
+    it("throws a ValidationError for a symlink at the folder of a returned story", async () => {
+      await writeBoard();
+      await fs.mkdir(join(project.paths.root, "elsewhere"));
+      await fs.mkdir(join(project.paths.dir, "attachments"));
+      await fs.symlink(join(project.paths.root, "elsewhere"), join(project.paths.dir, "attachments", "ROW-01"));
+
+      await expect(searchStories({}, project.ctx)).rejects.toBeInstanceOf(ValidationError);
     });
   });
 

@@ -1,5 +1,5 @@
 import { basename } from "node:path";
-import { attachmentDir, readAttachments } from "../attachment-files/attachment-files.js";
+import { attachmentDir, attachmentOwners, readAttachments } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
   type Issue,
@@ -197,11 +197,33 @@ function stagePositions(sorted: readonly StoryFile[]): ReadonlyMap<string, numbe
   );
 }
 
-/** The story with its count of saved images, and the names of the images for the query. */
-async function withAttachmentNames(paths: ProjectPaths, story: Story): Promise<{ story: Story; names: string[] }> {
+/**
+ * The story with its count of saved images, and the names of the images for the query. A story without a folder in
+ * `owners` reads no manifest.
+ */
+async function withAttachmentNames(
+  paths: ProjectPaths,
+  owners: ReadonlySet<string>,
+  story: Story,
+): Promise<{ story: Story; names: string[] }> {
+  if (!owners.has(story.id)) {
+    return { story: { ...story, attachmentCount: 0 }, names: [] };
+  }
+
   const attachments = await readAttachments(await attachmentDir(paths, story.id));
 
   return { story: { ...story, attachmentCount: attachments.length }, names: attachments.map((a) => a.name) };
+}
+
+/** Whether the story is in the stage of the filter and has each field value of the filter. */
+function matchesFilter(
+  story: Story,
+  stage: StageConfig | undefined,
+  fields: Readonly<Record<string, FieldValue>>,
+): boolean {
+  return (
+    (!stage || story.stage === stage.key) && Object.entries(fields).every(([key, value]) => story.fields[key] === value)
+  );
 }
 
 /** Gives the field filter of a search as values of the field types. Throws when a field or a value is invalid. */
@@ -229,14 +251,9 @@ export async function searchStories(input: SearchStoriesInput = {}, ctx: Service
   const sorted = sortStoryFiles(files).toSorted((a, b) => stageIndex(config, a) - stageIndex(config, b));
   const positions = stagePositions(sorted);
   const stories = sorted.map((file) => toStory(config, file, positions.get(file.id)));
-  const found = await Promise.all(stories.map((story) => withAttachmentNames(paths, story)));
+  const filtered = stories.filter((story) => matchesFilter(story, stage, fields));
+  const owners = new Set(await attachmentOwners(paths));
+  const found = await Promise.all(filtered.map((story) => withAttachmentNames(paths, owners, story)));
 
-  return found
-    .filter(
-      ({ story, names }) =>
-        (!stage || story.stage === stage.key) &&
-        Object.entries(fields).every(([key, value]) => story.fields[key] === value) &&
-        matchesQuery(story, words, names),
-    )
-    .map(({ story }) => story);
+  return found.filter(({ story, names }) => matchesQuery(story, words, names)).map(({ story }) => story);
 }
