@@ -1,6 +1,7 @@
 ---
 title: "Chore: Revert test changes"
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 worktree: null
 pull_request: null
 ---
