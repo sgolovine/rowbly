@@ -1,7 +1,7 @@
 ---
 title: Show and edit Story dependencies in the TUI
 stage: IN_REFINEMENT
-position: 8
+position: 1
 worktree: null
 pull_request: null
 ---

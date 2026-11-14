@@ -1,7 +1,7 @@
 ---
 title: Scaffold the website with TanStack Start, Tailwind and shadcn/ui
-stage: BACKLOG
-position: 3
+stage: IN_REFINEMENT
+position: 4
 worktree: null
 pull_request: null
 ---

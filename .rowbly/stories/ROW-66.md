@@ -1,7 +1,7 @@
 ---
 title: "Optional: move a stuck upstream Story out of Backlog automatically"
 stage: IN_REFINEMENT
-position: 9
+position: 2
 worktree: null
 pull_request: null
 ---
