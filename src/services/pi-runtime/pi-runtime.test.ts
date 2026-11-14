@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { useTempDir } from "../test-project/test-project.js";
 import { toolParameters } from "../tool-schema/tool-schema.js";
-import { createPiSession, loadPi, type PiSession, preloadPi } from "./pi-runtime.js";
+import { createPiSession, loadPi, type PiSession } from "./pi-runtime.js";
 
 describe("Pi runtime", () => {
   const dir = useTempDir();
@@ -114,24 +114,5 @@ describe("Pi runtime", () => {
     });
     await Promise.all([f.managed.close(), f.managed.close()]);
     expect(order).toEqual(["abort", "idle", "dispose"]);
-  });
-});
-
-describe("preloadPi", () => {
-  it("calls the loader one time and resolves", async () => {
-    const loader = vi.fn(() => Promise.resolve({} as Awaited<ReturnType<typeof loadPi>>));
-    await expect(preloadPi(loader)).resolves.toBeUndefined();
-    expect(loader).toHaveBeenCalledTimes(1);
-  });
-
-  it("resolves when the loader rejects or throws", async () => {
-    const rejects = vi.fn(() => Promise.reject(new Error("no Pi")));
-    const throws = vi.fn((): never => {
-      throw new Error("no Pi");
-    });
-    await expect(preloadPi(rejects)).resolves.toBeUndefined();
-    await expect(preloadPi(throws)).resolves.toBeUndefined();
-    expect(rejects).toHaveBeenCalledTimes(1);
-    expect(throws).toHaveBeenCalledTimes(1);
   });
 });

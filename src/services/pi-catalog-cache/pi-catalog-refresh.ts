@@ -1,6 +1,8 @@
 import { type AuthRuntime, getAuthStatus, listAvailableModels } from "../agent-auth/agent-auth.js";
 import type { ServiceContext } from "../workspace/workspace.js";
 import {
+  type CatalogModels,
+  type CatalogProviders,
   type PiCatalog,
   type PiCatalogOptions,
   piCatalogKey,
@@ -8,18 +10,32 @@ import {
   writePiCatalog,
 } from "./pi-catalog-cache.js";
 
+/** The two reads of Pi that the catalog needs. The Pi worker or a main-thread runtime gives them. */
+export interface PiCatalogSource {
+  listAvailableModels(): Promise<CatalogModels>;
+  getAuthStatus(): Promise<CatalogProviders>;
+}
+
+/** Reads the catalog through a runtime of this thread, for example the runtime of the AI settings. */
+export function runtimeSource(runtime: AuthRuntime): PiCatalogSource {
+  return {
+    listAvailableModels: () => listAvailableModels(runtime),
+    getAuthStatus: () => getAuthStatus(runtime),
+  };
+}
+
 /**
- * Loads the models and the providers through the runtime and writes them to the cache. The key is read before
+ * Loads the models and the providers through the source and writes them to the cache. The key is read before
  * the load, so that a change of the credentials during the load makes the cache stale. A failed write does not
  * fail the load, because the cache only makes the next view faster.
  */
 export async function refreshPiCatalog(
-  runtime: AuthRuntime,
+  source: PiCatalogSource,
   ctx: ServiceContext = {},
   options: PiCatalogOptions = {},
 ): Promise<PiCatalog> {
   const key = await piCatalogKey(ctx, options);
-  const [providers, models] = await Promise.all([getAuthStatus(runtime), listAvailableModels(runtime)]);
+  const [providers, models] = await Promise.all([source.getAuthStatus(), source.listAvailableModels()]);
   const catalog: PiCatalog = { models, providers };
 
   await writePiCatalog(catalog, key, ctx).catch(() => {});
@@ -27,9 +43,9 @@ export async function refreshPiCatalog(
   return catalog;
 }
 
-/** Gives the fresh cache, or loads Pi with `loadRuntime` and refreshes the cache when it is stale or missing. */
+/** Gives the fresh cache, or reads the source and refreshes the cache when it is stale or missing. */
 export async function loadPiCatalog(
-  loadRuntime: () => Promise<AuthRuntime>,
+  source: PiCatalogSource,
   ctx: ServiceContext = {},
   options: PiCatalogOptions = {},
 ): Promise<PiCatalog> {
@@ -39,13 +55,10 @@ export async function loadPiCatalog(
     return cached;
   }
 
-  return refreshPiCatalog(await loadRuntime(), ctx, options);
+  return refreshPiCatalog(source, ctx, options);
 }
 
-/** True when Pi has a provider with credentials or a key. It loads Pi only when the cache is stale or missing. */
-export async function piProviderReady(
-  loadRuntime: () => Promise<AuthRuntime>,
-  ctx: ServiceContext = {},
-): Promise<boolean> {
-  return (await loadPiCatalog(loadRuntime, ctx)).providers.some((provider) => provider.configured);
+/** True when Pi has a provider with credentials or a key. It reads the source only when the cache is stale or missing. */
+export async function piProviderReady(source: PiCatalogSource, ctx: ServiceContext = {}): Promise<boolean> {
+  return (await loadPiCatalog(source, ctx)).providers.some((provider) => provider.configured);
 }

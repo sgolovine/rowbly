@@ -20,6 +20,12 @@ vi.mock("../../../../services/agent-auth/agent-auth.js", async (original) => ({
   ),
 }));
 
+// The Pi worker must not start in this test: the Models tab reads Pi through it.
+vi.mock("../../../../services/pi-runtime/pi-worker-client.js", () => {
+  const source = { listAvailableModels: async () => [], getAuthStatus: async () => [] };
+  return { piWorkerSource: () => source };
+});
+
 afterEach(cleanup);
 
 function reports(): StoryTabReports {

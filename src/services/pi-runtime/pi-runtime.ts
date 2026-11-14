@@ -8,15 +8,6 @@ export type PiLoader = () => Promise<PiSdk>;
 /** Loads the SDK only for authentication or execution. */
 export const loadPi: PiLoader = () => import("@earendil-works/pi-coding-agent");
 
-function ignoreFailure(): undefined {
-  return undefined;
-}
-
-/** Imports the SDK in the background, so that a later Pi-backed view does not wait. A failure is ignored. */
-export async function preloadPi(loader: PiLoader = loadPi): Promise<void> {
-  await Promise.resolve().then(loader).then(ignoreFailure, ignoreFailure);
-}
-
 /** A Pi prompt that ended with an error, an abort or a busy supervisor. */
 export class PiPromptError extends RowblyError {
   readonly code = "PI_PROMPT";

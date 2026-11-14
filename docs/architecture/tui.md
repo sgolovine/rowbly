@@ -299,9 +299,9 @@ the model that applies and its source, for example `Stage model: openai/gpt-sol`
 - The title of the picker is `<Story ID> › Model › <Stage label>`.
 - A save writes `storyWorkerModels[<story id>][<stage key>]`. `No override` removes that entry. When
   the Story has no other override, the Story key also goes away.
-- The tab loads Pi only when the person opens the tab for the first time. Until the models load, the
-  tab shows `Loading models…`. If Pi cannot load, an error toast shows. The `loadRuntime` prop
-  (default `authRuntime`) lets a test replace Pi.
+- The tab reads the models only when the person opens the tab for the first time. Until the models
+  load, the tab shows `Loading models…`. If Pi cannot load, an error toast shows. The `source` prop
+  (default `piWorkerSource()`, the Pi worker) lets a test replace Pi.
 - While the picker is open, the tab tells the Story sidebar. Then `esc` closes the picker, not the
   Story sidebar. `shift+tab` and `esc` work as on the other tabs when the picker is closed.
 
