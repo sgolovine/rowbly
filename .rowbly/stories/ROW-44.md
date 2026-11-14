@@ -1,7 +1,7 @@
 ---
 title: Run Pi model and auth lookups in a worker thread
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-44
 pull_request: null
 ---
 
