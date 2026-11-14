@@ -1,6 +1,7 @@
 ---
 title: Add a view for deterministic checks
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
+position: 4
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-25
 pull_request: null
 ---
@@ -29,7 +30,7 @@ Not in scope:
 
 ## Acceptance criteria
 
-- [ ] When the live factory status has `checks` (`factoryLive(status) && status.checks !== undefined`), the header shows a `Checks` Button with the note `<running>/<queued>` count text, for example `Checks 2 · 1 queued` or a similar short text. A component test of `Header` examines this.
+- [ ] When the live factory status has `checks` (`factoryLive(status) && status.checks !== undefined`), the header shows a `Checks` Button with the note `<running>/<queued>` in `ink-muted`, for example `Checks 2/1`. A component test of `Header` examines this.
 - [ ] When the factory is not live, or its status has no `checks`, the header does not show the Button. A component test examines this.
 - [ ] A click on the Button opens the Checks Modal. A `renderTui` test examines this.
 - [ ] The key `c` in the shell opens the Checks Modal when the Button condition is true. The key does nothing when the condition is false. The key does not open the Modal when a text field or a different overlay has the focus. A test examines this.
