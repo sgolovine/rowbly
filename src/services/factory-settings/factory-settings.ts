@@ -1,8 +1,9 @@
 import { type ProjectConfig, readConfig, writeConfig } from "../config/config.js";
-import { ValidationError } from "../errors/errors.js";
+import { ConflictError, ValidationError } from "../errors/errors.js";
+import { pathExists } from "../files/files.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import { getStory } from "../story/story.js";
-import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import {
   type GitInput,
   type GitSettings,
@@ -149,6 +150,18 @@ export function gitSettings(settings: FactorySettings): GitSync {
 /** Gives the `factory` section of the config as it is on disk. Without the section, the limit is four workers. */
 function storedSettings(config: ProjectConfig): FactorySettings {
   return config.factory === undefined ? { ...DEFAULT_SETTINGS } : validate(config.factory);
+}
+
+/**
+ * Stops a factory start while an old `factory.json` exists, because the factory does not read it. It does not parse
+ * the file: `rowbly doctor` checks it.
+ */
+export async function assertNoLegacyFactorySettings(paths: ProjectPaths): Promise<void> {
+  if (await pathExists(paths.legacyFactorySettingsFile)) {
+    throw new ConflictError("The factory does not read .rowbly/factory.json", {
+      hint: "Run rowbly doctor --fix to move factory.json into rowbly.config.json, then start the factory again.",
+    });
+  }
 }
 
 /**

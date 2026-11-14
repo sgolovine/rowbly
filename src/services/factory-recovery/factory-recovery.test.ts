@@ -1,12 +1,14 @@
+import { execFile } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { acquireFactoryOwnership, newOwner } from "../factory-ownership/factory-ownership.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { createStory, updateStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createThread, getThread, projectNativeAttempt, transitionThread } from "../thread/thread.js";
-import { recoverFactory } from "./factory-recovery.js";
+import { preflightFactory, recoverFactory } from "./factory-recovery.js";
 
 describe("factory recovery", () => {
   const project = useTestProject();
@@ -54,6 +56,15 @@ describe("factory recovery", () => {
       }
     },
   );
+  it.runIf(process.platform === "linux")("refuses the preflight while an old factory.json exists", async () => {
+    await promisify(execFile)("git", ["init", project.paths.root]);
+    await expect(preflightFactory(project.ctx)).resolves.toBeUndefined();
+    await project.write("factory.json", "{ not parsed");
+    await expect(preflightFactory(project.ctx)).rejects.toMatchObject({
+      code: "CONFLICT",
+      hint: expect.stringContaining("rowbly doctor --fix"),
+    });
+  });
   it("preserves external attempts unless adoption is explicit", async () => {
     const owner = await newOwner();
     await acquireFactoryOwnership(project.paths, owner);

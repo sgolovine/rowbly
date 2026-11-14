@@ -10,7 +10,11 @@ import {
   releaseFactoryOwnership,
 } from "../factory-ownership/factory-ownership.js";
 import { recoverFactory } from "../factory-recovery/factory-recovery.js";
-import { type FactorySettings, getFactorySettings } from "../factory-settings/factory-settings.js";
+import {
+  assertNoLegacyFactorySettings,
+  type FactorySettings,
+  getFactorySettings,
+} from "../factory-settings/factory-settings.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -42,6 +46,8 @@ interface RecoveredFactory {
 export async function createFactoryManager(deps: FactoryDependencies, context: ServiceContext = {}) {
   const paths = await findProject(context);
   const ctx = { ...context, cwd: paths.root };
+
+  await assertNoLegacyFactorySettings(paths);
 
   const deadToken = await findDeadToken(deps, paths);
   const owner = deps.ownership?.owner ?? (await newOwner());

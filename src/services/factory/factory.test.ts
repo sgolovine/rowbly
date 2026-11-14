@@ -157,6 +157,21 @@ describe("detached factory with offline Pi", () => {
     },
     30_000,
   );
+  it("refuses a start while an old factory.json exists, and does not launch the daemon", async () => {
+    root = join(dir, "legacy project");
+    await mkdir(root);
+    await initProject({ name: "Legacy", key: "L" }, { cwd: root });
+    await writeFile(projectPaths(root).legacyFactorySettingsFile, "{ not parsed");
+    const marker = join(dir, "launched");
+    const entry = join(dir, "mark.mjs");
+    await writeFile(entry, `import { writeFileSync } from "node:fs"; writeFileSync(${JSON.stringify(marker)}, "x");`);
+    const error = await startFactory({ launch: { executable: process.execPath, entry, execArgv: [] } }, { cwd: root })
+      .then(() => undefined)
+      .catch((caught: unknown) => caught);
+    expect(error).toMatchObject({ code: "CONFLICT", hint: expect.stringContaining("rowbly doctor --fix") });
+    await expect(readFile(marker, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+    expect(await readFactoryOwner(projectPaths(root))).toBeFalsy();
+  });
   it("returns early launch errors and refuses restart on stop timeout", async () => {
     root = join(dir, "failure project");
     await mkdir(root);

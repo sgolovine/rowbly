@@ -118,6 +118,21 @@ describe("foreground factory", () => {
     );
     return (await listThreads({ role: "worker" }, { cwd: root })).threads[0];
   }
+  it("refuses to start while an old factory.json exists, before it takes ownership", async () => {
+    const paths = projectPaths(root);
+    await writeFile(paths.legacyFactorySettingsFile, "{ not parsed");
+    const start = createFactoryManager(
+      { runtime: {} as never, agentDir: join(dir.path, "agent"), shim: {} as never },
+      { cwd: root },
+    );
+    await expect(start).rejects.toMatchObject({
+      code: "CONFLICT",
+      hint: expect.stringContaining("rowbly doctor --fix"),
+    });
+    await expect(readFile(await runtimePath(paths, "factory.lock"), "utf8")).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  });
   it("moves one Story through independent real Pi sessions and the exact CLI shim", async () => {
     const story = await createStory({ title: "Complete me", stage: "WORK" }, { cwd: root });
     const f = await fixture();

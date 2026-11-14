@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import { ConflictError } from "../errors/errors.js";
 import { assertFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import type { PolicyAttempt, PolicyState } from "../factory-policy/factory-policy.js";
+import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
@@ -111,4 +112,6 @@ export async function preflightFactory(ctx: ServiceContext = {}) {
   } catch (cause) {
     throw new ConflictError("Native factory execution requires a Git Project and util-linux flock", { cause });
   }
+
+  await assertNoLegacyFactorySettings(paths);
 }
