@@ -1,7 +1,7 @@
 ---
 title: Edit worker model overrides in the TUI
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 21
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-21
 pull_request: https://github.com/sgolovine/rowbly/pull/205
 ---
@@ -69,15 +69,3 @@ Not in scope:
 - The first option of the override picker is labelled `No override` and removes the override. Reason: in the override pickers, the `Pi default` option would be misleading, because without an override the Stage model or the worker model applies.
 - The Story `Models` tab shows the model that applies without an override and its source. Reason: the author asks that a person can "see" the overrides, and the resolution order of ROW-20 makes the inherited model not obvious.
 - The Story waits for ROW-20 and does not copy its services. Reason: ROW-20 owns the storage and the services, and this Story "adds only the TUI".
-## Review findings
-
-1. GitHub cannot merge the pull request: it reports `CONFLICTING`/`DIRTY`. `main` moved to 66817e63 after the last merge into the branch (a3acbe47). The new `main` commits are scan commits (`chore(rowbly): record project changes after scan`) and #206 (cap vitest at four forks). Against the merge base `84018ecd`, these files conflict: `.rowbly/stories/ROW-18.md`, `.rowbly/stories/ROW-19.md`, `.rowbly/stories/ROW-20.md` and `.rowbly/stories/ROW-21.md` (add/add).
-   - The problem: the branch has its own scan commits for these Story files, which are outside the scope of this Story. `main` changed the same files.
-   - Fix: merge `origin/main` into `story/ROW-21`. For each file in `.rowbly/stories/`, keep the `main` version (`git checkout origin/main -- .rowbly/stories/`). Then the pull request does not change Story files. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again, push, and make sure that GitHub shows `MERGEABLE`.
-
-Review notes (not blocking):
-
-- The earlier finding (the conflict with ROW-19 in `factory-settings.test.ts` and `docs/architecture/tui.md`) is repaired in a3acbe47. The code satisfies all other acceptance criteria.
-- On a3acbe47 on the review machine, `pnpm lint`, `pnpm typecheck` and `pnpm build` passed. A full `vitest run` passed (1814 tests), and the `node --test scripts` suite passed. One run had a timing failure in `use-async.test.tsx`, which passed when it ran again.
-- CI `Test` failed two times, on different timing-sensitive `shell.test.tsx` tests. Similar `shell.test.tsx` tests fail on some CI runs of `main` too, so this is flaky and not a finding. The tests pass on the review machine.
-- A person did not verify the layout in a real terminal.
