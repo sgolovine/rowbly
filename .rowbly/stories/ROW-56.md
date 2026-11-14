@@ -1,7 +1,7 @@
 ---
 title: Check the website for accessibility, motion and performance
-stage: BACKLOG
-position: 14
+stage: IN_REFINEMENT
+position: 15
 worktree: null
 pull_request: null
 ---
