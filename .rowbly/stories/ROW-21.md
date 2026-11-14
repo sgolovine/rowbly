@@ -1,6 +1,6 @@
 ---
 title: Edit worker model overrides in the TUI
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-21
 pull_request: https://github.com/sgolovine/rowbly/pull/205
