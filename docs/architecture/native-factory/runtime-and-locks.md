@@ -11,7 +11,7 @@ change a lock.
 
 ```
 .rowbly/
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; native factory or external supervisor writes it
   runtime/            # private, ignored; directories use mode 0700
@@ -32,6 +32,10 @@ change a lock.
   (`skills/factory/references/supervisor-policy.md`). The shared scripts keep unknown v1 keys.
 - Without `factory.json`, the worker limit is four and Pi selects default models. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
+- `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
+  Story in a Stage. A Story override has priority over a Stage override. A Stage override has
+  priority over the `start_worker` model and `workerModel`. See
+  [pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
 ## Git and the runtime files
 

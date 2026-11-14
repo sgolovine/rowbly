@@ -9,18 +9,33 @@ viewer or the AI section of Settings.
 
 ## CLI commands
 
-| Commands                                                                  | Purpose                                                                      |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.            |
-| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential.        |
-| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                        |
-| `factory configure`                                                       | Set `--max-workers`, `--supervisor`, `--worker` and the role thinking flags. |
-| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                         |
-| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                        |
-| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.                      |
-| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                         |
-| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.           |
-| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                                  |
+| Commands                                                                   | Purpose                                                                      |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `auth providers`, `auth status`                                            | Show login methods and configured status, without a health check.            |
+| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>`  | Sign in through an interactive prompt, or remove a stored credential.        |
+| `model list [--provider <id>]`                                             | Show configured models and supported thinking levels.                        |
+| `factory configure`                                                        | Set `--max-workers`, `--supervisor`, `--worker` and the role thinking flags. |
+| `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.          |
+| `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                              |
+| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                         |
+| `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                        |
+| `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.                      |
+| `thread list [--story <id>]`, `thread show <id>`                           | Read active and historical metadata.                                         |
+| `thread log <id> [--tail <n>]`                                             | Read a bounded conversation tail: default 20, maximum 100 entries.           |
+| `thread cancel <id>`, `thread resume <id>`                                 | Send guarded commands to the native daemon.                                  |
+
+These inputs of `factory configure` give the error code `VALIDATION`, and the command does not write
+`factory.json`:
+
+- `--story` without `--stage`.
+- `--clear-worker` without `--stage`.
+- `--clear-worker` together with `--worker` or `--worker-thinking`.
+- `--stage` together with `--supervisor`, `--supervisor-thinking` or `--max-workers`.
+- `--stage` without `--worker` and without `--clear-worker`.
+- An unknown Stage key.
+
+An unknown Story ID gives `NOT_FOUND`. For the order of priority of the overrides, see
+[pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
 `factory run` is a hidden command. `factory start` uses it to start the detached daemon.
 

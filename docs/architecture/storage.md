@@ -28,7 +28,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; native factory or external supervisor writes it
   runtime/            # private, ignored; see native-factory/runtime-and-locks.md
@@ -38,6 +38,11 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 The files of `runtime/`, `state.json` and `factory.json` belong to the native factory. See
 [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md).
+
+`factory.json` can hold worker model overrides. `stageWorkerModels` maps a Stage key to a model
+choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
+priority is the Story override, then the Stage override, then `workerModel`. See
+[native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
 
 ## Config
 

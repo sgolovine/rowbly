@@ -19,6 +19,9 @@ interface ConfigureOptions {
   worker?: string;
   supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
+  stage?: string;
+  story?: string;
+  clearWorker?: boolean;
 }
 
 interface StartOptions {
@@ -125,12 +128,15 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
 function registerConfigure(program: Command): void {
   program
     .command("configure")
-    .description("Set factory models and worker limit")
+    .description("Set factory models, worker limit and worker model overrides")
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
     .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
+    .option("--stage <key>", "set the worker model override of this Stage")
+    .option("--story <id>", "with --stage, set the override of this Story in the Stage")
+    .option("--clear-worker", "with --stage, remove the worker model override")
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,
