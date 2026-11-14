@@ -55,7 +55,8 @@ Run `rowbly doctor` to examine the Project files. Run `rowbly --help` to see the
 
 `--supervisor-thinking` and `--worker-thinking` select a supported thinking level for each role.
 Without explicit choices, Pi selects default models. Rowbly does not change global Pi settings.
-Factory preferences stay in `.rowbly/factory.json`. Credentials stay in Pi storage, outside the Project.
+Factory preferences stay in the `factory` key of `.rowbly/rowbly.config.json`. Credentials stay in Pi
+storage, outside the Project.
 
 API keys use masked prompts. Do not put secrets in command arguments or Project files.
 `rowbly auth status` reports configured status, without a health check.

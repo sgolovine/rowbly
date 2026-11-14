@@ -81,7 +81,6 @@ describe("agent auth", () => {
       "thinking",
     );
     expect(await getFactorySettings(project.ctx)).toEqual({
-      version: 1,
       maxWorkers: 4,
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
     });
@@ -101,7 +100,6 @@ describe("agent auth", () => {
       configureFactory({ stage: "BACKLOG", worker: choice, workerThinking: "max" }, project.ctx, runtime),
     ).rejects.toThrow("thinking");
     expect(await getFactorySettings(project.ctx)).toEqual({
-      version: 1,
       maxWorkers: 4,
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
     });
@@ -109,7 +107,6 @@ describe("agent auth", () => {
     await configureFactory({ stage: "backlog", worker: choice, workerThinking: "off" }, project.ctx, runtime);
     await configureFactory({ stage: "DONE", story: story.id, worker: choice }, project.ctx, runtime);
     expect(await getFactorySettings(project.ctx)).toEqual({
-      version: 1,
       maxWorkers: 4,
       workerModel: model,
       stageWorkerModels: { BACKLOG: { ...model, thinkingLevel: "off" } },

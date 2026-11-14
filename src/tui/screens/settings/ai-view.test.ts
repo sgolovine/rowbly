@@ -31,7 +31,6 @@ describe("aiView", () => {
       { key: "DONE", label: "Done" },
     ] as Stage[];
     const settings = {
-      version: 1 as const,
       maxWorkers: 4,
       stageWorkerModels: { DONE: { provider: "a", modelId: "m", thinkingLevel: "low" as const } },
     };

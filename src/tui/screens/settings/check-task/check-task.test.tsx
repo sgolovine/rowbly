@@ -17,7 +17,7 @@ const check = {
 function props(overrides: Partial<CheckTaskViewProps>): CheckTaskViewProps {
   return {
     task: null,
-    settings: { version: 1, maxWorkers: 2 },
+    settings: { maxWorkers: 2 },
     onSaveCheckLimits: vi.fn(async () => {}),
     onSaveCheck: vi.fn(async () => {}),
     onRemoveCheck: vi.fn(),

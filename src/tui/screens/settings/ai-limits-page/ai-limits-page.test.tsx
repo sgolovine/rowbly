@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe("AiLimitsPage", () => {
   it("shows the worker limit with its Edit Button", async () => {
     const onLimit = vi.fn();
-    const tui = await renderTui(<AiLimitsPage settings={{ version: 1, maxWorkers: 1 }} idle onLimit={onLimit} />);
+    const tui = await renderTui(<AiLimitsPage settings={{ maxWorkers: 1 }} idle onLimit={onLimit} />);
 
     expect(tui.frame()).toMatch(/Worker limit\s+Edit\s+l/);
     expect(tui.frame()).toContain("1 worker");

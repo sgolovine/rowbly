@@ -6,7 +6,6 @@ import { AiChecksPage, checkLimitsText } from "./ai-checks-page.js";
 afterEach(cleanup);
 
 const settings = {
-  version: 1 as const,
   maxWorkers: 2,
   checks: { maxConcurrent: 1, items: [{ key: "test", label: "Tests", command: "pnpm test" }] },
 };

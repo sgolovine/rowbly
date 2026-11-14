@@ -5,7 +5,7 @@ import { runCli } from "../test-cli/test-cli.js";
 describe("factory check commands", () => {
   const project = useTestProject();
   const cli = (...args: string[]) => runCli(["--json", "factory", ...args], project.paths.root);
-  const settings = async () => JSON.parse(await project.read("factory.json"));
+  const settings = async () => JSON.parse(await project.read("rowbly.config.json")).factory;
 
   afterEach(() => {
     process.exitCode = undefined;
@@ -50,9 +50,9 @@ describe("factory check commands", () => {
     expect(JSON.parse(removed.stdout)).toEqual([]);
   });
 
-  it("rejects a bad check and an unknown key without a change of factory.json", async () => {
+  it("rejects a bad check and an unknown key without a change of the config", async () => {
     await cli("check", "add", "test", "--command", "pnpm test");
-    const before = await project.read("factory.json");
+    const before = await project.read("rowbly.config.json");
 
     const bad = await cli("check", "add", "lint", "--command", "pnpm lint", "--timeout-minutes", "0");
     const missing = await cli("check", "remove", "build");
@@ -60,7 +60,7 @@ describe("factory check commands", () => {
     expect(bad.exitCode).toBe(1);
     expect(JSON.parse(bad.stderr).error.code).toBe("VALIDATION");
     expect(missing.exitCode).not.toBe(0);
-    expect(await project.read("factory.json")).toBe(before);
+    expect(await project.read("rowbly.config.json")).toBe(before);
   });
 
   it("sets the check limits through configure", async () => {

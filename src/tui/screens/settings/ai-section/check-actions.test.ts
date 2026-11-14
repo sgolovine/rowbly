@@ -6,7 +6,7 @@ import { handleSectionKey, openCheck } from "./check-actions.js";
 
 const state = () => ({ reload: vi.fn(), refresh: vi.fn(), loading: false });
 const key = (overrides: Partial<Key> = {}) => ({ ...overrides }) as Key;
-const settings = { version: 1, maxWorkers: 2, checks: { items: [{ key: "test", command: "pnpm test" }] } };
+const settings = { maxWorkers: 2, checks: { items: [{ key: "test", command: "pnpm test" }] } };
 
 function env(overrides: Partial<AiEnv> = {}): AiEnv {
   return {

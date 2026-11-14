@@ -7,7 +7,7 @@ describe("gitTexts", () => {
   });
 
   it("shows the defaults without a git section", () => {
-    expect(gitTexts({ version: 1, maxWorkers: 4 })).toEqual({
+    expect(gitTexts({ maxWorkers: 4 })).toEqual({
       author: "Git config identity",
       message: "chore(rowbly): record project changes after scan",
       push: "off",
@@ -24,7 +24,7 @@ describe("gitTexts", () => {
       push: true,
       pull: true,
     };
-    expect(gitTexts({ version: 1, maxWorkers: 4, git: { ...git, syncIntervalSeconds: 60 } })).toEqual({
+    expect(gitTexts({ maxWorkers: 4, git: { ...git, syncIntervalSeconds: 60 } })).toEqual({
       author: "Bot <bot@example.com>",
       message: "chore: x",
       push: "on",
@@ -37,7 +37,6 @@ describe("gitTexts", () => {
 describe("gitForm", () => {
   it("starts each form with the current value, or empty text and the default interval", () => {
     const settings = {
-      version: 1 as const,
       maxWorkers: 4,
       git: { authorName: "Bot", authorEmail: "b@x.io", commitMessage: "m", syncIntervalSeconds: 90 },
     };

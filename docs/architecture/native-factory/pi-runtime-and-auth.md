@@ -32,11 +32,17 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 
 ## Factory settings
 
-The `factory-settings/` service reads and writes the optional `.rowbly/factory.json`:
-`version`, `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels`, `git` and `checks`.
+The `factory-settings/` service reads and writes the optional `factory` key of
+`.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
+`storyWorkerModels`, `git` and `checks`. See [../storage.md](../storage.md#factory-settings).
 
-- Without `factory.json`, the worker limit is four and Pi selects default models.
+- Without the `factory` key, the worker limit is four and Pi selects default models.
+- A write keeps the other keys of the config. The other config writers keep the `factory` key.
+- A `factory` key that is not valid gives a `ValidationError` on the factory paths. The board checks
+  only that the key is an object, so it continues to work.
+- Older versions kept the settings in `.rowbly/factory.json`. A factory start and a write of the
+  factory settings fail while that file exists. Run `rowbly doctor --fix` to move the settings. See
+  [../storage.md](../storage.md#upgrade-from-factoryjson).
 - An explicit model choice must be available and must support the selected thinking level.
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model
   supports only some of them.
@@ -46,11 +52,11 @@ The `factory-settings/` service reads and writes the optional `.rowbly/factory.j
   commits of the factory. See [runtime-and-locks.md](runtime-and-locks.md#git-and-the-runtime-files).
 - `rowbly factory configure --commit-message "<text>"` sets `git.commitMessage`.
 - `rowbly factory configure --commit-author "Name <email>"` sets `git.authorName` and
-  `git.authorEmail`. A value in a different form gives a `VALIDATION` error, and `factory.json` does
+  `git.authorEmail`. A value in a different form gives a `VALIDATION` error, and the config does
   not change.
 - An empty value, for example `--commit-message ""`, removes the setting. Then the factory uses the
   default again.
-- The service keeps the other keys of `factory.json`. Git flags without a model flag do not start
+- The service keeps the other factory keys. Git flags without a model flag do not start
   the Pi runtime.
 - The `git` section also has `push`, `pull` and `syncIntervalSeconds`. They set the Git sync of
   the canonical checkout. The `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and
@@ -60,7 +66,7 @@ The `factory-settings/` service reads and writes the optional `.rowbly/factory.j
 
 ### Checks
 
-The `checks` section sets the checks that the factory runs for its workers. See
+The `checks` key of the `factory` section sets the checks that the factory runs for its workers. See
 [checks.md](checks.md#settings) for all keys and their defaults.
 
 - `maxConcurrent` is the maximum number of checks at the same time. Use 1 to 32. The default is 2.
@@ -69,7 +75,7 @@ The `checks` section sets the checks that the factory runs for its workers. See
 - `rowbly factory configure --max-checks <n>` sets `checks.maxConcurrent`.
 - `rowbly factory configure --check-memory-reserve <mb>` sets `checks.reserveMemoryMb`.
 - `rowbly factory check add|update|remove|list` changes and shows the items.
-- A `checks` section that is not valid gives a `ValidationError`, and `factory.json` does not change.
+- A `checks` section that is not valid gives a `ValidationError`, and the config does not change.
 - Without a `checks` section, the factory has no checks, and the workers get no `run_check` tool.
 
 ### Worker model overrides
@@ -86,12 +92,12 @@ An override changes the worker model for one Stage, or for one Story in one Stag
   set the thinking level.
 - `rowbly factory configure --stage <key> [--story <id>] --clear-worker` removes the override. If the
   Story has no other overrides, its key goes out of `storyWorkerModels`. If the override does not
-  exist, the command succeeds and the file does not change.
+  exist, the command succeeds and the config does not change.
 - `--stage` sets only the worker model. If you use `--stage` together with `--supervisor`,
   `--supervisor-thinking`, `--max-workers` or a Git flag, the command gives a `VALIDATION` error. The
   command does not ignore these flags.
-- The service validates the model of an override with `validateModelChoice` before the file changes.
-- An override for a deleted or renamed Story or Stage stays in the file. The factory ignores it.
+- The service validates the model of an override with `validateModelChoice` before the config changes.
+- An override for a deleted or renamed Story or Stage stays in the config. The factory ignores it.
 
 When the factory reserves a worker, it uses the first model in this list:
 
@@ -101,8 +107,8 @@ When the factory reserves a worker, it uses the first model in this list:
 4. `workerModel`.
 
 The pure function `resolveWorkerModel(settings, storyId, stage)` gives items 1, 2 and 4. The
-reservation stores the selected model on the Thread. The supervisor loop reads `factory.json` again
-on each turn. Thus a changed override applies to the next reservation, and a restart is not
+reservation stores the selected model on the Thread. The supervisor loop reads the factory settings
+again on each turn. Thus a changed override applies to the next reservation, and a restart is not
 necessary.
 
 ## Related

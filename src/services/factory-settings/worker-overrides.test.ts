@@ -6,7 +6,6 @@ const base = { provider: "base", modelId: "default" };
 const stage = { provider: "stage", modelId: "refine" };
 const story = { provider: "story", modelId: "develop", thinkingLevel: "high" as const };
 const settings: FactorySettings = {
-  version: 1,
   maxWorkers: 4,
   workerModel: base,
   stageWorkerModels: { IN_REFINEMENT: stage, IN_DEVELOPMENT: stage },
@@ -26,7 +25,7 @@ describe("resolveWorkerModel", () => {
     expect(workerOverride(settings, "ROW-1", "BACKLOG")).toBeUndefined();
   });
   it("gives undefined without an override or a settings model", () => {
-    expect(resolveWorkerModel({ version: 1, maxWorkers: 4 }, "ROW-1", "BACKLOG")).toBeUndefined();
+    expect(resolveWorkerModel({ maxWorkers: 4 }, "ROW-1", "BACKLOG")).toBeUndefined();
   });
 });
 

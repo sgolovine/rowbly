@@ -4,14 +4,14 @@ The native factory keeps private runtime files in `.rowbly/runtime/` and shared 
 `.rowbly/state.json`. Three locks protect these files and the canonical Project files. The lock order
 and the ownership rules prevent two owners, lost writes and deadlocks.
 
-Read this when you read or write a runtime file, `state.json` or `factory.json`, or when you take or
-change a lock.
+Read this when you read or write a runtime file, `state.json` or the factory settings, or when you
+take or change a lock.
 
 ## Factory files in `.rowbly/`
 
 ```
 .rowbly/
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git, checks
+  rowbly.config.json  # the optional factory key: maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git, checks
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; directories use mode 0700
@@ -32,7 +32,7 @@ change a lock.
   folders and owns the ignore rules.
 - `state.json` uses version 1 of the policy format. The types are in
   `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
-- Without `factory.json`, the worker limit is four and Pi selects default models. See
+- Without the `factory` key of the config, the worker limit is four and Pi selects default models. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
@@ -45,7 +45,7 @@ change a lock.
 - Native start and `doctor --fix` add missing runtime ignore rules. Existing text stays.
 - Canonical factory commits exclude runtime files, also when Git already tracks them.
 - The factory commits the canonical files after each scan. The subject of the commit is
-  `git.commitMessage` of `factory.json`. If it is not set, the subject is
+  `git.commitMessage` of the factory settings. If it is not set, the subject is
   `chore(rowbly): record project changes after scan`. The body lists the changed paths.
 - If `git.authorName` and `git.authorEmail` are set, they are the author and the committer of the
   commit. `commitProjectFiles()` in `project-write/project-commit.ts` sets them through the Git
@@ -60,7 +60,7 @@ Do not commit runtime files or credentials. Runtime files hold private sessions 
 ## Git sync of the canonical checkout
 
 The native factory can pull the upstream branch and push the canonical branch at an interval. The
-`git` section of `factory.json` holds the settings:
+`git` section of the factory settings holds the settings:
 
 | Key                   | Type    | Default | Meaning                                               |
 | --------------------- | ------- | ------- | ----------------------------------------------------- |
@@ -68,8 +68,9 @@ The native factory can pull the upstream branch and push the canonical branch at
 | `pull`                | boolean | `false` | Pull the commits of the upstream branch.              |
 | `syncIntervalSeconds` | integer | `300`   | The time between two syncs. The range is 60 to 86400. |
 
-- `getFactorySettings` gives the default of each key that is not in the file. A write does not add
-  the defaults to the file. An update keeps the other keys of the `git` section, for example
+- `getFactorySettings` gives the default of each key that is not in the config. A write does not add
+  the defaults of the `git` sync keys to the config, but it always puts `maxWorkers` in the config.
+  An update keeps the other keys of the `git` section, for example
   `commitMessage`, `authorName` and `authorEmail`.
 - `project-sync/` (`syncCanonicalProject`) does one sync. With `push` and `pull` off, it runs no Git
   command.

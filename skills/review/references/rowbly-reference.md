@@ -383,7 +383,7 @@ Read these files if a command does not give the data. Users can edit these files
 
 ```
 .rowbly/
-  rowbly.config.json   # Project name and key, custom fields, Stages, features, installed skills
+  rowbly.config.json   # Project name and key, custom fields, Stages, features, installed skills, factory settings
   prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
   prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
   prompts/WORKER.md    # the Worker prompt, for all workers
@@ -453,6 +453,11 @@ One invalid Story file makes `story search` fail for the full Project.
 | Old `ROWBLY.md` with no text or only `# ROWBLY INSTRUCTIONS` (warning)           | Deletes it     |
 | Old `ROWBLY.md`, and the Project prompt has no text (warning)                    | Moves it to `prompts/SYSTEM.md` |
 | Old `ROWBLY.md`, and the Project prompt has text (warning)                       | No repair. Merge them by hand. |
+| The `factory` key of `rowbly.config.json` is invalid                             | No repair      |
+| Old `factory.json` is not valid JSON or has invalid settings                     | No repair. The file stays. |
+| Old `factory.json`, and the config has no `factory` key (warning)                | Moves it to the `factory` key |
+| Old `factory.json` with the same settings as the `factory` key (warning)         | Deletes it     |
+| Old `factory.json` with different settings from the `factory` key (warning)      | No repair. Merge them by hand. |
 | Story is in a disabled Stage (warning)                                           | No repair      |
 
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
@@ -484,3 +489,4 @@ Older skills and notes can show commands that do not exist now. Do not use the i
 | Automatic Git commits, GitHub integration                 | No replacement. Rowbly does not run Git.                      |
 | Exit codes 2 to 6                                         | Exit code 1 and `error.code`                                  |
 | `rowbly project get-instructions`, `.rowbly/ROWBLY.md`    | `rowbly prompt get system`, `.rowbly/prompts/SYSTEM.md`       |
+| `.rowbly/factory.json`                                    | The `factory` key of `.rowbly/rowbly.config.json`             |

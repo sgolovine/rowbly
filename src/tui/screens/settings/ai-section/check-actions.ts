@@ -59,7 +59,7 @@ function removeFailed(env: AiEnv, error: unknown): void {
   env.setTask(null);
 }
 
-/** The checks of the settings, in the order of `factory.json`. */
+/** The checks of the settings, in the order of the factory settings. */
 function settingsChecks(env: AiEnv): readonly CheckSpec[] {
   return checkLimits(env.settings.data?.checks)?.items ?? [];
 }

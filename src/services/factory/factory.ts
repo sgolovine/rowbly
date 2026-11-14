@@ -8,6 +8,7 @@ import {
 } from "../factory-control/factory-control.js";
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
 import { type Owner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
+import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
@@ -112,6 +113,7 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
   const launch = new Store<LaunchState>({ childError: undefined, exited: false });
 
   if (!existing || (await probeOwner(existing)) === "dead") {
+    await assertNoLegacyFactorySettings(paths);
     await launchDaemon(paths, input, launch);
   }
 

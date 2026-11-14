@@ -7,7 +7,7 @@ import { type GitEnv, handleGitKey, saveAuthor, saveInterval, toggleSync } from 
 
 vi.mock("../../../../services/factory-settings/factory-settings.js", async (original) => ({
   ...(await original<typeof import("../../../../services/factory-settings/factory-settings.js")>()),
-  configureGit: vi.fn(async () => ({ version: 1, maxWorkers: 4 })),
+  configureGit: vi.fn(async () => ({ maxWorkers: 4 })),
 }));
 
 afterEach(() => {
@@ -16,7 +16,7 @@ afterEach(() => {
 
 const noKey = {} as Key;
 
-function env(data: settings.FactorySettings | null = { version: 1, maxWorkers: 4 }): GitEnv {
+function env(data: settings.FactorySettings | null = { maxWorkers: 4 }): GitEnv {
   return {
     ctx: {},
     toast: createToastStore(),
@@ -43,7 +43,7 @@ describe("gitActions", () => {
   });
 
   it("toggles push and pull from their current values", async () => {
-    const e = env({ version: 1, maxWorkers: 4, git: { push: true } });
+    const e = env({ maxWorkers: 4, git: { push: true } });
     handleGitKey(e, "p", noKey);
     toggleSync(e, "pull");
     expect(vi.mocked(settings.configureGit).mock.calls.map(([input]) => input)).toEqual([

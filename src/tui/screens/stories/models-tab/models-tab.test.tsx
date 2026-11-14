@@ -119,7 +119,7 @@ describe("ModelsTab", () => {
     expect(tui.frame()).toMatch(/● Review\s+acme\/fast-1 · thinking low/);
   });
 
-  it("sets and removes the Story override of a Stage, and keeps the other keys of factory.json", async () => {
+  it("sets and removes the Story override of a Stage, and keeps the other factory keys", async () => {
     await updateFactorySettings(
       { maxWorkers: 3, workerModel: sol, storyWorkerModels: { "ROW-09": { DONE: sol } } },
       project.ctx,
@@ -137,8 +137,7 @@ describe("ModelsTab", () => {
     });
     expect(tui.frame()).not.toContain("ROW-01 › Model ›");
     expect(tui.toasts.list().map((t) => t.message)).toContain("Saved the Done model of ROW-01: acme/fast-1");
-    expect(JSON.parse(await project.read("factory.json"))).toEqual({
-      version: 1,
+    expect(JSON.parse(await project.read("rowbly.config.json")).factory).toEqual({
       maxWorkers: 3,
       workerModel: sol,
       storyWorkerModels: { "ROW-09": { DONE: sol }, "ROW-01": { DONE: fast } },
@@ -151,8 +150,7 @@ describe("ModelsTab", () => {
       await tui.press();
       expect(tui.frame()).toMatch(/● Done\s+Worker model: openai\/gpt-sol/);
     });
-    expect(JSON.parse(await project.read("factory.json"))).toEqual({
-      version: 1,
+    expect(JSON.parse(await project.read("rowbly.config.json")).factory).toEqual({
       maxWorkers: 3,
       workerModel: sol,
       storyWorkerModels: { "ROW-09": { DONE: sol } },

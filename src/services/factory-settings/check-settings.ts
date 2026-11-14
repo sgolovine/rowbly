@@ -1,6 +1,6 @@
 import { ValidationError } from "../errors/errors.js";
 
-/** One named check of `factory.json`. The absent keys have their defaults in `CheckSpec`. */
+/** One named check of the factory settings. The absent keys have their defaults in `CheckSpec`. */
 export interface CheckItem {
   readonly key: string;
   readonly label?: string;
@@ -11,7 +11,7 @@ export interface CheckItem {
   readonly block?: readonly string[];
 }
 
-/** The `checks` section of `factory.json`, as it is on disk. */
+/** The `checks` key of the `factory` section of `rowbly.config.json`, as it is on disk. */
 export interface CheckSettings {
   readonly maxConcurrent?: number;
   readonly reserveMemoryMb?: number;

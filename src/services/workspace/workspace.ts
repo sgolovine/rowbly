@@ -30,7 +30,8 @@ export interface ProjectPaths {
   stagesDir: string;
   specsDir: string;
   ignoreFile: string;
-  factorySettingsFile: string;
+  /** The old place of the factory settings. `rowbly doctor --fix` moves them to the `factory` key of the config. */
+  legacyFactorySettingsFile: string;
   stateFile: string;
   runtimeDir: string;
 }
@@ -49,7 +50,7 @@ export function projectPaths(root: string): ProjectPaths {
     stagesDir: join(dir, "stages"),
     specsDir: join(dir, "specs"),
     ignoreFile: join(dir, ".gitignore"),
-    factorySettingsFile: join(dir, "factory.json"),
+    legacyFactorySettingsFile: join(dir, "factory.json"),
     stateFile: join(dir, "state.json"),
     runtimeDir: join(dir, "runtime"),
   };
