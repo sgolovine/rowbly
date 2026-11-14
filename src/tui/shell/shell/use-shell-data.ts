@@ -1,16 +1,17 @@
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { type FactoryStatus, getFactoryStatus } from "../../../services/factory/factory.js";
-import { getFactoryActivity } from "../../../services/factory-activity/factory-activity.js";
+import { type FactoryActivity, getFactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import { recordProject } from "../../../services/known-project/known-project.js";
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
-import { searchStories } from "../../../services/story/story.js";
+import { type Story, searchStories } from "../../../services/story/story.js";
 import { hasProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   type AsyncState,
   type ToastStore,
   useAsync,
   useFactoryChanges,
+  useFactoryStateChanges,
   useStoryChanges,
   useToast,
 } from "../../hooks/index.js";
@@ -36,6 +37,36 @@ async function loadBoard(ctx: ServiceContext): Promise<Board | null> {
   const activity = await getFactoryActivity({ stories }, ctx);
 
   return { project, stages, stories, activity };
+}
+
+/** The factory activity that Rowbly read again after a change of the state file, and the Stories that it is for. */
+interface LiveActivity {
+  readonly stories: Story[];
+  readonly activity: FactoryActivity;
+}
+
+/**
+ * Reads only the factory state file again, for the Stories that are on the board. It does not read the Stories,
+ * the Stages or the config.
+ */
+async function loadActivity(ctx: ServiceContext, board: Board | null | undefined): Promise<LiveActivity | undefined> {
+  if (!board) {
+    return undefined;
+  }
+
+  return { stories: board.stories, activity: await getFactoryActivity({ stories: board.stories }, ctx) };
+}
+
+/**
+ * Gives the board with the newest activity. An activity that Rowbly read for older Stories does not apply, because
+ * the load of the new Stories also read the state file.
+ */
+function withActivity(board: Board | null | undefined, live: LiveActivity | undefined): Board | null | undefined {
+  if (!board || live?.stories !== board.stories) {
+    return board;
+  }
+
+  return { ...board, activity: live.activity };
 }
 
 function unavailable(error: unknown): FactoryStatus {
@@ -77,8 +108,13 @@ export function useShellData(ctx: ServiceContext): ShellData {
   const projectRoot = data.data?.project.root;
   const projectName = data.data?.project.projectName;
 
+  // A change of the state file reads only the activity again. The first run has no board, so it reads nothing.
+  const activity = useAsync(() => loadActivity(ctx, data.data), []);
+
   // Agents change Stories from other processes.
   useStoryChanges(projectRoot, data.refresh);
+  // The factory writes its state file frequently.
+  useFactoryStateChanges(projectRoot, activity.refresh);
 
   const factory = useAsync(() => loadFactoryStatus(ctx, projectRoot), [projectRoot]);
 
@@ -88,5 +124,5 @@ export function useShellData(ctx: ServiceContext): ShellData {
     recordOpenProject(ctx, projectRoot, projectName, toast);
   }, [projectRoot, projectName]);
 
-  return { data, factory, reload: () => bump(setVersion) };
+  return { data: { ...data, data: withActivity(data.data, activity.data) }, factory, reload: () => bump(setVersion) };
 }
