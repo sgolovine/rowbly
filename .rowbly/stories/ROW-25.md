@@ -1,7 +1,7 @@
 ---
 title: Add a view for deterministic checks
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-25
 pull_request: null
 ---
 
