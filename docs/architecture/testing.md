@@ -72,6 +72,9 @@ the exit code, stdout and stderr. `createProgram()` builds the program without a
 - Live provider validation is separate from the automated checks.
 - The `import-boundary` test makes sure that help and `factory status` do not load Pi. See
   [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md).
+- The TUI import boundary test `src/cli.test.ts` makes sure that help, `story get` and `status` do
+  not load Ink or React. It also makes sure that `src/cli.ts` has no static import of Ink, React or
+  `src/tui/`.
 - Check queue tests give fake `CheckQueueDeps`: fake memory and process readers, a fake spawn, fake
   signals and short times. Only the tests of `proc-readers.ts` and of the orphan recovery start real
   short processes. See [native-factory/checks.md](native-factory/checks.md#the-queue).

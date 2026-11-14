@@ -10,11 +10,14 @@ Read this when you add or change a CLI command, a flag, the text or JSON output,
 
 `src/cli.ts` is the entry point. It builds the Commander program and selects the mode:
 
-- With no arguments, it starts the TUI through `renderTui()`. It gives the TUI the Node executable,
-  the Node flags and the entry file. The Factory controls use them to start the daemon.
+- With no arguments, it loads `src/tui/index.tsx` with a dynamic `import()` and starts the TUI through
+  `renderTui()`. It gives the TUI the Node executable, the Node flags and the entry file. The Factory
+  controls use them to start the daemon.
 - With arguments, Commander parses them and runs one command.
 
-Keep `src/cli.ts` small. It only connects the parts. `--version` (`-v`) reads the version from
+Keep `src/cli.ts` small. It only connects the parts. Do not import Ink, React or a module in
+`src/tui/` statically in `src/cli.ts`. The CLI commands must not load the TUI. tsup puts the TUI in a
+separate chunk in `dist/`. The test `src/cli.test.ts` makes sure of this. `--version` (`-v`) reads the version from
 `package.json`. Change the version only in that file.
 
 ## Layout of `src/commands/`
