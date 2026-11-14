@@ -162,7 +162,7 @@ describe("Shell", () => {
       await tui.press();
       expect(tui.frame()).toContain("Rowbly › Settings");
       expect(tui.frame()).toContain("╭─AI─");
-      expect(tui.frame()).toMatch(/Worker limit\s+4/);
+      expect(tui.frame()).toMatch(/Providers\s+Models\s+Limits/);
       expect(tui.frame()).toMatch(/▌ AI/);
       expect(tui.frame()).not.toContain("Status");
     });

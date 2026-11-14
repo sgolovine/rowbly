@@ -48,34 +48,122 @@ export function modelText(choice: ModelChoice | undefined): string {
   return `${choice.provider}/${choice.modelId}${choice.thinkingLevel ? ` · thinking ${choice.thinkingLevel}` : ""}`;
 }
 
-/** The keys of the AI settings that work now. */
-export function aiHints(can: {
+/** Where the sign-in keeps its credentials, under the provider lists. */
+export const SIGN_IN_NOTE =
+  "The sign-in is for this computer. Pi keeps the credentials; the Project keeps no secret. A configured provider is not a check of the account.";
+
+/** The page of the AI settings: a tab, or the page that signs in to another provider under the Providers tab. */
+export type AiPage = "providers" | "addProvider" | "models" | "limits";
+
+/** The tabs of the AI settings, in order. */
+export const AI_TABS: readonly { readonly page: AiPage; readonly label: string }[] = [
+  { page: "providers", label: "Providers" },
+  { page: "models", label: "Models" },
+  { page: "limits", label: "Limits" },
+];
+
+/** The index of the tab of a page. The sign-in page is under the Providers tab. */
+export function tabIndex(page: AiPage): number {
+  return Math.max(
+    0,
+    AI_TABS.findIndex((tab) => tab.page === page),
+  );
+}
+
+/** The tab next to the tab of a page, with a wrap at the ends. */
+export function nextTab(page: AiPage, delta: number): AiPage {
+  const count = AI_TABS.length;
+
+  return AI_TABS[(tabIndex(page) + delta + count) % count]?.page ?? "providers";
+}
+
+/** True when Pi can use the provider: it has a stored credential, or a key in the environment. */
+function isSignedIn(provider: { configured: boolean; credentialType?: string }): boolean {
+  return provider.configured || provider.credentialType !== undefined;
+}
+
+/** The providers of a page: the signed-in providers, or the other providers on the sign-in page. */
+export function pageProviders(page: AiPage, providers: readonly AiProvider[]): readonly AiProvider[] {
+  if (page === "providers") {
+    return providers.filter(isSignedIn);
+  }
+
+  if (page === "addProvider") {
+    return providers.filter((provider) => !isSignedIn(provider));
+  }
+
+  return [];
+}
+
+/** What works now on the page of the AI settings. */
+export interface AiAbilities {
   readonly idle: boolean;
   readonly list: boolean;
   readonly signIn: boolean;
   readonly signOut: boolean;
   readonly ready: boolean;
-}): KeyHint[] {
-  if (!can.idle) {
+}
+
+const TAB_HINT: KeyHint = { key: "←/→", description: "tab" };
+
+function listHints(can: AiAbilities): KeyHint[] {
+  if (!can.list) {
     return [];
   }
 
   return [
-    ...(can.list
-      ? [
-          { key: "↑/↓", description: "select" },
-          { key: "/", description: "filter" },
-        ]
-      : []),
-    ...(can.signIn ? [{ key: "enter", description: "sign in" }] : []),
+    { key: "↑/↓", description: "select" },
+    { key: "/", description: "filter" },
+  ];
+}
+
+function providersHints(can: AiAbilities): KeyHint[] {
+  return [
+    ...listHints(can),
     ...(can.signOut ? [{ key: "d", description: "sign out" }] : []),
+    ...(can.ready ? [{ key: "n", description: "sign in to another provider" }] : []),
+    { key: "r", description: "reload" },
+    TAB_HINT,
+  ];
+}
+
+function addProviderHints(can: AiAbilities): KeyHint[] {
+  return [
+    ...listHints(can),
+    ...(can.signIn ? [{ key: "enter", description: "sign in" }] : []),
+    { key: "esc", description: "back to providers" },
+  ];
+}
+
+function modelsHints(can: AiAbilities): KeyHint[] {
+  return [
     ...(can.ready
       ? [
-          { key: "s", description: "supervisor model" },
-          { key: "w", description: "worker model" },
+          { key: "s", description: "change supervisor model" },
+          { key: "w", description: "change worker model" },
         ]
       : []),
-    { key: "l", description: "worker limit" },
-    { key: "r", description: "reload" },
+    TAB_HINT,
   ];
+}
+
+/** The keys of the page of the AI settings that work now. */
+export function aiHints(page: AiPage, can: AiAbilities): KeyHint[] {
+  if (!can.idle) {
+    return [];
+  }
+
+  if (page === "addProvider") {
+    return addProviderHints(can);
+  }
+
+  if (page === "models") {
+    return modelsHints(can);
+  }
+
+  if (page === "limits") {
+    return [{ key: "l", description: "edit worker limit" }, TAB_HINT];
+  }
+
+  return providersHints(can);
 }

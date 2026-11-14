@@ -24,7 +24,7 @@ function Probe({ ctx, loadRuntime }: { ctx: ServiceContext; loadRuntime: () => P
 
   return (
     <Text>
-      ready={String(model.ready)} task={model.task?.kind ?? "none"} signIn={String(model.canSignIn)}
+      page={model.page} ready={String(model.ready)} task={model.task?.kind ?? "none"} signIn={String(model.canSignIn)}
     </Text>
   );
 }
@@ -32,13 +32,17 @@ function Probe({ ctx, loadRuntime }: { ctx: ServiceContext; loadRuntime: () => P
 describe("useAiSection", () => {
   const project = useTestProject();
 
-  it("loads the providers and opens the worker limit with l", async () => {
+  it("loads the providers, signs in on the page of the other providers, and opens the worker limit with l", async () => {
     const tui = await renderTui(<Probe ctx={project.ctx} loadRuntime={async () => runtime} />);
 
     await vi.waitFor(async () => {
       await tui.press();
-      expect(tui.frame()).toContain("ready=true task=none signIn=true");
+      expect(tui.frame()).toContain("page=providers ready=true task=none signIn=false");
     });
+    await tui.press("n");
+
+    expect(tui.frame()).toContain("page=addProvider ready=true task=none signIn=true");
+
     await tui.press("l");
 
     expect(tui.frame()).toContain("task=limit");

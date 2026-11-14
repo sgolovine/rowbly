@@ -1,19 +1,23 @@
-import { Box, Text } from "ink";
+import { Box } from "ink";
 import { type AuthRuntime, authRuntime } from "../../../../services/agent-auth/agent-auth.js";
-import { DetailView } from "../../../components/index.js";
-import { theme } from "../../../theme.js";
-import { AiButtons } from "../ai-buttons/index.js";
-import { AiProviders } from "../ai-providers/index.js";
+import { Tabs } from "../../../components/index.js";
+import { AiAddProviderPage } from "../ai-add-provider-page/index.js";
+import { AiLimitsPage } from "../ai-limits-page/index.js";
+import { AiModelsPage } from "../ai-models-page/index.js";
+import { AiProvidersPage } from "../ai-providers-page/index.js";
 import { AiTaskView } from "../ai-task/index.js";
-import { modelText } from "../ai-view.js";
+import { AI_TABS, tabIndex } from "../ai-view.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
-import { finishTask, pickProvider, reloadAll, saveLimit, saveModel, signOut } from "./ai-actions.js";
+import { finishSignIn, openPage, pickProvider, reloadAll, saveLimit, saveModel, signOut } from "./ai-actions.js";
 import { useAiSection } from "./use-ai-section.js";
 
 /**
- * The AI settings of the factory: the AI providers of Pi and their sign-in, the models of the supervisor and
- * the workers, and the worker limit. `enter` signs in to the selected provider, and `d` asks before it signs
- * out. `s` and `w` select the model of the supervisor and of the workers, and `l` changes the worker limit.
+ * The AI settings of the factory, in three tabs. `←/→` or a click changes the tab.
+ * - Providers: the signed-in providers of Pi. `d` asks before it signs out, and `n` opens the page that signs in
+ *   to another provider. On that page, `enter` signs in and `esc` goes back.
+ * - Models: the models of the supervisor and of the workers. `s` and `w` change them.
+ * - Limits: the worker limit. `l` changes it.
+ *
  * The sign-in is for this computer: Pi keeps the credentials, and the Project keeps no secret. The section
  * loads Pi only when it opens. The board does not need it.
  */
@@ -27,42 +31,56 @@ export function AiSection({
 }) {
   const model = useAiSection({ ctx, onChange, loadRuntime });
 
-  const { env, idle, ready, settings } = model;
+  const { env, idle, ready, page, settings } = model;
 
   return (
     <Box flexDirection="column" gap={1}>
-      <DetailView
-        rows={[
-          { label: "Supervisor", value: modelText(settings.data?.supervisorModel) },
-          { label: "Workers", value: modelText(settings.data?.workerModel) },
-          { label: "Worker limit", value: settings.data ? String(settings.data.maxWorkers) : "—" },
-        ]}
+      <Tabs
+        tabs={AI_TABS.map((tab) => tab.label)}
+        selected={tabIndex(page)}
+        onSelect={(index) => openPage(env, AI_TABS[index]?.page ?? "providers")}
+        active={idle}
       />
-      <AiProviders
-        loading={model.loading}
-        ready={ready}
-        providers={env.providers}
-        idle={idle}
-        height={model.layout.height}
-        onHighlight={env.setSelected}
-        onSelect={(id) => pickProvider(env, id)}
-        onFilteringChange={model.setFiltering}
-      />
-      <AiButtons
-        canSignIn={model.canSignIn}
-        canSignOut={model.canSignOut}
-        ready={ready}
-        idle={idle}
-        onSignIn={() => env.setTask({ kind: "signIn" })}
-        onSignOut={() => env.setTask({ kind: "signOut" })}
-        onModel={(role) => env.setTask({ kind: "model", role })}
-        onLimit={() => env.setTask({ kind: "limit" })}
-        onReload={() => reloadAll(env)}
-      />
-      <Text color={theme.inkFaint} wrap="wrap">
-        The sign-in is for this computer. Pi keeps the credentials; the Project keeps no secret. A configured provider
-        is not a check of the account.
-      </Text>
+      {page === "providers" && (
+        <AiProvidersPage
+          loading={model.loading}
+          ready={ready}
+          providers={env.providers}
+          idle={idle}
+          canSignOut={model.canSignOut}
+          height={model.layout.height}
+          onHighlight={env.setSelected}
+          onFilteringChange={model.setFiltering}
+          onAddProvider={() => openPage(env, "addProvider")}
+          onSignOut={() => env.setTask({ kind: "signOut" })}
+          onReload={() => reloadAll(env)}
+        />
+      )}
+      {page === "addProvider" && (
+        <AiAddProviderPage
+          ready={ready}
+          providers={env.providers}
+          idle={idle}
+          canSignIn={model.canSignIn}
+          height={model.layout.height}
+          onHighlight={env.setSelected}
+          onFilteringChange={model.setFiltering}
+          onPick={(id) => pickProvider(env, id)}
+          onSignIn={() => env.setTask({ kind: "signIn" })}
+          onBack={() => openPage(env, "providers")}
+        />
+      )}
+      {page === "models" && (
+        <AiModelsPage
+          settings={settings.data}
+          ready={ready}
+          idle={idle}
+          onModel={(role) => env.setTask({ kind: "model", role })}
+        />
+      )}
+      {page === "limits" && (
+        <AiLimitsPage settings={settings.data} idle={idle} onLimit={() => env.setTask({ kind: "limit" })} />
+      )}
       <AiTaskView
         task={model.task}
         ctx={ctx}
@@ -70,7 +88,7 @@ export function AiSection({
         provider={model.provider}
         status={model.status.data}
         settings={settings.data}
-        onSignInDone={(signedIn) => finishTask(env, signedIn)}
+        onSignInDone={(signedIn) => finishSignIn(env, signedIn)}
         onSignOut={(id) => signOut(env, id)}
         onSaveModel={(role, choice) => saveModel(env, role, choice)}
         onSaveLimit={(values) => saveLimit(env, values)}
