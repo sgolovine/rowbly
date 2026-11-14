@@ -245,5 +245,31 @@ describe("story-read", () => {
       expect(reads.size).toBe(4);
       expect([...reads.values()].every((count) => count === 1)).toBe(true);
     });
+
+    it("reads each story file at most one time to check dependsOn before the write", async () => {
+      await writeBoard();
+      vi.mocked(fs.readFile).mockClear();
+      vi.mocked(fs.rename).mockClear();
+
+      const updated = await updateStory({ id: "ROW-02", dependsOn: ["ROW-01", "ROW-03"] }, project.ctx);
+
+      expect(updated.dependsOn).toEqual(["ROW-01", "ROW-03"]);
+      const renames = vi.mocked(fs.rename).mock;
+      const write = renames.calls.findIndex(([, to]) => String(to).startsWith(project.paths.storiesDir));
+      const reads = storyReads((order) => order < (renames.invocationCallOrder[write] as number));
+      expect(reads.size).toBe(4);
+      expect([...reads.values()].every((count) => count === 1)).toBe(true);
+    });
+  });
+
+  describe("dependsOn", () => {
+    it("reads a missing key as [] and a bad value as []", async () => {
+      await project.write("stories/ROW-01.md", story("One", "BACKLOG"));
+      await project.write("stories/ROW-02.md", "---\ntitle: Two\nstage: BACKLOG\ndependsOn: ROW-01\n---\n");
+      await project.write("stories/ROW-03.md", "---\ntitle: Three\nstage: BACKLOG\ndependsOn: [ROW-01, 7]\n---\n");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).dependsOn).toEqual([]);
+      expect((await getStory({ id: "ROW-02" }, project.ctx)).dependsOn).toEqual([]);
+      expect((await getStory({ id: "ROW-03" }, project.ctx)).dependsOn).toEqual(["ROW-01"]);
+    });
   });
 });

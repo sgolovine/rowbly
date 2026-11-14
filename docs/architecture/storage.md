@@ -27,7 +27,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, one key per custom field (null = unset); the body is the description
+  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -147,13 +147,35 @@ read the settings continue to work.
 ## Stories
 
 A Story file is `stories/<projectKey>-<n>.md`, for example `ROW-01.md`. The number has at least two
-digits. The frontmatter has `title`, `stage`, an optional `position`, and one key for each custom
-field. A `null` value means that the field has no value. The Markdown body is the description.
+digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list,
+and one key for each custom field. A `null` value means that the field has no value. The Markdown body
+is the description.
 
 The `position` of a Story sets its order in its Stage.
 
 - A Story without a `position` comes after the Stories that have one, in the order of their numbers.
 - When a Story moves, the service writes a new `position` to each Story of the Stage that changes place.
+
+### Dependencies
+
+The `dependsOn` key is a list of the IDs of the upstream Stories of the Story, for example
+`dependsOn: [ROW-01, ROW-02]`. See [domain-concepts.md](domain-concepts.md#story-dependencies).
+
+- Only the downstream Story keeps the relation. The services calculate the reverse list (`blocks`).
+- A Story without dependencies has no `dependsOn` key. When the list becomes empty, the service
+  removes the key. A change of a different key does not add `dependsOn`.
+- `dependsOn` comes after `position` and before the custom fields. A custom field cannot have this
+  key, because a custom field key has only lower-case letters, digits and `_`.
+- The service saves each ID in the canonical form (`row-1` and `1` become `ROW-01`). It removes
+  duplicates and keeps the order of the input.
+- On each create and update, the service makes sure that each ID is a Story of the same Project, that
+  the Story does not depend on itself, and that the list does not make a cycle. If a check fails, the
+  service gives a `ValidationError` with `details` (for example `{ cycle: ["ROW-03", "ROW-01",
+  "ROW-03"] }`), and it saves nothing.
+- When you delete a Story, the service removes its ID from the `dependsOn` list of each downstream
+  Story. The result has one warning for each changed Story.
+- When the Project key changes, the service changes the IDs in each `dependsOn` list to the new key.
+- A `dependsOn` value that is not a list reads as `[]`. Items that are not strings are ignored.
 
 Older versions of Rowbly wrote an agent lock to the `agentLock` key of a Story. Rowbly does not use
 this key now. `rowbly doctor` shows a warning for each Story file with an `agentLock` key. To remove

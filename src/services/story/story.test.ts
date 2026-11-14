@@ -27,6 +27,7 @@ describe("story", () => {
         title: "First",
         stage: "DONE",
         position: 1,
+        dependsOn: [],
         description: "Body",
         fields: { points: null, priority: null, owner: null },
         path: join(project.paths.storiesDir, "ROW-01.md"),
@@ -157,8 +158,87 @@ describe("story", () => {
   describe("deleteStory", () => {
     it("removes the file", async () => {
       await createStory({ title: "T" }, project.ctx);
-      expect(await deleteStory({ id: "1" }, project.ctx)).toEqual({ id: "ROW-01" });
+      expect(await deleteStory({ id: "1" }, project.ctx)).toEqual({ id: "ROW-01", warnings: [] });
       await expect(getStory({ id: "1" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+    });
+  });
+
+  describe("dependencies", () => {
+    async function seed(count: number): Promise<void> {
+      for (let i = 1; i <= count; i++) {
+        await createStory({ title: `S${i}` }, project.ctx);
+      }
+    }
+
+    async function files(): Promise<string[]> {
+      return Promise.all([1, 2, 3, 4].map((n) => project.read(`stories/ROW-0${n}.md`).catch(() => "")));
+    }
+
+    it("reads a story without dependsOn as an empty list, and an update of the title adds no key", async () => {
+      await project.write("stories/ROW-01.md", "---\ntitle: One\nstage: BACKLOG\nextra: 1\n---\n\nBody\n");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).dependsOn).toEqual([]);
+      await updateStory({ id: "ROW-01", title: "Uno" }, project.ctx);
+      expect(await project.read("stories/ROW-01.md")).toBe("---\ntitle: Uno\nstage: BACKLOG\nextra: 1\n---\n\nBody\n");
+    });
+
+    it("saves the list in order, without duplicates, in canonical form, after position and before the fields", async () => {
+      await addFields();
+      await seed(2);
+      const created = await createStory({ title: "Three", dependsOn: ["2", "row-1", "ROW-02"] }, project.ctx);
+      expect(created.dependsOn).toEqual(["ROW-02", "ROW-01"]);
+      expect(await project.read("stories/ROW-03.md")).toBe(
+        "---\ntitle: Three\nstage: BACKLOG\ndependsOn:\n  - ROW-02\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
+      );
+      await updateStory({ id: "ROW-03", position: 1, dependsOn: ["row-1"] }, project.ctx);
+      expect(await project.read("stories/ROW-03.md")).toBe(
+        "---\ntitle: Three\nstage: BACKLOG\nposition: 1\ndependsOn:\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
+      );
+    });
+
+    it("keeps the list on an update without dependsOn, and removes the key for an empty list", async () => {
+      await seed(1);
+      await createStory({ title: "Two", dependsOn: ["ROW-01"] }, project.ctx);
+      await updateStory({ id: "ROW-02", title: "Second" }, project.ctx);
+      expect((await getStory({ id: "ROW-02" }, project.ctx)).dependsOn).toEqual(["ROW-01"]);
+      await updateStory({ id: "ROW-02", dependsOn: [] }, project.ctx);
+      expect(await project.read("stories/ROW-02.md")).toBe("---\ntitle: Second\nstage: BACKLOG\n---\n\n");
+    });
+
+    it.each([
+      [["ROW-99"], { unknown: ["ROW-99"] }, /Unknown Story: ROW-99/],
+      [["ABC-01"], { otherProject: ["ABC-01"] }, /Not a Story of this Project: ABC-01/],
+      [["3"], { self: ["ROW-03"] }, /ROW-03 cannot depend on itself/],
+      [["ROW-01"], { cycle: ["ROW-03", "ROW-01", "ROW-03"] }, /ROW-03 → ROW-01 → ROW-03/],
+    ])("rejects %j with a ValidationError and saves nothing", async (dependsOn, details, message) => {
+      await seed(3);
+      await updateStory({ id: "ROW-01", dependsOn: ["ROW-03"] }, project.ctx);
+      const before = await files();
+      const error = await updateStory({ id: "ROW-03", title: "Changed", dependsOn }, project.ctx).catch(
+        (e: unknown) => e,
+      );
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).message).toMatch(message);
+      expect((error as ValidationError).details).toMatchObject(details);
+      expect(await files()).toEqual(before);
+    });
+
+    it("rejects an invalid list on create and saves no file", async () => {
+      await seed(1);
+      const error = await createStory({ title: "Two", dependsOn: ["ROW-02"] }, project.ctx).catch((e: unknown) => e);
+      expect((error as ValidationError).details).toMatchObject({ self: ["ROW-02"] });
+      await expect(getStory({ id: "ROW-02" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it("removes a deleted upstream story from each downstream story, with a warning for each", async () => {
+      await seed(2);
+      await createStory({ title: "Three", dependsOn: ["ROW-01", "ROW-02"] }, project.ctx);
+      await createStory({ title: "Four", dependsOn: ["ROW-01"] }, project.ctx);
+      expect(await deleteStory({ id: "ROW-01" }, project.ctx)).toEqual({
+        id: "ROW-01",
+        warnings: ["Removed the dependency on ROW-01 from ROW-03", "Removed the dependency on ROW-01 from ROW-04"],
+      });
+      expect((await getStory({ id: "ROW-03" }, project.ctx)).dependsOn).toEqual(["ROW-02"]);
+      expect(await project.read("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
     });
   });
 
