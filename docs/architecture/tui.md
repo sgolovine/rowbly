@@ -145,6 +145,9 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
   keys and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
+- The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
+  does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
+  wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
 - `t` on a factory warning closes the Factory controls and opens the Thread in the Story sidebar
   (`openThread` of `OverlayHandlers`).
 
@@ -216,6 +219,8 @@ visible.
   it the focus.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
   form keeps its draft. In the Story list, `esc` closes the Story sidebar.
+- The mouse wheel over the Story list moves the cursor also when the Story sidebar has the focus. The
+  wheel gives the focus to the Story list, and the Story sidebar stays open.
 - When the form has unsaved text or images, Rowbly asks before it closes the form or shows a
   different form (`discardStory` overlay).
 - A drag of the left edge changes the width (`ResizeEdge`). The default width is

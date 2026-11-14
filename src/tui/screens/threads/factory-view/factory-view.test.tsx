@@ -49,18 +49,18 @@ describe("FactoryView", () => {
     await createThread({ role: "supervisor", cwd: project.paths.root, ownerToken: "owner" }, project.ctx);
   }
 
-  async function open(props: { stage?: string; active?: boolean } = {}) {
+  async function open(props: { stage?: string; active?: boolean; clickable?: boolean; height?: number } = {}) {
     const onOpen = vi.fn<(thread: ThreadRecord) => void>();
     const onHints = vi.fn<(hints: readonly KeyHint[]) => void>();
     const view = (active: boolean) => (
-      <LayoutContext.Provider value={{ width: 100, height: undefined }}>
+      <LayoutContext.Provider value={{ width: 100, height: props.height }}>
         <FactoryView
           ctx={project.ctx}
           root={project.paths.root}
           stage={props.stage}
           stages={STAGES}
           active={active}
-          clickable
+          clickable={props.clickable ?? true}
           emptyText="No Threads. The factory adds a Thread when it starts a worker."
           onOpen={onOpen}
           onHints={onHints}
@@ -180,6 +180,36 @@ describe("FactoryView", () => {
       await tui.press(keys.up, keys.enter);
       expect(tui.frame()).toContain("▌ ROW-06");
       expect(onOpen).not.toHaveBeenCalled();
+    });
+
+    describe("in a short Panel", () => {
+      const position = (frame: string) => frame.match(/↑↓ \d+–\d+ of \d+/)?.[0];
+
+      it("scrolls with the wheel while it is active", async () => {
+        const { tui } = await open({ height: 4 });
+        expect(position(tui.frame())).toBe("↑↓ 1–3 of 15");
+        await tui.mouse("wheelDown", 1, 1);
+        expect(position(tui.frame())).toBe("↑↓ 4–6 of 15");
+        await tui.mouse("wheelUp", 1, 1);
+        expect(position(tui.frame())).toBe("↑↓ 1–3 of 15");
+      });
+
+      it("scrolls with the wheel but not with pgdn while it is clickable and not active", async () => {
+        const { tui, rerender } = await open({ height: 4, active: false });
+        await rerender(false);
+        await tui.press(keys.pageDown);
+        expect(position(tui.frame())).toBe("↑↓ 1–3 of 15");
+        await tui.mouse("wheelDown", 1, 1);
+        expect(position(tui.frame())).toBe("↑↓ 4–6 of 15");
+        await tui.mouse("wheelUp", 1, 1);
+        expect(position(tui.frame())).toBe("↑↓ 1–3 of 15");
+      });
+
+      it("takes no wheel while it is not clickable", async () => {
+        const { tui } = await open({ height: 4, active: false, clickable: false });
+        await tui.mouse("wheelDown", 1, 1);
+        expect(position(tui.frame())).toBe("↑↓ 1–3 of 15");
+      });
     });
 
     it("shows a change of a Thread file without a reload", async () => {
