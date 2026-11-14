@@ -11,7 +11,8 @@ import { type ModelsTabProps, useModelsTab } from "./use-models-tab.js";
 /**
  * The worker model of the Story in each Stage. Each row shows the Story override, or the model that applies
  * without it and its source. The arrows select a Stage, and `enter` or a click opens the model picker. Its first
- * option, `No override`, removes the Story override. Pi loads only after the tab is shown.
+ * option, `No override`, removes the Story override. The models come from the model cache, and Pi loads in the
+ * background only when the cache is stale or missing.
  */
 export function ModelsTab({
   loadRuntime = authRuntime,
@@ -36,10 +37,10 @@ export function ModelsTab({
           />
         </Box>
       </Box>
-      {task && models.data && (
+      {task && models && (
         <ModelPickerModal
           title={`${env.storyId} › Model › ${task.label}`}
-          models={models.data}
+          models={models}
           current={settings.data?.storyWorkerModels?.[env.storyId]?.[task.key]}
           defaultLabel={NO_OVERRIDE_LABEL}
           onSave={(choice) => saveStoryModel(env, task, choice)}

@@ -123,7 +123,7 @@ function registerLogout(program: Command): void {
     .action((provider: string, _opts: unknown, cmd: Command) =>
       run(
         cmd,
-        async () => logoutProvider(await authRuntime(), provider),
+        async (ctx) => logoutProvider(await authRuntime(), provider, ctx),
         (r) => `Logged out: ${r.provider}`,
       ),
     );

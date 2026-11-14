@@ -10,7 +10,14 @@ import { StoryTabPanes, type StoryTabReports } from "./story-tab-panes.js";
 
 vi.mock("../../../../services/agent-auth/agent-auth.js", async (original) => ({
   ...(await original<typeof import("../../../../services/agent-auth/agent-auth.js")>()),
-  authRuntime: vi.fn(async () => ({ getAvailable: async () => [] }) as unknown as AuthRuntime),
+  authRuntime: vi.fn(
+    async () =>
+      ({
+        getAvailable: async () => [],
+        getProviders: () => [],
+        listCredentials: async () => [],
+      }) as unknown as AuthRuntime,
+  ),
 }));
 
 afterEach(cleanup);

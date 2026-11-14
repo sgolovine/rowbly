@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { useTestProject } from "../test-project/test-project.js";
+import { useTempDir, useTestProject } from "../test-project/test-project.js";
 
 vi.mock("@earendil-works/pi-coding-agent", () => {
   throw new Error("Pi loaded during command registration");
@@ -7,6 +7,18 @@ vi.mock("@earendil-works/pi-coding-agent", () => {
 
 describe("Pi import boundary", () => {
   const project = useTestProject();
+  const home = useTempDir();
+
+  it("reads and writes the model cache without loading Pi", async () => {
+    const cache = await import("../pi-catalog-cache/pi-catalog-cache.js");
+    const ctx = { home: home.path };
+    const catalog = { models: [], providers: [] };
+    await cache.writePiCatalog(catalog, await cache.piCatalogKey(ctx, { env: {} }), ctx);
+    expect(await cache.readPiCatalog(ctx, { env: {} })).toEqual({ ...catalog, fresh: true });
+    await cache.deletePiCatalog(ctx);
+    expect(await cache.readPiCatalog(ctx, { env: {} })).toBeUndefined();
+  });
+
   it("does not load Pi for help or command registration", async () => {
     const { createProgram } = await import("../../commands/test-cli/test-cli.js");
     expect(createProgram().helpInformation()).toContain("Usage:");

@@ -29,6 +29,21 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 - Rowbly does not write global Pi settings. Credentials stay in Pi storage, outside the Project.
 - A login gives Pi the nonsecret `deviceId` from `~/.rowblyrc.json`. See
   [../storage.md](../storage.md#rowblyrcjson).
+- Each login and logout deletes the model cache, also when the attempt fails.
+
+## The model cache
+
+Pi takes about 0.6 s to load. The TUI loads it on the main thread, so the TUI stops during the load.
+The `pi-catalog-cache/` service keeps the model list and the provider status in
+`~/.cache/rowbly/pi-catalog.json`. See [../storage.md](../storage.md#cacherowblypi-catalogjson).
+
+- `pi-catalog-cache.ts` reads, writes and deletes the file. It does not import Pi. The
+  `import-boundary` test examines this.
+- `pi-catalog-refresh.ts` loads the catalog through a runtime and writes the cache
+  (`refreshPiCatalog()`). `loadPiCatalog()` and `piProviderReady()` use a fresh cache, and load Pi
+  only when the cache is stale or missing.
+- The Models tab shows the cached models at once. When the cache is stale, it loads Pi in the
+  background and then shows the new models. A failed refresh keeps the cached models.
 
 ## Factory settings
 
