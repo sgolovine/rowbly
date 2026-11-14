@@ -1,7 +1,7 @@
 ---
 title: Periodic Git push and pull in the factory
-stage: IN_REVIEW
-position: 3
+stage: DONE
+position: 18
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-18
 pull_request: https://github.com/sgolovine/rowbly/pull/201
 ---
@@ -77,3 +77,6 @@ Not in scope:
 - The sync does not stash or change uncommitted user files. If Git refuses the merge because of a dirty file, the pull is a failure. Reason: the canonical checkout can hold the work of a person.
 - A success removes the attention entry of the same key. Reason: an old failure must not stay after the problem is solved. The `commit` entry keeps its current behaviour.
 - The flag names are `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and `--git-sync-interval`. Reason: they agree with the `git` section name and the Commander negation pattern.
+
+- After the merge of ROW-17, `getFactorySettings` gives the sync defaults in the returned `git` object, but a write does not add the defaults to `factory.json`. Reason: AC 1 asks for the default values, and the ROW-17 rule that an empty `git` section goes away from the file stays true.
+- `updateFactorySettings` merges `git` one level deep. `configureFactory` uses the ROW-17 `mergeGit`, so that `--commit-message ""` removes the key and the old value does not come back. Reason: one merge function for the configure flags.

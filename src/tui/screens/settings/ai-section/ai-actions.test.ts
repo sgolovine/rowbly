@@ -2,6 +2,7 @@ import type { Key } from "ink";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ValidationError } from "../../../../services/errors/errors.js";
 import * as settings from "../../../../services/factory-settings/factory-settings.js";
+import type { Stage } from "../../../../services/stage/stage.js";
 import { createToastStore } from "../../../hooks/index.js";
 import type { AiProvider } from "../ai-view.js";
 import {
@@ -10,13 +11,16 @@ import {
   finishTask,
   handleAiKey,
   loadStatus,
+  openStageModel,
   pickProvider,
   saveLimit,
+  saveStageModel,
 } from "./ai-actions.js";
 
 vi.mock("../../../../services/factory-settings/factory-settings.js", async (original) => ({
   ...(await original<typeof import("../../../../services/factory-settings/factory-settings.js")>()),
   updateFactorySettings: vi.fn(async () => ({})),
+  setWorkerOverride: vi.fn(async () => ({})),
 }));
 
 afterEach(() => {
@@ -24,6 +28,8 @@ afterEach(() => {
 });
 
 const state = () => ({ reload: vi.fn(), refresh: vi.fn(), loading: false });
+const backlog = { key: "BACKLOG", label: "Backlog" } as Stage;
+const done = { key: "DONE", label: "Done" } as Stage;
 
 function env(overrides: Partial<AiEnv> = {}): AiEnv {
   return {
@@ -32,6 +38,9 @@ function env(overrides: Partial<AiEnv> = {}): AiEnv {
     runtime: state(),
     status: state(),
     settings: state(),
+    stages: { ...state(), data: [backlog, done] },
+    stageCursor: 0,
+    setStageCursor: vi.fn(),
     providers: [
       { id: "acme", methods: ["api_key"], configured: true },
       { id: "none", methods: [], configured: false },
@@ -71,6 +80,50 @@ describe("aiActions", () => {
     expect(e.setTask).toHaveBeenCalledTimes(4);
     expect(e.runtime.reload).toHaveBeenCalledOnce();
     expect(e.settings.reload).toHaveBeenCalledOnce();
+    expect(e.stages.reload).toHaveBeenCalledOnce();
+  });
+
+  it("selects a Stage with the arrows on the Models tab, and opens its picker with enter only when Pi has loaded", () => {
+    const e = env({ page: "models", stageCursor: 1 });
+
+    handleAiKey(e, "", key({ downArrow: true }));
+    handleAiKey(e, "k", key());
+    handleAiKey(e, "", key({ return: true }));
+
+    const update = vi.mocked(e.setStageCursor).mock.calls[0]?.[0] as (n: number) => number;
+
+    expect(update(1)).toBe(1);
+    expect(update(0)).toBe(1);
+    expect(e.setTask).toHaveBeenCalledWith({ kind: "stageModel", stage: done });
+
+    const notReady = env({ page: "models", ready: false });
+
+    handleAiKey(notReady, "", key({ return: true }));
+    openStageModel(notReady, 1);
+
+    expect(notReady.setTask).not.toHaveBeenCalled();
+    expect(notReady.setStageCursor).toHaveBeenCalledWith(1);
+  });
+
+  it("saves and removes a Stage override through the service, then closes the picker", async () => {
+    const e = env();
+
+    await saveStageModel(e, backlog, { provider: "acme", modelId: "deep-1", thinkingLevel: "high" });
+    await saveStageModel(e, backlog, null);
+
+    expect(settings.setWorkerOverride).toHaveBeenNthCalledWith(
+      1,
+      { stage: "BACKLOG" },
+      { provider: "acme", modelId: "deep-1", thinkingLevel: "high" },
+      {},
+    );
+    expect(settings.setWorkerOverride).toHaveBeenNthCalledWith(2, { stage: "BACKLOG" }, undefined, {});
+    expect(e.toast.list().map((t) => t.message)).toEqual([
+      "Saved the Backlog worker model: acme/deep-1 · thinking high",
+      "Removed the Backlog worker model",
+    ]);
+    expect(e.setTask).toHaveBeenCalledWith(null);
+    expect(e.onChange).toHaveBeenCalledTimes(2);
   });
 
   it("does not change models, sign out or open the sign-in page before the providers load", () => {

@@ -137,4 +137,43 @@ describe("AiSection", () => {
       expect(tui.frame()).toContain("2 workers");
     });
   });
+
+  it("lists the Stages under the worker model, and sets and removes the override of a Stage", async () => {
+    await updateFactorySettings({ maxWorkers: 3, workerModel: { provider: "acme", modelId: "fast-1" } }, project.ctx);
+    const { tui } = await open();
+    await tui.press(keys.right);
+    expect(tui.frame()).toContain("Stage worker models");
+    expect(tui.frame()).toMatch(/▌ ● Backlog\s+Worker model/);
+    await tui.press(keys.down, keys.enter);
+    expect(tui.frame()).toContain("AI › Worker model › Done");
+    expect(tui.frame()).toContain("No override");
+    await tui.type("deep");
+    await tui.press(keys.enter, keys.down, keys.down, keys.down, keys.enter);
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.toasts.list().map((t) => t.message)).toContain(
+        "Saved the Done worker model: acme/deep-1 · thinking low",
+      );
+    });
+    expect(tui.frame()).not.toContain("AI › Worker model ›");
+    expect(tui.frame()).toMatch(/● Done\s+acme\/deep-1 · thinking low/);
+    expect(JSON.parse(await project.read("factory.json"))).toEqual({
+      version: 1,
+      maxWorkers: 3,
+      workerModel: { provider: "acme", modelId: "fast-1" },
+      stageWorkerModels: { DONE: { provider: "acme", modelId: "deep-1", thinkingLevel: "low" } },
+    });
+    await settle(30);
+    await tui.press(keys.enter);
+    expect(tui.frame()).toMatch(/▌\s*acme\/deep-1/);
+    await tui.type("No override");
+    await tui.press(keys.enter);
+    await vi.waitFor(async () => {
+      expect(JSON.parse(await project.read("factory.json"))).toEqual({
+        version: 1,
+        maxWorkers: 3,
+        workerModel: { provider: "acme", modelId: "fast-1" },
+      });
+    });
+  });
 });

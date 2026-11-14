@@ -1,7 +1,7 @@
 ---
 title: "Threads View: Open in sidebar instead of modal"
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 17
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-16
 pull_request: https://github.com/sgolovine/rowbly/pull/199
 ---

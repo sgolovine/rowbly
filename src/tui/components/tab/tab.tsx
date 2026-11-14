@@ -20,7 +20,7 @@ export function Tab({
   useMouse(ref, { onClick }, active);
 
   return (
-    <Box ref={ref}>
+    <Box ref={ref} flexShrink={0}>
       <Text
         backgroundColor={selected ? theme.accent : undefined}
         color={selected ? theme.onAccent : theme.inkMuted}

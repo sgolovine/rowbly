@@ -1,11 +1,17 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import { updateProject } from "../../../../services/project/project.js";
 import { createSpec } from "../../../../services/spec/spec.js";
 import { createStory } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { renderTui } from "../../../testing/index.js";
 import { StoryTabPanes, type StoryTabReports } from "./story-tab-panes.js";
+
+vi.mock("../../../../services/agent-auth/agent-auth.js", async (original) => ({
+  ...(await original<typeof import("../../../../services/agent-auth/agent-auth.js")>()),
+  authRuntime: vi.fn(async () => ({ getAvailable: async () => [] }) as unknown as AuthRuntime),
+}));
 
 afterEach(cleanup);
 
@@ -19,6 +25,8 @@ function reports(): StoryTabReports {
     setThreadHints: vi.fn(),
     setAttachmentHints: vi.fn(),
     setAttachmentTask: vi.fn(),
+    setModelHints: vi.fn(),
+    setModelTask: vi.fn(),
   };
 }
 
@@ -51,5 +59,31 @@ describe("StoryTabPanes", () => {
       expect(calls.setSpecCount).toHaveBeenLastCalledWith(1);
     });
     expect(tui.frame()).not.toContain("No attachments");
+    expect(tui.frame()).not.toContain("A Story override");
+  });
+
+  it("shows the Models tab with one row for each Stage, and reports its hints", async () => {
+    const calls = reports();
+    const tui = await renderTui(
+      <StoryTabPanes
+        ctx={project.ctx}
+        storyId="ROW-01"
+        specs
+        shown="models"
+        open
+        specsLayout={{ width: 100 }}
+        generalLayout={{ width: 96 }}
+        reports={calls}
+      />,
+    );
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toMatch(/● Backlog\s+Worker model: Pi default/);
+      expect(calls.setModelHints).toHaveBeenLastCalledWith([
+        { key: "↑/↓", description: "select Stage" },
+        { key: "enter", description: "change model" },
+      ]);
+    });
+    expect(tui.frame()).not.toContain("The API text");
   });
 });
