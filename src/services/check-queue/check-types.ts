@@ -134,7 +134,7 @@ export interface QueueState {
 export interface CheckQueue {
   readonly paths: ProjectPaths;
   readonly ownerToken: string;
-  /** Gives the current checks of `factory.json`. A change applies to the next admission. */
+  /** Gives the current checks of the factory settings. A change applies to the next admission. */
   readonly limits: () => CheckLimits | undefined;
   readonly deps: CheckQueueDeps;
   /** Gets each change of a job status. */

@@ -17,7 +17,7 @@ describe("projectPaths", () => {
       stagesDir: join("/repo", ".rowbly", "stages"),
       specsDir: join("/repo", ".rowbly", "specs"),
       ignoreFile: join("/repo", ".rowbly", ".gitignore"),
-      factorySettingsFile: join("/repo", ".rowbly", "factory.json"),
+      legacyFactorySettingsFile: join("/repo", ".rowbly", "factory.json"),
       stateFile: join("/repo", ".rowbly", "state.json"),
       runtimeDir: join("/repo", ".rowbly", "runtime"),
     });

@@ -49,7 +49,7 @@ export async function listChecks(ctx: ServiceContext = {}): Promise<readonly Che
   return checkLimits((await getFactorySettings(ctx)).checks)?.items ?? [];
 }
 
-/** Adds one check. A check with the same key gives a `ConflictError`. The other keys of `factory.json` stay. */
+/** Adds one check. A check with the same key gives a `ConflictError`. The other keys of the factory settings stay. */
 export async function addCheck(item: CheckItem, ctx: ServiceContext = {}): Promise<CheckSpec> {
   const written = await writeSettings((current) => {
     if (itemsOf(current.checks).some((existing) => existing.key === item.key)) {

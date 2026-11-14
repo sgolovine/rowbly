@@ -222,6 +222,13 @@ function featureIssues(name: string, value: unknown): Issue[] {
   return [];
 }
 
+/** Checks only the shape of the factory section, so that a bad section does not stop the board. */
+function factoryIssues(factory: unknown): Issue[] {
+  return factory === undefined || isRecord(factory)
+    ? []
+    : [{ path: ["factory"], message: "factory must be an object" }];
+}
+
 /** Every problem with a parsed config file; none means `raw` is a valid `ProjectConfig`. */
 export function configIssues(raw: unknown): Issue[] {
   if (!isRecord(raw)) {
@@ -235,5 +242,6 @@ export function configIssues(raw: unknown): Issue[] {
     ...stagesIssues(raw.stages),
     ...featuresIssues(raw.features),
     ...(raw.skills === undefined ? [] : skillIssues(raw.skills)),
+    ...factoryIssues(raw.factory),
   ];
 }

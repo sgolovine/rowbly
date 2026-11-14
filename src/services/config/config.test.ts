@@ -219,6 +219,17 @@ describe("parseConfig", () => {
     ]);
   });
 
+  it("keeps a factory object, and reports a factory value that is not an object", () => {
+    const factory = { maxWorkers: 2, git: { push: true } };
+    expect(parseConfig(JSON.stringify({ ...VALID, factory })).config?.factory).toEqual(factory);
+    expect(configIssues({ ...VALID, factory: { maxWorkers: "bad" } })).toEqual([]);
+    for (const bad of [5, "x", null, [1]]) {
+      expect(configIssues({ ...VALID, factory: bad })).toEqual([
+        { path: ["factory"], message: "factory must be an object" },
+      ]);
+    }
+  });
+
   it("drops unknown keys", () => {
     const text = JSON.stringify({ ...VALID, extra: 1, stages: [{ ...VALID.stages[0], color: "red" }] });
     expect(parseConfig(text)).toEqual({ config: VALID, issues: [] });
@@ -245,6 +256,16 @@ describe("readConfig and writeConfig", () => {
     await updateProject({ name: "Renamed" }, project.ctx);
     await createStage({ label: "Review" }, project.ctx);
     expect((await readConfig(project.paths)).skills).toEqual(skills);
+  });
+
+  it("keeps the factory section as the last key when other services write the config", async () => {
+    const factory = { maxWorkers: 3 };
+    await writeConfig(project.paths, { ...(await readConfig(project.paths)), factory });
+    await updateProject({ name: "Renamed" }, project.ctx);
+    await createStage({ label: "Review" }, project.ctx);
+    const raw = JSON.parse(await project.read("rowbly.config.json"));
+    expect(raw.factory).toEqual(factory);
+    expect(Object.keys(raw).at(-1)).toBe("factory");
   });
 
   it("throws a ValidationError for an invalid file", async () => {

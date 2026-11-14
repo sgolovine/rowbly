@@ -15,7 +15,7 @@ vi.mock("./manager-status.js", () => ({ persistStatus: mocks.persist }));
 vi.mock("../factory-ownership/factory-ownership.js", () => ({ assertFactoryOwnership: async () => {} }));
 
 function settings(git: FactorySettings["git"]): FactorySettings {
-  return { version: 1, maxWorkers: 1, git };
+  return { maxWorkers: 1, git };
 }
 
 function createManager(git: FactorySettings["git"]): Manager {

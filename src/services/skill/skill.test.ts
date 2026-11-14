@@ -309,6 +309,20 @@ describe("skill service", () => {
       ]);
     });
 
+    it("keeps the factory section when it installs and removes a skill", async () => {
+      const factory = {
+        maxWorkers: 2,
+        git: { push: true },
+        checks: { items: [{ key: "test", command: "pnpm test" }] },
+      };
+      const config = JSON.parse(await project.read("rowbly.config.json"));
+      await project.write("rowbly.config.json", JSON.stringify({ ...config, factory }, null, 2));
+      await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);
+      expect((await readConfig(project.paths)).factory).toEqual(factory);
+      await removeSkill({ name: "alpha" }, ctx);
+      expect((await readConfig(project.paths)).factory).toEqual(factory);
+    });
+
     it("gives NotFoundError for a skill or a harness that is not tracked, and changes nothing", async () => {
       await expect(removeSkill({ name: "alpha" }, ctx)).rejects.toBeInstanceOf(NotFoundError);
       await installSkill({ name: "alpha", harnesses: ["codex"] }, ctx);

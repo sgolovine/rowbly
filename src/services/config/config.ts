@@ -55,6 +55,7 @@ function normalizeConfig(config: ProjectConfig): ProjectConfig {
     ...(config.skills === undefined
       ? {}
       : { skills: config.skills.map(({ name, harnesses }) => ({ name, harnesses: [...harnesses] })) }),
+    ...(config.factory === undefined ? {} : { factory: config.factory }),
   };
 }
 

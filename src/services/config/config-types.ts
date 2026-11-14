@@ -29,6 +29,8 @@ export interface ProjectConfig {
   features?: FeatureConfig;
   /** The bundled skills that Rowbly installed in this project. */
   skills?: InstalledSkill[];
+  /** The settings of the native factory. The factory-settings service checks the keys. */
+  factory?: Record<string, unknown>;
 }
 
 /** The optional features of a project, by name. */

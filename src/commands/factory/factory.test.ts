@@ -10,6 +10,11 @@ import { runCli } from "../test-cli/test-cli.js";
 
 describe("factory commands", () => {
   const project = useTestProject();
+  const readFactory = async () => JSON.parse(await project.read("rowbly.config.json")).factory;
+  const writeFactory = async (text: string) => {
+    const config = JSON.parse(await project.read("rowbly.config.json"));
+    await project.write("rowbly.config.json", JSON.stringify({ ...config, factory: JSON.parse(text) }));
+  };
   afterEach(() => {
     process.exitCode = undefined;
     vi.restoreAllMocks();
@@ -29,14 +34,14 @@ describe("factory commands", () => {
     expect(start).toHaveBeenCalledOnce();
   });
   it("configures the Git sync keys and keeps the keys of flags that are not given", async () => {
-    const settingsFile = `${project.paths.root}/.rowbly/factory.json`;
+    const settingsFile = project.paths.configFile;
     const on = await runCli(
       ["--json", "factory", "configure", "--git-push", "--git-pull", "--git-sync-interval", "120"],
       project.paths.root,
     );
     expect(on.exitCode).toBe(0);
     expect(JSON.parse(on.stdout).git).toEqual({ push: true, pull: true, syncIntervalSeconds: 120 });
-    expect(JSON.parse(await readFile(settingsFile, "utf8")).git).toEqual({
+    expect(JSON.parse(await readFile(settingsFile, "utf8")).factory.git).toEqual({
       push: true,
       pull: true,
       syncIntervalSeconds: 120,
@@ -55,8 +60,8 @@ describe("factory commands", () => {
       git: { push: false, pull: false, syncIntervalSeconds: 120 },
     });
   });
-  it("rejects a sync interval below the limit without a change of factory.json", async () => {
-    const settingsFile = `${project.paths.root}/.rowbly/factory.json`;
+  it("rejects a sync interval below the limit without a change of the config", async () => {
+    const settingsFile = project.paths.configFile;
     await runCli(["--json", "factory", "configure", "--git-pull"], project.paths.root);
     const before = await readFile(settingsFile, "utf8");
 
@@ -79,12 +84,11 @@ describe("factory commands", () => {
     vi.spyOn(agentAuth, "validateModelChoice").mockImplementation(async (_runtime, choice) => choice);
     const story = await createStory({ title: "Override" }, project.ctx);
     const worker = { provider: "anthropic", modelId: "claude-opus-5-5" };
-    await project.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 2, workerModel: worker }));
+    await writeFactory(JSON.stringify({ maxWorkers: 2, workerModel: worker }));
     const cli = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
     const staged = await cli("--stage", "BACKLOG", "--worker", "openai/gpt-sol");
     expect(staged.exitCode).toBe(0);
     expect(JSON.parse(staged.stdout)).toEqual({
-      version: 1,
       maxWorkers: 2,
       workerModel: worker,
       stageWorkerModels: { BACKLOG: { provider: "openai", modelId: "gpt-sol" } },
@@ -101,16 +105,17 @@ describe("factory commands", () => {
       "high",
     );
     expect(pinned.exitCode).toBe(0);
-    expect(JSON.parse(await project.read("factory.json")).storyWorkerModels).toEqual({
+    expect((await readFactory()).storyWorkerModels).toEqual({
       [story.id]: { DONE: { provider: "openai", modelId: "gpt-sol", thinkingLevel: "high" } },
     });
     expect((await cli("--story", story.id, "--stage", "DONE", "--clear-worker")).exitCode).toBe(0);
     expect((await cli("--stage", "BACKLOG", "--clear-worker")).exitCode).toBe(0);
-    expect(JSON.parse(await project.read("factory.json"))).toEqual({ version: 1, maxWorkers: 2, workerModel: worker });
+    expect(await readFactory()).toEqual({ maxWorkers: 2, workerModel: worker });
   });
   it("rejects invalid override flags without a write", async () => {
-    const text = JSON.stringify({ version: 1, maxWorkers: 2 });
-    await project.write("factory.json", text);
+    const text = JSON.stringify({ maxWorkers: 2 });
+    await writeFactory(text);
+    const before = await project.read("rowbly.config.json");
     const cli = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
     const invalid = [
       ["--story", "ROW-1", "--worker", "a/b"],
@@ -132,16 +137,16 @@ describe("factory commands", () => {
     const missing = await cli("--stage", "BACKLOG", "--story", "ROW-99", "--clear-worker");
     expect(missing.exitCode).toBe(1);
     expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
-    expect(await project.read("factory.json")).toBe(text);
+    expect(await project.read("rowbly.config.json")).toBe(before);
   });
   describe("configure Git settings", () => {
-    const readSettings = async () => JSON.parse(await project.read("factory.json"));
+    const readSettings = readFactory;
     const configure = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
-    const seed = { version: 1, maxWorkers: 2, workerModel: { provider: "faux", modelId: "test" } };
+    const seed = { maxWorkers: 2, workerModel: { provider: "faux", modelId: "test" } };
 
     it("writes the commit message and keeps the other keys, without the auth runtime", async () => {
       const auth = vi.spyOn(agentAuth, "authRuntime");
-      await project.write("factory.json", JSON.stringify(seed));
+      await writeFactory(JSON.stringify(seed));
       const result = await configure("--commit-message", "chore(rowbly): sync board");
       expect(result.exitCode).toBe(0);
       expect(await readSettings()).toEqual({ ...seed, git: { commitMessage: "chore(rowbly): sync board" } });
@@ -155,20 +160,21 @@ describe("factory commands", () => {
     });
     it("writes the commit author name and email", async () => {
       const auth = vi.spyOn(agentAuth, "authRuntime");
-      await project.write("factory.json", JSON.stringify(seed));
+      await writeFactory(JSON.stringify(seed));
       const result = await configure("--commit-author", "Rowbly Bot <bot@example.com>");
       expect(result.exitCode).toBe(0);
       expect((await readSettings()).git).toEqual({ authorName: "Rowbly Bot", authorEmail: "bot@example.com" });
       expect((await readSettings()).workerModel).toEqual(seed.workerModel);
       expect(auth).not.toHaveBeenCalled();
     });
-    it("rejects an author that is not in the Name <email> form and keeps factory.json", async () => {
+    it("rejects an author that is not in the Name <email> form and keeps the config", async () => {
       const text = JSON.stringify(seed);
-      await project.write("factory.json", text);
+      await writeFactory(text);
+      const before = await project.read("rowbly.config.json");
       const result = await configure("--commit-author", "bot@example.com");
       expect(result.exitCode).toBe(1);
       expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
-      expect(await project.read("factory.json")).toBe(text);
+      expect(await project.read("rowbly.config.json")).toBe(before);
     });
     it("clears the message and the author with empty values", async () => {
       await configure("--commit-message", "chore: sync", "--commit-author", "Bot <bot@example.com>");
@@ -180,7 +186,7 @@ describe("factory commands", () => {
       expect((await configure("--commit-message", "")).exitCode).toBe(0);
       expect((await readSettings()).git).toEqual({ authorName: "Bot", authorEmail: "bot@example.com" });
       expect((await configure("--commit-author", "")).exitCode).toBe(0);
-      expect(await readSettings()).toEqual({ version: 1, maxWorkers: 4 });
+      expect(await readSettings()).toEqual({ maxWorkers: 4 });
     });
   });
 });

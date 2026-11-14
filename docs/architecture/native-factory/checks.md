@@ -13,30 +13,32 @@ tool, the bash gate or the check records.
   and the agent sessions outside the factory do not change.
 - The supervisor does not run checks and does not decide about them. The queue has no model work.
 - The memory rules use `/proc`. The native factory runs only on Linux.
-- Without a `checks` section in `factory.json`, or without items, the factory works as before. The
+- Without a `checks` key in the factory settings, or without items, the factory works as before. The
   workers get no `run_check` tool, and the bash gate rejects nothing.
 
 ## Settings
 
-The `checks` section of `.rowbly/factory.json` holds the limits and the named checks.
-`factory-settings/check-settings.ts` reads and validates it.
+The `checks` key of the `factory` section of `.rowbly/rowbly.config.json` holds the limits and the
+named checks. `factory-settings/check-settings.ts` reads and validates it.
 
 ```json
 {
-  "checks": {
-    "maxConcurrent": 4,
-    "reserveMemoryMb": 2048,
-    "items": [
-      {
-        "key": "test",
-        "label": "Tests",
-        "command": "pnpm test",
-        "narrowCommand": "pnpm vitest related --run {files}",
-        "memoryMb": 1500,
-        "timeoutMinutes": 20,
-        "block": ["pnpm test", "vitest"]
-      }
-    ]
+  "factory": {
+    "checks": {
+      "maxConcurrent": 4,
+      "reserveMemoryMb": 2048,
+      "items": [
+        {
+          "key": "test",
+          "label": "Tests",
+          "command": "pnpm test",
+          "narrowCommand": "pnpm vitest related --run {files}",
+          "memoryMb": 1500,
+          "timeoutMinutes": 20,
+          "block": ["pnpm test", "vitest"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -54,12 +56,13 @@ The `checks` section of `.rowbly/factory.json` holds the limits and the named ch
 | `items[].block`          | `[]`    | Text that the bash gate rejects, in addition to `command`.                |
 
 - A `checks` section that is not valid gives a `ValidationError` from `getFactorySettings`. Then
-  `rowbly factory start` and `rowbly factory configure` fail, and `factory.json` does not change.
-- `getFactorySettings` gives the default of each absent key. A write does not add the defaults to
-  the file. A write keeps the other keys of `factory.json`.
+  `rowbly factory start` and `rowbly factory configure` fail, and the config does not change.
+- `getFactorySettings` gives the default of each absent key. A write does not add the defaults of
+  `checks` or of the `git` sync keys to the config. A write always puts `maxWorkers` in the config.
+  A write keeps the other keys of the `factory` section and of the config.
 - `factory-settings/check-items.ts` adds, changes, removes and lists the items. `setCheckLimits`
   sets the limits. These functions do not load Pi.
-- The supervisor loop reads `factory.json` again on each turn. A changed setting applies to the next
+- The supervisor loop reads the factory settings again on each turn. A changed setting applies to the next
   admission. A restart is not necessary.
 
 ## The `run_check` tool
@@ -171,7 +174,7 @@ runs if the command contains the `command` text or a `block` text of a configure
 
 ## Status, stop and recovery
 
-- `status.json` gets `checks` when `factory.json` has a `checks` section: `running`, `queued`,
+- `status.json` gets `checks` when the factory settings have a `checks` key: `running`, `queued`,
   `availableMb`, `maxConcurrent` and the jobs that run or wait.
 - A normal stop cancels the queued jobs and stops each running process group. Then the daemon
   releases the ownership.

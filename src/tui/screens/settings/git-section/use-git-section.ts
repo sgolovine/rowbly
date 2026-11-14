@@ -20,7 +20,7 @@ interface GitSectionModel {
   readonly idle: boolean;
 }
 
-/** The state, the keys and the handlers of the Git settings. It reads `factory.json` and does not load Pi. */
+/** The state, the keys and the handlers of the Git settings. It reads the factory settings and does not load Pi. */
 export function useGitSection({ ctx, onChange }: GitSectionInput): GitSectionModel {
   const active = useIsActive();
   const toast = useToast();

@@ -150,7 +150,7 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
   );
 }
 
-/** A Story or Stage override in `factory.json` has priority over the model of the supervisor. */
+/** A Story or Stage override in the factory settings has priority over the model of the supervisor. */
 function workerModelFor(manager: Manager, story: Story, model: ModelChoice | undefined): ModelChoice | undefined {
   const { settings } = getState(manager);
 
