@@ -1,7 +1,7 @@
 ---
 title: Cache Pi model list and provider auth status on disk
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-39
 pull_request: null
 ---
 
