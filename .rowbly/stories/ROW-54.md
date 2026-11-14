@@ -1,7 +1,7 @@
 ---
 title: Add SEO metadata, the OG image and the sitemap to the website
-stage: BACKLOG
-position: 12
+stage: IN_REFINEMENT
+position: 13
 worktree: null
 pull_request: null
 ---
