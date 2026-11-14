@@ -7,7 +7,7 @@ pull_request: null
 
 ## Problem
 
-The Specs tab of the Story Modal calls `listSpecs({ story })` in `src/services/spec/spec.ts`. That calls `getStory`, which reads every Story file two times (see the Story about `getStory`). It then reads every spec file.
+The Specs tab of the Story Modal calls `listSpecs({ story })` in `src/services/spec/spec.ts`. That calls `getStory`, which reads every Story file two times (see ROW-27). It then reads every spec file.
 
 `resolveStories` calls `getStory` for each linked Story, one at a time through `mapInOrder`. Each call reads the full Story folder two times again. A Story that many specs link to opens slowly.
 
