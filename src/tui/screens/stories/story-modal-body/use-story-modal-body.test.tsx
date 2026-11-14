@@ -32,7 +32,7 @@ describe("useStoryModalBody", () => {
   it("starts on the General tab, changes the tab with shift+tab, and asks to delete only on General", async () => {
     const onConfirming = vi.fn();
     const tui = await renderTui(<Probe ctx={project.ctx} onConfirming={onConfirming} />);
-    expect(tui.frame()).toContain("General|Attachments|Threads shown:general");
+    expect(tui.frame()).toContain("General|Attachments|Threads|Models shown:general");
     await tui.press(keys.shiftTab);
     expect(tui.frame()).toContain("shown:attachments");
     await tui.press(keys.ctrl("d"));

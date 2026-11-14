@@ -18,12 +18,15 @@ export interface TabHints {
   readonly specHints: readonly KeyHint[];
   readonly threadHints: readonly KeyHint[];
   readonly attachmentHints: readonly KeyHint[];
+  readonly modelHints: readonly KeyHint[];
   readonly tabOwnsKeys: boolean;
 }
 
 /** The ids of the tabs, with Specs only when the Project has Specs on. */
 export function storyTabIds(specs: boolean): readonly StoryTabId[] {
-  return specs ? ["general", "specs", "attachments", "threads"] : ["general", "attachments", "threads"];
+  return specs
+    ? ["general", "specs", "attachments", "threads", "models"]
+    : ["general", "attachments", "threads", "models"];
 }
 
 /** The id of the tab after `index`, and the first tab after the last tab. */
@@ -47,6 +50,7 @@ export function storyTabLabels(
     ...(specs ? [countLabel("Specs", specCount)] : []),
     "Attachments",
     countLabel("Threads", threadCount),
+    "Models",
   ];
 }
 
@@ -54,6 +58,10 @@ export function storyTabLabels(
 function shownTabHints(shown: StoryTabId, tabs: TabHints): readonly KeyHint[] {
   if (shown === "attachments") {
     return tabs.attachmentHints;
+  }
+
+  if (shown === "models") {
+    return tabs.modelHints;
   }
 
   return shown === "threads" ? tabs.threadHints : tabs.specHints;

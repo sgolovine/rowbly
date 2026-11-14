@@ -16,7 +16,7 @@ export interface StoryModalBodyEnv {
   readonly shown: StoryTabId;
   /** The text editor of the Specs tab has the keys. */
   readonly specEditing: boolean;
-  /** The Attachments tab asks a question. */
+  /** The Attachments tab asks a question, or the Models tab has its picker open. */
   readonly attachmentTask: boolean;
   readonly paste: ReturnType<typeof useStoryPaste>;
   /** True while a save runs, so that a second save key does not save again. */

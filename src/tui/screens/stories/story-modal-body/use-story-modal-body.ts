@@ -68,6 +68,8 @@ function useTabReports() {
   const [specHints, setSpecHints] = useState<readonly KeyHint[]>(NO_HINTS);
   const [attachmentHints, setAttachmentHints] = useState<readonly KeyHint[]>(NO_HINTS);
   const [attachmentTask, setAttachmentTask] = useState(false);
+  const [modelHints, setModelHints] = useState<readonly KeyHint[]>(NO_HINTS);
+  const [modelTask, setModelTask] = useState(false);
 
   const reports: StoryTabReports = {
     setSpecCount,
@@ -78,6 +80,8 @@ function useTabReports() {
     setThreadHints,
     setAttachmentHints,
     setAttachmentTask,
+    setModelHints,
+    setModelTask,
   };
 
   return {
@@ -91,6 +95,8 @@ function useTabReports() {
       specHints,
       attachmentHints,
       attachmentTask,
+      modelHints,
+      modelTask,
     },
   };
 }
@@ -116,13 +122,15 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
   const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, storyId, idle && !saving);
   const summaryRows = paste.summary ? 1 : 0;
   const hints = storyModalHints(shown, { ...values, tabOwnsKeys });
+  // A tab that asks a question or has a picker open takes `esc` and the save key.
+  const tabTask = values.attachmentTask || values.modelTask;
 
   const env: StoryModalBodyEnv = {
     tabIds,
     tab,
     shown,
     specEditing: values.specEditing,
-    attachmentTask: values.attachmentTask,
+    attachmentTask: tabTask,
     paste,
     savingNow,
     setTabId,
@@ -133,7 +141,7 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
   };
 
   useKeyCapture(active, { text: false, escape: true });
-  useEscape(idle && !tabOwnsKeys && !values.attachmentTask, onRequestClose);
+  useEscape(idle && !tabOwnsKeys && !tabTask, onRequestClose);
   useInput((input, key) => handleBodyKey(env, input, key), { isActive: idle });
   useReportHints(onHints, hints);
 
