@@ -27,7 +27,10 @@ function rowText(text: string): string {
   return line.length > ROW_WIDTH ? `${line.slice(0, ROW_WIDTH - 1)}…` : line;
 }
 
-/** All warnings of the live factory. `enter` or a click opens the detail view of a warning. */
+/**
+ * All warnings of the live factory. `enter` opens the detail view of the highlighted warning. A click
+ * highlights a warning, and a click on the highlighted warning opens its detail view.
+ */
 export function FactoryAttention({ problems, height, active, onFilteringChange, onPick }: FactoryAttentionProps) {
   return (
     <SelectList
@@ -36,6 +39,7 @@ export function FactoryAttention({ problems, height, active, onFilteringChange, 
       emptyText="No warnings"
       isActive={active}
       onFilteringChange={onFilteringChange}
+      clickToHighlight
       onSelect={(item) => onPick(item.value)}
     />
   );

@@ -54,10 +54,13 @@ Modal has these views:
 
 - **Main.** The overview, the `Attention` list, the queue and the buttons. `s` starts, `x` stops,
   `enter` opens the supervisor, `w` opens the warnings, `h` opens the history and `a` opens the AI
-  settings. The `Attention` list shows a maximum of five rows. A click on a row opens the detail view
-  of that warning.
-- **Attention.** `Factory › Attention` lists all warnings in a `SelectList`. `↑/↓` selects, `enter`
-  opens the detail view, `/` filters and `esc` goes back.
+  settings. The `Attention` list shows a maximum of five rows. A click on a row selects the row: the
+  row shows the `▌` bar and the selection fill. A click on the selected row opens the detail view of
+  that warning. A click on a different row moves the selection and does not open a warning. If the
+  selected warning goes away, no row stays selected. The `Attention` list has no keys.
+- **Attention.** `Factory › Attention` lists all warnings in a `SelectList` with `clickToHighlight`.
+  `↑/↓` selects, `enter` opens the detail view, `/` filters and `esc` goes back. A click on a row
+  that is not highlighted highlights the row. A click on the highlighted row opens the detail view.
 - **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
   Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
   attention entry. `esc` goes back.

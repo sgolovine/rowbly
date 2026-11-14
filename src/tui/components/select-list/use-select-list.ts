@@ -12,6 +12,8 @@ export interface SelectListEnv<T> {
   readonly filtering: boolean;
   readonly selected: readonly T[];
   readonly multi: boolean;
+  /** A click on an item that is not highlighted only highlights it. */
+  readonly clickToHighlight: boolean;
   readonly onSelect?: (item: SelectItem<T>) => void;
   readonly onChange?: (values: T[]) => void;
   readonly onSubmit?: (values: T[]) => void;
@@ -98,9 +100,17 @@ function handleListKey<T>(env: SelectListEnv<T>, input: string, key: Key): void 
   pickKey(env, input, key);
 }
 
-/** Picks the item at `at` after a click, as `enter` on it does. */
+/**
+ * Picks the item at `at` after a click, as `enter` on it does. With `clickToHighlight`, a click on an
+ * item that is not highlighted only highlights it.
+ */
 export function pickItem<T>(env: SelectListEnv<T>, at: number, item: SelectItem<T>): void {
   env.setCursor(at);
+
+  if (env.clickToHighlight && at !== env.index) {
+    return;
+  }
+
   env.onSelect?.(item);
 }
 
@@ -108,6 +118,7 @@ export function pickItem<T>(env: SelectListEnv<T>, at: number, item: SelectItem<
 export function useSelectList<T>({
   items,
   onSelect,
+  clickToHighlight = false,
   onHighlight,
   onFilteringChange,
   multi = false,
@@ -135,6 +146,7 @@ export function useSelectList<T>({
     filtering,
     selected,
     multi,
+    clickToHighlight,
     onSelect,
     onChange,
     onSubmit,

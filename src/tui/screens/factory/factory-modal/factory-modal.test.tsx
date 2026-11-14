@@ -260,8 +260,12 @@ describe("FactoryModal", () => {
       expect(tui.frame()).toContain("part29");
     });
 
-    it("opens a warning with a click on its row in the overview", async () => {
+    it("selects a warning with a click on its row in the overview, and opens it with a second click", async () => {
       const { tui } = await openWarned();
+      await tui.click("Canonical commit: failed");
+      expect(tui.frame()).toContain("▌ ! ROW-01: Canonical commit: failed");
+      expect(tui.frame()).not.toContain("Factory › Attention › commit");
+
       await tui.click("Canonical commit: failed");
       expect(tui.frame()).toContain("Factory › Attention › commit");
 
@@ -280,6 +284,7 @@ describe("FactoryModal", () => {
       );
       const { tui, onOpenStory, onOpenThread } = await openWarned();
       await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
       await vi.waitFor(async () => {
         await tui.press();
         expect(tui.frame()).toContain(`${newest.id} · pending`);
@@ -297,6 +302,7 @@ describe("FactoryModal", () => {
     it("dismisses an attention entry with d, and the warning goes away after the receipt", async () => {
       const { tui, props } = await openWarned();
       await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
       await tui.press("d");
       await settle(20);
 
@@ -313,6 +319,7 @@ describe("FactoryModal", () => {
       vi.mocked(factory.dismissFactoryAttention).mockRejectedValueOnce(new ConflictError("Factory is not running"));
       const { tui } = await openWarned();
       await tui.click("Canonical commit: failed");
+      await tui.click("Canonical commit: failed");
       await tui.press("d");
       await settle(20);
 
@@ -322,6 +329,7 @@ describe("FactoryModal", () => {
 
     it("offers no dismiss for a provider warning", async () => {
       const { tui } = await openWarned({ ...running, attention: [] } as unknown as FactoryStatus);
+      await tui.click("Provider anthropic");
       await tui.click("Provider anthropic");
       expect(tui.frame()).toContain("Factory › Attention › Provider anthropic");
       expect(tui.frame()).not.toContain("Dismiss");
