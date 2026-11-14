@@ -1,7 +1,7 @@
 ---
 title: Factory Git settings in the TUI
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 20
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-19
 pull_request: https://github.com/sgolovine/rowbly/pull/203
 ---
@@ -70,12 +70,3 @@ Not in scope:
 - (Development) The default commit message is `DEFAULT_COMMIT_MESSAGE` in `git-settings.ts`. A test compares it with the text of `commit-project.mjs`.
 - (Development) The hints are `a author`, `m message`, `p toggle push`, `u toggle pull`, `i interval`. Reason: with longer text, the strip did not show all five hints at 100 columns.
 - (Development) The push and pull cards have a `Toggle` Button. The other cards have an `Edit` Button. The section uses `AiSettingCard` from its `index.ts`.
-
-## Review findings
-
-1. The pull request has conflicts with the base branch. GitHub reports PR #203 as `CONFLICTING`, and `gh pr merge 203 --merge` failed with "the merge commit cannot be cleanly created". The branch has two merge bases with `main` (`ed82391f` and `d6c902f4`), because `main` merged ROW-17 (#200) and ROW-18 (#201) separately from the merges in `story/ROW-19`. GitHub uses the base `d6c902f4` and finds conflicts in `src/services/factory-settings/factory-settings.ts`, `factory-settings.test.ts`, `git-settings.ts` and `git-settings.test.ts`. Fix: merge `origin/main` into `story/ROW-19` (a local `git merge origin/main` resolves with no conflicts), run the checks again, and push. Then GitHub must report the pull request as mergeable.
-
-Notes that are not blocking:
-
-- All acceptance criteria are satisfied in the code and the tests. `pnpm lint`, `pnpm typecheck` and `pnpm build` pass. `pnpm test` had one or two timing failures in each full run, in files that the pull request does not change (`threads-tab.test.tsx`, `factory-view.test.tsx`, `shell.test.tsx`). Each file passes when it runs alone.
-- The branch has the canonical commit `de30817e` (`chore(rowbly): record project changes after scan`) that is not on `origin/main`. It changes `.rowbly/stories/ROW-18.md`. The canonical `main` already has this commit, so the effect is small.
