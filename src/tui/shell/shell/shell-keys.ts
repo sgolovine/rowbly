@@ -1,7 +1,15 @@
 import type { Key } from "ink";
 import { groupDelta, moveDelta, reorderDelta } from "../../keymap.js";
 import type { Overlay } from "../overlay.js";
-import { collapseStory, editStage, fold, selectStage, selectStory, toggleSidebar } from "./shell-selection.js";
+import {
+  collapseStory,
+  editStage,
+  fold,
+  selectStage,
+  selectStory,
+  toggleMode,
+  toggleSidebar,
+} from "./shell-selection.js";
 import type { Pane, ShellEnv, ShellView, StoryListRow } from "./shell-state.js";
 import { moveStage, moveStoryStage, shiftStory } from "./story-changes.js";
 import { editStory, newStory, requestStoryPane } from "./story-pane.js";
@@ -20,14 +28,14 @@ const BOARD_OVERLAYS: ReadonlyMap<string, Overlay> = new Map<string, Overlay>([
 
 /** `ctrl` keys: hide the sidebar, find a Story, or move a Story to another Stage. */
 function ctrlKey(env: ShellEnv, input: string, key: Key): void {
-  const { board, listFocused, row } = env.view;
+  const { board, listFocused, row, mode } = env.view;
   const group = groupDelta(key);
 
   if (key.ctrl && input === "b") {
     toggleSidebar(env);
   } else if (key.ctrl && input === "p" && board) {
     env.setOverlay({ kind: "finder" });
-  } else if (group && board && listFocused && row?.kind === "story") {
+  } else if (group && board && listFocused && mode === "stories" && row?.kind === "story") {
     moveStoryStage(env, row.story, group);
   }
 }
@@ -122,7 +130,8 @@ function paneKey(env: ShellEnv, input: string, key: Key): void {
     selectStage(env, (stageIndex + (input === "[" ? -1 : 1) + stages.length + 1) % (stages.length + 1));
   } else if (sidebarFocused) {
     sidebarKey(env, input, delta, shift);
-  } else {
+  } else if (env.view.mode === "stories") {
+    // The Factory view takes its own keys.
     listKey(env, input, key, delta, shift);
   }
 }
@@ -148,6 +157,8 @@ export function handleShellKey(env: ShellEnv, input: string, key: Key): void {
     return;
   } else if (boardOverlay) {
     env.setOverlay(boardOverlay);
+  } else if (input === "t") {
+    toggleMode(env);
   } else {
     paneKey(env, input, key);
   }

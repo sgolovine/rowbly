@@ -9,6 +9,7 @@ import { getProject, initProject } from "../../../services/project/project.js";
 import { createStage, listStages } from "../../../services/stage/stage.js";
 import { createStory, searchStories } from "../../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../../services/test-project/test-project.js";
+import { createThread, transitionThread } from "../../../services/thread/thread.js";
 import type { Layout } from "../../hooks/index.js";
 import { LayoutContext } from "../../hooks/index.js";
 import { keys, renderTui, settle } from "../../testing/index.js";
@@ -850,6 +851,116 @@ describe("Shell", () => {
     expect(tui.frame()).toContain("close the Story sidebar (in the Story list)");
     await tui.press("?");
     expect(tui.frame()).not.toContain("edit a text field full screen");
+  });
+
+  describe("Factory view", () => {
+    /** A worker Thread for `story` in `stage`, created at minute `minute`, and moved to `status`. */
+    async function thread(story: string, stage: string, minute: number, status?: "running" | "completed") {
+      const ctx = { ...project.ctx, now: () => new Date(Date.UTC(2026, 10, 12, 10, minute)) };
+      const created = await createThread(
+        { role: "worker", storyId: story, stage, attemptNumber: 1, cwd: project.paths.root, ownerToken: "o" },
+        ctx,
+      );
+      return status ? transitionThread(created.id, { expectedRevision: 1, status }, ctx) : created;
+    }
+
+    it("changes to the Factory view with t, and back to the Story list, with the sidebar in both", async () => {
+      await createStory({ title: "First story" }, project.ctx);
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      await thread("ROW-01", "BACKLOG", 1, "running");
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("t");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("▾ Active Threads (1)");
+      });
+      expect(tui.frame()).toContain("╭─Threads");
+      expect(tui.frame()).toContain("▾ Inactive Threads (1)");
+      expect(tui.frame()).toMatch(/▌ ROW-01 ▶ running #1 Backlog/);
+      expect(tui.frame()).toContain("╭─Stages");
+      expect(tui.frame()).toContain("t Stories");
+      expect(tui.frame()).not.toContain("n new Story");
+      // The Story keys do nothing in the Factory view.
+      await tui.press("n", "d");
+      expect(tui.frame()).not.toContain("New Story ›");
+      expect(tui.frame()).not.toContain("Delete Story");
+      await tui.press("t");
+      expect(tui.frame()).toContain("Rowbly › All Stages");
+      expect(tui.frame()).toMatch(/▌ {3}ROW-01 First story/);
+      expect(tui.frame()).toContain("n new Story");
+    });
+
+    it("shows one faint line without Threads, and keeps the full header in 100 columns", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("t");
+      // The switch goes first in a narrow header; `t` still works.
+      expect(tui.frame()).not.toContain("━━● Threads");
+      expect(tui.frame()).toContain("Find Stories");
+      expect(tui.frame()).toContain("╭─Threads");
+      expect(tui.frame()).toContain("No Threads. The factory adds a Thread when it starts a worker.");
+    });
+
+    it("filters the Threads by the Stage of the sidebar", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "running");
+      await thread("ROW-02", "DONE", 1, "completed");
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("t");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("ROW-02");
+      });
+      await tui.press("]");
+      expect(tui.frame()).toContain("ROW-01");
+      expect(tui.frame()).not.toContain("ROW-02");
+      await tui.press("]");
+      expect(tui.frame()).toContain("ROW-02");
+      expect(tui.frame()).not.toContain("ROW-01 ▶");
+      expect(tui.frame()).toContain("▾ Active Threads (0)  No Threads");
+    });
+
+    it("opens the Thread Modal with enter, closes it with esc, and keeps the selection on the row", async () => {
+      await thread("ROW-01", "BACKLOG", 0, "completed");
+      await thread("ROW-02", "BACKLOG", 1, "running");
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("t");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("ROW-01");
+      });
+      await tui.press(keys.down, keys.down);
+      expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
+      await tui.press(keys.enter);
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("ROW-01 › #1 Backlog");
+        expect(tui.frame()).toContain("No conversation yet");
+      });
+      expect(tui.frame()).toMatch(/Status\s+✓ completed/);
+      await tui.press(keys.escape);
+      expect(tui.frame()).not.toContain("ROW-01 › #1 Backlog");
+      expect(tui.frame()).toMatch(/▌ ROW-01 ✓ completed/);
+      expect(tui.frame()).toContain("╭─Threads");
+    });
+
+    it("shows a new Thread from the factory without a reload", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("t");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("No Threads.");
+      });
+      await thread("ROW-03", "BACKLOG", 0, "running");
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain("ROW-03 ▶ running");
+      });
+    });
+
+    it("lists t in Help", async () => {
+      const tui = await open(project.ctx as { cwd: string });
+      await tui.press("?");
+      expect(tui.frame()).toContain("show the Stories or the Threads of the factory");
+    });
   });
 });
 

@@ -66,4 +66,28 @@ describe("shellHints", () => {
     expect(hints.find((hint) => hint.key === "shift+tab")?.description).toBe("Stages");
     expect(hints.find((hint) => hint.key === "esc")?.description).toBe("close Story");
   });
+
+  it("shows the keys of the Factory view and t in threads mode", () => {
+    const threadHints = [{ key: "enter", description: "open Thread" }];
+    const hints = shellHints(view({ mode: "threads" }), true, [], [], threadHints);
+
+    expect(keysOf(hints)).toEqual(["enter", "t", "tab", "ctrl+p", "p", "f", ",", "ctrl+b"]);
+    expect(hints.find((hint) => hint.key === "t")?.description).toBe("Stories");
+  });
+
+  it("shows the focus keys of the Story sidebar in threads mode, and its own keys while it is the selected pane", () => {
+    const story = [{ key: "ctrl+s", description: "save" }];
+    const list = shellHints(view({ mode: "threads", storyPane: { kind: "new" } } as never), true, [], story, []);
+    const pane = shellHints(
+      view({ mode: "threads", storyPane: { kind: "new" }, storyActive: true } as never),
+      true,
+      [],
+      story,
+      [],
+    );
+
+    expect(list.find((hint) => hint.key === "tab")?.description).toBe("Story");
+    expect(list.find((hint) => hint.key === "esc")?.description).toBe("close Story");
+    expect(pane).toEqual(story);
+  });
 });

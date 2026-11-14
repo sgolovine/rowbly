@@ -70,12 +70,27 @@ function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
   ];
 }
 
+/** The keys of the Factory view: the keys of its selected row, then the keys of the shell. */
+function factoryViewHints(view: ShellView, sidebarShown: boolean, threadHints: readonly KeyHint[]): KeyHint[] {
+  return [
+    ...threadHints,
+    { key: "t", description: "Stories" },
+    ...focusHints(view),
+    { key: "ctrl+p", description: "find" },
+    { key: "p", description: "switch Project", secondary: true },
+    { key: "f", description: "factory", secondary: true },
+    { key: ",", description: "settings", secondary: true },
+    { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
+  ];
+}
+
 /** The keys of the region in focus, for the footer and the help Modal. The Story sidebar reports its own keys. */
 export function shellHints(
   view: ShellView,
   sidebarShown: boolean,
   onboardingHints: readonly KeyHint[],
   storyHints: readonly KeyHint[] = [],
+  threadHints: readonly KeyHint[] = [],
 ): KeyHint[] {
   if (!view.board) {
     return boardlessHints(view, onboardingHints);
@@ -85,5 +100,9 @@ export function shellHints(
     return [...storyHints];
   }
 
-  return view.sidebarFocused ? sidebarHints(view.stage) : listHints(view, sidebarShown);
+  if (view.sidebarFocused) {
+    return sidebarHints(view.stage);
+  }
+
+  return view.mode === "threads" ? factoryViewHints(view, sidebarShown, threadHints) : listHints(view, sidebarShown);
 }

@@ -1,5 +1,6 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { initProject } from "../../../services/project/project.js";
 import type { Story } from "../../../services/story/story.js";
 import { useTempDir } from "../../../services/test-project/test-project.js";
 import { storyListRows } from "../../screens/stories/index.js";
@@ -65,6 +66,28 @@ describe("StoryPanel", () => {
     );
 
     await vi.waitFor(() => expect(tui.frame()).toContain("Use defaults"));
+  });
+
+  it("shows the Factory view in threads mode", async () => {
+    await initProject({ name: "Rowbly", key: "ROW" }, { cwd: dir.path });
+    const tui = await renderTui(
+      panel({
+        kind: "threads",
+        view: {
+          ctx: { cwd: dir.path },
+          root: dir.path,
+          stage: undefined,
+          stages: {},
+          active: true,
+          clickable: true,
+          emptyText: "No Threads. The factory adds a Thread when it starts a worker.",
+          onOpen: () => {},
+          onHints: () => {},
+        },
+      }),
+    );
+
+    await vi.waitFor(() => expect(tui.frame()).toContain("The factory adds a Thread when it starts a worker."));
   });
 
   it("calls onClick on a click in the Panel", async () => {

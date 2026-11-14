@@ -71,6 +71,11 @@ export function collapseStory(env: ShellEnv, story: Story): void {
   env.setSelectedId(stageRowId(story.stage));
 }
 
+/** Changes the right Panel between the Story list and the Factory view. */
+export function toggleMode(env: ShellEnv): void {
+  env.setMode((mode) => (mode === "stories" ? "threads" : "stories"));
+}
+
 /** Hides or shows the Stage sidebar. A hidden sidebar gives the focus to the list. */
 export function toggleSidebar(env: ShellEnv): void {
   if (env.sidebarShown) {

@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Sidebar } from "../../components/index.js";
+import type { FactoryView } from "../../screens/threads/index.js";
 import type { Header } from "../header/index.js";
 import type { OverlayHandlers } from "../overlay.js";
 import type { StoryPanel, StoryPanelBody } from "../story-panel/index.js";
@@ -16,14 +17,15 @@ import {
   showSavedStage,
   showSavedStory,
   switchProject,
+  toggleMode,
 } from "./shell-selection.js";
-import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
+import { ALL_STAGES, type Board, type ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
 import { discardStory, newStory, requestStoryPane } from "./story-pane.js";
 
 /** The header: the Project Button, and the controls of an open Project. */
 export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): ComponentProps<typeof Header> {
-  const { board, idle, loading, sidebarFocused, storyFocused } = env.view;
+  const { board, idle, loading, sidebarFocused, storyFocused, mode } = env.view;
   const open = board !== undefined;
 
   return {
@@ -33,8 +35,11 @@ export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): 
     },
     finder: open ? { onClick: () => env.setOverlay({ kind: "finder" }) } : undefined,
     factory: open ? { status: factory, onClick: () => env.setOverlay({ kind: "factory" }) } : undefined,
+    viewSwitch: open ? { threads: mode === "threads", onToggle: () => toggleMode(env) } : undefined,
     settings: open ? { onClick: () => env.setOverlay({ kind: "settings" }) } : undefined,
-    newStory: open ? { onClick: () => newStory(env), showKey: !sidebarFocused && !storyFocused } : undefined,
+    newStory: open
+      ? { onClick: () => newStory(env), showKey: !sidebarFocused && !storyFocused && mode === "stories" }
+      : undefined,
     clickable: idle,
   };
 }
@@ -66,14 +71,35 @@ export function stageSidebarProps(env: ShellEnv, frame: ShellFrame): ComponentPr
 }
 
 function panelTitle(env: ShellEnv): string {
-  const { board, noProject, stage } = env.view;
+  const { board, noProject, stage, mode } = env.view;
   const projectName = board?.project.projectName;
+
+  if (board && mode === "threads") {
+    return "Threads";
+  }
 
   if (projectName) {
     return `${projectName} › ${stage?.label ?? "All Stages"}`;
   }
 
   return noProject ? "Set up Rowbly" : "Stories";
+}
+
+/** The Factory view: the worker Threads of the Stage of the filter, or of all Stages. */
+function factoryViewProps(env: ShellEnv, board: Board): ComponentProps<typeof FactoryView> {
+  const { stage, listFocused, idle } = env.view;
+
+  return {
+    ctx: env.ctx,
+    root: board.project.root,
+    stage: stage?.key,
+    stages: Object.fromEntries(board.stages.map((s) => [s.key, s.label])),
+    active: listFocused,
+    clickable: idle,
+    emptyText: `No Threads${stage ? ` in ${stage.label}` : ""}. The factory adds a Thread when it starts a worker.`,
+    onOpen: (thread) => env.setOverlay({ kind: "thread", thread }),
+    onHints: env.setThreadHints,
+  };
 }
 
 function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
@@ -87,6 +113,10 @@ function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
     return noProject
       ? { kind: "onboarding", ctx: env.ctx, active: idle, onHints: env.setOnboardingHints, onCreated: env.reload }
       : { kind: "error" };
+  }
+
+  if (env.view.mode === "threads") {
+    return { kind: "threads", view: factoryViewProps(env, board) };
   }
 
   return {

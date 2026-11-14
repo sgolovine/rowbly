@@ -144,4 +144,51 @@ describe("Header", () => {
       expect(tui.frame()).not.toContain("pending");
     });
   });
+
+  describe("view mode switch", () => {
+    const stopped = { version: 1, phase: "stopped" } as const;
+    /** The full header at `width` columns, with the switch in the Factory group. */
+    const header = (width: number, threads: boolean, onToggle = () => {}, onFactory = () => {}) => (
+      <LayoutContext.Provider value={{ width, height: undefined }}>
+        <Box width={width}>
+          <Header
+            project={{ name: "rowbly", onClick: () => {} }}
+            finder={{ onClick: () => {} }}
+            factory={{ status: stopped, onClick: onFactory }}
+            viewSwitch={{ threads, onToggle }}
+            settings={{ onClick: () => {} }}
+            newStory={{ onClick: () => {}, showKey: true }}
+            clickable
+          />
+        </Box>
+      </LayoutContext.Provider>
+    );
+
+    it("shows Stories while off and Threads while on, after the Factory Button and before the |", async () => {
+      const tui = await renderTui(header(140, false));
+      expect(tui.frame()).toMatch(/Factory off {2}f {3}●── Stories {2}t {2}\| {1,2}Settings/);
+      await tui.rerender(header(140, true));
+      expect(tui.frame()).toMatch(/Factory off {2}f {3}━━● Threads {2}t {2}\|/);
+    });
+
+    it("changes the view mode on a click on the switch, and opens the Factory controls on a click on Factory", async () => {
+      const onToggle = vi.fn();
+      const onFactory = vi.fn();
+      const tui = await renderTui(header(140, false, onToggle, onFactory));
+      // The 🔎 of the finder takes two cells, so the click lands one cell to the left: on the gap of the switch.
+      await tui.click("Stories  t");
+      expect(onToggle).toHaveBeenCalledOnce();
+      expect(onFactory).not.toHaveBeenCalled();
+      await tui.click("Factory");
+      expect(onFactory).toHaveBeenCalledOnce();
+      expect(onToggle).toHaveBeenCalledOnce();
+    });
+
+    it("goes first when the header is narrow, and keeps the Factory Button and the full finder", async () => {
+      const tui = await renderTui(header(100, false));
+      expect(tui.frame()).not.toContain("●── Stories");
+      expect(tui.frame()).toContain("Find Stories");
+      expect(tui.frame()).toMatch(/Factory off {2}f/);
+    });
+  });
 });

@@ -33,6 +33,7 @@ function env(change: Partial<ShellViewInput> = {}): ShellEnv {
     overlay: null,
     pane: "stories",
     storyPane: null,
+    mode: "stories",
     sidebarShown: true,
     stageKey: null,
     selectedId: "ROW-01",
@@ -52,6 +53,8 @@ function env(change: Partial<ShellViewInput> = {}): ShellEnv {
     setCtx: vi.fn(),
     setOverlay: vi.fn(),
     setOnboardingHints: vi.fn(),
+    setThreadHints: vi.fn(),
+    setMode: vi.fn(),
     setPane: vi.fn(),
     setSidebarWidth: vi.fn(),
     setSidebarShown: vi.fn(),
@@ -186,5 +189,47 @@ describe("handleShellKey", () => {
 
     expect(shell.setCollapsed).toHaveBeenCalledOnce();
     expect(shell.setSelectedId).toHaveBeenCalledWith("stage:BACKLOG");
+  });
+
+  it("changes the view mode with t when a Project is open, also from the sidebar", () => {
+    const list = env();
+    const sidebar = env({ pane: "stages" });
+    const none = env({ data: { loading: false, data: null } });
+
+    handleShellKey(list, "t", key());
+    handleShellKey(sidebar, "t", key());
+    handleShellKey(none, "t", key());
+
+    expect(list.setMode).toHaveBeenCalledOnce();
+    expect(sidebar.setMode).toHaveBeenCalledOnce();
+    expect(none.setMode).not.toHaveBeenCalled();
+    const toggle = vi.mocked(list.setMode).mock.calls[0]?.[0] as (mode: string) => string;
+    expect(toggle("stories")).toBe("threads");
+    expect(toggle("threads")).toBe("stories");
+  });
+
+  it("gives the keys of the list to the Factory view in threads mode, and keeps the sidebar and f", () => {
+    const threads = env({ mode: "threads" });
+    const sidebar = env({ mode: "threads", pane: "stages" });
+
+    handleShellKey(threads, "n", key());
+    handleShellKey(threads, "d", key());
+    handleShellKey(threads, "", key({ return: true }));
+    handleShellKey(threads, "", key({ downArrow: true }));
+    handleShellKey(threads, "", key({ shift: true, downArrow: true }));
+    handleShellKey(threads, "", key({ ctrl: true, shift: true, downArrow: true }));
+    handleShellKey(threads, "", key({ leftArrow: true }));
+    handleShellKey(threads, "f", key());
+    handleShellKey(threads, "]", key());
+    handleShellKey(threads, "", key({ tab: true }));
+    handleShellKey(sidebar, "n", key());
+
+    expect(threads.setOverlay).toHaveBeenCalledExactlyOnceWith({ kind: "factory" });
+    expect(threads.setSelectedId).not.toHaveBeenCalled();
+    expect(threads.setCollapsed).not.toHaveBeenCalled();
+    expect(threads.reload).not.toHaveBeenCalled();
+    expect(threads.setStageKey).toHaveBeenCalledWith("BACKLOG");
+    expect(threads.setPane).toHaveBeenCalledWith("stages");
+    expect(sidebar.setOverlay).toHaveBeenCalledWith({ kind: "newStage" });
   });
 });

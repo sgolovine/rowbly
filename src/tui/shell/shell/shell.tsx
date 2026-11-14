@@ -37,6 +37,8 @@ interface ShellProps {
  * Without a Project in the directory where Rowbly runs, the Story panel shows the onboarding steps, which create one
  * there. A Project in a parent directory does not open. The Factory Button and `f` open the Factory controls. The
  * header shows the state of the factory, which runs in a process of its own and continues after Rowbly quits.
+ * The Switch beside the Factory Button and `t` change the list to the Factory view: the worker Threads of all
+ * Stories, filtered by the Stage of the sidebar. `enter` or a click on a Thread opens the Thread Modal.
  */
 export function Shell({ ctx: initialCtx = CWD, launch }: ShellProps) {
   const { env, overlay, factory, layout, frame, hints } = useShell(initialCtx);
