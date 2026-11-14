@@ -125,7 +125,9 @@ quits.
 - **The sections.** In the `threads` mode, the Panel has the title `Threads`. `FactoryView` shows
   the section "Active Threads" (`pending` and `running`) and the section "Inactive Threads"
   (`completed`, `failed`, `cancelled` and `interrupted`). Each heading shows `▾` or `▸`, the name and
-  the count. `enter`, a click or `←/→` expands or collapses a section.
+  the count. One empty line separates the two sections. This line shows also when the section
+  "Active Threads" is collapsed. You cannot select the empty line. `enter`, a click or `←/→`
+  expands or collapses a section.
 - **The rows.** Each row shows the Story id, the status, the Stage, the attempt, the model and the
   run time. The Threads in a section are newest first. Only worker Threads with a Story show.
   `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.

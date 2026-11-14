@@ -10,7 +10,8 @@ import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
  * The Factory view: the worker Threads of all Stories in two sections, "Active Threads" (pending and running)
  * and "Inactive Threads" (the Threads that stopped), newest first. With a Stage, only the Threads of that Stage
  * show. `↑/↓` and `j/k` select a row. `enter`, a click or `←/→` expand and collapse a section. `enter` or a click
- * on a Thread calls `onOpen`. The wheel scrolls the rows while the view is `clickable`, also when it is not `active`. The view reads the Threads again when a Thread file changes.
+ * on a Thread calls `onOpen`. One empty line separates the two sections. The wheel scrolls the rows while the
+ * view is `clickable`, also when it is not `active`. The view reads the Threads again when a Thread file changes.
  */
 export function FactoryView(props: FactoryViewProps) {
   const { stages, active, clickable, emptyText } = props;
@@ -37,6 +38,7 @@ export function FactoryView(props: FactoryViewProps) {
             label={row.label}
             count={row.count}
             collapsed={row.collapsed}
+            spaced={index > 0}
             selected={index === env.cursor}
             clickable={clickable}
             onClick={() => clickRow(env, index)}
