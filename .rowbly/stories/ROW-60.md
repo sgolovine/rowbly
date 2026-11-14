@@ -2,7 +2,7 @@
 title: Set and show Story dependencies in the CLI
 stage: IN_REFINEMENT
 position: 3
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-60
 pull_request: null
 ---
 

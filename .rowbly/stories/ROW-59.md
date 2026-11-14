@@ -2,7 +2,7 @@
 title: Store Story dependencies in the Story service
 stage: IN_REFINEMENT
 position: 2
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-59
 pull_request: null
 ---
 

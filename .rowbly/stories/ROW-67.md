@@ -2,7 +2,7 @@
 title: Restart the factory daemon automatically after a crash
 stage: IN_REFINEMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
 pull_request: null
 ---
 
