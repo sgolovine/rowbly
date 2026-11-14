@@ -1,6 +1,6 @@
 ---
 title: Add more space between active and inactive threads accordions
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-24
 pull_request: https://github.com/sgolovine/rowbly/pull/211
