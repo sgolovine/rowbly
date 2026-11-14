@@ -169,13 +169,14 @@ function storedSettings(config: ProjectConfig): FactorySettings {
 }
 
 /**
- * Stops a factory start while an old `factory.json` exists, because the factory does not read it. It does not parse
- * the file: `rowbly doctor` checks it.
+ * Stops a factory start and a settings write while an old `factory.json` exists, because Rowbly does not read it. A
+ * write before the move makes a `factory` section that `rowbly doctor` cannot merge. It does not parse the file:
+ * `rowbly doctor` checks it.
  */
 export async function assertNoLegacyFactorySettings(paths: ProjectPaths): Promise<void> {
   if (await pathExists(paths.legacyFactorySettingsFile)) {
-    throw new ConflictError("The factory does not read .rowbly/factory.json", {
-      hint: "Run rowbly doctor --fix to move factory.json into rowbly.config.json, then start the factory again.",
+    throw new ConflictError("Rowbly does not read .rowbly/factory.json", {
+      hint: "Run rowbly doctor --fix to move factory.json into rowbly.config.json, then do the operation again.",
     });
   }
 }
@@ -192,13 +193,17 @@ export async function getFactorySettings(ctx: ServiceContext = {}): Promise<Fact
 
 /**
  * Validates the settings that `change` makes from the settings on disk, and writes them to the `factory`
- * section of the config. The other config keys stay. The defaults are not written.
+ * section of the config. The other config keys stay. The absent Git sync keys are not written, but `maxWorkers`
+ * is always written. While an old `factory.json` exists, it gives a `ConflictError` and changes nothing.
  */
 export async function writeSettings(
   change: (current: FactorySettings) => FactorySettings,
   ctx: ServiceContext,
 ): Promise<FactorySettings> {
   const paths = await findProject(ctx);
+
+  await assertNoLegacyFactorySettings(paths);
+
   const config = await readConfig(paths);
   const settings = validate(change(storedSettings(config)));
 

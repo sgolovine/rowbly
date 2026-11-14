@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addCustomField } from "../custom-field/custom-field.js";
-import { ValidationError } from "../errors/errors.js";
+import { ConflictError, ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { createStage, updateStage } from "../stage/stage.js";
 import { createStory } from "../story/story.js";
@@ -271,5 +271,23 @@ describe("factorySettings", () => {
     await expect(configureGit({ commitAuthor: "Bot" }, p.ctx)).rejects.toThrow("Name <email>");
     await expect(configureGit({ gitSyncInterval: 86_401 }, p.ctx)).rejects.toBeInstanceOf(ValidationError);
     expect(await p.read("rowbly.config.json")).toBe(before);
+  });
+  it("refuses each settings write while an old factory.json exists, and changes nothing", async () => {
+    await updateFactorySettings({ maxWorkers: 2 }, p.ctx);
+    await p.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 3 }));
+    const before = await p.read("rowbly.config.json");
+    const writes = [
+      () => updateFactorySettings({ maxWorkers: 5 }, p.ctx),
+      () => configureGit({ gitPush: true }, p.ctx),
+      () => configureFactory({ maxWorkers: 5 }, p.ctx),
+      () => setWorkerOverride({ stage: "BACKLOG" }, model, p.ctx),
+    ];
+    for (const write of writes) {
+      const error = await write().catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ConflictError);
+      expect(error).toMatchObject({ hint: expect.stringContaining("rowbly doctor --fix") });
+    }
+    expect(await p.read("rowbly.config.json")).toBe(before);
+    expect((await getFactorySettings(p.ctx)).maxWorkers).toBe(2);
   });
 });
