@@ -2,7 +2,7 @@
 title: "Chore: Revert test changes"
 stage: IN_REFINEMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-12
 pull_request: null
 ---
 
