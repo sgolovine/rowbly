@@ -1,7 +1,7 @@
 ---
 title: Create a "status" command for humans
-stage: IN_DEVELOPMENT
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-36
 pull_request: https://github.com/sgolovine/rowbly/pull/217
 ---
