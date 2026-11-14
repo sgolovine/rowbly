@@ -71,7 +71,7 @@ keys and the screen stay responsive.
 - If the worker cannot start, the request fails. The client does not load Pi on the main thread in
   its place, because that stops the TUI again.
 - The TUI starts the worker in the background after the board shows (`warmPiWorker()`). When the
-  TUI quits, `src/cli.ts` calls `stopPiWorker()`. The CLI commands do not import the client.
+  TUI quits, `src/cli-main.ts` calls `stopPiWorker()`. The CLI commands do not import the client.
 - The AI section of Settings, login, logout, the CLI commands and the factory daemon still load Pi
   on the main thread through `authRuntime()` or `createFactoryRuntime()`.
 - The build makes `dist/pi-worker.js` next to `dist/cli.js`. The client finds `pi-worker.js` next to

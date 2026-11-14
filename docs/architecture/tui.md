@@ -11,7 +11,7 @@ code.
 
 ## Start-up
 
-1. When there are no arguments, `src/cli.ts` loads `src/tui/index.tsx` with a dynamic `import()` and
+1. When there are no arguments, `src/cli-main.ts` loads `src/tui/index.tsx` with a dynamic `import()` and
    calls `renderTui()`. Other commands do not load the TUI.
 2. `renderTui()` uses `runFullScreen()` from `terminal.ts`. This function turns on the alternate
    screen, mouse reports and the kitty keyboard protocol. It restores the terminal on exit, on

@@ -23,9 +23,22 @@ function staticImports(source: string): string[] {
 describe("TUI import boundary", () => {
   const project = useTestProject();
 
-  it("has no static import of Ink, React or the TUI in src/cli.ts", async () => {
-    // Do not import src/cli.ts here: it parses process.argv and runs at import time.
+  it("has only node: built-ins and the compile cache in the static imports of src/cli.ts", async () => {
+    // Do not import src/cli.ts here: it loads the CLI, which parses process.argv at import time.
     const source = await readFile(new URL("./cli.ts", import.meta.url), "utf8");
+    const imports = staticImports(source);
+
+    expect(imports.filter((specifier) => !specifier.startsWith("node:"))).toEqual([
+      "./services/compile-cache/compile-cache.js",
+    ]);
+    expect(source).toMatch(/await import\("\.\/cli-main\.js"\)/);
+    expect(source.indexOf("enableRowblyCompileCache();")).toBeGreaterThan(-1);
+    expect(source.indexOf("enableRowblyCompileCache();")).toBeLessThan(source.indexOf("await import("));
+  });
+
+  it("has no static import of Ink, React or the TUI in src/cli-main.ts", async () => {
+    // Do not import src/cli-main.ts here: it parses process.argv and runs at import time.
+    const source = await readFile(new URL("./cli-main.ts", import.meta.url), "utf8");
     const imports = staticImports(source);
 
     expect(imports).toContain("commander");
