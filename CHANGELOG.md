@@ -10,4 +10,5 @@ This file records the changes to Rowbly that users can see.
 ### Pre Release
 
 - Added: Story files can have a `dependsOn` list of upstream Stories. `rowbly story delete` removes the deleted Story from each `dependsOn` list and shows a warning for each changed Story. (ROW-59)
+- Added: `rowbly doctor` finds bad `dependsOn` lists in Story files, for example unknown IDs, self dependencies, duplicates and cycles. `rowbly doctor --fix` repairs the safe problems. (ROW-61)
 - Added: The factory starts its daemon again automatically after a crash, with a longer wait after each crash. After 5 crashes in a row, the factory stops with the `failed` phase, and `rowbly factory status` and the TUI factory screen show the restart count and the time of the last crash. (ROW-67)
