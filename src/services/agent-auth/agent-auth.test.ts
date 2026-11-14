@@ -7,7 +7,73 @@ import { getDeviceId } from "../known-project/known-project.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
-import { getAuthStatus, listAvailableModels, loginProvider, logoutProvider } from "./agent-auth.js";
+import {
+  authRuntime,
+  getAuthStatus,
+  listAvailableModels,
+  loginProvider,
+  logoutProvider,
+  resetAuthRuntime,
+} from "./agent-auth.js";
+
+const createFactoryRuntime = vi.hoisted(() => vi.fn());
+
+vi.mock("../pi-runtime/factory-runtime.js", () => ({ createFactoryRuntime }));
+
+describe("shared auth runtime", () => {
+  afterEach(() => {
+    resetAuthRuntime();
+    createFactoryRuntime.mockReset();
+  });
+  function runtimeResult(name: string) {
+    return { runtime: { name }, agentDir: "/agent" };
+  }
+  it("creates one runtime for all callers, also for concurrent callers", async () => {
+    createFactoryRuntime.mockImplementation(async () => runtimeResult("first"));
+    const [a, b] = await Promise.all([authRuntime(), authRuntime()]);
+    const c = await authRuntime();
+    expect(createFactoryRuntime).toHaveBeenCalledTimes(1);
+    expect(a).toBe(b);
+    expect(c).toBe(a);
+    expect(a).toEqual({ name: "first" });
+  });
+  it("creates a new runtime after a reset", async () => {
+    createFactoryRuntime.mockImplementationOnce(async () => runtimeResult("first"));
+    createFactoryRuntime.mockImplementationOnce(async () => runtimeResult("second"));
+    const first = await authRuntime();
+    resetAuthRuntime();
+    const second = await authRuntime();
+    expect(createFactoryRuntime).toHaveBeenCalledTimes(2);
+    expect(second).not.toBe(first);
+    expect(second).toEqual({ name: "second" });
+    expect(await authRuntime()).toBe(second);
+  });
+  it("forgets a runtime that failed, so that the next call tries again", async () => {
+    const error = new Error("no runtime");
+    createFactoryRuntime.mockRejectedValueOnce(error);
+    createFactoryRuntime.mockImplementationOnce(async () => runtimeResult("retry"));
+    await expect(authRuntime()).rejects.toBe(error);
+    expect(await authRuntime()).toEqual({ name: "retry" });
+    expect(createFactoryRuntime).toHaveBeenCalledTimes(2);
+  });
+  it("keeps a newer runtime when an older creation fails after a reset", async () => {
+    const error = new Error("late failure");
+    const late = { reject: (_: Error) => {} };
+    createFactoryRuntime.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        late.reject = reject;
+      }),
+    );
+    createFactoryRuntime.mockImplementationOnce(async () => runtimeResult("newer"));
+    const failing = authRuntime();
+    resetAuthRuntime();
+    const newer = await authRuntime();
+    late.reject(error);
+    await expect(failing).rejects.toBe(error);
+    expect(await authRuntime()).toBe(newer);
+    expect(createFactoryRuntime).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe("agent auth", () => {
   const dir = useTempDir();

@@ -16,6 +16,7 @@ import {
   useToast,
 } from "../../hooks/index.js";
 import type { Board } from "./shell-state.js";
+import { usePiPreload } from "./use-pi-preload.js";
 
 /** The data of the shell: the board of the Project, and the status of its factory. */
 export interface ShellData {
@@ -100,8 +101,16 @@ function bump(setVersion: Dispatch<SetStateAction<number>>): void {
   setVersion((v) => v + 1);
 }
 
-/** Loads the board of the Project in `ctx`, and reads it again when a different process changes it. */
-export function useShellData(ctx: ServiceContext): ShellData {
+/** True when the board shows a Project: it has loaded, with no error, and the directory has a Project. */
+function showsProject(data: AsyncState<Board | null>): boolean {
+  return !data.loading && data.error === undefined && Boolean(data.data);
+}
+
+/**
+ * Loads the board of the Project in `ctx`, and reads it again when a different process changes it. `preloadPi`, when
+ * given, imports the Pi SDK one time a short time after the board first shows.
+ */
+export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void>): ShellData {
   const toast = useToast();
   const [version, setVersion] = useState(0);
   const data = useAsync(() => loadBoard(ctx), [ctx, version]);
@@ -123,6 +132,8 @@ export function useShellData(ctx: ServiceContext): ShellData {
   useEffect(() => {
     recordOpenProject(ctx, projectRoot, projectName, toast);
   }, [projectRoot, projectName]);
+
+  usePiPreload(showsProject(data), preloadPi);
 
   return { data: { ...data, data: withActivity(data.data, activity.data) }, factory, reload: () => bump(setVersion) };
 }
