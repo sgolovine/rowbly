@@ -1,6 +1,6 @@
 import { useInput } from "ink";
 import { useEffect, useRef, useState } from "react";
-import { type FactoryQueueEntry, getFactoryStatus } from "../../../../services/factory/factory.js";
+import { type FactoryQueueEntry, type FactoryStatus, getFactoryStatus } from "../../../../services/factory/factory.js";
 import { listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { useCovered } from "../../../components/index.js";
@@ -14,6 +14,8 @@ import {
   useIsActive,
   useLayout,
   useReportHints,
+  useSharedFactoryStatus,
+  useThreadChanges,
   useToast,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
@@ -40,7 +42,6 @@ export interface ThreadsTabProps {
 
 interface ThreadsData {
   readonly threads: readonly ThreadRecord[];
-  readonly status: Awaited<ReturnType<typeof getFactoryStatus>> | undefined;
 }
 
 /** The state of the Threads tab that its render reads. */
@@ -59,21 +60,28 @@ export interface ThreadsTabState {
   readonly shownId: string | undefined;
 }
 
-/** Reads the threads and the factory status, but only after the tab is selected the first time. */
+/** Reads the threads, but only after the tab is selected the first time. */
 async function loadThreads(ctx: ServiceContext, storyId: string, opened: boolean): Promise<ThreadsData | undefined> {
   if (!opened) {
     return undefined;
   }
 
-  const [list, status] = await Promise.all([
-    listThreads({ story: storyId }, ctx),
-    getFactoryStatus(ctx).catch(() => undefined),
-  ]);
+  const list = await listThreads({ story: storyId }, ctx);
 
-  return { threads: sortThreads(list.threads), status };
+  return { threads: sortThreads(list.threads) };
 }
 
-/** The threads of the Story, read again when the threads or the factory status change. */
+/** Reads the factory status of the tab itself, only when no shell shares its status read. */
+async function loadOwnStatus(ctx: ServiceContext, own: boolean): Promise<FactoryStatus | undefined> {
+  return own ? getFactoryStatus(ctx).catch(() => undefined) : undefined;
+}
+
+/** The root of the Project of the tab, while the tab is on the screen. */
+function watchRoot(ctx: ServiceContext, selected: boolean): string | undefined {
+  return selected ? (ctx.cwd ?? process.cwd()) : undefined;
+}
+
+/** The threads of the Story, read again when the thread metadata changes. */
 function useThreadList(ctx: ServiceContext, storyId: string, selected: boolean) {
   const [opened, setOpened] = useState(selected);
 
@@ -85,10 +93,24 @@ function useThreadList(ctx: ServiceContext, storyId: string, selected: boolean) 
 
   const data = useAsync(() => loadThreads(ctx, storyId, opened), [ctx, storyId, opened]);
 
-  // The worker writes its thread, and the factory its status, from another process.
-  useFactoryChanges(selected ? (ctx.cwd ?? process.cwd()) : undefined, data.refresh);
+  // The worker writes its thread from another process.
+  useThreadChanges(watchRoot(ctx, selected), data.refresh);
 
   return { data, opened };
+}
+
+/**
+ * The factory status. In the shell, it is the shared status read of the shell. A standalone tab reads the
+ * status itself, and reads it again when the factory changes.
+ */
+function useTabStatus(ctx: ServiceContext, selected: boolean, opened: boolean): FactoryStatus | undefined {
+  const shared = useSharedFactoryStatus();
+  const own = shared === undefined && opened;
+  const status = useAsync(() => loadOwnStatus(ctx, own), [ctx, own]);
+
+  useFactoryChanges(own ? watchRoot(ctx, selected) : undefined, status.refresh);
+
+  return shared === undefined ? status.data : shared.data;
 }
 
 /** The id of the selected thread, after the selection stays, so that `↑/↓` through the list opens no file. */
@@ -156,6 +178,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const sending = useRef(false);
 
   const { data, opened } = useThreadList(ctx, storyId, selected);
+  const status = useTabStatus(ctx, selected, opened);
   const threads = data.data?.threads ?? [];
   const keysOwn = active && selected && !covered && confirm === null;
   const listing = keysOwn && focus === "list" && data.data !== undefined;
@@ -198,7 +221,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     confirm,
     listing,
     viewing,
-    waiting: queueEntry(data.data?.status, storyId),
+    waiting: queueEntry(status, storyId),
     now,
     shownId,
   };

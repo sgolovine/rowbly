@@ -1,6 +1,7 @@
 import { ConflictError } from "../errors/errors.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { type ProjectPaths, runtimePaths } from "../workspace/workspace.js";
+import { probeOwnerCached } from "./owner-probe-cache.js";
 import {
   acquireOwner,
   newOwner,
@@ -12,7 +13,7 @@ import {
 } from "./ownership-lock.js";
 
 export type { Owner, OwnerProbe };
-export { newOwner, probeOwner };
+export { newOwner, probeOwner, probeOwnerCached };
 
 /** Takes daemon ownership of the Project. A live, foreign or uncertain owner gives a ConflictError. */
 export async function acquireFactoryOwnership(paths: ProjectPaths, owner: Owner, probe: OwnerProbe = probeOwner) {
