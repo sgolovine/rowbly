@@ -2,8 +2,7 @@ import type { BigIntStats } from "node:fs";
 import { stat } from "node:fs/promises";
 import { dirname } from "node:path";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
-import type { ServiceContext } from "../workspace/workspace.js";
-import { readProblem, readThreadFile, threadPath } from "./thread-files.js";
+import { checkSessionIn, readProblem, readThreadFile, type ThreadDirs, threadFileIn } from "./thread-files.js";
 import type { ThreadRecord } from "./thread-types.js";
 
 /** One valid Thread record and the identity of the file that gave it. */
@@ -44,18 +43,22 @@ function forget(id: string, file: string, error: unknown): never {
 /**
  * Gives the validated metadata of one Thread. It reads the file only when its `ino`, `size` or `mtimeNs`
  * changed since the last read. The `stat` comes before the read, so a change during the read gives a new
- * identity on the next call. An invalid file is never cached.
+ * identity on the next call. An invalid file is never cached. A cache hit checks the session reference again,
+ * because a symlink can appear in `sessions/` with no change to the Thread file.
  */
-export async function cachedThread(id: string, ctx: ServiceContext): Promise<ThreadRecord> {
-  const file = await threadPath(id, ctx);
+export async function cachedThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
+  const file = await threadFileIn(id, dirs);
   const info = await stat(file, { bigint: true }).catch((error: unknown) => forget(id, file, error));
   const entry = cache.current.entries.get(file);
 
   if (entry && sameFile(entry, info)) {
-    return entry.thread;
+    return checkSessionIn(entry.thread, dirs).then(
+      () => entry.thread,
+      (error: unknown) => forget(id, file, error),
+    );
   }
 
-  return readThreadFile(id, file, info.size, ctx).then(
+  return readThreadFile(id, file, info.size, dirs).then(
     (thread) => remember(file, info, thread),
     (error: unknown) => forget(id, file, error),
   );

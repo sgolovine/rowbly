@@ -19,4 +19,11 @@ describe("Pi import boundary", () => {
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout).phase).toBe("stopped");
   });
+
+  it("reads the project status without loading Pi", async () => {
+    const { runCli } = await import("../../commands/test-cli/test-cli.js");
+    const result = await runCli(["--json", "status"], project.paths.root);
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout).factory.phase).toBe("stopped");
+  });
 });

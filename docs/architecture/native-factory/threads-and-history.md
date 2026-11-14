@@ -26,7 +26,8 @@ projects Thread changes into the v1 policy state and watches the Thread files fo
 the absolute file path. Before each read, `listThreads` does a `stat` of the file. If the `ino`, the
 `size` and the `mtimeNs` are the same as in the cache, it does not read the file again. An atomic save
 gives a new `ino`, thus the next list reads the file. A file that is not valid is not in the cache, and
-it gives an issue on each list. `getThread` reads the file each time.
+it gives an issue on each list. `getThread` reads the file each time. The symlink checks of the Thread
+file and of its session reference occur on each list, also when the record is in the cache.
 
 ## Sessions
 
