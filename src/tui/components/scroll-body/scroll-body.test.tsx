@@ -9,7 +9,7 @@ afterEach(cleanup);
 const rows = Array.from({ length: 20 }, (_, i) => `row ${i + 1}`);
 
 /** Renders 20 rows in a ScrollBody and waits until it has measured them, which turns its keys on. */
-async function setup(props: { height?: number; active?: boolean } = {}) {
+async function setup(props: { height?: number; active?: boolean; wheel?: boolean } = {}) {
   const tui = await renderTui(
     <ScrollBody {...props}>
       {rows.map((row) => (
@@ -60,5 +60,23 @@ describe("ScrollBody", () => {
     await tui.press(keys.pageDown);
     await tui.mouse("wheelDown", 1, 1);
     expect(tui.frame()).toContain("↑↓ 1–5 of 20");
+  });
+
+  it("scrolls with the wheel but takes no keys while not active with the wheel on", async () => {
+    const tui = await setup({ height: 6, active: false, wheel: true });
+    await tui.press(keys.pageDown);
+    expect(tui.frame()).toContain("↑↓ 1–5 of 20");
+    await tui.mouse("wheelDown", 1, 1);
+    expect(tui.frame()).toContain("↑↓ 4–8 of 20");
+    await tui.mouse("wheelUp", 1, 1);
+    expect(tui.frame()).toContain("↑↓ 1–5 of 20");
+  });
+
+  it("takes the keys but no wheel while active with the wheel off", async () => {
+    const tui = await setup({ height: 6, wheel: false });
+    await tui.mouse("wheelDown", 1, 1);
+    expect(tui.frame()).toContain("↑↓ 1–5 of 20");
+    await tui.press(keys.pageDown);
+    expect(tui.frame()).toContain("↑↓ 6–10 of 20");
   });
 });
