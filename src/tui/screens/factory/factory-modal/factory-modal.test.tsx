@@ -1,13 +1,19 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import { ConflictError } from "../../../../services/errors/errors.js";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import * as factory from "../../../../services/factory/factory.js";
+import { piCatalogKey, readPiCatalog, writePiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-cache.js";
 import type { Story } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../../../services/thread/thread.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
 import { FactoryModal } from "./factory-modal.js";
+
+vi.mock("@earendil-works/pi-coding-agent", () => {
+  throw new Error("The Factory modal test must not load Pi");
+});
 
 vi.mock("../../../../services/factory/factory.js", async (original) => ({
   ...(await original<typeof import("../../../../services/factory/factory.js")>()),
@@ -190,6 +196,70 @@ describe("FactoryModal", () => {
     await settle(50);
     await tui.press();
     expect(tui.frame()).toContain("Press a to sign in");
+  });
+
+  describe("the provider check with the model cache", () => {
+    const configured = {
+      getProviders: () => [{ id: "acme", auth: { apiKey: { login: true } } }],
+      listCredentials: async () => [],
+      getAvailable: async () => [{ provider: "acme", id: "fast-1", name: "Fast One", reasoning: false }],
+    } as unknown as AuthRuntime;
+
+    async function start(loadRuntime: () => Promise<AuthRuntime>) {
+      const tui = await renderTui(
+        <FactoryModal
+          ctx={project.ctx}
+          status={{ version: 1, phase: "stopped" }}
+          launch={launch}
+          onClose={() => {}}
+          onAiSettings={() => {}}
+          loadRuntime={loadRuntime}
+        />,
+      );
+      await settle(50);
+      await tui.press("s");
+      await vi.waitFor(() => expect(factory.startFactory).toHaveBeenCalledOnce());
+      await settle(20);
+      await tui.press();
+      return tui;
+    }
+
+    it("answers provider ready from a fresh cache without a call to the Pi loader", async () => {
+      const providers = [
+        {
+          id: "acme",
+          methods: ["api_key" as const],
+          configured: true,
+          credentialType: undefined,
+          health: "unverified" as const,
+        },
+      ];
+      await writePiCatalog({ models: [], providers }, await piCatalogKey(project.ctx), project.ctx);
+      const loadRuntime = vi.fn(async () => configured);
+      const tui = await start(loadRuntime);
+      expect(tui.frame()).not.toContain("Press a to sign in");
+      expect(loadRuntime).not.toHaveBeenCalled();
+    });
+
+    it("calls the loader when the cache is missing, and writes the cache", async () => {
+      const loadRuntime = vi.fn(async () => configured);
+      const tui = await start(loadRuntime);
+      expect(loadRuntime).toHaveBeenCalledOnce();
+      expect(tui.frame()).not.toContain("Press a to sign in");
+      expect(await readPiCatalog(project.ctx)).toMatchObject({
+        fresh: true,
+        providers: [{ id: "acme", configured: true }],
+        models: [{ modelId: "fast-1" }],
+      });
+    });
+
+    it("asks to sign in when a fresh cache has no configured provider", async () => {
+      await writePiCatalog({ models: [], providers: [] }, await piCatalogKey(project.ctx), project.ctx);
+      const loadRuntime = vi.fn(async () => configured);
+      const tui = await start(loadRuntime);
+      expect(tui.frame()).toContain("Press a to sign in");
+      expect(loadRuntime).not.toHaveBeenCalled();
+    });
   });
 
   describe("warnings", () => {

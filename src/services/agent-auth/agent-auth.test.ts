@@ -4,6 +4,7 @@ import { fauxProvider, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { configureFactory, getFactorySettings } from "../factory-settings/factory-settings.js";
 import { getDeviceId } from "../known-project/known-project.js";
+import { piCatalogFile, piCatalogKey, readPiCatalog, writePiCatalog } from "../pi-catalog-cache/pi-catalog-cache.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
@@ -134,10 +135,40 @@ describe("agent auth", () => {
       message: "Provider login did not complete",
     });
     vi.spyOn(runtime, "logout").mockRejectedValue({ credential: "SECRET" });
-    await expect(logoutProvider(runtime, "openai")).rejects.toMatchObject({
+    await expect(logoutProvider(runtime, "openai", { home: dir.path })).rejects.toMatchObject({
       message: "Provider logout did not complete",
     });
     expect(settle).toHaveBeenCalledTimes(3);
+  });
+  it("deletes the model cache after each login and logout, also after a failure", async () => {
+    const { runtime } = await fixture();
+    const ctx = { home: dir.path };
+    const writeCache = async () =>
+      writePiCatalog({ models: [], providers: [] }, await piCatalogKey(ctx, { env: {} }), ctx);
+    const cached = async () => (await readPiCatalog(ctx, { env: {} })) !== undefined;
+    const interaction = { prompt: vi.fn(), notify: vi.fn() };
+    const login = vi.spyOn(runtime, "login").mockResolvedValue({ type: "api_key", key: "SECRET" });
+    const logout = vi.spyOn(runtime, "logout").mockResolvedValue(undefined);
+
+    await writeCache();
+    expect(await cached()).toBe(true);
+    await loginProvider(runtime, "openai", "api_key", interaction, ctx);
+    expect(await cached()).toBe(false);
+
+    await writeCache();
+    login.mockRejectedValue(new Error("no"));
+    await expect(loginProvider(runtime, "openai", "api_key", interaction, ctx)).rejects.toThrow();
+    expect(await cached()).toBe(false);
+
+    await writeCache();
+    await logoutProvider(runtime, "openai", ctx);
+    expect(await cached()).toBe(false);
+
+    await writeCache();
+    logout.mockRejectedValue(new Error("no"));
+    await expect(logoutProvider(runtime, "openai", ctx)).rejects.toThrow();
+    expect(await cached()).toBe(false);
+    expect(piCatalogFile(ctx).startsWith(dir.path)).toBe(true);
   });
   it("rejects unavailable explicit models and unsupported thinking without settings changes", async () => {
     const { runtime, faux } = await fixture();
