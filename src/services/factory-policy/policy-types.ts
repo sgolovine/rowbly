@@ -6,6 +6,8 @@ export interface PolicyStory {
   title?: string;
   description?: string;
   fields?: Record<string, unknown>;
+  /** The IDs of the upstream Stories. */
+  dependsOn?: readonly string[];
 }
 
 export interface PolicyStage {
@@ -71,6 +73,8 @@ export interface PolicyDecision {
   attempt?: number;
   retryAt?: string;
   previous?: { workerId: string; status: string; result: unknown };
+  /** The upstream Stories that are not complete, for a Story that the gate skips. */
+  waitingFor?: string[];
 }
 
 export interface PolicyReport {

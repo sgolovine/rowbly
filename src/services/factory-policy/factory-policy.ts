@@ -1,4 +1,6 @@
 // The pure assignment policy of the factory supervisor. This module does no I/O.
+import { type DependencyStory, waitingFor } from "../story-dependency/story-dependency.js";
+import { dependencyStories, downstreamCount } from "./policy-dependencies.js";
 import {
   DEFAULT_LIMITS,
   FAILURE_STATUSES,
@@ -42,6 +44,8 @@ type ScanWorker = PolicyWorker & { status: AttemptStatus };
 /** The facts of one scan that each step reads. */
 interface ScanFacts {
   stories: PolicyStory[];
+  /** The Stories with a mandatory `dependsOn` list, for the dependency rules. */
+  dependencies: DependencyStory[];
   stages: PolicyStage[];
   workers: ScanWorker[];
   time: Date;
@@ -217,6 +221,15 @@ function planStory(previous: PolicyState, story: PolicyStory, facts: ScanFacts):
     return { state: next, decision: makeDecision(story, "skip", reason) };
   }
 
+  // A blocked Story records no attempt and uses no budget. A running worker of the Story continues.
+  const upstream = waitingFor(facts.dependencies, facts.stages, story.id);
+
+  if (upstream.length > 0) {
+    const waiting = `waiting for ${upstream.join(", ")}`;
+
+    return { state, decision: makeDecision(story, "skip", waiting, { waitingFor: upstream }) };
+  }
+
   // The harness list must include workers from other supervisors in this Project.
   if (facts.workers.some((worker) => worker.story === story.id && !STOPPED_STATUSES.has(worker.status))) {
     return { state, decision: makeDecision(story, "skip", "active or unknown harness worker") };
@@ -249,7 +262,22 @@ function stageIndex(facts: ScanFacts, decision: PolicyDecision): number {
   return facts.stages.findIndex((stage) => stage.key === decision.stage);
 }
 
-/** A limit on workers: the Stories nearest to the last Stage start first, then the order of the board. */
+/**
+ * Compares two launches. The Story nearest to the last Stage starts first. Then the Story with more downstream
+ * Stories that are not complete starts first. `toSorted` is stable, so the order of the board comes last.
+ */
+function launchOrder(
+  facts: ScanFacts,
+  counts: ReadonlyMap<string, number>,
+  first: PolicyDecision,
+  second: PolicyDecision,
+) {
+  const byStage = stageIndex(facts, second) - stageIndex(facts, first);
+
+  return byStage === 0 ? (counts.get(second.story) ?? 0) - (counts.get(first.story) ?? 0) : byStage;
+}
+
+/** A limit on workers. See `launchOrder` for the Stories that start first. */
 function limitWorkers(decisions: PolicyDecision[], state: PolicyState, facts: ScanFacts, maxActive?: number) {
   if (maxActive === undefined || !Number.isFinite(maxActive)) {
     return decisions;
@@ -260,9 +288,12 @@ function limitWorkers(decisions: PolicyDecision[], state: PolicyState, facts: Sc
     .filter((worker) => !STOPPED_STATUSES.has(worker.status))
     .map((worker) => workerId(worker) ?? `story:${worker.story}`);
   const active = new Set([...activeAttempts, ...activeWorkers]);
-  const allowed = decisions
-    .filter(isLaunch)
-    .toSorted((first, second) => stageIndex(facts, second) - stageIndex(facts, first))
+  const launches = decisions.filter(isLaunch);
+  const counts = new Map(
+    launches.map((decision) => [decision.story, downstreamCount(facts.dependencies, facts.stages, decision.story)]),
+  );
+  const allowed = launches
+    .toSorted((first, second) => launchOrder(facts, counts, first, second))
     .slice(0, Math.max(0, maxActive - active.size));
 
   return decisions.map((decision) =>
@@ -304,6 +335,7 @@ export function evaluateScan(previous: PolicyState, input: ScanInput): ScanResul
   const priorStages = cloned.scan?.stages ?? {};
   const facts: ScanFacts = {
     stories: input.stories,
+    dependencies: dependencyStories(input.stories),
     stages: input.stages,
     workers: (input.harnessWorkers ?? []).map((worker) => ({
       ...worker,
