@@ -56,6 +56,28 @@ the `flock` command prefix. When the Project has checks, it also lists the check
 system prompt keeps its check rules. See [native-factory/checks.md](native-factory/checks.md#prompts-and-the-digest). A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
 each user prompt at 16000 characters (`USER_PROMPT_LIMIT`).
 
+### Upstream Stories
+
+When the Story of a worker has upstream Stories (`dependsOn`), the worker message tells the worker about them:
+
+- The `Run` section lists the upstream Stories under the line
+  `Upstream Stories (read each one with \`story get\`):`. The order is the order of `dependsOn`.
+- Each line gives the ID, the title and the Stage key of one upstream Story. It also gives the key and
+  the value of each `url` custom field that has a value, for example
+  `- ROW-59: Store Story dependencies (DONE), pull_request: https://…`.
+- The line does not show a `url` field with no value or a field of a different type.
+- An ID in `dependsOn` that is not a Story gives no line and no error. `rowbly doctor` reports it.
+- `src/config/prompts/WORKER.md` has the upstream rule between `<!-- upstream -->` and
+  `<!-- /upstream -->`. The rule tells the worker not to do the work of the upstream Stories again.
+  The message keeps this rule only when the Story has upstream Stories. It does not keep the marker
+  comments.
+- A Story with no upstream Stories gets no upstream lines and no upstream rule.
+- `upstreamOf()` in `messages.ts` makes the upstream lines from the Stories and the keys of the `url`
+  fields. `buildWorkerPrompt` in `factory-manager/worker-launch.ts` reads the Stories and the config
+  only when `dependsOn` is not empty.
+- The message does not include the descriptions of the upstream Stories. The worker reads them with
+  `rowbly story get`.
+
 ## Read and write the user prompts
 
 `src/services/prompts/prompts.ts` reads and writes the user prompts. Its functions are `listPrompts()`,
