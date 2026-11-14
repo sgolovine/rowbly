@@ -1,8 +1,8 @@
 export * from "./attachment-list/index.js";
 export { deleteStoryMessage } from "./delete-story-message.js";
-export * from "./edit-story-modal/index.js";
+export * from "./edit-story-form/index.js";
 export * from "./factory-status-line/index.js";
-export * from "./new-story-modal/index.js";
+export * from "./new-story-form/index.js";
 export * from "./spec-dialogs/index.js";
 export * from "./spec-list-panel/index.js";
 export * from "./spec-panel/index.js";
@@ -14,7 +14,6 @@ export * from "./story-general-tab/index.js";
 export * from "./story-list/index.js";
 export * from "./story-list-item/index.js";
 export { rowStage, stageRowId, storyListRows } from "./story-list-rows.js";
-export * from "./story-modal/index.js";
 export * from "./story-modal-body/index.js";
 export * from "./story-row/index.js";
 export * from "./story-tab-panes/index.js";

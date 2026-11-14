@@ -38,13 +38,13 @@ src/tui/
 
 The screen areas in `screens/` are:
 
-| Area          | Contents                                                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `stories/`    | The Story list and rows, the new and edit Story modals, and the Story tabs (General, Specs, Attachments, Threads). |
-| `stages/`     | The Stage form modal.                                                                                              |
-| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                       |
-| `settings/`   | The Settings modal and its sections, the AI section and the model picker.                                          |
-| `factory/`    | The Factory controls modal and the factory status helpers.                                                         |
+| Area          | Contents                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads). |
+| `stages/`     | The Stage form modal.                                                                                                                  |
+| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                           |
+| `settings/`   | The Settings modal and its sections, the AI section and the model picker.                                                              |
+| `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
 
 ## Code organization
 
@@ -97,6 +97,30 @@ The screen areas in `screens/` are:
 | `use-story-changes.ts`  | `useStoryChanges`: calls a function when the files of the Stories change.                          |
 | `use-story-paste.ts`    | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
 | `use-thread-changes.ts` | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
+
+## Story sidebar
+
+The new Story form and the edit form of a Story show in the Story sidebar, not in a Modal. The Story
+sidebar is a `Panel` on the right of the Story list (`shell/story-sidebar/`). The Story list stays
+visible.
+
+- `n`, **+ New Story**, `enter`, a click on a selected Story and a pick in the Story finder open the
+  Story sidebar. The shell keeps the open form in `storyPane` (`use-shell.ts`).
+- The top border shows `New Story` or `Edit <story-id>`, and a `✕` at its right end. The border is
+  `accent` when the Story sidebar has the focus.
+- `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the
+  Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
+  it the focus.
+- In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
+  form keeps its draft. In the Story list, `esc` closes the Story sidebar.
+- When the form has unsaved text or images, Rowbly asks before it closes the form or shows a
+  different form (`discardStory` overlay).
+- A drag of the left edge changes the width (`ResizeEdge`). The default width is
+  `STORY_SIDEBAR_WIDTH` of the terminal width. The minimum is `STORY_SIDEBAR_MIN_WIDTH`, and the Story
+  list keeps `MAIN_MIN_WIDTH`. The width stays until Rowbly quits.
+- Below `STACKED_BELOW_WIDTH`, the Story sidebar takes the full main area while it has the focus.
+- `PaneBody` gives the form the contexts of a Modal body, so a `ConfirmDialog` of the form shows over
+  the Story sidebar. The keys of the form go to the footer.
 
 ## Design rules in short
 

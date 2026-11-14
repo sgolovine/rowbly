@@ -7,13 +7,13 @@ import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { ShellRegistry, ToastStore } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import type { storyListRows } from "../../screens/stories/index.js";
-import type { Overlay } from "../overlay.js";
+import type { Overlay, StoryPane } from "../overlay.js";
 
 /** The id of the first sidebar entry, which shows the Stories of every Stage. */
 export const ALL_STAGES = "*";
 
-/** The region that takes `↑/↓`, `n` and the other keys of a list: the Stage sidebar or the Story list. */
-export type Pane = "stages" | "stories";
+/** The region that has the focus: the Stage sidebar, the Story list or the Story sidebar. */
+export type Pane = "stages" | "stories" | "story";
 
 /** A row of the Story list: a Stage heading or a Story. */
 export type StoryListRow = ReturnType<typeof storyListRows>[number];
@@ -48,12 +48,21 @@ export interface ShellView {
   /** The selected sidebar entry. Entry 0 is All Stages. */
   readonly stageIndex: number;
 
+  // The Story sidebar.
+  /** What the Story sidebar shows, or `null` when it is closed. */
+  readonly storyPane: StoryPane | null;
+  /** The Story sidebar is open and is the selected pane, also while an overlay is open. */
+  readonly storyActive: boolean;
+
   // The focus.
-  /** The shell has the keys: no overlay is open. */
+  /** No overlay is open: the panes take the mouse. */
   readonly idle: boolean;
+  /** The shell has the keys: no overlay is open, and the Story sidebar does not have the focus. */
+  readonly shellKeys: boolean;
   readonly sidebar: boolean;
   readonly sidebarFocused: boolean;
   readonly listFocused: boolean;
+  readonly storyFocused: boolean;
 }
 
 /** What the handlers of the shell read and change. */
@@ -78,6 +87,10 @@ export interface ShellEnv {
   readonly setPane: Dispatch<SetStateAction<Pane>>;
   readonly setSidebarWidth: Dispatch<SetStateAction<number>>;
   readonly setSidebarShown: Dispatch<SetStateAction<boolean>>;
+  readonly setStoryPane: Dispatch<SetStateAction<StoryPane | null>>;
+  /** The width of the Story sidebar after a drag, or `null` for the default width. */
+  readonly setStoryWidth: Dispatch<SetStateAction<number | null>>;
+  readonly setStoryHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
   readonly setStageKey: Dispatch<SetStateAction<string | null>>;
   readonly setSelectedId: Dispatch<SetStateAction<string | null>>;
   readonly setCollapsed: Dispatch<SetStateAction<ReadonlySet<string>>>;

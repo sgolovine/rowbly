@@ -16,7 +16,6 @@ function Probe({ ctx, onConfirming }: { ctx: ServiceContext; onConfirming: (conf
     fields: [],
     initialValues: {},
     onSubmit: () => {},
-    onClose: () => {},
     onRequestClose: () => {},
     onDelete: { title: "Delete Story", message: "Delete it?", onConfirm: () => {} },
     confirming: null,

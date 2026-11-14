@@ -50,4 +50,20 @@ describe("shellHints", () => {
 
     expect(shellHints(view({ row }), true, []).find((hint) => hint.key === "enter")?.description).toBe("expand");
   });
+
+  it("shows the keys of the Story sidebar while it is the selected pane", () => {
+    const story = [{ key: "ctrl+s", description: "save" }];
+
+    expect(shellHints(view({ storyPane: { kind: "new" }, storyActive: true } as never), true, [], story)).toEqual(
+      story,
+    );
+  });
+
+  it("shows the focus keys and the close key of the Story sidebar in the list", () => {
+    const hints = shellHints(view({ storyPane: { kind: "new" } } as never), true, []);
+
+    expect(hints.find((hint) => hint.key === "tab")?.description).toBe("Story");
+    expect(hints.find((hint) => hint.key === "shift+tab")?.description).toBe("Stages");
+    expect(hints.find((hint) => hint.key === "esc")?.description).toBe("close Story");
+  });
 });

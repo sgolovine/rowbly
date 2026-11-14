@@ -18,7 +18,6 @@ interface ShellOverlaysProps {
   readonly factory: FactoryStatus | undefined;
   /** The keys that the help Modal shows. */
   readonly hints: readonly KeyHint[];
-  readonly cursorStage: string | undefined;
   readonly on: OverlayHandlers;
 }
 
@@ -28,10 +27,10 @@ function stageLabels(board: OverlayBoard): Record<string, string> {
 }
 
 /** The overlay of the shell that is open, if there is one. */
-export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, cursorStage, on }: ShellOverlaysProps) {
+export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on }: ShellOverlaysProps) {
   return (
     <>
-      {board && <StoryOverlays overlay={overlay} board={board} ctx={ctx} cursorStage={cursorStage} on={on} />}
+      {board && <StoryOverlays overlay={overlay} board={board} on={on} />}
       {board && (overlay?.kind === "newStage" || overlay?.kind === "editStage") && (
         <StageFormModal
           ctx={ctx}

@@ -5,7 +5,7 @@ import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { SIDEBAR_WIDTH } from "../../components/index.js";
 import { type Layout, ShellContext, useIsActive, useLayout, useToast } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
-import type { Overlay } from "../overlay.js";
+import type { Overlay, StoryPane } from "../overlay.js";
 import { type ShellFrame, shellFrame } from "./shell-frame.js";
 import { shellHints } from "./shell-hints.js";
 import { handleShellKey } from "./shell-keys.js";
@@ -38,6 +38,10 @@ export function useShell(initialCtx: ServiceContext): ShellModel {
   // Dragged with the mouse and toggled with `ctrl+b`; both last until Rowbly quits.
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
   const [sidebarShown, setSidebarShown] = useState(true);
+  // What the Story sidebar shows, and its width after a drag (`null` for the default width) until Rowbly quits.
+  const [storyPane, setStoryPane] = useState<StoryPane | null>(null);
+  const [storyWidth, setStoryWidth] = useState<number | null>(null);
+  const [storyHints, setStoryHints] = useState<readonly KeyHint[]>([]);
   const [stageKey, setStageKey] = useState<string | null>(null);
   // The id of the selected row: a Story id, or the `stageRowId` of a section heading.
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -45,7 +49,7 @@ export function useShell(initialCtx: ServiceContext): ShellModel {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const toast = useToast();
 
-  const view = shellView({ data, active, overlay, pane, sidebarShown, stageKey, selectedId, collapsed });
+  const view = shellView({ data, active, overlay, pane, storyPane, sidebarShown, stageKey, selectedId, collapsed });
   const env: ShellEnv = {
     ctx,
     view,
@@ -61,19 +65,22 @@ export function useShell(initialCtx: ServiceContext): ShellModel {
     setPane,
     setSidebarWidth,
     setSidebarShown,
+    setStoryPane,
+    setStoryWidth,
+    setStoryHints,
     setStageKey,
     setSelectedId,
     setCollapsed,
   };
 
-  useInput((input, key) => handleShellKey(env, input, key), { isActive: view.idle });
+  useInput((input, key) => handleShellKey(env, input, key), { isActive: view.shellKeys });
 
   return {
     env,
     overlay,
     factory: factory.data,
     layout,
-    frame: shellFrame(layout, view, sidebarWidth),
-    hints: shellHints(view, sidebarShown, onboardingHints),
+    frame: shellFrame(layout, view, sidebarWidth, storyWidth),
+    hints: shellHints(view, sidebarShown, onboardingHints, storyHints),
   };
 }

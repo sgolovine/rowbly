@@ -6,36 +6,36 @@ import { listStages } from "../../../../services/stage/stage.js";
 import { searchStories } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
-import { NewStoryModal } from "./new-story-modal.js";
+import { NewStoryForm } from "./new-story-form.js";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-describe("NewStoryModal", () => {
+describe("NewStoryForm", () => {
   const project = useTestProject();
 
   async function setup(stage?: string) {
     const onCreated = vi.fn();
-    const onClose = vi.fn();
+    const onBack = vi.fn();
     const stages = await listStages(project.ctx);
     const tui = await renderTui(
-      <NewStoryModal
+      <NewStoryForm
         ctx={project.ctx}
         stages={stages}
         customFields={[{ key: "points", label: "Points", type: "number" }]}
         stage={stage}
         onCreated={onCreated}
-        onClose={onClose}
+        onBack={onBack}
       />,
     );
-    return { tui, onCreated, onClose };
+    return { tui, onCreated, onBack };
   }
 
   it("shows the title, Stage, description and custom fields", async () => {
     const frame = (await setup("DONE")).tui.frame();
-    expect(frame).toContain("New Story");
+    expect(frame).toContain("Title");
     expect(frame).toContain("‹ Done ›");
     expect(frame).toContain("Description");
     expect(frame).toContain("[Full screen]");
@@ -75,23 +75,21 @@ describe("NewStoryModal", () => {
   });
 });
 
-it("keeps a pasted image after invalid save and asks before discard", async () => {
+it("keeps a pasted image and the text after an invalid save and after esc", async () => {
   const clipboard = await import("../../../../services/clipboard/clipboard.js");
   const reader = vi.spyOn(clipboard, "readClipboardImage").mockResolvedValue({
     bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
     type: "image/png",
   });
-  const onClose = vi.fn();
+  const onBack = vi.fn();
   const tui = await renderTui(
-    <NewStoryModal ctx={{}} stages={[]} customFields={[]} onCreated={() => {}} onClose={onClose} />,
+    <NewStoryForm ctx={{}} stages={[]} customFields={[]} onCreated={() => {}} onBack={onBack} />,
   );
   await tui.press(keys.ctrl("v"), keys.ctrl("s"));
   expect(tui.frame()).toContain("required");
   expect(tui.frame()).toContain("1 pending image");
   await tui.press(keys.escape);
-  expect(tui.frame()).toContain("Close and discard unsaved changes?");
-  expect(onClose).not.toHaveBeenCalled();
-  await tui.press("y");
-  expect(onClose).toHaveBeenCalledOnce();
+  expect(onBack).toHaveBeenCalledOnce();
+  expect(tui.frame()).toContain("1 pending image");
   reader.mockRestore();
 });

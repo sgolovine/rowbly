@@ -11,7 +11,9 @@ import { IMAGE_PASTE_HINT } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 
 const NO_HINTS: readonly KeyHint[] = [];
-/** The Form leaves `shift+tab` and the save key to the Story Modal, which changes the tab and asks the Form to save. */
+/** One list for all renders, so that the Form does not report its keys again on each render. */
+const EXTRA_HINTS: readonly KeyHint[] = [IMAGE_PASTE_HINT];
+/** The Form leaves `shift+tab` and the save key to the Story form, which changes the tab and asks the Form to save. */
 const NAVIGATION = { extraHints: NO_HINTS, register: () => () => {} };
 
 export interface StoryGeneralTabProps {
@@ -30,7 +32,7 @@ export interface StoryGeneralTabProps {
   readonly onDelete: () => void;
 }
 
-/** The General tab of the Story Modal: the Form of the Story, and the Delete Button under it. */
+/** The General tab of the Story form: the Form of the Story, and the Delete Button under it. */
 export function StoryGeneralTab({
   fields,
   initialValues,
@@ -48,7 +50,7 @@ export function StoryGeneralTab({
           fields={fields}
           initialValues={initialValues}
           onSubmit={onSubmit}
-          extraHints={[IMAGE_PASTE_HINT]}
+          extraHints={EXTRA_HINTS}
           isActive={formActive}
           submitRequest={submitRequest}
         />

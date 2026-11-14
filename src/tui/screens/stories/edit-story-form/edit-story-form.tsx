@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { CustomField } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
@@ -5,9 +6,11 @@ import { deleteStory, type Story, updateStory } from "../../../../services/story
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
 import { showToast, type ToastStore, useToast } from "../../../hooks/index.js";
+import type { KeyHint } from "../../../keymap.js";
 import { deleteStoryMessage } from "../delete-story-message.js";
+import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
-import { StoryModal } from "../story-modal/index.js";
+import { StoryModalBody } from "../story-modal-body/index.js";
 
 /** The environment of the save and the delete of the Story. */
 interface EditStoryEnv {
@@ -61,11 +64,12 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
 }
 
 /**
- * Edits the Story in a screen Modal. General has the Story fields, and Attachments has the saved PNG images.
- * Specs appears between these tabs when the Project has Specs on. The form keeps pasted images until save.
- * The Delete Button and `ctrl+d` ask before they delete the Story.
+ * The form that edits a Story in the Story sidebar. General has the Story fields, and Attachments has the
+ * saved PNG images. Specs appears between these tabs when the Project has Specs on, and Threads is last.
+ * The form keeps pasted images until save. The Delete Button and `ctrl+d` ask before they delete the Story.
+ * `esc` calls `onBack`, and the form keeps its text.
  */
-export function EditStoryModal({
+export function EditStoryForm({
   ctx,
   story,
   stages,
@@ -73,7 +77,8 @@ export function EditStoryModal({
   specs = false,
   onSaved,
   onDeleted,
-  onClose,
+  onBack,
+  onHints,
 }: {
   ctx: ServiceContext;
   story: Story;
@@ -83,29 +88,35 @@ export function EditStoryModal({
   specs?: boolean;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
-  onClose(): void;
+  /** `esc`: the Story sidebar gives the focus to the Story list. */
+  onBack(): void;
+  /** The keys of the tab on the screen. */
+  onHints(hints: readonly KeyHint[]): void;
 }) {
   const toast = useToast();
+  const [confirming, setConfirming] = useState<StoryConfirm>(null);
 
   const env: EditStoryEnv = { ctx, story, customFields, toast, onSaved, onDeleted };
   const stageNames = Object.fromEntries(stages.map((stage) => [stage.key, stage.label]));
 
   return (
-    <StoryModal
+    <StoryModalBody
       ctx={ctx}
       storyId={story.id}
       stages={stageNames}
       specs={specs}
-      title={`Edit ${story.id}`}
       fields={storyFormFields(stages, customFields)}
       initialValues={initialValues(story, customFields)}
       onSubmit={(values, attachments) => saveStory(env, values, attachments)}
-      onClose={onClose}
+      onRequestClose={onBack}
       onDelete={{
         title: `Delete Story › ${story.id}`,
         message: deleteStoryMessage(story),
         onConfirm: () => removeStory(env),
       }}
+      confirming={confirming}
+      onConfirming={setConfirming}
+      onHints={onHints}
     />
   );
 }

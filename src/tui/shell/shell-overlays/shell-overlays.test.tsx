@@ -20,8 +20,7 @@ function handlers(): OverlayHandlers {
   return {
     close: vi.fn(),
     openStory: vi.fn(),
-    storySaved: vi.fn(),
-    storyDeleted: vi.fn(),
+    discardStory: vi.fn(),
     removeStory: vi.fn(),
     stageSaved: vi.fn(),
     openAiSettings: vi.fn(),
@@ -46,7 +45,6 @@ describe("ShellOverlays", () => {
         launch={undefined}
         factory={{ version: 1, phase: "stopped" }}
         hints={[{ key: "n", description: "new Story" }]}
-        cursorStage={undefined}
         on={on}
       />,
     );

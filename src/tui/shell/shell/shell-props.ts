@@ -4,6 +4,7 @@ import type { Sidebar } from "../../components/index.js";
 import type { Header } from "../header/index.js";
 import type { OverlayHandlers } from "../overlay.js";
 import type { StoryPanel, StoryPanelBody } from "../story-panel/index.js";
+import type { StorySidebarProps } from "../story-sidebar/index.js";
 import type { ShellFrame } from "./shell-frame.js";
 import {
   clickRow,
@@ -18,10 +19,11 @@ import {
 } from "./shell-selection.js";
 import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
+import { discardStory, newStory, requestStoryPane } from "./story-pane.js";
 
 /** The header: the Project Button, and the controls of an open Project. */
 export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): ComponentProps<typeof Header> {
-  const { board, idle, loading, sidebarFocused } = env.view;
+  const { board, idle, loading, sidebarFocused, storyFocused } = env.view;
   const open = board !== undefined;
 
   return {
@@ -32,7 +34,7 @@ export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): 
     finder: open ? { onClick: () => env.setOverlay({ kind: "finder" }) } : undefined,
     factory: open ? { status: factory, onClick: () => env.setOverlay({ kind: "factory" }) } : undefined,
     settings: open ? { onClick: () => env.setOverlay({ kind: "settings" }) } : undefined,
-    newStory: open ? { onClick: () => env.setOverlay({ kind: "newStory" }), showKey: !sidebarFocused } : undefined,
+    newStory: open ? { onClick: () => newStory(env), showKey: !sidebarFocused && !storyFocused } : undefined,
     clickable: idle,
   };
 }
@@ -117,13 +119,42 @@ export function storyPanelProps(env: ShellEnv, frame: ShellFrame): ComponentProp
   };
 }
 
+/** The Story sidebar, or `undefined` while it is closed. */
+export function storySidebarProps(env: ShellEnv, frame: ShellFrame): StorySidebarProps | undefined {
+  const { board, storyPane, storyFocused, idle, cursorStage } = env.view;
+  const { story } = frame;
+
+  if (!board || !storyPane) {
+    return;
+  }
+
+  return {
+    pane: storyPane,
+    board,
+    ctx: env.ctx,
+    cursorStage,
+    width: story.width,
+    height: story.height,
+    maxWidth: story.room,
+    onResize: story.mode === "beside" ? env.setStoryWidth : undefined,
+    shown: story.shown,
+    focused: storyFocused,
+    clickable: idle && story.shown,
+    onFocus: () => env.setPane("story"),
+    onClose: () => requestStoryPane(env, null),
+    onBack: () => env.setPane("stories"),
+    onSaved: (saved) => showSavedStory(env, saved),
+    onDeleted: (id) => afterDelete(env, id),
+    onHints: env.setStoryHints,
+  };
+}
+
 /** What the overlays do when they close or change a record. */
 export function overlayHandlers(env: ShellEnv): OverlayHandlers {
   return {
     close: () => closeOverlay(env),
     openStory: (story) => openFoundStory(env, story),
-    storySaved: (story) => showSavedStory(env, story),
-    storyDeleted: (id) => afterDelete(env, id),
+    discardStory: (next) => discardStory(env, next),
     removeStory: (story) => removeStory(env, story),
     stageSaved: (stage) => showSavedStage(env, stage),
     openAiSettings: () => env.setOverlay({ kind: "settings", section: "ai" }),
