@@ -3,7 +3,7 @@ title: Add a view for deterministic checks
 stage: IN_DEVELOPMENT
 position: 4
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-25
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/212
 ---
 
 ## Goal
