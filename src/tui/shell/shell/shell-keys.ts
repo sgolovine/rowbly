@@ -99,10 +99,19 @@ function paneOrder(view: ShellView): readonly Pane[] {
   return [...(view.sidebar ? (["stages"] as const) : []), "stories", ...(view.storyPane ? (["story"] as const) : [])];
 }
 
+/** The pane in focus. The Story list has the focus when no other pane has it. */
+function focusedPane(view: ShellView): Pane {
+  if (view.storyFocused) {
+    return "story";
+  }
+
+  return view.sidebarFocused ? "stages" : "stories";
+}
+
 /** The pane after the pane in focus (`tab`), or before it (`shift+tab`). The last pane goes back to the first. */
 export function cyclePane(view: ShellView, step: 1 | -1): Pane {
   const order = paneOrder(view);
-  const at = Math.max(0, order.indexOf(view.sidebarFocused ? "stages" : "stories"));
+  const at = Math.max(0, order.indexOf(focusedPane(view)));
 
   return order[(at + step + order.length) % order.length] ?? "stories";
 }

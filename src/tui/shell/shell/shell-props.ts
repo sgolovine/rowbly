@@ -7,6 +7,7 @@ import type { OverlayHandlers } from "../overlay.js";
 import type { StoryPanel, StoryPanelBody } from "../story-panel/index.js";
 import type { StorySidebarProps } from "../story-sidebar/index.js";
 import type { ShellFrame } from "./shell-frame.js";
+import { cyclePane } from "./shell-keys.js";
 import {
   clickRow,
   closeOverlay,
@@ -21,7 +22,7 @@ import {
 } from "./shell-selection.js";
 import { ALL_STAGES, type Board, type ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
-import { discardStory, newStory, requestStoryPane } from "./story-pane.js";
+import { discardStory, newStory, openOverlayThread, openThread, requestStoryPane } from "./story-pane.js";
 
 /** The header: the Project Button, and the controls of an open Project. */
 export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): ComponentProps<typeof Header> {
@@ -97,7 +98,7 @@ function factoryViewProps(env: ShellEnv, board: Board): ComponentProps<typeof Fa
     active: listFocused,
     clickable: idle,
     emptyText: `No Threads${stage ? ` in ${stage.label}` : ""}. The factory adds a Thread when it starts a worker.`,
-    onOpen: (thread) => env.setOverlay({ kind: "thread", thread }),
+    onOpen: (thread) => openThread(env, thread),
     onHints: env.setThreadHints,
   };
 }
@@ -173,6 +174,7 @@ export function storySidebarProps(env: ShellEnv, frame: ShellFrame): StorySideba
     onFocus: () => env.setPane("story"),
     onClose: () => requestStoryPane(env, null),
     onBack: () => env.setPane("stories"),
+    onTab: (step) => env.setPane(cyclePane(env.view, step)),
     onSaved: (saved) => showSavedStory(env, saved),
     onDeleted: (id) => afterDelete(env, id),
     onHints: env.setStoryHints,
@@ -184,7 +186,7 @@ export function overlayHandlers(env: ShellEnv): OverlayHandlers {
   return {
     close: () => closeOverlay(env),
     openStory: (story) => openFoundStory(env, story),
-    openThread: (thread) => env.setOverlay({ kind: "thread", thread }),
+    openThread: (thread) => openOverlayThread(env, thread),
     discardStory: (next) => discardStory(env, next),
     removeStory: (story) => removeStory(env, story),
     stageSaved: (stage) => showSavedStage(env, stage),

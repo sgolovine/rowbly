@@ -84,6 +84,10 @@ export interface ManagerState {
   readonly attention: ReadonlyMap<string, Attention>;
   readonly providers: ReadonlyMap<string, ProviderPause>;
 
+  // Git sync of the canonical checkout
+  readonly lastSyncAt: number;
+  readonly syncTask?: Promise<void>;
+
   // Timers
   readonly unwatch?: () => void;
   readonly timer?: NodeJS.Timeout;

@@ -23,7 +23,9 @@ The command types are `stop`, `cancel`, `resume` and `dismiss`:
 ## Dismiss an attention entry
 
 The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
-them. A `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
+them. The supervisor loop uses the keys `reconcile`, `commit`, `supervisor`, `pull` and `push`. A
+successful Git pull removes the `pull` entry, and a successful push removes the `push` entry. A
+`dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
 does not exist is not an error. The manager loads the attention entries from `status.json` when it
 starts, so a dismissed entry does not come back after a restart. If the factory records the same key
 again, the entry comes back.

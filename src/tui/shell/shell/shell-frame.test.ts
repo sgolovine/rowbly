@@ -110,6 +110,16 @@ describe("shellFrame with the Story sidebar", () => {
     expect(behind.mainWidth).toBe(layout.width - 4);
   });
 
+  it("sizes a Thread in the sidebar as a Story: beside the list, or on the full main area of a narrow terminal", () => {
+    const thread = { kind: "thread", thread: { id: "t1" } } as const;
+    const narrow = { width: STACKED_BELOW_WIDTH - 1, height: 40 };
+    const full = shellFrame(narrow, view({ storyPane: thread, storyActive: true } as never), SIDEBAR_WIDTH);
+    const beside = shellFrame({ width: 150, height: 40 }, view({ storyPane: thread } as never), SIDEBAR_WIDTH, 50);
+
+    expect(full.story).toMatchObject({ mode: "full", shown: true, cover: true, width: narrow.width });
+    expect(beside.story).toMatchObject({ mode: "beside", shown: true, width: 50 });
+  });
+
   it("puts the Story sidebar beside the list from STACKED_BELOW_WIDTH, where the narrowest panes all fit", () => {
     const layout = { width: STACKED_BELOW_WIDTH, height: 40 };
     const frame = shellFrame(layout, view({ storyPane: open }), SIDEBAR_WIDTH);

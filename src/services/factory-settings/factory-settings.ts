@@ -6,12 +6,26 @@ import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import {
+  type GitInput,
+  type GitSettings,
+  type GitSync,
+  gitSync,
+  hasGitInput,
+  MAX_SYNC_SECONDS,
+  MIN_SYNC_SECONDS,
+  mergeGit,
+  parseAuthor,
+  validGit,
+} from "./git-settings.js";
+import {
   hasWorkerOverride,
   type OverrideTarget,
   type StageWorkerModels,
   type StoryWorkerModels,
   withWorkerOverride,
 } from "./worker-overrides.js";
+
+export type { GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
@@ -32,9 +46,13 @@ export interface FactorySettings {
   stageWorkerModels?: StageWorkerModels;
   /** Worker model overrides by Story ID, then by Stage key. */
   storyWorkerModels?: StoryWorkerModels;
+  git?: GitSettings;
 }
 
-interface ConfigureInput {
+/** The changes of an update. The `git` keys merge into the current `git` section. */
+export type FactorySettingsInput = Partial<Omit<FactorySettings, "version">>;
+
+interface ConfigureInput extends GitInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -98,12 +116,25 @@ function validate(value: unknown): FactorySettings {
     settings.maxWorkers < 1 ||
     (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
     (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
-    !validOverrides(settings)
+    !validOverrides(settings) ||
+    (settings.git !== undefined && !validGit(settings.git))
   ) {
-    throw new ValidationError("Invalid factory settings");
+    throw new ValidationError("Invalid factory settings", {
+      hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
+    });
   }
 
   return settings;
+}
+
+/** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
+function withDefaults(settings: FactorySettings): FactorySettings {
+  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) } };
+}
+
+/** Gives the Git sync settings. Settings without a `git` section use the defaults. */
+export function gitSettings(settings: FactorySettings): GitSync {
+  return gitSync(settings.git);
 }
 
 function readProblem(error: unknown): FactorySettings {
@@ -118,26 +149,46 @@ function readProblem(error: unknown): FactorySettings {
   throw error;
 }
 
-/** Reads the factory settings of the Project. Without `factory.json`, the limit is four workers. */
-export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
-  const paths = await findProject(ctx);
-
-  return readFile(paths.factorySettingsFile, "utf8")
+/** Reads `factory.json` as it is on disk. Without the file, the limit is four workers. */
+async function readSettings(file: string): Promise<FactorySettings> {
+  return readFile(file, "utf8")
     .then((text) => validate(JSON.parse(text)))
     .catch(readProblem);
 }
 
-/** Merges the input into the factory settings and writes `factory.json`. */
-export async function updateFactorySettings(
-  input: Partial<Omit<FactorySettings, "version">>,
-  ctx: ServiceContext = {},
+/**
+ * Reads the factory settings of the Project. Without `factory.json`, the limit is four workers.
+ * The absent Git sync keys have their defaults: push and pull are off, and the interval is 300 seconds.
+ */
+export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
+  const paths = await findProject(ctx);
+
+  return withDefaults(await readSettings(paths.factorySettingsFile));
+}
+
+/** Validates and writes the settings that `change` makes from the settings on disk. The defaults are not written. */
+async function writeSettings(
+  change: (current: FactorySettings) => FactorySettings,
+  ctx: ServiceContext,
 ): Promise<FactorySettings> {
   const paths = await findProject(ctx);
-  const settings = validate({ ...(await getFactorySettings(ctx)), ...input, version: 1 });
+  const current = await readSettings(paths.factorySettingsFile);
+  const settings = validate({ ...change(current), version: 1 });
 
   await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
 
-  return settings;
+  return withDefaults(settings);
+}
+
+/** Merges the input into the factory settings and writes `factory.json`. The `git` keys merge one level deep. */
+export async function updateFactorySettings(
+  input: FactorySettingsInput,
+  ctx: ServiceContext = {},
+): Promise<FactorySettings> {
+  return writeSettings(
+    (current) => ({ ...current, ...input, ...(input.git ? { git: { ...current.git, ...input.git } } : {}) }),
+    ctx,
+  );
 }
 
 /** Parses `provider/model`. The provider and the model must not be empty. */
@@ -193,7 +244,12 @@ function overrideProblem(input: ConfigureInput): string | undefined {
       : "Select the Stage of the Story override";
   }
 
-  if (input.supervisor !== undefined || input.supervisorThinking !== undefined || input.maxWorkers !== undefined) {
+  if (
+    input.supervisor !== undefined ||
+    input.supervisorThinking !== undefined ||
+    input.maxWorkers !== undefined ||
+    hasGitInput(input)
+  ) {
     return "A Stage override sets only the worker model";
   }
 
@@ -238,17 +294,24 @@ async function configureWorkerOverride(
     const settings = await getFactorySettings(ctx);
 
     return hasWorkerOverride(settings, target)
-      ? updateFactorySettings(withWorkerOverride(settings, target, undefined), ctx)
+      ? writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, undefined) }), ctx)
       : settings;
   }
 
   const auth = await import("../agent-auth/agent-auth.js");
   const { choice } = await chooseRole(auth, "worker", input, runtime);
 
-  return updateFactorySettings(withWorkerOverride(await getFactorySettings(ctx), target, choice), ctx);
+  return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, choice) }), ctx);
 }
 
-/** Validates explicit model choices before the settings file changes. A `stage` sets an override. */
+/** Rejects an invalid commit author before the runtime starts. */
+function checkGitInput(input: ConfigureInput): void {
+  if (input.commitAuthor?.trim()) {
+    parseAuthor(input.commitAuthor);
+  }
+}
+
+/** Validates explicit model choices and Git values before the settings file changes. A `stage` sets an override. */
 export async function configureFactory(
   input: ConfigureInput,
   ctx: ServiceContext = {},
@@ -258,17 +321,20 @@ export async function configureFactory(
     return configureWorkerOverride(input, ctx, runtime);
   }
 
-  const auth = await import("../agent-auth/agent-auth.js");
+  checkGitInput(input);
 
+  const auth = await import("../agent-auth/agent-auth.js");
   const supervisor = await chooseRole(auth, "supervisor", input, runtime);
   const worker = await chooseRole(auth, "worker", input, supervisor.runtime);
 
-  return updateFactorySettings(
-    {
+  return writeSettings(
+    (current) => ({
+      ...current,
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
-    },
+      ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
+    }),
     ctx,
   );
 }
