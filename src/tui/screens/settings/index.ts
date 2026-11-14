@@ -19,6 +19,7 @@ export * from "./settings-body/index.js";
 export * from "./settings-modal/index.js";
 export * from "./skill-details/index.js";
 export * from "./specs-section/index.js";
+export * from "./stage-model-list/index.js";
 export * from "./stage-row/index.js";
 export * from "./stages-section/index.js";
 export * from "./thinking-picker/index.js";

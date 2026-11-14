@@ -9,7 +9,7 @@ export interface PickerModel {
   thinkingLevels: readonly string[];
 }
 
-/** The option that clears the choice, so that Pi selects its default model. */
+/** The option that clears the choice: Pi selects its default model, or an override is removed. */
 export const DEFAULT = "";
 
 /** The id of a model in the search: `provider/modelId`. */
@@ -17,10 +17,16 @@ export function pickerId(model: { readonly provider: string; readonly modelId: s
   return `${model.provider}/${model.modelId}`;
 }
 
+/** The label of the first option of a role picker. */
+export const PI_DEFAULT_LABEL = "Pi default";
+
+/** The label of the first option of an override picker: it removes the override. */
+export const NO_OVERRIDE_LABEL = "No override";
+
 /** The label of each option. A model with a name of its own shows the name after its id. */
-export function modelLabels(models: readonly PickerModel[]): Record<string, string> {
+export function modelLabels(models: readonly PickerModel[], defaultLabel = PI_DEFAULT_LABEL): Record<string, string> {
   return Object.fromEntries([
-    [DEFAULT, "Pi default"],
+    [DEFAULT, defaultLabel],
     ...models.map((m) => [pickerId(m), m.name && m.name !== m.modelId ? `${pickerId(m)} · ${m.name}` : pickerId(m)]),
   ]);
 }

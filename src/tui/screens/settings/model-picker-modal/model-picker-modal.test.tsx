@@ -1,7 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { keys, renderTui } from "../../../testing/index.js";
-import { ModelPickerModal } from "./model-picker-modal.js";
+import { ModelPickerModal, NO_OVERRIDE_LABEL } from "./model-picker-modal.js";
 
 afterEach(cleanup);
 
@@ -43,6 +43,25 @@ describe("ModelPickerModal", () => {
     await tui.type("Pi default");
     await tui.press(keys.enter);
     expect(onSave).toHaveBeenLastCalledWith(null);
+  });
+
+  it("labels the first option No override in an override picker, and saves it as null", async () => {
+    const onSave = vi.fn(async () => {});
+    const tui = await renderTui(
+      <ModelPickerModal
+        title="AI › Worker model › Backlog"
+        models={models}
+        current={{ provider: "acme", modelId: "fast-1" }}
+        defaultLabel={NO_OVERRIDE_LABEL}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(tui.frame()).toContain("No override");
+    expect(tui.frame()).not.toContain("Pi default");
+    await tui.type("No override");
+    await tui.press(keys.enter);
+    expect(onSave).toHaveBeenCalledWith(null);
   });
 
   it("goes back from the thinking levels with esc, then closes", async () => {

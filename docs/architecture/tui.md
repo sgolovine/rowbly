@@ -38,14 +38,14 @@ src/tui/
 
 The screen areas in `screens/` are:
 
-| Area          | Contents                                                                                                                               |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads). |
-| `stages/`     | The Stage form modal.                                                                                                                  |
-| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                           |
-| `settings/`   | The Settings modal and its sections, the AI section, the Git section and the model picker.                                             |
-| `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
-| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                   |
+| Area          | Contents                                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads, Models). |
+| `stages/`     | The Stage form modal.                                                                                                                          |
+| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                   |
+| `settings/`   | The Settings modal and its sections, the AI section, the Git section, the model picker and the list of Stage worker models.                    |
+| `factory/`    | The Factory controls modal and the factory status helpers.                                                                                     |
+| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                           |
 
 ## The Factory controls
 
@@ -222,6 +222,51 @@ visible.
 - Below `STACKED_BELOW_WIDTH`, the Story sidebar takes the full main area while it has the focus.
 - `PaneBody` gives the form the contexts of a Modal body, so a `ConfirmDialog` of the form shows over
   the Story sidebar. The keys of the form go to the footer.
+
+## Worker model overrides
+
+A person can see, set and remove the worker model overrides of `factory.json` in the TUI. The
+factory uses the Story override, then the Stage override, then the worker model. The TUI writes
+the overrides only through `setWorkerOverride` in `src/services/factory-settings/`. The supervisor
+reads `factory.json` again on each turn, so a change applies to the next worker without a restart.
+
+Both places use `ModelPickerModal` (`settings/model-picker-modal/`) and `StageModelList`
+(`settings/stage-model-list/`). `StageModelList` shows one row for each Stage of the Project, in
+board order. Each row has the `StageBadge` of the Stage and a model text. The list shows all Stages,
+also disabled Stages.
+
+The first option of the picker of an override is `No override`, not `Pi default`. Use the
+`defaultLabel` prop of `ModelPickerModal` for this label. When you select `No override`, the
+override goes away. A map that becomes empty goes away from `factory.json`. The other keys of
+`factory.json` do not change. If the save fails, the error shows as a toast, and the picker stays
+open.
+
+### The Stage overrides in Settings
+
+The Models tab of the AI section shows the list under the `Worker model` card. A row shows the
+override of the Stage as `provider/model · thinking <level>`, or `Worker model` when the Stage has
+no override.
+
+- `↑/↓` select a Stage. `enter` or a click opens the picker when Pi has loaded.
+- The title of the picker is `AI › Worker model › <Stage label>`. The current override is selected.
+- A save writes `stageWorkerModels[<stage key>]`, shows an info toast and closes the picker.
+
+### The Story overrides in the Story sidebar
+
+The `Models` tab is the last tab of a Story, after the `Threads` tab (`stories/models-tab/`). A row
+shows the Story override for the Stage. When the Story has no override for the Stage, the row shows
+the model that applies and its source, for example `Stage model: openai/gpt-sol` or
+`Worker model: Pi default`.
+
+- `↑/↓` select a Stage. `enter` or a click opens the picker when the models have loaded.
+- The title of the picker is `<Story ID> › Model › <Stage label>`.
+- A save writes `storyWorkerModels[<story id>][<stage key>]`. `No override` removes that entry. When
+  the Story has no other override, the Story key also goes away.
+- The tab loads Pi only when the person opens the tab for the first time. Until the models load, the
+  tab shows `Loading models…`. If Pi cannot load, an error toast shows. The `loadRuntime` prop
+  (default `authRuntime`) lets a test replace Pi.
+- While the picker is open, the tab tells the Story sidebar. Then `esc` closes the picker, not the
+  Story sidebar. `shift+tab` and `esc` work as on the other tabs when the picker is closed.
 
 ## Design rules in short
 

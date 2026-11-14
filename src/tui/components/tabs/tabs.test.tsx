@@ -1,3 +1,4 @@
+import { Box } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderTui } from "../../testing/index.js";
@@ -11,6 +12,20 @@ describe("Tabs", () => {
   it("shows all the tab labels in a row", async () => {
     const tui = await renderTui(<Tabs tabs={tabs} selected={0} onSelect={() => {}} active />);
     expect(tui.frame()).toBe(" Details   Prompt   History");
+  });
+
+  it("wraps a narrow row between the tabs, not in a label", async () => {
+    const tui = await renderTui(
+      <Box width={20}>
+        <Tabs tabs={tabs} selected={0} onSelect={() => {}} active />
+      </Box>,
+    );
+    expect(
+      tui
+        .frame()
+        .split("\n")
+        .map((line) => line.trimEnd()),
+    ).toEqual([" Details   Prompt", " History"]);
   });
 
   it("selects the clicked tab by its index while active", async () => {

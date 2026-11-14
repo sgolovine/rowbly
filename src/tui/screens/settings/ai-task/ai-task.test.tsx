@@ -1,6 +1,7 @@
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { renderTui } from "../../../testing/index.js";
+import type { Stage } from "../../../../services/stage/stage.js";
+import { keys, renderTui } from "../../../testing/index.js";
 import type { AiProvider } from "../ai-view.js";
 import { AiTaskView, type AiTaskViewProps } from "./ai-task.js";
 
@@ -19,6 +20,7 @@ function props(overrides: Partial<AiTaskViewProps> = {}): AiTaskViewProps {
     onSignInDone: vi.fn(),
     onSignOut: vi.fn(),
     onSaveModel: vi.fn(async () => {}),
+    onSaveStageModel: vi.fn(async () => {}),
     onSaveLimit: vi.fn(async () => {}),
     onCancel: vi.fn(),
     ...overrides,
@@ -51,5 +53,33 @@ describe("AiTaskView", () => {
     const limit = await renderTui(<AiTaskView {...props({ task: { kind: "limit" } })} />);
 
     expect(limit.frame()).toContain("AI › Worker limit");
+  });
+
+  it("shows the override picker of a Stage with No override, and removes the override with it", async () => {
+    const stage = { key: "BACKLOG", label: "Backlog" } as Stage;
+    const p = props({
+      task: { kind: "stageModel", stage },
+      status: {
+        providers: [provider],
+        models: [{ provider: "acme", modelId: "fast-1", name: "", thinkingLevels: [] }],
+      },
+      settings: {
+        version: 1,
+        maxWorkers: 2,
+        workerModel: { provider: "acme", modelId: "deep-1" },
+        stageWorkerModels: { BACKLOG: { provider: "acme", modelId: "fast-1" } },
+      },
+    });
+    const tui = await renderTui(<AiTaskView {...p} />);
+
+    expect(tui.frame()).toContain("AI › Worker model › Backlog");
+    expect(tui.frame()).toContain("No override");
+    expect(tui.frame()).not.toContain("Pi default");
+    expect(tui.frame()).toMatch(/▌\s*acme\/fast-1/);
+
+    await tui.type("No override");
+    await tui.press(keys.enter);
+
+    expect(p.onSaveStageModel).toHaveBeenCalledWith(stage, null);
   });
 });

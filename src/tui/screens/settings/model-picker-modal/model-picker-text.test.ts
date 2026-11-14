@@ -11,6 +11,7 @@ describe("modelPickerText", () => {
       "acme/deep-1": "acme/deep-1 · Deep One",
       "acme/x": "acme/x",
     });
+    expect(modelLabels([deep], "No override")[""]).toBe("No override");
   });
 
   it("gives the keys of each step", () => {

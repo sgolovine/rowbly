@@ -3,7 +3,13 @@ import { ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { createStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { configureFactory, configureGit, getFactorySettings, updateFactorySettings } from "./factory-settings.js";
+import {
+  configureFactory,
+  configureGit,
+  getFactorySettings,
+  setWorkerOverride,
+  updateFactorySettings,
+} from "./factory-settings.js";
 
 const model = { provider: "faux", modelId: "test" };
 const git = { push: false, pull: false, syncIntervalSeconds: 300 };
@@ -100,6 +106,33 @@ describe("factorySettings", () => {
     });
     await configureFactory({ stage: "BACKLOG", clearWorker: true }, p.ctx);
     expect((await getFactorySettings(p.ctx)).stageWorkerModels).toEqual({ DONE: model });
+  });
+  it("sets and removes one override with setWorkerOverride, and keeps the other keys", async () => {
+    const story = await createStory({ title: "Override" }, p.ctx);
+    const high = { ...model, thinkingLevel: "high" as const };
+    await updateFactorySettings({ maxWorkers: 3, workerModel: model }, p.ctx);
+    await setWorkerOverride({ stage: "backlog" }, high, p.ctx);
+    await setWorkerOverride({ stage: "BACKLOG", storyId: story.id }, model, p.ctx);
+    expect(await getFactorySettings(p.ctx)).toEqual({
+      version: 1,
+      maxWorkers: 3,
+      workerModel: model,
+      stageWorkerModels: { BACKLOG: high },
+      storyWorkerModels: { [story.id]: { BACKLOG: model } },
+      git,
+    });
+    await setWorkerOverride({ stage: "BACKLOG", storyId: story.id }, undefined, p.ctx);
+    await setWorkerOverride({ stage: "BACKLOG" }, undefined, p.ctx);
+    expect(JSON.parse(await p.read("factory.json"))).toEqual({ version: 1, maxWorkers: 3, workerModel: model });
+  });
+  it("rejects an unknown Stage, an unknown Story and an invalid model in setWorkerOverride", async () => {
+    await expect(setWorkerOverride({ stage: "NOPE" }, model, p.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(setWorkerOverride({ stage: "BACKLOG", storyId: "ROW-99" }, model, p.ctx)).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    await expect(setWorkerOverride({ stage: "BACKLOG" }, { provider: "", modelId: "x" }, p.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
   });
   it("reads the git section and fills absent sync keys with defaults", async () => {
     await p.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 2, git: { push: true } }));
