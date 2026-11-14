@@ -64,14 +64,15 @@ of the `factory` skill.
 
 ## Map of the sub-pages
 
-| Page                                             | Read it when …                                                            |
-| ------------------------------------------------ | ------------------------------------------------------------------------- |
-| [runtime-and-locks.md](runtime-and-locks.md)     | You touch `.rowbly/runtime/`, `state.json`, `factory.json` or a lock.     |
-| [recovery.md](recovery.md)                       | You change stop, restart, cancel, resume, recovery or external adoption.  |
-| [threads-and-history.md](threads-and-history.md) | You change Thread metadata, runs, Peek or the conversation reader.        |
-| [pi-runtime-and-auth.md](pi-runtime-and-auth.md) | You change a Pi import, authentication, models or factory settings.       |
-| [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list. |
-| [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.              |
+| Page                                             | Read it when …                                                                |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| [runtime-and-locks.md](runtime-and-locks.md)     | You touch `.rowbly/runtime/`, `state.json`, `factory.json` or a lock.         |
+| [recovery.md](recovery.md)                       | You change stop, restart, cancel, resume, recovery or external adoption.      |
+| [threads-and-history.md](threads-and-history.md) | You change Thread metadata, runs, Peek or the conversation reader.            |
+| [pi-runtime-and-auth.md](pi-runtime-and-auth.md) | You change a Pi import, authentication, models or factory settings.           |
+| [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
+| [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
+| [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
 
 ## Related
 
