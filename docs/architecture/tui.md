@@ -75,7 +75,8 @@ Modal the Stories of the board and the callbacks `onOpenStory` and `onOpenThread
 
 The Factory group of Settings has a Git section under the AI section (`GitSection` in
 `src/tui/screens/settings/git-section/`). The section shows the Git settings of the canonical
-checkout. These settings are in the `git` section of `.rowbly/factory.json`.
+checkout. These settings are in the `git` section of the `factory` key of
+`.rowbly/rowbly.config.json`.
 
 The section has five cards. Each card shows the current value. If the value is not set, the card
 shows the default.
@@ -225,10 +226,11 @@ visible.
 
 ## Worker model overrides
 
-A person can see, set and remove the worker model overrides of `factory.json` in the TUI. The
+A person can see, set and remove the worker model overrides of the factory settings in the TUI. The
 factory uses the Story override, then the Stage override, then the worker model. The TUI writes
 the overrides only through `setWorkerOverride` in `src/services/factory-settings/`. The supervisor
-reads `factory.json` again on each turn, so a change applies to the next worker without a restart.
+reads the factory settings again on each turn, so a change applies to the next worker without a
+restart.
 
 Both places use `ModelPickerModal` (`settings/model-picker-modal/`) and `StageModelList`
 (`settings/stage-model-list/`). `StageModelList` shows one row for each Stage of the Project, in
@@ -237,9 +239,9 @@ also disabled Stages.
 
 The first option of the picker of an override is `No override`, not `Pi default`. Use the
 `defaultLabel` prop of `ModelPickerModal` for this label. When you select `No override`, the
-override goes away. A map that becomes empty goes away from `factory.json`. The other keys of
-`factory.json` do not change. If the save fails, the error shows as a toast, and the picker stays
-open.
+override goes away. A map that becomes empty goes away from the factory settings. The other keys of
+the factory settings and of the config do not change. If the save fails, the error shows as a toast,
+and the picker stays open.
 
 ### The Stage overrides in Settings
 

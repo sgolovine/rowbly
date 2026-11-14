@@ -25,7 +25,7 @@ viewer or the AI section of Settings.
 | `thread cancel <id>`, `thread resume <id>`                                 | Send guarded commands to the native daemon.                           |
 
 These inputs of `factory configure` give the error code `VALIDATION`, and the command does not write
-`factory.json`:
+`rowbly.config.json`:
 
 - `--story` without `--stage`.
 - `--clear-worker` without `--stage`.
@@ -43,7 +43,7 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 
 ### The Git sync flags of `factory configure`
 
-| Flag                            | Key in `factory.json`     | Effect                                                   |
+| Flag                            | Key in `factory`          | Effect                                                   |
 | ------------------------------- | ------------------------- | -------------------------------------------------------- |
 | `--git-push`, `--no-git-push`   | `git.push`                | Turn on or turn off the push of the canonical branch.    |
 | `--git-pull`, `--no-git-pull`   | `git.pull`                | Turn on or turn off the pull of the upstream branch.     |
@@ -52,7 +52,7 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 - A flag that you do not give does not change its key.
 - The `--commit-message` and `--commit-author` flags set the commit keys of the same `git` section.
   See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
-- An interval out of the range gives a `VALIDATION` error and exit code 1. `factory.json` does not change.
+- An interval out of the range gives a `VALIDATION` error and exit code 1. The config does not change.
 - The command prints all the settings. See [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout)
   for the sync.
 

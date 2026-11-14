@@ -66,7 +66,7 @@ of the `factory` skill.
 
 | Page                                             | Read it when …                                                            |
 | ------------------------------------------------ | ------------------------------------------------------------------------- |
-| [runtime-and-locks.md](runtime-and-locks.md)     | You touch `.rowbly/runtime/`, `state.json`, `factory.json` or a lock.     |
+| [runtime-and-locks.md](runtime-and-locks.md)     | You touch `.rowbly/runtime/`, `state.json`, factory settings or a lock.   |
 | [recovery.md](recovery.md)                       | You change stop, restart, cancel, resume, recovery or external adoption.  |
 | [threads-and-history.md](threads-and-history.md) | You change Thread metadata, runs, Peek or the conversation reader.        |
 | [pi-runtime-and-auth.md](pi-runtime-and-auth.md) | You change a Pi import, authentication, models or factory settings.       |
