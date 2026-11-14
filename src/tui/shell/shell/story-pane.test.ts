@@ -1,13 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Project } from "../../../services/project/project.js";
 import type { Story } from "../../../services/story/story.js";
+import type { ThreadRecord } from "../../../services/thread/thread.js";
 import { createShellRegistry, createToastStore } from "../../hooks/index.js";
-import type { StoryPane } from "../overlay.js";
+import type { SidePane } from "../overlay.js";
 import type { Board, ShellEnv } from "./shell-state.js";
 import { shellView } from "./shell-view.js";
-import { closeDeletedStory, discardStory, editStory, newStory, requestStoryPane } from "./story-pane.js";
+import {
+  closeDeletedStory,
+  discardStory,
+  editStory,
+  newStory,
+  openOverlayThread,
+  openThread,
+  requestStoryPane,
+} from "./story-pane.js";
 
 const STORY = { id: "ROW-01", stage: "BACKLOG", position: 1 } as Story;
+const THREAD = { id: "t1", storyId: "ROW-01" } as ThreadRecord;
 const OTHER = { id: "ROW-02", stage: "BACKLOG", position: 2 } as Story;
 const BOARD: Board = {
   project: { root: "/p", projectName: "Rowbly" } as Project,
@@ -16,7 +26,7 @@ const BOARD: Board = {
   activity: { path: "", status: "ok", stories: {} },
 };
 
-function env(storyPane: StoryPane | null, dirty = false): ShellEnv {
+function env(storyPane: SidePane | null, dirty = false): ShellEnv {
   const registry = createShellRegistry();
 
   if (dirty) {
@@ -105,6 +115,48 @@ describe("Story sidebar panes", () => {
     expect(shell.setStoryPane).toHaveBeenCalledWith(null);
     expect(paneAfter(shell, "story")).toBe("stories");
     expect(paneAfter(shell, "stages")).toBe("stages");
+  });
+
+  it("shows a Thread in place of a form, and asks first when the form has unsaved changes", () => {
+    const clean = env({ kind: "edit", story: STORY });
+    const dirty = env({ kind: "new" }, true);
+
+    openThread(clean, THREAD);
+    openThread(dirty, THREAD);
+
+    expect(clean.setStoryPane).toHaveBeenCalledWith({ kind: "thread", thread: THREAD });
+    expect(paneAfter(clean, "stories")).toBe("story");
+    expect(dirty.setStoryPane).not.toHaveBeenCalled();
+    expect(dirty.setOverlay).toHaveBeenCalledWith({ kind: "discardStory", next: { kind: "thread", thread: THREAD } });
+  });
+
+  it("replaces or closes a Thread without a question, because a Thread is never dirty", () => {
+    const shell = env({ kind: "thread", thread: THREAD }, true);
+
+    editStory(shell, STORY);
+    requestStoryPane(shell, null);
+
+    expect(shell.setOverlay).not.toHaveBeenCalled();
+    expect(shell.setStoryPane).toHaveBeenNthCalledWith(1, { kind: "edit", story: STORY });
+    expect(shell.setStoryPane).toHaveBeenNthCalledWith(2, null);
+  });
+
+  it("only focuses the Thread that is open already", () => {
+    const shell = env({ kind: "thread", thread: THREAD });
+
+    openThread(shell, { ...THREAD });
+
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "thread", thread: THREAD });
+    expect(paneAfter(shell, "stories")).toBe("story");
+  });
+
+  it("closes the overlay before it shows the Thread of a factory warning", () => {
+    const shell = env(null);
+
+    openOverlayThread(shell, THREAD);
+
+    expect(shell.setOverlay).toHaveBeenCalledWith(null);
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "thread", thread: THREAD });
   });
 
   it("closes the form of a deleted Story only", () => {

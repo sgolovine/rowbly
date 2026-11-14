@@ -6,10 +6,11 @@ import { getProject, updateProject } from "../../../services/project/project.js"
 import { listStages } from "../../../services/stage/stage.js";
 import { createStory, searchStories } from "../../../services/story/story.js";
 import { useTestProject } from "../../../services/test-project/test-project.js";
+import { createThread } from "../../../services/thread/thread.js";
 import { STORY_SIDEBAR_MIN_WIDTH } from "../../components/index.js";
 import { keys, renderTui, settle } from "../../testing/index.js";
 import { theme } from "../../theme.js";
-import type { StoryPane } from "../overlay.js";
+import type { SidePane } from "../overlay.js";
 import { StorySidebar } from "./story-sidebar.js";
 
 /** The frame colour of each Panel that renders, read from its `focused` prop as `Panel` reads it. */
@@ -38,7 +39,7 @@ describe("StorySidebar", () => {
     await createStory({ title: "Login" }, project.ctx);
   });
 
-  async function setup(pane: (story: Awaited<ReturnType<typeof searchStories>>[number]) => StoryPane, change = {}) {
+  async function setup(pane: (story: Awaited<ReturnType<typeof searchStories>>[number]) => SidePane, change = {}) {
     const [story] = await searchStories({}, project.ctx);
     const board = {
       project: await getProject(project.ctx),
@@ -50,6 +51,7 @@ describe("StorySidebar", () => {
       onFocus: vi.fn(),
       onClose: vi.fn(),
       onBack: vi.fn(),
+      onTab: vi.fn(),
       onSaved: vi.fn(),
       onDeleted: vi.fn(),
       onHints: vi.fn(),
@@ -146,6 +148,36 @@ describe("StorySidebar", () => {
       expect(hints[0]).toEqual({ key: "ctrl+s", description: "save" });
       expect(hints.at(-1)).toEqual({ key: "esc", description: "Story list" });
     });
+  });
+
+  it("shows a Thread with its title, its detail and its conversation, and reports its keys", async () => {
+    const thread = await createThread(
+      {
+        role: "worker",
+        storyId: "ROW-01",
+        stage: "BACKLOG",
+        attemptNumber: 1,
+        cwd: project.paths.root,
+        ownerToken: "o",
+      },
+      project.ctx,
+    );
+    const { tui, on } = await setup(() => ({ kind: "thread", thread }), { height: 30 });
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("No conversation yet");
+    });
+    expect(tui.frame().split("\n")[0]).toMatch(/^ {20}╭─ROW-01 › #1 Backlog─+ ✕ ╮$/);
+    expect(tui.frame()).toMatch(/Status\s+· pending/);
+    const hints = on.onHints.mock.lastCall?.[0] ?? [];
+    expect(hints.map((hint: { key: string }) => hint.key)).toEqual(["↑/↓", "pgup/pgdn", "home/end", "tab", "esc"]);
+    expect(hints.at(-1)).toEqual({ key: "esc", description: "Thread list" });
+    await tui.press(keys.tab);
+    expect(on.onTab).toHaveBeenCalledWith(1);
+    await tui.press(keys.escape);
+    expect(on.onBack).toHaveBeenCalledOnce();
+    await tui.click("✕");
+    expect(on.onClose).toHaveBeenCalledOnce();
   });
 
   it("creates a Story and reports it", async () => {

@@ -41,13 +41,18 @@ function rowHints(row: StoryListRow | undefined): KeyHint[] {
     : [];
 }
 
-/** `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar. */
+/**
+ * `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar. The
+ * hints name what the Story sidebar shows: a Story, or a Thread.
+ */
 function focusHints(view: ShellView): KeyHint[] {
   if (view.storyPane) {
+    const shown = view.storyPane.kind === "thread" ? "Thread" : "Story";
+
     return [
-      { key: "tab", description: "Story" },
+      { key: "tab", description: shown },
       ...(view.sidebar ? [{ key: "shift+tab", description: "Stages", secondary: true }] : []),
-      { key: "esc", description: "close Story" },
+      { key: "esc", description: `close ${shown}` },
     ];
   }
 
