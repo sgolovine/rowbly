@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ValidationError } from "../errors/errors.js";
 import { updateProject } from "../project/project.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { getFactorySettings, updateFactorySettings } from "./factory-settings.js";
@@ -22,4 +23,20 @@ describe("factorySettings", () => {
       "Invalid",
     );
   });
+  it("accepts settings with or without a git section", async () => {
+    await p.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 2 }));
+    expect((await getFactorySettings(p.ctx)).git).toBeUndefined();
+    const git = { commitMessage: "chore: sync", authorName: "Bot", authorEmail: "bot@example.com" };
+    await p.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 2, git }));
+    expect((await getFactorySettings(p.ctx)).git).toEqual(git);
+  });
+  it.each([{ commitMessage: "" }, { authorName: "Bot", authorEmail: 5 }, { authorName: "Bot" }, "git"])(
+    "rejects the git section %j",
+    async (git) => {
+      await p.write("factory.json", JSON.stringify({ version: 1, maxWorkers: 2, git }));
+      const error = await getFactorySettings(p.ctx).catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as Error).message).toBe("Invalid factory settings");
+    },
+  );
 });

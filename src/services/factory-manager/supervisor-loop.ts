@@ -184,7 +184,7 @@ async function clearProviderPauses(manager: Manager): Promise<void> {
 }
 
 async function commitProject(manager: Manager): Promise<void> {
-  const committed = await commitCanonicalProject(manager.paths.root);
+  const committed = await commitCanonicalProject(manager.paths.root, getState(manager).settings.git);
 
   if (["clean", "committed"].includes(committed.status)) {
     return;

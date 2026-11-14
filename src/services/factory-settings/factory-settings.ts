@@ -2,6 +2,9 @@ import { readFile } from "node:fs/promises";
 import { ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { type GitInput, type GitSettings, hasGitInput, mergeGit, validGit } from "./git-settings.js";
+
+export type { GitSettings } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
@@ -18,9 +21,10 @@ export interface FactorySettings {
   maxWorkers: number;
   supervisorModel?: ModelChoice;
   workerModel?: ModelChoice;
+  git?: GitSettings;
 }
 
-interface ConfigureInput {
+interface ConfigureInput extends GitInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -62,7 +66,8 @@ function validate(value: unknown): FactorySettings {
     !Number.isSafeInteger(settings.maxWorkers) ||
     settings.maxWorkers < 1 ||
     (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
-    (settings.workerModel !== undefined && !validModel(settings.workerModel))
+    (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
+    (settings.git !== undefined && !validGit(settings.git))
   ) {
     throw new ValidationError("Invalid factory settings");
   }
@@ -145,12 +150,24 @@ async function chooseRole(
   return { runtime: resolved, choice: await auth.validateModelChoice(resolved, choice) };
 }
 
-/** Validates explicit model choices before the settings file changes. */
+/** The new Git section, or nothing when the input has no Git values. An invalid author fails here. */
+async function chooseGit(input: ConfigureInput, ctx: ServiceContext): Promise<Pick<FactorySettings, "git">> {
+  if (!hasGitInput(input)) {
+    return {};
+  }
+
+  const current = await getFactorySettings(ctx);
+
+  return { git: mergeGit(current.git, input) };
+}
+
+/** Validates explicit model choices and Git values before the settings file changes. */
 export async function configureFactory(
   input: ConfigureInput,
   ctx: ServiceContext = {},
   runtime?: AuthRuntime,
 ): Promise<FactorySettings> {
+  const git = await chooseGit(input, ctx);
   const auth = await import("../agent-auth/agent-auth.js");
 
   const supervisor = await chooseRole(auth, "supervisor", input, runtime);
@@ -161,6 +178,7 @@ export async function configureFactory(
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
+      ...git,
     },
     ctx,
   );

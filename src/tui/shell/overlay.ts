@@ -6,19 +6,21 @@ import type { ThreadRecord } from "../../services/thread/thread.js";
 /** What the Story sidebar shows: the form of a new Story, or the edit form of a Story. */
 export type StoryPane = { readonly kind: "new" } | { readonly kind: "edit"; readonly story: Story };
 
+/** What the sidebar on the right of the list shows: a Story form, or a worker Thread of the Factory view. */
+export type SidePane = StoryPane | { readonly kind: "thread"; readonly thread: ThreadRecord };
+
 /** The Modal or the finder that the shell shows over the Story list. */
 export type Overlay =
   | { readonly kind: "finder" }
   | { readonly kind: "projects" }
   | { readonly kind: "help" }
   | { readonly kind: "settings"; readonly section?: string }
-  /** The Story sidebar has unsaved changes. A confirmation shows `next` in the Story sidebar, or closes it with `null`. */
-  | { readonly kind: "discardStory"; readonly next: StoryPane | null }
+  /** The Story sidebar has unsaved changes. A confirmation shows `next` in the sidebar, or closes it with `null`. */
+  | { readonly kind: "discardStory"; readonly next: SidePane | null }
   | { readonly kind: "deleteStory"; readonly story: Story }
   | { readonly kind: "newStage" }
   | { readonly kind: "editStage"; readonly stage: Stage }
-  | { readonly kind: "factory" }
-  | { readonly kind: "thread"; readonly thread: ThreadRecord };
+  | { readonly kind: "factory" };
 
 /** The records of an open Project that the overlays show. */
 export interface OverlayBoard {
@@ -32,10 +34,10 @@ export interface OverlayHandlers {
   close(): void;
   /** A pick in the Story finder: show the Story in the list and open it. */
   openStory(story: Story): void;
-  /** Shows a Thread in the Thread Modal, for example the Thread of a factory warning. */
+  /** Closes the overlay and shows a Thread in the sidebar, for example the Thread of a factory warning. */
   openThread(thread: ThreadRecord): void;
   /** The discard of the changes in the Story sidebar was confirmed. */
-  discardStory(next: StoryPane | null): void;
+  discardStory(next: SidePane | null): void;
   /** The delete of a Story was confirmed. */
   removeStory(story: Story): void;
   stageSaved(stage: Stage): void;

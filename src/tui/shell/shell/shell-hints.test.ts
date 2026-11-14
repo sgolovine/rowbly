@@ -67,6 +67,16 @@ describe("shellHints", () => {
     expect(hints.find((hint) => hint.key === "esc")?.description).toBe("close Story");
   });
 
+  it("names the Thread in the focus keys and the close key while the sidebar shows a Thread", () => {
+    const thread = { kind: "thread", thread: { id: "t1" } };
+    const hints = shellHints(view({ mode: "threads", storyPane: thread } as never), true, [], [], []);
+    const own = [{ key: "esc", description: "Thread list" }];
+
+    expect(hints.find((hint) => hint.key === "tab")?.description).toBe("Thread");
+    expect(hints.find((hint) => hint.key === "esc")?.description).toBe("close Thread");
+    expect(shellHints(view({ storyPane: thread, storyActive: true } as never), true, [], own)).toEqual(own);
+  });
+
   it("shows the keys of the Factory view and t in threads mode", () => {
     const threadHints = [{ key: "enter", description: "open Thread" }];
     const hints = shellHints(view({ mode: "threads" }), true, [], [], threadHints);
