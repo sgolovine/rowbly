@@ -216,7 +216,8 @@ There are two kinds of Modal, and no other kinds:
 - **Screen Modals** — `StoryModal` and `SettingsModal`. A screen Modal is a full screen in a frame.
   It has a fixed size: the area of the Board panel minus one cell on each side, with a maximum of
   120 columns. It has a header band on `overlay-raised` and its own navigation (Tabs, or a section
-  list). Its body scrolls independently. Only core opens screen Modals.
+  list). Its body scrolls independently. Only core opens screen Modals. The current shell shows a
+  Story in the Story sidebar, a `Panel` beside the Story list, and not in a `StoryModal`.
 - **Generic Modal** — `Modal`, for one short task: Forms, pickers (Move Stage), ConfirmDialog, Help,
   and all items that a Plugin opens. Its size comes from its content, from 48 to 72 columns. It has
   no band and no Tabs.

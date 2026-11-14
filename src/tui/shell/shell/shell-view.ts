@@ -1,8 +1,8 @@
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
 import { rowStage, storyListRows } from "../../screens/stories/index.js";
-import type { Overlay } from "../overlay.js";
-import type { Board, Pane, ShellView, StoryListRow } from "./shell-state.js";
+import type { Overlay, StoryPane } from "../overlay.js";
+import type { Board, Pane, ShellView, StoryListRow, ViewMode } from "./shell-state.js";
 
 /** The data and the state that the view reads. */
 export interface ShellViewInput {
@@ -10,6 +10,8 @@ export interface ShellViewInput {
   readonly active: boolean;
   readonly overlay: Overlay | null;
   readonly pane: Pane;
+  readonly storyPane: StoryPane | null;
+  readonly mode: ViewMode;
   readonly sidebarShown: boolean;
   readonly stageKey: string | null;
   readonly selectedId: string | null;
@@ -49,6 +51,9 @@ export function shellView(input: ShellViewInput): ShellView {
   const idle = input.active && input.overlay === null;
   const sidebar = board !== undefined && input.sidebarShown;
   const sidebarFocused = idle && sidebar && input.pane === "stages";
+  const storyPane = board ? input.storyPane : null;
+  const storyActive = storyPane !== null && input.pane === "story";
+  const storyFocused = idle && storyActive;
 
   return {
     board,
@@ -56,15 +61,20 @@ export function shellView(input: ShellViewInput): ShellView {
     noProject: !input.data.loading && input.data.data === null,
     stages,
     stories,
+    mode: input.mode,
     stage,
     rows,
     cursor,
     row,
     cursorStage: newStoryStage(stages, stage, row),
     stageIndex: stage ? stages.indexOf(stage) + 1 : 0,
+    storyPane,
+    storyActive,
     idle,
+    shellKeys: idle && !storyFocused,
     sidebar,
     sidebarFocused,
-    listFocused: idle && !sidebarFocused,
+    listFocused: idle && !sidebarFocused && !storyFocused,
+    storyFocused,
   };
 }

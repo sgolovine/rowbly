@@ -1,5 +1,9 @@
 # StoryModal
 
+> **Note:** The current shell does not use a StoryModal. The new Story form and the edit form of a
+> Story show in the Story sidebar, a `Panel` on the right of the Story list. See the "Story sidebar"
+> section of `docs/architecture/tui.md`. This guideline is the v1 pattern.
+
 StoryModal is a screen Modal that shows one Story. The `enter` key opens it from the Board or the list view. It is a screen in a frame, not a task.
 
 - **Fixed size**: The size is one column and one row smaller on each side than the area of the Board panel. The maximum width is 120 columns. The size never changes between Tabs, so the frame does not jump when the user goes from Details to Comments.

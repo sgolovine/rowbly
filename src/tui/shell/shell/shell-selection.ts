@@ -3,6 +3,7 @@ import { withMember, withoutMember } from "../../../services/store/store.js";
 import type { Story } from "../../../services/story/story.js";
 import { stageRowId } from "../../screens/stories/index.js";
 import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
+import { editStory, showStoryPane } from "./story-pane.js";
 
 /** Closes the overlay that is open. */
 export function closeOverlay(env: ShellEnv): void {
@@ -48,7 +49,7 @@ function activateRow(env: ShellEnv, index: number): void {
   if (at?.kind === "stage") {
     fold(env, at.key, !at.collapsed);
   } else if (at?.kind === "story") {
-    env.setOverlay({ kind: "editStory", story: at.story });
+    editStory(env, at.story);
   }
 }
 
@@ -68,6 +69,11 @@ export function clickRow(env: ShellEnv, index: number): void {
 export function collapseStory(env: ShellEnv, story: Story): void {
   fold(env, story.stage, true);
   env.setSelectedId(stageRowId(story.stage));
+}
+
+/** Changes the right Panel between the Story list and the Factory view. */
+export function toggleMode(env: ShellEnv): void {
+  env.setMode((mode) => (mode === "stories" ? "threads" : "stories"));
 }
 
 /** Hides or shows the Stage sidebar. A hidden sidebar gives the focus to the list. */
@@ -98,14 +104,14 @@ export function editStageByKey(env: ShellEnv, key: string): void {
 /** Opens the Story `story` from the Story finder. */
 export function openFoundStory(env: ShellEnv, story: Story): void {
   reveal(env, story);
-  env.setPane("stories");
-  env.setOverlay({ kind: "editStory", story });
+  closeOverlay(env);
+  editStory(env, story);
 }
 
-/** Shows a Story that a Modal created or saved. */
+/** Shows a Story that the Story sidebar created or saved, and closes the Story sidebar. */
 export function showSavedStory(env: ShellEnv, story: Story): void {
   reveal(env, story);
-  closeOverlay(env);
+  showStoryPane(env, null);
   env.reload();
 }
 
@@ -125,6 +131,7 @@ export function switchProject(env: ShellEnv, path: string): void {
   }
 
   env.setCtx({ ...env.ctx, cwd: path });
+  showStoryPane(env, null);
   env.setStageKey(null);
   env.setSelectedId(null);
   env.setCollapsed(new Set());

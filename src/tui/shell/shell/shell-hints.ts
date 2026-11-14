@@ -41,13 +41,26 @@ function rowHints(row: StoryListRow | undefined): KeyHint[] {
     : [];
 }
 
+/** `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar. */
+function focusHints(view: ShellView): KeyHint[] {
+  if (view.storyPane) {
+    return [
+      { key: "tab", description: "Story" },
+      ...(view.sidebar ? [{ key: "shift+tab", description: "Stages", secondary: true }] : []),
+      { key: "esc", description: "close Story" },
+    ];
+  }
+
+  return view.sidebar ? [{ key: "tab", description: "Stages" }] : [];
+}
+
 function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
   return [
     { key: "↑/↓", description: "select" },
     ...rowHints(view.row),
     { key: "n", description: "new Story" },
     ...(view.row?.kind === "story" ? [{ key: "d", description: "delete" }] : []),
-    ...(view.sidebar ? [{ key: "tab", description: "Stages" }] : []),
+    ...focusHints(view),
     { key: "ctrl+p", description: "find" },
     { key: "p", description: "switch Project", secondary: true },
     { key: "f", description: "factory", secondary: true },
@@ -57,11 +70,39 @@ function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
   ];
 }
 
-/** The keys of the region in focus, for the footer and the help Modal. */
-export function shellHints(view: ShellView, sidebarShown: boolean, onboardingHints: readonly KeyHint[]): KeyHint[] {
+/** The keys of the Factory view: the keys of its selected row, then the keys of the shell. */
+function factoryViewHints(view: ShellView, sidebarShown: boolean, threadHints: readonly KeyHint[]): KeyHint[] {
+  return [
+    ...threadHints,
+    { key: "t", description: "Stories" },
+    ...focusHints(view),
+    { key: "ctrl+p", description: "find" },
+    { key: "p", description: "switch Project", secondary: true },
+    { key: "f", description: "factory", secondary: true },
+    { key: ",", description: "settings", secondary: true },
+    { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
+  ];
+}
+
+/** The keys of the region in focus, for the footer and the help Modal. The Story sidebar reports its own keys. */
+export function shellHints(
+  view: ShellView,
+  sidebarShown: boolean,
+  onboardingHints: readonly KeyHint[],
+  storyHints: readonly KeyHint[] = [],
+  threadHints: readonly KeyHint[] = [],
+): KeyHint[] {
   if (!view.board) {
     return boardlessHints(view, onboardingHints);
   }
 
-  return view.sidebarFocused ? sidebarHints(view.stage) : listHints(view, sidebarShown);
+  if (view.storyActive) {
+    return [...storyHints];
+  }
+
+  if (view.sidebarFocused) {
+    return sidebarHints(view.stage);
+  }
+
+  return view.mode === "threads" ? factoryViewHints(view, sidebarShown, threadHints) : listHints(view, sidebarShown);
 }

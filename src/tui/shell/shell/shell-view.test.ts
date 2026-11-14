@@ -28,6 +28,8 @@ function input(change: Partial<ShellViewInput>): ShellViewInput {
     active: true,
     overlay: null,
     pane: "stories",
+    storyPane: null,
+    mode: "stories",
     sidebarShown: true,
     stageKey: null,
     selectedId: null,
@@ -72,5 +74,38 @@ describe("shellView", () => {
     expect(shellView(input({ pane: "stages" }))).toMatchObject({ sidebarFocused: true, listFocused: false });
     expect(shellView(input({ pane: "stories" }))).toMatchObject({ sidebarFocused: false, listFocused: true });
     expect(shellView(input({ overlay: { kind: "help" } }))).toMatchObject({ idle: false, listFocused: false });
+  });
+
+  it("gives the focus to the Story sidebar only while it is open, and takes the keys from the shell", () => {
+    const open = { kind: "new" } as const;
+
+    expect(shellView(input({ pane: "story", storyPane: open }))).toMatchObject({
+      storyFocused: true,
+      storyActive: true,
+      listFocused: false,
+      shellKeys: false,
+      idle: true,
+    });
+    expect(shellView(input({ pane: "story", storyPane: null }))).toMatchObject({
+      storyFocused: false,
+      listFocused: true,
+      shellKeys: true,
+    });
+    expect(shellView(input({ pane: "stories", storyPane: open }))).toMatchObject({
+      storyFocused: false,
+      storyActive: false,
+      listFocused: true,
+    });
+    expect(shellView(input({ pane: "story", storyPane: open, overlay: { kind: "help" } }))).toMatchObject({
+      storyFocused: false,
+      storyActive: true,
+      shellKeys: false,
+    });
+  });
+
+  it("closes the Story sidebar without a Project", () => {
+    const view = shellView(input({ data: { loading: false, data: null }, pane: "story", storyPane: { kind: "new" } }));
+
+    expect([view.storyPane, view.storyFocused]).toEqual([null, false]);
   });
 });

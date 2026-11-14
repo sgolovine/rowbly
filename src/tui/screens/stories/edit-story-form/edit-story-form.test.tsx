@@ -6,14 +6,14 @@ import { listStages } from "../../../../services/stage/stage.js";
 import { createStory, getStory, searchStories } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import { keys, renderTui, settle } from "../../../testing/index.js";
-import { EditStoryModal } from "./edit-story-modal.js";
+import { EditStoryForm } from "./edit-story-form.js";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-describe("EditStoryModal", () => {
+describe("EditStoryForm", () => {
   const project = useTestProject();
 
   async function setup() {
@@ -23,26 +23,28 @@ describe("EditStoryModal", () => {
       project.ctx,
     );
     const onSaved = vi.fn();
-    const onClose = vi.fn();
+    const onBack = vi.fn();
     const onDeleted = vi.fn();
+    const onHints = vi.fn();
     const stages = await listStages(project.ctx);
     const tui = await renderTui(
-      <EditStoryModal
+      <EditStoryForm
         ctx={project.ctx}
         story={story}
         stages={stages}
         customFields={[field]}
         onSaved={onSaved}
         onDeleted={onDeleted}
-        onClose={onClose}
+        onBack={onBack}
+        onHints={onHints}
       />,
     );
-    return { tui, story, onSaved, onDeleted, onClose };
+    return { tui, story, onSaved, onDeleted, onBack, onHints };
   }
 
-  it("shows the current values of the Story", async () => {
+  it("shows the current values of the Story in the tabs", async () => {
     const frame = (await setup()).tui.frame();
-    expect(frame).toContain("Edit ROW-01");
+    expect(frame).toMatch(/General\s+Attachments\s+Threads/);
     expect(frame).toContain("Fix login");
     expect(frame).toContain("‹ Backlog ›");
     expect(frame).toContain("Use SSO.");
@@ -94,6 +96,23 @@ describe("EditStoryModal", () => {
     expect(tui.toasts.list().map((t) => t.message)).toEqual(["Deleted ROW-01"]);
   });
 
+  it("calls onBack with esc and keeps the text", async () => {
+    const { tui, onBack } = await setup();
+    await tui.type("!");
+    await tui.press(keys.escape);
+    expect(onBack).toHaveBeenCalledOnce();
+    expect(tui.frame()).toContain("Fix login!");
+    expect(tui.frame()).not.toContain("discard");
+  });
+
+  it("reports the keys of the tab", async () => {
+    const { tui, onHints } = await setup();
+    await tui.press(keys.shiftTab);
+    await vi.waitFor(() =>
+      expect(onHints.mock.lastCall?.[0].at(-1)).toEqual({ key: "esc", description: "Story list" }),
+    );
+  });
+
   it("asks before it deletes the Story when the Delete Button is clicked", async () => {
     const { tui } = await setup();
     await tui.click("Delete");
@@ -101,23 +120,24 @@ describe("EditStoryModal", () => {
   });
 });
 
-describe("EditStoryModal image drafts", () => {
+describe("EditStoryForm image drafts", () => {
   const project = useTestProject();
-  it("keeps draft images across tabs, confirms discard, and saves them once", async () => {
+  it("keeps draft images across tabs and after esc, and saves them once", async () => {
     const reader = vi.spyOn(await import("../../../../services/clipboard/clipboard.js"), "readClipboardImage");
     reader.mockResolvedValue({ bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), type: "image/png" });
     const story = await createStory({ title: "Images" }, project.ctx);
-    const onClose = vi.fn();
+    const onBack = vi.fn();
     const onSaved = vi.fn();
     const tui = await renderTui(
-      <EditStoryModal
+      <EditStoryForm
         ctx={project.ctx}
         story={story}
         stages={await listStages(project.ctx)}
         customFields={[]}
         onSaved={onSaved}
         onDeleted={() => {}}
-        onClose={onClose}
+        onBack={onBack}
+        onHints={() => {}}
       />,
     );
     await tui.press(keys.ctrl("v"));
@@ -128,8 +148,8 @@ describe("EditStoryModal image drafts", () => {
     await tui.click("Attachments");
     expect(tui.frame()).toContain("1 pending image");
     await tui.press(keys.escape);
-    expect(tui.frame()).toContain("Close and discard unsaved changes?");
-    await tui.press("n");
+    expect(onBack).toHaveBeenCalledOnce();
+    expect(tui.frame()).toContain("1 pending image");
     const storyModule = await import("../../../../services/story/story.js");
     const save = vi.spyOn(storyModule, "updateStory").mockRejectedValueOnce(new Error("Save failed"));
     await tui.press(keys.ctrl("s"));
@@ -140,8 +160,6 @@ describe("EditStoryModal image drafts", () => {
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
     expect(await listAttachments({ story: story.id }, project.ctx)).toHaveLength(1);
     expect(tui.frame()).not.toContain("pending image");
-    await tui.press(keys.ctrl("v"), keys.escape, "y");
-    expect(onClose).toHaveBeenCalledOnce();
     expect(await listAttachments({ story: story.id }, project.ctx)).toHaveLength(1);
     save.mockRestore();
     reader.mockRestore();

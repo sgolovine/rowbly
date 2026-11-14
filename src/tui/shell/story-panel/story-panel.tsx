@@ -7,9 +7,13 @@ import { ActiveContext, type Layout, LayoutContext } from "../../hooks/index.js"
 import type { KeyHint } from "../../keymap.js";
 import { Onboarding } from "../../screens/onboarding/index.js";
 import { FactoryStatusLine, StoryList } from "../../screens/stories/index.js";
+import { FactoryView } from "../../screens/threads/index.js";
 import { theme } from "../../theme.js";
 
-/** What the Story panel shows: the first load, the Stories of a Project, the onboarding steps or a read error. */
+/**
+ * What the Story panel shows: the first load, the Stories of a Project, the worker Threads of the Factory view,
+ * the onboarding steps or a read error.
+ */
 export type StoryPanelBody =
   | { readonly kind: "loading" }
   | {
@@ -19,6 +23,7 @@ export type StoryPanelBody =
       /** A problem with the factory state file takes one line below the list. */
       readonly statusLine: boolean;
     }
+  | { readonly kind: "threads"; readonly view: ComponentProps<typeof FactoryView> }
   | {
       readonly kind: "onboarding";
       readonly ctx: ServiceContext;
@@ -39,7 +44,10 @@ interface StoryPanelProps {
   readonly body: StoryPanelBody;
 }
 
-/** The Panel of the Story list. Without a Project, it holds the onboarding steps, because they have no Modal. */
+/**
+ * The Panel of the Story list, or of the Factory view. Without a Project, it holds the onboarding steps, because
+ * they have no Modal.
+ */
 export function StoryPanel({ title, focused, height, inner, onClick, body }: StoryPanelProps) {
   return (
     <Panel
@@ -63,6 +71,7 @@ export function StoryPanel({ title, focused, height, inner, onClick, body }: Sto
             )}
           </>
         )}
+        {body.kind === "threads" && <FactoryView {...body.view} />}
         {body.kind === "onboarding" && (
           <ActiveContext.Provider value={body.active}>
             <Onboarding ctx={body.ctx} onHints={body.onHints} onCreated={body.onCreated} />
