@@ -1,6 +1,6 @@
 ---
 title: Factory View
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-13
 pull_request: null
