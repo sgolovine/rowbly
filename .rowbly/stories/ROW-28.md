@@ -1,7 +1,7 @@
 ---
 title: Stop the Specs tab from re-reading every Story for each linked Story
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 28
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-28
 pull_request: https://github.com/sgolovine/rowbly/pull/215
 ---
