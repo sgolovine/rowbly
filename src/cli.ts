@@ -8,6 +8,13 @@ const program = new Command().name("rowbly").description(pkg.description).versio
 
 registerCommands(program);
 
+/** Imports the Pi SDK in the background. The dynamic import keeps the CLI commands free of Pi. */
+async function preloadPiSdk(): Promise<void> {
+  const { preloadPi } = await import("./services/pi-runtime/pi-runtime.js");
+
+  await preloadPi();
+}
+
 // `rowbly` with no arguments launches the TUI; anything else is a CLI invocation.
 if (process.argv.length <= 2) {
   // The Factory controls start the factory with the same Node, loader flags and entry file as this process.
@@ -17,6 +24,8 @@ if (process.argv.length <= 2) {
       execArgv: [...process.execArgv],
       entry: resolve(process.argv[1] as string),
     },
+    // Only the TUI imports Pi early, after the board shows. The CLI commands stay free of Pi.
+    preloadPi: preloadPiSdk,
   });
 } else {
   await program.parseAsync(process.argv);
