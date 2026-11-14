@@ -11,11 +11,18 @@ export interface FactoryCommand {
   version: 1;
   id: string;
   targetOwnerToken: string;
-  type: "stop" | "cancel" | "resume";
+  type: FactoryCommandType;
   threadId?: string;
   expectedRunId?: string;
+  /** The key of the attention entry that a `dismiss` removes. */
+  attentionKey?: string;
   createdAt: string;
 }
+
+/** The kinds of request that the daemon runs. */
+export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss";
+
+const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss"];
 
 export interface CommandReceipt {
   version: 1;
@@ -35,6 +42,11 @@ type Unlink = typeof import("node:fs/promises").unlink;
 
 function validId(id: string): boolean {
   return /^[a-zA-Z0-9_-]{1,128}$/.test(id);
+}
+
+/** True for an attention key of 1 to 128 characters. */
+export function validAttentionKey(key: unknown): key is string {
+  return typeof key === "string" && key.length >= 1 && key.length <= 128;
 }
 
 /** Reads a command receipt. An absent receipt gives `undefined`; a malformed receipt gives a ValidationError. */
@@ -115,10 +127,14 @@ function acceptedCommand(loaded: LoadedCommand, id: string, token: string): Fact
   if (
     command?.version !== 1 ||
     command.id !== id ||
-    !["stop", "cancel", "resume"].includes(command.type) ||
+    !COMMAND_TYPES.includes(command.type) ||
     !Number.isFinite(Date.parse(command.createdAt))
   ) {
     throw new ValidationError("Invalid factory command");
+  }
+
+  if (command.type === "dismiss" && !validAttentionKey(command.attentionKey)) {
+    throw new ValidationError("An attention key of 1 to 128 characters is necessary");
   }
 
   if (command.targetOwnerToken !== token) {

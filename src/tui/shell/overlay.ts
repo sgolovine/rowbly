@@ -32,6 +32,8 @@ export interface OverlayHandlers {
   close(): void;
   /** A pick in the Story finder: show the Story in the list and open it. */
   openStory(story: Story): void;
+  /** Shows a Thread in the Thread Modal, for example the Thread of a factory warning. */
+  openThread(thread: ThreadRecord): void;
   /** The discard of the changes in the Story sidebar was confirmed. */
   discardStory(next: StoryPane | null): void;
   /** The delete of a Story was confirmed. */

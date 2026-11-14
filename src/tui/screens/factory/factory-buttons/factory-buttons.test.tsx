@@ -51,4 +51,17 @@ describe("FactoryButtons", () => {
 
     expect(tui.frame()).toContain("Stop…");
   });
+
+  it("offers the warnings of a live factory with w, and a click opens them", async () => {
+    const onWarnings = vi.fn();
+    const tui = await renderTui(
+      <FactoryButtons {...props({ live: true, canStart: false, canWarnings: true, onWarnings })} />,
+    );
+
+    expect(tui.frame()).toMatch(/Warnings\s+w/);
+
+    await tui.click("Warnings");
+
+    expect(onWarnings).toHaveBeenCalledOnce();
+  });
 });

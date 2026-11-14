@@ -47,6 +47,27 @@ The screen areas in `screens/` are:
 | `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
 | `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread Modal.                                       |
 
+## The Factory controls
+
+`f` opens the Factory controls, a generic Modal (`FactoryModal` in `src/tui/screens/factory/`). The
+Modal has these views:
+
+- **Main.** The overview, the `Attention` list, the queue and the buttons. `s` starts, `x` stops,
+  `enter` opens the supervisor, `w` opens the warnings, `h` opens the history and `a` opens the AI
+  settings. The `Attention` list shows a maximum of five rows. A click on a row opens the detail view
+  of that warning.
+- **Attention.** `Factory › Attention` lists all warnings in a `SelectList`. `↑/↓` selects, `enter`
+  opens the detail view, `/` filters and `esc` goes back.
+- **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
+  Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
+  attention entry. `esc` goes back.
+- **Supervisor** and **History.** The conversation and the history of the supervisor.
+
+`factoryProblems` in `factory-status.ts` makes the warnings. Each warning has a kind: `heartbeat`,
+`attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
+Modal the Stories of the board and the callbacks `onOpenStory` and `onOpenThread`. See
+[native-factory/controls.md](native-factory/controls.md) for the keys.
+
 ## The Factory view
 
 The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the

@@ -57,6 +57,9 @@ export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on 
           launch={launch}
           onClose={on.close}
           onAiSettings={on.openAiSettings}
+          stories={board.stories}
+          onOpenStory={on.openStory}
+          onOpenThread={on.openThread}
         />
       )}
       {board && overlay?.kind === "thread" && (

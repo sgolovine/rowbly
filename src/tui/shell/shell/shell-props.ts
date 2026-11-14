@@ -184,6 +184,7 @@ export function overlayHandlers(env: ShellEnv): OverlayHandlers {
   return {
     close: () => closeOverlay(env),
     openStory: (story) => openFoundStory(env, story),
+    openThread: (thread) => env.setOverlay({ kind: "thread", thread }),
     discardStory: (next) => discardStory(env, next),
     removeStory: (story) => removeStory(env, story),
     stageSaved: (stage) => showSavedStage(env, stage),

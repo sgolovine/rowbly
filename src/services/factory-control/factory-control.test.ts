@@ -58,4 +58,28 @@ describe("factory control receipts", () => {
     expect((await readReceipt(project.paths, previous.id))?.status).toBe("rejected");
     expect((await readReceipt(project.paths, current.id))?.status).toBe("completed");
   });
+  it("accepts a dismiss with an attention key and rejects a dismiss without one", async () => {
+    await prepareRuntime(project.paths);
+    const good = await publishCommand(project.paths, {
+      targetOwnerToken: "current",
+      type: "dismiss",
+      attentionKey: "commit",
+    });
+    const missing = await publishCommand(project.paths, { targetOwnerToken: "current", type: "dismiss" });
+    const long = await publishCommand(project.paths, {
+      targetOwnerToken: "current",
+      type: "dismiss",
+      attentionKey: "k".repeat(129),
+    });
+    const execute = vi.fn(async () => {});
+    await processCommands(project.paths, "current", execute);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "dismiss", attentionKey: "commit" }));
+    expect((await readReceipt(project.paths, good.id))?.status).toBe("completed");
+    expect(await readReceipt(project.paths, missing.id)).toMatchObject({
+      status: "rejected",
+      error: { message: "An attention key of 1 to 128 characters is necessary" },
+    });
+    expect((await readReceipt(project.paths, long.id))?.status).toBe("rejected");
+  });
 });

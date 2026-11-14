@@ -30,6 +30,8 @@ function env(overrides: Partial<FactoryKeyEnv> = {}): FactoryKeyEnv {
     canStart: true,
     canStop: true,
     canInspect: true,
+    canWarnings: false,
+    openWarnings: vi.fn(),
     setConfirm: vi.fn(),
     setInspect: vi.fn(),
     setHistory: vi.fn(),
@@ -78,6 +80,20 @@ describe("factoryRun", () => {
     expect(e.setInspect).toHaveBeenCalledWith(true);
     expect(e.setHistory).toHaveBeenCalledOnce();
     expect(e.onAiSettings).toHaveBeenCalledOnce();
+  });
+
+  it("opens the warnings with w only when the factory has warnings", () => {
+    const none = env();
+
+    handleFactoryKey(none, "w", key());
+
+    expect(none.openWarnings).not.toHaveBeenCalled();
+
+    const some = env({ canWarnings: true });
+
+    handleFactoryKey(some, "w", key());
+
+    expect(some.openWarnings).toHaveBeenCalledOnce();
   });
 
   it("ignores the keys of actions that cannot run now", () => {
