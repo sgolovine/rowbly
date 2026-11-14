@@ -1,7 +1,7 @@
 ---
 title: Scroll does not work when a sidebar is open
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 22
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-22
 pull_request: https://github.com/sgolovine/rowbly/pull/209
 ---
