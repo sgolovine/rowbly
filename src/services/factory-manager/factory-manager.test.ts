@@ -281,6 +281,51 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("pushes the canonical commit after start, and shows a push failure as attention", async () => {
+    const remote = join(dir.path, "remote.git");
+    await exec("git", ["init", "-q", "--bare", remote]);
+    await exec("git", ["-C", root, "config", "user.name", "Test"]);
+    await exec("git", ["-C", root, "config", "user.email", "test@example.com"]);
+    await exec("git", ["-C", root, "remote", "add", "origin", remote]);
+    await exec("git", ["-C", root, "push", "-q", "-u", "origin", "HEAD"]);
+    const f = await fixture();
+    await updateFactorySettings({ git: { push: true } }, { cwd: root });
+    await writeFile(join(root, ".rowbly/ROWBLY.md"), "# Synced\n");
+    const head = async (cwd: string, ref = "HEAD") => (await exec("git", ["-C", cwd, "rev-parse", ref])).stdout.trim();
+    const initial = await head(root);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          expect(await head(root)).not.toBe(initial);
+          expect(await head(remote, "HEAD")).toBe(await head(root));
+        },
+        { timeout: 10000, interval: 50 },
+      );
+      expect((await f.manager.snapshot()).attention).toEqual([]);
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+
+    manager = undefined;
+    await exec("git", ["-C", root, "checkout", "-q", "-b", "no-upstream"]);
+    const again = await fixture();
+    const second = again.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const attention = new Map((await again.manager.snapshot()).attention as [string, { text: string }][]);
+          expect(attention.get("push")?.text).toBe("Git push failed: The current branch has no upstream branch.");
+        },
+        { timeout: 10000, interval: 50 },
+      );
+      expect((await again.manager.snapshot()).phase).toBe("ready");
+    } finally {
+      await again.manager.shutdown();
+      await second;
+    }
+  }, 30000);
   it("classifies the fresh prompt through real Pi tools before a reservation", async () => {
     const story = await createStory({ title: "Classify me", stage: "WORK" }, { cwd: root });
     const f = await fixture(undefined, false);

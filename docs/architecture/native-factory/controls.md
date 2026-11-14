@@ -9,20 +9,33 @@ viewer or the AI section of Settings.
 
 ## CLI commands
 
-| Commands                                                                  | Purpose                                                                      |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.            |
-| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential.        |
-| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                        |
-| `factory configure`                                                       | Set `--max-workers`, `--supervisor`, `--worker` and the role thinking flags. |
-| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                         |
-| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                        |
-| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.                      |
-| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                         |
-| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.           |
-| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                                  |
+| Commands                                                                  | Purpose                                                                  |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `auth providers`, `auth status`                                           | Show login methods and configured status, without a health check.        |
+| `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>` | Sign in through an interactive prompt, or remove a stored credential.    |
+| `model list [--provider <id>]`                                            | Show configured models and supported thinking levels.                    |
+| `factory configure`                                                       | Set the worker limit, the role models, thinking levels and the Git sync. |
+| `factory start [--foreground] [--max-workers <n>] [--adopt-external]`     | Start a detached daemon, or use the foreground path.                     |
+| `factory status`, `factory stop`, `factory restart [--adopt-external]`    | Observe or control the native daemon.                                    |
+| `factory logs [--tail <n>]`                                               | Read bounded operational logs. There is no follow mode.                  |
+| `thread list [--story <id>]`, `thread show <id>`                          | Read active and historical metadata.                                     |
+| `thread log <id> [--tail <n>]`                                            | Read a bounded conversation tail: default 20, maximum 100 entries.       |
+| `thread cancel <id>`, `thread resume <id>`                                | Send guarded commands to the native daemon.                              |
 
 `factory run` is a hidden command. `factory start` uses it to start the detached daemon.
+
+### The Git sync flags of `factory configure`
+
+| Flag                            | Key in `factory.json`     | Effect                                                   |
+| ------------------------------- | ------------------------- | -------------------------------------------------------- |
+| `--git-push`, `--no-git-push`   | `git.push`                | Turn on or turn off the push of the canonical branch.    |
+| `--git-pull`, `--no-git-pull`   | `git.pull`                | Turn on or turn off the pull of the upstream branch.     |
+| `--git-sync-interval <seconds>` | `git.syncIntervalSeconds` | Set the time between two syncs. Use 60 to 86400 seconds. |
+
+- A flag that you do not give does not change its key.
+- An interval out of the range gives a `VALIDATION` error and exit code 1. `factory.json` does not change.
+- The command prints all the settings. See [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout)
+  for the sync.
 
 ## Factory controls in the TUI
 

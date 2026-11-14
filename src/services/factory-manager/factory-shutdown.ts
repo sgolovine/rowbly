@@ -31,6 +31,8 @@ async function stopFactory(manager: Manager): Promise<void> {
 
   await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.session?.session.abort())]);
   await getState(manager).loopDone;
+  // A Git merge or push must complete before the write lock goes away with this process.
+  await getState(manager).syncTask;
   await Promise.all([...getState(manager).active.values()].map((a) => a.task));
   await getState(manager).supervisor?.close();
 

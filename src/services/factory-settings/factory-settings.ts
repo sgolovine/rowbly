@@ -13,12 +13,25 @@ export interface ModelChoice {
   thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 }
 
+/** The Git sync of the canonical checkout. Other keys of the `git` section stay in the file. */
+export interface GitSettings {
+  readonly push: boolean;
+  readonly pull: boolean;
+  readonly syncIntervalSeconds: number;
+}
+
 export interface FactorySettings {
   version: 1;
   maxWorkers: number;
   supervisorModel?: ModelChoice;
   workerModel?: ModelChoice;
+  git?: GitSettings;
 }
+
+/** The changes of an update. The `git` keys merge into the current `git` section. */
+export type FactorySettingsInput = Partial<Omit<FactorySettings, "version" | "git">> & {
+  git?: Partial<GitSettings>;
+};
 
 interface ConfigureInput {
   maxWorkers?: number;
@@ -26,6 +39,9 @@ interface ConfigureInput {
   worker?: string;
   supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
+  gitPush?: boolean;
+  gitPull?: boolean;
+  gitSyncInterval?: number;
 }
 
 /** The model choice of one role, and the runtime that the next role can use again. */
@@ -35,7 +51,10 @@ interface RoleChoice {
 }
 
 const THINKING_LEVELS: readonly unknown[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
-const DEFAULT_SETTINGS: FactorySettings = { version: 1, maxWorkers: 4 };
+const DEFAULT_GIT: GitSettings = { push: false, pull: false, syncIntervalSeconds: 300 };
+const DEFAULT_SETTINGS: FactorySettings = { version: 1, maxWorkers: 4, git: DEFAULT_GIT };
+const MIN_SYNC_SECONDS = 60;
+const MAX_SYNC_SECONDS = 86_400;
 
 /** Tells if a value is a model choice with a provider, a model and an optional known thinking level. */
 export function validModel(value: unknown): value is ModelChoice {
@@ -54,6 +73,31 @@ export function validModel(value: unknown): value is ModelChoice {
   );
 }
 
+/** Tells if a sync interval is a whole number of seconds in the permitted range. */
+function validInterval(value: unknown): boolean {
+  return Number.isSafeInteger(value) && (value as number) >= MIN_SYNC_SECONDS && (value as number) <= MAX_SYNC_SECONDS;
+}
+
+/** Tells if a `git` section is absent, or an object with valid sync keys. A key can be absent. */
+function validGit(value: unknown): boolean {
+  if (value === undefined) {
+    return true;
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const git = value as Partial<GitSettings>;
+
+  return (
+    (git.push === undefined || typeof git.push === "boolean") &&
+    (git.pull === undefined || typeof git.pull === "boolean") &&
+    (git.syncIntervalSeconds === undefined || validInterval(git.syncIntervalSeconds))
+  );
+}
+
+/** Validates the settings, then fills the absent `git` keys with their defaults. */
 function validate(value: unknown): FactorySettings {
   const settings = value as FactorySettings;
 
@@ -62,12 +106,20 @@ function validate(value: unknown): FactorySettings {
     !Number.isSafeInteger(settings.maxWorkers) ||
     settings.maxWorkers < 1 ||
     (settings.supervisorModel !== undefined && !validModel(settings.supervisorModel)) ||
-    (settings.workerModel !== undefined && !validModel(settings.workerModel))
+    (settings.workerModel !== undefined && !validModel(settings.workerModel)) ||
+    !validGit(settings.git)
   ) {
-    throw new ValidationError("Invalid factory settings");
+    throw new ValidationError("Invalid factory settings", {
+      hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
+    });
   }
 
-  return settings;
+  return { ...settings, git: { ...DEFAULT_GIT, ...settings.git } };
+}
+
+/** Gives the Git sync settings. Settings without a `git` section use the defaults. */
+export function gitSettings(settings: FactorySettings): GitSettings {
+  return { ...DEFAULT_GIT, ...settings.git };
 }
 
 function readProblem(error: unknown): FactorySettings {
@@ -82,7 +134,7 @@ function readProblem(error: unknown): FactorySettings {
   throw error;
 }
 
-/** Reads the factory settings of the Project. Without `factory.json`, the limit is four workers. */
+/** Reads the factory settings of the Project. Without `factory.json`, the limit is four workers and sync is off. */
 export async function getFactorySettings(ctx: ServiceContext = {}): Promise<FactorySettings> {
   const paths = await findProject(ctx);
 
@@ -93,11 +145,12 @@ export async function getFactorySettings(ctx: ServiceContext = {}): Promise<Fact
 
 /** Merges the input into the factory settings and writes `factory.json`. */
 export async function updateFactorySettings(
-  input: Partial<Omit<FactorySettings, "version">>,
+  input: FactorySettingsInput,
   ctx: ServiceContext = {},
 ): Promise<FactorySettings> {
   const paths = await findProject(ctx);
-  const settings = validate({ ...(await getFactorySettings(ctx)), ...input, version: 1 });
+  const current = await getFactorySettings(ctx);
+  const settings = validate({ ...current, ...input, git: { ...current.git, ...input.git }, version: 1 });
 
   await writeFileAtomic(paths.factorySettingsFile, `${JSON.stringify(settings, null, 2)}\n`);
 
@@ -145,6 +198,15 @@ async function chooseRole(
   return { runtime: resolved, choice: await auth.validateModelChoice(resolved, choice) };
 }
 
+/** Gives only the Git sync keys that the input sets. */
+function gitInput(input: ConfigureInput): Partial<GitSettings> {
+  return {
+    ...(input.gitPush !== undefined ? { push: input.gitPush } : {}),
+    ...(input.gitPull !== undefined ? { pull: input.gitPull } : {}),
+    ...(input.gitSyncInterval !== undefined ? { syncIntervalSeconds: input.gitSyncInterval } : {}),
+  };
+}
+
 /** Validates explicit model choices before the settings file changes. */
 export async function configureFactory(
   input: ConfigureInput,
@@ -161,6 +223,7 @@ export async function configureFactory(
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
       ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
+      git: gitInput(input),
     },
     ctx,
   );

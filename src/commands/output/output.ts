@@ -107,6 +107,17 @@ export function parsePosition(value: string): number {
   return number;
 }
 
+/** Parses a whole number option. The service checks the range. */
+export function parseInteger(value: string): number {
+  const number = Number(value);
+
+  if (!value.trim() || !Number.isSafeInteger(number)) {
+    throw new InvalidArgumentError("Expected a whole number");
+  }
+
+  return number;
+}
+
 /** The text of a field value; an unset value is a dash. */
 export function formatValue(value: FieldValue): string {
   return value === null ? "—" : String(value);

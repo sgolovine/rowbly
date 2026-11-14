@@ -33,14 +33,15 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 ## Factory settings
 
 The `factory-settings/` service reads and writes the optional `.rowbly/factory.json`:
-`version`, `maxWorkers`, `supervisorModel` and `workerModel`.
+`version`, `maxWorkers`, `supervisorModel`, `workerModel` and the `git` section.
 
 - Without `factory.json`, the worker limit is four and Pi selects default models.
 - An explicit model choice must be available and must support the selected thinking level.
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model
   supports only some of them.
 - `rowbly factory configure` sets `--max-workers`, `--supervisor`, `--worker`,
-  `--supervisor-thinking` and `--worker-thinking`.
+  `--supervisor-thinking` and `--worker-thinking`. It also sets the Git sync flags. See
+  [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - The model picker of the TUI offers the supported thinking levels and `Pi default`.
 
 ## Related
