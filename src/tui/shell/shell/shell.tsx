@@ -2,7 +2,7 @@ import { Box } from "ink";
 import type { FactoryLaunch } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { Footer, Sidebar, ToastArea } from "../../components/index.js";
-import { LayoutContext } from "../../hooks/index.js";
+import { FactoryStatusContext, LayoutContext } from "../../hooks/index.js";
 import { Header } from "../header/index.js";
 import { ShellOverlays } from "../shell-overlays/index.js";
 import { StoryPanel } from "../story-panel/index.js";
@@ -42,36 +42,38 @@ interface ShellProps {
  * Story sidebar, which then shows the Thread in place of a form.
  */
 export function Shell({ ctx: initialCtx = CWD, launch }: ShellProps) {
-  const { env, overlay, factory, layout, frame, hints } = useShell(initialCtx);
+  const { env, overlay, factory, factoryState, layout, frame, hints } = useShell(initialCtx);
   const { view } = env;
   const story = storySidebarProps(env, frame);
   const cover = frame.story.cover;
 
   return (
-    <Box flexDirection="column" width={layout.width} height={layout.height}>
-      <Header {...headerProps(env, factory)} />
-      <Box flexGrow={1} flexDirection="column">
-        <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
-          {view.sidebar && !cover && <Sidebar {...stageSidebarProps(env, frame)} />}
-          {!cover && <StoryPanel {...storyPanelProps(env, frame)} />}
-          {story && <StorySidebar {...story} />}
+    <FactoryStatusContext.Provider value={factoryState}>
+      <Box flexDirection="column" width={layout.width} height={layout.height}>
+        <Header {...headerProps(env, factory)} />
+        <Box flexGrow={1} flexDirection="column">
+          <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
+            {view.sidebar && !cover && <Sidebar {...stageSidebarProps(env, frame)} />}
+            {!cover && <StoryPanel {...storyPanelProps(env, frame)} />}
+            {story && <StorySidebar {...story} />}
+          </Box>
+          <Box flexDirection="column" {...frame.overlayBox}>
+            <LayoutContext.Provider value={{ width: frame.overlayWidth, height: frame.overlayHeight }}>
+              <ShellOverlays
+                overlay={overlay}
+                board={view.board}
+                ctx={env.ctx}
+                launch={launch}
+                factory={factory}
+                hints={hints}
+                on={overlayHandlers(env)}
+              />
+            </LayoutContext.Provider>
+          </Box>
         </Box>
-        <Box flexDirection="column" {...frame.overlayBox}>
-          <LayoutContext.Provider value={{ width: frame.overlayWidth, height: frame.overlayHeight }}>
-            <ShellOverlays
-              overlay={overlay}
-              board={view.board}
-              ctx={env.ctx}
-              launch={launch}
-              factory={factory}
-              hints={hints}
-              on={overlayHandlers(env)}
-            />
-          </LayoutContext.Provider>
-        </Box>
+        <Footer hints={overlay ? [] : hints} atRoot />
+        <ToastArea />
       </Box>
-      <Footer hints={overlay ? [] : hints} atRoot />
-      <ToastArea />
-    </Box>
+    </FactoryStatusContext.Provider>
   );
 }
