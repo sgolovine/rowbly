@@ -33,6 +33,8 @@ The skills in `skills/` are for the users of Rowbly. Rowbly itself does not use 
 - This repository has installed copies of `refine`, `develop` and `review` in `.agents/skills/`, for
   the `codex` harness. The Stage prompts in `.rowbly/stages/` give their paths. After a change in
   `skills/<name>/`, run `rowbly skill remove <name> --harness codex` and then `rowbly skill install`.
+- `.agents/skills/changelog/` is a skill of this repository only. It is not in `skills/`, and the
+  `skills` list of the config does not track it. The `CHANGELOG` Stage of `.rowbly/stages/` uses it.
 
 ## Rules for a change to a skill or a stage prompt
 

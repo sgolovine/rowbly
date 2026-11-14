@@ -132,6 +132,9 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
 The `refine`, `develop` and `review` folders in `.agents/skills/` are installed copies of the bundled skills. The Rowbly
 project of this repository uses them through its Stage prompts in `.rowbly/stages/`. Rowbly code does not read them.
 
+The `changelog` folder in `.agents/skills/` is a skill of this repository only. It is not a bundled skill. The
+`CHANGELOG` Stage uses it to add one entry for each Story to `CHANGELOG.md`.
+
 ## CI
 
 `.github/workflows/ci.yml` has two jobs:
@@ -140,6 +143,12 @@ project of this repository uses them through its Stage prompts in `.rowbly/stage
 - **Test**: `pnpm test` and `pnpm build`.
 
 `.github/workflows/release.yml` creates a release. Node comes from `.nvmrc`.
+
+- `scripts/release-changelog.mjs` changes the `### Pre Release` heading of `CHANGELOG.md` to the new version,
+  for example `### 1.12.0`. Then it adds a new empty `### Pre Release` section above it.
+- The release commit holds `package.json` and `CHANGELOG.md`. If a later step fails, the `revert-version` job
+  reverts that commit, and the changelog also goes back.
+- The script stops the release if `CHANGELOG.md` does not have exactly one `### Pre Release` heading.
 
 ## Related
 

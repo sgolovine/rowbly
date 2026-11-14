@@ -30,6 +30,11 @@
       "enabled": true
     },
     {
+      "key": "CHANGELOG",
+      "label": "Changelog",
+      "enabled": true
+    },
+    {
       "key": "IN_REVIEW",
       "label": "In Review",
       "enabled": true

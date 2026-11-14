@@ -76,6 +76,12 @@ jobs:
         env:
           TAG: ${{ steps.package.outputs.tag }}
 
+      - name: Release changelog
+        # Renames `### Pre Release` to the version and adds a new empty `### Pre Release` above it.
+        run: node scripts/release-changelog.mjs "${VERSION}"
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+
       - name: Build
         run: pnpm build
 
@@ -84,7 +90,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json
+          git add package.json CHANGELOG.md
           git commit -m "chore(release): ${TAG}"
           git push origin HEAD:main
           echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
