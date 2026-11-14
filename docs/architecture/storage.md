@@ -22,7 +22,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -117,7 +117,9 @@ The optional `git` section sets the canonical commits and the Git sync of the fa
 - Each value is optional. Each string that is set must not be empty.
 - Set `authorName` and `authorEmail` together, or do not set them.
 - A `git` section that is not valid makes the settings not valid.
-- A write does not add the default values. The service gives them when it reads the settings.
+- A write does not add the absent `git` sync keys. The service gives their default values when it
+  reads the settings. A write always puts `maxWorkers` in the `factory` section, also when its value
+  is the default value of `4`.
 
 ### Upgrade from `factory.json`
 
@@ -130,8 +132,10 @@ Rowbly does not read this file now. To upgrade a Project, do these steps:
    `checks` section moves with no change.
 4. Start the factory again with `rowbly factory start`.
 
-A factory start fails with a `CONFLICT` error while `factory.json` exists. The hint tells you to run
-`rowbly doctor --fix`.
+A factory start and each write of the factory settings fail with a `CONFLICT` error while
+`factory.json` exists. Examples of writes are `rowbly factory configure` and `rowbly factory check`.
+The config does not change. The hint tells you to run `rowbly doctor --fix`. The commands that only
+read the settings continue to work.
 
 ## Stories
 

@@ -40,8 +40,8 @@ The `factory-settings/` service reads and writes the optional `factory` key of
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
 - A `factory` key that is not valid gives a `ValidationError` on the factory paths. The board checks
   only that the key is an object, so it continues to work.
-- Older versions kept the settings in `.rowbly/factory.json`. A factory start fails while that file
-  exists. Run `rowbly doctor --fix` to move the settings. See
+- Older versions kept the settings in `.rowbly/factory.json`. A factory start and a write of the
+  factory settings fail while that file exists. Run `rowbly doctor --fix` to move the settings. See
   [../storage.md](../storage.md#upgrade-from-factoryjson).
 - An explicit model choice must be available and must support the selected thinking level.
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model

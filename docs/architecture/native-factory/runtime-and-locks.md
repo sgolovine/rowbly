@@ -69,7 +69,8 @@ The native factory can pull the upstream branch and push the canonical branch at
 | `syncIntervalSeconds` | integer | `300`   | The time between two syncs. The range is 60 to 86400. |
 
 - `getFactorySettings` gives the default of each key that is not in the config. A write does not add
-  the defaults to the config. An update keeps the other keys of the `git` section, for example
+  the defaults of the `git` sync keys to the config, but it always puts `maxWorkers` in the config.
+  An update keeps the other keys of the `git` section, for example
   `commitMessage`, `authorName` and `authorEmail`.
 - `project-sync/` (`syncCanonicalProject`) does one sync. With `push` and `pull` off, it runs no Git
   command.

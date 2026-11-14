@@ -57,8 +57,9 @@ named checks. `factory-settings/check-settings.ts` reads and validates it.
 
 - A `checks` section that is not valid gives a `ValidationError` from `getFactorySettings`. Then
   `rowbly factory start` and `rowbly factory configure` fail, and the config does not change.
-- `getFactorySettings` gives the default of each absent key. A write does not add the defaults to
-  the config. A write keeps the other keys of the `factory` section and of the config.
+- `getFactorySettings` gives the default of each absent key. A write does not add the defaults of
+  `checks` or of the `git` sync keys to the config. A write always puts `maxWorkers` in the config.
+  A write keeps the other keys of the `factory` section and of the config.
 - `factory-settings/check-items.ts` adds, changes, removes and lists the items. `setCheckLimits`
   sets the limits. These functions do not load Pi.
 - The supervisor loop reads the factory settings again on each turn. A changed setting applies to the next
