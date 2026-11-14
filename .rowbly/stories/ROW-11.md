@@ -1,6 +1,6 @@
 ---
 title: Move New/Edit story modal to sidebar
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-11
 pull_request: null
@@ -40,7 +40,7 @@ Not in scope:
 
 ## Acceptance criteria
 
-- [ ] In the Story list, `n`, `+ New Story` in the header and `n` hints open the new Story form in the Story sidebar on the right of the Story list. No Modal opens. The Story list stays visible. A `renderTui` test of `Shell` examines this.
+- [ ] In the Story list, `n` and the `+ New Story` button in the header open the new Story form in the Story sidebar on the right of the Story list. No Modal opens. The Story list stays visible. A `renderTui` test of `Shell` examines this.
 - [ ] `enter` or a click on a Story, and a pick in the Story finder, open the edit form of that Story in the Story sidebar, with the General, Specs (when Specs are on), Attachments and Threads tabs. A test examines this.
 - [ ] The Story sidebar is a `Panel`. Its top border shows the title `New Story` or `Edit <story-id>`, as the modals show today. The border is `theme.accent` when the Story sidebar has the focus, and `theme.border` when it does not have the focus. A test examines this.
 - [ ] The top border of the Story sidebar has a `✕` (`CloseButton`) at its right end. A click on it closes the Story sidebar. If the form has unsaved text or images, Rowbly first shows the discard confirmation, as the Modal does today. A test examines this.
