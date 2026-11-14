@@ -12,6 +12,8 @@ set up.
 | ----------------- | ----------- | ---------------------------------------------------------------- |
 | `pnpm test`       | Vitest      | `src/**/*.test.ts` and `src/**/*.test.tsx`.                      |
 |                   | `node:test` | Then `scripts/*.test.mjs`, for example the dash-case name check. |
+| `pnpm test:ci`    | Vitest      | The same tests, but without the local-only tests. CI uses it.    |
+|                   | `node:test` | Then `scripts/*.test.mjs`.                                       |
 | `pnpm test:watch` | Vitest      | The Vitest tests again after each change.                        |
 
 ## General rules
@@ -25,6 +27,9 @@ set up.
 - `vitest.config.ts` sets `maxWorkers` to 4. Each fork uses approximately 200 MB, and factory workers
   can run the tests at the same time. To change the limit, set `VITEST_MAX_WORKERS` or use
   `--maxWorkers`.
+- `vitest.ci.config.ts` extends `vitest.config.ts` for CI. It does not run the local-only tests in
+  its `exclude` list. At this time, `src/tui/hooks/shell.test.ts` is local only, because it fails in
+  CI. Run `pnpm test` on your machine before you complete a change to the shell.
 
 ## Service tests
 

@@ -52,7 +52,7 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:ci
 
       - name: Bump package version
         run: npm version "${VERSION_BUMP}" --no-git-tag-version

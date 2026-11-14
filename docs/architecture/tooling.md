@@ -16,6 +16,7 @@ pnpm build            # bundle to dist/
 pnpm start            # run the built bundle
 pnpm typecheck        # tsc --noEmit
 pnpm test             # vitest run: run all tests one time; then the node:test suite of scripts/
+pnpm test:ci          # the same as pnpm test, but with vitest.ci.config.ts: CI does not run the local-only tests
 pnpm test:watch       # vitest: run the tests again when a file changes
 pnpm lint             # biome check: lint, formatting and import order; then the dash-case name check
 pnpm lint:fix         # biome check --write: apply safe fixes and format

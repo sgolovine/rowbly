@@ -27,6 +27,7 @@
     "knip": "knip",
     "knip:production": "knip --production",
     "test": "vitest run && node --test scripts/*.test.mjs",
+    "test:ci": "vitest run --config vitest.ci.config.ts && node --test scripts/*.test.mjs",
     "test:watch": "vitest"
   },
   "license": "MIT",
