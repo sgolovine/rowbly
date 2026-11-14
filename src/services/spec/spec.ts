@@ -2,7 +2,6 @@ import { rm } from "node:fs/promises";
 import { featureEnabled, type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
-import { mapInOrder } from "../in-order/in-order.js";
 import {
   canonicalStoryId,
   readSpecFile,
@@ -10,10 +9,11 @@ import {
   SPEC_SLUG_PATTERN,
   type SpecFile,
   specPath,
+  storyIdNumber,
   toSpecSlug,
   writeSpecFile,
 } from "../spec-files/spec-files.js";
-import { getStory } from "../story/story.js";
+import { formatStoryId, listStoryFileNames, type StoryFileName } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 /** A Markdown document that describes the work of the Stories it is linked to. */
@@ -136,23 +136,53 @@ function titleIssues(title: string): Issue[] {
   return title.trim() === "" ? [{ path: ["title"], message: "Title is required" }] : [];
 }
 
-async function lookupStory(id: string, ctx: ServiceContext): Promise<StoryLookup> {
-  try {
-    return { id: (await getStory({ id }, ctx)).id };
-  } catch (error) {
-    if (!(error instanceof NotFoundError)) {
-      throw error;
-    }
+/** The story file name of the project with the ID (`ROW-01`, `row-1` or `1`), or `undefined` when there is none. */
+function findStoryName(config: ProjectConfig, names: readonly StoryFileName[], id: string): StoryFileName | undefined {
+  const number = storyIdNumber(config.projectKey, id);
 
-    return { issue: { path: ["stories"], message: `Story ${id} not found` } };
+  return number === undefined
+    ? undefined
+    : names.find((name) => name.projectKey === config.projectKey && name.number === number);
+}
+
+function lookupStory(config: ProjectConfig, names: readonly StoryFileName[], id: string): StoryLookup {
+  const name = findStoryName(config, names, id);
+
+  return name ? { id: name.id } : { issue: { path: ["stories"], message: `Story ${id} not found` } };
+}
+
+/**
+ * The canonical ID (`ROW-01`) of the existing Story, as `toSpec` gives the links. Throws a `NotFoundError` when
+ * there is none. No file is read.
+ */
+async function existingStoryId(paths: ProjectPaths, config: ProjectConfig, id: string): Promise<string> {
+  const number = storyIdNumber(config.projectKey, id);
+
+  if (number === undefined) {
+    throw new NotFoundError(`Story ${id} not found`, {
+      hint: `Story IDs in this project look like ${formatStoryId(config.projectKey, 1)}.`,
+    });
   }
+
+  const name = findStoryName(config, await listStoryFileNames(paths), id);
+
+  if (!name) {
+    throw new NotFoundError(`Story ${formatStoryId(config.projectKey, number)} not found`);
+  }
+
+  return formatStoryId(name.projectKey, name.number);
 }
 
 /** The IDs of `stories` as the files name them, without repeats. Each one must be an existing Story. */
-async function resolveStories(stories: readonly string[], ctx: ServiceContext): Promise<ResolvedStories> {
+async function resolveStories(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  stories: readonly string[],
+): Promise<ResolvedStories> {
   const empty =
     stories.length === 0 ? [{ path: ["stories"], message: "A spec must be linked to at least one Story" }] : [];
-  const lookups = await mapInOrder(stories, (id) => lookupStory(id, ctx));
+  const names = await listStoryFileNames(paths);
+  const lookups = stories.map((id) => lookupStory(config, names, id));
 
   return {
     ids: [...new Set(lookups.flatMap((lookup) => ("id" in lookup ? [lookup.id] : [])))],
@@ -200,7 +230,7 @@ export async function createSpec(input: CreateSpecInput, ctx: ServiceContext = {
   const { paths, config } = await open(ctx);
   const title = input.title.trim();
   const slug = await newSlug(paths, input, title);
-  const stories = await resolveStories(input.stories, ctx);
+  const stories = await resolveStories(paths, config, input.stories);
   const issues = [...titleIssues(input.title), ...slug.issues, ...stories.issues];
 
   throwIfIssues(invalidMessage(issues), issues);
@@ -220,7 +250,7 @@ export async function getSpec(input: { slug: string }, ctx: ServiceContext = {})
 /** Every spec, by slug. With `story`, only the specs linked to that Story. */
 export async function listSpecs(input: ListSpecsInput = {}, ctx: ServiceContext = {}): Promise<Spec[]> {
   const { paths, config } = await open(ctx);
-  const story = input.story === undefined ? undefined : (await getStory({ id: input.story }, ctx)).id;
+  const story = input.story === undefined ? undefined : await existingStoryId(paths, config, input.story);
   const specs = (await readSpecFiles(paths)).map((file) => toSpec(config, file));
 
   return story === undefined ? specs : specs.filter((spec) => spec.stories.includes(story));
@@ -233,7 +263,7 @@ export async function updateSpec(input: UpdateSpecInput, ctx: ServiceContext = {
 
   toSpec(config, file);
 
-  const stories = input.stories === undefined ? undefined : await resolveStories(input.stories, ctx);
+  const stories = input.stories === undefined ? undefined : await resolveStories(paths, config, input.stories);
   const issues = [...(input.title === undefined ? [] : titleIssues(input.title)), ...(stories?.issues ?? [])];
 
   throwIfIssues(invalidMessage(issues), issues);
