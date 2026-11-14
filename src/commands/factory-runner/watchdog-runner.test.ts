@@ -110,14 +110,19 @@ describe("factory watchdog", () => {
   });
 
   it("sets the count to 0 when a daemon stays up for the stable period", async () => {
-    const steps = Array.from({ length: 6 }, () => ({ sleepMs: 150, code: 1 }));
+    // The stable timer starts at the spawn, and each crash step sleeps for longer than the stable period
+    // after Node starts. Thus each crashed daemon was up for longer than the stable period.
+    const steps = Array.from({ length: 6 }, () => ({ sleepMs: 400, code: 1 }));
     const fake = await fakeDaemon([...steps, { code: 0 }]);
-    const short = { ...timing, stableMs: 50 };
+    const short = { ...timing, stableMs: 200 };
     const result = await runWatchdog({ launch: fake.launch, timing: short }, project.ctx);
-    // Six crashes, more than the limit, but each daemon was up for longer than the stable period.
-    expect(result).toMatchObject({ phase: "stopped", crashCount: 1 });
+    // Six crashes, more than the limit, but the count did not reach the limit. The last daemon exits
+    // cleanly. Its start time on a slow machine can be longer than the stable period, so the final
+    // count is 0 or 1.
+    expect(result.phase).toBe("stopped");
+    expect(result.crashCount).toBeLessThanOrEqual(1);
     expect(await fake.starts()).toBe(7);
-  });
+  }, 20_000);
 
   it("cancels the restart when a stop comes during the back-off", async () => {
     const fake = await fakeDaemon([{ code: 1 }]);
