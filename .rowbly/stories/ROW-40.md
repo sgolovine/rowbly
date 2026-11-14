@@ -1,7 +1,7 @@
 ---
 title: Share one Pi ModelRuntime per TUI process
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-40
 pull_request: null
 ---
 

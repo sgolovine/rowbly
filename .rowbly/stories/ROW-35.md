@@ -1,9 +1,9 @@
 ---
 title: Load the TUI lazily so CLI commands do not pay for Ink
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-35
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/222
 ---
 
 ## Goal
