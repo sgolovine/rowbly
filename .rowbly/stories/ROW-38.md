@@ -1,7 +1,7 @@
 ---
 title: Add syntax highlighting to agent output.
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 43
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-38
 pull_request: https://github.com/sgolovine/rowbly/pull/229
 ---
