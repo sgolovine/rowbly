@@ -3,6 +3,7 @@ import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { AiSection } from "./ai-section/index.js";
 import { CustomFieldsSection } from "./custom-fields-section/index.js";
 import { DoctorSection } from "./doctor-section/index.js";
+import { GitSection } from "./git-section/index.js";
 import { ProjectSection } from "./project-section/index.js";
 import { PromptsSection } from "./prompts-section/index.js";
 import { SkillsSection } from "./skills-section/index.js";
@@ -85,6 +86,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "AI",
         description: "AI providers, the models of the factory and the worker limit.",
         Component: AiSection,
+      },
+      {
+        id: "git",
+        label: "Git",
+        description: "The commits of the canonical checkout and its periodic sync.",
+        Component: GitSection,
       },
     ],
   },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAuthor, hasGitInput, mergeGit, parseAuthor, validGit } from "./git-settings.js";
+import { formatAuthor, gitSync, hasGitInput, mergeGit, parseAuthor, validGit } from "./git-settings.js";
 
 describe("gitSettings", () => {
   it("accepts non-empty strings and an author with both name and email", () => {
@@ -53,5 +53,27 @@ describe("gitSettings", () => {
     expect(hasGitInput({})).toBe(false);
     expect(hasGitInput({ commitMessage: "" })).toBe(true);
     expect(hasGitInput({ commitAuthor: "A <a@example.com>" })).toBe(true);
+  });
+  it("validates the sync keys", () => {
+    expect(validGit({ push: true, pull: false, syncIntervalSeconds: 60 })).toBe(true);
+    expect(validGit({ syncIntervalSeconds: 86400, commitMessage: "chore: sync" })).toBe(true);
+    for (const git of [{ push: "yes" }, { pull: 0 }, { syncIntervalSeconds: 59 }, { syncIntervalSeconds: 60.5 }]) {
+      expect(validGit(git)).toBe(false);
+    }
+  });
+  it("gives the sync defaults for absent keys", () => {
+    expect(gitSync(undefined)).toEqual({ push: false, pull: false, syncIntervalSeconds: 300 });
+    expect(gitSync({ pull: true, commitMessage: "x" })).toEqual({ push: false, pull: true, syncIntervalSeconds: 300 });
+  });
+  it("merges the sync keys and keeps the commit keys", () => {
+    const current = { commitMessage: "old", authorName: "A", authorEmail: "a@example.com", push: true };
+    expect(mergeGit(current, { gitPull: true, gitSyncInterval: 120 })).toEqual({
+      ...current,
+      pull: true,
+      syncIntervalSeconds: 120,
+    });
+    expect(mergeGit(current, { gitPush: false })).toEqual({ ...current, push: false });
+    expect(hasGitInput({ gitPush: false })).toBe(true);
+    expect(hasGitInput({ gitSyncInterval: 60 })).toBe(true);
   });
 });

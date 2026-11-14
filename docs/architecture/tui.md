@@ -43,7 +43,7 @@ The screen areas in `screens/` are:
 | `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads). |
 | `stages/`     | The Stage form modal.                                                                                                                  |
 | `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                           |
-| `settings/`   | The Settings modal and its sections, the Prompts section, the AI section and the model picker.                                         |
+| `settings/`   | The Settings modal and its sections, the Prompts section, the AI section, the Git section and the model picker.                        |
 | `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
 | `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                   |
 
@@ -70,6 +70,33 @@ Modal has these views:
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
 Modal the Stories of the board and the callbacks `onOpenStory` and `onOpenThread`. See
 [native-factory/controls.md](native-factory/controls.md) for the keys.
+
+## The Git section of Settings
+
+The Factory group of Settings has a Git section under the AI section (`GitSection` in
+`src/tui/screens/settings/git-section/`). The section shows the Git settings of the canonical
+checkout. These settings are in the `git` section of `.rowbly/factory.json`.
+
+The section has five cards. Each card shows the current value. If the value is not set, the card
+shows the default.
+
+| Card           | Key | Default                                            |
+| -------------- | --- | -------------------------------------------------- |
+| Commit author  | `a` | `Git config identity`                              |
+| Commit message | `m` | `chore(rowbly): record project changes after scan` |
+| Periodic push  | `p` | `off`                                              |
+| Periodic pull  | `u` | `off`                                              |
+| Sync interval  | `i` | `300 seconds`                                      |
+
+- `a`, `m` and `i` open a `FormModal` for the value. The author has the form `Name <email>`.
+- An empty author or an empty message removes the value. Then the factory uses the default.
+- The interval must be a whole number from 60 to 86400. The form shows an incorrect value under the
+  field, and the file does not change.
+- `p` and `u` turn push and pull on or off immediately.
+- Each card has a Button that does the same operation as its key.
+
+The section calls `configureGit` of the `factory-settings` service. The `rowbly factory configure`
+command uses the same Git rules. The section does not load Pi or `agent-auth`.
 
 ## The Factory view
 

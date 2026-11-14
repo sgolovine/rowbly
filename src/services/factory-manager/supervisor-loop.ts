@@ -23,6 +23,7 @@ import {
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
+import { startProjectSync } from "./project-sync-step.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
@@ -120,6 +121,7 @@ async function superviseOnce(manager: Manager): Promise<void> {
   await refreshSettings(manager);
   await clearProviderPauses(manager);
   await commitProject(manager);
+  startProjectSync(manager);
 
   if (getState(manager).stopping) {
     return;
@@ -179,7 +181,12 @@ async function clearProviderPauses(manager: Manager): Promise<void> {
   });
 }
 
+/** Commits the canonical files. A running sync holds the write lock, so the commit waits for the next scan. */
 async function commitProject(manager: Manager): Promise<void> {
+  if (getState(manager).syncTask) {
+    return;
+  }
+
   const committed = await commitCanonicalProject(manager.paths.root, getState(manager).settings.git);
 
   if (["clean", "committed"].includes(committed.status)) {

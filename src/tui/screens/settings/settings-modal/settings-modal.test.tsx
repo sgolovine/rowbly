@@ -25,6 +25,7 @@ describe("SettingsModal", () => {
       "Skills",
       "Factory",
       "AI",
+      "Git",
       "Maintenance",
       "Doctor",
     ]) {
@@ -44,6 +45,15 @@ describe("SettingsModal", () => {
     expect(tui.frame()).toContain("esc back to sections");
     await tui.press(keys.escape, keys.escape);
     expect(onClose).toHaveBeenCalledOnce();
+  });
+  it("shows Git under AI in the Factory group, and the keys of the Git section", async () => {
+    const tui = await renderTui(<SettingsModal ctx={project.ctx} onChange={() => {}} onClose={() => {}} />);
+    await settle(50);
+    expect(tui.frame()).toMatch(/Factory[\s\S]*AI[\s\S]*Git[\s\S]*Maintenance/);
+    await tui.click("Git");
+    await vi.waitFor(() => expect(tui.frame()).toContain("Commit author"));
+    await tui.press();
+    expect(tui.frame()).toMatch(/a author\s+m message\s+p toggle push\s+u toggle pull\s+i interval/);
   });
   it.each(["keyboard", "mouse"])("opens Skills with the %s", async (input) => {
     const tui = await renderTui(<SettingsModal ctx={project.ctx} onChange={() => {}} onClose={() => {}} />);

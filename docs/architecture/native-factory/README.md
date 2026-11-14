@@ -39,6 +39,9 @@ Read this page when you start a task on the factory. Then read only the sub-page
   `runtime/bin/rowbly`, under the Project write lock.
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
   parked Stories. The policy state is in `state.json`.
+- **Git sync.** When the user turns it on, the factory pulls the upstream branch and pushes the
+  canonical branch at an interval (`project-sync/`). See
+  [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 

@@ -4,10 +4,10 @@ import { execFile } from "node:child_process";
 import { realpath } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { promisify } from "node:util";
+import { DEFAULT_COMMIT_MESSAGE } from "../factory-settings/git-settings.js";
 
 const run = promisify(execFile);
 const CONFLICTS = new Set(["DD", "AU", "UD", "UA", "DU", "AA", "UU"]);
-const DEFAULT_MESSAGE = "chore(rowbly): record project changes after scan";
 const GIT_TIMEOUT_MS = 120_000;
 const IDENTITY = /^([^<>\n]*[^<>\s])\s*<([^<>\s]+)>$/;
 const LISTED_PATHS = 20;
@@ -22,7 +22,7 @@ export interface CommitResult {
 }
 
 export interface CommitOptions {
-  /** The subject of the commit. The default is `chore(rowbly): record project changes after scan`. */
+  /** The subject of the commit. The default is `DEFAULT_COMMIT_MESSAGE`. */
   message?: string;
   /** The author and the committer, as `Name <email>`. Without it, the Git config sets the identity. */
   author?: string;
@@ -182,7 +182,7 @@ export async function commitProjectFiles(root: string, options: CommitOptions = 
   try {
     const project = relative(repository, await realpath(resolve(root, ".rowbly")));
 
-    return await commitChanges(repository, project, options.message ?? DEFAULT_MESSAGE, env);
+    return await commitChanges(repository, project, options.message ?? DEFAULT_COMMIT_MESSAGE, env);
   } catch (error) {
     return { status: "failed", detail: describe(error) };
   }
