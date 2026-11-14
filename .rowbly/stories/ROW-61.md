@@ -2,7 +2,7 @@
 title: Check Story dependencies in rowbly doctor
 stage: IN_REFINEMENT
 position: 4
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-61
 pull_request: null
 ---
 
