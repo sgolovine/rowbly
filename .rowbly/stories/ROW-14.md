@@ -140,3 +140,14 @@ Documentation: update `docs/architecture/tui.md` (Factory Modal keys) and
   TUI actions. The service function makes a later CLI command small.
 - The Story is not split. Reason: the control command, the manager change and the TUI views are small and
   follow existing patterns, so one pull request can hold them.
+- The TUI does not hide a dismissed warning by itself. It waits for the next read of `status.json`.
+  Reason: the daemon writes `status.json` before it writes the `completed` receipt, and the shell
+  reads the status file again on each change. After a dismiss, the detail view goes back to the list.
+- The main view of the Factory controls also has a `Warnings` button with the key `w`. Reason: the
+  TUI design gives each key a button for mouse users when there is space.
+- A row of the `Factory › Attention` list is cut at 64 columns with `…`. Reason: the detail view
+  shows the full text, and a row of a `SelectList` must stay on one line.
+- The breadcrumb title of a warning is its attention key, `Heartbeat`, `Thread file` or
+  `Provider <name>`. Reason: these names are short and unique enough for a breadcrumb.
+- `w` and the `Warnings` button show only when the live factory has warnings. Reason: the empty list
+  gives no information.
