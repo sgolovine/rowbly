@@ -1,7 +1,7 @@
 ---
 title: Factory View
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 13
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-13
 pull_request: https://github.com/sgolovine/rowbly/pull/196
 ---
@@ -86,11 +86,3 @@ Not in scope:
 - The Thread rows reuse `ThreadRow` with a new `storyId` prop. Reason: the row already shows the status, the Stage and attempt, the model and the run time.
 - The Story sidebar of ROW-11 stays open when the view mode changes and keeps its draft. In the `threads` mode, `tab` gives it the focus, `esc` in the Factory view closes it, and **+ New Story** opens it; the `n` key does not. Reason: this is the smallest merge of the two features. It does not discard a draft, and it does not add new rules for the Story sidebar.
 - The rebase on `origin/main` replaced the branch history with one commit and a force push. The old head `4a6c1244` is kept in the local branch `backup/ROW-13-pre-rebase` of the worktree. Reason: review findings 2 and 3 ask to remove commits from the branch.
-
-## Review findings
-
-Review of PR #196 at commit `4a6c1244`. On the branch, `pnpm lint`, `pnpm typecheck`, `pnpm test` (284 files, 1561 tests) and `pnpm build` pass. The Factory view code agrees with the acceptance criteria. These findings block the merge:
-
-1. **Conflicts with the base branch.** GitHub reports the PR as `CONFLICTING`. `main` now has the Story sidebar of ROW-11 (merge `ed2c7dce`). A merge of `origin/main` gives conflicts in: `docs/architecture/tui.md`, `src/tui/shell/shell/shell-hints.ts`, `shell-hints.test.ts`, `shell-keys.ts`, `shell-keys.test.ts`, `shell-props.ts`, `shell-props.test.ts`, `shell-selection.test.ts`, `shell-view.ts`, `shell-view.test.ts`, `story-changes.test.ts` and `use-shell.ts`. Fix: merge `origin/main` into `story/ROW-13` (or rebase on it), resolve the conflicts so that the Factory view and the Story sidebar both work, then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again.
-2. **Work outside the scope of the Story.** Commit `0590b892` (`refactor(factory): build the native worker prompt in one TypeScript template`) is not part of ROW-13 and is not on `main`. It changes `src/services/factory-worker/factory-worker.ts`, `src/services/factory-manager/worker-launch.ts`, adds `src/services/factory-worker/worker-prompt.ts` and its test, deletes `worker-message-native.md` in `skills/factory/references/`, `.agents/skills/factory/references/` and `.claude/skills/factory/references/`, and changes `.agents/skills/rowbly-code-style/SKILL.md`, `docs/architecture/skills-and-stages.md` and `docs/architecture/native-factory/README.md`. This changes the native factory worker prompt, which the Story does not include. Fix: remove this commit from the branch (for example rebase `story/ROW-13` on `origin/main` and keep only the ROW-13 commit). Move the refactor to its own Story if it is necessary.
-3. **Commits of canonical `.rowbly/` Story files.** The branch has ten `chore(rowbly): record project changes after scan` commits that change `.rowbly/stories/ROW-11.md`, `.rowbly/stories/ROW-12.md` and `.rowbly/stories/ROW-13.md` (137 lines). A merge writes old Story text over the Project data on `main`. Fix: remove these commits from the branch, so that the PR diff has no file in `.rowbly/`.
