@@ -5,6 +5,7 @@ import type { KeyHint } from "../../keymap.js";
 type ThreadModel = ThreadRecord["model"];
 
 type Workers = FactoryStatus["workers"];
+type Checks = NonNullable<FactoryStatus["checks"]>;
 
 /** The words of a phase for people. */
 export const PHASES: Readonly<Record<FactoryStatus["phase"], string>> = {
@@ -73,6 +74,13 @@ export function workersText(live: boolean, workers: Workers, limit: number | und
   }
 
   return limit !== undefined ? `limit ${limit}` : "—";
+}
+
+/** The checks of a factory that runs: the running and queued counts, the limit and the free memory. */
+export function checksText(checks: Checks): string {
+  const memory = checks.availableMb !== undefined ? ` · ${checks.availableMb} MB free` : "";
+
+  return `${checks.running} running · ${checks.queued} queued · limit ${checks.maxConcurrent}${memory}`;
 }
 
 /** The model of a supervisor Thread in the history list. */

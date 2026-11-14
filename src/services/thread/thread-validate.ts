@@ -20,6 +20,7 @@ const MAX_SUMMARY_LENGTH = 1000;
 const MAX_NOTES = 10;
 const MAX_NOTE_LENGTH = 500;
 const MAX_COMMITS = 20;
+const MAX_CHECKS = 20;
 
 /** Tells if an ID is safe as a file name: letters, digits, `_` and `-`, at most 128 characters. */
 export function validId(id: string): boolean {
@@ -90,6 +91,18 @@ function validError(error: ThreadRecord["error"]): boolean {
   );
 }
 
+function validChecks(checks: ThreadRecord["checks"]): boolean {
+  if (checks === undefined) {
+    return true;
+  }
+
+  return (
+    Array.isArray(checks) &&
+    checks.length <= MAX_CHECKS &&
+    checks.every((check) => [check?.id, check?.key, check?.scope, check?.status].every((v) => typeof v === "string"))
+  );
+}
+
 function validSession(t: ThreadRecord): boolean {
   return !!t.session && t.session.id === t.id && (t.session.file === null || typeof t.session.file === "string");
 }
@@ -124,6 +137,7 @@ function validMetadata(t: ThreadRecord): boolean {
     hasOptionalFields(t) &&
     validUsage(t.usage) &&
     validError(t.error) &&
+    validChecks(t.checks) &&
     validSession(t) &&
     validRuns(t) &&
     (t.model === undefined || validModel(t.model))

@@ -1,4 +1,5 @@
 export * from "./ai-add-provider-page/index.js";
+export * from "./ai-checks-page/index.js";
 export * from "./ai-limits-page/index.js";
 export * from "./ai-models-page/index.js";
 export * from "./ai-providers/index.js";
@@ -7,6 +8,8 @@ export * from "./ai-setting-card/index.js";
 export * from "./ai-task/index.js";
 export * from "./auth-event/index.js";
 export * from "./auth-prompt/index.js";
+export * from "./check-list/index.js";
+export * from "./check-task/index.js";
 export * from "./custom-field-form-modal/index.js";
 export * from "./custom-field-row/index.js";
 export * from "./custom-fields-section/index.js";

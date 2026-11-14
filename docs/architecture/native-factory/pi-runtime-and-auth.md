@@ -34,7 +34,7 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 
 The `factory-settings/` service reads and writes the optional `.rowbly/factory.json`:
 `version`, `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels` and `git`.
+`storyWorkerModels`, `git` and `checks`.
 
 - Without `factory.json`, the worker limit is four and Pi selects default models.
 - An explicit model choice must be available and must support the selected thinking level.
@@ -57,6 +57,20 @@ The `factory-settings/` service reads and writes the optional `.rowbly/factory.j
   `--git-sync-interval` flags set them. See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - The model picker of the TUI offers the supported thinking levels and `Pi default`.
+
+### Checks
+
+The `checks` section sets the checks that the factory runs for its workers. See
+[checks.md](checks.md#settings) for all keys and their defaults.
+
+- `maxConcurrent` is the maximum number of checks at the same time. Use 1 to 32. The default is 2.
+- `reserveMemoryMb` is the memory that the check queue always keeps free. The default is 2048.
+- `items` is the list of the named checks. Each item has a `key` and a `command`.
+- `rowbly factory configure --max-checks <n>` sets `checks.maxConcurrent`.
+- `rowbly factory configure --check-memory-reserve <mb>` sets `checks.reserveMemoryMb`.
+- `rowbly factory check add|update|remove|list` changes and shows the items.
+- A `checks` section that is not valid gives a `ValidationError`, and `factory.json` does not change.
+- Without a `checks` section, the factory has no checks, and the workers get no `run_check` tool.
 
 ### Worker model overrides
 

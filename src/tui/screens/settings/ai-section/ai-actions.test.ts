@@ -144,7 +144,7 @@ describe("aiActions", () => {
     handleAiKey(e, "", key({ leftArrow: true }));
 
     expect(e.setPage).toHaveBeenNthCalledWith(1, "models");
-    expect(e.setPage).toHaveBeenNthCalledWith(2, "limits");
+    expect(e.setPage).toHaveBeenNthCalledWith(2, "checks");
     expect(e.setSelected).toHaveBeenCalledWith(undefined);
   });
 

@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { checkQueueStatus } from "../check-queue/check-queue.js";
 import { evaluateScan, storyHash } from "../factory-policy/factory-policy.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
@@ -162,6 +163,7 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     nextWakeAt: state.nextWakeAt,
     lastDigestHash: state.attemptedHash,
     unanswered: state.unanswered,
+    ...(state.settings.checks ? { checks: checkQueueStatus(manager.checks) } : {}),
     threads: threads
       .slice(-12)
       .map((t) => ({ id: t.id, storyId: t.storyId, stage: t.stage, status: t.status, result: t.result })),

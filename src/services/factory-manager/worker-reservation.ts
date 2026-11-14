@@ -1,4 +1,5 @@
 import { stat } from "node:fs/promises";
+import { cancelThreadChecks } from "../check-queue/check-queue.js";
 import { ConflictError } from "../errors/errors.js";
 import { releaseStory, storyHash } from "../factory-policy/factory-policy.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
@@ -249,7 +250,7 @@ export async function cancelWorker(manager: Manager, id: string, expectedRunId: 
     return getState(manager).active.get(id)?.session;
   });
 
-  await session?.session.abort();
+  await Promise.all([session?.session.abort(), cancelThreadChecks(manager.checks, id)]);
 }
 
 /** Resumes a Thread with a new run. A repeated request for the same run does nothing. */

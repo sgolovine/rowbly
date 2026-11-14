@@ -23,7 +23,10 @@ function Probe(props: {
   selected: boolean;
   onHints: (hints: readonly KeyHint[]) => void;
   onTask: (task: boolean) => void;
+  onRender?: () => void;
 }) {
+  props.onRender?.();
+  // A new `loadRuntime` on each render, as an inline prop gives.
   const tab = useModelsTab({ ...props, storyId: "ROW-01", loadRuntime: async () => runtime });
 
   return <Text>{`cursor=${tab.env.cursor} ready=${tab.env.ready} task=${tab.task?.key ?? "none"}`}</Text>;
@@ -58,5 +61,19 @@ describe("useModelsTab", () => {
     await tui.press(keys.down, keys.enter);
 
     expect(tui.frame()).toContain("cursor=0 ready=false task=none");
+  });
+
+  it("does not render again and again when `loadRuntime` is a new function on each render", async () => {
+    const onRender = vi.fn();
+    const tui = await renderTui(
+      <Probe ctx={project.ctx} selected onHints={vi.fn()} onTask={vi.fn()} onRender={onRender} />,
+    );
+
+    await vi.waitFor(async () => {
+      await tui.press();
+      expect(tui.frame()).toContain("ready=true");
+    });
+
+    expect(onRender.mock.calls.length).toBeLessThan(20);
   });
 });

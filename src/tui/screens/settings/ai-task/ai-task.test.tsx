@@ -22,6 +22,9 @@ function props(overrides: Partial<AiTaskViewProps> = {}): AiTaskViewProps {
     onSaveModel: vi.fn(async () => {}),
     onSaveStageModel: vi.fn(async () => {}),
     onSaveLimit: vi.fn(async () => {}),
+    onSaveCheckLimits: vi.fn(async () => {}),
+    onSaveCheck: vi.fn(async () => {}),
+    onRemoveCheck: vi.fn(),
     onCancel: vi.fn(),
     ...overrides,
   };
