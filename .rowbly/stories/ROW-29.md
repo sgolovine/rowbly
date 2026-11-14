@@ -1,7 +1,7 @@
 ---
 title: Read only changed Threads when a worker writes its activity
 stage: BACKLOG
-position: 4
+position: 3
 worktree: null
 pull_request: null
 ---
