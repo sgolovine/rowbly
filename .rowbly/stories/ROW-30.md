@@ -1,7 +1,7 @@
 ---
 title: Reduce the cost of runtimePath checks on hot runtime reads
-stage: IN_REVIEW
-position: 2
+stage: IN_DEVELOPMENT
+position: 3
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-30
 pull_request: https://github.com/sgolovine/rowbly/pull/216
 ---
@@ -52,3 +52,11 @@ Not in scope:
 - Select the per-operation check (first option) and not a time-based cache. Reason: it has the smallest scope, it has no stale state, and it keeps the symlink protection simple.
 - "One check for each file" in the original acceptance means a fixed number of checks for each Thread, not related to the depth of the path. The session reference `sessions/<id>/<file>.jsonl` has a folder for each Thread, so each Thread has up to 3 `lstat` checks. Reason: the session folder is different for each Thread and cannot be checked one time.
 - Only `listThreads` and `getThread` change. Reason: the Story names `listThreads` in its acceptance, and the other hot paths read one file per operation, so a shared folder check does not reduce their cost much.
+## Review findings
+
+1. `src/services/thread/thread-files.ts` and `src/services/thread/thread-list.ts`: the pull request has merge conflicts with `main`. Commit `9b287c78` (`perf(thread): read only changed Thread files in listThreads`) on `main` added `src/services/thread/thread-cache.ts`. It exports `threadPath`, `readThreadFile` and `readProblem` from `thread-files.ts`, and `listThreads` now calls `cachedThread` and `pruneThreadCache`. Fix: rebase `story/ROW-30` on `origin/main` (or merge `main`) and resolve the conflicts. Keep the cache of `main` and the per-operation folder checks of this Story together. For example, `cachedThread` takes the checked `ThreadDirs` handle and gets the Thread file path with `runtimeChild(dirs.threads, ...)`. Make sure that these items stay true after the merge:
+   - The `realpath` count of `listThreads` stays fixed and the `lstat` count stays at most `C + 3 × N` (`thread-list-checks.test.ts`).
+   - A symlink at `threads/<id>.json`, at `sessions/<id>` or at the session file still gives a Thread issue, also when the Thread is in the cache. On `main`, a cache hit returns the entry before the session check. The test must examine a second `listThreads` call after the symlink is added.
+   - The tests of `thread-cache` on `main` and all existing tests pass. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+
+Notes (not blocking): the code before the merge satisfies the acceptance criteria. CI has no checks on the pull request, so the checks were not run again because of the conflict.
