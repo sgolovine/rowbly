@@ -1,7 +1,7 @@
 ---
 title: Make getStory read one Story file instead of the whole folder twice
 stage: BACKLOG
-position: 4
+position: 5
 worktree: null
 pull_request: null
 ---

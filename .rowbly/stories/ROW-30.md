@@ -1,7 +1,7 @@
 ---
 title: Reduce the cost of runtimePath checks on hot runtime reads
 stage: BACKLOG
-position: 5
+position: 4
 worktree: null
 pull_request: null
 ---
