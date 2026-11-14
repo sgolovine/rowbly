@@ -35,6 +35,8 @@ const IDENTITY = /^([^<>\n]*[^<>\s])\s*<([^<>\s]+)>$/;
 
 export const MIN_SYNC_SECONDS = 60;
 export const MAX_SYNC_SECONDS = 86_400;
+/** The message of a canonical commit without `commitMessage`. `commit-project.mjs` uses the same text. */
+export const DEFAULT_COMMIT_MESSAGE = "chore(rowbly): record project changes after scan";
 export const DEFAULT_GIT_SYNC: GitSync = { push: false, pull: false, syncIntervalSeconds: 300 };
 
 function validText(value: unknown): boolean {
