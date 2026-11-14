@@ -1,7 +1,7 @@
 ---
 title: Turn on the Node compile cache at startup
-stage: IN_REVIEW
-position: 3
+stage: IN_DEVELOPMENT
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-42
 pull_request: https://github.com/sgolovine/rowbly/pull/226
 ---
@@ -66,3 +66,9 @@ Not in scope:
 - A failure of the cache is silent, also without `--json`. Reason: the author said that Rowbly must behave the same without the cache, and a warning would change the stderr of each command.
 - No call to `flushCompileCache()` in the long-running daemon. Reason: Node writes the cache when the process exits normally. A flush is an extra optimization, and the smallest scope does not include it.
 - The bootstrap is in `src/cli.ts` and the old body moves to a new module, so that `package.json` `bin`, `tsup.config.ts` and `launch.entry` do not change. Reason: this is the smallest change that also caches the modules that the CLI imports statically.
+
+## Review findings
+
+1. `src/cli.ts` (whole file): the pull request has a merge conflict with `main`. PR #224 (ROW-41, commit ce9825f2) added a `preloadPiSdk()` function to `src/cli.ts` and passes `preloadPi: preloadPiSdk` to `renderTui`. Fix: merge `origin/main` into `story/ROW-42`. Keep `src/cli.ts` as the bootstrap entry, and move the `preloadPiSdk` function and the `preloadPi` option into `src/cli-main.ts`. Keep the Pi import dynamic. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again, and push.
+
+All other acceptance criteria were satisfied at commit da342ea5. The non-blocking notes are in a comment on the pull request.
