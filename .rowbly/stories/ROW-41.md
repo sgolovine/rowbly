@@ -1,7 +1,7 @@
 ---
 title: Preload the Pi SDK after the board paints
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-41
 pull_request: null
 ---
 
