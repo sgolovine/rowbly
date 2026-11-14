@@ -1,5 +1,5 @@
 ---
-title: Do not reload the board when only state.json changes
+title: Read attachment manifests in search only when the query needs them
 stage: BACKLOG
 worktree: null
 pull_request: null
