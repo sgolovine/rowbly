@@ -1,7 +1,7 @@
 ---
 title: Capture real TUI screenshots for the website
-stage: BACKLOG
-position: 13
+stage: IN_REFINEMENT
+position: 14
 worktree: null
 pull_request: null
 ---
