@@ -8,3 +8,5 @@ This file records the changes to Rowbly that users can see.
   adds a new empty `### Pre Release` section above it.
 
 ### Pre Release
+
+- Added: Story files can have a `dependsOn` list of upstream Stories. `rowbly story delete` removes the deleted Story from each `dependsOn` list and shows a warning for each changed Story. (ROW-59)

@@ -19,7 +19,7 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { createUserPrompts } from "../prompts/prompts.js";
 import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
-import { formatStoryId, readStoryFiles, storyPath } from "../story-files/story-files.js";
+import { dependsOnOf, formatStoryId, readStoryFiles, rewriteStories, storyPath } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, projectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Project extends ProjectConfig {
@@ -127,8 +127,21 @@ function renamedLink(id: string, oldKey: string, newKey: string): string {
   return canonical ? formatStoryId(newKey, Number(canonical.slice(oldKey.length + 1))) : id;
 }
 
-/** Renames the story files, their attachment folders and the spec links to the new key. */
-async function renameStoryKey(paths: ProjectPaths, oldKey: string, newKey: string): Promise<void> {
+/** The frontmatter with each `dependsOn` ID of the old key changed to the new key, or `false` for no change. */
+function renamedDependsOn(
+  data: Record<string, unknown>,
+  oldKey: string,
+  newKey: string,
+): Record<string, unknown> | false {
+  const dependsOn = dependsOnOf(data);
+  const renamed = dependsOn.map((id) => renamedLink(id, oldKey, newKey));
+
+  return renamed.every((id, index) => id === dependsOn[index]) ? false : { ...data, dependsOn: renamed };
+}
+
+/** Renames the story files, their attachment folders, the spec links and the dependencies to the new key. */
+async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey: string): Promise<void> {
+  const oldKey = config.projectKey;
   const files = await readStoryFiles(paths);
   const owned = files.filter((file) => file.projectKey === oldKey);
   const taken = files.filter((file) => file.projectKey === newKey).map((file) => file.id);
@@ -143,6 +156,7 @@ async function renameStoryKey(paths: ProjectPaths, oldKey: string, newKey: strin
   );
   await mapInOrder(owned, (file) => rename(file.path, storyPath(paths, newKey, file.number)));
   await rewriteSpecLinks(paths, (stories) => stories.map((id) => renamedLink(id, oldKey, newKey)));
+  await rewriteStories(paths, config, (data) => renamedDependsOn(data, oldKey, newKey));
 }
 
 /** Changes the name, the key, the features or the display options of the project. A new key renames every story. */
@@ -158,7 +172,7 @@ export async function updateProject(input: UpdateProjectInput, ctx: ServiceConte
   ]);
 
   if (projectKey !== config.projectKey) {
-    await renameStoryKey(paths, config.projectKey, projectKey);
+    await renameStoryKey(config, paths, projectKey);
   }
 
   const features = input.features === undefined ? config.features : { ...config.features, ...input.features };

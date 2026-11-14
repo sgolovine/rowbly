@@ -11,12 +11,14 @@ import {
   type StoryFile,
   sortStoryFiles,
   storyPath,
+  withDependsOn,
   writeStoryFile,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
+import { checkedDependsOn, removeDependencies } from "./story-dependencies.js";
 import { fieldUpdates, positionIssues, titleIssues } from "./story-input.js";
 import { countAttachments, findStoryFile, getStory, positionIn, toStory } from "./story-read.js";
-import type { CreateStoryInput, Story, UpdateStoryInput } from "./story-types.js";
+import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
 export { getStory, searchStories } from "./story-read.js";
 export * from "./story-types.js";
@@ -70,7 +72,8 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   const files = await readStoryFiles(paths);
   const number = Math.max(0, ...files.map((file) => file.number)) + 1;
   const path = storyPath(paths, config.projectKey, number);
-  const doc = { data, body: input.description ?? "" };
+  const dependsOn = checkedDependsOn(config, files, formatStoryId(config.projectKey, number), input.dependsOn ?? []);
+  const doc = { data: withDependsOn(data, dependsOn), body: input.description ?? "" };
 
   return withAttachments(
     await attachmentDir(paths, formatStoryId(config.projectKey, number)),
@@ -80,8 +83,24 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   );
 }
 
+/** The frontmatter after an update of the `dependsOn` list. Without a list in the input, the old value stays. */
+function updatedDependsOn(
+  config: ProjectConfig,
+  files: readonly StoryFile[],
+  file: StoryFile,
+  data: Record<string, unknown>,
+  dependsOn: readonly string[] | undefined,
+): Record<string, unknown> {
+  return dependsOn === undefined ? data : withDependsOn(data, checkedDependsOn(config, files, file.id, dependsOn));
+}
+
 /** The frontmatter of the story after the update. Throws a `ValidationError` when the input is invalid. */
-function updatedStoryData(config: ProjectConfig, file: StoryFile, input: UpdateStoryInput): Record<string, unknown> {
+function updatedStoryData(
+  config: ProjectConfig,
+  files: readonly StoryFile[],
+  file: StoryFile,
+  input: UpdateStoryInput,
+): Record<string, unknown> {
   const stage = input.stage === undefined ? undefined : lookupStage(config, input.stage);
   const fields = fieldUpdates(config, input.fields ?? {});
 
@@ -92,12 +111,14 @@ function updatedStoryData(config: ProjectConfig, file: StoryFile, input: UpdateS
     ...fields.issues,
   ]);
 
-  return {
+  const data = {
     ...file.doc.data,
     ...(input.title === undefined ? {} : { title: input.title.trim() }),
     ...(input.stage === undefined ? {} : { stage: stage?.key }),
     ...fields.values,
   };
+
+  return updatedDependsOn(config, files, file, data, input.dependsOn);
 }
 
 /** Writes the story at `position` in its stage. The moved story is always written. */
@@ -130,7 +151,7 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
   const config = await readConfig(paths);
   const files = await readStoryFiles(paths);
   const file = await findStoryFile(paths, config, input.id, files);
-  const data = updatedStoryData(config, file, input);
+  const data = updatedStoryData(config, files, file, input);
 
   const moved = data.stage !== file.doc.data.stage;
   const updated = { ...file, doc: { data, body: input.description ?? file.doc.body } };
@@ -205,16 +226,22 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
   );
 }
 
-/** Deletes a story, its images and its links from the specs. */
-export async function deleteStory(input: { id: string }, ctx: ServiceContext = {}): Promise<{ id: string }> {
+/**
+ * Deletes a story, its images and its links from the specs. Removes its ID from the `dependsOn` list of each
+ * downstream story, and gives a warning for each changed story.
+ */
+export async function deleteStory(input: { id: string }, ctx: ServiceContext = {}): Promise<DeleteStoryResult> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
-  const file = await findStoryFile(paths, config, input.id);
+  const files = await readStoryFiles(paths);
+  const file = await findStoryFile(paths, config, input.id, files);
+
+  const warnings = await removeDependencies(config, files, file.id);
 
   await rm(await attachmentDir(paths, file.id), { recursive: true, force: true });
   await rm(file.path);
   // A spec that loses its last Story stays, and `doctor` reports it as an orphan.
   await rewriteSpecLinks(paths, (stories) => stories.filter((id) => id !== file.id));
 
-  return { id: file.id };
+  return { id: file.id, warnings };
 }

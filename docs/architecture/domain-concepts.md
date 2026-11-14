@@ -12,7 +12,7 @@ relate.
 Project ── configuration: custom field definitions, stages (each with an optional prompt)
   ├── Factory ── native supervisor and independent workers
   │     └── Thread ── one Pi session, with one or more runs
-  └── Story ── custom field values, exactly one stage, optional PNG attachments
+  └── Story ── custom field values, exactly one stage, optional PNG attachments, upstream Stories
         ├── Thread ── the history of one worker attempt
         └── Spec ── a Markdown document, linked to one or more stories
 ```
@@ -31,6 +31,26 @@ factory. The Supervisor prompt and the Worker prompt go to one role. See [prompt
 A Project contains Stories. You define each custom field one time, at the Project level. The field
 then applies to all Stories in that Project, and each Story has its own value for it. Each Story is in
 a Stage. A Story can have PNG attachments. See [storage.md](storage.md#attachments).
+
+### Story dependencies
+
+A Story can depend on other Stories of the same Project. The Story keeps the IDs of these Stories in
+its `dependsOn` list. See [storage.md](storage.md#dependencies).
+
+| Word             | Meaning                                                                         |
+| ---------------- | ------------------------------------------------------------------------------- |
+| Dependency       | A relation: Story B depends on Story A.                                         |
+| Upstream Story   | Story A. It must be complete before Story B can start.                          |
+| Downstream Story | Story B. It waits for Story A.                                                  |
+| Complete         | The Story is in the last Stage of the board, also when that Stage is disabled.  |
+| Blocked          | The Story has one or more upstream Stories that are not complete.               |
+| Ready            | The Story has no upstream Stories, or all of its upstream Stories are complete. |
+
+- A Story in review is not complete. The upstream code is on the main branch only after the merge.
+- The pure functions in `src/services/story-dependency/` calculate these values: `isComplete`,
+  `waitingFor`, `isBlocked`, `blocksOf`, `findCycle` and `dependencyError`. Use them. Do not write a
+  second rule for "Complete".
+- An upstream ID of a Story that does not exist does not block the Story. `rowbly doctor` reports it.
 
 ## Stage
 
