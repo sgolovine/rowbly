@@ -1,7 +1,7 @@
 ---
 title: Read only changed Threads when a worker writes its activity
-stage: IN_DEVELOPMENT
-position: 3
+stage: IN_REVIEW
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-29
 pull_request: https://github.com/sgolovine/rowbly/pull/213
 ---
