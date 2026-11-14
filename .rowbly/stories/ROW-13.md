@@ -1,6 +1,6 @@
 ---
 title: Factory View
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-13
 pull_request: https://github.com/sgolovine/rowbly/pull/196
@@ -84,6 +84,8 @@ Not in scope:
 - In the `stories` mode, the footer hints do not change and do not show `t`. `GLOBAL_KEYS` and the help Modal list `t`. In the `threads` mode, the footer shows `t Stories`. Reason: the Story list must not change in the `stories` mode, and its hint tests must pass.
 - A click on a Thread row selects the row and opens the Thread Modal at once. Reason: the acceptance criteria say that a click on a Thread row opens the Modal.
 - The Thread rows reuse `ThreadRow` with a new `storyId` prop. Reason: the row already shows the status, the Stage and attempt, the model and the run time.
+- The Story sidebar of ROW-11 stays open when the view mode changes and keeps its draft. In the `threads` mode, `tab` gives it the focus, `esc` in the Factory view closes it, and **+ New Story** opens it; the `n` key does not. Reason: this is the smallest merge of the two features. It does not discard a draft, and it does not add new rules for the Story sidebar.
+- The rebase on `origin/main` replaced the branch history with one commit and a force push. The old head `4a6c1244` is kept in the local branch `backup/ROW-13-pre-rebase` of the worktree. Reason: review findings 2 and 3 ask to remove commits from the branch.
 
 ## Review findings
 
