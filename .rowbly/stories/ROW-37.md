@@ -1,7 +1,7 @@
 ---
 title: Make threads tab compact
-stage: IN_REVIEW
-position: 2
+stage: DONE
+position: 42
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-37
 pull_request: https://github.com/sgolovine/rowbly/pull/230
 ---
