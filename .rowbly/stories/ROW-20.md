@@ -1,7 +1,7 @@
 ---
 title: Allow overriding AI worker model
-stage: IN_DEVELOPMENT
-position: 3
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-20
 pull_request: https://github.com/sgolovine/rowbly/pull/202
 ---
