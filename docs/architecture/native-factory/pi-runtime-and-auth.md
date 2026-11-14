@@ -16,6 +16,7 @@ Settings, or the factory settings.
 - `src/services/pi-runtime/` holds the lazy import (`loadPi()`), the session adapter, the runtime and
   the model catalog. Keep each runtime import of Pi in this module.
 - The `import-boundary` test in `pi-runtime/` fails if help or `factory status` loads Pi. Keep this test.
+  It also imports the Pi worker client, which must not load Pi.
 - `tsup` keeps `@earendil-works/pi-coding-agent` external. See [../tooling.md](../tooling.md#build).
 
 ## Authentication
@@ -33,17 +34,49 @@ The `agent-auth/` service gives the provider status and does login, logout and m
 
 ## The model cache
 
-Pi takes about 0.6 s to load. The TUI loads it on the main thread, so the TUI stops during the load.
-The `pi-catalog-cache/` service keeps the model list and the provider status in
+Pi takes about 0.6 s to load. If the TUI loads Pi on its main thread, the TUI stops during the load.
+The [Pi worker](#the-pi-worker) loads Pi for the model list and the provider status. The `pi-catalog-cache/` service keeps the model list and the provider status in
 `~/.cache/rowbly/pi-catalog.json`. See [../storage.md](../storage.md#cacherowblypi-catalogjson).
 
 - `pi-catalog-cache.ts` reads, writes and deletes the file. It does not import Pi. The
   `import-boundary` test examines this.
-- `pi-catalog-refresh.ts` loads the catalog through a runtime and writes the cache
-  (`refreshPiCatalog()`). `loadPiCatalog()` and `piProviderReady()` use a fresh cache, and load Pi
-  only when the cache is stale or missing.
-- The Models tab shows the cached models at once. When the cache is stale, it loads Pi in the
-  background and then shows the new models. A failed refresh keeps the cached models.
+- `pi-catalog-refresh.ts` loads the catalog through a `PiCatalogSource` and writes the cache
+  (`refreshPiCatalog()`). A source has two reads: `listAvailableModels()` and `getAuthStatus()`.
+  `loadPiCatalog()` and `piProviderReady()` use a fresh cache, and read the source only when the
+  cache is stale or missing.
+- `runtimeSource(runtime)` makes a source from a runtime of the same thread. The AI section of
+  Settings uses it, because it also needs the runtime for login and logout.
+- The Models tab shows the cached models at once. When the cache is stale, it reads the Pi worker in
+  the background and then shows the new models. A failed refresh keeps the cached models.
+
+## The Pi worker
+
+The Models tab and the Factory controls read the model list and the provider status through a
+`worker_threads` worker. Thus the main thread of the TUI does not import Pi for these reads, and the
+keys and the screen stay responsive.
+
+- `pi-runtime/pi-worker.ts` is the worker entry. It imports Pi and answers two requests: `models` and
+  `authStatus`. It uses `createFactoryRuntime()` and the functions of `agent-auth/`.
+- The worker makes a new Pi runtime for each request. Thus a login or a logout in the TUI or in a
+  different process shows in the next answer.
+- A reply has plain data, or an error message. It does not have an `Error` object or a stack, so
+  that no credential text goes to the main thread. Only the message of a Rowbly error goes through.
+  Other errors get a fixed message.
+- `pi-runtime/pi-worker-client.ts` is the client. It does not import Pi. `piWorkerSource()` gives a
+  `PiCatalogSource` that sends each read to the worker.
+- The worker starts at the first request, not at the import. The client calls `unref()`, so that the
+  worker does not keep the process alive.
+- Each request has an id. The client gives each reply to the request with the same id.
+- If the worker sends `error` or stops, all its requests fail. The next request starts a new worker.
+- If the worker cannot start, the request fails. The client does not load Pi on the main thread in
+  its place, because that stops the TUI again.
+- The TUI starts the worker in the background after the board shows (`warmPiWorker()`). When the
+  TUI quits, `src/cli-main.ts` calls `stopPiWorker()`. The CLI commands do not import the client.
+- The AI section of Settings, login, logout, the CLI commands and the factory daemon still load Pi
+  on the main thread through `authRuntime()` or `createFactoryRuntime()`.
+- The build makes `dist/pi-worker.js` next to `dist/cli.js`. The client finds `pi-worker.js` next to
+  its own file. When `tsx` runs the sources (`pnpm dev`), the client finds `pi-worker.ts` and gives
+  the loader flags of the process to the worker. See [../tooling.md](../tooling.md#build).
 
 ## Factory settings
 

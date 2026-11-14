@@ -8,7 +8,7 @@ import {
   setWorkerOverride,
   updateFactorySettings,
 } from "../../../../services/factory-settings/factory-settings.js";
-import { refreshPiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
+import { refreshPiCatalog, runtimeSource } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { FormValues } from "../../../components/index.js";
@@ -51,7 +51,7 @@ export async function loadStatus(runtime: AuthRuntime | undefined, ctx: ServiceC
     return undefined;
   }
 
-  const { providers, models } = await refreshPiCatalog(runtime, ctx);
+  const { providers, models } = await refreshPiCatalog(runtimeSource(runtime), ctx);
 
   return { providers, models };
 }

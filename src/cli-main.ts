@@ -7,11 +7,21 @@ const program = new Command().name("rowbly").description(pkg.description).versio
 
 registerCommands(program);
 
-/** Imports the Pi SDK in the background. The dynamic import keeps the CLI commands free of Pi. */
+/**
+ * Starts the Pi worker in the background, so that it imports the Pi SDK off the render thread. The dynamic import
+ * keeps the CLI commands free of the worker client.
+ */
 async function preloadPiSdk(): Promise<void> {
-  const { preloadPi } = await import("./services/pi-runtime/pi-runtime.js");
+  const { warmPiWorker } = await import("./services/pi-runtime/pi-worker-client.js");
 
-  await preloadPi();
+  await warmPiWorker();
+}
+
+/** Terminates the Pi worker when the TUI quits. */
+async function stopPiWorkerThread(): Promise<void> {
+  const { stopPiWorker } = await import("./services/pi-runtime/pi-worker-client.js");
+
+  await stopPiWorker();
 }
 
 // `rowbly` with no arguments launches the TUI; anything else is a CLI invocation.
@@ -26,9 +36,10 @@ if (process.argv.length <= 2) {
       execArgv: [...process.execArgv],
       entry: resolve(process.argv[1] as string),
     },
-    // Only the TUI imports Pi early, after the board shows. The CLI commands stay free of Pi.
+    // Only the TUI starts the Pi worker early, after the board shows. The CLI commands stay free of Pi.
     preloadPi: preloadPiSdk,
   });
+  await stopPiWorkerThread();
 } else {
   await program.parseAsync(process.argv);
 }

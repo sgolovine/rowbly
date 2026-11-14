@@ -1,7 +1,7 @@
 ---
 title: Load the TUI only when rowbly starts without a command
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 39
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-43
 pull_request: https://github.com/sgolovine/rowbly/pull/227
 ---
