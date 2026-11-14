@@ -1,7 +1,7 @@
 ---
 title: Read attachment manifests in search only when the query needs them
-stage: IN_REFINEMENT
-position: 5
+stage: IN_DEVELOPMENT
+position: 3
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-34
 pull_request: null
 ---
