@@ -36,6 +36,25 @@ describe("factoryStatus", () => {
     expect(factoryLive({ ...ready, liveness: "dead" })).toBe(false);
   });
 
+  it("gives each problem its kind, its Story, its file and the dismiss of attention entries only", () => {
+    const problems = factoryProblems({ ...ready, responsive: false });
+
+    expect(problems.map((p) => [p.kind, p.dismissible])).toEqual([
+      ["heartbeat", false],
+      ["attention", true],
+      ["issue", false],
+      ["provider", false],
+    ]);
+    expect(problems[1]).toMatchObject({
+      key: "attention:commit",
+      title: "commit",
+      attentionKey: "commit",
+      storyId: "ROW-01",
+      message: "Canonical commit: failed",
+    });
+    expect(problems[2]).toMatchObject({ file: "threads/x.json", message: "bad" });
+  });
+
   it("finds the queue entry of a Story and says why it waits", () => {
     const entry = queueEntry(ready, "ROW-02");
     expect(entry && queueReason(entry)).toBe("waiting for a worker slot");

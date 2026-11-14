@@ -11,11 +11,14 @@ export interface FactoryButtonsProps {
   readonly canStart: boolean;
   readonly canStop: boolean;
   readonly canInspect: boolean;
+  /** The live factory has warnings. */
+  readonly canWarnings?: boolean;
   /** False while a dialog or a different view has the keys; then the buttons do not take a click. */
   readonly idle: boolean;
   readonly onStart: () => void;
   readonly onInspect: () => void;
   readonly onHistory: () => void;
+  readonly onWarnings?: () => void;
   readonly onStop: () => void;
   readonly onAiSettings?: () => void;
 }
@@ -37,6 +40,9 @@ export function FactoryButtons(props: FactoryButtonsProps) {
         />
       )}
       {canInspect && <Button label="Supervisor" keyName="enter" compact clickable={idle} onClick={props.onInspect} />}
+      {props.canWarnings && props.onWarnings && (
+        <Button label="Warnings" keyName="w" compact clickable={idle} onClick={props.onWarnings} />
+      )}
       <Button label="History" keyName="h" compact clickable={idle} onClick={props.onHistory} />
       {props.onAiSettings && (
         <Button label="AI settings" keyName="a" compact clickable={idle} onClick={props.onAiSettings} />

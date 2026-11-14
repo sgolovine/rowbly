@@ -21,14 +21,38 @@ export function factoryHints(can: {
   readonly start: boolean;
   readonly stop: boolean;
   readonly inspect: boolean;
+  readonly warnings: boolean;
   readonly aiSettings: boolean;
 }): KeyHint[] {
   return [
     ...(can.start ? [{ key: "s", description: "start" }] : []),
     ...(can.stop ? [{ key: "x", description: "stop" }] : []),
     ...(can.inspect ? [{ key: "enter", description: "supervisor" }] : []),
+    ...(can.warnings ? [{ key: "w", description: "warnings" }] : []),
     { key: "h", description: "history" },
     ...(can.aiSettings ? [{ key: "a", description: "AI settings" }] : []),
+    { key: "esc", description: "back" },
+  ];
+}
+
+/** The keys of the list of the warnings. */
+export const ATTENTION_HINTS: readonly KeyHint[] = [
+  { key: "↑/↓", description: "select" },
+  { key: "enter", description: "open" },
+  { key: "/", description: "filter" },
+  { key: "esc", description: "back" },
+];
+
+/** The keys of the detail view of a warning that it offers now. */
+export function problemHints(can: {
+  readonly story: boolean;
+  readonly thread: boolean;
+  readonly dismiss: boolean;
+}): KeyHint[] {
+  return [
+    ...(can.story ? [{ key: "o", description: "open Story" }] : []),
+    ...(can.thread ? [{ key: "t", description: "open Thread" }] : []),
+    ...(can.dismiss ? [{ key: "d", description: "dismiss" }] : []),
     { key: "esc", description: "back" },
   ];
 }

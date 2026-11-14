@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Project } from "../../../services/project/project.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
+import type { ThreadRecord } from "../../../services/thread/thread.js";
 import { SIDEBAR_WIDTH } from "../../components/index.js";
 import { createShellRegistry, createToastStore } from "../../hooks/index.js";
 import { shellFrame } from "./shell-frame.js";
@@ -118,6 +119,15 @@ describe("shell props", () => {
     overlayHandlers(shell).openAiSettings();
 
     expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "settings", section: "ai" });
+  });
+
+  it("opens the Thread of a factory warning in the Thread Modal", () => {
+    const shell = env(OPEN);
+    const thread = { id: "thread-1" } as ThreadRecord;
+
+    overlayHandlers(shell).openThread(thread);
+
+    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "thread", thread });
   });
 
   it("gives the Story sidebar its size, its focus and its handlers, and closes it with the ✕", () => {
