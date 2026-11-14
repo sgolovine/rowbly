@@ -1,7 +1,7 @@
 ---
 title: Click and dismiss warnings
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 14
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-14
 pull_request: https://github.com/sgolovine/rowbly/pull/197
 ---
