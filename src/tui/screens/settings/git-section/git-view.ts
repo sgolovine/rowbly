@@ -35,7 +35,7 @@ export interface GitForm {
 
 const NO_VALUE = "—";
 
-export const DEFAULT_AUTHOR_TEXT = "Git config identity";
+const DEFAULT_AUTHOR_TEXT = "Git config identity";
 
 /** The bounds of the sync interval, as text for the hints of a form and an error. */
 export const INTERVAL_RANGE = `a whole number from ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS}`;
