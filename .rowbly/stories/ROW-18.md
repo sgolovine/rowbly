@@ -1,7 +1,7 @@
 ---
 title: Periodic Git push and pull in the factory
 stage: IN_REFINEMENT
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-18
 pull_request: null
 ---
 
