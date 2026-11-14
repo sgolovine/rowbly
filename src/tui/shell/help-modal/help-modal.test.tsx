@@ -11,6 +11,7 @@ describe("HelpModal", () => {
     const frame = tui.frame();
     expect(frame).toContain("Keys");
     expect(frame.indexOf("new Stage")).toBeLessThan(frame.indexOf("find Stories"));
+    expect(frame).toContain("checks in the factory queue");
   });
 
   it("explains the factory activity indicator", async () => {

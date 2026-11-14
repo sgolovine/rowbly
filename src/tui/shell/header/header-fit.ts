@@ -1,4 +1,5 @@
 import type { FactoryStatus } from "../../../services/factory/factory.js";
+import { checksButtonWidth } from "../checks-button/index.js";
 import { factoryButtonWidth } from "../factory-button/index.js";
 import { viewModeSwitchWidth } from "../view-mode-switch/index.js";
 
@@ -31,6 +32,8 @@ export interface HeaderFit {
   readonly factoryShown: boolean;
   /** The view mode switch shows after the Factory Button. It shows only when the full header fits with it. */
   readonly switchShown: boolean;
+  /** The Checks Button shows after the switch. It shows only when the full header fits with it, and it goes first. */
+  readonly checksShown: boolean;
 }
 
 /** What the fit reads: the width, the Project name and the status of the factory, when there are such parts. */
@@ -40,6 +43,8 @@ interface FitInput {
   readonly factory: { readonly status: FactoryStatus | undefined } | undefined;
   /** The Factory group has the view mode switch. */
   readonly viewSwitch?: boolean;
+  /** The check queue of the live factory, when the Factory group has the Checks Button. */
+  readonly checks?: NonNullable<FactoryStatus["checks"]>;
 }
 
 function cutName(name: string | undefined, width: number): string {
@@ -53,14 +58,19 @@ function factoryWidth(input: FitInput, withKey: boolean, short = false, withSwit
   return input.factory ? factoryButtonWidth(input.factory.status, withKey, short) + switchWidth + SEPARATOR_WIDTH : 0;
 }
 
+/** The columns of the Checks Button with its key cap, or none without a check queue. */
+function checksWidth(input: FitInput): number {
+  return input.checks ? checksButtonWidth(input.checks, true) : 0;
+}
+
 /** Whether a row of `row` columns fits next to the Project name. Without a Project, each row fits. */
 function fits(input: FitInput, name: string, row: number): boolean {
   return input.project === undefined || name.length + row <= input.width;
 }
 
 /**
- * Fits the header parts in `width`. The view mode switch goes first, so that the other parts keep their room.
- * Then the Story finder becomes its glyph, the Factory Button loses its pending count, then its key cap, then
+ * Fits the header parts in `width`. The Checks Button goes first, then the view mode switch, so that the other parts
+ * keep their room. Then the Story finder becomes its glyph, the Factory Button loses its pending count, then its key cap, then
  * it goes.
  */
 export function headerFit(input: FitInput): HeaderFit {
@@ -78,6 +88,11 @@ export function headerFit(input: FitInput): HeaderFit {
     factoryShown &&
     input.viewSwitch === true &&
     fits(input, name, ROW_WIDTH_FULL + factoryWidth(input, true, false, true));
+  const checksShown =
+    factoryShown &&
+    input.checks !== undefined &&
+    (switchShown || input.viewSwitch !== true) &&
+    fits(input, name, ROW_WIDTH_FULL + factoryWidth(input, true, false, switchShown) + checksWidth(input));
 
-  return { narrow, name, compact, factoryShort, factoryKey, factoryShown, switchShown };
+  return { narrow, name, compact, factoryShort, factoryKey, factoryShown, switchShown, checksShown };
 }

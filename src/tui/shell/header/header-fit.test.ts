@@ -13,7 +13,22 @@ describe("headerFit", () => {
       factoryKey: true,
       factoryShown: true,
       switchShown: false,
+      checksShown: false,
     });
+  });
+
+  it("removes the Checks Button before the view mode switch in a narrow header", () => {
+    const checks = { running: 2, queued: 1, maxConcurrent: 4, jobs: [] };
+    const input = { project: "Rowbly", factory: STOPPED, viewSwitch: true, checks };
+
+    // The switch needs 114 columns. The Checks Button with its key (16) needs more.
+    expect(headerFit({ ...input, width: 130 })).toMatchObject({ switchShown: true, checksShown: true });
+    expect(headerFit({ ...input, width: 129 })).toMatchObject({ switchShown: true, checksShown: false });
+    expect(headerFit({ ...input, width: 113 })).toMatchObject({ switchShown: false, checksShown: false });
+    expect(headerFit({ ...input, width: 160, checks: undefined }).checksShown).toBe(false);
+    // Without the switch, the Checks Button needs the full row, the Factory Button and its own width.
+    expect(headerFit({ ...input, viewSwitch: false, width: 113 }).checksShown).toBe(true);
+    expect(headerFit({ ...input, viewSwitch: false, width: 112 }).checksShown).toBe(false);
   });
 
   it("shows the view mode switch only when the full header fits with it", () => {

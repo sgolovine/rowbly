@@ -1,3 +1,4 @@
+export * from "./checks-button/index.js";
 export * from "./factory-button/index.js";
 export * from "./header/index.js";
 export * from "./help-modal/index.js";

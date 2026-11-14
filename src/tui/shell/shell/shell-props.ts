@@ -37,6 +37,7 @@ export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): 
     finder: open ? { onClick: () => env.setOverlay({ kind: "finder" }) } : undefined,
     factory: open ? { status: factory, onClick: () => env.setOverlay({ kind: "factory" }) } : undefined,
     viewSwitch: open ? { threads: mode === "threads", onToggle: () => toggleMode(env) } : undefined,
+    checks: open ? { onClick: () => env.setOverlay({ kind: "checks" }) } : undefined,
     settings: open ? { onClick: () => env.setOverlay({ kind: "settings" }) } : undefined,
     newStory: open
       ? { onClick: () => newStory(env), showKey: !sidebarFocused && !storyFocused && mode === "stories" }

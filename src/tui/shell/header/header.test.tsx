@@ -191,4 +191,64 @@ describe("Header", () => {
       expect(tui.frame()).toMatch(/Factory off {2}f/);
     });
   });
+
+  describe("Checks Button", () => {
+    const checks = { running: 2, queued: 1, maxConcurrent: 4, jobs: [] };
+    const live = { version: 1, phase: "ready", liveness: "alive", checks } as FactoryStatus;
+    /**
+     * The header with the factory status `status`. Without a Project, each part fits. The test terminal has 100
+     * columns, so a wider row draws its parts too close together.
+     */
+    const header = (status: FactoryStatus, onChecks = () => {}) => (
+      <LayoutContext.Provider value={{ width: 100, height: undefined }}>
+        <Box width={100} flexDirection="column">
+          <Header
+            factory={{ status, onClick: () => {} }}
+            viewSwitch={{ threads: false, onToggle: () => {} }}
+            checks={{ onClick: onChecks }}
+            settings={{ onClick: () => {} }}
+            newStory={{ onClick: () => {}, showKey: true }}
+            clickable
+          />
+        </Box>
+      </LayoutContext.Provider>
+    );
+
+    it("shows the running and the queued counts after the switch and before the |, and calls onClick", async () => {
+      const onChecks = vi.fn();
+      const tui = await renderTui(header(live, onChecks));
+      expect(tui.frame()).toMatch(/Stories {2}t {3}Checks 2\/1 {2}c {2}\| {1,2}Settings {2},/);
+      await tui.click("Checks");
+      expect(onChecks).toHaveBeenCalledOnce();
+    });
+
+    it("does not show the Button when the factory is not live or has no checks", async () => {
+      const tui = await renderTui(header({ ...live, phase: "stopped" }));
+      expect(tui.frame()).not.toContain("Checks");
+      await tui.rerender(header({ ...live, liveness: "dead" }));
+      expect(tui.frame()).not.toContain("Checks");
+      await tui.rerender(header({ ...live, checks: undefined }));
+      expect(tui.frame()).not.toContain("Checks");
+      await tui.rerender(header(live));
+      expect(tui.frame()).toContain("Checks 2/1");
+    });
+
+    it("goes before the view mode switch in a narrow header", async () => {
+      // The full row, the Project name, the Factory Button and the switch fit in 125 columns, but not the Checks Button.
+      const tui = await renderTui(
+        <LayoutContext.Provider value={{ width: 125, height: undefined }}>
+          <Header
+            project={{ name: "rowbly", onClick: () => {} }}
+            finder={{ onClick: () => {} }}
+            factory={{ status: live, onClick: () => {} }}
+            viewSwitch={{ threads: false, onToggle: () => {} }}
+            checks={{ onClick: () => {} }}
+            clickable
+          />
+        </LayoutContext.Provider>,
+      );
+      expect(tui.frame()).not.toContain("Checks");
+      expect(tui.frame()).toContain("Stories");
+    });
+  });
 });

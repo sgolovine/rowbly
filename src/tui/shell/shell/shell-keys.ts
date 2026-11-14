@@ -1,5 +1,6 @@
 import type { Key } from "ink";
 import { groupDelta, moveDelta, reorderDelta } from "../../keymap.js";
+import { liveChecks } from "../../screens/factory/index.js";
 import type { Overlay } from "../overlay.js";
 import {
   collapseStory,
@@ -25,6 +26,13 @@ const BOARD_OVERLAYS: ReadonlyMap<string, Overlay> = new Map<string, Overlay>([
   [",", { kind: "settings" }],
   ["f", { kind: "factory" }],
 ]);
+
+/** `c` opens the Checks Modal while the live factory has a check queue. Otherwise the key does nothing. */
+function checksKey(env: ShellEnv): void {
+  if (liveChecks(env.factory)) {
+    env.setOverlay({ kind: "checks" });
+  }
+}
 
 /** `ctrl` keys: hide the sidebar, find a Story, or move a Story to another Stage. */
 function ctrlKey(env: ShellEnv, input: string, key: Key): void {
@@ -168,6 +176,8 @@ export function handleShellKey(env: ShellEnv, input: string, key: Key): void {
     env.setOverlay(boardOverlay);
   } else if (input === "t") {
     toggleMode(env);
+  } else if (input === "c") {
+    checksKey(env);
   } else {
     paneKey(env, input, key);
   }
