@@ -101,6 +101,32 @@ The supervisor receives bounded worker summaries. It reads transcript excerpts o
 
 A Project without `state.json` remains valid and shows no activity status line below the Story list.
 
+## Prompts
+
+Each factory agent gets the Rowbly system prompts first. Then it gets the prompts of your Project:
+
+| File                            | Prompt            | Who gets it                    |
+| ------------------------------- | ----------------- | ------------------------------ |
+| `.rowbly/prompts/SYSTEM.md`     | Project prompt    | The supervisor and all workers |
+| `.rowbly/prompts/SUPERVISOR.md` | Supervisor prompt | The supervisor only            |
+| `.rowbly/prompts/WORKER.md`     | Worker prompt     | All workers, in all Stages     |
+| `.rowbly/stages/<KEY>.md`       | Stage prompt      | Only the workers of that Stage |
+
+The Rowbly system prompts have the highest priority. Your prompts cannot remove a system rule.
+After the system prompts, the Stage prompt comes first, then the Supervisor or Worker prompt, then the Project prompt.
+
+Edit a prompt in the file, in Settings › Project › Prompts, or with the CLI:
+
+```sh
+rowbly prompt list
+rowbly prompt get worker
+rowbly prompt set worker --file worker-prompt.md
+```
+
+`rowbly init` creates the three files with no text. A missing file has no text.
+`rowbly doctor --fix` creates a missing prompt file.
+Rowbly does not read the old `.rowbly/ROWBLY.md` now. `rowbly doctor --fix` moves its text to `prompts/SYSTEM.md` when that prompt has no text.
+
 ## Threads and conversations
 
 Press `t`, or click the `Stories`/`Threads` Switch in the header, to see the worker Threads of all Stories.
@@ -160,44 +186,41 @@ See [runtime files and locks](docs/architecture/native-factory/runtime-and-locks
 
 ## Files and compatibility
 
-Stories, Stage prompts, Specs and Project instructions remain ordinary files under `.rowbly/`.
+Stories, Stage prompts, Specs and user prompts remain ordinary files under `.rowbly/`.
 Existing Projects need no migration. Without factory settings, the worker limit is four.
 `.rowbly/.gitignore` excludes `/state.json*` and `/runtime/`.
-The native factory or the external supervisor writes v1 `state.json`; unknown v1 keys stay intact.
+The native factory writes v1 `state.json`; unknown v1 keys stay intact.
 
 Runtime metadata, command receipts, operational logs and Pi histories stay in `.rowbly/runtime/`.
 Do not commit runtime files or credentials. Doctor reports tracked runtime files and corrupt or orphan Threads.
 `rowbly doctor --fix` can add missing ignore rules. It does not repair conversations.
 
-The external factory skill remains available when the native factory is off.
-Never run both supervisors together. Updated external scripts refuse a live or uncertain native owner.
-Old installed copies do not honor this ownership protocol.
+Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy of the `factory` skill.
+Never run that copy and the native factory together. Old copies do not honor the native ownership protocol.
 Stop external workers before `rowbly factory start --adopt-external` marks their active attempts interrupted.
-
 That option does not stop external workers or import their conversations.
 
 | Path                    | Support and limits                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------- |
 | Existing Projects       | No Story, Stage, Spec or config migration. Missing runtime files remain valid.              |
 | Native execution        | Linux, Git, local files and util-linux `flock`; minimum Node 22.19.0.                       |
-| External harness        | Retained when native execution is off; old copies cannot protect native ownership.          |
+| Old external supervisor | No longer bundled; old copies cannot protect native ownership.                              |
 | Peek                    | Current Pi v3 only; unknown versions show a placeholder; no agent activation.               |
 | Recovery                | Definite local owner death only; no shell descendant tracking after a daemon crash.         |
 | Authentication evidence | Faux and scripted tests; real login, entitlement and refresh need separate live validation. |
 
 ## Skills
 
-| Skill     | Function                                                                      |
-| --------- | ----------------------------------------------------------------------------- |
-| `factory` | Starts the native factory, or supervises workers through an external harness. |
-| `refine`  | Makes a Story ready for development without source code changes.              |
-| `develop` | Builds a refined Story in a Git worktree, or repairs review findings.         |
-| `review`  | Examines a Story pull request and reports if it is ready to merge.            |
+| Skill     | Function                                                              |
+| --------- | --------------------------------------------------------------------- |
+| `refine`  | Makes a Story ready for development without source code changes.      |
+| `develop` | Builds a refined Story in a Git worktree, or repairs review findings. |
+| `review`  | Examines a Story pull request and reports if it is ready to merge.    |
 
-Install skills for your harness:
+The default Stage prompts tell the workers to use these skills. Install the skills for the harness of your workers:
 
 ```sh
-rowbly skill install factory --harness claude-code --harness codex
+rowbly skill install develop --harness claude-code --harness codex
 ```
 
 | Harness          | Project skills folder |
@@ -231,7 +254,6 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm test:factory
 ```
 
 Automated session tests use Pi's faux provider, in-memory credentials and no live provider requests.

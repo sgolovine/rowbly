@@ -17,7 +17,6 @@ pnpm start            # run the built bundle
 pnpm typecheck        # tsc --noEmit
 pnpm test             # vitest run: run all tests one time; then the node:test suite of scripts/
 pnpm test:watch       # vitest: run the tests again when a file changes
-pnpm test:factory     # node --test: run the tests of the factory skill scripts
 pnpm lint             # biome check: lint, formatting and import order; then the dash-case name check
 pnpm lint:fix         # biome check --write: apply safe fixes and format
 pnpm format           # biome format --write
@@ -70,7 +69,8 @@ The script lists the exceptions:
 
 `tsup.config.ts` bundles `src/cli.ts` into `dist/cli.js` as ESM for Node 22, with a
 `#!/usr/bin/env node` banner. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
-only on demand. The npm package contains `dist/`, `skills/` (without tests) and `stages/`.
+only on demand. The npm package contains `dist/`, `skills/` (without tests), `stages/` and
+`src/config/prompts/`, the system prompts of the factory agents.
 
 ## Knip
 
@@ -99,15 +99,14 @@ The skills for the development of Rowbly are in `.agents/skills/<name>/SKILL.md`
 | `rowbly-code-style`  | The TypeScript style: top-level functions, immutable state, layout and files             |
 | `agentic-tui`        | The PTY tool. This is an unchanged copy from `@codebolt/agentic-tui` (see `UPSTREAM.md`) |
 
-`.agents/skills/` also holds the installed copies of the bundled skills (`factory`, `refine`, `develop`
-and `review`). `.claude/skills/` holds only the installed copies of the bundled skills.
+This repository does not keep installed copies of the bundled skills in `.agents/skills/` or `.claude/`. The bundled skills
+are for the users of Rowbly only.
 
 ## CI
 
 `.github/workflows/ci.yml` has two jobs:
 
-- **Lint and format**: `biome ci .`, `node scripts/check-names.mjs`, `pnpm typecheck` and
-  `pnpm test:factory`.
+- **Lint and format**: `biome ci .`, `node scripts/check-names.mjs` and `pnpm typecheck`.
 - **Test**: `pnpm test` and `pnpm build`.
 
 `.github/workflows/release.yml` creates a release. Node comes from `.nvmrc`.

@@ -9,10 +9,9 @@ Also read it when you change how the board reads `state.json`.
 
 ## Source
 
-The native factory and the external supervisor both write `.rowbly/state.json` under the shared state
-lock. The format is version 1 of the factory skill
-(`skills/factory/references/supervisor-policy.md`). The activity reader does not examine if a worker
-is alive. The native factory controls examine daemon ownership separately.
+The native factory writes `.rowbly/state.json` under the state lock. An old external supervisor can
+also write it. The format is version 1 of the policy format (`src/services/factory-policy/policy-types.ts`).
+The activity reader does not examine if a worker is alive. The native factory controls examine daemon ownership separately.
 
 ## Rules
 

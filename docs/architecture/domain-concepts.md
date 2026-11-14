@@ -23,8 +23,8 @@ The Project is the top-level concept. Rowbly keeps all of its data in a Project.
 level" is data at the Project level. Each Project has a configuration that sets how the Project
 operates. The configuration contains the custom fields and the Stages of the Project.
 
-A Project can also have a `ROWBLY.md` file with instructions for all agents of the Project. See
-[storage.md](storage.md#rowblymd).
+A Project also has user prompts in `.rowbly/prompts/`. The Project prompt goes to all agents of the
+factory. The Supervisor prompt and the Worker prompt go to one role. See [prompts.md](prompts.md).
 
 ## Story
 
@@ -39,7 +39,8 @@ Project **must** have a Stage.
 
 - Each Project from `rowbly init` or the TUI starts with the Stages that onboarding selects.
 - Users can add more Stages.
-- Each Stage can have a prompt. The prompt tells agents what to do with a Story in that Stage.
+- Each Stage can have a prompt. The prompt tells agents what to do with a Story in that Stage. Only
+  the workers of that Stage get it.
 - The order of the Stages in the config is the order of the board.
 
 ## Spec
@@ -56,8 +57,8 @@ tab between the General tab and the Attachments tab.
 The native factory runs a Pi supervisor and independent Pi workers in a separate daemon. The manager
 controls ownership, worker slots, worktrees, sessions, commands and recovery.
 
-The external factory skill (`skills/factory/`) stays available when the native factory is off.
-Never run native and external supervisors together.
+Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
+of the `factory` skill. Never run that copy and the native factory together.
 
 See [native-factory/README.md](native-factory/README.md).
 
@@ -75,9 +76,9 @@ See [native-factory/threads-and-history.md](native-factory/threads-and-history.m
 ## Factory activity
 
 The factory activity shows the workers in `.rowbly/state.json` for the current Stage of each Story.
-The native factory and the external supervisor both write this file under the shared state lock. The
-activity reader does not examine if a worker is alive. The native factory controls examine daemon
-ownership separately.
+The native factory writes this file under the state lock. An old external supervisor can also write
+it. The activity reader does not examine if a worker is alive. The native factory controls examine
+daemon ownership separately.
 
 See [native-factory/factory-activity.md](native-factory/factory-activity.md).
 

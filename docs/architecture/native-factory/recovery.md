@@ -78,12 +78,13 @@ live daemon.
 
 ## Adopt external attempts
 
-Native start preserves the active attempts of an external supervisor.
+Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
+of the `factory` skill. Native start preserves the active attempts of that external supervisor.
 
 - `--adopt-external` marks these attempts as interrupted. It does not stop external workers or import
   their conversations.
 - Stop the external workers before this explicit adoption.
-- Never run both supervisors together. Old external skill copies do not honor native ownership.
+- Never run both supervisors together. Old copies of the external skill can ignore native ownership.
 
 ## Related
 

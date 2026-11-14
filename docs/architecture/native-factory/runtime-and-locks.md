@@ -13,7 +13,7 @@ change a lock.
 .rowbly/
   factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, git
   .gitignore          # /state.json* and /runtime/; existing text stays
-  state.json          # v1 policy state; native factory or external supervisor writes it
+  state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; directories use mode 0700
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
@@ -28,8 +28,8 @@ change a lock.
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private
   folders and owns the ignore rules.
-- `state.json` uses version 1 of the factory skill format
-  (`skills/factory/references/supervisor-policy.md`). The shared scripts keep unknown v1 keys.
+- `state.json` uses version 1 of the policy format. The types are in
+  `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
 - Without `factory.json`, the worker limit is four and Pi selects default models. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 
@@ -42,8 +42,8 @@ change a lock.
   `git.commitMessage` of `factory.json`. If it is not set, the subject is
   `chore(rowbly): record project changes after scan`. The body lists the changed paths.
 - If `git.authorName` and `git.authorEmail` are set, they are the author and the committer of the
-  commit. `commit-project.mjs --author "Name <email>"` sets them through the Git identity variables.
-  Thus the commit works also when Git has no identity. If they are not set, Git uses its own
+  commit. `commitProjectFiles()` in `project-write/project-commit.ts` sets them through the Git
+  identity variables. Thus the commit works also when Git has no identity. If they are not set, Git uses its own
   identity.
 - These settings apply only to the canonical commits. They do not apply to the commits of workers
   on Story branches.
@@ -61,10 +61,10 @@ The factory uses three locks:
    - A live, foreign, corrupt or uncertain owner prevents takeover.
    - An old heartbeat does not prove death.
 2. **State.** `state.json.lock` serializes v1 state transactions and Thread metadata writes.
-   - The shared scripts keep unknown v1 keys.
+   - The `factory-state/` service keeps unknown v1 keys.
    - Do not hold this lock across model, Git or subprocess work.
 3. **Project write.** The Git common directory holds the Project write lock. Its path comes from
-   `commit-project.mjs::lockPath(root)`.
+   `lockPath(root)` in `src/services/project-write/project-commit.ts`.
    - Native factory writers use util-linux `flock -w 60` for canonical changes and commits
      (`src/services/project-write/`).
    - Workers use the exact CLI shim under the same lock. There is no unlocked fallback.
@@ -83,4 +83,4 @@ The factory uses three locks:
 
 - [recovery.md](recovery.md): what happens after an owner dies.
 - [../storage.md](../storage.md): the other files in `.rowbly/`.
-- [../skills-and-stages.md](../skills-and-stages.md#factory-skill-files): the shared factory scripts.
+- [../service-layer.md](../service-layer.md#native-factory): the factory services.
