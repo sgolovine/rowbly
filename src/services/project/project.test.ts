@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConflictError, ValidationError } from "../errors/errors.js";
-import { createStory } from "../story/story.js";
+import { createStory, getStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { defaultProjectName, getProject, initProject, updateProject } from "./project.js";
@@ -79,6 +79,16 @@ describe("getProject and updateProject", () => {
     const updated = await updateProject({ key: "web" }, project.ctx);
     expect(updated.projectKey).toBe("WEB");
     expect(await readdir(project.paths.storiesDir)).toEqual(["WEB-01.md", "WEB-02.md"]);
+  });
+
+  it("changes the IDs in each dependsOn list to the new key", async () => {
+    await createStory({ title: "One" }, project.ctx);
+    await createStory({ title: "Two", dependsOn: ["ROW-01"] }, project.ctx);
+    await updateProject({ key: "web" }, project.ctx);
+    expect(await project.read("stories/WEB-02.md")).toBe(
+      "---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - WEB-01\n---\n\n",
+    );
+    expect((await getStory({ id: "WEB-02" }, project.ctx)).dependsOn).toEqual(["WEB-01"]);
   });
 
   it("refuses a key that other story files already use", async () => {

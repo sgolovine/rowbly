@@ -35,7 +35,7 @@ export type StoryDataChange = (data: Record<string, unknown>, file: StoryFile) =
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
 
 /** The keys that come first in the frontmatter, before the custom fields. */
-const LEADING_KEYS = ["title", "stage", "position"];
+const LEADING_KEYS = ["title", "stage", "position", "dependsOn"];
 
 /** `ROW` and `1` → `ROW-01`. */
 export function formatStoryId(projectKey: string, number: number): string {
@@ -47,6 +47,23 @@ export function parseStoryFileName(name: string): { projectKey: string; number: 
   const match = STORY_FILE_NAME.exec(name);
 
   return match ? { projectKey: match[1] as string, number: Number(match[2]) } : undefined;
+}
+
+/**
+ * The `dependsOn` list of the frontmatter. A missing key or a value that is not a list gives `[]`, and items that are
+ * not strings are ignored, so that a bad value does not make the board unreadable.
+ */
+export function dependsOnOf(data: Record<string, unknown>): string[] {
+  const value = data.dependsOn;
+
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+/** The frontmatter with the `dependsOn` list. An empty list removes the key. */
+export function withDependsOn(data: Record<string, unknown>, dependsOn: readonly string[]): Record<string, unknown> {
+  const rest = Object.fromEntries(Object.entries(data).filter(([key]) => key !== "dependsOn"));
+
+  return dependsOn.length === 0 ? rest : { ...rest, dependsOn: [...dependsOn] };
 }
 
 /** The path of the story file with this project key and number. */

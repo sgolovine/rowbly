@@ -104,7 +104,7 @@ function registerDelete(program: Command): void {
       run(
         command,
         (ctx) => deleteStory({ id }, ctx),
-        (result) => `Deleted ${result.id}`,
+        (result) => [`Deleted ${result.id}`, ...result.warnings].join("\n"),
       ),
     );
 }

@@ -12,6 +12,7 @@ import { NotFoundError } from "../errors/errors.js";
 import { type FieldValue, fieldValueError } from "../fields/fields.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import {
+  dependsOnOf,
   formatStoryId,
   readStoryFile,
   readStoryFiles,
@@ -63,6 +64,7 @@ export function toStory(config: ProjectConfig, file: StoryFile, position = 1): S
     title: data.title as string,
     stage: data.stage as string,
     position,
+    dependsOn: dependsOnOf(data),
     description: body,
     fields: fields as Record<string, FieldValue>,
     path: file.path,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ProjectConfig } from "../config/config.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
+  dependsOnOf,
   formatStoryId,
   listStoryFileNames,
   orderStoryData,
@@ -10,6 +11,7 @@ import {
   readStoryFiles,
   rewriteStories,
   storyPath,
+  withDependsOn,
   writeStoryFile,
 } from "./story-files.js";
 
@@ -41,6 +43,24 @@ describe("orderStoryData", () => {
   it("puts title, stage and the configured fields first, then the rest", () => {
     const data = { extra: 1, a: "a", stage: "BACKLOG", b: "b", title: "T" };
     expect(Object.keys(orderStoryData(CONFIG, data))).toEqual(["title", "stage", "b", "a", "extra"]);
+  });
+
+  it("puts dependsOn after position and before the configured fields", () => {
+    const data = { a: "a", dependsOn: ["ROW-01"], position: 1, title: "T", stage: "BACKLOG" };
+    expect(Object.keys(orderStoryData(CONFIG, data))).toEqual(["title", "stage", "position", "dependsOn", "a"]);
+  });
+});
+
+describe("dependsOn", () => {
+  it("dependsOnOf reads the list, ignores items that are not strings, and gives [] for a bad value", () => {
+    expect(dependsOnOf({ dependsOn: ["ROW-01", 2, "ROW-03"] })).toEqual(["ROW-01", "ROW-03"]);
+    expect(dependsOnOf({})).toEqual([]);
+    expect(dependsOnOf({ dependsOn: "ROW-01" })).toEqual([]);
+  });
+
+  it("withDependsOn sets the list and removes the key for an empty list", () => {
+    expect(withDependsOn({ title: "T" }, ["ROW-01"])).toEqual({ title: "T", dependsOn: ["ROW-01"] });
+    expect(withDependsOn({ title: "T", dependsOn: ["ROW-01"] }, [])).toEqual({ title: "T" });
   });
 });
 
