@@ -15,6 +15,9 @@ export const ALL_STAGES = "*";
 /** The region that has the focus: the Stage sidebar, the Story list or the Story sidebar. */
 export type Pane = "stages" | "stories" | "story";
 
+/** What the right Panel shows: the Story list, or the worker Threads of the Factory view. */
+export type ViewMode = "stories" | "threads";
+
 /** A row of the Story list: a Stage heading or a Story. */
 export type StoryListRow = ReturnType<typeof storyListRows>[number];
 
@@ -38,6 +41,8 @@ export interface ShellView {
   readonly stories: readonly Story[];
 
   // The Story list.
+  /** The right Panel shows the Story list or the Factory view. */
+  readonly mode: ViewMode;
   /** The Stage of the filter. A Stage that is gone gives `undefined`, and the list shows every Story again. */
   readonly stage: Stage | undefined;
   readonly rows: readonly StoryListRow[];
@@ -84,6 +89,9 @@ export interface ShellEnv {
   readonly setCtx: Dispatch<SetStateAction<ServiceContext>>;
   readonly setOverlay: Dispatch<SetStateAction<Overlay | null>>;
   readonly setOnboardingHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
+  /** The Factory view gives its keys for the footer. */
+  readonly setThreadHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
+  readonly setMode: Dispatch<SetStateAction<ViewMode>>;
   readonly setPane: Dispatch<SetStateAction<Pane>>;
   readonly setSidebarWidth: Dispatch<SetStateAction<number>>;
   readonly setSidebarShown: Dispatch<SetStateAction<boolean>>;

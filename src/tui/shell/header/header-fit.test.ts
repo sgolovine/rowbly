@@ -12,7 +12,24 @@ describe("headerFit", () => {
       factoryShort: false,
       factoryKey: true,
       factoryShown: true,
+      switchShown: false,
     });
+  });
+
+  it("shows the view mode switch only when the full header fits with it", () => {
+    // The full row (73), the Project name (6), the Factory Button with its key (17), the switch (17) and the `|`.
+    expect(headerFit({ width: 114, project: "Rowbly", factory: STOPPED, viewSwitch: true })).toMatchObject({
+      compact: false,
+      factoryKey: true,
+      switchShown: true,
+    });
+    expect(headerFit({ width: 113, project: "Rowbly", factory: STOPPED, viewSwitch: true })).toMatchObject({
+      compact: false,
+      factoryKey: true,
+      factoryShown: true,
+      switchShown: false,
+    });
+    expect(headerFit({ width: 160, project: "Rowbly", factory: undefined, viewSwitch: true }).switchShown).toBe(false);
   });
 
   it("cuts a long Project name to its room", () => {

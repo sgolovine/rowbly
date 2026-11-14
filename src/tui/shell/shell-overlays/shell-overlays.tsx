@@ -4,6 +4,7 @@ import type { KeyHint } from "../../keymap.js";
 import { FactoryModal } from "../../screens/factory/index.js";
 import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
+import { ThreadModal } from "../../screens/threads/index.js";
 import { HelpModal } from "../help-modal/index.js";
 import type { Overlay, OverlayBoard, OverlayHandlers } from "../overlay.js";
 import { ProjectSwitcher } from "../project-switcher/index.js";
@@ -56,6 +57,15 @@ export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on 
           launch={launch}
           onClose={on.close}
           onAiSettings={on.openAiSettings}
+        />
+      )}
+      {board && overlay?.kind === "thread" && (
+        <ThreadModal
+          ctx={ctx}
+          root={board.project.root}
+          thread={overlay.thread}
+          stages={stageLabels(board)}
+          onClose={on.close}
         />
       )}
       {overlay?.kind === "projects" && (

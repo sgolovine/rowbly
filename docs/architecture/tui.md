@@ -45,6 +45,42 @@ The screen areas in `screens/` are:
 | `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                           |
 | `settings/`   | The Settings modal and its sections, the AI section and the model picker.                                                              |
 | `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
+| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread Modal.                                       |
+
+## The Factory view
+
+The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the
+default mode. The `threads` mode shows the Factory view. Rowbly does not save the view mode when it
+quits.
+
+- **The Switch.** The Factory group of the header has a `Switch` after the Factory Button. The
+  Switch shows `Stories` (off) or `Threads` (on). A click on the Switch changes the view mode. A
+  click on the `Factory` label opens the Factory controls. When the header is narrow, the Switch
+  goes first. `ViewModeSwitch` and `headerFit` in `src/tui/shell/` control this.
+- **The key `t`.** The key `t` changes the view mode when the shell is idle. The key `f` opens the
+  Factory controls in the two modes. `GLOBAL_KEYS` and the help Modal list `t`.
+- **The sections.** In the `threads` mode, the Panel has the title `Threads`. `FactoryView` shows
+  the section "Active Threads" (`pending` and `running`) and the section "Inactive Threads"
+  (`completed`, `failed`, `cancelled` and `interrupted`). Each heading shows `▾` or `▸`, the name and
+  the count. `enter`, a click or `←/→` expands or collapses a section.
+- **The rows.** Each row shows the Story id, the status, the Stage, the attempt, the model and the
+  run time. The Threads in a section are newest first. Only worker Threads with a Story show.
+  `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.
+- **The filter.** The Stage sidebar stays. When you select a Stage, only the Threads with that
+  `stage` show. "All Stages" shows all Threads.
+- **The keys.** `↑/↓` and `j/k` move the selection. The Story keys (`n`, `d`, `shift+↑/↓` and
+  `ctrl+shift+↑/↓`) do nothing in the Factory view. The sidebar keys do not change.
+- **The Story sidebar.** The Story sidebar stays open when the view mode changes. It keeps its
+  draft. `tab` gives it the focus in the two modes. **+ New Story** opens it also in the `threads`
+  mode, but the `n` key does not.
+- **Live data.** The view reads the Threads with `useAsync`. `useThreadChanges` reads them again
+  when the factory writes a Thread file.
+
+`enter` or a click on a Thread row opens the Thread Modal. The shell opens it as the `thread`
+overlay. The title is `<story-id> › <thread name>`. The Modal shows `ThreadDetail` and the
+`ConversationView` of the Thread. The conversation follows the new entries while the Thread is
+`running`. The Modal is read-only. `esc` or the `✕` closes it, and the selection stays on the same
+row.
 
 ## Code organization
 

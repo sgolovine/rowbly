@@ -2,7 +2,7 @@ import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
 import { rowStage, storyListRows } from "../../screens/stories/index.js";
 import type { Overlay, StoryPane } from "../overlay.js";
-import type { Board, Pane, ShellView, StoryListRow } from "./shell-state.js";
+import type { Board, Pane, ShellView, StoryListRow, ViewMode } from "./shell-state.js";
 
 /** The data and the state that the view reads. */
 export interface ShellViewInput {
@@ -11,6 +11,7 @@ export interface ShellViewInput {
   readonly overlay: Overlay | null;
   readonly pane: Pane;
   readonly storyPane: StoryPane | null;
+  readonly mode: ViewMode;
   readonly sidebarShown: boolean;
   readonly stageKey: string | null;
   readonly selectedId: string | null;
@@ -60,6 +61,7 @@ export function shellView(input: ShellViewInput): ShellView {
     noProject: !input.data.loading && input.data.data === null,
     stages,
     stories,
+    mode: input.mode,
     stage,
     rows,
     cursor,

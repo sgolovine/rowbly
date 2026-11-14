@@ -85,9 +85,12 @@ function shownWidthOf(beside: boolean, room: number, sidebarWidth: number): numb
   return beside ? Math.max(SIDEBAR_MIN_WIDTH, Math.min(room, sidebarWidth)) : 0;
 }
 
-/** A problem with the factory state file takes one line below the list. A missing file is no problem. */
+/**
+ * A problem with the factory state file takes one line below the Story list. A missing file is no problem. The
+ * Factory view has no such line.
+ */
 function hasStatusLine(view: ShellView): boolean {
-  return view.board !== undefined && !["ok", "missing"].includes(view.board.activity.status);
+  return view.mode !== "threads" && view.board !== undefined && !["ok", "missing"].includes(view.board.activity.status);
 }
 
 /** Modals are centred over the inside of the Story panel, and also the sidebar above it when stacked. */

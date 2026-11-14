@@ -29,6 +29,7 @@ function input(change: Partial<ShellViewInput>): ShellViewInput {
     overlay: null,
     pane: "stories",
     storyPane: null,
+    mode: "stories",
     sidebarShown: true,
     stageKey: null,
     selectedId: null,

@@ -36,6 +36,16 @@ viewer or the AI section of Settings.
   - `a` opens Settings at the AI section.
 - Close the TUI without a stop to leave the daemon active.
 
+## The Factory view
+
+- `t` or the Switch in the header changes the right Panel to the Factory view and back.
+- The view shows the worker Threads of all Stories in "Active Threads" and "Inactive Threads".
+- The Stage sidebar filters the Threads by their Stage.
+- `enter` or a click on a Thread opens the Thread Modal: the Thread metadata and its conversation.
+- The view and the Thread Modal are read-only. Use the Threads tab of a Story to interrupt or resume a Thread.
+
+See [../tui.md](../tui.md#the-factory-view) for the structure.
+
 ## The Threads tab of a Story
 
 - The tab shows all Thread statuses, and a queue note when the Story waits for a worker slot.

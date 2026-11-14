@@ -23,6 +23,7 @@ function env(data: ShellViewInput["data"], change: Partial<ShellViewInput> = {})
     overlay: null,
     pane: "stories",
     storyPane: null,
+    mode: "stories",
     sidebarShown: true,
     stageKey: null,
     selectedId: null,
@@ -42,6 +43,8 @@ function env(data: ShellViewInput["data"], change: Partial<ShellViewInput> = {})
     setCtx: vi.fn(),
     setOverlay: vi.fn(),
     setOnboardingHints: vi.fn(),
+    setThreadHints: vi.fn(),
+    setMode: vi.fn(),
     setPane: vi.fn(),
     setSidebarWidth: vi.fn(),
     setSidebarShown: vi.fn(),
@@ -150,5 +153,36 @@ describe("shell props", () => {
 
     expect(props).toMatchObject({ width: 80, shown: true });
     expect(props?.onResize).toBeUndefined();
+  });
+
+  it("shows the switch in the header, and hides the n key of + New Story in threads mode", () => {
+    const stories = env(OPEN);
+    const threads = env(OPEN, { mode: "threads" });
+
+    headerProps(stories, undefined).viewSwitch?.onToggle();
+
+    expect(headerProps(stories, undefined).viewSwitch?.threads).toBe(false);
+    expect(headerProps(threads, undefined).viewSwitch?.threads).toBe(true);
+    expect(headerProps(threads, undefined).newStory?.showKey).toBe(false);
+    expect(headerProps(env({ loading: false, data: null }), undefined).viewSwitch).toBeUndefined();
+    expect(stories.setMode).toHaveBeenCalledOnce();
+  });
+
+  it("shows the Factory view with the title Threads and the Stage of the filter in threads mode", () => {
+    const shell = env(OPEN, { mode: "threads", stageKey: "BACKLOG" });
+    const panel = storyPanelProps(shell, shellFrame({ width: 120 }, shell.view, SIDEBAR_WIDTH));
+
+    expect(panel.title).toBe("Threads");
+    expect(panel.body).toMatchObject({
+      kind: "threads",
+      view: { root: "/p", stage: "BACKLOG", stages: { BACKLOG: "Backlog" }, active: true, clickable: true },
+    });
+    if (panel.body.kind !== "threads") {
+      throw new Error("The body is not the Factory view");
+    }
+    expect(panel.body.view.emptyText).toBe("No Threads in Backlog. The factory adds a Thread when it starts a worker.");
+    const thread = { id: "t1" } as never;
+    panel.body.view.onOpen(thread);
+    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "thread", thread });
   });
 });
