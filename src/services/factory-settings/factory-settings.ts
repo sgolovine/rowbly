@@ -268,18 +268,41 @@ async function overrideTarget(input: ConfigureInput, ctx: ServiceContext): Promi
     throw new ValidationError(problem);
   }
 
+  return checkedTarget({ stage: input.stage as string, storyId: input.story }, ctx);
+}
+
+/** Checks the Stage key and the Story ID of an override target, and gives their canonical keys. */
+async function checkedTarget(target: OverrideTarget, ctx: ServiceContext): Promise<OverrideTarget> {
   const config = await readConfig(await findProject(ctx));
-  const stage = lookupStage(config, input.stage as string);
+  const stage = lookupStage(config, target.stage);
 
   if (!stage) {
     throw new ValidationError("Unknown stage", {
-      details: { issues: unknownStageIssues(config, input.stage as string, ["stage"]) },
+      details: { issues: unknownStageIssues(config, target.stage, ["stage"]) },
     });
   }
 
-  const story = input.story === undefined ? undefined : await getStory({ id: input.story }, ctx);
+  const story = target.storyId === undefined ? undefined : await getStory({ id: target.storyId }, ctx);
 
   return { stage: stage.key, storyId: story?.id };
+}
+
+/**
+ * Sets the worker model override of a Stage, or of a Story in a Stage, to a model that was already selected.
+ * Without a choice, it removes the override. An empty map is not kept, and the other keys do not change.
+ */
+export async function setWorkerOverride(
+  target: OverrideTarget,
+  choice: ModelChoice | undefined,
+  ctx: ServiceContext = {},
+): Promise<FactorySettings> {
+  const checked = await checkedTarget(target, ctx);
+
+  if (choice !== undefined && !validModel(choice)) {
+    throw new ValidationError("Invalid model choice");
+  }
+
+  return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, checked, choice) }), ctx);
 }
 
 /** Sets or clears the worker model override of a Stage, or of a Story in a Stage. */
