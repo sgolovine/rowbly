@@ -1,3 +1,4 @@
+import { stopCheckQueue } from "../check-queue/check-queue.js";
 import { releaseFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import { getThread } from "../thread/thread.js";
 import { changeThread, getState, isActiveStatus, type Manager, serial, setState } from "./manager-state.js";
@@ -30,6 +31,8 @@ async function stopFactory(manager: Manager): Promise<void> {
   const workers = [...state.active.values()];
 
   await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.session?.session.abort())]);
+  // No check process stays alive after a stop.
+  await stopCheckQueue(manager.checks);
   await getState(manager).loopDone;
   // A Git merge or push must complete before the write lock goes away with this process.
   await getState(manager).syncTask;

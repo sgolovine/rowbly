@@ -12,6 +12,7 @@ import { configureFactory, type ModelChoice } from "../../services/factory-setti
 import type { ServiceContext } from "../../services/workspace/workspace.js";
 import { type LaunchDescriptor, runFactoryForeground } from "../factory-runner/factory-runner.js";
 import { parseInteger, parsePosition, run } from "../output/output.js";
+import { registerCheckCommands } from "./factory-check.js";
 
 interface ConfigureOptions {
   maxWorkers?: number;
@@ -27,6 +28,8 @@ interface ConfigureOptions {
   gitPush?: boolean;
   gitPull?: boolean;
   gitSyncInterval?: number;
+  maxChecks?: number;
+  checkMemoryReserve?: number;
 }
 
 interface StartOptions {
@@ -133,7 +136,9 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
 function registerConfigure(program: Command): void {
   program
     .command("configure")
-    .description("Set factory models, worker limit, worker model overrides, Git commit settings and Git sync")
+    .description(
+      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync and check limits",
+    )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
@@ -149,6 +154,8 @@ function registerConfigure(program: Command): void {
     .option("--git-pull", "pull the upstream at each sync")
     .option("--no-git-pull", "do not pull the upstream")
     .option("--git-sync-interval <seconds>", "seconds between syncs, 60 to 86400", parseInteger)
+    .option("--max-checks <n>", "checks that run at the same time, 1 to 32", parseInteger)
+    .option("--check-memory-reserve <mb>", "memory that the check queue always keeps free", parseInteger)
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,
@@ -174,4 +181,5 @@ export function registerFactoryCommands(program: Command): void {
   registerLogs(program);
   registerStart(program, launch);
   registerConfigure(program);
+  registerCheckCommands(program);
 }

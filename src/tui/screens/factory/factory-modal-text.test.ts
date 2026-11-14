@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ThreadRecord } from "../../../services/thread/thread.js";
 import {
+  checksText,
   factoryHints,
   historyModel,
   problemHints,
@@ -41,6 +42,13 @@ describe("factoryModalText", () => {
     expect(workersText(true, workers, 4)).toBe("2 running · 1 pending · limit 4");
     expect(workersText(false, workers, 3)).toBe("limit 3");
     expect(workersText(false, undefined, undefined)).toBe("—");
+  });
+
+  it("gives the check counts, the limit and the free memory", () => {
+    expect(checksText({ running: 2, queued: 1, maxConcurrent: 2, availableMb: 5120, jobs: [] })).toBe(
+      "2 running · 1 queued · limit 2 · 5120 MB free",
+    );
+    expect(checksText({ running: 0, queued: 0, maxConcurrent: 4, jobs: [] })).toBe("0 running · 0 queued · limit 4");
   });
 
   it("names the model of a history Thread and the way to sign in", () => {

@@ -14,12 +14,15 @@ viewer or the AI section of Settings.
 | `auth providers`, `auth status`                                            | Show login methods and configured status, without a health check.     |
 | `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>`  | Sign in through an interactive prompt, or remove a stored credential. |
 | `model list [--provider <id>]`                                             | Show configured models and supported thinking levels.                 |
-| `factory configure`                                                        | Set workers, role models, thinking levels, commits and the Git sync.  |
+| `factory configure`                                                        | Set workers, role models, thinking levels, commits, Git sync, checks. |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
 | `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                 |
 | `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.               |
+| `factory check add <key> --command <command> [options]`                    | Add a check that the factory runs for its workers.                    |
+| `factory check update <key> [options]`, `factory check remove <key>`       | Change or remove a check.                                             |
+| `factory check list`                                                       | Show the checks with their defaults.                                  |
 | `thread list [--story <id>]`, `thread show <id>`                           | Read active and historical metadata.                                  |
 | `thread log <id> [--tail <n>]`                                             | Read a bounded conversation tail: default 20, maximum 100 entries.    |
 | `thread cancel <id>`, `thread resume <id>`                                 | Send guarded commands to the native daemon.                           |
@@ -30,8 +33,8 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 - `--story` without `--stage`.
 - `--clear-worker` without `--stage`.
 - `--clear-worker` together with `--worker` or `--worker-thinking`.
-- `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers` or a Git flag
-  (`--commit-message`, `--commit-author`, `--git-push`, `--no-git-push`, `--git-pull`,
+- `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers`, a check flag or
+  a Git flag (`--commit-message`, `--commit-author`, `--git-push`, `--no-git-push`, `--git-pull`,
   `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
 - An unknown Stage key.
@@ -56,10 +59,32 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 - The command prints all the settings. See [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout)
   for the sync.
 
+### The check commands
+
+| Flag                          | Key in `factory.json`    | Effect                                                  |
+| ----------------------------- | ------------------------ | ------------------------------------------------------- |
+| `--max-checks <n>`            | `checks.maxConcurrent`   | Set the number of checks at the same time. Use 1 to 32. |
+| `--check-memory-reserve <mb>` | `checks.reserveMemoryMb` | Set the memory that the check queue always keeps free.  |
+
+`factory check add` and `factory check update` take these options:
+
+- `--command <command>`: the full check. `add` must have it.
+- `--label <text>`: the name that the TUI shows. `--clear-label` uses the key again.
+- `--narrow-command <command>`: the narrow form. It must contain `{files}`. `--clear-narrow-command` removes it.
+- `--memory-mb <mb>` and `--timeout-minutes <n>`: the first estimate and the timeout. The
+  `--clear-memory-mb` and `--clear-timeout-minutes` flags use the defaults again.
+- `--block <text>`: text that the worker bash tool rejects. Repeat the flag for more text.
+  `--clear-block` removes all block text.
+
+A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out of range gives
+`VALIDATION`. In each case, `factory.json` does not change. See [checks.md](checks.md#settings).
+
 ## Factory controls in the TUI
 
 - `f` opens Factory controls. It is a global key of the shell.
 - The header shows the active and pending counts when space permits.
+- When the live factory has checks, the `Checks` row shows the running and queued checks, the limit
+  and the free memory.
 - In Factory controls:
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
@@ -114,7 +139,8 @@ override of the selected Stage. See [../tui.md](../tui.md#worker-model-overrides
 
 ## The AI section of Settings
 
-Settings has a Factory group with an AI section. The section has three tabs: Providers, Models and Limits.
+Settings has a Factory group with an AI section. The section has four tabs: Providers, Models, Limits
+and Checks.
 `←` and `→` change the tab.
 
 - The Providers tab shows only the signed-in providers. `d` signs out, with confirmation. `r` reloads.
@@ -124,6 +150,9 @@ Settings has a Factory group with an AI section. The section has three tabs: Pro
   `↑/↓` select a Stage. Enter or a click opens the model picker of the Stage.
   See [../tui.md](../tui.md#worker-model-overrides).
 - The Limits tab shows each limit in its own card. `l` sets the worker limit.
+- The Checks tab shows the check limits in a card, and one row for each check. `c` sets the check
+  limits. `n` adds a check. `↑/↓` select a check. Enter or a click edits the check. `d` removes the
+  check, with confirmation. See [checks.md](checks.md).
 - `s`, `w` and `l` also work on the other tabs.
 - The model picker offers the supported thinking levels and `Pi default`. The picker of an override offers
   `No override` in place of `Pi default`.

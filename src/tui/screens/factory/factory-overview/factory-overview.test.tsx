@@ -53,6 +53,14 @@ describe("FactoryOverview", () => {
     expect(tui.frame()).toContain("Pi default");
     expect(tui.frame()).toContain("Canonical commit: failed");
     expect(tui.frame()).toContain("ROW-02 Develop · waiting for a worker slot");
+    expect(tui.frame()).not.toContain("Checks");
+  });
+
+  it("shows the running and queued checks of a live factory with checks", async () => {
+    const status = { ...running, checks: { running: 1, queued: 2, maxConcurrent: 1, availableMb: 900, jobs: [] } };
+    const tui = await renderTui(<FactoryOverview {...props({ status, live: true })} />);
+
+    expect(tui.frame()).toMatch(/Checks\s+1 running · 2 queued · limit 1 · 900 MB free/);
   });
 
   it("selects a warning with the first click and opens it with a click on the selected row", async () => {

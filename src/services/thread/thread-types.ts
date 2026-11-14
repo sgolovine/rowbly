@@ -23,6 +23,16 @@ export interface WorkerResult {
   readonly problems: readonly string[];
 }
 
+/** A short record of one check that the worker of the Thread asked for. `runtime/checks/` has the full record. */
+export interface ThreadCheck {
+  readonly id: string;
+  readonly key: string;
+  readonly scope: "full" | "narrow";
+  readonly status: string;
+  readonly head?: string;
+  readonly durationSeconds?: number;
+}
+
 export interface ThreadRecord {
   // Identity
   readonly version: 1;
@@ -71,6 +81,8 @@ export interface ThreadRecord {
     readonly cacheWrite: number;
     readonly cost: number;
   };
+  /** The last checks of the worker, oldest first. */
+  readonly checks?: readonly ThreadCheck[];
 }
 
 export interface ThreadList {
@@ -93,6 +105,7 @@ export type ThreadPatch = Partial<
     | "lastActivityAt"
     | "lastTool"
     | "usage"
+    | "checks"
   >
 >;
 

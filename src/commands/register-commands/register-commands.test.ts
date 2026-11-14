@@ -13,7 +13,7 @@ const resources = {
   "custom-field": ["add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
-  factory: ["status", "run", "stop", "restart", "logs", "start", "configure"],
+  factory: ["status", "run", "stop", "restart", "logs", "start", "configure", "check"],
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
   thread: ["cancel", "resume", "log", "list", "show"],

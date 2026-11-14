@@ -100,5 +100,6 @@ export function runtimePaths(paths: ProjectPaths) {
     sessionsDir: join(dir, "sessions"),
     binDir: join(dir, "bin"),
     logsDir: join(dir, "logs"),
+    checksDir: join(dir, "checks"),
   };
 }

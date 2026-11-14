@@ -1,6 +1,7 @@
 import { useInput } from "ink";
 import { type Dispatch, type SetStateAction, useState } from "react";
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import { checkLimits } from "../../../../services/factory-settings/check-settings.js";
 import { type FactorySettings, getFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
 import { listStages, type Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -24,7 +25,8 @@ import {
   aiHints,
   pageProviders,
 } from "../ai-view.js";
-import { type AiEnv, handleAiKey, loadStatus, openPage } from "./ai-actions.js";
+import { type AiEnv, loadStatus, openPage } from "./ai-actions.js";
+import { handleSectionKey } from "./check-actions.js";
 
 /** The inputs of the AI settings. */
 interface AiSectionInput {
@@ -63,10 +65,12 @@ interface PageInput {
   readonly providers: readonly AiProvider[];
   readonly provider: AiProvider | undefined;
   readonly stages: readonly Stage[] | undefined;
+  /** The number of configured checks. */
+  readonly checks: number;
 }
 
 /** What works now on the page: the sign-in and the sign-out need the highlighted provider. */
-function pageAbilities({ page, idle, ready, providers, provider, stages }: PageInput): AiAbilities {
+function pageAbilities({ page, idle, ready, providers, provider, stages, checks }: PageInput): AiAbilities {
   return {
     idle,
     list: providers.length > 0,
@@ -74,7 +78,16 @@ function pageAbilities({ page, idle, ready, providers, provider, stages }: PageI
     signOut: ready && page === "providers" && provider?.credentialType !== undefined,
     ready,
     stages: (stages?.length ?? 0) > 0,
+    checks: checks > 0,
   };
+}
+
+/** The highlighted rows of the Models tab and of the Checks tab. */
+function useCursors(): Pick<AiEnv, "stageCursor" | "setStageCursor" | "checkCursor" | "setCheckCursor"> {
+  const [stageCursor, setStageCursor] = useState(0);
+  const [checkCursor, setCheckCursor] = useState(0);
+
+  return { stageCursor, setStageCursor, checkCursor, setCheckCursor };
 }
 
 /**
@@ -93,14 +106,15 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
   const status = useAsync(() => loadStatus(runtime.data), [runtime.data]);
   const settings = useAsync(() => getFactorySettings(ctx), [ctx]);
   const stages = useAsync<readonly Stage[]>(() => listStages(ctx), [ctx]);
-  const [stageCursor, setStageCursor] = useState(0);
+  const cursors = useCursors();
 
   const providers = pageProviders(page, status.data?.providers ?? []);
   const provider = providers.find((p) => p.id === selected) ?? providers[0];
   const ready = runtime.data !== undefined && status.data !== undefined;
   const idle = active && task === null;
   const keysOwn = idle && !filtering;
-  const can = pageAbilities({ page, idle, ready, providers, provider, stages: stages.data });
+  const checks = checkLimits(settings.data?.checks)?.items.length ?? 0;
+  const can = pageAbilities({ page, idle, ready, providers, provider, stages: stages.data, checks });
   const env: AiEnv = {
     ctx,
     toast,
@@ -108,8 +122,7 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
     status,
     settings,
     stages,
-    stageCursor,
-    setStageCursor,
+    ...cursors,
     providers,
     page,
     ready,
@@ -123,7 +136,7 @@ export function useAiSection({ ctx, onChange, loadRuntime }: AiSectionInput): Ai
   useKeyHints(aiHints(page, can));
   useKeyCapture(idle && page === "addProvider", { text: false, escape: true });
   useEscape(keysOwn && page === "addProvider", () => openPage(env, "providers"));
-  useInput((input, key) => handleAiKey(env, input, key), { isActive: keysOwn });
+  useInput((input, key) => handleSectionKey(env, input, key), { isActive: keysOwn });
 
   return {
     env,

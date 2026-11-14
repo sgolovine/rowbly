@@ -117,28 +117,29 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 
 ### Native factory
 
-| Module                              | Function                                                          |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| `pi-runtime/`                       | Lazy Pi imports, session adapter, runtime and model catalog.      |
-| `agent-auth/`                       | Provider status, model checks, login and logout.                  |
-| `factory-settings/`                 | The optional `factory.json`, the role models and the Git sync.    |
-| `factory/`                          | Daemon client, status, controls and operational logs.             |
-| `factory-manager/`                  | Serial supervisor loop, tools, reservations and worker lifecycle. |
-| `factory-worker/`                   | Independent worker session, result and activity.                  |
-| `factory-ownership/`                | Daemon ownership and process identity.                            |
-| `factory-control/`                  | Durable commands and receipts.                                    |
-| `factory-recovery/`                 | Reconciliation after owner death, and resume eligibility.         |
-| `factory-policy/`, `factory-state/` | The v1 policy rules and the `state.json` transactions.            |
-| `factory-activity/`                 | The factory activity of each Story, from `state.json`.            |
-| `project-write/`                    | The kernel `flock` and the commits of canonical factory writes.   |
-| `project-sync/`                     | The Git pull and push of the canonical checkout.                  |
-| `runtime-files/`                    | Private runtime paths and ignore rules.                           |
-| `thread/`                           | Thread metadata, runs, state projection and watches.              |
-| `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.     |
-| `supervisor-digest/`                | Bounded operational facts, without worker transcripts.            |
-| `messages/`                         | The only builder of the supervisor and worker messages.           |
-| `worker-worktree/`                  | One worktree for each Story. Existing work stays.                 |
-| `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.            |
+| Module                              | Function                                                           |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `pi-runtime/`                       | Lazy Pi imports, session adapter, runtime and model catalog.       |
+| `agent-auth/`                       | Provider status, model checks, login and logout.                   |
+| `factory-settings/`                 | The optional `factory.json`, the role models, Git sync and checks. |
+| `factory/`                          | Daemon client, status, controls and operational logs.              |
+| `factory-manager/`                  | Serial supervisor loop, tools, reservations and worker lifecycle.  |
+| `factory-worker/`                   | Independent worker session, result and activity.                   |
+| `check-queue/`                      | The memory-aware queue of the worker checks in the daemon.         |
+| `factory-ownership/`                | Daemon ownership and process identity.                             |
+| `factory-control/`                  | Durable commands and receipts.                                     |
+| `factory-recovery/`                 | Reconciliation after owner death, and resume eligibility.          |
+| `factory-policy/`, `factory-state/` | The v1 policy rules and the `state.json` transactions.             |
+| `factory-activity/`                 | The factory activity of each Story, from `state.json`.             |
+| `project-write/`                    | The kernel `flock` and the commits of canonical factory writes.    |
+| `project-sync/`                     | The Git pull and push of the canonical checkout.                   |
+| `runtime-files/`                    | Private runtime paths and ignore rules.                            |
+| `thread/`                           | Thread metadata, runs, state projection and watches.               |
+| `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.      |
+| `supervisor-digest/`                | Bounded operational facts, without worker transcripts.             |
+| `messages/`                         | The only builder of the supervisor and worker messages.            |
+| `worker-worktree/`                  | One worktree for each Story. Existing work stays.                  |
+| `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.             |
 
 See [native-factory/README.md](native-factory/README.md) for how these modules work together.
 

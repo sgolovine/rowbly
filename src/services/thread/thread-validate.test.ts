@@ -22,6 +22,9 @@ describe("thread validation", () => {
     expect(validateThread(record())).toMatchObject({ id: "t1" });
     expect(validId("a_b-1")).toBe(true);
     expect(validId("../x")).toBe(false);
+    expect(
+      validateThread(record({ checks: [{ id: "j1", key: "test", scope: "full", status: "passed" }] })),
+    ).toBeTruthy();
   });
 
   it("rejects invalid metadata", () => {
@@ -40,6 +43,8 @@ describe("thread validation", () => {
       record({ runs: [] }),
       record({ status: "running" }),
       record({ model: { provider: "", modelId: "m" } }),
+      record({ checks: [{ id: "j1", key: "test", scope: "full" }] }),
+      record({ checks: Array(21).fill({ id: "j1", key: "test", scope: "full", status: "passed" }) }),
     ];
 
     for (const value of invalid) {
