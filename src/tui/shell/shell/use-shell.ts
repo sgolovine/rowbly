@@ -25,15 +25,15 @@ export interface ShellModel {
   readonly hints: KeyHint[];
 }
 
-/** The state, the data and the keys of the shell. */
-export function useShell(initialCtx: ServiceContext): ShellModel {
+/** The state, the data and the keys of the shell. `preloadPi` imports the Pi SDK after the board shows. */
+export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<void>): ShellModel {
   const { exit } = useApp();
   // The Project switcher changes where the services look.
   const [ctx, setCtx] = useState(initialCtx);
   const active = useIsActive();
   const registry = useContext(ShellContext);
   const layout = useLayout();
-  const { data, factory, reload } = useShellData(ctx);
+  const { data, factory, reload } = useShellData(ctx, preloadPi);
   const { values, setters } = useShellState();
   const { overlay, sidebarShown, stageKey } = values;
   const toast = useToast();

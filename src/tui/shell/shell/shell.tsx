@@ -17,6 +17,8 @@ interface ShellProps {
   readonly ctx?: ServiceContext;
   /** How the Factory controls start the factory process. The CLI entry point supplies it. */
   readonly launch?: FactoryLaunch;
+  /** Imports the Pi SDK in the background after the board shows. Only the CLI entry point supplies it. */
+  readonly preloadPi?: () => Promise<void>;
 }
 
 /**
@@ -41,8 +43,8 @@ interface ShellProps {
  * Stories, filtered by the Stage of the sidebar. `enter` or a click on a Thread opens the Thread in the
  * Story sidebar, which then shows the Thread in place of a form.
  */
-export function Shell({ ctx: initialCtx = CWD, launch }: ShellProps) {
-  const { env, overlay, factory, factoryState, layout, frame, hints } = useShell(initialCtx);
+export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) {
+  const { env, overlay, factory, factoryState, layout, frame, hints } = useShell(initialCtx, preloadPi);
   const { view } = env;
   const story = storySidebarProps(env, frame);
   const cover = frame.story.cover;
