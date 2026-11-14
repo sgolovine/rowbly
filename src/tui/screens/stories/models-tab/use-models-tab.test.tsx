@@ -16,6 +16,8 @@ afterEach(cleanup);
 
 const runtime = {
   getAvailable: async () => [{ provider: "acme", id: "fast-1", name: "Fast One", reasoning: false }],
+  getProviders: () => [],
+  listCredentials: async () => [],
 } as unknown as AuthRuntime;
 
 function Probe(props: {

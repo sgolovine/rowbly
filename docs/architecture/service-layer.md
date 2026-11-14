@@ -48,12 +48,12 @@ logic in the service.
 Most public service functions take a `ServiceContext` as their last parameter. The type is in
 `src/services/workspace/`. All of its fields are optional:
 
-| Field       | Default                         | Function                                       |
-| ----------- | ------------------------------- | ---------------------------------------------- |
-| `cwd`       | `process.cwd()`                 | The directory where the Project search starts. |
-| `home`      | `os.homedir()`                  | The home directory, for `~/.rowblyrc.json`.    |
-| `now`       | the system time                 | The clock.                                     |
-| `skillsDir` | `skills/` of the Rowbly package | The folder of the bundled skills.              |
+| Field       | Default                         | Function                                                           |
+| ----------- | ------------------------------- | ------------------------------------------------------------------ |
+| `cwd`       | `process.cwd()`                 | The directory where the Project search starts.                     |
+| `home`      | `os.homedir()`                  | The home directory, for `~/.rowblyrc.json` and `~/.cache/rowbly/`. |
+| `now`       | the system time                 | The clock.                                                         |
+| `skillsDir` | `skills/` of the Rowbly package | The folder of the bundled skills.                                  |
 
 The CLI sets `cwd` from `-C <dir>`. Tests set the fields to temporary paths.
 
@@ -84,22 +84,23 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 
 ### Project data
 
-| Module           | Function                                                                               |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `workspace/`     | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`. |
-| `config/`        | `ProjectConfig` types, checks, key rules, and read and write of the config.            |
-| `project/`       | `initProject()`, `getProject()`, `updateProject()`.                                    |
-| `story/`         | Create, update, delete, get and search Stories, and positions.                         |
-| `stage/`         | List, create, update, delete and get Stages and their prompts.                         |
-| `custom-field/`  | Add, update and remove custom fields.                                                  |
-| `spec/`          | Specs and their links to Stories.                                                      |
-| `attachment/`    | PNG attachments of a Story.                                                            |
-| `doctor/`        | Compare the files with the config, and repair problems.                                |
-| `onboarding/`    | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.            |
-| `skill/`         | Install, list and remove the bundled skills for each harness.                          |
-| `prompts/`       | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`. |
-| `known-project/` | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.       |
-| `story-watch/`   | `watchStories()`: calls a function when the files of `stories/` change.                |
+| Module              | Function                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `workspace/`        | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`.               |
+| `config/`           | `ProjectConfig` types, checks, key rules, and read and write of the config.                          |
+| `project/`          | `initProject()`, `getProject()`, `updateProject()`.                                                  |
+| `story/`            | Create, update, delete, get and search Stories, and positions.                                       |
+| `stage/`            | List, create, update, delete and get Stages and their prompts.                                       |
+| `custom-field/`     | Add, update and remove custom fields.                                                                |
+| `spec/`             | Specs and their links to Stories.                                                                    |
+| `attachment/`       | PNG attachments of a Story.                                                                          |
+| `doctor/`           | Compare the files with the config, and repair problems.                                              |
+| `onboarding/`       | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.                          |
+| `skill/`            | Install, list and remove the bundled skills for each harness.                                        |
+| `prompts/`          | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`.               |
+| `known-project/`    | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.                     |
+| `story-watch/`      | `watchStories()`: calls a function when the files of `stories/` change.                              |
+| `pi-catalog-cache/` | `readPiCatalog()`, `refreshPiCatalog()`, `piProviderReady()`: the model cache in `~/.cache/rowbly/`. |
 
 ### Shared helpers
 

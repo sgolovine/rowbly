@@ -1,8 +1,11 @@
 import type { Key } from "ink";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
 import { ValidationError } from "../../../../services/errors/errors.js";
 import * as settings from "../../../../services/factory-settings/factory-settings.js";
+import { readPiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-cache.js";
 import type { Stage } from "../../../../services/stage/stage.js";
+import { useTempDir } from "../../../../services/test-project/test-project.js";
 import { createToastStore } from "../../../hooks/index.js";
 import type { AiProvider } from "../ai-view.js";
 import {
@@ -59,8 +62,22 @@ function env(overrides: Partial<AiEnv> = {}): AiEnv {
 const key = (overrides: Partial<Key> = {}) => ({ ...overrides }) as Key;
 
 describe("aiActions", () => {
+  const home = useTempDir();
+
   it("reads nothing without a runtime", async () => {
-    await expect(loadStatus(undefined)).resolves.toBeUndefined();
+    await expect(loadStatus(undefined, { home: home.path })).resolves.toBeUndefined();
+    expect(await readPiCatalog({ home: home.path })).toBeUndefined();
+  });
+
+  it("reads the providers and the models through Pi, and writes them to the model cache", async () => {
+    const runtime = {
+      getProviders: () => [{ id: "acme", auth: { apiKey: { login: true } } }],
+      listCredentials: async () => [],
+      getAvailable: async () => [{ provider: "acme", id: "fast-1", name: "Fast One", reasoning: false }],
+    } as unknown as AuthRuntime;
+    const status = await loadStatus(runtime, { home: home.path });
+    expect(status?.providers).toMatchObject([{ id: "acme", configured: true }]);
+    expect(await readPiCatalog({ home: home.path })).toMatchObject({ fresh: true, models: status?.models });
   });
 
   it("opens the task of each key, and reloads with r", () => {

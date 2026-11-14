@@ -4,6 +4,7 @@ import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js"
 import { ValidationError } from "../../../../services/errors/errors.js";
 import * as factorySettings from "../../../../services/factory-settings/factory-settings.js";
 import { updateFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
+import { piCatalogKey, readPiCatalog, writePiCatalog } from "../../../../services/pi-catalog-cache/pi-catalog-cache.js";
 import { createStage } from "../../../../services/stage/stage.js";
 import { createStory } from "../../../../services/story/story.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
@@ -24,6 +25,8 @@ const runtime = {
     { provider: "acme", id: "deep-1", name: "Deep One", reasoning: true },
     { provider: "acme", id: "fast-1", name: "Fast One", reasoning: false },
   ],
+  getProviders: () => [],
+  listCredentials: async () => [],
 } as unknown as AuthRuntime;
 
 const fast = { provider: "acme", modelId: "fast-1" };
@@ -167,5 +170,88 @@ describe("ModelsTab", () => {
     await tui.press(keys.enter);
     await vi.waitFor(() => expect(tui.toasts.list().map((t) => t.message)).toContain("Unknown stage"));
     expect(tui.frame()).toContain("ROW-01 › Model › Backlog");
+  });
+
+  describe("with the model cache", () => {
+    const cached = { provider: "acme", modelId: "cached-1", name: "Cached One", thinkingLevels: ["off" as const] };
+
+    async function writeCache(version?: string) {
+      const key = await piCatalogKey(project.ctx, { version });
+      await writePiCatalog({ models: [cached], providers: [] }, key, project.ctx);
+    }
+
+    function render(loadRuntime: () => Promise<AuthRuntime>) {
+      return renderTui(
+        <ModelsTab
+          ctx={project.ctx}
+          storyId="ROW-01"
+          selected
+          onHints={vi.fn()}
+          onTask={vi.fn()}
+          loadRuntime={loadRuntime}
+        />,
+      );
+    }
+
+    async function pickerShows(tui: Awaited<ReturnType<typeof render>>, text: string) {
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).not.toContain("Loading models");
+      });
+      await tui.press(keys.enter);
+      await vi.waitFor(async () => {
+        await tui.press();
+        expect(tui.frame()).toContain(text);
+      });
+      await tui.press(keys.escape);
+    }
+
+    it("shows the models of a fresh cache and never loads Pi", async () => {
+      await writeCache();
+      const loadRuntime = vi.fn(async () => runtime);
+      const tui = await render(loadRuntime);
+      await pickerShows(tui, "cached-1");
+      expect(tui.frame()).not.toContain("Loading models");
+      expect(loadRuntime).not.toHaveBeenCalled();
+    });
+
+    it("shows the models of a stale cache first, then the refreshed models, and writes them to the cache", async () => {
+      await writeCache("0.0.1-old");
+      const pending = { resolve: (_: AuthRuntime) => {} };
+      const loaded = new Promise<AuthRuntime>((resolve) => {
+        pending.resolve = resolve;
+      });
+      const loadRuntime = vi.fn(() => loaded);
+      const tui = await render(loadRuntime);
+      await pickerShows(tui, "cached-1");
+      expect(loadRuntime).toHaveBeenCalledOnce();
+      pending.resolve(runtime);
+      await vi.waitFor(async () =>
+        expect((await readPiCatalog(project.ctx))?.models.map((m) => m.modelId)).toEqual(["deep-1", "fast-1"]),
+      );
+      await pickerShows(tui, "fast-1");
+      expect(tui.frame()).not.toContain("cached-1");
+      expect((await readPiCatalog(project.ctx))?.fresh).toBe(true);
+      expect(loadRuntime).toHaveBeenCalledOnce();
+    });
+
+    it("loads Pi when the cache is missing, and writes the cache", async () => {
+      const loadRuntime = vi.fn(async () => runtime);
+      const tui = await render(loadRuntime);
+      await pickerShows(tui, "fast-1");
+      expect(loadRuntime).toHaveBeenCalledOnce();
+      expect((await readPiCatalog(project.ctx))?.fresh).toBe(true);
+    });
+
+    it("keeps the cached models without an error toast when the refresh fails", async () => {
+      await writeCache("0.0.1-old");
+      const loadRuntime = vi.fn(async (): Promise<AuthRuntime> => {
+        throw new Error("Pi did not load");
+      });
+      const tui = await render(loadRuntime);
+      await vi.waitFor(() => expect(loadRuntime).toHaveBeenCalledOnce());
+      await pickerShows(tui, "cached-1");
+      expect(tui.toasts.list()).toEqual([]);
+    });
   });
 });
