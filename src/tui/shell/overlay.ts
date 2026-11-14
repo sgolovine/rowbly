@@ -20,7 +20,9 @@ export type Overlay =
   | { readonly kind: "deleteStory"; readonly story: Story }
   | { readonly kind: "newStage" }
   | { readonly kind: "editStage"; readonly stage: Stage }
-  | { readonly kind: "factory" };
+  | { readonly kind: "factory" }
+  /** The checks in the queue of the live factory. */
+  | { readonly kind: "checks" };
 
 /** The records of an open Project that the overlays show. */
 export interface OverlayBoard {

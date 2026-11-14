@@ -1,5 +1,6 @@
 import type { Key } from "ink";
 import { describe, expect, it, vi } from "vitest";
+import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Project } from "../../../services/project/project.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
@@ -92,6 +93,35 @@ describe("handleShellKey", () => {
     expect(none.setOverlay).not.toHaveBeenCalled();
     expect(open.setOverlay).toHaveBeenNthCalledWith(1, { kind: "settings" });
     expect(open.setOverlay).toHaveBeenNthCalledWith(2, { kind: "factory" });
+  });
+
+  it("opens the Checks Modal on c only while the live factory has a check queue", () => {
+    const checks = { running: 1, queued: 0, maxConcurrent: 2, jobs: [] };
+    const live = { version: 1, phase: "ready", liveness: "alive", checks } as FactoryStatus;
+    const cases: [FactoryStatus | undefined, boolean][] = [
+      [live, true],
+      [undefined, false],
+      [{ ...live, phase: "stopped" }, false],
+      [{ ...live, checks: undefined }, false],
+    ];
+
+    for (const [factory, opens] of cases) {
+      const shell = { ...env(), factory };
+
+      handleShellKey(shell, "c", key());
+
+      if (opens) {
+        expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "checks" });
+      } else {
+        expect(shell.setOverlay).not.toHaveBeenCalled();
+      }
+    }
+
+    const none = { ...env({ data: { loading: false, data: null } }), factory: live };
+
+    handleShellKey(none, "c", key());
+
+    expect(none.setOverlay).not.toHaveBeenCalled();
   });
 
   it("does not take the keys of the onboarding text fields", () => {
