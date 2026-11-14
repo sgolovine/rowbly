@@ -25,6 +25,11 @@ describe("Pi import boundary", () => {
     await expect(import("./pi-runtime.js")).resolves.toHaveProperty("loadPi");
   });
 
+  it("imports the Pi worker client without loading Pi or starting a worker", async () => {
+    const client = await import("./pi-worker-client.js");
+    expect(client.piWorkerSource()).toHaveProperty("listAvailableModels");
+  });
+
   it("reads factory status without loading Pi or credentials", async () => {
     const { runCli } = await import("../../commands/test-cli/test-cli.js");
     const result = await runCli(["--json", "factory", "status"], project.paths.root);

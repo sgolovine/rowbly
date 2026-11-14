@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import { authRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import { piWorkerSource } from "../../../../services/pi-runtime/pi-worker-client.js";
 import { Loading, ScrollBody } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { ModelPickerModal, NO_OVERRIDE_LABEL } from "../../settings/model-picker-modal/index.js";
@@ -11,14 +11,14 @@ import { type ModelsTabProps, useModelsTab } from "./use-models-tab.js";
 /**
  * The worker model of the Story in each Stage. Each row shows the Story override, or the model that applies
  * without it and its source. The arrows select a Stage, and `enter` or a click opens the model picker. Its first
- * option, `No override`, removes the Story override. The models come from the model cache, and Pi loads in the
- * background only when the cache is stale or missing.
+ * option, `No override`, removes the Story override. The models come from the model cache, and the Pi worker reads
+ * Pi in the background only when the cache is stale or missing.
  */
 export function ModelsTab({
-  loadRuntime = authRuntime,
+  source = piWorkerSource(),
   ...props
-}: Omit<ModelsTabProps, "loadRuntime"> & Partial<Pick<ModelsTabProps, "loadRuntime">>) {
-  const { env, layout, settings, models, loading, task, idle } = useModelsTab({ ...props, loadRuntime });
+}: Omit<ModelsTabProps, "source"> & Partial<Pick<ModelsTabProps, "source">>) {
+  const { env, layout, settings, models, loading, task, idle } = useModelsTab({ ...props, source });
 
   return (
     <ScrollBody height={layout.height} active={idle}>

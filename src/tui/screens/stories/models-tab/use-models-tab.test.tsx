@@ -2,6 +2,7 @@ import { Text } from "ink";
 import { cleanup } from "ink-testing-library";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
+import { runtimeSource } from "../../../../services/pi-catalog-cache/pi-catalog-refresh.js";
 import { useTestProject } from "../../../../services/test-project/test-project.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../../keymap.js";
@@ -28,8 +29,8 @@ function Probe(props: {
   onRender?: () => void;
 }) {
   props.onRender?.();
-  // A new `loadRuntime` on each render, as an inline prop gives.
-  const tab = useModelsTab({ ...props, storyId: "ROW-01", loadRuntime: async () => runtime });
+  // A new `source` on each render, as an inline prop gives.
+  const tab = useModelsTab({ ...props, storyId: "ROW-01", source: runtimeSource(runtime) });
 
   return <Text>{`cursor=${tab.env.cursor} ready=${tab.env.ready} task=${tab.task?.key ?? "none"}`}</Text>;
 }
@@ -65,7 +66,7 @@ describe("useModelsTab", () => {
     expect(tui.frame()).toContain("cursor=0 ready=false task=none");
   });
 
-  it("does not render again and again when `loadRuntime` is a new function on each render", async () => {
+  it("does not render again and again when `source` is a new object on each render", async () => {
     const onRender = vi.fn();
     const tui = await renderTui(
       <Probe ctx={project.ctx} selected onHints={vi.fn()} onTask={vi.fn()} onRender={onRender} />,
