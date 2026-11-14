@@ -1,6 +1,13 @@
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import type { ServiceContext } from "../workspace/workspace.js";
-import { type CheckItem, type CheckSettings, type CheckSpec, checkLimits } from "./check-settings.js";
+import {
+  type CheckInput,
+  type CheckItem,
+  type CheckSettings,
+  type CheckSpec,
+  checkLimits,
+  mergeChecks,
+} from "./check-settings.js";
 import { type FactorySettings, getFactorySettings, writeSettings } from "./factory-settings.js";
 
 /** The values of a check update. `null` removes an optional key. */
@@ -27,6 +34,14 @@ function changedItem(item: CheckItem, change: CheckItemChange): CheckItem {
   const entries = Object.entries(merged).filter(([, value]) => value !== null && value !== undefined);
 
   return Object.fromEntries(entries) as unknown as CheckItem;
+}
+
+/**
+ * Sets the check limits: the number of checks at the same time and the memory reserve. It does not load Pi, so
+ * that the TUI can use it. A value out of range fails before the file changes.
+ */
+export async function setCheckLimits(input: CheckInput, ctx: ServiceContext = {}): Promise<FactorySettings> {
+  return writeSettings((current) => ({ ...current, checks: mergeChecks(current.checks, input) }), ctx);
 }
 
 /** Lists the checks of the Project with their defaults. Without a `checks` section, the list is empty. */

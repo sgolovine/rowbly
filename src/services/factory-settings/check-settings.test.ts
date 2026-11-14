@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
-import { addCheck, listChecks, removeCheck, updateCheck } from "./check-items.js";
+import { addCheck, listChecks, removeCheck, setCheckLimits, updateCheck } from "./check-items.js";
 import { checkLimits, mergeChecks, validChecks } from "./check-settings.js";
 import { configureFactory, getFactorySettings } from "./factory-settings.js";
 
@@ -72,6 +72,18 @@ describe("check items", () => {
     await p.write("factory.json", `${JSON.stringify({ version: 1, maxWorkers: 2, checks: { maxConcurrent: 0 } })}\n`);
 
     await expect(getFactorySettings(p.ctx)).rejects.toThrow("Invalid factory checks");
+  });
+
+  it("sets the limits without Pi, and keeps the items", async () => {
+    await addCheck(test, p.ctx);
+    await setCheckLimits({ maxChecks: 4, checkMemoryReserve: 0 }, p.ctx);
+
+    expect(JSON.parse(await p.read("factory.json")).checks).toEqual({
+      items: [test],
+      maxConcurrent: 4,
+      reserveMemoryMb: 0,
+    });
+    await expect(setCheckLimits({ maxChecks: 0 }, p.ctx)).rejects.toThrow("Invalid factory checks");
   });
 
   it("sets the limits through configure", async () => {

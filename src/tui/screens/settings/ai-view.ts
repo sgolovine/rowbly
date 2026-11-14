@@ -1,5 +1,5 @@
 import type { getAuthStatus, listAvailableModels } from "../../../services/agent-auth/agent-auth.js";
-import type { FactorySettings, ModelChoice } from "../../../services/factory-settings/factory-settings.js";
+import type { CheckSpec, FactorySettings, ModelChoice } from "../../../services/factory-settings/factory-settings.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { KeyHint } from "../../keymap.js";
 
@@ -16,6 +16,10 @@ export type AiTask =
   | { readonly kind: "model"; readonly role: Role }
   | { readonly kind: "stageModel"; readonly stage: Stage }
   | { readonly kind: "limit" }
+  | { readonly kind: "checkLimits" }
+  /** Adds a check, or edits the check that it names. */
+  | { readonly kind: "check"; readonly check?: CheckSpec }
+  | { readonly kind: "removeCheck"; readonly check: CheckSpec }
   | null;
 
 /** The providers and the models that the AI settings show. */
@@ -67,13 +71,14 @@ export const SIGN_IN_NOTE =
   "The sign-in is for this computer. Pi keeps the credentials; the Project keeps no secret. A configured provider is not a check of the account.";
 
 /** The page of the AI settings: a tab, or the page that signs in to another provider under the Providers tab. */
-export type AiPage = "providers" | "addProvider" | "models" | "limits";
+export type AiPage = "providers" | "addProvider" | "models" | "limits" | "checks";
 
 /** The tabs of the AI settings, in order. */
 export const AI_TABS: readonly { readonly page: AiPage; readonly label: string }[] = [
   { page: "providers", label: "Providers" },
   { page: "models", label: "Models" },
   { page: "limits", label: "Limits" },
+  { page: "checks", label: "Checks" },
 ];
 
 /** The index of the tab of a page. The sign-in page is under the Providers tab. */
@@ -118,6 +123,8 @@ export interface AiAbilities {
   readonly ready: boolean;
   /** The Models tab has Stages to select. */
   readonly stages?: boolean;
+  /** The Checks tab has checks to select. */
+  readonly checks?: boolean;
 }
 
 const TAB_HINT: KeyHint = { key: "←/→", description: "tab" };
@@ -169,6 +176,21 @@ function modelsHints(can: AiAbilities): KeyHint[] {
   ];
 }
 
+function checksHints(can: AiAbilities): KeyHint[] {
+  return [
+    { key: "c", description: "edit check limits" },
+    { key: "n", description: "add check" },
+    ...(can.checks
+      ? [
+          { key: "↑/↓", description: "select check" },
+          { key: "enter", description: "edit check" },
+          { key: "d", description: "remove check" },
+        ]
+      : []),
+    TAB_HINT,
+  ];
+}
+
 /** The keys of the page of the AI settings that work now. */
 export function aiHints(page: AiPage, can: AiAbilities): KeyHint[] {
   if (!can.idle) {
@@ -181,6 +203,10 @@ export function aiHints(page: AiPage, can: AiAbilities): KeyHint[] {
 
   if (page === "models") {
     return modelsHints(can);
+  }
+
+  if (page === "checks") {
+    return checksHints(can);
   }
 
   if (page === "limits") {

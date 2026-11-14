@@ -4,7 +4,7 @@ import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
 import { FactoryList } from "../factory-list/index.js";
-import { PHASES, providerNotice, supervisorText, workersText } from "../factory-modal-text.js";
+import { checksText, PHASES, providerNotice, supervisorText, workersText } from "../factory-modal-text.js";
 import { factoryProblems, queueReason } from "../factory-status.js";
 
 /** The props of `FactoryOverview`. */
@@ -61,6 +61,7 @@ export function FactoryOverview({
           },
           { label: "Supervisor", value: supervisorText(supervisor?.model, live) },
           { label: "Workers", value: workersText(live, status?.workers, limit) },
+          ...(live && status?.checks ? [{ label: "Checks", value: checksText(status.checks) }] : []),
           ...(live && status?.owner ? [{ label: "Started", value: formatDateTime(status.owner.startedAt) }] : []),
         ]}
       />

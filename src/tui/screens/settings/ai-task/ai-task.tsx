@@ -1,10 +1,15 @@
 import type { AuthRuntime } from "../../../../services/agent-auth/agent-auth.js";
-import type { FactorySettings, ModelChoice } from "../../../../services/factory-settings/factory-settings.js";
+import type {
+  CheckSpec,
+  FactorySettings,
+  ModelChoice,
+} from "../../../../services/factory-settings/factory-settings.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { ConfirmDialog, FormModal, type FormValues } from "../../../components/index.js";
 import type { AiProvider, AiStatus, AiTask, Role } from "../ai-view.js";
 import { AuthFlow } from "../auth-flow/index.js";
+import { CheckTaskView } from "../check-task/index.js";
 import { ModelPickerModal, NO_OVERRIDE_LABEL } from "../model-picker-modal/index.js";
 
 /** The props of `AiTaskView`. */
@@ -23,6 +28,10 @@ export interface AiTaskViewProps {
   /** `null` removes the override of the Stage. */
   readonly onSaveStageModel: (stage: Stage, choice: ModelChoice | null) => Promise<void>;
   readonly onSaveLimit: (values: FormValues) => Promise<void>;
+  readonly onSaveCheckLimits: (values: FormValues) => Promise<void>;
+  /** Without a check, the form adds a new check. */
+  readonly onSaveCheck: (check: CheckSpec | undefined, values: FormValues) => Promise<void>;
+  readonly onRemoveCheck: (check: CheckSpec) => void;
   readonly onCancel: () => void;
 }
 
@@ -79,6 +88,7 @@ export function AiTaskView({ task, ctx, runtime, provider, status, settings, ...
           onClose={on.onCancel}
         />
       )}
+      <CheckTaskView task={task} settings={settings} {...on} />
     </>
   );
 }
