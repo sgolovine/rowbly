@@ -3,7 +3,7 @@ title: "Chore: Revert test changes"
 stage: IN_DEVELOPMENT
 position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-12
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/194
 ---
 
 Revert all test changes in this PR: https://github.com/sgolovine/rowbly/pull/192
