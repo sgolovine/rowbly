@@ -1,7 +1,7 @@
 ---
 title: Build the animated board section of the landing page
-stage: BACKLOG
-position: 7
+stage: IN_REFINEMENT
+position: 8
 worktree: null
 pull_request: null
 ---
