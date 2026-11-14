@@ -51,6 +51,10 @@ The `factory-settings/` service reads and writes the optional `.rowbly/factory.j
   default again.
 - The service keeps the other keys of `factory.json`. Git flags without a model flag do not start
   the Pi runtime.
+- The `git` section also has `push`, `pull` and `syncIntervalSeconds`. They set the Git sync of
+  the canonical checkout. The `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and
+  `--git-sync-interval` flags set them. See
+  [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - The model picker of the TUI offers the supported thinking levels and `Pi default`.
 
 ## Related
