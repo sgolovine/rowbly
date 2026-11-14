@@ -75,6 +75,7 @@ export function EditStoryForm({
   stages,
   customFields,
   specs = false,
+  compactThreads,
   onSaved,
   onDeleted,
   onBack,
@@ -86,6 +87,8 @@ export function EditStoryForm({
   customFields: readonly CustomField[];
   /** The project has Specs on. */
   specs?: boolean;
+  /** Each thread of the Threads tab uses one line. */
+  compactThreads?: boolean;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
   /** `esc`: the Story sidebar gives the focus to the Story list. */
@@ -105,6 +108,7 @@ export function EditStoryForm({
       storyId={story.id}
       stages={stageNames}
       specs={specs}
+      compactThreads={compactThreads}
       fields={storyFormFields(stages, customFields)}
       initialValues={initialValues(story, customFields)}
       onSubmit={(values, attachments) => saveStory(env, values, attachments)}

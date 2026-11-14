@@ -24,6 +24,8 @@ export interface ThreadListPanelProps {
   readonly height: number | undefined;
   /** The height inside the frame, or undefined when the content sets the height. */
   readonly innerHeight: number | undefined;
+  /** Each thread uses one line. */
+  readonly compactThreads?: boolean;
   /** A click on the Panel while the thread region has the keys. */
   readonly onFocusList: () => void;
   readonly onClickRow: (index: number) => void;
@@ -51,6 +53,7 @@ export function ThreadListPanel({
   width,
   height,
   innerHeight,
+  compactThreads = false,
   onFocusList,
   onClickRow,
 }: ThreadListPanelProps) {
@@ -79,6 +82,7 @@ export function ThreadListPanel({
             now={now}
             selected={i === cursor}
             clickable={listing || viewing}
+            compact={compactThreads}
             onClick={() => onClickRow(i)}
           />
         ))}

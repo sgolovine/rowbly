@@ -27,6 +27,8 @@ export interface FactoryViewProps {
   readonly active: boolean;
   /** The rows take the clicks. */
   readonly clickable: boolean;
+  /** Each Thread uses one line. */
+  readonly compact?: boolean;
   /** The line that shows when there is no Thread. */
   readonly emptyText: string;
   onOpen(thread: ThreadRecord): void;

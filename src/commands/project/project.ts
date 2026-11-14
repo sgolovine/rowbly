@@ -1,11 +1,13 @@
 import { type Command, InvalidArgumentError } from "commander";
+import { compactThreads } from "../../services/config/config.js";
 import { type Project, updateProject } from "../../services/project/project.js";
 import { run } from "../output/output.js";
 
 function describe(project: Project): string {
   const specs = project.features?.specs ? "\nSpecs: on" : "";
+  const compact = project.display === undefined ? "" : `\nCompact threads: ${compactThreads(project) ? "on" : "off"}`;
 
-  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}`;
+  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}${compact}`;
 }
 
 /** Parses `on` or `off`. */
@@ -17,14 +19,22 @@ function parseSwitch(value: string): boolean {
   throw new InvalidArgumentError("Expected on or off.");
 }
 
+interface UpdateOptions {
+  name?: string;
+  key?: string;
+  specs?: boolean;
+  compactThreads?: boolean;
+}
+
 function registerUpdate(program: Command): void {
   program
     .command("update")
-    .description("Update the project's name, key or features")
+    .description("Update the project's name, key, features or display options")
     .option("--name <name>", "new project name")
     .option("--key <key>", "new story ID prefix; renames every story file")
     .option("--specs <on|off>", "turn specs on or off", parseSwitch)
-    .action((opts: { name?: string; key?: string; specs?: boolean }, command: Command) =>
+    .option("--compact-threads <on|off>", "show each Thread on one line in the TUI", parseSwitch)
+    .action((opts: UpdateOptions, command: Command) =>
       run(
         command,
         (ctx) =>
@@ -33,6 +43,7 @@ function registerUpdate(program: Command): void {
               name: opts.name,
               key: opts.key,
               features: opts.specs === undefined ? undefined : { specs: opts.specs },
+              display: opts.compactThreads === undefined ? undefined : { compactThreads: opts.compactThreads },
             },
             ctx,
           ),

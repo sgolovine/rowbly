@@ -2,6 +2,8 @@ import { checkFieldKey, checkFieldOptions, checkProjectKey, checkStageKey, isSki
 import {
   CUSTOM_FIELD_TYPES,
   type CustomFieldType,
+  DISPLAY_OPTIONS,
+  type DisplayOption,
   FEATURES,
   type Feature,
   type Issue,
@@ -222,6 +224,30 @@ function featureIssues(name: string, value: unknown): Issue[] {
   return [];
 }
 
+function displayIssues(display: unknown): Issue[] {
+  if (display === undefined) {
+    return [];
+  }
+
+  if (!isRecord(display)) {
+    return [{ path: ["display"], message: "display must be an object" }];
+  }
+
+  return Object.entries(display).flatMap(([name, value]) => displayOptionIssues(name, value));
+}
+
+function displayOptionIssues(name: string, value: unknown): Issue[] {
+  if (!DISPLAY_OPTIONS.includes(name as DisplayOption)) {
+    return [{ path: ["display", name], message: `Unknown display option "${name}"` }];
+  }
+
+  if (typeof value !== "boolean") {
+    return [{ path: ["display", name], message: `${name} must be true or false` }];
+  }
+
+  return [];
+}
+
 /** Checks only the shape of the factory section, so that a bad section does not stop the board. */
 function factoryIssues(factory: unknown): Issue[] {
   return factory === undefined || isRecord(factory)
@@ -243,5 +269,6 @@ export function configIssues(raw: unknown): Issue[] {
     ...featuresIssues(raw.features),
     ...(raw.skills === undefined ? [] : skillIssues(raw.skills)),
     ...factoryIssues(raw.factory),
+    ...displayIssues(raw.display),
   ];
 }

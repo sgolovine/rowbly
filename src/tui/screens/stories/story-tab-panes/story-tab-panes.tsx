@@ -35,6 +35,8 @@ export interface StoryTabPanesProps {
   readonly stages?: StageNames;
   /** The Project has Specs on. */
   readonly specs: boolean;
+  /** Each thread of the Threads tab uses one line. */
+  readonly compactThreads?: boolean;
   /** The tab on the screen. */
   readonly shown: StoryTabId;
   /** No confirmation is on top of the Modal. */
@@ -55,6 +57,7 @@ export function StoryTabPanes({
   storyId,
   stages,
   specs,
+  compactThreads,
   shown,
   open,
   specsLayout,
@@ -82,6 +85,7 @@ export function StoryTabPanes({
             storyId={storyId}
             stages={stages}
             selected={shown === "threads" && open}
+            compactThreads={compactThreads}
             onCount={reports.setThreadCount}
             onEditing={reports.setThreadViewing}
             onHints={reports.setThreadHints}

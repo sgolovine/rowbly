@@ -32,7 +32,7 @@ test.
 | `test-cli/`                                            | `runCli()`, `createProgram()`: run commands in tests.                            |
 | `init/`                                                | The `rowbly init` command: flags and JSON input.                                 |
 | `init-wizard/`                                         | `askOnboarding()`: the `@clack/prompts` questions of `rowbly init`.              |
-| `project/`                                             | `project update`.                                                                |
+| `project/`                                             | `project update`: `--name`, `--key`, `--specs` and `--compact-threads`.          |
 | `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
 | `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
@@ -56,6 +56,17 @@ Most commands belong to a resource command, for example `story`, `stage`, `custo
 `skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
 its help. A resource command with an unknown action gives an error. `init`, `doctor`, `status` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
+
+### Project update
+
+`rowbly project update` changes the Project config through `updateProject`:
+
+- `--name <name>` and `--key <key>` change the name and the key. A new key renames all Story files.
+- `--specs <on|off>` turns Specs on or off.
+- `--compact-threads <on|off>` sets `display.compactThreads`. When it is on, each Thread in the TUI
+  uses one line. When the config does not have the value, the compact mode is on.
+
+A value that is not `on` or `off` gives a Commander error and exit code 1.
 
 ## Output and errors
 

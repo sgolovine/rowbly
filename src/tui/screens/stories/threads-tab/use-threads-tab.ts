@@ -34,6 +34,8 @@ export interface ThreadsTabProps {
   readonly stages?: StageNames;
   /** This tab is the tab on the screen, and takes the keys. */
   readonly selected: boolean;
+  /** Each thread of the list uses one line. */
+  readonly compactThreads?: boolean;
   onCount(count: number): void;
   /** The thread region takes `esc`, so that the Modal does not close. */
   onEditing(editing: boolean): void;

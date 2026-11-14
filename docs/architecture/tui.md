@@ -129,8 +129,11 @@ quits.
   the count. One empty line separates the two sections. This line shows also when the section
   "Active Threads" is collapsed. You cannot select the empty line. `enter`, a click or `←/→`
   expands or collapses a section.
-- **The rows.** Each row shows the Story id, the status, the Stage, the attempt, the model and the
-  run time. The Threads in a section are newest first. Only worker Threads with a Story show.
+- **The rows.** Each row shows the Story id, the status, the Stage, the attempt and the run time.
+  When `display.compactThreads` of the config is off, `ThreadRow` also shows the model, the creation
+  time and the error or the summary of the result on two more lines. When it is on (the default),
+  each Thread uses one line. A failed Thread shows `failed` in `danger` colour also in one line.
+  The Threads tab of a Story uses the same setting. Settings › Display has a `Switch` for it. The Threads in a section are newest first. Only worker Threads with a Story show.
   `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.
 - **The filter.** The Stage sidebar stays. When you select a Stage, only the Threads with that
   `stage` show. "All Stages" shows all Threads.

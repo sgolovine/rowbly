@@ -13,6 +13,7 @@ export * from "./check-task/index.js";
 export * from "./custom-field-form-modal/index.js";
 export * from "./custom-field-row/index.js";
 export * from "./custom-fields-section/index.js";
+export * from "./display-section/index.js";
 export * from "./doctor-report/index.js";
 export * from "./doctor-section/index.js";
 export * from "./git-section/index.js";

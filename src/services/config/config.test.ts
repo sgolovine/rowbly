@@ -8,6 +8,7 @@ import {
   checkFieldOptions,
   checkProjectKey,
   checkStageKey,
+  compactThreads,
   configIssues,
   featureEnabled,
   isSkillName,
@@ -230,6 +231,29 @@ describe("parseConfig", () => {
     }
   });
 
+  it("reads the display options, and the compact Thread mode is on when it is not set", () => {
+    const text = JSON.stringify({ ...VALID, display: { compactThreads: false } });
+    const config = parseConfig(text).config as ProjectConfig;
+    expect(config.display).toEqual({ compactThreads: false });
+    expect(compactThreads(config)).toBe(false);
+    expect(compactThreads({ ...VALID, display: { compactThreads: true } })).toBe(true);
+    expect(compactThreads(VALID)).toBe(true);
+    expect(compactThreads({ ...VALID, display: {} })).toBe(true);
+    expect(configIssues(VALID)).toEqual([]);
+  });
+
+  it("reports a display value that is not an object, an unknown option or a value that is not a boolean", () => {
+    for (const bad of [5, "x", null, [1]]) {
+      expect(configIssues({ ...VALID, display: bad })).toEqual([
+        { path: ["display"], message: "display must be an object" },
+      ]);
+    }
+    expect(configIssues({ ...VALID, display: { compactThreads: "yes", wide: true } })).toEqual([
+      { path: ["display", "compactThreads"], message: "compactThreads must be true or false" },
+      { path: ["display", "wide"], message: 'Unknown display option "wide"' },
+    ]);
+  });
+
   it("drops unknown keys", () => {
     const text = JSON.stringify({ ...VALID, extra: 1, stages: [{ ...VALID.stages[0], color: "red" }] });
     expect(parseConfig(text)).toEqual({ config: VALID, issues: [] });
@@ -266,6 +290,13 @@ describe("readConfig and writeConfig", () => {
     const raw = JSON.parse(await project.read("rowbly.config.json"));
     expect(raw.factory).toEqual(factory);
     expect(Object.keys(raw).at(-1)).toBe("factory");
+  });
+
+  it("writes and reads back the display options", async () => {
+    const config: ProjectConfig = { ...VALID, display: { compactThreads: false } };
+    await writeConfig(project.paths, config);
+    expect(await readConfig(project.paths)).toEqual(config);
+    expect(JSON.parse(await project.read("rowbly.config.json")).display).toEqual({ compactThreads: false });
   });
 
   it("throws a ValidationError for an invalid file", async () => {

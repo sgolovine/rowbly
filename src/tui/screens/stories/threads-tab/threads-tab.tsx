@@ -17,7 +17,7 @@ import { type ThreadsTabProps, useThreadsTab } from "./use-threads-tab.js";
  * keys send a command to the running factory. A note tells when the Story waits for a worker slot.
  */
 export function ThreadsTab(props: ThreadsTabProps) {
-  const { ctx, storyId, stages, selected } = props;
+  const { ctx, storyId, stages, selected, compactThreads } = props;
   const tab = useThreadsTab(props);
   const { env, layout, confirm } = tab;
   const view = threadsLayout(layout, tab.focus, env.current);
@@ -40,6 +40,7 @@ export function ThreadsTab(props: ThreadsTabProps) {
           width={view.split ? LIST_WIDTH : layout.width}
           height={layout.height}
           innerHeight={view.innerHeight}
+          compactThreads={compactThreads}
           onFocusList={() => env.setFocus("list")}
           onClickRow={(index) => clickRow(env, index)}
         />

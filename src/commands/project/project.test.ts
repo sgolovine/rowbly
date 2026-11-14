@@ -18,6 +18,20 @@ describe("project commands", () => {
       expect((await runCli(["project", "update", "--specs", "yes"], cwd)).stderr).toContain("Expected on or off.");
     });
 
+    it("turns the compact Thread mode on and off", async () => {
+      const cwd = project.ctx.cwd;
+      expect((await runCli(["project", "update", "--compact-threads", "off"], cwd)).stdout).toBe(
+        `Updated Rowbly (ROW) in ${cwd}\nCompact threads: off`,
+      );
+      expect((await getProject(project.ctx)).display).toEqual({ compactThreads: false });
+      const json = await runCli(["project", "update", "--compact-threads", "on", "--json"], cwd);
+      expect(JSON.parse(json.stdout)).toMatchObject({ projectKey: "ROW", display: { compactThreads: true } });
+      expect((await getProject(project.ctx)).display).toEqual({ compactThreads: true });
+      const bad = await runCli(["project", "update", "--compact-threads", "yes"], cwd);
+      expect(bad.stderr).toContain("Expected on or off.");
+      expect(bad.exitCode).not.toBe(0);
+    });
+
     it("updates the name and key", async () => {
       const cwd = project.ctx.cwd;
       const result = await runCli(["project", "update", "--name", "Renamed", "--key", "NEW"], cwd);
