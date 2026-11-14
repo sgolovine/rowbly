@@ -2,7 +2,7 @@
 title: Share one factory status read across TUI views
 stage: IN_REFINEMENT
 position: 2
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-31
 pull_request: null
 ---
 
