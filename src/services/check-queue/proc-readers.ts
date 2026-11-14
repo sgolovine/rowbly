@@ -10,7 +10,7 @@ const PGRP_INDEX = 2;
 /** The start time is field 22 of `/proc/<pid>/stat`. */
 const START_INDEX = 19;
 
-export const DEFAULT_TIMING = {
+const DEFAULT_TIMING = {
   sampleMs: 1000,
   admitMs: 5000,
   progressMs: 10_000,
@@ -72,7 +72,7 @@ export function killGroup(pgid: number, signal: NodeJS.Signals): void {
 }
 
 /** Reads the Git `HEAD` of a worktree, or undefined. */
-export async function readHead(cwd: string): Promise<string | undefined> {
+async function readHead(cwd: string): Promise<string | undefined> {
   return exec("git", ["-C", cwd, "rev-parse", "HEAD"]).then(
     ({ stdout }) => stdout.trim() || undefined,
     () => undefined,

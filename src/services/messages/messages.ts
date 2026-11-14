@@ -76,7 +76,7 @@ export interface WorkerRun {
 }
 
 /** One configured check: its key, its label and whether it has a narrow form. */
-export interface RunCheck {
+interface RunCheck {
   readonly key: string;
   readonly label: string;
   readonly narrow: boolean;

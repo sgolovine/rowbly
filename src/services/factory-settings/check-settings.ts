@@ -42,9 +42,9 @@ export interface CheckInput {
   readonly checkMemoryReserve?: number;
 }
 
-export const CHECK_KEY_PATTERN = /^[a-z][a-z0-9_-]*$/;
-export const MAX_CONCURRENT_CHECKS = 32;
-export const MAX_CHECK_TIMEOUT_MINUTES = 240;
+const CHECK_KEY_PATTERN = /^[a-z][a-z0-9_-]*$/;
+const MAX_CONCURRENT_CHECKS = 32;
+const MAX_CHECK_TIMEOUT_MINUTES = 240;
 export const FILES_PLACEHOLDER = "{files}";
 export const DEFAULT_CHECKS = { maxConcurrent: 2, reserveMemoryMb: 2048, memoryMb: 1024, timeoutMinutes: 30 } as const;
 
@@ -73,7 +73,7 @@ function validBlock(value: unknown): boolean {
 }
 
 /** Tells if a value is one check with a valid key, a command and keys in their ranges. */
-export function validCheckItem(value: unknown): value is CheckItem {
+function validCheckItem(value: unknown): value is CheckItem {
   if (!isRecord(value)) {
     return false;
   }
@@ -112,7 +112,7 @@ export function validChecks(value: unknown): value is CheckSettings {
 }
 
 /** Gives one check with the defaults for the absent keys. */
-export function checkSpec(item: CheckItem): CheckSpec {
+function checkSpec(item: CheckItem): CheckSpec {
   return {
     key: item.key,
     label: item.label ?? item.key,
@@ -156,7 +156,7 @@ export function mergeChecks(current: CheckSettings | undefined, input: CheckInpu
 }
 
 /** The hint of a `ValidationError` for a `checks` section that is not valid. */
-export const CHECKS_HINT =
+const CHECKS_HINT =
   `Use 1 to ${MAX_CONCURRENT_CHECKS} for checks.maxConcurrent, lowercase keys, a command for each check, ` +
   `${FILES_PLACEHOLDER} in narrowCommand, and 1 to ${MAX_CHECK_TIMEOUT_MINUTES} for timeoutMinutes`;
 

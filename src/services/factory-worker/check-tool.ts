@@ -71,7 +71,7 @@ export function checkCall(checks: readonly CheckSpec[], worktree: string, input:
 }
 
 /** Writes the result of a check for the worker. */
-export function formatOutcome(outcome: CheckOutcome, now: number): string {
+function formatOutcome(outcome: CheckOutcome, now: number): string {
   const { job } = outcome;
 
   return [

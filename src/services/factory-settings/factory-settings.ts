@@ -33,7 +33,7 @@ import {
   withWorkerOverride,
 } from "./worker-overrides.js";
 
-export type { CheckItem, CheckLimits, CheckSettings, CheckSpec } from "./check-settings.js";
+export type { CheckItem, CheckSpec } from "./check-settings.js";
 export type { GitInput, GitSettings, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");

@@ -3,7 +3,7 @@ import type { ThreadCheck } from "../../../../services/thread/thread.js";
 import { theme } from "../../../theme.js";
 
 /** The pane shows the last checks of a Thread, newest last. */
-export const THREAD_CHECK_ROWS = 3;
+const THREAD_CHECK_ROWS = 3;
 
 const FAILED = ["failed", "timed_out", "error"];
 

@@ -61,7 +61,7 @@ function admitIfWaiting(queue: CheckQueue): Promise<void> {
 }
 
 /** Runs one admission after the earlier admissions. It starts jobs while a slot and memory are free. */
-export function admit(queue: CheckQueue): Promise<void> {
+function admit(queue: CheckQueue): Promise<void> {
   const next = getQueue(queue)
     .admitting.then(() => admitWaiting(queue))
     .catch(() => {});
@@ -176,7 +176,7 @@ export async function submitCheck(
 }
 
 /** Cancels one job: a queued job leaves the queue, and a running job stops. */
-export async function cancelCheck(queue: CheckQueue, id: string): Promise<void> {
+async function cancelCheck(queue: CheckQueue, id: string): Promise<void> {
   const job = findJob(queue, id);
 
   if (job?.status === "queued") {
@@ -211,11 +211,6 @@ export async function stopCheckQueue(queue: CheckQueue): Promise<void> {
   await mapInOrder(queued, (job) => cancelCheck(queue, job.id));
   await Promise.all(activeJobs(queue).map((job) => cancelCheck(queue, job.id)));
   await persistJobs(queue);
-}
-
-/** Gives the jobs of one Thread, oldest first. */
-export function threadChecks(queue: CheckQueue, threadId: string): readonly CheckJob[] {
-  return getQueue(queue).jobs.filter((job) => job.threadId === threadId);
 }
 
 /** Gives the checks part of `status.json`: the counts, the free memory and the jobs that run or wait. */

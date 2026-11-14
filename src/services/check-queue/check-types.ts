@@ -2,7 +2,7 @@ import type { CheckLimits } from "../factory-settings/check-settings.js";
 import type { Store } from "../store/store.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 
-export type CheckScope = "full" | "narrow";
+type CheckScope = "full" | "narrow";
 export type CheckStatus = "queued" | "running" | "passed" | "failed" | "timed_out" | "cancelled" | "error";
 export type StopReason = "timed_out" | "cancelled";
 export type ShellEnv = Readonly<Record<string, string | undefined>>;
@@ -78,7 +78,7 @@ export interface CheckProcess {
 }
 
 /** The times of the queue. Tests make them short. */
-export interface CheckTiming {
+interface CheckTiming {
   readonly sampleMs: number;
   readonly admitMs: number;
   readonly progressMs: number;
@@ -101,7 +101,7 @@ export interface CheckQueueDeps {
 }
 
 /** The waiter of one job, and the values that do not go into the record. */
-export interface Ticket {
+interface Ticket {
   readonly env: ShellEnv;
   readonly resolve: (outcome: CheckOutcome) => void;
 }
