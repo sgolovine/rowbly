@@ -1,7 +1,7 @@
 ---
 title: Tell workers about the upstream Stories of their Story
-stage: IN_REFINEMENT
-position: 7
+stage: IN_DEVELOPMENT
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-64
 pull_request: null
 ---
