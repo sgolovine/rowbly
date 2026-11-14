@@ -1,6 +1,6 @@
 ---
 title: Edit worker model overrides in the TUI
-stage: IN_REVIEW
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-21
 pull_request: https://github.com/sgolovine/rowbly/pull/205
@@ -69,3 +69,15 @@ Not in scope:
 - The first option of the override picker is labelled `No override` and removes the override. Reason: in the override pickers, the `Pi default` option would be misleading, because without an override the Stage model or the worker model applies.
 - The Story `Models` tab shows the model that applies without an override and its source. Reason: the author asks that a person can "see" the overrides, and the resolution order of ROW-20 makes the inherited model not obvious.
 - The Story waits for ROW-20 and does not copy its services. Reason: ROW-20 owns the storage and the services, and this Story "adds only the TUI".
+## Review findings
+
+1. The pull request has merge conflicts with `main` (GitHub state `CONFLICTING`/`DIRTY`). `main` now has ROW-19 (#203), which adds `configureGit` and the factory Git settings in Settings.
+   - `src/services/factory-settings/factory-settings.test.ts`, line 6 (the import from `./factory-settings.js`): `main` imports `configureGit`, and the branch imports `setWorkerOverride`. Fix: merge `origin/main` into `story/ROW-21` and import both names.
+   - `docs/architecture/tui.md`, the table of screen areas (about lines 41–68): both sides changed the table. Fix: keep the rows of `main` (for example the Git settings of ROW-19), add the rows of this Story, and align the table again.
+   - After the merge, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again and push.
+
+Review notes (not blocking):
+
+- The code satisfies the other acceptance criteria. On the branch head (87a2e30a), `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` passed. A second `vitest` run had two failures (`doctor-section.test.tsx`, `factory-view.test.tsx`) that passed alone: flaky, not related. GitHub has no CI checks for the pull request.
+- The branch holds five `chore(rowbly): record project changes after scan` commits that change `.rowbly/stories/ROW-16.md`, `ROW-18.md`, `ROW-19.md`, `ROW-20.md` and `ROW-21.md`. They are outside the scope of this Story, and a merge writes old Story data to `main`. If possible, keep these files at the `main` version in the merge.
+- The layout in a real terminal is not verified by a person.
