@@ -18,6 +18,7 @@ take or change a lock.
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
     status.json       # heartbeat, workers, queue, holds, provider pauses, attention and checks
+    watchdog.json     # watchdog phase, process identity, crashes in a row, last crash, last exit and last log
     control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
@@ -122,6 +123,32 @@ The factory uses three locks:
    - Native factory writers use util-linux `flock -w 60` for canonical changes, commits and the Git
      sync (`src/services/project-write/`).
    - Workers use the exact CLI shim under the same lock. There is no unlocked fallback.
+
+## The watchdog state file
+
+Only the watchdog process writes `runtime/watchdog.json`. It uses `writeFileAtomic` with mode 0600.
+The daemon writes `status.json`, so the two processes never write the same file.
+
+| Key           | Meaning                                                                            |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `version`     | Always `1`.                                                                        |
+| `pid`         | The PID of the watchdog.                                                           |
+| `process`     | The identity of the watchdog process, in the format of an owner of `factory.lock`. |
+| `phase`       | `running`, `backoff`, `failed` or `stopped`.                                       |
+| `crashCount`  | The count of daemon crashes in a row.                                              |
+| `lastCrashAt` | The time of the last crash.                                                        |
+| `lastExit`    | The last exit code or signal, for example `code 1` or `signal SIGKILL`.            |
+| `lastLog`     | The log of the last daemon that the watchdog started, in `runtime/logs/`.          |
+| `problem`     | A problem that stopped the watchdog without a crash.                               |
+
+- The watchdog is not an owner. It does not take `factory.lock` or `lifecycle.guard`.
+- `probeOwner` checks the identity of the watchdog process. A dead identity makes the file
+  inactive, also if its phase is `running` or `backoff`.
+- A watchdog does not write the file while it holds the identity of a different live watchdog.
+- If two watchdogs start at the same time, only the watchdog of the last write continues. The
+  ownership of the daemon stops a second daemon.
+
+See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart rules.
 
 ## Lock rules
 

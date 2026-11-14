@@ -11,6 +11,7 @@ import {
 import { configureFactory, type ModelChoice } from "../../services/factory-settings/factory-settings.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
 import { type LaunchDescriptor, runFactoryForeground } from "../factory-runner/factory-runner.js";
+import { runFactoryWatchdog } from "../factory-runner/watchdog-runner.js";
 import { parseInteger, parsePosition, run } from "../output/output.js";
 import { registerCheckCommands } from "./factory-check.js";
 
@@ -72,6 +73,20 @@ function registerRun(program: Command): void {
         command,
         (ctx) => runFactoryForeground(opts, ctx),
         () => "Factory stopped.",
+      ),
+    );
+}
+
+function registerWatchdog(program: Command, launch: LaunchDescriptor): void {
+  program
+    .command("watchdog", { hidden: true })
+    .option("--max-workers <n>", "worker limit", parsePosition)
+    .option("--adopt-external", "adopt stopped external attempts")
+    .action((opts: StartOptions, command: Command) =>
+      run(
+        command,
+        (ctx) => runFactoryWatchdog({ ...opts, launch }, ctx),
+        (result) => `Factory watchdog ${result.phase}.`,
       ),
     );
 }
@@ -176,6 +191,7 @@ export function registerFactoryCommands(program: Command): void {
 
   registerStatus(program);
   registerRun(program);
+  registerWatchdog(program, launch);
   registerStop(program);
   registerRestart(program, launch);
   registerLogs(program);

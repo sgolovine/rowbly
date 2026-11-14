@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import * as agentAuth from "../../services/agent-auth/agent-auth.js";
 import * as factory from "../../services/factory/factory.js";
 import { newOwner } from "../../services/factory-ownership/factory-ownership.js";
+import { writeWatchdogState } from "../../services/factory-watchdog/factory-watchdog.js";
 import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
 import { createStory } from "../../services/story/story.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
@@ -22,7 +23,33 @@ describe("factory commands", () => {
   it("shows stopped status without credentials or runtime files", async () => {
     const result = await runCli(["--json", "factory", "status"], project.paths.root);
     expect(result.exitCode).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ version: 1, phase: "stopped" });
+    expect(JSON.parse(result.stdout)).toEqual({ version: 1, phase: "stopped", restarts: 0 });
+  });
+  it("shows the restart count, the last crash and the crash-limit entry in the JSON status", async () => {
+    const owner = await newOwner();
+    const lastCrashAt = new Date().toISOString();
+    await writeWatchdogState(project.paths, {
+      version: 1,
+      pid: owner.pid,
+      process: { ...owner, processIdentity: "gone" },
+      phase: "failed",
+      crashCount: 5,
+      lastCrashAt,
+      lastExit: "code 9",
+      lastLog: "/logs/last.jsonl",
+      updatedAt: lastCrashAt,
+    });
+    const result = await runCli(["--json", "factory", "status"], project.paths.root);
+    expect(result.exitCode).toBe(0);
+    const status = JSON.parse(result.stdout);
+    expect(status).toMatchObject({ phase: "failed", restarts: 5, lastCrashAt });
+    expect(status.attention[0][0]).toBe("watchdog:crash-limit");
+    expect(status.attention[0][1].text).toContain("code 9");
+    expect(status.attention[0][1].text).toContain("/logs/last.jsonl");
+  });
+  it("hides the watchdog command from the help", async () => {
+    const result = await runCli(["factory", "--help"], project.paths.root);
+    expect(result.stdout).not.toContain("watchdog");
   });
   it("starts the detached client by default", async () => {
     const start = vi
