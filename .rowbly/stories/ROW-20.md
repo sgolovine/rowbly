@@ -78,6 +78,7 @@ Not in scope:
 - The CLI uses `rowbly factory configure` with `--stage`, `--story` and `--clear-worker`, and no new command. Reason: `factory configure` already sets the worker model. This is the smallest change.
 - An override for a deleted or renamed Story or Stage stays in the file and is ignored. Reason: smallest scope. Removal on delete or rename can be a later Story.
 - The TUI part is split to ROW-21. Reason: one pull request for the services, the factory, the CLI and the TUI is too large.
+- The earlier `chore(rowbly)` commits stay on `story/ROW-20`. Reason: a removal needs a history rewrite and a force push of a shared branch, and the repository rules do not permit this without a person. The merge of `main` (commit `2f15b520`) repairs the merge conflicts.
 
 ## Review findings
 
