@@ -1,8 +1,9 @@
 import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { mapInOrder } from "../in-order/in-order.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
-import { getThread } from "./thread-files.js";
+import { cachedThread, pruneThreadCache } from "./thread-cache.js";
 import type { ThreadList, ThreadRecord, ThreadStatus } from "./thread-types.js";
 
 interface ListFilter {
@@ -17,7 +18,7 @@ interface ReadOutcome {
 }
 
 function readOutcome(file: string, ctx: ServiceContext): Promise<ReadOutcome> {
-  return getThread(file.slice(0, -".json".length), ctx).then(
+  return cachedThread(file.slice(0, -".json".length), ctx).then(
     (thread) => ({ thread }),
     (error: unknown) => ({
       issue: { file: `threads/${file}`, message: error instanceof Error ? error.message : "Thread unavailable" },
@@ -48,13 +49,18 @@ function listedFiles(dir: string): Promise<string[]> {
   });
 }
 
-/** Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue. */
+/**
+ * Lists the Threads that match the filter, oldest first. A file that cannot be read gives an issue. A file
+ * with no change since the last list is not read again. See `thread-cache.ts`.
+ */
 export async function listThreads(input: ListFilter = {}, ctx: ServiceContext = {}): Promise<ThreadList> {
   const paths = await findProject(ctx);
   const dir = await runtimePath(paths, "threads");
-  const files = await listedFiles(dir);
+  const files = (await listedFiles(dir)).filter((file) => file.endsWith(".json")).toSorted();
 
-  const outcomes = await readInOrder(files.filter((file) => file.endsWith(".json")).toSorted(), ctx);
+  pruneThreadCache(dir, new Set(files.map((file) => join(dir, file))));
+
+  const outcomes = await readInOrder(files, ctx);
   const threads = outcomes.flatMap(({ thread }) => (thread && matches(thread, input) ? [thread] : []));
   const issues = outcomes.flatMap(({ issue }) => (issue ? [issue] : []));
 

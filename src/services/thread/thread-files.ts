@@ -8,7 +8,8 @@ import { validateThread, validId } from "./thread-validate.js";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
 
-async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
+/** Gives the checked absolute path of the metadata file of a Thread. */
+export async function threadPath(id: string, ctx: ServiceContext): Promise<string> {
   if (!validId(id)) {
     throw new ValidationError("Invalid thread ID");
   }
@@ -29,8 +30,17 @@ async function checkSession(t: ThreadRecord, ctx: ServiceContext): Promise<void>
   await runtimePath(await findProject(ctx), t.session.file);
 }
 
-async function readThread(id: string, file: string, ctx: ServiceContext): Promise<ThreadRecord> {
-  if ((await stat(file)).size > MAX_METADATA_BYTES) {
+/**
+ * Reads and validates a Thread file. The caller gives the size from its own `stat` before the read.
+ * Give a failure to `readProblem`.
+ */
+export async function readThreadFile(
+  id: string,
+  file: string,
+  size: number | bigint,
+  ctx: ServiceContext,
+): Promise<ThreadRecord> {
+  if (size > MAX_METADATA_BYTES) {
     throw new ValidationError("Thread metadata is too large");
   }
 
@@ -45,7 +55,12 @@ async function readThread(id: string, file: string, ctx: ServiceContext): Promis
   return t;
 }
 
-function readProblem(id: string, error: unknown): never {
+async function readThread(id: string, file: string, ctx: ServiceContext): Promise<ThreadRecord> {
+  return readThreadFile(id, file, (await stat(file)).size, ctx);
+}
+
+/** Maps a read error of a Thread file to a service error. */
+export function readProblem(id: string, error: unknown): never {
   if ((error as NodeJS.ErrnoException).code === "ENOENT") {
     throw new NotFoundError(`Thread ${id} not found`);
   }
