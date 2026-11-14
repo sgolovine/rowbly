@@ -1,6 +1,7 @@
 ---
 title: Read attachment manifests in search only when the query needs them
 stage: BACKLOG
+position: 9
 worktree: null
 pull_request: null
 ---
