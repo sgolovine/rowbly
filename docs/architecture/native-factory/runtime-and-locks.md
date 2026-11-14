@@ -11,7 +11,7 @@ change a lock.
 
 ```
 .rowbly/
-  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel
+  factory.json        # optional committed settings: version, maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, git
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; native factory or external supervisor writes it
   runtime/            # private, ignored; directories use mode 0700
@@ -32,15 +32,64 @@ change a lock.
   (`skills/factory/references/supervisor-policy.md`). The shared scripts keep unknown v1 keys.
 - Without `factory.json`, the worker limit is four and Pi selects default models. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
+- `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
+  Story in a Stage. A Story override has priority over a Stage override. A Stage override has
+  priority over the `start_worker` model and `workerModel`. See
+  [pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
 ## Git and the runtime files
 
 - Initialization creates `.rowbly/.gitignore` with `/state.json*` and `/runtime/`.
 - Native start and `doctor --fix` add missing runtime ignore rules. Existing text stays.
 - Canonical factory commits exclude runtime files, also when Git already tracks them.
+- The factory commits the canonical files after each scan. The subject of the commit is
+  `git.commitMessage` of `factory.json`. If it is not set, the subject is
+  `chore(rowbly): record project changes after scan`. The body lists the changed paths.
+- If `git.authorName` and `git.authorEmail` are set, they are the author and the committer of the
+  commit. `commit-project.mjs --author "Name <email>"` sets them through the Git identity variables.
+  Thus the commit works also when Git has no identity. If they are not set, Git uses its own
+  identity.
+- These settings apply only to the canonical commits. They do not apply to the commits of workers
+  on Story branches.
 - `rowbly doctor` reports runtime files that Git tracks.
 
 Do not commit runtime files or credentials. Runtime files hold private sessions and process identity.
+
+## Git sync of the canonical checkout
+
+The native factory can pull the upstream branch and push the canonical branch at an interval. The
+`git` section of `factory.json` holds the settings:
+
+| Key                   | Type    | Default | Meaning                                               |
+| --------------------- | ------- | ------- | ----------------------------------------------------- |
+| `push`                | boolean | `false` | Push the local commits of the canonical branch.       |
+| `pull`                | boolean | `false` | Pull the commits of the upstream branch.              |
+| `syncIntervalSeconds` | integer | `300`   | The time between two syncs. The range is 60 to 86400. |
+
+- `getFactorySettings` gives the default of each key that is not in the file. A write does not add
+  the defaults to the file. An update keeps the other keys of the `git` section, for example
+  `commitMessage`, `authorName` and `authorEmail`.
+- `project-sync/` (`syncCanonicalProject`) does one sync. With `push` and `pull` off, it runs no Git
+  command.
+- The sync runs Git commands while it holds the Project write lock (`projectWrite`). It does not
+  hold the state lock.
+- Each Git command has a timeout of 120 seconds. Git does not ask for credentials.
+- The pull runs first. It needs a branch with an upstream, and no merge in progress. It runs
+  `git fetch`, then `git merge --ff-only @{u}`. If the branches diverged, it runs
+  `git merge --no-edit @{u}`. If the merge fails, it runs `git merge --abort`.
+- The push runs also after a failed pull. If `git rev-list --count @{u}..HEAD` is 0, the push is
+  `skipped`. Else it runs `git push`. It never uses force.
+- The sync does not rebase, stash or change uncommitted files. It does not sync worker worktrees or
+  Story branches. The `.gitignore` rules keep `state.json*` and `runtime/` out of the merge.
+- The supervisor loop starts a sync after the canonical commit of a scan. The first sync runs at the
+  first scan after start. The next sync runs at the first scan after `syncIntervalSeconds`. The loop
+  reads the interval again at each scan. A scan occurs at least each 30 seconds.
+- Only one sync runs at a time. The sync runs outside the serial queue, so a slow network does not
+  stop the reconcile. While a sync runs, the canonical commit waits for the next scan.
+- A stop waits for a running sync, so that Git does not continue after the release of the lock.
+- A failed pull sets the attention entry `pull`. A failed push sets the attention entry `push`. The
+  text has the Git error, limited to 500 characters. The factory continues to run. A pull or push
+  that does not fail removes its entry.
 
 ## The three locks
 
@@ -56,8 +105,8 @@ The factory uses three locks:
    - Do not hold this lock across model, Git or subprocess work.
 3. **Project write.** The Git common directory holds the Project write lock. Its path comes from
    `commit-project.mjs::lockPath(root)`.
-   - Native factory writers use util-linux `flock -w 60` for canonical changes and commits
-     (`src/services/project-write/`).
+   - Native factory writers use util-linux `flock -w 60` for canonical changes, commits and the Git
+     sync (`src/services/project-write/`).
    - Workers use the exact CLI shim under the same lock. There is no unlocked fallback.
 
 ## Lock rules

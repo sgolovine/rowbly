@@ -121,13 +121,37 @@ describe("shell props", () => {
     expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "settings", section: "ai" });
   });
 
-  it("opens the Thread of a factory warning in the Thread Modal", () => {
-    const shell = env(OPEN);
+  it("closes the Factory controls and opens the Thread of a factory warning in the sidebar", () => {
+    const shell = env(OPEN, { overlay: { kind: "factory" } });
     const thread = { id: "thread-1" } as ThreadRecord;
 
     overlayHandlers(shell).openThread(thread);
 
-    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "thread", thread });
+    expect(shell.setOverlay).toHaveBeenCalledWith(null);
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "thread", thread });
+    expect(shell.setPane).toHaveBeenCalled();
+  });
+
+  it("asks before a factory warning Thread discards the unsaved changes of the Story sidebar", () => {
+    const shell = env(OPEN, { overlay: { kind: "factory" }, storyPane: { kind: "new" }, pane: "story" });
+    const thread = { id: "thread-1" } as ThreadRecord;
+
+    shell.registry.setDirty(-1, "form", true);
+    overlayHandlers(shell).openThread(thread);
+
+    expect(shell.setStoryPane).not.toHaveBeenCalled();
+    expect(shell.setOverlay).toHaveBeenLastCalledWith({ kind: "discardStory", next: { kind: "thread", thread } });
+  });
+
+  it("gives a Thread in the sidebar the same frame as a Story, and its title", () => {
+    const thread = { id: "t1", storyId: "ROW-01", stage: "BACKLOG", attemptNumber: 1 } as ThreadRecord;
+    const shell = env(OPEN, { mode: "threads", storyPane: { kind: "thread", thread }, pane: "story" });
+    const props = storySidebarProps(shell, shellFrame({ width: 150, height: 40 }, shell.view, SIDEBAR_WIDTH));
+
+    expect(props).toMatchObject({ pane: { kind: "thread", thread }, width: 60, shown: true, focused: true });
+    expect(props?.onResize).toBe(shell.setStoryWidth);
+    props?.onBack();
+    expect(shell.setPane).toHaveBeenCalledWith("stories");
   });
 
   it("gives the Story sidebar its size, its focus and its handlers, and closes it with the ✕", () => {
@@ -193,6 +217,7 @@ describe("shell props", () => {
     expect(panel.body.view.emptyText).toBe("No Threads in Backlog. The factory adds a Thread when it starts a worker.");
     const thread = { id: "t1" } as never;
     panel.body.view.onOpen(thread);
-    expect(shell.setOverlay).toHaveBeenCalledWith({ kind: "thread", thread });
+    expect(shell.setOverlay).not.toHaveBeenCalled();
+    expect(shell.setStoryPane).toHaveBeenCalledWith({ kind: "thread", thread });
   });
 });

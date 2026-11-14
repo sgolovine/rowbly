@@ -30,7 +30,7 @@ export function openProblemStory(env: AttentionEnv): void {
   }
 }
 
-/** Opens the related Thread of the warning in the Thread Modal, if it has one. */
+/** Opens the related Thread of the warning in the Story sidebar, if it has one. */
 export function openProblemThread(env: AttentionEnv): void {
   if (env.thread && env.onOpenThread) {
     env.onOpenThread(env.thread);

@@ -43,9 +43,9 @@ The screen areas in `screens/` are:
 | `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads). |
 | `stages/`     | The Stage form modal.                                                                                                                  |
 | `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                           |
-| `settings/`   | The Settings modal and its sections, the AI section and the model picker.                                                              |
+| `settings/`   | The Settings modal and its sections, the AI section, the Git section and the model picker.                                             |
 | `factory/`    | The Factory controls modal and the factory status helpers.                                                                             |
-| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread Modal.                                       |
+| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                   |
 
 ## The Factory controls
 
@@ -70,6 +70,33 @@ Modal has these views:
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
 Modal the Stories of the board and the callbacks `onOpenStory` and `onOpenThread`. See
 [native-factory/controls.md](native-factory/controls.md) for the keys.
+
+## The Git section of Settings
+
+The Factory group of Settings has a Git section under the AI section (`GitSection` in
+`src/tui/screens/settings/git-section/`). The section shows the Git settings of the canonical
+checkout. These settings are in the `git` section of `.rowbly/factory.json`.
+
+The section has five cards. Each card shows the current value. If the value is not set, the card
+shows the default.
+
+| Card           | Key | Default                                            |
+| -------------- | --- | -------------------------------------------------- |
+| Commit author  | `a` | `Git config identity`                              |
+| Commit message | `m` | `chore(rowbly): record project changes after scan` |
+| Periodic push  | `p` | `off`                                              |
+| Periodic pull  | `u` | `off`                                              |
+| Sync interval  | `i` | `300 seconds`                                      |
+
+- `a`, `m` and `i` open a `FormModal` for the value. The author has the form `Name <email>`.
+- An empty author or an empty message removes the value. Then the factory uses the default.
+- The interval must be a whole number from 60 to 86400. The form shows an incorrect value under the
+  field, and the file does not change.
+- `p` and `u` turn push and pull on or off immediately.
+- Each card has a Button that does the same operation as its key.
+
+The section calls `configureGit` of the `factory-settings` service. The `rowbly factory configure`
+command uses the same Git rules. The section does not load Pi or `agent-auth`.
 
 ## The Factory view
 
@@ -100,11 +127,24 @@ quits.
 - **Live data.** The view reads the Threads with `useAsync`. `useThreadChanges` reads them again
   when the factory writes a Thread file.
 
-`enter` or a click on a Thread row opens the Thread Modal. The shell opens it as the `thread`
-overlay. The title is `<story-id> › <thread name>`. The Modal shows `ThreadDetail` and the
-`ConversationView` of the Thread. The conversation follows the new entries while the Thread is
-`running`. The Modal is read-only. `esc` or the `✕` closes it, and the selection stays on the same
-row.
+`enter` or a click on a Thread row opens the Thread in the Story sidebar, not in a Modal. The Thread
+list and the Thread show at the same time. The shell keeps the Thread in `storyPane` as
+`{ kind: "thread", thread }` (a `SidePane`). The Thread uses the frame, the size, the focus and the
+keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar at a time.
+
+- The title in the top border is `<story-id> › <thread name>`.
+- `ThreadPane` (`screens/threads/thread-pane/`) shows `ThreadDetail` and the `ConversationView` of
+  the Thread. Its size comes from the body of the Story sidebar. In a short body, the detail is
+  compact. The conversation follows the new entries while the Thread is `running`.
+- `ThreadPane` reads the Thread again when the worker writes its file (`useThreadChanges`).
+- The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
+  Thread replaces it (`discardStory` overlay).
+- In the Thread, `esc` gives the focus to the Thread list, and the Thread stays open. `tab` and
+  `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
+  keys and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
+  the same row.
+- `t` on a factory warning closes the Factory controls and opens the Thread in the Story sidebar
+  (`openThread` of `OverlayHandlers`).
 
 ## Code organization
 
@@ -165,7 +205,8 @@ sidebar is a `Panel` on the right of the Story list (`shell/story-sidebar/`). Th
 visible.
 
 - `n`, **+ New Story**, `enter`, a click on a selected Story and a pick in the Story finder open the
-  Story sidebar. The shell keeps the open form in `storyPane` (`use-shell.ts`).
+  Story sidebar. The shell keeps the open form in `storyPane` (`use-shell-state.ts`). The Story
+  sidebar also shows a Thread of the Factory view. See [The Factory view](#the-factory-view).
 - The top border shows `New Story` or `Edit <story-id>`, and a `✕` at its right end. The border is
   `accent` when the Story sidebar has the focus.
 - `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the

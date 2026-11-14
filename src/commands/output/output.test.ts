@@ -1,7 +1,7 @@
 import { Command, InvalidArgumentError } from "commander";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NotFoundError, ValidationError } from "../../services/errors/errors.js";
-import { collect, formatValue, parseFieldFlags, parsePosition, run } from "./output.js";
+import { collect, formatValue, parseFieldFlags, parseInteger, parsePosition, run } from "./output.js";
 
 function command(args: string[] = []): Command {
   const program = new Command().option("--json").option("-C, --cwd <dir>").exitOverride();
@@ -132,6 +132,12 @@ describe("output", () => {
   it("parsePosition accepts only whole numbers from 1", () => {
     expect(parsePosition("2")).toBe(2);
     for (const value of ["0", "-1", "1.5", "x"]) expect(() => parsePosition(value)).toThrow(InvalidArgumentError);
+  });
+
+  it("parseInteger accepts only whole numbers", () => {
+    expect(parseInteger("120")).toBe(120);
+    expect(parseInteger("10")).toBe(10);
+    for (const value of ["", " ", "1.5", "x"]) expect(() => parseInteger(value)).toThrow(InvalidArgumentError);
   });
 
   it("formatValue shows an unset value as a dash", () => {

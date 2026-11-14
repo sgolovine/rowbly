@@ -281,6 +281,73 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("pushes the canonical commit after start, and shows a push failure as attention", async () => {
+    const remote = join(dir.path, "remote.git");
+    await exec("git", ["init", "-q", "--bare", remote]);
+    await exec("git", ["-C", root, "config", "user.name", "Test"]);
+    await exec("git", ["-C", root, "config", "user.email", "test@example.com"]);
+    await exec("git", ["-C", root, "remote", "add", "origin", remote]);
+    await exec("git", ["-C", root, "push", "-q", "-u", "origin", "HEAD"]);
+    const f = await fixture();
+    await updateFactorySettings({ git: { push: true } }, { cwd: root });
+    await writeFile(join(root, ".rowbly/ROWBLY.md"), "# Synced\n");
+    const head = async (cwd: string, ref = "HEAD") => (await exec("git", ["-C", cwd, "rev-parse", ref])).stdout.trim();
+    const initial = await head(root);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          expect(await head(root)).not.toBe(initial);
+          expect(await head(remote, "HEAD")).toBe(await head(root));
+        },
+        { timeout: 10000, interval: 50 },
+      );
+      expect((await f.manager.snapshot()).attention).toEqual([]);
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+
+    manager = undefined;
+    await exec("git", ["-C", root, "checkout", "-q", "-b", "no-upstream"]);
+    const again = await fixture();
+    const second = again.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const attention = new Map((await again.manager.snapshot()).attention as [string, { text: string }][]);
+          expect(attention.get("push")?.text).toBe("Git push failed: The current branch has no upstream branch.");
+        },
+        { timeout: 10000, interval: 50 },
+      );
+      expect((await again.manager.snapshot()).phase).toBe("ready");
+    } finally {
+      await again.manager.shutdown();
+      await second;
+    }
+  }, 30000);
+  it("commits canonical files with the configured message and author", async () => {
+    const f = await fixture();
+    f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
+    await updateFactorySettings(
+      { git: { commitMessage: "chore: board sync", authorName: "Rowbly Bot", authorEmail: "bot@example.com" } },
+      { cwd: root },
+    );
+    await writeFile(join(root, ".rowbly/ROWBLY.md"), "# Changed");
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const log = await exec("git", ["-C", root, "log", "-1", "--format=%s|%an <%ae>|%cn <%ce>"]);
+          expect(log.stdout.trim()).toBe("chore: board sync|Rowbly Bot <bot@example.com>|Rowbly Bot <bot@example.com>");
+        },
+        { timeout: 10000, interval: 50 },
+      );
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
   it("classifies the fresh prompt through real Pi tools before a reservation", async () => {
     const story = await createStory({ title: "Classify me", stage: "WORK" }, { cwd: root });
     const f = await fixture(undefined, false);
@@ -325,6 +392,41 @@ describe("foreground factory", () => {
     await writeFile(join(root, ".rowbly/stages/WORK.md"), "Different instructions");
     release();
     expect((await settled())?.error?.message).toContain("prompt changed");
+  });
+  it("uses Story and Stage worker model overrides before the start_worker model", async () => {
+    const staged = await createStory({ title: "Stage override", stage: "WORK" }, { cwd: root });
+    const pinned = await createStory({ title: "Story override", stage: "WORK" }, { cwd: root });
+    await updateFactorySettings(
+      {
+        stageWorkerModels: { WORK: { provider: "supervisor", modelId: "faux-1" } },
+        storyWorkerModels: { [pinned.id]: { WORK: { provider: "worker", modelId: "faux-1" } } },
+      },
+      { cwd: root },
+    );
+    const f = await fixture();
+    expect(f.supervisor.getModel().id).toBe("faux-1");
+    f.supervisor.setResponses([fauxAssistantMessage("RESULT: complete")]);
+    await f.manager.reserveWorker({
+      storyId: staged.id,
+      stage: "WORK",
+      requestId: "stage-override",
+      model: { provider: f.worker.getModel().provider, modelId: f.worker.getModel().id },
+    });
+    expect((await settled())?.model).toEqual({ provider: "supervisor", modelId: "faux-1" });
+    f.worker.setResponses([fauxAssistantMessage("RESULT: complete")]);
+    // The slot of the first worker is free only after its launch task ends.
+    await vi.waitFor(
+      () => f.manager.reserveWorker({ storyId: pinned.id, stage: "WORK", requestId: "story-override" }),
+      {
+        timeout: 5000,
+        interval: 30,
+      },
+    );
+    await vi.waitFor(async () => {
+      const thread = (await listThreads({ story: pinned.id }, { cwd: root })).threads[0];
+      expect(thread?.model).toEqual({ provider: "worker", modelId: "faux-1" });
+      expect(["completed", "failed"]).toContain(thread?.status);
+    });
   });
   it("quota pause does not block a worker with another provider", async () => {
     const story = await createStory({ title: "Quota", stage: "WORK" }, { cwd: root });

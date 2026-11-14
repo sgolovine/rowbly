@@ -2,6 +2,7 @@ import { stat } from "node:fs/promises";
 import { ConflictError } from "../errors/errors.js";
 import { releaseStory, storyHash } from "../factory-policy/factory-policy.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
+import { workerOverride } from "../factory-settings/worker-overrides.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { withEntry } from "../store/store.js";
 import { getStory, type Story } from "../story/story.js";
@@ -57,7 +58,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     await releaseForResume(manager, previous, story);
   }
 
-  const choice = input.model ?? getState(manager).settings.workerModel;
+  const choice = workerModelFor(manager, story, input.model);
 
   await assertWorkerModel(manager, choice);
 
@@ -146,6 +147,13 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
     },
     manager.ctx,
   );
+}
+
+/** A Story or Stage override in `factory.json` has priority over the model of the supervisor. */
+function workerModelFor(manager: Manager, story: Story, model: ModelChoice | undefined): ModelChoice | undefined {
+  const { settings } = getState(manager);
+
+  return workerOverride(settings, story.id, story.stage) ?? model ?? settings.workerModel;
 }
 
 async function assertWorkerModel(manager: Manager, choice: ModelChoice | undefined): Promise<void> {

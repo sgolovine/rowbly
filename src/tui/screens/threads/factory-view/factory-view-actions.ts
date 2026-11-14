@@ -38,7 +38,7 @@ function sectionKey(env: FactoryViewEnv, row: Extract<FactoryViewRow, { kind: "s
 /** The keys of a Thread: `enter` opens it, and `←` collapses its section and selects the heading. */
 function threadKey(env: FactoryViewEnv, row: Extract<FactoryViewRow, { kind: "thread" }>, key: Key): void {
   if (key.return) {
-    // The selection stays on the row when the Thread Modal closes, also when new Threads come above it.
+    // The selection stays on the row when the Thread closes, also when new Threads come above it.
     env.setSelectedId(row.id);
     env.onOpen(row.thread);
   } else if (key.leftArrow) {

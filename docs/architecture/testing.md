@@ -23,6 +23,9 @@ set up.
 - Keep live credentials out of tests.
 - `vitest.config.ts` sets `HOME` to a temporary folder. A test that renders the shell records its
   Project, and it must not write to the real home directory.
+- `vitest.config.ts` sets `maxWorkers` to 4. Each fork uses approximately 200 MB, and factory workers
+  can run the tests at the same time. To change the limit, set `VITEST_MAX_WORKERS` or use
+  `--maxWorkers`.
 
 ## Service tests
 

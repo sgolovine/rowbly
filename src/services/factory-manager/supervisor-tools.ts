@@ -91,7 +91,8 @@ function workerTools(manager: Manager) {
     {
       name: "start_worker",
       label: "Start worker",
-      description: "Reserve an eligible worker",
+      description:
+        "Reserve an eligible worker. A Story or Stage worker model override in factory.json has priority over the model argument",
       parameters: toolParameters(
         z.object({
           storyId: z.string(),

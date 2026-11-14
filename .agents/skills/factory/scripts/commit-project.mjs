@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Commits the canonical Project files. It never commits source files or the factory state.
 // A problem gives a result, not an exception, because a commit problem must not stop the factory.
-// Usage: node commit-project.mjs --root <dir> [--message <text>] [--lock <path>]
+// Usage: node commit-project.mjs --root <dir> [--message <text>] [--author "Name <email>"] [--lock <path>]
 
 import { execFile } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -16,8 +16,9 @@ const CONFLICTS = new Set(["DD", "AU", "UD", "UA", "DU", "AA", "UU"]);
 const DEFAULT_MESSAGE = "chore(rowbly): record project changes after scan";
 
 const GIT_TIMEOUT_MS = 120_000;
-const git = async (cwd, args) =>
-  (await run("git", ["-C", cwd, ...args], { maxBuffer: 64 * 1024 * 1024, timeout: GIT_TIMEOUT_MS })).stdout;
+const IDENTITY = /^([^<>\n]*[^<>\s])\s*<([^<>\s]+)>$/;
+const git = async (cwd, args, env) =>
+  (await run("git", ["-C", cwd, ...args], { maxBuffer: 64 * 1024 * 1024, timeout: GIT_TIMEOUT_MS, ...(env ? { env } : {}) })).stdout;
 const describe = (error) => error.stderr?.trim() || error.stdout?.trim() || error.message;
 
 /** The lock that all writers of the canonical Project files share. */
@@ -30,8 +31,22 @@ export async function lockPath(root) {
   }
 }
 
+/**
+ * The environment that sets the author and the committer of a `Name <email>` identity.
+ * The environment overrides the Git config and the identity variables of the caller.
+ */
+function identityEnv(author) {
+  if (!author) return undefined;
+  const match = IDENTITY.exec(author.trim());
+  if (!match) return null;
+  const [name, email] = [match[1].trim(), match[2]];
+  return { ...process.env, GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email, GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email };
+}
+
 // Run this only while the process holds the shared write lock.
-async function commitLocked(root, message = DEFAULT_MESSAGE) {
+async function commitLocked(root, { message = DEFAULT_MESSAGE, author } = {}) {
+  const env = identityEnv(author);
+  if (env === null) return { status: "failed", detail: `Use "Name <email>" for the author, not "${author}".` };
   let repository;
   try {
     repository = realpathSync((await git(root, ["rev-parse", "--show-toplevel"])).trim());
@@ -59,7 +74,7 @@ async function commitLocked(root, message = DEFAULT_MESSAGE) {
     const pathspec = ["--literal-pathspecs"];
     await git(repository, [...pathspec, "add", "--all", "--", ...paths]);
     const body = paths.slice(0, 20).join("\n") + (paths.length > 20 ? `\nand ${paths.length - 20} more` : "");
-    await git(repository, [...pathspec, "commit", "--only", "-m", message, "-m", body, "--", ...paths]);
+    await git(repository, [...pathspec, "commit", "--only", "-m", message, "-m", body, "--", ...paths], env);
     const commit = (await git(repository, ["rev-parse", "--short", "HEAD"])).trim();
     return { status: "committed", commit, paths, ...(held.length > 0 ? { held } : {}) };
   } catch (error) {
@@ -71,16 +86,16 @@ async function commitLocked(root, message = DEFAULT_MESSAGE) {
  * Commits each changed file of `<root>/.rowbly/` that Git does not ignore, except the state file.
  * The status is `committed`, `clean`, `held`, `conflict`, `no-git` or `failed`.
  */
-export async function commitProject(root, { message, lock, lockWaitSeconds = LOCK_WAIT_SECONDS } = {}) {
+export async function commitProject(root, { message, author, lock, lockWaitSeconds = LOCK_WAIT_SECONDS } = {}) {
   const path = lock ?? (await lockPath(root));
-  const args = [self, "--root", root, "--locked", ...(message ? ["--message", message] : [])];
+  const args = [self, "--root", root, "--locked", ...(message ? ["--message", message] : []), ...(author ? ["--author", author] : [])];
   try {
     // A commit that does not end must not keep the lock: all writers wait for it.
     const timeout = lockWaitSeconds * 1000 + 3 * GIT_TIMEOUT_MS;
     const { stdout } = await run("flock", ["-w", String(lockWaitSeconds), path, process.execPath, ...args], { timeout });
     return JSON.parse(stdout);
   } catch (error) {
-    if (error.code === "ENOENT") return { ...(await commitLocked(root, message)), lock: "flock is not available" };
+    if (error.code === "ENOENT") return { ...(await commitLocked(root, { message, author })), lock: "flock is not available" };
     return { status: "failed", detail: `The write lock ${path} is busy, or the commit did not run: ${describe(error)}` };
   }
 }
@@ -92,16 +107,17 @@ async function main() {
       options: {
         root: { type: "string" },
         message: { type: "string" },
+        author: { type: "string" },
         lock: { type: "string" },
         locked: { type: "boolean", default: false },
       },
     }));
     if (!values.root) throw new Error();
   } catch {
-    console.error("Usage: commit-project.mjs --root <dir> [--message <text>] [--lock <path>]");
+    console.error('Usage: commit-project.mjs --root <dir> [--message <text>] [--author "Name <email>"] [--lock <path>]');
     process.exit(2);
   }
-  const result = values.locked ? await commitLocked(values.root, values.message) : await commitProject(values.root, values);
+  const result = values.locked ? await commitLocked(values.root, values) : await commitProject(values.root, values);
   console.log(JSON.stringify(result));
 }
 
