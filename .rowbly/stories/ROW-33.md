@@ -1,7 +1,7 @@
 ---
 title: Do not reload the board when only state.json changes
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 34
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-33
 pull_request: https://github.com/sgolovine/rowbly/pull/221
 ---
@@ -54,9 +54,3 @@ Not in scope:
 
 - The board does not use `state.json` for data other than `Board.activity`. Reason: `grep` shows `getFactoryActivity` in `loadBoard` as the only reader of the state file in `src/tui/shell/`; the factory status uses `runtime/status.json` through `useFactoryChanges`.
 - A separate state-only watch is better than a second option on `watchStories`. Reason: it keeps the default of `watchStories` and the supervisor watch the same, and it is the smallest change. The developer can put the function in `story-watch.ts` if that is simpler.
-
-## Review findings
-
-1. `src/tui/shell/shell/use-shell-data.test.tsx`: the pull request (#221) has a merge conflict with `main`. Commit `f3c42b13` (`perf(tui): share one factory status read across views`) on `main` changed the same file. It adds imports (`writeFile`, `join`, `newOwner`, `prepareRuntime`, `runtimePaths`), a new `afterEach` that also calls `vi.useRealTimers()` and `vi.restoreAllMocks()`, a `FactoryProbe` component and the test `shows a factory that stops without a file write as stopped in under 10 s`. Fix: merge `origin/main` into `story/ROW-33`, keep the imports, helpers and tests of both sides, and make sure that the `searchStories` spy of this Story still works with `vi.restoreAllMocks()` in `afterEach`. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` again and push.
-
-The code of the pull request satisfies all acceptance criteria. `src/tui/shell/shell/use-shell-data.ts` merges with no conflict. The tests of `story-watch`, `use-factory-state-changes` and `use-shell-data` pass on the branch.
