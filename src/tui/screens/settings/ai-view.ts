@@ -1,5 +1,6 @@
 import type { getAuthStatus, listAvailableModels } from "../../../services/agent-auth/agent-auth.js";
-import type { ModelChoice } from "../../../services/factory-settings/factory-settings.js";
+import type { FactorySettings, ModelChoice } from "../../../services/factory-settings/factory-settings.js";
+import type { Stage } from "../../../services/stage/stage.js";
 import type { KeyHint } from "../../keymap.js";
 
 /** The factory role of a model choice. */
@@ -13,6 +14,7 @@ export type AiTask =
   | { readonly kind: "signIn" }
   | { readonly kind: "signOut" }
   | { readonly kind: "model"; readonly role: Role }
+  | { readonly kind: "stageModel"; readonly stage: Stage }
   | { readonly kind: "limit" }
   | null;
 
@@ -46,6 +48,18 @@ export function modelText(choice: ModelChoice | undefined): string {
   }
 
   return `${choice.provider}/${choice.modelId}${choice.thinkingLevel ? ` · thinking ${choice.thinkingLevel}` : ""}`;
+}
+
+/** The text of a Stage without an override: the worker model applies. */
+const WORKER_MODEL_TEXT = "Worker model";
+
+/** One row for each Stage: its worker model override, or the worker model when it has none. */
+export function stageModelItems(settings: FactorySettings | undefined, stages: readonly Stage[]) {
+  return stages.map((stage) => {
+    const override = settings?.stageWorkerModels?.[stage.key];
+
+    return { stage, value: override ? modelText(override) : WORKER_MODEL_TEXT, inherited: !override };
+  });
 }
 
 /** Where the sign-in keeps its credentials, under the provider lists. */
@@ -102,6 +116,8 @@ export interface AiAbilities {
   readonly signIn: boolean;
   readonly signOut: boolean;
   readonly ready: boolean;
+  /** The Models tab has Stages to select. */
+  readonly stages?: boolean;
 }
 
 const TAB_HINT: KeyHint = { key: "←/→", description: "tab" };
@@ -141,6 +157,12 @@ function modelsHints(can: AiAbilities): KeyHint[] {
       ? [
           { key: "s", description: "change supervisor model" },
           { key: "w", description: "change worker model" },
+        ]
+      : []),
+    ...(can.ready && can.stages
+      ? [
+          { key: "↑/↓", description: "select Stage" },
+          { key: "enter", description: "change Stage model" },
         ]
       : []),
     TAB_HINT,

@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { type AiProvider, aiHints, modelText, nextTab, pageProviders, providerStatus, tabIndex } from "./ai-view.js";
+import type { Stage } from "../../../services/stage/stage.js";
+import {
+  type AiProvider,
+  aiHints,
+  modelText,
+  nextTab,
+  pageProviders,
+  providerStatus,
+  stageModelItems,
+  tabIndex,
+} from "./ai-view.js";
 
 describe("aiView", () => {
   it("names the sign-in state of a provider", () => {
@@ -15,6 +25,23 @@ describe("aiView", () => {
     expect(modelText({ provider: "a", modelId: "m", thinkingLevel: "high" })).toBe("a/m · thinking high");
   });
 
+  it("gives each Stage its override, or the worker model without one", () => {
+    const stages = [
+      { key: "BACKLOG", label: "Backlog" },
+      { key: "DONE", label: "Done" },
+    ] as Stage[];
+    const settings = {
+      version: 1 as const,
+      maxWorkers: 4,
+      stageWorkerModels: { DONE: { provider: "a", modelId: "m", thinkingLevel: "low" as const } },
+    };
+
+    expect(stageModelItems(settings, stages)).toEqual([
+      { stage: stages[0], value: "Worker model", inherited: true },
+      { stage: stages[1], value: "a/m · thinking low", inherited: false },
+    ]);
+  });
+
   it("offers only the keys of the page that work now", () => {
     const none = { idle: true, list: false, signIn: false, signOut: false, ready: false };
     const all = { idle: true, list: true, signIn: true, signOut: true, ready: true };
@@ -27,6 +54,8 @@ describe("aiView", () => {
     expect(keysOf(aiHints("addProvider", none))).toEqual(["esc"]);
     expect(keysOf(aiHints("models", all))).toEqual(["s", "w", "←/→"]);
     expect(keysOf(aiHints("models", none))).toEqual(["←/→"]);
+    expect(keysOf(aiHints("models", { ...all, stages: true }))).toEqual(["s", "w", "↑/↓", "enter", "←/→"]);
+    expect(keysOf(aiHints("models", { ...none, stages: true }))).toEqual(["←/→"]);
     expect(keysOf(aiHints("limits", none))).toEqual(["l", "←/→"]);
   });
 
