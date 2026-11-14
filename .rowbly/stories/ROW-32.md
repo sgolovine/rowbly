@@ -1,7 +1,7 @@
 ---
 title: Skip conversation polls when the session file did not change
 stage: IN_REFINEMENT
-position: 5
+position: 3
 worktree: null
 pull_request: null
 ---

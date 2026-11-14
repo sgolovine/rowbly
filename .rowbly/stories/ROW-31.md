@@ -1,7 +1,7 @@
 ---
 title: Share one factory status read across TUI views
 stage: IN_REFINEMENT
-position: 4
+position: 2
 worktree: null
 pull_request: null
 ---

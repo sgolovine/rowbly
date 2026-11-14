@@ -1,7 +1,7 @@
 ---
 title: Do not reload the board when only state.json changes
 stage: IN_REFINEMENT
-position: 6
+position: 4
 worktree: null
 pull_request: null
 ---
