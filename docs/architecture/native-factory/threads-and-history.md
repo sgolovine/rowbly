@@ -22,6 +22,12 @@ Read this when you change Thread metadata, runs, the Threads tab, Peek or the co
 The `thread/` service reads and writes `runtime/threads/<id>.json` under the state lock. It also
 projects Thread changes into the v1 policy state and watches the Thread files for changes.
 
+`listThreads` keeps a cache of the valid Thread records in each process (`thread-cache.ts`). The key is
+the absolute file path. Before each read, `listThreads` does a `stat` of the file. If the `ino`, the
+`size` and the `mtimeNs` are the same as in the cache, it does not read the file again. An atomic save
+gives a new `ino`, thus the next list reads the file. A file that is not valid is not in the cache, and
+it gives an issue on each list. `getThread` reads the file each time.
+
 ## Sessions
 
 Each Thread has an exact session reference. The Pi history is in
