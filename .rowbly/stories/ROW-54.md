@@ -2,7 +2,7 @@
 title: Add SEO metadata, the OG image and the sitemap to the website
 stage: IN_REFINEMENT
 position: 13
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-54
 pull_request: null
 ---
 
