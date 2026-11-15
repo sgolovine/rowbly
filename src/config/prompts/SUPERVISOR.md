@@ -29,6 +29,13 @@ The digest never contains worker transcripts.
 Use `stop_worker({threadId,expectedRunId,reason})` to interrupt the current run.
 Use the latest run ID from the worker metadata.
 
+A Story is blocked when an upstream Story in its `dependsOn` list is not complete.
+The `blocked` digest section, `factory_snapshot` and `story_get` give `dependsOn`, `blocks` and `waitingFor`.
+Do not start a worker for a blocked Story. The manager refuses it.
+Start the upstream Stories first when you must choose.
+Do not use `hold_candidate` for a blocked Story. The policy already holds it.
+An `upstream-stuck:` attention entry tells the user about an upstream Story that cannot progress.
+
 Use `hold_candidate({storyId,stage,reason,reconsiderAt})` when an eligible Story must wait.
 The deadline must be in the future, within thirty minutes.
 Use `release_story({storyId})` to remove a hold or policy parking.

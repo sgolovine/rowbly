@@ -9,6 +9,7 @@ import { type Story, searchStories } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { listThreads } from "../thread/thread.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
+import { dependencyLists } from "./dependency-facts.js";
 import {
   type Attention,
   getState,
@@ -132,14 +133,23 @@ export async function scan(manager: Manager, maxActive = getState(manager).limit
   return { ...policy, decisions };
 }
 
+/** Adds the `dependsOn`, `blocks` and `waitingFor` lists of its Story to each decision. */
+async function withDependencies(manager: Manager, decisions: readonly Decision[]) {
+  const stories = await searchStories({}, manager.ctx);
+  const stages = await listStages(manager.ctx);
+
+  return decisions.map((decision) => ({ ...decision, ...dependencyLists(stories, stages, decision.story) }));
+}
+
 /** Builds one page of the factory status for the supervisor tool and the status file. */
 export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12) {
   const policy = await scan(manager);
   const { threads, issues } = await listThreads({}, manager.ctx);
+  const pageEnd = cursor + pageLimit;
+  const decisions = await withDependencies(manager, policy.decisions.slice(cursor, pageEnd));
 
   const state = setState(manager, (current) => ({ revision: current.revision + 1 }));
   const workers = threads.filter((t) => t.role === "worker" && t.runs.at(-1)?.ownerToken === manager.owner.token);
-  const pageEnd = cursor + pageLimit;
 
   return {
     version: 1,
@@ -154,7 +164,7 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
       waiting: policy.decisions.filter((d) => ["start", "retry"].includes(d.action)).length,
       limit: state.limit,
     },
-    decisions: policy.decisions.slice(cursor, pageEnd),
+    decisions,
     nextCursor: policy.decisions.length > pageEnd ? pageEnd : null,
     attention: [...issues, ...state.attention.entries()].slice(0, 12),
     providers: Object.fromEntries(state.providers),
