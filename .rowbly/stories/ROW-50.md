@@ -1,7 +1,7 @@
 ---
 title: Build the How it works and Watch everything live landing sections
 stage: IN_DEVELOPMENT
-position: 3
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-50
 pull_request: null
 ---

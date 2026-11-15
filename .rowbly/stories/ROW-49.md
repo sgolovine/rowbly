@@ -1,7 +1,7 @@
 ---
 title: Build the animated board section of the landing page
-stage: CHANGELOG
-position: 1
+stage: IN_DEVELOPMENT
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-49
 pull_request: https://github.com/sgolovine/rowbly/pull/245
 ---
@@ -95,3 +95,7 @@ Not in scope:
 - The section has a Pause / Play button. Reason: the loop never ends, and WCAG 2.2.2 (Pause, Stop, Hide) asks for a control for moving content that lasts more than 5 s. The button is small and it saves rework in ROW-56.
 - The static reduced-motion board is also the server render and the first client render. Reason: it prevents a hydration mismatch, and the built HTML shows a full board without JavaScript.
 - `SeeItWork` goes after the existing content of `index.tsx` (after `ProofStrip` if ROW-48 is merged). Reason: Spec section 3 gives the order Hero, Proof strip, Stories move themselves.
+
+## Review findings
+
+- The changelog step found a merge conflict with `origin/main` in `website/src/routes/index.tsx`. The merge was aborted. ROW-48 is now on `main`: it imports `Hero` and `ProofStrip` and renders `<Hero />` and `<ProofStrip />` in place of the placeholder `rowbly_` heading. Merge `origin/main` into `story/ROW-49`. Keep the `Hero` and `ProofStrip` imports and elements, add the `SeeItWork` import, and render `<SeeItWork />` after `<ProofStrip />`. Then run the checks again and push.
