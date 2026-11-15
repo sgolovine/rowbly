@@ -85,6 +85,40 @@ The fonts are JetBrains Mono (`font-mono`) and Inter (`font-sans`). The `@fontso
 supply the font files, and the build copies them into the output. The site does not request fonts from a
 CDN.
 
+## Layout and shared components
+
+The root route `src/routes/__root.tsx` shows the header (`src/components/site-header.tsx`), the page content
+in `<main>` and the footer (`src/components/site-footer.tsx`) on each page.
+
+Use these shared components in `src/components/` for the pages:
+
+| Component        | File                  | Use                                                                  |
+| ---------------- | --------------------- | -------------------------------------------------------------------- |
+| `Section`        | `section.tsx`         | A page section with an `id`, an eyebrow, a headline and a subhead    |
+| `TerminalFrame`  | `terminal-frame.tsx`  | A terminal window frame for an image or content. `glow` adds a glow  |
+| `InstallCommand` | `install-command.tsx` | A command with a `$` prompt and a copy button. Set it with `command` |
+| `Kbd`            | `kbd.tsx`             | A keycap for a key, for example `f`                                  |
+| `AgentTag`       | `agent-tag.tsx`       | A mono tag with an agent name and a Stage label                      |
+
+The external URLs of the header and the footer are in `src/lib/site.ts`.
+
+## Icons and images
+
+The icons in `public/` come from `assets/icon.png` (400x400) at the root of the repository. They are
+`favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` (180x180) and `icon-512.png`. The 512 px
+icon is an upscale with a Lanczos filter. The icons are committed files. The build does not make them.
+
+To make the icons again, use an image tool one time, for example:
+
+```sh
+magick assets/icon.png -filter Lanczos -resize 32x32 website/public/favicon-32x32.png
+```
+
+`public/site.webmanifest` refers to `icon-512.png`.
+
+`public/images/` has copies of `assets/screenshot.png`, `assets/header.png` and `assets/icon.png`. If you
+change a file in `assets/`, copy it again.
+
 ## Site URL
 
 `src/lib/site.ts` exports `SITE_URL`. Use this constant for each absolute URL of the site.
