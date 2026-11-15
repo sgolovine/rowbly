@@ -164,3 +164,24 @@ export function isBlocked(
 ): boolean {
   return waitingFor(stories, stages, id).length > 0;
 }
+
+/**
+ * The IDs of the Stories that a picker can add to the `dependsOn` list of the Story `id`, in the order of `stories`:
+ * not the Story itself, not an ID of the list, and not a Story that makes a cycle. A new Story has no `id` yet, so
+ * each Story that is not in the list is a candidate.
+ */
+export function dependencyCandidates(
+  stories: readonly DependencyStory[],
+  id: string | undefined,
+  dependsOn: readonly string[],
+): string[] {
+  const others = stories.filter((story) => story.id !== id && !dependsOn.includes(story.id));
+
+  if (id === undefined) {
+    return others.map((story) => story.id);
+  }
+
+  return others
+    .filter((story) => dependencyError(stories, id, [...dependsOn, story.id]) === undefined)
+    .map((story) => story.id);
+}

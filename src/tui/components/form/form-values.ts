@@ -13,7 +13,10 @@ export interface FormField {
   options?: readonly string[];
   /** What a choice shows instead of its value, e.g. a Stage's name for its key. */
   optionLabels?: Readonly<Record<string, string>>;
-  /** A select opens a fuzzy picker over option values and labels instead of cycling. */
+  /**
+   * A select opens a fuzzy picker over option values and labels instead of cycling. A multiselect shows only the
+   * chosen options, and the picker adds one option.
+   */
   searchable?: boolean;
   /** Separate search fields when a display label combines several values. Defaults to the label. */
   optionSearchText?: Readonly<Record<string, readonly string[]>>;
