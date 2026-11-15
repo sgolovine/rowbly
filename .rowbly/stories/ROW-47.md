@@ -1,6 +1,6 @@
 ---
 title: Build the website layout, header, footer and shared components
-stage: IN_REVIEW
+stage: IN_DEVELOPMENT
 position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-47
 pull_request: https://github.com/sgolovine/rowbly/pull/243
@@ -77,3 +77,7 @@ Not in scope:
 - `InstallCommand` takes a `command` prop with the default `npm install -g rowbly`. Reason: ROW-53 needs one copy button for each command, and one component with a prop is smaller than a second component.
 - The mobile menu breakpoint is 768 px (the Tailwind `md` breakpoint). Reason: it is the Tailwind default, and the Story gives no value.
 - The web manifest has only the 512 px icon. Reason: the Story names only these four sizes, and the site is not an installable app.
+
+## Review findings
+
+1. `website/src/routes/__root.tsx` (lines 1-5 and 12-22): the pull request has a merge conflict with `origin/main`. ROW-46 (PR #242, merged) adds `import { NotFoundPage } from "@/components/not-found-page";` and `notFoundComponent: NotFoundPage` to the root route, next to the lines that this pull request changes (the imports and `links`). GitHub shows the pull request as `CONFLICTING`. `CHANGELOG.md` also has a conflict. Fix: merge `origin/main` into `story/ROW-47`. Keep both changes in `__root.tsx` (the header, footer, icon links and manifest link, and `notFoundComponent: NotFoundPage`). Keep both `CHANGELOG.md` entries and both `website/README.md` sections. After the merge, the 404 page renders inside the root layout: `website/src/components/not-found-page.tsx` has its own `<main className="flex min-h-screen ...">`, so it becomes a nested `<main>` inside the `<main>` of the layout. Change its outer element to a `div` (and remove `min-h-screen`, or use a smaller height), so that the page has one `<main>`. Then run `pnpm --dir website build`, make sure that `dist/client/404.html` is written and has the header and footer, and run the root checks again.
