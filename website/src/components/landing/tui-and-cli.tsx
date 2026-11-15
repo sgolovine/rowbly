@@ -43,7 +43,7 @@ export function TuiAndCli() {
         <TabsContent value="tui" className="mt-2">
           <TerminalFrame>
             <img
-              src="/images/board.png"
+              src="/images/board.webp"
               alt="The Rowbly terminal UI: a board of Stories in Stage columns, each one with its agent."
               width={1351}
               height={618}
