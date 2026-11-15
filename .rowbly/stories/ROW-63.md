@@ -1,7 +1,7 @@
 ---
 title: Show dependencies to the supervisor and raise attention for a stuck upstream Story
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 49
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-63
 pull_request: https://github.com/sgolovine/rowbly/pull/237
 ---
@@ -73,7 +73,3 @@ Not in scope:
 - "First Stage" is the first Stage of the board order (`stages[0]`), also if it is disabled. A disabled Stage and a Story that the supervisor holds with `hold_candidate` do not cause an entry. Reason: smallest scope that agrees with the list of the author. A supervisor hold ends in 30 minutes.
 - When the user dismisses an `upstream-stuck:` entry and the upstream Story is still stuck, the next pass adds the entry again. Reason: the problem still applies, and a memory of dismissed entries is more scope. A person can change this later.
 - When an upstream Story is stuck for more than one reason, the text gives the first reason in this order: first Stage, parked, hold Stage. Reason: one entry for each upstream Story.
-
-## Review findings
-
-- The merge of `origin/main` into `story/ROW-63` has a conflict in `docs/architecture/prompts.md`. The Changelog Stage did not repair it. Merge `origin/main` into the branch, repair the conflict in `docs/architecture/prompts.md`, and keep the dependency rules of this Story and the new text from `main`. Then run the checks again and push.
