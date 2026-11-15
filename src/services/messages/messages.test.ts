@@ -189,6 +189,14 @@ describe("factory messages", () => {
     expect(message).not.toContain("Not for the supervisor.");
   });
 
+  it("gives the supervisor the dependency rules", async () => {
+    const message = await supervisorMessage(project.paths, "Digest text.");
+
+    expect(message).toContain("Do not start a worker for a blocked Story. The manager refuses it.");
+    expect(message).toContain("Start the upstream Stories first when you must choose.");
+    expect(message).toContain("Do not use `hold_candidate` for a blocked Story. The policy already holds it.");
+  });
+
   it("gives a worker the check rules when the Project has checks", async () => {
     const message = await workerMessage(project.paths, {
       ...run,
