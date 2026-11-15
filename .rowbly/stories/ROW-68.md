@@ -2,7 +2,7 @@
 title: Fix Gap in list view.
 stage: IN_REFINEMENT
 position: 1
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-68
 pull_request: null
 ---
 
