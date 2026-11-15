@@ -1,0 +1,67 @@
+name: Website
+
+# Builds the marketing website in `website/` and deploys it to GitHub Pages at https://rowbly.com.
+# A pull request only builds the site. A push to `main` or a manual run also deploys it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+      - run: pnpm --dir website install --frozen-lockfile
+      - run: pnpm --dir website build
+      - run: pnpm --dir website typecheck
+      - name: Check the static output
+        run: |
+          for file in index.html 404.html CNAME .nojekyll; do
+            if [ ! -f "website/dist/client/$file" ]; then
+              echo "::error::website/dist/client/$file is missing"
+              exit 1
+            fi
+          done
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: website/dist/client
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    # Do not cancel a deploy that is in progress.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

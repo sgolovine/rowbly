@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const DASH_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-// Conventional meta files keep their uppercase names, for example `README.md` and `SKILL.md`.
-const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "UPSTREAM", "CHANGELOG"]);
+// Conventional meta files keep their uppercase names, for example `README.md`, `SKILL.md` and the GitHub Pages `CNAME`.
+const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "UPSTREAM", "CHANGELOG", "CNAME"]);
 
 // Paths that keep their names:
 // - `.agents/skills/agentic-tui/` is an unchanged copy of an upstream skill.

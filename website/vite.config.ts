@@ -21,6 +21,8 @@ export default defineConfig({
         enabled: true,
         crawlLinks: true,
       },
+      // GitHub Pages serves 404.html for each unknown path, so the build writes the /404 route to that file.
+      pages: [{ path: "/" }, { path: "/404", prerender: { enabled: true, outputPath: "/404.html" } }],
     }),
     viteReact(),
   ],
