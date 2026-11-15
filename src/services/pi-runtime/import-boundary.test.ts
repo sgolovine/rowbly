@@ -37,6 +37,17 @@ describe("Pi import boundary", () => {
     expect(JSON.parse(result.stdout).phase).toBe("stopped");
   });
 
+  it("runs the factory watchdog without loading Pi", async () => {
+    const { writeFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const { runWatchdog } = await import("../../commands/factory-runner/watchdog-runner.js");
+    const entry = join(project.paths.root, "clean-daemon.mjs");
+    await writeFile(entry, "process.exit(0);\n");
+    const launch = { executable: process.execPath, execArgv: [], entry };
+    await expect(runWatchdog({ launch }, project.ctx)).resolves.toMatchObject({ phase: "stopped" });
+    await import("../factory-watchdog/factory-watchdog.js");
+  });
+
   it("reads the project status without loading Pi", async () => {
     const { runCli } = await import("../../commands/test-cli/test-cli.js");
     const result = await runCli(["--json", "status"], project.paths.root);

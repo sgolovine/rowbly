@@ -66,6 +66,8 @@ Thread file issue. The factory makes these warnings again from the live state on
 - Normal stop cancels the queued checks and stops the process group of each running check. See
   [checks.md](checks.md#status-stop-and-recovery).
 - A restart waits for the stop and for the release of ownership.
+- A normal stop also stops the watchdog. A stop does not cause an automatic restart. See
+  [Automatic restart after a crash](#automatic-restart-after-a-crash).
 
 ## Cancel
 
@@ -92,6 +94,55 @@ Each Thread has at most three runs. A resume adds a run to the same Thread. A re
 
 A later start lets the supervisor select eligible interrupted Threads. It does not resume all Threads
 automatically.
+
+## Automatic restart after a crash
+
+`rowbly factory start` starts a detached watchdog, the hidden command `rowbly factory watchdog`. The
+watchdog starts `rowbly factory run` as its child and watches the exit of the child. The watchdog
+loop is in `src/commands/factory-runner/watchdog-runner.ts`. The pure rules and the state file are in
+`src/services/factory-watchdog/`.
+
+- A crash is a non-zero exit code, a signal or a launch error, without a stop request.
+- An exit with code 0 is not a crash. This includes a stop command and the `already-running` result
+  of `factory run`. After an exit with code 0, the watchdog does not start the daemon again, and it
+  exits.
+- After a crash, the watchdog waits, then it starts the daemon again. The wait increases with each
+  crash in a row: 1 s, 2 s, 4 s, 8 s, 16 s.
+- When a daemon stays up for 5 minutes, the count of crashes in a row goes back to 0.
+- After 5 crashes in a row, the watchdog does not start the daemon again, and it exits. The factory
+  phase is `failed`. The status has the attention entry `watchdog:crash-limit`. Its text has the last
+  exit code or signal and the path of the last log. You cannot dismiss this entry, because no daemon
+  is live. The next `rowbly factory start` clears it.
+- The back-off, the crash limit and the stable period are constants. They are not settings.
+- Each restart uses the usual start path of `factory run`: the owner probe, the recovery after owner
+  death and the release of ownership. Thus recovery marks the active runs of the crashed daemon as
+  interrupted.
+- Before each start, the watchdog probes the owner. If the owner is alive or uncertain, the watchdog
+  does not start a daemon. It records the problem in its state file and exits.
+- The watchdog never takes ownership. The daemon is the owner in `factory.lock`.
+- Only one watchdog runs for a Project. Each watchdog takes the exclusive watchdog claim before it
+  starts a daemon. A watchdog without the claim exits with `already-running`. See
+  [runtime-and-locks.md](runtime-and-locks.md#the-watchdog-claim).
+- The watchdog does not load Pi.
+- If the watchdog dies, nothing starts it again. A reboot of the machine does not start the factory.
+
+`rowbly factory status` and the TUI factory screen show the count of crashes in a row (`restarts`) and
+the time of the last crash (`lastCrashAt`). During a back-off, the phase is `starting`.
+
+### Stop and start with a watchdog
+
+- `factory stop` with a live daemon sends the stop command. The daemon exits with code 0, so the
+  watchdog also exits. The stop waits until the watchdog releases its claim.
+- `factory stop` during a back-off sends `SIGTERM` to the watchdog. First it compares the process
+  identity of the watchdog with `watchdog.json`. The watchdog cancels its timer, does not start a
+  daemon, writes the phase `stopped` and exits. If the identity is uncertain, the stop fails with
+  `CONFLICT`.
+- `factory start` does not start a second watchdog while a live watchdog waits in its back-off. It
+  waits for the daemon of that watchdog.
+- Many `factory start` commands at the same time start only one daemon. Each start can launch a
+  watchdog, but only the watchdog with the claim continues. The other starts wait for its daemon.
+- `factory start` after the `failed` phase starts a new watchdog. The new watchdog sets the count to 0.
+  It keeps the time and the exit of the last crash.
 
 ## Recovery after owner death
 
