@@ -8,6 +8,12 @@
   "files": {
     "includes": ["**", "!**/.agents", "!**/.claude", "!**/skills", "!**/rowbly-test", "!**/.rowbly"]
   },
+  // The website CSS uses Tailwind CSS v4 directives, for example `@theme`, `@apply` and `@custom-variant`.
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
