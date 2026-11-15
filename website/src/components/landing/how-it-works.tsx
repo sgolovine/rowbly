@@ -67,31 +67,44 @@ type Step = Readonly<{
   illustration: ReactNode;
 }>;
 
-/** The four steps of section 4 of the Spec `website-content-plan`. Keep the copy word for word. */
+const inlineCodeClass = "font-mono text-brand-text";
+
+/** The four steps from a new Story to a merged change. */
 const STEPS: readonly Step[] = [
   {
     title: "Write a Story.",
-    copy: 'One line is enough: "Add an undo button for two-player games." It lands in Backlog.',
+    copy: (
+      <>
+        In the TUI or with <code className={inlineCodeClass}>rowbly story create</code>. One line is enough. The Story
+        is a Markdown file and starts in Backlog.
+      </>
+    ),
     illustration: <StoryIllustration />,
   },
   {
-    title: "Tell each Stage what to do.",
-    copy: 'In plain English. Refinement: "Turn this into a spec with acceptance criteria." Development: "Build it, open a PR, move it to review." Review: "Review the PR." Set it once.',
+    title: "Give each Stage a prompt.",
+    copy: (
+      <>
+        A Stage prompt is a Markdown file in <code className={inlineCodeClass}>.rowbly/stages/</code>, for example
+        &ldquo;Build it, open a PR, move it to In Review.&rdquo; Stages without work, like Backlog and Done, get no
+        workers.
+      </>
+    ),
     illustration: <PromptIllustration />,
   },
   {
     title: "Start the factory.",
     copy: (
       <>
-        Press <Kbd>f</Kbd> then <Kbd>s</Kbd>. A supervisor picks which Stories get work. Workers take one Story each, on
-        their own branch, in their own conversation, up to as many as you allow.
+        Press <Kbd>f</Kbd> then <Kbd>s</Kbd>, or run <code className={inlineCodeClass}>rowbly factory start</code>. The
+        supervisor picks ready Stories and starts workers, up to your worker limit. The default limit is 4.
       </>
     ),
     illustration: <FactoryIllustration />,
   },
   {
-    title: "Watch, nudge, merge.",
-    copy: "Stories move across the board on their own. Read any agent's conversation, interrupt it, or answer when it is blocked. When a PR is ready, you merge it. Close the UI; the factory keeps going.",
+    title: "Review and merge.",
+    copy: "Workers do what the Stage prompt says and move the Story on. Read any session while it runs, interrupt it, or resume it. The merge is yours.",
     illustration: <MergeIllustration />,
   },
 ];
@@ -99,7 +112,7 @@ const STEPS: readonly Step[] = [
 /** The "How it works" section of the landing page: four steps from idea to pull request. */
 export function HowItWorks() {
   return (
-    <Section id="how-it-works" headline="Four steps from idea to pull request.">
+    <Section id="how-it-works" headline="How it works">
       <ol className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {STEPS.map((step, index) => (
           <li key={step.title} className="min-w-0">
@@ -120,7 +133,7 @@ export function HowItWorks() {
         to="/how-it-works"
         className="mt-8 inline-flex items-center gap-1.5 text-sm text-brand-text transition-colors hover:text-brand-accent"
       >
-        More about how it works
+        The details
         <ArrowRight aria-hidden="true" className="size-4" />
       </Link>
     </Section>

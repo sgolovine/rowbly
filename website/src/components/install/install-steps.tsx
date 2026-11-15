@@ -36,18 +36,23 @@ const STEPS: readonly Step[] = [
       {
         kind: "text",
         id: "text-3",
-        text: "Onboarding asks for a project name, Stages and agent skills. The defaults are fine.",
+        text: "The first run asks for a Project name, Stages and agent skills. The defaults work.",
       },
     ],
   },
   {
-    title: "Sign in to a provider",
+    title: "Connect a model provider",
     parts: [
+      {
+        kind: "text",
+        id: "text-6",
+        text: "Rowbly uses Pi's credential store. If you are already signed in to Pi, skip the login. If not, run:",
+      },
       { kind: "command", command: "rowbly auth login" },
       {
         kind: "text",
         id: "text-4",
-        text: "Then pick a supervisor model, a worker model and a worker limit in Settings > AI. You can also set them with the CLI:",
+        text: "Optional: pick a supervisor model, a worker model and a worker limit in Settings > AI, or with the CLI. Without a choice, Pi picks its default model and the limit is 4.",
       },
       { kind: "command", command: CONFIGURE_COMMAND },
     ],

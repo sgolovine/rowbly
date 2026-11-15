@@ -9,14 +9,14 @@ export function GetStarted() {
   return (
     <Section
       id="get-started"
-      headline="Start your factory."
-      subhead="Install Rowbly, open it in your repo, and the onboarding sets up your Stages and prompts."
+      headline="Install"
+      subhead="Install Rowbly and run it in a Git repo. The first run creates the Stages and the prompt files."
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <InstallCommand className="max-w-md" />
         <Button asChild size="lg">
           <Link to="/install">
-            Read the install guide
+            Install steps
             <ArrowRight aria-hidden="true" />
           </Link>
         </Button>

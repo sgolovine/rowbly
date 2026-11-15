@@ -27,15 +27,6 @@ const TAG_ROW_TOPS = TAG_GROUPS.flatMap(({ top, rows }) =>
 /** The delay between the fade-in of two tags. 26 tags take about 1.5 s. */
 const TAG_FADE_STEP_MS = 55;
 
-/** The three tags that have a ring in the proof strip: one for each provider and each Stage. */
-const RING_TAGS = [
-  { agent: "claude-19", left: 1303, top: 186 },
-  { agent: "codex-12", left: 1303, top: 414 },
-  { agent: "gemini-7", left: 1353, top: 680 },
-] as const;
-const RING_RIGHT = 1593;
-const RING_PADDING_Y = 1;
-
 export const BOARD_ALT =
   "A real Rowbly board for a Tic-Tac-Toe project, with 26 AI agents at work on Stories in Refinement, Development and Review.";
 
@@ -56,66 +47,33 @@ function tagRowClipPath(top: number) {
 }
 
 type BoardShotProps = Readonly<{
-  /**
-   * `tags`: the agent tags fade in one after the other on load.
-   * `rings`: three agent tags have an amber ring.
-   */
-  mode: "tags" | "rings";
   className?: string;
 }>;
 
-/** The board of the screenshot, cropped to the board panel. */
-export function BoardShot({ mode, className }: BoardShotProps) {
-  if (mode === "tags") {
-    return (
-      <div className={cn("relative", className)}>
-        <img
-          src="/images/board-no-tags.webp"
-          alt={BOARD_ALT}
-          width={CROP_WIDTH}
-          height={CROP_HEIGHT}
-          loading="eager"
-          fetchPriority="high"
-          className="block h-auto w-full"
-        />
-        {TAG_ROW_TOPS.map((top, index) => (
-          <img
-            key={top}
-            src="/images/board.webp"
-            alt=""
-            aria-hidden="true"
-            width={CROP_WIDTH}
-            height={CROP_HEIGHT}
-            loading="eager"
-            className="board-tag-fade absolute inset-0 size-full"
-            style={{ clipPath: tagRowClipPath(top), animationDelay: `${index * TAG_FADE_STEP_MS}ms` }}
-          />
-        ))}
-      </div>
-    );
-  }
-
+/** The board of the screenshot, cropped to the board panel. The agent tags fade in one after the other on load. */
+export function BoardShot({ className }: BoardShotProps) {
   return (
     <div className={cn("relative", className)}>
       <img
-        src="/images/board.webp"
+        src="/images/board-no-tags.webp"
         alt={BOARD_ALT}
         width={CROP_WIDTH}
         height={CROP_HEIGHT}
-        loading="lazy"
+        loading="eager"
+        fetchPriority="high"
         className="block h-auto w-full"
       />
-      {RING_TAGS.map(({ agent, left, top }) => (
-        <span
-          key={agent}
+      {TAG_ROW_TOPS.map((top, index) => (
+        <img
+          key={top}
+          src="/images/board.webp"
+          alt=""
           aria-hidden="true"
-          className="absolute rounded-md ring-2 ring-brand-accent motion-safe:animate-ring-pulse"
-          style={{
-            left: percentX(left),
-            top: percentY(top - RING_PADDING_Y),
-            width: `${(((RING_RIGHT - left) / CROP_WIDTH) * 100).toFixed(3)}%`,
-            height: `${(((ROW_HEIGHT + 2 * RING_PADDING_Y) / CROP_HEIGHT) * 100).toFixed(3)}%`,
-          }}
+          width={CROP_WIDTH}
+          height={CROP_HEIGHT}
+          loading="eager"
+          className="board-tag-fade absolute inset-0 size-full"
+          style={{ clipPath: tagRowClipPath(top), animationDelay: `${index * TAG_FADE_STEP_MS}ms` }}
         />
       ))}
     </div>

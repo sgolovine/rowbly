@@ -12,7 +12,7 @@ export const Route = createFileRoute("/install")({
       path: "/install",
       title: "Install | Rowbly",
       description:
-        "Install Rowbly with npm, open it in your Git repo and start the factory. Free and open source under MIT. Needs Node 22. The factory runs on Linux today.",
+        "Install Rowbly with npm, run it in your Git repo and start the factory. MIT licensed. Needs Node 22.19 or later. The factory runs on Linux.",
     }),
   component: InstallPage,
 });
@@ -21,8 +21,7 @@ export const Route = createFileRoute("/install")({
 const REQUIREMENTS: readonly string[] = [
   "Node 22.19 or later.",
   "Git.",
-  "Linux for the factory.",
-  "The board and the CLI work without a provider sign-in.",
+  "For the factory: Linux and util-linux flock.",
 ];
 
 type NoteProps = Readonly<{
@@ -47,7 +46,7 @@ function InstallPage() {
       <div className="mx-auto flex max-w-3xl flex-col gap-12">
         <header className="flex flex-col gap-4">
           <h1 className="text-4xl font-semibold tracking-tight text-brand-text md:text-5xl">Install Rowbly</h1>
-          <p className="text-lg text-brand-muted">From install to your first factory run in a few commands.</p>
+          <p className="text-lg text-brand-muted">From npm to a running factory.</p>
         </header>
 
         <section aria-labelledby="requirements" className="flex flex-col gap-4">
@@ -59,8 +58,9 @@ function InstallPage() {
               <li key={requirement}>{requirement}</li>
             ))}
           </ul>
-          <p className="text-brand-text">
-            You can use the board on any platform. The factory itself runs on Linux today.
+          <p className="text-brand-muted">
+            The board and the CLI run on any platform and do not need provider credentials. The factory runs on one
+            Linux host per Project. NFS and copied runtime folders are not supported.
           </p>
         </section>
 
@@ -71,9 +71,10 @@ function InstallPage() {
           <InstallSteps />
         </section>
 
-        <Note title="Costs">Rowbly is free. Your model provider bills you for the models you use.</Note>
-        <Note title="Your keys">
-          Your keys stay on your machine. Rowbly sends them only to the provider you signed in to.
+        <Note title="Costs">Rowbly is free. Your model provider bills you for the tokens the agents use.</Note>
+        <Note title="Credentials">
+          Credentials stay in Pi&apos;s credential store, outside the repo. API keys use a masked prompt, never a
+          command argument.
         </Note>
 
         <a

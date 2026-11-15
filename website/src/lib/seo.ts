@@ -1,11 +1,11 @@
 import { GITHUB_URL, LICENSE_URL, NPM_URL, SITE_URL } from "@/lib/site";
 
 /** The title of the home page. */
-export const HOME_TITLE = "Rowbly: a software factory manager in your terminal";
+export const HOME_TITLE = "Rowbly: a Kanban board in your repo, worked by Pi agents";
 
 /** The description of the home page. The JSON-LD of the home page also uses it. */
 export const HOME_DESCRIPTION =
-  "Keep a Kanban board of Stories in your Git repo. Give each Stage a prompt. Start the factory and a team of AI agents refines, builds and reviews in parallel.";
+  "Rowbly keeps a Kanban board of Stories as files in your Git repo. Each Stage has a prompt. A daemon runs Pi agents on the Stories, one worktree per worker. Open source, MIT.";
 
 /** The absolute URL of the social card image (`public/images/og-image.png`). */
 export const OG_IMAGE_URL = `${SITE_URL}/images/og-image.png`;

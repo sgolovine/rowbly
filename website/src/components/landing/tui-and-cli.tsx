@@ -16,18 +16,18 @@ const CLI_RUNS = [
 
 const inlineCodeClass = "font-mono text-brand-text";
 
-/** The "Humans and scripts" section of the landing page. Tabs show the TUI and the CLI. */
+/** The "TUI and CLI" section of the landing page. Tabs show the TUI and the CLI. */
 export function TuiAndCli() {
   return (
     <Section
       id="tui-and-cli"
-      headline="A terminal UI when you want to look. A CLI when you want to script."
+      headline="TUI and CLI"
       subhead={
         <>
-          Open <code className={inlineCodeClass}>rowbly</code> and work the board with your keyboard. Or drive it from
-          the command line: <code className={inlineCodeClass}>rowbly story create</code>,{" "}
-          <code className={inlineCodeClass}>rowbly factory status</code>. Your own scripts and agents can use the same
-          commands.
+          <code className={inlineCodeClass}>rowbly</code> opens the board in your terminal.{" "}
+          <code className={inlineCodeClass}>rowbly &lt;command&gt;</code> runs one command and exits. Both call the same
+          services. Commands take <code className={inlineCodeClass}>--json</code> and have fixed exit codes, so scripts
+          and other agents can use them.
         </>
       }
     >
