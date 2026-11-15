@@ -9,12 +9,21 @@ import {
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
+import { readWatchdogState, type WatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
-import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { type DaemonOptions, type LaunchState, launchDaemon } from "./factory-launch.js";
 import { getFactoryLogs } from "./factory-logs.js";
+import {
+  crashLimitAttention,
+  type RestartFields,
+  restartFields,
+  stopWatchdog,
+  waitForActiveWatchdogExit,
+  watchdogLive,
+} from "./watchdog-status.js";
 
 export type { FactoryLaunch } from "./factory-launch.js";
 export { getFactoryLogs };
@@ -28,6 +37,10 @@ export type FactoryStatus = Partial<Omit<Awaited<ReturnType<FactoryManager["snap
   error?: string;
   /** Queued work with its policy reasons: at most 50 Stories, without the Stories that wait for no worker. */
   queue?: FactoryQueueEntry[];
+  /** The count of daemon crashes in a row. The watchdog restarts the daemon after each crash below the limit. */
+  restarts?: number;
+  /** The time of the last daemon crash. */
+  lastCrashAt?: string;
 };
 
 export interface FactoryQueueEntry {
@@ -42,30 +55,59 @@ interface StartFactoryInput extends DaemonOptions {
   readonly timeoutMs?: number;
 }
 
-/** Combines the owner lock, a liveness probe and the status file. A runtime problem gives `unavailable`. */
+/** The status without a live owner. A watchdog can still start a daemon, or it stopped at the crash limit. */
+async function ownerlessStatus(
+  paths: ProjectPaths,
+  status: FactoryStatus,
+  watchdog: WatchdogState | undefined,
+  restarts: RestartFields,
+  phase: "stopped" | "failed",
+): Promise<FactoryStatus> {
+  if (await watchdogLive(paths)) {
+    return { version: 1, phase: "starting", ...restarts };
+  }
+
+  if (watchdog?.phase === "failed") {
+    return { ...status, ...restarts, phase: "failed", attention: [crashLimitAttention(watchdog)] };
+  }
+
+  return { ...status, ...restarts, phase };
+}
+
+/** Combines the owner lock, a liveness probe, the status file and the watchdog. A runtime problem gives `unavailable`. */
 export async function getFactoryStatus(ctx: ServiceContext = {}): Promise<FactoryStatus> {
   const paths = await findProject(ctx);
 
   try {
     const owner = await readFactoryOwner(paths);
     const status = await readStatus(ctx);
+    const watchdog = await readWatchdogState(paths);
+    const restarts = restartFields(watchdog);
 
     if (!owner) {
-      return { ...status, phase: status.phase === "failed" ? "failed" : "stopped", owner: undefined };
+      const phase = status.phase === "failed" ? "failed" : "stopped";
+
+      return { ...(await ownerlessStatus(paths, status, watchdog, restarts, phase)), owner: undefined };
     }
 
     // The status is read often. The takeover and the commands below use the uncached probe.
     const liveness = await probeOwnerCached(owner);
 
     if (liveness === "dead") {
-      return { ...status, owner, phase: "stopped", liveness };
+      return { ...(await ownerlessStatus(paths, status, watchdog, restarts, "stopped")), owner, liveness };
     }
 
     if (status.owner?.token !== owner.token) {
-      return { version: 1, owner, phase: "starting", liveness };
+      return { version: 1, owner, phase: "starting", liveness, ...restarts };
     }
 
-    return { ...status, owner, liveness, responsive: Date.now() - Date.parse(status.heartbeatAt) < 15_000 };
+    return {
+      ...status,
+      ...restarts,
+      owner,
+      liveness,
+      responsive: Date.now() - Date.parse(status.heartbeatAt) < 15_000,
+    };
   } catch (error) {
     return { version: 1, phase: "unavailable", error: error instanceof Error ? error.message : "Runtime unavailable" };
   }
@@ -87,7 +129,8 @@ async function waitForReady(input: StartFactoryInput, launch: Store<LaunchState>
       throw new ConflictError(`Factory launch failed: ${childError}`);
     }
 
-    if (exited && (!status.owner || status.liveness === "dead")) {
+    // A watchdog that exits while a different watchdog starts the daemon is not a failure: the phase is `starting`.
+    if (exited && status.phase !== "starting" && (!status.owner || status.liveness === "dead")) {
       const logs = await getFactoryLogs({ tail: 10 }, ctx);
 
       throw new ConflictError(`Factory exited before ready. ${logs.lines.join("\n")}`);
@@ -113,7 +156,8 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
 
   const launch = new Store<LaunchState>({ childError: undefined, exited: false });
 
-  if (!existing || (await probeOwner(existing)) === "dead") {
+  // A live watchdog in its back-off starts the daemon itself. A second watchdog is not necessary.
+  if ((!existing || (await probeOwner(existing)) === "dead") && !(await watchdogLive(paths))) {
     await assertNoLegacyFactorySettings(paths);
     await launchDaemon(paths, input, launch);
   }
@@ -179,8 +223,27 @@ export async function dismissFactoryAttention(
   return sendFactoryCommand("dismiss", { ...input, attentionKey: key }, ctx);
 }
 
-/** Stops the daemon. A factory that is already stopped gives `stopped` without a command. */
+/**
+ * Stops the daemon and its watchdog. A watchdog without a live daemon, for example in its back-off, gets `SIGTERM`.
+ * A factory that is already stopped gives `stopped` without a command.
+ */
 export async function stopFactory(input: { timeoutMs?: number } = {}, ctx: ServiceContext = {}) {
+  const paths = await findProject(ctx);
+  const timeoutMs = input.timeoutMs ?? 30_000;
+  const owner = await readFactoryOwner(paths);
+
+  if (owner && (await probeOwner(owner)) === "alive") {
+    const receipt = await sendFactoryCommand("stop", input, ctx);
+
+    await waitForActiveWatchdogExit(paths, timeoutMs);
+
+    return receipt;
+  }
+
+  if (await stopWatchdog(paths, timeoutMs)) {
+    return { phase: "stopped" };
+  }
+
   const status = await getFactoryStatus(ctx);
 
   if (status.phase === "stopped" || (status.phase === "failed" && !status.owner)) {

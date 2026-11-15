@@ -1,8 +1,9 @@
 import type { FactoryQueueEntry, FactoryStatus } from "../../../services/factory/factory.js";
+import { CRASH_LIMIT_KEY } from "../../../services/factory-watchdog/factory-watchdog.js";
 import { formatDateTime } from "../../theme.js";
 
 /** Where a factory problem comes from. Only an `attention` entry of the manager can be dismissed. */
-export type FactoryProblemKind = "heartbeat" | "attention" | "issue" | "provider";
+export type FactoryProblemKind = "heartbeat" | "attention" | "issue" | "provider" | "watchdog";
 
 /** One item that asks for the attention of a person. */
 export interface FactoryProblem {
@@ -55,11 +56,16 @@ export function factoryState(status: FactoryStatus | undefined, short = false): 
 
 /**
  * The problems of a factory that runs: its attention items, the providers that it paused and a heartbeat that
- * stopped. A stopped factory has no problems, because its status file is old.
+ * stopped. A stopped factory has no problems, because its status file is old. Only a factory that failed at the
+ * crash limit of its watchdog has the crash-limit problem.
  */
 export function factoryProblems(status: FactoryStatus | undefined): FactoryProblem[] {
-  if (!status || !factoryLive(status)) {
+  if (!status) {
     return [];
+  }
+
+  if (!factoryLive(status)) {
+    return status.phase === "failed" ? ((status.attention ?? []) as unknown[]).flatMap(crashLimitProblem) : [];
   }
 
   return [
@@ -100,6 +106,38 @@ function attentionProblem(item: unknown): FactoryProblem[] {
   }
 
   return [];
+}
+
+/** The crash-limit entry of the watchdog. Only the next start clears it, so it cannot be dismissed. */
+function crashLimitProblem(item: unknown): FactoryProblem[] {
+  if (!Array.isArray(item) || item[0] !== CRASH_LIMIT_KEY || typeof item[1]?.text !== "string") {
+    return [];
+  }
+
+  const message: string = item[1].text;
+
+  return [
+    {
+      key: `attention:${CRASH_LIMIT_KEY}`,
+      kind: "watchdog",
+      title: "Crash limit",
+      text: message,
+      message,
+      attentionKey: CRASH_LIMIT_KEY,
+      dismissible: false,
+    },
+  ];
+}
+
+/** The restart count and the time of the last crash, for example `2 · last crash 12 May 10:02`. */
+export function restartText(status: FactoryStatus | undefined): string | undefined {
+  if (!status?.restarts && !status?.lastCrashAt) {
+    return undefined;
+  }
+
+  const crash = status.lastCrashAt ? ` · last crash ${formatDateTime(status.lastCrashAt)}` : "";
+
+  return `${status.restarts ?? 0}${crash}`;
 }
 
 /** An entry that the manager recorded with `key`. It can name the Story that it is about. */

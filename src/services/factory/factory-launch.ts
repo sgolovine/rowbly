@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { open } from "node:fs/promises";
+import { type FileHandle, open } from "node:fs/promises";
 import { isAbsolute } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
@@ -52,7 +52,8 @@ function daemonExecArgv(execArgv: readonly string[]): string[] {
   return [...execArgv.reduce(filterArg, { kept: [], skipNext: false }).kept];
 }
 
-function daemonArgs(paths: ProjectPaths, options: DaemonOptions): string[] {
+/** The arguments of a detached `factory watchdog` or of the `factory run` child of a watchdog. */
+export function daemonArgs(paths: ProjectPaths, options: DaemonOptions, command: "watchdog" | "run"): string[] {
   const d = options.launch;
 
   return [
@@ -61,33 +62,45 @@ function daemonArgs(paths: ProjectPaths, options: DaemonOptions): string[] {
     "-C",
     paths.root,
     "factory",
-    "run",
+    command,
     ...(options.maxWorkers !== undefined ? ["--max-workers", String(options.maxWorkers)] : []),
     ...(options.adoptExternal ? ["--adopt-external"] : []),
   ];
 }
 
-/** Starts a detached daemon with its output in a new log. The state records a launch error and the exit. */
+/** Checks that the executable and the entry of a launch are absolute paths. */
+export function assertAbsoluteLaunch(launch: FactoryLaunch): void {
+  if (!isAbsolute(launch.executable) || !isAbsolute(launch.entry)) {
+    throw new ValidationError("Factory launch paths must be absolute");
+  }
+}
+
+/** Opens a new operational log below `.rowbly/runtime/logs/` with mode 0600, and gives its path and handle. */
+export async function openFactoryLog(paths: ProjectPaths): Promise<{ path: string; file: FileHandle }> {
+  const path = await runtimePath(paths, `logs/${randomUUID()}.jsonl`);
+
+  return { path, file: await open(path, "a", 0o600) };
+}
+
+/**
+ * Starts a detached watchdog with its output in a new log. The watchdog starts the daemon as its child.
+ * The state records a launch error and the exit of the watchdog.
+ */
 export async function launchDaemon(
   paths: ProjectPaths,
   options: DaemonOptions,
   state: Store<LaunchState>,
 ): Promise<void> {
-  const d = options.launch;
+  assertAbsoluteLaunch(options.launch);
 
-  if (!isAbsolute(d.executable) || !isAbsolute(d.entry)) {
-    throw new ValidationError("Factory launch paths must be absolute");
-  }
-
-  const args = daemonArgs(paths, options);
-  const logPath = await runtimePath(paths, `logs/${randomUUID()}.jsonl`);
-  const log = await open(logPath, "a", 0o600);
+  const args = daemonArgs(paths, options, "watchdog");
+  const log = await openFactoryLog(paths);
 
   try {
-    const child = spawn(d.executable, args, {
+    const child = spawn(options.launch.executable, args, {
       cwd: paths.root,
       detached: true,
-      stdio: ["ignore", log.fd, log.fd],
+      stdio: ["ignore", log.file.fd, log.file.fd],
       windowsHide: true,
     });
 
@@ -95,6 +108,6 @@ export async function launchDaemon(
     child.on("exit", () => state.update(() => ({ exited: true })));
     child.unref();
   } finally {
-    await log.close();
+    await log.file.close();
   }
 }

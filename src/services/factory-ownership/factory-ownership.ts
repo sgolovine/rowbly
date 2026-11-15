@@ -13,7 +13,7 @@ import {
 } from "./ownership-lock.js";
 
 export type { Owner, OwnerProbe };
-export { newOwner, probeOwner, probeOwnerCached };
+export { acquireOwner, newOwner, probeOwner, probeOwnerCached, readOwner, releaseOwner };
 
 /** Takes daemon ownership of the Project. A live, foreign or uncertain owner gives a ConflictError. */
 export async function acquireFactoryOwnership(paths: ProjectPaths, owner: Owner, probe: OwnerProbe = probeOwner) {
