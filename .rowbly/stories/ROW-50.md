@@ -1,6 +1,6 @@
 ---
 title: Build the How it works and Watch everything live landing sections
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-50
 pull_request: https://github.com/sgolovine/rowbly/pull/246
@@ -80,3 +80,9 @@ Not in scope:
 - The section ids are `how-it-works` and `watch-live`. Reason: the Spec gives no ids, and these ids are short and match the headlines.
 - The names, Story key and conversation lines of the mock are invented demo data in the Tic-Tac-Toe theme of the Hero screenshot. Reason: the site uses this demo Project in the other sections, and the mock must not show private data.
 - The chips are static labels, not buttons. Reason: the Spec only says "Chips", and a button with no action confuses users.
+
+## Review findings
+
+- The Changelog Stage found a merge conflict with `origin/main` in `website/src/routes/index.tsx`. `main` now has the `SeeItWork` section of ROW-49 (import and `<SeeItWork />`). This branch adds `HowItWorks` and `WatchLive` at the same lines.
+- Repair: merge `origin/main` into `story/ROW-50`. Keep all three imports. Use the page order Hero, `ProofStrip`, `SeeItWork`, `HowItWorks`, `WatchLive`. Then run `pnpm lint`, `pnpm --dir website typecheck` and `pnpm --dir website build`, and push.
+- No other file has a conflict. The Changelog Stage did not add a CHANGELOG entry.
