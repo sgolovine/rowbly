@@ -1,21 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Section } from "@/components/section";
-import { DOCS_URL } from "@/lib/site";
+import { FilesInYourRepo } from "@/components/how-it-works/files-in-your-repo";
+import { GetStarted } from "@/components/how-it-works/get-started";
+import { Intro } from "@/components/how-it-works/intro";
+import { StagePrompts } from "@/components/how-it-works/stage-prompts";
+import { StayingInControl } from "@/components/how-it-works/staying-in-control";
+import { TheBoard } from "@/components/how-it-works/the-board";
+import { TheFactory } from "@/components/how-it-works/the-factory";
+import { YourModels } from "@/components/how-it-works/your-models";
 
 export const Route = createFileRoute("/how-it-works")({
+  head: () => ({
+    meta: [
+      { title: "How it works | Rowbly" },
+      {
+        name: "description",
+        content:
+          "How Rowbly works: a Kanban board of Stories in your repo, a plain-English prompt for each Stage, and a factory of AI agents that does the work while you watch.",
+      },
+    ],
+  }),
   component: HowItWorksPage,
 });
 
 function HowItWorksPage() {
   return (
-    <Section headline="How it works">
-      <p className="text-brand-muted">
-        This page is not ready yet. Read the{" "}
-        <a href={DOCS_URL} className="text-brand-text underline underline-offset-4">
-          README
-        </a>{" "}
-        for now.
-      </p>
-    </Section>
+    <>
+      <Intro />
+      <TheBoard />
+      <StagePrompts />
+      <TheFactory />
+      <StayingInControl />
+      <YourModels />
+      <FilesInYourRepo />
+      <GetStarted />
+    </>
   );
 }
