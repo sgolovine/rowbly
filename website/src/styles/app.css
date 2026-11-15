@@ -90,6 +90,11 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
   }
+
+  /* A clear focus ring for keyboard users. An element with its own focus style ("outline-none") does not use it. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
 }
 
 /* The cursor blink of the "rowbly_" wordmark. It runs only when the user allows motion. */
