@@ -68,6 +68,16 @@ Read this page when you start a task on the factory. Then read only the sub-page
     The text gives the reason and the downstream Stories, for example
     `ROW-04 cannot progress (in Backlog). ROW-05 waits for it.` The manager removes the entry when the
     Story can progress. The manager is the guard. The supervisor prompt rules only help the model.
+  - **Pull upstream Stories.** This step is off by default. When `dependencies.pullUpstream` is
+    `true`, the step runs after the policy scan and before the `upstream-stuck:` step. For each blocked
+    Story in a `work` Stage, the manager finds all its upstream Stories that are not complete, also
+    the indirect ones. The manager moves each of these Stories that is in the first Stage to the
+    first enabled `work` Stage. It does not move a parked Story or a Story in a `hold` Stage. The
+    `upstream-stuck:` entry stays for these Stories. The manager moves the Stories with `updateStory`
+    inside the Project write lock, and not inside the state lock. Then it commits the moves, for
+    example `chore(rowbly): move ROW-04 out of Backlog for ROW-05`. While a Git sync runs, the step
+    waits for a later pass. A failure sets the attention entry `pull-upstream`, and the pass
+    continues. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#pull-upstream-stories).
 - **Git sync.** When the user turns it on, the factory pulls the upstream branch and pushes the
   canonical branch at an interval (`project-sync/`). See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).

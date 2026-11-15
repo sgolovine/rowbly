@@ -31,6 +31,7 @@ interface ConfigureOptions {
   gitSyncInterval?: number;
   maxChecks?: number;
   checkMemoryReserve?: number;
+  pullUpstream?: string;
 }
 
 interface StartOptions {
@@ -152,7 +153,7 @@ function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync and check limits",
+      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync, check limits and pull-upstream",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
@@ -171,6 +172,7 @@ function registerConfigure(program: Command): void {
     .option("--git-sync-interval <seconds>", "seconds between syncs, 60 to 86400", parseInteger)
     .option("--max-checks <n>", "checks that run at the same time, 1 to 32", parseInteger)
     .option("--check-memory-reserve <mb>", "memory that the check queue always keeps free", parseInteger)
+    .option("--pull-upstream <on|off>", "move a stuck upstream Story out of the first Stage")
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,

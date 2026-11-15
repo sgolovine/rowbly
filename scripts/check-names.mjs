@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const DASH_CASE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-// Conventional meta files keep their uppercase names, for example `README.md` and `SKILL.md`.
-const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "UPSTREAM", "CHANGELOG"]);
+// Conventional meta files keep their uppercase names, for example `README.md`, `SKILL.md` and the GitHub Pages `CNAME`.
+const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "UPSTREAM", "CHANGELOG", "CNAME"]);
 
 // Paths that keep their names:
 // - `.agents/skills/agentic-tui/` is an unchanged copy of an upstream skill.
@@ -39,11 +39,69 @@ function isGoodSegment(segment, isFile) {
   return DASH_CASE.test(base);
 }
 
+// TanStack Router gives a meaning to some characters in the file and folder names of its file-based routes.
+// Only the paths below this prefix can use these names. Each word in them is still dash-case.
+const ROUTES_PREFIX = "website/src/routes/";
+
+const WORD = "[a-z0-9]+(?:-[a-z0-9]+)*";
+
+// One dot-separated part of a route name:
+// `$` (splat), `$name` (path parameter), `{-$name}` (optional path parameter),
+// `_name` (pathless layout), `name_` (non-nested) and plain `name` (also `index`, `route` and `lazy`).
+const ROUTE_PART = new RegExp(`^(?:\\$|(?:_|\\$|\\{-\\$)?${WORD}\\}?_?)$`);
+const ROUTE_GROUP = new RegExp(`^\\(${WORD}\\)$`);
+
+// An escaped character, for example `[.]` in `script[.]js.tsx`. The router uses the text in the brackets as it is.
+const ESCAPE = /\[[^\]/]+\]/g;
+
+/** Tells if one route part has a good name. A brace must open with `{-$` and close at the end of the name. */
+function isGoodRoutePart(part) {
+  if (!ROUTE_PART.test(part)) {
+    return false;
+  }
+
+  return part.startsWith("{-$") === /\}_?$/.test(part);
+}
+
+/**
+ * Tells if one segment of a path below `website/src/routes/` has a good TanStack Router name.
+ * Only the last segment of a path is a file. The check removes the extension of a file.
+ */
+export function isGoodRouteSegment(segment, isFile) {
+  if (segment.startsWith(".")) {
+    return isGoodSegment(segment, isFile);
+  }
+  // The router ignores a name that starts with `-`. The rest of the name obeys the usual rule.
+  if (segment.startsWith("-")) {
+    return isGoodSegment(segment.slice(1), isFile);
+  }
+  if (isFile && META_FILES.has(baseName(segment))) {
+    return true;
+  }
+  if (!isFile && ROUTE_GROUP.test(segment)) {
+    return true;
+  }
+
+  const unescaped = segment.replace(ESCAPE, "x");
+  const name = isFile && unescaped.includes(".") ? unescaped.slice(0, unescaped.lastIndexOf(".")) : unescaped;
+
+  if (isFile && name === "__root") {
+    return true;
+  }
+
+  return name.split(".").every(isGoodRoutePart);
+}
+
 /** Tells if all segments of a path have good names. */
 function isGoodPath(path) {
   const segments = path.split("/");
+  const routeStart = path.startsWith(ROUTES_PREFIX) ? ROUTES_PREFIX.split("/").length - 1 : segments.length;
 
-  return segments.every((segment, index) => isGoodSegment(segment, index === segments.length - 1));
+  return segments.every((segment, index) => {
+    const isFile = index === segments.length - 1;
+
+    return index < routeStart ? isGoodSegment(segment, isFile) : isGoodRouteSegment(segment, isFile);
+  });
 }
 
 /** Gives the paths that do not have dash-case names, in their input order. */

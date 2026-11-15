@@ -1,3 +1,4 @@
+import type { AsyncLocalStorage } from "node:async_hooks";
 import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -5,7 +6,7 @@ import { promisify } from "node:util";
 import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
-import { pendingReports } from "../factory-policy/factory-policy.js";
+import { pendingReports, storyHash } from "../factory-policy/factory-policy.js";
 import { getFactorySettings, updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
@@ -23,9 +24,26 @@ import { readAuthStamp } from "./manager-state.js";
 import { scan } from "./manager-status.js";
 import { startProjectSync } from "./project-sync-step.js";
 
+// Marks the async context that holds the state lock, so that a test can find a projectWrite inside it.
+const stateLockHeld = vi.hoisted(() => ({ storage: undefined as AsyncLocalStorage<boolean> | undefined, nested: 0 }));
+vi.mock("../factory-state/state-file.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../factory-state/state-file.js")>();
+  const { AsyncLocalStorage: Storage } = await import("node:async_hooks");
+  const storage = new Storage<boolean>();
+  stateLockHeld.storage = storage;
+  return {
+    ...actual,
+    withStateLock: <T>(root: string, action: () => Promise<T>) =>
+      actual.withStateLock(root, () => storage.run(true, action)),
+  };
+});
 vi.mock("../project-write/project-write.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../project-write/project-write.js")>();
-  return { ...actual, commitCanonicalProject: vi.fn(actual.commitCanonicalProject) };
+  const projectWrite = <T>(root: string, action: () => Promise<T>, waitSeconds?: number) => {
+    if (stateLockHeld.storage?.getStore()) stateLockHeld.nested += 1;
+    return actual.projectWrite(root, action, waitSeconds);
+  };
+  return { ...actual, projectWrite, commitCanonicalProject: vi.fn(actual.commitCanonicalProject) };
 });
 vi.mock("./manager-state.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-state.js")>();
@@ -524,6 +542,105 @@ describe("foreground factory", () => {
       await f.manager.shutdown();
       await run;
     }
+  });
+  async function pullFixture(upstreamStage: string, pull: boolean) {
+    await updateFactorySettings(
+      { dependencies: { pullUpstream: pull }, git: { authorName: "Factory", authorEmail: "factory@example.com" } },
+      { cwd: root },
+    );
+    return dependencyFixture(upstreamStage);
+  }
+  async function runUntil(f: { manager: FactoryManager }, check: () => Promise<void>) {
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(check, { timeout: 10000, interval: 20 });
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  }
+  const upstreamKeysOf = async (f: { manager: FactoryManager }) =>
+    [...(await attentionOf(f)).keys()].filter((entry) => entry.startsWith("upstream-stuck:"));
+  const subjects = async () => (await exec("git", ["-C", root, "log", "--format=%s"])).stdout;
+  it("keeps the upstream Story in Backlog while pull-upstream is off", async () => {
+    const { f, upstream } = await pullFixture("BACKLOG", false);
+    f.supervisor.setResponses([fauxAssistantMessage("Wait")]);
+    const scans = vi.mocked(scan).mock.calls.length;
+    await runUntil(f, async () => {
+      expect(await upstreamKeysOf(f)).toEqual([`upstream-stuck:${upstream.id}`]);
+      expect(vi.mocked(scan).mock.calls.length).toBeGreaterThan(scans + 1);
+    });
+    expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BACKLOG");
+    expect(await subjects()).not.toContain("out of Backlog");
+  });
+  it("moves a stuck upstream Story to the first work Stage, commits the move and starts it", async () => {
+    const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
+    const digests: string[] = [];
+    f.supervisor.setResponses([
+      (context) => {
+        digests.push(JSON.stringify(context.messages.at(-1)));
+        return fauxAssistantMessage("Wait");
+      },
+    ]);
+    stateLockHeld.nested = 0;
+    await runUntil(f, async () => {
+      expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BUILD");
+      expect(digests.length).toBeGreaterThan(0);
+      expect(await upstreamKeysOf(f)).toEqual([]);
+      const decisions = (await f.manager.snapshot()).decisions as unknown as Record<string, unknown>[];
+      expect(decisions.find((d) => d.story === upstream.id)).toMatchObject({ action: "start", stage: "BUILD" });
+    });
+    expect(digests[0]).toContain(upstream.id);
+    expect(await subjects()).toContain(`chore(rowbly): move ${upstream.id} out of Backlog for ${downstream.id}`);
+    expect(stateLockHeld.nested).toBe(0);
+  });
+  it("moves the indirect upstream Stories in one pass", async () => {
+    const indirect = await createStory({ title: "Indirect", stage: "BACKLOG" }, { cwd: root });
+    const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
+    await updateStory({ id: upstream.id, dependsOn: [indirect.id] }, { cwd: root });
+    f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
+    await runUntil(f, async () => {
+      expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BUILD");
+      expect((await getStory({ id: indirect.id }, { cwd: root })).stage).toBe("BUILD");
+    });
+    expect(await subjects()).toContain(
+      `chore(rowbly): move ${indirect.id}, ${upstream.id} out of Backlog for ${downstream.id}`,
+    );
+  });
+  it("does not move a parked upstream Story or an upstream Story in a hold Stage", async () => {
+    const prompt = "Wait for a person.";
+    await createStage({ label: "Wait", key: "WAIT", prompt, position: 3 }, { cwd: root });
+    const held = await createStory({ title: "Held", stage: "WAIT" }, { cwd: root });
+    const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
+    await updateStory({ id: downstream.id, dependsOn: [upstream.id, held.id] }, { cwd: root });
+    await updateFactoryState(root, (state) => ({
+      ...state,
+      prompts: { ...(state.prompts as object), WAIT: { hash: promptHash(prompt), class: "hold" } },
+      parked: {
+        [upstream.id]: { stage: "BACKLOG", hash: storyHash(upstream), reason: "test", since: "", reported: true },
+      },
+    }));
+    f.supervisor.setResponses([fauxAssistantMessage("Wait")]);
+    const scans = vi.mocked(scan).mock.calls.length;
+    await runUntil(f, async () => {
+      expect((await upstreamKeysOf(f)).toSorted()).toEqual(
+        [`upstream-stuck:${upstream.id}`, `upstream-stuck:${held.id}`].toSorted(),
+      );
+      expect(vi.mocked(scan).mock.calls.length).toBeGreaterThan(scans + 1);
+    });
+    expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BACKLOG");
+    expect((await getStory({ id: held.id }, { cwd: root })).stage).toBe("WAIT");
+  });
+  it("does not move for a blocked downstream Story in Backlog", async () => {
+    const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
+    await updateStory({ id: downstream.id, stage: "BACKLOG" }, { cwd: root });
+    f.supervisor.setResponses([fauxAssistantMessage("Wait")]);
+    const scans = vi.mocked(scan).mock.calls.length;
+    await runUntil(f, async () => {
+      expect(vi.mocked(scan).mock.calls.length).toBeGreaterThan(scans + 1);
+      expect(await upstreamKeysOf(f)).toEqual([]);
+    });
+    expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BACKLOG");
   });
   it("rejects a changed prompt after durable reservation", async () => {
     let release = () => {};

@@ -99,6 +99,20 @@ describe("factory commands", () => {
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     expect(await readFile(settingsFile, "utf8")).toBe(before);
   });
+  it("turns pull-upstream on and off, and rejects other values without a change of the config", async () => {
+    await writeFactory(JSON.stringify({ maxWorkers: 3, git: { push: true } }));
+    const on = await runCli(["--json", "factory", "configure", "--pull-upstream", "on"], project.paths.root);
+    expect(on.exitCode).toBe(0);
+    expect(await readFactory()).toEqual({ maxWorkers: 3, git: { push: true }, dependencies: { pullUpstream: true } });
+    const off = await runCli(["--json", "factory", "configure", "--pull-upstream", "off"], project.paths.root);
+    expect(off.exitCode).toBe(0);
+    expect(await readFactory()).toEqual({ maxWorkers: 3, git: { push: true }, dependencies: { pullUpstream: false } });
+    const before = await project.read("rowbly.config.json");
+    const result = await runCli(["--json", "factory", "configure", "--pull-upstream", "maybe"], project.paths.root);
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(await project.read("rowbly.config.json")).toBe(before);
+  });
   it("returns exit one for unavailable runtime status", async () => {
     await prepareRuntime(project.paths);
     await writeFile(`${project.paths.runtimeDir}/factory.lock`, "{");

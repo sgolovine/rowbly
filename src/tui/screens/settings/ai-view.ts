@@ -210,7 +210,11 @@ export function aiHints(page: AiPage, can: AiAbilities): KeyHint[] {
   }
 
   if (page === "limits") {
-    return [{ key: "l", description: "edit worker limit" }, TAB_HINT];
+    return [
+      { key: "l", description: "edit worker limit" },
+      { key: "u", description: "toggle pull upstream" },
+      TAB_HINT,
+    ];
   }
 
   return providersHints(can);

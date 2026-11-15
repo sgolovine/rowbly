@@ -1,0 +1,130 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* The site is dark only. The root element has the "dark" class, so each "dark:" class of shadcn/ui applies. */
+@custom-variant dark (&:is(.dark *));
+
+/* The brand palette. The site uses these colours and no other hues. */
+@theme {
+  --color-brand-background: #111214;
+  --color-brand-surface: #17181b;
+  --color-brand-border: #26282d;
+  --color-brand-accent: #f5b841;
+  --color-brand-text: #eceae4;
+  --color-brand-muted: #9a9ca3;
+  --color-brand-story-key: #56b6e8;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* A slow pulse of the rings in the proof strip. Use it only with the "motion-safe:" variant. */
+  --animate-ring-pulse: ring-pulse 3s ease-out infinite;
+
+  @keyframes ring-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+}
+
+/* The shadcn/ui variables map to the brand tokens. */
+:root {
+  color-scheme: dark;
+  --radius: 0.5rem;
+  --background: var(--color-brand-background);
+  --foreground: var(--color-brand-text);
+  --card: var(--color-brand-surface);
+  --card-foreground: var(--color-brand-text);
+  --popover: var(--color-brand-surface);
+  --popover-foreground: var(--color-brand-text);
+  --primary: var(--color-brand-accent);
+  --primary-foreground: var(--color-brand-background);
+  --secondary: var(--color-brand-surface);
+  --secondary-foreground: var(--color-brand-text);
+  --muted: var(--color-brand-surface);
+  --muted-foreground: var(--color-brand-muted);
+  --accent: var(--color-brand-border);
+  --accent-foreground: var(--color-brand-text);
+  --destructive: var(--color-brand-accent);
+  --border: var(--color-brand-border);
+  --input: var(--color-brand-border);
+  --ring: var(--color-brand-accent);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+/* The cursor blink of the "rowbly_" wordmark. It runs only when the user allows motion. */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The fade-in of one agent tag of the Hero board. Each tag layer sets its own animation delay. */
+@keyframes board-tag-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* All motion of the site. With reduced motion, the elements show at once and do not move. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .cursor-blink {
+    animation: cursor-blink 1.1s step-end infinite;
+  }
+
+  .board-tag-fade {
+    animation: board-tag-in 400ms ease-out both;
+  }
+}
