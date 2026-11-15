@@ -1,6 +1,6 @@
 ---
 title: Link the website from the README and package metadata
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-57
 pull_request: https://github.com/sgolovine/rowbly/pull/252
