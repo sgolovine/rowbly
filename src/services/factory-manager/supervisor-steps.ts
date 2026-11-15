@@ -7,7 +7,7 @@ import { startProjectSync } from "./project-sync-step.js";
 const ATTENTION_LIMIT = 500;
 
 /** The result of one step: an attention text for a problem, `undefined` for no problem, or `keep` for no change. */
-type StepResult = string | undefined | "keep";
+export type StepResult = string | undefined | "keep";
 
 /** Gives the message of an error. */
 function errorMessage(error: unknown): string {
@@ -30,7 +30,13 @@ export async function runSideSteps(manager: Manager): Promise<void> {
   await runStep(manager, "sync", "Git sync start failed", () => startSync(manager));
 }
 
-async function runStep(manager: Manager, key: string, label: string, step: () => Promise<StepResult>): Promise<void> {
+/** Runs one step of a pass. A failure records the attention entry `key`, and the pass continues. */
+export async function runStep(
+  manager: Manager,
+  key: string,
+  label: string,
+  step: () => Promise<StepResult>,
+): Promise<void> {
   const result = await attempt(label, step);
 
   if (result === "keep") {
