@@ -52,7 +52,7 @@ Not in scope:
       stage rename, a stage delete that moves Stories, a custom field add, rename or remove, a Project
       key change that changes `dependsOn`, the removal of a deleted Story from a `dependsOn` list, and a
       `rowbly doctor --fix` repair of a Story file.
-- [ ] `rowbly attachment add` and `rowbly attachment remove` set `updatedAt` of the Story.
+- [ ] The attachment add and remove commands (`addAttachment` and `removeAttachment`) set `updatedAt` of the Story.
 - [ ] When a Story moves to a new place, the other Stories of the stage that get a new `position`
       keep their old `updatedAt`.
 - [ ] A Story file without `createdAt` or `updatedAt` reads without an error. The `Story` record
