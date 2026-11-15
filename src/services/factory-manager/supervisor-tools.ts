@@ -4,7 +4,7 @@ import { ConflictError } from "../errors/errors.js";
 import { releaseStory } from "../factory-policy/factory-policy.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { withEntry, withoutEntry } from "../store/store.js";
-import { getStory } from "../story/story.js";
+import { getStory, getStoryDetails } from "../story/story.js";
 import { getThread } from "../thread/thread.js";
 import { toolParameters } from "../tool-schema/tool-schema.js";
 import { changeThread, getState, type Manager, notify, serial, setState } from "./manager-state.js";
@@ -72,8 +72,7 @@ function readTools(manager: Manager) {
       label: "Read Story",
       description: "Read a bounded current Story",
       parameters: toolParameters(z.object({ storyId: z.string() })),
-      execute: async (_id: string, args: { storyId: string }) =>
-        textResult(JSON.stringify(await getStory({ id: args.storyId }, manager.ctx)).slice(0, 8192)),
+      execute: async (_id: string, args: { storyId: string }) => textResult(await boundedStory(manager, args.storyId)),
     },
     {
       name: "stage_get",
@@ -83,6 +82,19 @@ function readTools(manager: Manager) {
       execute: async (_id: string, args: { stage: string }) => textResult(await readStage(manager, args.stage)),
     },
   ];
+}
+
+/**
+ * Reads a Story as JSON text of at most 8192 characters. The dependency lists come before the description, so that
+ * the limit does not cut them.
+ */
+async function boundedStory(manager: Manager, storyId: string): Promise<string> {
+  const { id, title, stage, dependsOn, blocks, waitingFor, ...rest } = await getStoryDetails(
+    { id: storyId },
+    manager.ctx,
+  );
+
+  return JSON.stringify({ id, title, stage, dependsOn, blocks, waitingFor, ...rest }).slice(0, 8192);
 }
 
 /** Tools that start and stop workers. */

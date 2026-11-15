@@ -44,6 +44,30 @@ Read this page when you start a task on the factory. Then read only the sub-page
   `runtime/bin/rowbly`, under the Project write lock.
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
   parked Stories. The policy state is in `state.json`.
+  - **Dependency gate.** The policy does not start a worker for a blocked Story. A blocked Story has one or
+    more upstream Stories that are not complete. The decision is `skip`, with the reason
+    `waiting for <IDs>` and the `waitingFor` list. A Story in a hold Stage keeps the reason `hold stage`.
+    A blocked Story records no attempt, uses no attempt budget and is not parked. When the Story becomes
+    ready, it starts with the reason `new stage stay` if it has no attempt in its current Stage stay.
+    The gate does not stop a worker that runs. `start_worker` refuses a blocked Story with the error
+    `Story is not eligible: waiting for <IDs>`.
+  - **Launch order.** When the worker limit applies, the Stories in the Stage nearest to the last Stage
+    start first. Then the Stories with more downstream Stories start first. This count includes the
+    direct and the indirect downstream Stories that are not complete, each one time. Then the order of
+    the board applies. Thus an upstream Story starts and goes to the main branch before its downstream
+    Stories.
+  - **Dependencies for the supervisor.** Each decision of `factory_snapshot` and the `story_get` result
+    have the `dependsOn`, `blocks` and `waitingFor` lists. In the `story_get` result, the lists come
+    before `description`, so the limit of 8192 characters does not cut them. The digest has a `blocked`
+    section with an item such as `ROW-03 waits for ROW-01, ROW-02` for each blocked Story in a `work`
+    Stage. The section has a maximum of 12 items. It does not wake the supervisor.
+  - **Stuck upstream Story.** On each pass, the manager finds the upstream Stories of the blocked
+    Stories in a `work` Stage. An upstream Story cannot progress when it is in the first Stage of the
+    board, when the policy parked it, or when it is in a `hold` Stage that is not the last Stage. For
+    each of these Stories, the manager sets one attention entry with the key `upstream-stuck:<ID>`.
+    The text gives the reason and the downstream Stories, for example
+    `ROW-04 cannot progress (in Backlog). ROW-05 waits for it.` The manager removes the entry when the
+    Story can progress. The manager is the guard. The supervisor prompt rules only help the model.
 - **Git sync.** When the user turns it on, the factory pulls the upstream branch and pushes the
   canonical branch at an interval (`project-sync/`). See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).

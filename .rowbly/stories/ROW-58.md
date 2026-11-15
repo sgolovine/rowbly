@@ -1,7 +1,7 @@
 ---
 title: Accept TanStack Router file names in the lint checks
-stage: BACKLOG
-position: 2
+stage: IN_REFINEMENT
+position: 3
 worktree: null
 pull_request: null
 ---

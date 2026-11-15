@@ -426,6 +426,105 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("refuses to reserve a worker for a blocked Story", async () => {
+    const upstream = await createStory({ title: "Upstream", stage: "BACKLOG" }, { cwd: root });
+    const blocked = await createStory({ title: "Blocked", stage: "WORK", dependsOn: [upstream.id] }, { cwd: root });
+    const f = await fixture();
+    await expect(f.manager.reserveWorker({ storyId: blocked.id, stage: "WORK", requestId: "blocked" })).rejects.toThrow(
+      `Story is not eligible: waiting for ${upstream.id}`,
+    );
+    expect((await f.manager.snapshot()).workers.pending).toBe(0);
+    expect((await readFactoryState(root)).attempts).toEqual([]);
+    expect((await listThreads({ role: "worker" }, { cwd: root })).threads).toEqual([]);
+  });
+  async function dependencyFixture(upstreamStage: string) {
+    const prompt = "Build this Story. Report complete.";
+    await createStage({ label: "Build", key: "BUILD", prompt, position: 2 }, { cwd: root });
+    const upstream = await createStory({ title: "Upstream", stage: upstreamStage }, { cwd: root });
+    const downstream = await createStory(
+      { title: "Downstream", stage: "BUILD", dependsOn: [upstream.id] },
+      { cwd: root },
+    );
+    const f = await fixture();
+    await updateFactoryState(root, (state) => ({
+      ...state,
+      prompts: { ...(state.prompts as object), BUILD: { hash: promptHash(prompt), class: "work" } },
+    }));
+    return { f, upstream, downstream };
+  }
+  it("gives the dependency lists in factory_snapshot and story_get", async () => {
+    const { f, upstream, downstream } = await dependencyFixture("BUILD");
+    const results: string[] = [];
+    f.supervisor.setResponses([
+      tool("story_get", { storyId: downstream.id }),
+      (context) => {
+        results.push(JSON.stringify(context.messages.at(-1)));
+        return fauxAssistantMessage("Wait");
+      },
+    ]);
+    const decisions = (await f.manager.snapshot()).decisions as unknown as Record<string, unknown>[];
+    expect(decisions.find((d) => d.story === downstream.id)).toMatchObject({
+      dependsOn: [upstream.id],
+      blocks: [],
+      waitingFor: [upstream.id],
+    });
+    expect(decisions.find((d) => d.story === upstream.id)).toMatchObject({
+      dependsOn: [],
+      blocks: [downstream.id],
+      waitingFor: [],
+    });
+    await updateStory({ id: downstream.id, description: "x".repeat(10_000) }, { cwd: root });
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(() => expect(results).toHaveLength(1), { timeout: 10000, interval: 20 });
+      const message = JSON.parse(results[0] as string);
+      expect(message.role).toBe("toolResult");
+      const text = JSON.parse(message.content[0].text) as string;
+      expect(text.length).toBe(8192);
+      expect(
+        text.startsWith(
+          `{"id":"${downstream.id}","title":"Downstream","stage":"BUILD","dependsOn":["${upstream.id}"],"blocks":[],"waitingFor":["${upstream.id}"],`,
+        ),
+      ).toBe(true);
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("raises attention for a stuck upstream Story, without a wake, and removes it when the Story can progress", async () => {
+    const { f, upstream, downstream } = await dependencyFixture("BACKLOG");
+    const key = `upstream-stuck:${upstream.id}`;
+    const digests: string[] = [];
+    const reply = (context: { messages: unknown[] }) => {
+      digests.push(JSON.stringify(context.messages.at(-1)));
+      return fauxAssistantMessage("Wait");
+    };
+    f.supervisor.setResponses([reply, reply, reply]);
+    const upstreamKeys = async () =>
+      [...(await attentionOf(f)).keys()].filter((entry) => entry.startsWith("upstream-stuck:"));
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () => expect(await upstreamKeys()).toEqual([key]), { timeout: 10000, interval: 20 });
+      const entry = (await attentionOf(f)).get(key) as { text: string; storyId?: string };
+      expect(entry.storyId).toBe(upstream.id);
+      expect(entry.text).toContain(downstream.id);
+      const scans = vi.mocked(scan).mock.calls.length;
+      await updateStory({ id: downstream.id, title: "Downstream again" }, { cwd: root });
+      await vi.waitFor(() => expect(vi.mocked(scan).mock.calls.length).toBeGreaterThan(scans + 2), {
+        timeout: 10000,
+        interval: 20,
+      });
+      expect(await upstreamKeys()).toEqual([key]);
+      expect(digests).toEqual([]);
+      await updateStory({ id: upstream.id, stage: "BUILD" }, { cwd: root });
+      await vi.waitFor(async () => expect(await upstreamKeys()).toEqual([]), { timeout: 10000, interval: 20 });
+      await vi.waitFor(() => expect(digests.length).toBeGreaterThan(0), { timeout: 10000, interval: 20 });
+      expect(digests[0]).toContain(`${downstream.id} waits for ${upstream.id}`);
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
   it("rejects a changed prompt after durable reservation", async () => {
     let release = () => {};
     const barrier = new Promise<void>((resolve) => {

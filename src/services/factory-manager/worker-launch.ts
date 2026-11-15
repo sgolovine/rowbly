@@ -1,14 +1,15 @@
 import { cancelThreadChecks } from "../check-queue/check-queue.js";
+import { readConfig } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { createResultTool } from "../factory-worker/factory-worker.js";
-import { workerMessage } from "../messages/messages.js";
+import { type RunUpstream, upstreamOf, workerMessage } from "../messages/messages.js";
 import { openFactorySession } from "../pi-runtime/factory-session.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import { projectWrite, projectWriteLockPath } from "../project-write/project-write.js";
 import { listStages } from "../stage/stage.js";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
-import { getStory, type Story, updateStory } from "../story/story.js";
+import { getStory, type Story, searchStories, updateStory } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { getThread, type ThreadRecord, type WorkerResult } from "../thread/thread.js";
 import { prepareWorkerWorktree } from "../worker-worktree/worker-worktree.js";
@@ -219,7 +220,20 @@ async function buildWorkerPrompt(
     shim: manager.deps.shim,
     lock: await projectWriteLockPath(root),
     checks: configuredChecks(manager).map((c) => ({ key: c.key, label: c.label, narrow: !!c.narrowCommand })),
+    upstream: await readUpstream(manager, story),
   });
+}
+
+/** The upstream Stories of the worker message. Reads the Stories and the config only when the Story has dependencies. */
+async function readUpstream(manager: Manager, story: Story): Promise<RunUpstream[]> {
+  if (story.dependsOn.length === 0) {
+    return [];
+  }
+
+  const [stories, config] = await Promise.all([searchStories({}, manager.ctx), readConfig(manager.paths)]);
+  const urlFieldKeys = config.customFields.filter((field) => field.type === "url").map((field) => field.key);
+
+  return upstreamOf(story, stories, urlFieldKeys);
 }
 
 function trackWorkerActivity(manager: Manager, run: RunStore, handle: PiSession): void {

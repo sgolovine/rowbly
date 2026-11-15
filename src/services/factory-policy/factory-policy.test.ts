@@ -517,3 +517,118 @@ describe("reports per attempt", () => {
     expect(() => recordStart(saved, story.id, story.stage, {})).toThrow(/worker ID/);
   });
 });
+
+describe("factory policy dependencies", () => {
+  const dev = "IN_DEVELOPMENT";
+  const node = (id: string, dependsOn: string[] = [], stage = dev): PolicyStory => ({ id, stage, dependsOn });
+  const example = (done: string[] = []): PolicyStory[] =>
+    [
+      node("ROW-01"),
+      node("ROW-02"),
+      node("ROW-03", ["ROW-01", "ROW-02"]),
+      node("ROW-04"),
+      node("ROW-05", ["ROW-04"]),
+    ].map((item) => (done.includes(item.id) ? { ...item, stage: "DONE" } : item));
+  const decisionOf = (plan: { decisions: PolicyDecision[] }, id: string) =>
+    plan.decisions.find((decision) => decision.story === id) as PolicyDecision;
+  const startedIds = (plan: { decisions: PolicyDecision[] }) =>
+    plan.decisions.filter((decision) => decision.action === "start").map((decision) => decision.story);
+
+  it("starts only the Stories that wait for no upstream Story", () => {
+    const plan = evaluateScan(empty(), facts([], example()));
+    expect(startedIds(plan)).toEqual(["ROW-01", "ROW-02", "ROW-04"]);
+    expect(decisionOf(plan, "ROW-03")).toMatchObject({
+      action: "skip",
+      reason: "waiting for ROW-01, ROW-02",
+      waitingFor: ["ROW-01", "ROW-02"],
+    });
+    expect(decisionOf(plan, "ROW-05")).toMatchObject({
+      action: "skip",
+      reason: "waiting for ROW-04",
+      waitingFor: ["ROW-04"],
+    });
+  });
+
+  it("starts a downstream Story in a new stage stay when its upstream Stories are complete", () => {
+    const blocked = evaluateScan(empty(), facts([], example())).state;
+    const one = evaluateScan(blocked, facts([], example(["ROW-01"])));
+    expect(decisionOf(one, "ROW-03")).toMatchObject({ action: "skip", reason: "waiting for ROW-02" });
+    const both = evaluateScan(one.state, facts([], example(["ROW-01", "ROW-02"])));
+    expect(decisionOf(both, "ROW-03")).toMatchObject({ action: "start", reason: "new stage stay", attempt: 1 });
+    expect(decisionOf(both, "ROW-05")).toMatchObject({ action: "skip", reason: "waiting for ROW-04" });
+    const all = evaluateScan(both.state, facts([], example(["ROW-01", "ROW-02", "ROW-04"])));
+    expect(decisionOf(all, "ROW-05")).toMatchObject({ action: "start", reason: "new stage stay", attempt: 1 });
+  });
+
+  it("starts an upstream Story before an unrelated Story that is earlier on the board", () => {
+    const board = [node("ROW-01"), node("ROW-02"), node("ROW-03", ["ROW-02"])];
+    const plan = evaluateScan(empty(), facts([], board, { maxActive: 1 }));
+    expect(decisionOf(plan, "ROW-02")).toMatchObject({ action: "start" });
+    expect(decisionOf(plan, "ROW-01")).toMatchObject({ action: "skip", reason: "worker limit" });
+  });
+
+  it("counts the indirect downstream Stories in the launch order", () => {
+    const board = [
+      node("ROW-01"),
+      node("ROW-02"),
+      node("ROW-03", ["ROW-01"]),
+      node("ROW-04"),
+      node("ROW-05", ["ROW-04"]),
+    ];
+    const chain = [...board, node("ROW-06", ["ROW-05"])];
+    const plan = evaluateScan(empty(), facts([], chain, { maxActive: 1 }));
+    expect(startedIds(plan)).toEqual(["ROW-04"]);
+    expect(decisionOf(plan, "ROW-01")).toMatchObject({ action: "skip", reason: "worker limit" });
+  });
+
+  it("does not count a complete downstream Story", () => {
+    const board = [node("ROW-01"), node("ROW-02"), node("ROW-03", ["ROW-01"], "DONE"), node("ROW-04", ["ROW-02"])];
+    expect(startedIds(evaluateScan(empty(), facts([], board, { maxActive: 1 })))).toEqual(["ROW-02"]);
+  });
+
+  it("starts a Story in a later Stage before an upstream Story in an earlier Stage", () => {
+    const board = [node("ROW-01", [], "IN_REFINEMENT"), node("ROW-02", ["ROW-01"], "BACKLOG"), node("ROW-03")];
+    const plan = evaluateScan(empty(), facts([], board, { maxActive: 1 }));
+    expect(startedIds(plan)).toEqual(["ROW-03"]);
+    expect(decisionOf(plan, "ROW-01")).toMatchObject({ action: "skip", reason: "worker limit" });
+  });
+
+  it("stops at a cycle in the files", () => {
+    const board = [node("ROW-01", ["ROW-02"], "BACKLOG"), node("ROW-02", ["ROW-01"], "BACKLOG"), node("ROW-03")];
+    expect(startedIds(evaluateScan(empty(), facts([], board, { maxActive: 1 })))).toEqual(["ROW-03"]);
+  });
+
+  it("never parks a blocked Story and records no attempt for it", () => {
+    const board = [node("ROW-01", [], "BACKLOG"), node("ROW-02", ["ROW-01"])];
+    let state = empty();
+    for (let scan = 0; scan < DEFAULT_LIMITS.attempts * 3; scan += 1) {
+      const plan = evaluateScan(state, facts([], board, { now: new Date(START + scan * 60 * MINUTE) }));
+      expect(decisionOf(plan, "ROW-02")).toMatchObject({ action: "skip", reason: "waiting for ROW-01" });
+      state = restart(plan.state);
+    }
+    expect(state.parked?.["ROW-02"]).toBeUndefined();
+    expect(state.attempts.filter((attempt) => attempt.story === "ROW-02")).toEqual([]);
+  });
+
+  it("keeps the hold stage reason for a blocked Story in a hold Stage", () => {
+    const board = [node("ROW-01"), node("ROW-02", ["ROW-01"], "BACKLOG")];
+    expect(decisionOf(evaluateScan(empty(), facts([], board)), "ROW-02")).toMatchObject({
+      action: "skip",
+      reason: "hold stage",
+    });
+  });
+
+  it("keeps a running worker of a Story that becomes blocked again", () => {
+    const board = [node("ROW-01", [], "DONE"), node("ROW-02", ["ROW-01"])];
+    const planned = evaluateScan(empty(), facts([], board));
+    expect(decisionOf(planned, "ROW-02")).toMatchObject({ action: "start" });
+    const started = recordStart(planned.state, "ROW-02", dev, { threadId: "worker-2" });
+    const worker = { story: "ROW-02", threadId: "worker-2", status: "running" };
+    const reopened = [node("ROW-01", [], "IN_REVIEW"), node("ROW-02", ["ROW-01"])];
+    const plan = evaluateScan(started, facts([worker], reopened));
+    expect(decisionOf(plan, "ROW-02")).toMatchObject({ action: "skip", reason: "waiting for ROW-01" });
+    expect(plan.state.attempts).toEqual([
+      expect.objectContaining({ story: "ROW-02", workerId: "worker-2", status: "running" }),
+    ]);
+  });
+});

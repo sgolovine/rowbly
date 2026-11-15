@@ -25,6 +25,8 @@ The command types are `stop`, `cancel`, `resume` and `dismiss`:
 Each pass of the supervisor loop does these steps in this order:
 
 1. The scan (`reconcilePolicy`). It writes the policy decisions to the factory state.
+   Then the manager sets the `upstream-stuck:<ID>` entries for the upstream Stories that cannot
+   progress, and removes the other `upstream-stuck:` entries.
 2. The steps that the digest does not need: the settings refresh (`settings`), the provider pause
    check (`providers`), the canonical commit (`commit`) and the start of the Git sync (`sync`).
 3. The digest and its delivery to the supervisor.
@@ -45,8 +47,9 @@ The text of each entry has the error message, limited to 500 characters.
 
 The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
 them. The supervisor loop uses the keys `reconcile`, `settings`, `providers`, `commit`, `sync`,
-`supervisor`, `pull` and `push`. A successful Git pull removes the `pull` entry, and a successful push
-removes the `push` entry. A
+`supervisor`, `pull`, `push` and `upstream-stuck:<ID>`. A successful Git pull removes the `pull` entry, and a successful push
+removes the `push` entry. A pass removes an `upstream-stuck:` entry when its Story can progress. If
+you dismiss an `upstream-stuck:` entry and the Story still cannot progress, the next pass adds it again. A
 `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
 does not exist is not an error. The manager loads the attention entries from `status.json` when it
 starts, so a dismissed entry does not come back after a restart. If the factory records the same key
