@@ -9,8 +9,10 @@ import {
   configureFactory,
   configureGit,
   getFactorySettings,
+  pullUpstream,
   setWorkerOverride,
   updateFactorySettings,
+  validFactorySettings,
 } from "./factory-settings.js";
 
 /** Sets the `factory` section of the config to the parsed JSON text. */
@@ -233,6 +235,30 @@ describe("factorySettings", () => {
     expect((await readFactory(p)).git).toEqual({ commitMessage: "chore: scan" });
     await configureFactory({ commitMessage: "", gitPush: true }, p.ctx);
     expect((await readFactory(p)).git).toEqual({ push: true });
+  });
+  it("gives pullUpstream as false when the key is absent, and rejects a value that is not a boolean", async () => {
+    const settings = await getFactorySettings(p.ctx);
+    expect(settings.dependencies?.pullUpstream ?? false).toBe(false);
+    expect(pullUpstream(settings)).toBe(false);
+    expect(validFactorySettings({ dependencies: { pullUpstream: "yes" } })).toBe(false);
+    expect(validFactorySettings({ dependencies: [] })).toBe(false);
+    expect(validFactorySettings({ dependencies: { pullUpstream: true } })).toBe(true);
+    await writeFactory(p, JSON.stringify({ dependencies: { pullUpstream: "yes" } }));
+    await expect(getFactorySettings(p.ctx)).rejects.toThrow("Invalid factory settings");
+  });
+  it("configures pullUpstream with on and off, and keeps the other keys", async () => {
+    await writeFactory(p, JSON.stringify({ maxWorkers: 3, git: { push: true } }));
+    await configureFactory({ pullUpstream: "on" }, p.ctx);
+    expect(await readFactory(p)).toEqual({ maxWorkers: 3, git: { push: true }, dependencies: { pullUpstream: true } });
+    expect(pullUpstream(await getFactorySettings(p.ctx))).toBe(true);
+    await configureFactory({ pullUpstream: "off" }, p.ctx);
+    expect(await readFactory(p)).toEqual({ maxWorkers: 3, git: { push: true }, dependencies: { pullUpstream: false } });
+    const before = await p.read("rowbly.config.json");
+    await expect(configureFactory({ pullUpstream: "maybe" }, p.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(configureFactory({ stage: "BACKLOG", pullUpstream: "on" }, p.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    expect(await p.read("rowbly.config.json")).toBe(before);
   });
   it("does not write an invalid sync interval", async () => {
     await updateFactorySettings({ git: { pull: true } }, p.ctx);

@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { FormField } from "../form/index.js";
+import { SearchableMultiSelect } from "../searchable-multi-select/index.js";
 import { SearchableSelect } from "../searchable-select/index.js";
 import { Switch } from "../switch/index.js";
 import { TextArea } from "../text-area/index.js";
@@ -25,6 +26,7 @@ export function FieldValue({
   field,
   raw,
   focused,
+  clickable,
   optionCursor,
   width,
   onChange,
@@ -33,6 +35,8 @@ export function FieldValue({
   field: FormField;
   raw: Raw;
   focused: boolean;
+  /** The form takes clicks. */
+  clickable: boolean;
   optionCursor: number;
   width: number;
   onChange(raw: Raw): void;
@@ -57,7 +61,15 @@ export function FieldValue({
         <Text>{selectText(field, raw)}</Text>
       );
     case "multiselect":
-      return (
+      return field.searchable ? (
+        <SearchableMultiSelect
+          field={field}
+          value={checkedOptions(raw)}
+          focused={focused}
+          clickable={clickable}
+          onChange={onChange}
+        />
+      ) : (
         <Box columnGap={2} flexWrap="wrap">
           {(field.options ?? []).map((option, i) => (
             <Text key={option} underline={focused && i === optionCursor}>

@@ -39,7 +39,7 @@ export interface FormView extends FormEnv {
 const NO_EXTRA_HINTS: readonly KeyHint[] = [];
 
 function isSearchable(field: FormField | undefined): boolean {
-  return field?.kind === "select" && field.searchable === true;
+  return (field?.kind === "select" || field?.kind === "multiselect") && field.searchable === true;
 }
 
 /** The state, the keys and the key hints of a `Form`. */
@@ -67,6 +67,7 @@ export function useForm({
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[state.focus];
   const searchable = isSearchable(field);
+  const multiple = searchable && field?.kind === "multiselect";
   const env: FormEnv = {
     ...state,
     fields,
@@ -81,8 +82,8 @@ export function useForm({
     toast,
   };
   const keys = useMemo(
-    () => formHints({ navigation: navigation !== null, submitLabel, searchable, submitOnEnter }),
-    [navigation, submitLabel, searchable, submitOnEnter],
+    () => formHints({ navigation: navigation !== null, submitLabel, searchable, multiple, submitOnEnter }),
+    [navigation, submitLabel, searchable, multiple, submitOnEnter],
   );
   // External save requests validate Details even while another tab is visible, with the values of the last render.
   const latest = useRef(env);

@@ -44,7 +44,7 @@ export function shellView(input: ShellViewInput): ShellView {
   const stages = board?.stages ?? [];
   const stories = board?.stories ?? [];
   const stage = stages.find((s) => s.key === input.stageKey);
-  const rows = storyListRows(stages, visibleStories(stories, stage), stage ? undefined : input.collapsed);
+  const rows = storyListRows(stages, visibleStories(stories, stage), stage ? undefined : input.collapsed, stories);
   const cursor = rowCursor(rows, input.selectedId);
   const row = rows[cursor];
 
