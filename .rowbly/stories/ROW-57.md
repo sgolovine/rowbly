@@ -3,7 +3,7 @@ title: Link the website from the README and package metadata
 stage: IN_DEVELOPMENT
 position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-57
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/252
 ---
 
 ## Goal
