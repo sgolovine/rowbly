@@ -12,6 +12,8 @@ interface SearchableSelectPickerProps {
   searchText?: Readonly<Record<string, readonly string[]>>;
   initialQuery: string;
   value: string | null;
+  /** The picker adds an option to a list, so it does not show the `Selected:` line. */
+  hideSelected?: boolean;
   onSelect(option: string): void;
   onCancel(): void;
 }
@@ -91,6 +93,7 @@ export function SearchableSelectPicker({
   searchText,
   initialQuery,
   value,
+  hideSelected = false,
   onSelect,
   onCancel,
 }: SearchableSelectPickerProps) {
@@ -123,9 +126,11 @@ export function SearchableSelectPicker({
           placeholder="Type to search…"
         />
       </Box>
-      <Text color={theme.inkMuted} wrap="truncate-end">
-        Selected: {!value ? "—" : (labels?.[value] ?? value)}
-      </Text>
+      {!hideSelected && (
+        <Text color={theme.inkMuted} wrap="truncate-end">
+          Selected: {!value ? "—" : (labels?.[value] ?? value)}
+        </Text>
+      )}
       <Box flexDirection="column">
         {results.length === 0 && (
           <Text color={theme.inkFaint}>{options.length ? "No matching choices." : "No choices available."}</Text>
