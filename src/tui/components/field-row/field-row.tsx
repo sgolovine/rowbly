@@ -63,6 +63,7 @@ export function FieldRow({
             field={field}
             raw={raw}
             focused={lit}
+            clickable={active}
             optionCursor={optionCursor}
             width={inputWidth - 2}
             onChange={onChange}

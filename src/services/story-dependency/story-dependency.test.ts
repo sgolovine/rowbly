@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   blocksOf,
   type DependencyStory,
+  dependencyCandidates,
   dependencyError,
   findCycle,
   isBlocked,
@@ -117,5 +118,37 @@ describe("blocksOf, waitingFor and isBlocked", () => {
     expect(isBlocked(stories, STAGES, "ROW-03")).toBe(true);
     expect(isBlocked(stories, STAGES, "ROW-04")).toBe(false);
     expect(isBlocked(stories, STAGES, "ROW-01")).toBe(false);
+  });
+});
+
+describe("dependencyCandidates", () => {
+  const stories = [
+    story("ROW-01"),
+    story("ROW-02", ["ROW-01"]),
+    story("ROW-03", ["ROW-02"]),
+    story("ROW-04"),
+    story("ROW-05", [], "DONE"),
+  ];
+
+  it("does not give the story itself", () => {
+    expect(dependencyCandidates(stories, "ROW-04", [])).not.toContain("ROW-04");
+  });
+
+  it("does not give the stories that are already in the list", () => {
+    expect(dependencyCandidates(stories, "ROW-04", ["ROW-01", "ROW-05"])).toEqual(["ROW-02", "ROW-03"]);
+  });
+
+  it("does not give a story that makes a cycle", () => {
+    // ROW-03 → ROW-02 → ROW-01, so ROW-01 cannot depend on ROW-02 or ROW-03.
+    expect(dependencyCandidates(stories, "ROW-01", [])).toEqual(["ROW-04", "ROW-05"]);
+    expect(dependencyCandidates(stories, "ROW-02", ["ROW-01"])).toEqual(["ROW-04", "ROW-05"]);
+  });
+
+  it("gives each story that is not in the list for a new story", () => {
+    expect(dependencyCandidates(stories, undefined, ["ROW-02"])).toEqual(["ROW-01", "ROW-03", "ROW-04", "ROW-05"]);
+  });
+
+  it("gives a story in the last stage", () => {
+    expect(dependencyCandidates(stories, "ROW-04", [])).toContain("ROW-05");
   });
 });

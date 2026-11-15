@@ -40,6 +40,7 @@ export function StoryModalBody(props: StoryModalBodyProps) {
           <StoryGeneralTab
             fields={props.fields}
             initialValues={props.initialValues}
+            dependencies={props.dependencies}
             height={generalLayout.height}
             active={idle && general}
             formActive={general && confirming === null}

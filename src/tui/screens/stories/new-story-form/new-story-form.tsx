@@ -16,6 +16,7 @@ import {
   writeRef,
 } from "../../../hooks/index.js";
 import { NewStoryImages } from "../new-story-images/index.js";
+import { dependencyChoices, dependsOnValue } from "../story-dependency-view.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 
 type StoryPaste = ReturnType<typeof useStoryPaste>;
@@ -52,6 +53,7 @@ async function createNewStory(env: NewStoryEnv, values: FormValues): Promise<voi
         stage: typeof values.stage === "string" ? values.stage : undefined,
         description: String(values.description ?? ""),
         fields: customFieldInput(env.customFields, values),
+        dependsOn: dependsOnValue(values.dependsOn),
       },
       env.ctx,
     );
@@ -70,17 +72,19 @@ function initialValues(stages: readonly Stage[], customFields: readonly CustomFi
     title: "",
     stage: stage ?? stages[0]?.key ?? null,
     description: "",
+    dependsOn: [],
     ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, null)])),
   };
 }
 
 /**
  * The form that creates a Story in the Story sidebar: its title, its Stage, its description in a Markdown
- * `TextArea` (`ctrl+f` opens it full screen) and the custom fields of the project. `ctrl+v` pastes an image.
+ * `TextArea` (`ctrl+f` opens it full screen), its `Depends on` list and the custom fields of the project. `ctrl+v` pastes an image.
  * `esc` calls `onBack`, and the form keeps its text.
  */
 export function NewStoryForm({
   ctx,
+  stories,
   stages,
   customFields,
   stage,
@@ -88,6 +92,8 @@ export function NewStoryForm({
   onBack,
 }: {
   ctx: ServiceContext;
+  /** The Stories of the Project, for the `Depends on` picker. */
+  stories: readonly Story[];
   stages: readonly Stage[];
   customFields: readonly CustomField[];
   /** The Stage the form starts with. Defaults to the first Stage. */
@@ -112,7 +118,7 @@ export function NewStoryForm({
       <NewStoryImages enabled={!saving} onPaste={(value) => writeRef(paste, value)} />
       <Form
         extraHints={EXTRA_HINTS}
-        fields={storyFormFields(stages, customFields)}
+        fields={storyFormFields(stages, customFields, dependencyChoices(stories, undefined, []))}
         initialValues={initialValues(stages, customFields, stage)}
         onSubmit={(values) => createNewStory(env, values)}
       />

@@ -46,6 +46,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, ...on }: Story
     return (
       <NewStoryForm
         ctx={ctx}
+        stories={board.stories}
         stages={board.stages}
         customFields={board.project.customFields}
         stage={cursorStage}
@@ -59,6 +60,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, ...on }: Story
     <EditStoryForm
       ctx={ctx}
       story={pane.story}
+      stories={board.stories}
       stages={board.stages}
       customFields={board.project.customFields}
       specs={board.project.features?.specs === true}

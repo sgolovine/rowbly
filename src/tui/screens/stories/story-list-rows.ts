@@ -1,5 +1,6 @@
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
+import { waitingFor } from "../../../services/story-dependency/story-dependency.js";
 import type { StageCategory } from "../../components/index.js";
 import { stageCategory } from "./stage-category.js";
 
@@ -18,6 +19,8 @@ export type StoryListRow =
       readonly id: string;
       readonly story: Story;
       readonly stage: { readonly name: string; readonly category: StageCategory };
+      /** The IDs of the upstream Stories that are not complete. A Story with IDs here is blocked. */
+      readonly waitingFor: readonly string[];
     };
 
 /** A Stage section of the list: its key and its heading. */
@@ -31,12 +34,13 @@ export function stageRowId(key: string): string {
   return `stage:${key}`;
 }
 
-/** The row of `story`, with the name and the category of its Stage. */
-function storyRow(stages: readonly Stage[], story: Story): StoryListRow {
+/** The row of `story`, with the name and the category of its Stage, and the upstream Stories of `all` that it waits for. */
+function storyRow(stages: readonly Stage[], all: readonly Story[], story: Story): StoryListRow {
   return {
     kind: "story",
     id: story.id,
     story,
+    waitingFor: waitingFor(all, stages, story.id),
     stage: {
       name: stages.find((s) => s.key === story.stage)?.label ?? story.stage,
       category: stageCategory(stages, story.stage),
@@ -54,6 +58,7 @@ function sectionsOf(stages: readonly Stage[], stories: readonly Story[]): Sectio
 /** The heading of `section`, then its Stories if the section is not collapsed. */
 function sectionRows(
   stages: readonly Stage[],
+  all: readonly Story[],
   stories: readonly Story[],
   collapsed: ReadonlySet<string>,
   { key, label }: Section,
@@ -69,24 +74,26 @@ function sectionRows(
     collapsed: folded,
   };
 
-  return [heading, ...(folded ? [] : inStage.map((story) => storyRow(stages, story)))];
+  return [heading, ...(folded ? [] : inStage.map((story) => storyRow(stages, all, story)))];
 }
 
 /**
  * The rows of the Story list. Without `collapsed`, the rows are only the Stories. With `collapsed`, each
  * Stage gets a heading in board order, then its Stories if its key is not in `collapsed`. Stories in a
  * Stage that is not in `stages` (for example, after a hand edit) get a section of their own at the end.
+ * `all` is each Story of the Project, so that a filter does not hide an upstream Story that is not complete.
  */
 export function storyListRows(
   stages: readonly Stage[],
   stories: readonly Story[],
   collapsed?: ReadonlySet<string>,
+  all: readonly Story[] = stories,
 ): StoryListRow[] {
   if (!collapsed) {
-    return stories.map((story) => storyRow(stages, story));
+    return stories.map((story) => storyRow(stages, all, story));
   }
 
-  return sectionsOf(stages, stories).flatMap((section) => sectionRows(stages, stories, collapsed, section));
+  return sectionsOf(stages, stories).flatMap((section) => sectionRows(stages, all, stories, collapsed, section));
 }
 
 /** The Stage key of a row: the Stage of its section heading, or the Stage of its Story. */

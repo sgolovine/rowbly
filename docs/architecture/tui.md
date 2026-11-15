@@ -265,6 +265,42 @@ visible.
 - `PaneBody` gives the form the contexts of a Modal body, so a `ConfirmDialog` of the form shows over
   the Story sidebar. The keys of the form go to the footer.
 
+## Story dependencies
+
+The TUI shows and changes the `dependsOn` list of a Story. The pure functions of
+`src/services/story-dependency/` give the rules. A component does not contain a blocked rule or a
+cycle rule. `src/tui/screens/stories/story-dependency-view.ts` changes the results of these
+functions into the data that the components show.
+
+- **The `Depends on` field.** The new Story form and the General tab have a `Depends on` field. It
+  is a `multiselect` field with `searchable: true` (`SearchableMultiSelect`). The field shows each
+  upstream Story on one line as `<ID> <title>`, with a `✕` at its right. An empty list shows
+  `none`. A `+ add` line is under the list.
+- **The picker.** `enter`, typed text or a click on `+ add` opens a `SearchableSelectPicker` in a
+  generic Modal (`Add Depends on`). Each choice has the label `<ID> <title>`. `enter` or a click adds
+  the Story to the list. `dependencyCandidates` gives the choices. The picker does not show the Story
+  itself, a Story that is already in the list, or a Story that makes a cycle. For a new Story, all
+  Stories of the Project are choices. A Story in the last Stage is also a choice.
+- **Removal.** `←/→` select an upstream Story, and `backspace` removes it. A click on `✕` also
+  removes it. The form shows `enter add` and `backspace remove` in its key hints.
+- **Save.** `ctrl+s` saves the form. The edit form gives `updateStory` the changes of the list as
+  `addDependsOn` and `removeDependsOn`. If the list does not change, the form does not send these
+  keys. The new Story form gives the list to `createStory` as `dependsOn`. A `ValidationError` of the
+  service shows under the `Depends on` field, and nothing is saved.
+- **The General tab lists.** Under the form, `StoryDependencyLists` shows the saved `Depends on` and
+  `Blocks` lists of the Story. Each item shows the ID, the title and the `StageBadge` of the Stage.
+  An empty list shows `none`. The lists are read-only. To change a `Blocks` item, edit the
+  `Depends on` field of the downstream Story.
+- **The blocked mark.** `storyListRows` gives each Story row its `waitingFor` IDs. The function uses
+  all Stories of the Project, also when a Stage filter hides some of them. A Story row with one or
+  more of these IDs is blocked, and it shows `⊘` in `ink-muted` on the right, before the other slots. The mark shows in
+  all Stages. When all upstream Stories are in the last Stage, the mark goes away after the board
+  reads the Stories again.
+- **The `waiting for` text.** A blocked Story in a work Stage (the `board` Stage Category) with no
+  factory activity shows `waiting for ROW-01, ROW-02` in the activity slot, in `ink-muted`. The text
+  shows a maximum of three IDs, then `+<count>`. If the row is narrow, the text is cut. When a worker
+  is active, the slot shows `▶ <agent>`.
+
 ## Worker model overrides
 
 A person can see, set and remove the worker model overrides of the factory settings in the TUI. The
