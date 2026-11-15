@@ -1,7 +1,7 @@
 ---
 title: Build the How it works page
-stage: IN_REFINEMENT
-position: 11
+stage: IN_DEVELOPMENT
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-52
 pull_request: null
 ---
@@ -43,7 +43,7 @@ Not in scope:
 - [ ] The page has a link to `/install`.
 - [ ] The route `head` sets the title `How it works | Rowbly` and a `description` meta tag.
 - [ ] `pnpm --dir website build` succeeds and writes `website/dist/client/how-it-works/index.html`. That file contains the page copy (the page is prerendered, so a deep link to `https://rowbly.com/how-it-works` loads it directly).
-- [ ] A case-insensitive search of `website/src/routes/how-it-works.tsx` and of each new component file finds none of these words: daemon, worktree, lock, flock, Pi SDK, runtime, state file, harness, orchestration, JSON schema.
+- [ ] A case-insensitive whole-word search (for example `grep -iwE`) of `website/src/routes/how-it-works.tsx` and of each new component file finds none of these words: daemon, worktree, lock, flock, Pi SDK, runtime, state file, harness, orchestration, JSON schema.
 - [ ] Each claim is true for the current Rowbly version. A person checks the copy against `README.md` and the facts in Technical notes.
 - [ ] All motion respects `prefers-reduced-motion`. A person checks this with the reduced-motion setting on.
 - [ ] Root `pnpm lint` and `pnpm --dir website typecheck` pass.
