@@ -30,7 +30,7 @@ function helpText({ busy, searchable, field, submitLabel }: FormView): string {
   }
 
   if (searchable) {
-    return "type or enter to search";
+    return field?.kind === "multiselect" ? "enter adds · ←/→ pick · backspace removes" : "type or enter to search";
   }
 
   return field ? FIELD_HELP[field.kind] : `ctrl+s ${submitLabel}`;

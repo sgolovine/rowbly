@@ -2,12 +2,17 @@ import type { CustomField } from "../../../services/config/config.js";
 import type { FieldValue } from "../../../services/fields/fields.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { FormField, FormValue, FormValues } from "../../components/index.js";
+import type { DependencyChoices } from "./story-dependency-view.js";
 
 /** The choice of a select or boolean custom field that leaves it unset. */
 const NONE = "—";
 
-/** The fields of the Story form: title, Stage, description, then the custom fields of the project. */
-export function storyFormFields(stages: readonly Stage[], customFields: readonly CustomField[]): FormField[] {
+/** The fields of the Story form: title, Stage, description, `Depends on`, then the custom fields of the project. */
+export function storyFormFields(
+  stages: readonly Stage[],
+  customFields: readonly CustomField[],
+  dependencies: DependencyChoices,
+): FormField[] {
   return [
     { name: "title", label: "Title", kind: "text", required: true },
     {
@@ -19,6 +24,15 @@ export function storyFormFields(stages: readonly Stage[], customFields: readonly
       optionLabels: Object.fromEntries(stages.map((s) => [s.key, s.label])),
     },
     { name: "description", label: "Description", kind: "multiline" },
+    {
+      name: "dependsOn",
+      label: "Depends on",
+      kind: "multiselect",
+      searchable: true,
+      options: dependencies.options,
+      optionLabels: dependencies.labels,
+      optionSearchText: dependencies.searchText,
+    },
     ...customFields.map(customFormField),
   ];
 }
