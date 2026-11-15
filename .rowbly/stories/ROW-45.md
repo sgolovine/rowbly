@@ -1,9 +1,9 @@
 ---
 title: Scaffold the website with TanStack Start, Tailwind and shadcn/ui
-stage: IN_DEVELOPMENT
-position: 1
+stage: DONE
+position: 53
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-45
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/241
 ---
 
 ## Goal
