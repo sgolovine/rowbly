@@ -42,6 +42,7 @@ export function StoryListItem({
       story={row.story}
       activity={activity}
       stage={row.stage}
+      waitingFor={row.waitingFor}
       selected={selected}
       clickable={clickable}
       indented={indented}

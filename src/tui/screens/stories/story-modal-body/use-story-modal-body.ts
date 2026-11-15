@@ -14,6 +14,7 @@ import {
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
+import type { DependencyLists } from "../story-dependency-view.js";
 import type { StoryTabId, StoryTabReports } from "../story-tab-panes/index.js";
 import type { StageNames } from "../thread-text.js";
 import { handleBodyKey, type StoryModalBodyEnv } from "./story-modal-body-actions.js";
@@ -37,6 +38,8 @@ export interface StoryModalBodyProps {
   readonly compactThreads?: boolean;
   readonly fields: readonly FormField[];
   readonly initialValues: FormValues;
+  /** The saved upstream and downstream Stories, for the General tab. */
+  readonly dependencies?: DependencyLists;
   onSubmit(values: FormValues, attachments?: readonly PendingImage[]): void | Promise<void>;
   /** `esc` outside a region of a tab that takes `esc`: the Story sidebar gives the focus to the Story list. */
   onRequestClose(): void;

@@ -9,6 +9,7 @@ import { showToast, type ToastStore, useToast } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { deleteStoryMessage } from "../delete-story-message.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
+import { dependencyChoices, dependencyLists, dependsOnChanges, dependsOnValue } from "../story-dependency-view.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 import { StoryModalBody } from "../story-modal-body/index.js";
 
@@ -32,6 +33,7 @@ async function saveStory(env: EditStoryEnv, values: FormValues, attachments?: re
       stage: typeof values.stage === "string" ? values.stage : undefined,
       description: String(values.description ?? ""),
       fields: customFieldInput(env.customFields, values),
+      ...dependsOnChanges(env.story.dependsOn, dependsOnValue(values.dependsOn)),
     },
     env.ctx,
   );
@@ -59,12 +61,14 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
     title: story.title,
     stage: story.stage,
     description: story.description,
+    dependsOn: [...story.dependsOn],
     ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, story.fields[f.key] ?? null)])),
   };
 }
 
 /**
- * The form that edits a Story in the Story sidebar. General has the Story fields, and Attachments has the
+ * The form that edits a Story in the Story sidebar. General has the Story fields with `Depends on`, and the
+ * `Depends on` and `Blocks` lists of the saved Story. Attachments has the
  * saved PNG images. Specs appears between these tabs when the Project has Specs on, and Threads is last.
  * The form keeps pasted images until save. The Delete Button and `ctrl+d` ask before they delete the Story.
  * `esc` calls `onBack`, and the form keeps its text.
@@ -72,6 +76,7 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
 export function EditStoryForm({
   ctx,
   story,
+  stories,
   stages,
   customFields,
   specs = false,
@@ -83,6 +88,8 @@ export function EditStoryForm({
 }: {
   ctx: ServiceContext;
   story: Story;
+  /** The Stories of the Project, for the `Depends on` picker and the dependency lists. */
+  stories: readonly Story[];
   stages: readonly Stage[];
   customFields: readonly CustomField[];
   /** The project has Specs on. */
@@ -109,8 +116,9 @@ export function EditStoryForm({
       stages={stageNames}
       specs={specs}
       compactThreads={compactThreads}
-      fields={storyFormFields(stages, customFields)}
+      fields={storyFormFields(stages, customFields, dependencyChoices(stories, story.id, story.dependsOn))}
       initialValues={initialValues(story, customFields)}
+      dependencies={dependencyLists(stories, stages, story.id, story.dependsOn)}
       onSubmit={(values, attachments) => saveStory(env, values, attachments)}
       onRequestClose={onBack}
       onDelete={{

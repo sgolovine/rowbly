@@ -10,16 +10,34 @@ export interface FormHintOptions {
   readonly submitLabel: string;
   /** The focused field opens a fuzzy picker with `enter`. */
   readonly searchable: boolean;
+  /** The focused field is a searchable multiselect: `enter` adds an option and `backspace` removes one. */
+  readonly multiple: boolean;
   readonly submitOnEnter: boolean;
 }
 
+/** The keys of a searchable field: `enter` opens the picker, and `backspace` removes an option of a multiselect. */
+function searchKeys(multiple: boolean): readonly KeyHint[] {
+  return multiple
+    ? [
+        { key: "enter", description: "add" },
+        { key: "backspace", description: "remove" },
+      ]
+    : [{ key: "enter", description: "search" }];
+}
+
 /** The key hints of a `Form`. */
-export function formHints({ navigation, submitLabel, searchable, submitOnEnter }: FormHintOptions): readonly KeyHint[] {
+export function formHints({
+  navigation,
+  submitLabel,
+  searchable,
+  multiple,
+  submitOnEnter,
+}: FormHintOptions): readonly KeyHint[] {
   if (navigation) {
     return [
       { key: "ctrl+s", description: submitLabel },
       { key: "shift+tab", description: "next tab" },
-      ...(searchable ? [{ key: "enter", description: "search" }] : []),
+      ...(searchable ? searchKeys(multiple) : []),
       { key: searchable ? "tab/↑/↓" : "tab/↑/↓/enter", description: "field" },
     ];
   }
@@ -27,7 +45,7 @@ export function formHints({ navigation, submitLabel, searchable, submitOnEnter }
   if (searchable) {
     return [
       { key: "ctrl+s", description: submitLabel },
-      { key: "enter", description: "search" },
+      ...searchKeys(multiple),
       { key: "tab/↑/↓", description: "field" },
       { key: "shift+tab", description: "previous field" },
     ];
