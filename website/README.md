@@ -41,6 +41,51 @@ scripts and the font files in `assets/`. Deploy only this folder.
 
 The build also writes `website/dist/server/`. The prerender step uses it. Do not deploy it.
 
+The build writes one HTML file for each prerendered route, for example `install/index.html` for `/install`.
+GitHub Pages serves each of these files directly.
+
+The build also writes `404.html` from the `/404` route. After the build, `scripts/make-static-404.mjs` removes
+the scripts from this file, so that the 404 page is static HTML. GitHub Pages serves this page for each
+unknown path. The files in `public/` (`CNAME` and `.nojekyll`) go into the output without changes.
+
+## Deploy
+
+The workflow `.github/workflows/website.yml` deploys the site to GitHub Pages. It starts when:
+
+- A push to `main` changes `website/` or the workflow. The workflow builds and deploys the site.
+- A pull request changes `website/` or the workflow. The workflow only builds the site. It does not deploy it.
+- A person starts the workflow manually from the Actions tab ("Run workflow"). The workflow builds and deploys
+  the site.
+
+The `build` job installs the dependencies, builds the site, checks the types and makes sure that
+`dist/client/` has `index.html`, `404.html`, `CNAME` and `.nojekyll`. Then it uploads `dist/client/` as the
+Pages artifact. The `deploy` job publishes the artifact. Only one deploy runs at a time. A new deploy does not
+cancel a deploy that is in progress.
+
+### Turn on GitHub Pages
+
+Do this step one time. You must be an owner of the repository.
+
+1. Open Settings > Pages of the repository.
+2. Set "Source" to "GitHub Actions".
+
+### Set up the custom domain
+
+The site is served at `https://rowbly.com`. The file `public/CNAME` has the domain `rowbly.com`. Each deploy
+includes this file, so the deploy keeps the custom domain.
+
+Do these steps one time:
+
+1. At the DNS provider of `rowbly.com`, add these records for the apex domain:
+   - `A` records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153` and `185.199.111.153`.
+   - `AAAA` records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153` and
+     `2606:50c0:8003::153`.
+2. At the DNS provider, add a `CNAME` record from `www` to `sgolovine.github.io`.
+3. In Settings > Pages, set "Custom domain" to `rowbly.com` and click "Save".
+4. When the DNS check passes, turn on "Enforce HTTPS". The TLS certificate can take some time to be ready.
+5. Optional: verify the domain in the settings of your GitHub account (Settings > Pages > Verified domains).
+   This prevents a domain takeover.
+
 ## Check the types
 
 Run the build or the development server one time before you check the types. TanStack Start generates the
