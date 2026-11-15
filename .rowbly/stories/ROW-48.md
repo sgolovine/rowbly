@@ -2,7 +2,7 @@
 title: Build the landing page Hero and proof strip
 stage: IN_REFINEMENT
 position: 7
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-48
 pull_request: null
 ---
 
