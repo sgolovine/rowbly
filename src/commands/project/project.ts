@@ -1,13 +1,14 @@
 import { type Command, InvalidArgumentError } from "commander";
-import { compactThreads } from "../../services/config/config.js";
+import { compactThreads, type DisplayConfig } from "../../services/config/config.js";
 import { type Project, updateProject } from "../../services/project/project.js";
 import { run } from "../output/output.js";
 
 function describe(project: Project): string {
   const specs = project.features?.specs ? "\nSpecs: on" : "";
   const compact = project.display === undefined ? "" : `\nCompact threads: ${compactThreads(project) ? "on" : "off"}`;
+  const timeZone = project.display?.timeZone === undefined ? "" : `\nTime zone: ${project.display.timeZone}`;
 
-  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}${compact}`;
+  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}${compact}${timeZone}`;
 }
 
 /** Parses `on` or `off`. */
@@ -24,6 +25,17 @@ interface UpdateOptions {
   key?: string;
   specs?: boolean;
   compactThreads?: boolean;
+  timeZone?: string;
+}
+
+/** The display options of the flags, or `undefined` when no display flag is given. */
+function displayOptions(opts: UpdateOptions): DisplayConfig | undefined {
+  const display = {
+    ...(opts.compactThreads === undefined ? {} : { compactThreads: opts.compactThreads }),
+    ...(opts.timeZone === undefined ? {} : { timeZone: opts.timeZone.trim() }),
+  };
+
+  return Object.keys(display).length === 0 ? undefined : display;
 }
 
 function registerUpdate(program: Command): void {
@@ -34,6 +46,10 @@ function registerUpdate(program: Command): void {
     .option("--key <key>", "new story ID prefix; renames every story file")
     .option("--specs <on|off>", "turn specs on or off", parseSwitch)
     .option("--compact-threads <on|off>", "show each Thread on one line in the TUI", parseSwitch)
+    .option(
+      "--time-zone <zone>",
+      'time zone of the Story times in the TUI, for example Europe/Berlin; "" for the system zone',
+    )
     .action((opts: UpdateOptions, command: Command) =>
       run(
         command,
@@ -43,7 +59,7 @@ function registerUpdate(program: Command): void {
               name: opts.name,
               key: opts.key,
               features: opts.specs === undefined ? undefined : { specs: opts.specs },
-              display: opts.compactThreads === undefined ? undefined : { compactThreads: opts.compactThreads },
+              display: displayOptions(opts),
             },
             ctx,
           ),

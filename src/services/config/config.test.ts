@@ -8,14 +8,17 @@ import {
   checkFieldOptions,
   checkProjectKey,
   checkStageKey,
+  checkTimeZone,
   compactThreads,
   configIssues,
   featureEnabled,
   isSkillName,
+  isTimeZone,
   labelFromKey,
   type ProjectConfig,
   parseConfig,
   readConfig,
+  storyTimeZone,
   throwIfIssues,
   toFieldKey,
   toProjectKey,
@@ -252,6 +255,30 @@ describe("parseConfig", () => {
       { path: ["display", "compactThreads"], message: "compactThreads must be true or false" },
       { path: ["display", "wide"], message: 'Unknown display option "wide"' },
     ]);
+  });
+
+  it("reads a valid time zone, and reports a time zone that Intl does not accept", () => {
+    const text = JSON.stringify({ ...VALID, display: { timeZone: "Europe/Berlin" } });
+    const { config } = parseConfig(text) as { config: ProjectConfig };
+    expect(config.display).toEqual({ timeZone: "Europe/Berlin" });
+    expect(storyTimeZone(config)).toBe("Europe/Berlin");
+    expect(storyTimeZone(VALID)).toBeUndefined();
+    expect(configIssues({ ...VALID, display: { timeZone: "Mars/Olympus" } })).toEqual([
+      { path: ["display", "timeZone"], message: 'Unknown time zone "Mars/Olympus"' },
+    ]);
+    expect(configIssues({ ...VALID, display: { timeZone: 5 } })).toEqual([
+      { path: ["display", "timeZone"], message: "timeZone must be a time zone name" },
+    ]);
+    expect(configIssues({ ...VALID, display: { timeZone: "" } })).toHaveLength(1);
+  });
+
+  it("isTimeZone accepts the names of Intl.DateTimeFormat only", () => {
+    expect(isTimeZone("UTC")).toBe(true);
+    expect(isTimeZone("America/New_York")).toBe(true);
+    expect(isTimeZone("")).toBe(false);
+    expect(isTimeZone("Nowhere/City")).toBe(false);
+    expect(checkTimeZone("UTC")).toEqual([]);
+    expect(checkTimeZone("x", ["timeZone"])).toEqual([{ path: ["timeZone"], message: 'Unknown time zone "x"' }]);
   });
 
   it("drops unknown keys", () => {

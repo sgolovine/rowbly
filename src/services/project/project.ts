@@ -4,6 +4,7 @@ import { moveAttachmentDirs } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
   checkProjectKey,
+  checkTimeZone,
   type DisplayConfig,
   type FeatureConfig,
   type Issue,
@@ -50,7 +51,7 @@ export interface UpdateProjectInput {
   key?: string;
   /** Turns optional features on (`true`) or off (`false`). The features that are not named do not change. */
   features?: FeatureConfig;
-  /** Changes the display options. The options that are not named do not change. */
+  /** Changes the display options. The options that are not named do not change. A `timeZone` of `""` removes it. */
   display?: DisplayConfig;
 }
 
@@ -139,8 +140,11 @@ function renamedDependsOn(
   return renamed.every((id, index) => id === dependsOn[index]) ? false : { ...data, dependsOn: renamed };
 }
 
-/** Renames the story files, their attachment folders, the spec links and the dependencies to the new key. */
-async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey: string): Promise<void> {
+/**
+ * Renames the story files, their attachment folders, the spec links and the dependencies to the new key. A story with
+ * a changed `dependsOn` list gets `now` as its `updatedAt`.
+ */
+async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey: string, now: Date): Promise<void> {
   const oldKey = config.projectKey;
   const files = await readStoryFiles(paths);
   const owned = files.filter((file) => file.projectKey === oldKey);
@@ -156,7 +160,21 @@ async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey
   );
   await mapInOrder(owned, (file) => rename(file.path, storyPath(paths, newKey, file.number)));
   await rewriteSpecLinks(paths, (stories) => stories.map((id) => renamedLink(id, oldKey, newKey)));
-  await rewriteStories(paths, config, (data) => renamedDependsOn(data, oldKey, newKey));
+  await rewriteStories(paths, config, (data) => renamedDependsOn(data, oldKey, newKey), now);
+}
+
+/** The issues of the display options of an update. An empty time zone is valid, because it removes the option. */
+function displayInputIssues(display: DisplayConfig | undefined): Issue[] {
+  const timeZone = display?.timeZone;
+
+  return timeZone === undefined || timeZone === "" ? [] : checkTimeZone(timeZone);
+}
+
+/** The display options after an update. A `timeZone` of `""` removes the key, so that the system zone applies. */
+function updatedDisplay(current: DisplayConfig | undefined, input: DisplayConfig): DisplayConfig {
+  const merged = { ...current, ...input };
+
+  return Object.fromEntries(Object.entries(merged).filter(([key, value]) => !(key === "timeZone" && value === "")));
 }
 
 /** Changes the name, the key, the features or the display options of the project. A new key renames every story. */
@@ -169,14 +187,15 @@ export async function updateProject(input: UpdateProjectInput, ctx: ServiceConte
   throwIfIssues("The project is invalid", [
     ...(input.name === undefined ? [] : nameIssues(input.name)),
     ...checkProjectKey(projectKey, ["key"]),
+    ...displayInputIssues(input.display),
   ]);
 
   if (projectKey !== config.projectKey) {
-    await renameStoryKey(config, paths, projectKey);
+    await renameStoryKey(config, paths, projectKey, ctx.now?.() ?? new Date());
   }
 
   const features = input.features === undefined ? config.features : { ...config.features, ...input.features };
-  const display = input.display === undefined ? config.display : { ...config.display, ...input.display };
+  const display = input.display === undefined ? config.display : updatedDisplay(config.display, input.display);
   const updated = {
     ...config,
     projectName,

@@ -15,7 +15,7 @@ import {
 } from "../attachment-files/attachment-files.js";
 import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
-import { getStory } from "../story/story.js";
+import { getStory, touchStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 export type { Attachment, PendingImage } from "../attachment-files/attachment-files.js";
@@ -37,6 +37,15 @@ export function clipboardName(now: Date): string {
 
 async function directory(story: string, ctx: ServiceContext): Promise<string> {
   return attachmentDir(await findProject(ctx), (await getStory({ id: story }, ctx)).id);
+}
+
+/** The last attachment of the Story, after the Story gets the time of the change. */
+async function addedAttachment(dir: string, story: string, ctx: ServiceContext) {
+  const records = await readAttachments(dir);
+
+  await touchStory({ id: story }, ctx);
+
+  return records[records.length - 1];
 }
 
 /** Lists the attachments of a Story. */
@@ -110,11 +119,9 @@ export async function addAttachment(input: AddAttachmentInput, ctx: ServiceConte
   const dir = await directory(input.story, ctx);
   const image = await sourceImage(input, ctx);
 
-  return withAttachments(dir, prepareImages([image]), ctx.now?.() ?? new Date(), async () => {
-    const records = await readAttachments(dir);
-
-    return records[records.length - 1];
-  });
+  return withAttachments(dir, prepareImages([image]), ctx.now?.() ?? new Date(), () =>
+    addedAttachment(dir, input.story, ctx),
+  );
 }
 
 async function selected(story: string, id: string, ctx: ServiceContext) {
@@ -177,6 +184,7 @@ export async function removeAttachment(input: { story: string; id: string }, ctx
       dir,
       records.filter((a) => a.id !== input.id),
     );
+    await touchStory({ id: input.story }, ctx);
     await rm(temporary);
   } catch (err) {
     await rename(temporary, path);

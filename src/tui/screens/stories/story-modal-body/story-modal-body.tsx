@@ -41,6 +41,7 @@ export function StoryModalBody(props: StoryModalBodyProps) {
             fields={props.fields}
             initialValues={props.initialValues}
             dependencies={props.dependencies}
+            times={props.times}
             height={generalLayout.height}
             active={idle && general}
             formActive={general && confirming === null}

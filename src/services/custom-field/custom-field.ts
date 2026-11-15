@@ -80,7 +80,12 @@ export async function addCustomField(input: AddCustomFieldInput, ctx: ServiceCon
   const next = { ...config, customFields: [...config.customFields, field] };
 
   await writeConfig(paths, next);
-  await rewriteStories(paths, next, (data) => (key in data ? false : { ...data, [key]: null }));
+  await rewriteStories(
+    paths,
+    next,
+    (data) => (key in data ? false : { ...data, [key]: null }),
+    ctx.now?.() ?? new Date(),
+  );
 
   return field;
 }
@@ -161,8 +166,11 @@ export async function updateCustomField(input: UpdateCustomFieldInput, ctx: Serv
   const next = { ...config, customFields: config.customFields.map((f) => (f === field ? updated : f)) };
 
   await writeConfig(paths, next);
-  await rewriteStories(paths, next, (data, file) =>
-    oldKey in data ? renameValue(data, oldKey, newKey, values.get(file.id) ?? null) : false,
+  await rewriteStories(
+    paths,
+    next,
+    (data, file) => (oldKey in data ? renameValue(data, oldKey, newKey, values.get(file.id) ?? null) : false),
+    ctx.now?.() ?? new Date(),
   );
 
   return updated;
@@ -176,8 +184,12 @@ export async function removeCustomField(input: { key: string }, ctx: ServiceCont
   const next = { ...config, customFields: config.customFields.filter((f) => f !== field) };
 
   await writeConfig(paths, next);
-  await rewriteStories(paths, next, (data) =>
-    field.key in data ? Object.fromEntries(Object.entries(data).filter(([key]) => key !== field.key)) : false,
+  await rewriteStories(
+    paths,
+    next,
+    (data) =>
+      field.key in data ? Object.fromEntries(Object.entries(data).filter(([key]) => key !== field.key)) : false,
+    ctx.now?.() ?? new Date(),
   );
 
   return field;

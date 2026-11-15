@@ -94,9 +94,19 @@ describe("story commands", () => {
       await addCustomField({ label: "Points", type: "number" }, project.ctx);
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
       await cli("story", "create", "--title", "First", "--description", "Some *text*", "--field", "points=5");
+      const { createdAt } = await getStory({ id: "ROW-01" }, project.ctx);
       expect((await cli("story", "get", "ROW-01")).stdout).toBe(
-        "ROW-01  First\nStage: Backlog (BACKLOG)\nDepends on: none\nBlocks: none\nBlocked: no\nPoints: 5\nOwner: —\n\nSome *text*",
+        `ROW-01  First\nStage: Backlog (BACKLOG)\nDepends on: none\nBlocks: none\nBlocked: no\nCreated: ${createdAt}\nUpdated: ${createdAt}\nPoints: 5\nOwner: —\n\nSome *text*`,
       );
+    });
+
+    it("shows — for a Story without times", async () => {
+      await project.write("stories/ROW-01.md", "---\ntitle: Old\nstage: BACKLOG\n---\n");
+      expect((await cli("story", "get", "ROW-01")).stdout).toContain("Created: —\nUpdated: —");
+      expect(JSON.parse((await cli("story", "get", "ROW-01", "--json")).stdout)).toMatchObject({
+        createdAt: null,
+        updatedAt: null,
+      });
     });
 
     it("prints the story as JSON with --json", async () => {
@@ -189,7 +199,9 @@ describe("story commands", () => {
       await seed(1);
       await cli("story", "create", "--title", "Two", "--depends-on", "ROW-01");
       expect((await cli("story", "update", "ROW-02", "--depends-on", "")).exitCode).toBe(0);
-      expect(await project.read("stories/ROW-02.md")).toBe("---\ntitle: Two\nstage: BACKLOG\n---\n\n");
+      expect((await project.read("stories/ROW-02.md")).replace(/^(createdAt|updatedAt): .*\n/gm, "")).toBe(
+        "---\ntitle: Two\nstage: BACKLOG\n---\n\n",
+      );
     });
 
     it("gives exit 1 and the details of a cycle or an unknown ID, and changes no file", async () => {
@@ -210,11 +222,12 @@ describe("story commands", () => {
     });
 
     it("shows the dependency state in story get", async () => {
-      await createStory({ title: "Done", stage: "DONE" }, project.ctx);
-      await createStory({ title: "Open" }, project.ctx);
-      await createStory({ title: "Down", dependsOn: ["ROW-01", "ROW-02"] }, project.ctx);
+      const ctx = { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") };
+      await createStory({ title: "Done", stage: "DONE" }, ctx);
+      await createStory({ title: "Open" }, ctx);
+      await createStory({ title: "Down", dependsOn: ["ROW-01", "ROW-02"] }, ctx);
       expect((await cli("story", "get", "ROW-03")).stdout).toBe(
-        "ROW-03  Down\nStage: Backlog (BACKLOG)\nDepends on: ROW-01, ROW-02\nBlocks: none\nBlocked: yes (ROW-02)",
+        "ROW-03  Down\nStage: Backlog (BACKLOG)\nDepends on: ROW-01, ROW-02\nBlocks: none\nBlocked: yes (ROW-02)\nCreated: 2025-01-02T03:04:05.678Z\nUpdated: 2025-01-02T03:04:05.678Z",
       );
       expect((await cli("story", "get", "ROW-01")).stdout).toContain("Depends on: none\nBlocks: ROW-03\nBlocked: no");
       const json = JSON.parse((await cli("--json", "story", "get", "ROW-03")).stdout);
@@ -254,6 +267,7 @@ describe("story commands", () => {
       expect(Object.keys(story).sort()).toEqual([
         "attachmentCount",
         "blocks",
+        "createdAt",
         "dependsOn",
         "description",
         "fields",
@@ -263,6 +277,7 @@ describe("story commands", () => {
         "position",
         "stage",
         "title",
+        "updatedAt",
         "waitingFor",
       ]);
     });

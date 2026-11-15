@@ -234,16 +234,17 @@ describe("doctor Story dependency checks", () => {
     );
     const before = await readStory("ROW-04");
 
-    await doctor({ fix: true }, project.ctx);
+    await doctor({ fix: true }, { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") });
     const after = await readStory("ROW-04");
     expect(after.data).toEqual({
       title: "Four",
       stage: "BACKLOG",
       position: 2,
       dependsOn: ["ROW-03", "ROW-01", "ROW-02"],
+      updatedAt: "2025-01-02T03:04:05.678Z",
       owner: "Ann",
     });
-    expect(Object.keys(after.data)).toEqual(Object.keys(before.data));
+    expect(Object.keys(after.data).filter((key) => key !== "updatedAt")).toEqual(Object.keys(before.data));
     expect(after.body).toBe(before.body);
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });

@@ -291,6 +291,10 @@ functions into the data that the components show.
   `Blocks` lists of the Story. Each item shows the ID, the title and the `StageBadge` of the Stage.
   An empty list shows `none`. The lists are read-only. To change a `Blocks` item, edit the
   `Depends on` field of the downstream Story.
+- **The Story times.** Under the lists, `StoryTimeRows` shows the `Created` and `Updated` times of
+  the Story, in the time zone of `display.timeZone`, or in the system time zone when the config does
+  not set it. A missing time shows `—`. Settings › Display shows the time zone, and `e` edits it in a
+  Form. An empty value removes the setting. The other dates of the TUI keep the system time zone.
 - **The blocked mark.** `storyListRows` gives each Story row its `waitingFor` IDs. The function uses
   all Stories of the Project, also when a Stage filter hides some of them. A Story row with one or
   more of these IDs is blocked, and it shows `⊘` in `ink-muted` on the right, before the other slots. The mark shows in

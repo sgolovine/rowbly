@@ -1,4 +1,11 @@
-import { checkFieldKey, checkFieldOptions, checkProjectKey, checkStageKey, isSkillName } from "./config-keys.js";
+import {
+  checkFieldKey,
+  checkFieldOptions,
+  checkProjectKey,
+  checkStageKey,
+  checkTimeZone,
+  isSkillName,
+} from "./config-keys.js";
 import {
   CUSTOM_FIELD_TYPES,
   type CustomFieldType,
@@ -239,6 +246,12 @@ function displayIssues(display: unknown): Issue[] {
 function displayOptionIssues(name: string, value: unknown): Issue[] {
   if (!DISPLAY_OPTIONS.includes(name as DisplayOption)) {
     return [{ path: ["display", name], message: `Unknown display option "${name}"` }];
+  }
+
+  if (name === "timeZone") {
+    return typeof value === "string"
+      ? checkTimeZone(value)
+      : [{ path: ["display", name], message: `${name} must be a time zone name` }];
   }
 
   if (typeof value !== "boolean") {

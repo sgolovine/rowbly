@@ -64,6 +64,20 @@ export function checkFieldOptions(type: CustomFieldType, options: string[] | und
   return [];
 }
 
+/** Tells if `Intl.DateTimeFormat` accepts the name as a time zone, for example `Europe/Berlin` or `UTC`. */
+export function isTimeZone(name: string): boolean {
+  try {
+    return new Intl.DateTimeFormat("en-US", { timeZone: name }).resolvedOptions().timeZone !== "";
+  } catch {
+    return false;
+  }
+}
+
+/** The issues of a time zone name at `path`. */
+export function checkTimeZone(name: string, path: Issue["path"] = ["display", "timeZone"]): Issue[] {
+  return isTimeZone(name) ? [] : [{ path, message: `Unknown time zone "${name}"` }];
+}
+
 /** A skill name is also a folder name, so this check keeps a hand-edited config inside the skills folders. */
 export function isSkillName(name: string): boolean {
   return name.length <= SKILL_NAME_MAX_LENGTH && SKILL_NAME_PATTERN.test(name);

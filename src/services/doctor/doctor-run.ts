@@ -30,6 +30,11 @@ export interface DocRepair {
   readonly changed: boolean;
 }
 
+/** The current time of the run, for the `updatedAt` of a repaired Story. */
+export function runNow(run: DoctorRun): Date {
+  return run.ctx.now?.() ?? new Date();
+}
+
 /** The path relative to the project root, as the issues show it. */
 export function rel(run: DoctorRun, path: string): string {
   return relative(run.paths.root, path);
