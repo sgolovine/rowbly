@@ -1,7 +1,7 @@
 ---
 title: Build the animated board section of the landing page
-stage: IN_REFINEMENT
-position: 8
+stage: IN_DEVELOPMENT
+position: 3
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-49
 pull_request: null
 ---
