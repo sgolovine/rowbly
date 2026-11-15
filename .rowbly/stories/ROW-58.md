@@ -2,7 +2,7 @@
 title: Accept TanStack Router file names in the lint checks
 stage: IN_REFINEMENT
 position: 3
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-58
 pull_request: null
 ---
 
