@@ -1,6 +1,6 @@
 ---
 title: Deploy the website to GitHub Pages
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-46
 pull_request: https://github.com/sgolovine/rowbly/pull/242
