@@ -21,9 +21,10 @@ import {
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
-import { failureText, runSideSteps } from "./supervisor-steps.js";
+import { failureText, runSideSteps, runStep } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
+import { pullUpstreamStories } from "./upstream-pull-step.js";
 import { checkHistory } from "./worker-checks.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
@@ -121,6 +122,7 @@ async function recordReconcileFailure(manager: Manager, error: unknown): Promise
  */
 async function superviseOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
+  await runStep(manager, "pull-upstream", "Upstream Story move failed", () => pullUpstreamStories(manager));
   await refreshUpstreamAttention(manager);
   setState(manager, (state) => ({ attention: withoutEntry(state.attention, "reconcile") }));
   await runSideSteps(manager);

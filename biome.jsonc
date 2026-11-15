@@ -8,6 +8,12 @@
   "files": {
     "includes": ["**", "!**/.agents", "!**/.claude", "!**/skills", "!**/rowbly-test", "!**/.rowbly"]
   },
+  // The website CSS uses Tailwind CSS v4 directives, for example `@theme`, `@apply` and `@custom-variant`.
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -37,6 +43,20 @@
     }
   },
   "overrides": [
+    // TanStack Router gives a meaning to characters in route file names, for example `$.tsx`, `-helpers.tsx`,
+    // `script[.]js.tsx` and `{-$locale}.tsx`. The `match` option of `useFilenamingConvention` cannot express a
+    // name with a variable number of dot-separated route parts, so the rule is off only in this folder.
+    // `scripts/check-names.mjs` checks these names instead: each word in them must still be dash-case.
+    {
+      "includes": ["website/src/routes/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
     {
       "includes": ["**/*.ts"],
       "linter": {

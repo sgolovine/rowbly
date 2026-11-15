@@ -15,6 +15,7 @@ viewer or the AI section of Settings.
 | `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>`  | Sign in through an interactive prompt, or remove a stored credential. |
 | `model list [--provider <id>]`                                             | Show configured models and supported thinking levels.                 |
 | `factory configure`                                                        | Set workers, role models, thinking levels, commits, Git sync, checks. |
+| `factory configure --pull-upstream on\|off`                                | Turn on or turn off the move of stuck upstream Stories.               |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
@@ -33,9 +34,10 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 - `--story` without `--stage`.
 - `--clear-worker` without `--stage`.
 - `--clear-worker` together with `--worker` or `--worker-thinking`.
-- `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers`, a check flag or
-  a Git flag (`--commit-message`, `--commit-author`, `--git-push`, `--no-git-push`, `--git-pull`,
-  `--no-git-pull` or `--git-sync-interval`).
+- `--pull-upstream` with a value that is not `on` or `off`.
+- `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers`,
+  `--pull-upstream`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
+  `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
 - An unknown Stage key.
 
@@ -58,6 +60,17 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 - An interval out of the range gives a `VALIDATION` error and exit code 1. The config does not change.
 - The command prints all the settings. See [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout)
   for the sync.
+
+### The pull-upstream flag of `factory configure`
+
+| Flag                      | Key in `factory`            | Effect                                                  |
+| ------------------------- | --------------------------- | ------------------------------------------------------- |
+| `--pull-upstream on\|off` | `dependencies.pullUpstream` | Turn on or turn off the move of stuck upstream Stories. |
+
+- The default is `off`. The other keys of the config do not change.
+- When the setting is `on`, the manager moves each stuck upstream Story in the first Stage to the
+  first enabled `work` Stage. See [README.md](README.md#parts-of-the-factory).
+- The command prints all the settings.
 
 ### The check commands
 

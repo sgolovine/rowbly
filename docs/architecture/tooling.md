@@ -29,12 +29,15 @@ pnpm link --global    # put `rowbly` on your PATH for local testing
 
 ## Biome
 
-`biome.json` sets the lint and format rules.
+`biome.jsonc` sets the lint and format rules.
 
 - The format is double quotes, semicolons, 2-space indent and 120 columns. Do not format by hand. Run
   `pnpm lint:fix`.
 - The linter uses the recommended rules, and `useFilenamingConvention` with kebab-case for all script
-  files.
+  files. An override sets `useFilenamingConvention` to off in `website/src/routes/**`, because TanStack
+  Router route names are not kebab-case. The [name check](#name-check) examines these names.
+- `biome.jsonc` is JSONC, so it can have comments. Write a comment that tells why for each override that
+  is not clear.
 - Biome does not examine `.agents/`, `.claude/`, `skills/` or `.rowbly/`.
 - The **strict override** applies to `src/**` without the test files. It adds the rules of the strict
   code style and the GritQL plugins in `biome-plugins/`. The
@@ -58,6 +61,28 @@ The script lists the exceptions:
 - Dotfiles and dotfolders. The name after the dot is dash-case.
 - `.agents/skills/agentic-tui/`, because it is an unchanged upstream copy.
 - `stages/*.md` and all of `.rowbly/`, because these names are stage keys and Story IDs.
+- The TanStack Router file-based routes in `website/src/routes/`. `isGoodRouteSegment` examines each
+  file and folder below this folder. Each word in a name must be dash-case. The script accepts these
+  forms:
+
+  | Form                     | Example                  | Meaning                                  |
+  | ------------------------ | ------------------------ | ---------------------------------------- |
+  | `__root`                 | `__root.tsx`             | The root route                           |
+  | `$name`                  | `$story-key.tsx`         | A path parameter                         |
+  | `{-$name}`               | `{-$locale}/`            | An optional path parameter               |
+  | `$`                      | `$.tsx`                  | A splat (catch-all) route                |
+  | `_name`                  | `_marketing.tsx`         | A pathless layout route                  |
+  | `name_`                  | `posts_.tsx`             | A non-nested route                       |
+  | `-name`                  | `-components/`           | A file or folder that the router ignores |
+  | `(name)`                 | `(legal)/`               | A route group folder                     |
+  | `a.b.c`                  | `how-it-works.index.tsx` | Flat routes: a dot separates two parts   |
+  | `[x]`                    | `script[.]js.tsx`        | An escaped character                     |
+  | `index`, `route`, `lazy` | `index.lazy.tsx`         | Special route file names                 |
+
+  Outside `website/src/routes/`, these forms are errors. For example, `$storyKey.tsx`, `__Root.tsx` and
+  `My_Page.tsx` are errors in all folders.
+- The generated route tree of TanStack Router must have a dash-case name. Set
+  `generatedRouteTree: "./src/route-tree.gen.ts"` in the router config.
 
 ## TypeScript
 

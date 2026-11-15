@@ -5,6 +5,7 @@ import { ValidationError } from "../../../../services/errors/errors.js";
 import {
   type FactorySettings,
   type ModelChoice,
+  pullUpstream,
   setWorkerOverride,
   updateFactorySettings,
 } from "../../../../services/factory-settings/factory-settings.js";
@@ -127,6 +128,27 @@ export async function saveLimit(env: AiEnv, values: FormValues): Promise<void> {
   finishTask(env, true);
 }
 
+/** Switches the move of stuck upstream Stories on or off. Before the settings load, it does nothing. */
+export function togglePullUpstream(env: AiEnv): void {
+  if (!env.settings.data) {
+    return;
+  }
+
+  const on = !pullUpstream(env.settings.data);
+  const dependencies = { ...env.settings.data.dependencies, pullUpstream: on };
+
+  updateFactorySettings({ dependencies }, env.ctx).then(
+    () => savedPullUpstream(env, on),
+    (error: unknown) => env.toast.error(error),
+  );
+}
+
+function savedPullUpstream(env: AiEnv, on: boolean): void {
+  showToast(env.toast, "info", `Pull upstream Stories: ${on ? "On" : "Off"}`);
+  env.settings.reload();
+  env.onChange();
+}
+
 /** Removes the stored credential of a provider. A failure closes the dialog and shows the error. */
 export function signOut(env: AiEnv, id: string): void {
   if (!env.runtime.data) {
@@ -168,7 +190,7 @@ export function pickProvider(env: AiEnv, id: string): void {
 
 /**
  * The keys of the AI settings. `←/→` change the tab. `s`, `w` and `l` work on each page, so that the keys of
- * the earlier screen stay. The list of the sign-in page takes `enter`: its `onSelect` starts the sign-in.
+ * the earlier screen stay. On the Limits tab, `u` switches the move of stuck upstream Stories. The list of the sign-in page takes `enter`: its `onSelect` starts the sign-in.
  */
 export function handleAiKey(env: AiEnv, input: string, key: Key): void {
   if (key.ctrl || key.meta) {
@@ -227,6 +249,12 @@ function handleModelsKey(env: AiEnv, input: string, key: Key): void {
 }
 
 function handleOtherKey(env: AiEnv, input: string): void {
+  if (input === "u" && env.page === "limits") {
+    togglePullUpstream(env);
+
+    return;
+  }
+
   if (input === "l") {
     env.setTask({ kind: "limit" });
 
