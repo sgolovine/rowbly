@@ -1,9 +1,9 @@
 ---
 title: Build the Install page
-stage: IN_DEVELOPMENT
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-53
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/249
 ---
 
 ## Goal
