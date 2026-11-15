@@ -110,4 +110,28 @@ describe("customField", () => {
       await expect(removeCustomField({ key: "nope" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
     });
   });
+
+  describe("story times", () => {
+    const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+    const updatedAt = async (id: string) => (await getStory({ id }, project.ctx)).updatedAt;
+
+    it("an add, a rename and a remove set updatedAt of each story that they change", async () => {
+      await createStory({ title: "A" }, at("2025-01-01T00:00:00.000Z"));
+      await addCustomField({ label: "Owner", type: "string" }, at("2025-02-02T00:00:00.000Z"));
+      expect(await updatedAt("ROW-01")).toBe("2025-02-02T00:00:00.000Z");
+      await createStory({ title: "B" }, at("2025-02-02T00:00:00.000Z"));
+      await project.write("stories/ROW-03.md", "---\ntitle: C\nstage: BACKLOG\nowner: null\n---\n");
+      await updateCustomField({ key: "owner", newKey: "lead" }, at("2025-03-03T00:00:00.000Z"));
+      expect(await updatedAt("ROW-01")).toBe("2025-03-03T00:00:00.000Z");
+      await removeCustomField({ key: "lead" }, at("2025-04-04T00:00:00.000Z"));
+      expect(await updatedAt("ROW-02")).toBe("2025-04-04T00:00:00.000Z");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).createdAt).toBe("2025-01-01T00:00:00.000Z");
+    });
+
+    it("an add keeps updatedAt of a story that has the field", async () => {
+      await project.write("stories/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\nowner: x\n---\n");
+      await addCustomField({ label: "Owner", type: "string" }, at("2025-02-02T00:00:00.000Z"));
+      expect(await updatedAt("ROW-01")).toBeNull();
+    });
+  });
 });

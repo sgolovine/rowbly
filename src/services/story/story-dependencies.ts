@@ -64,8 +64,11 @@ function isId(config: ProjectConfig, value: string, id: string): boolean {
   return canonicalStoryId(config.projectKey, value) === id;
 }
 
-/** Removes `id` from the `dependsOn` list of the story file. Gives a warning, or nothing when the list has no `id`. */
-async function removeDependency(config: ProjectConfig, file: StoryFile, id: string): Promise<string[]> {
+/**
+ * Removes `id` from the `dependsOn` list of the story file, with `now` as its `updatedAt`. Gives a warning, or nothing
+ * when the list has no `id`.
+ */
+async function removeDependency(config: ProjectConfig, file: StoryFile, id: string, now: Date): Promise<string[]> {
   const dependsOn = dependsOnOf(file.doc.data);
   const kept = dependsOn.filter((value) => !isId(config, value, id));
 
@@ -73,7 +76,7 @@ async function removeDependency(config: ProjectConfig, file: StoryFile, id: stri
     return [];
   }
 
-  await writeStoryFile(config, file.path, { ...file.doc, data: withDependsOn(file.doc.data, kept) });
+  await writeStoryFile(config, file.path, { ...file.doc, data: withDependsOn(file.doc.data, kept) }, now);
 
   return [`Removed the dependency on ${id} from ${file.id}`];
 }
@@ -83,9 +86,10 @@ export async function removeDependencies(
   config: ProjectConfig,
   files: readonly StoryFile[],
   id: string,
+  now: Date,
 ): Promise<string[]> {
   const downstream = files.filter((file) => file.id !== id);
-  const warnings = await mapInOrder(downstream, (file) => removeDependency(config, file, id));
+  const warnings = await mapInOrder(downstream, (file) => removeDependency(config, file, id, now));
 
   return warnings.flat();
 }

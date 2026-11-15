@@ -6,7 +6,7 @@ import { listMarkdownFiles } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { parseMarkdown } from "../markdown/markdown.js";
 import { Store } from "../store/store.js";
-import { parseStoryFileName, type StoryFile, writeStoryFile } from "../story-files/story-files.js";
+import { parseStoryFileName, STORY_TIME_KEYS, type StoryFile, writeStoryFile } from "../story-files/story-files.js";
 import {
   type DocRepair,
   type DoctorIssue,
@@ -15,6 +15,7 @@ import {
   noted,
   rel,
   reportChange,
+  runNow,
   withoutKey,
 } from "./doctor-run.js";
 import { fieldIssues } from "./story-field-checks.js";
@@ -159,6 +160,7 @@ async function unknownKeyIssues(
     "stage",
     "position",
     "dependsOn",
+    ...STORY_TIME_KEYS,
     "agentLock",
     ...config.customFields.map((field) => field.key),
   ]);
@@ -185,7 +187,7 @@ async function checkStory(
   ];
 
   if (repair.current.changed) {
-    await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } });
+    await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } }, runNow(run));
   }
 
   return issues;

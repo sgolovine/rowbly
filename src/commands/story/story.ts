@@ -44,6 +44,11 @@ function dependencyLines(story: StoryDetails): string[] {
   ];
 }
 
+/** The time lines of `story get`, in UTC as they are saved. A missing time shows `—`. */
+function timeLines(story: StoryDetails): string[] {
+  return [`Created: ${story.createdAt ?? "—"}`, `Updated: ${story.updatedAt ?? "—"}`];
+}
+
 async function formatStory(story: StoryDetails, ctx: ServiceContext): Promise<string> {
   const project = await getProject(ctx);
   const stage = project.stages.find((s) => s.key === story.stage);
@@ -52,6 +57,7 @@ async function formatStory(story: StoryDetails, ctx: ServiceContext): Promise<st
     `${story.id}  ${story.title}`,
     `Stage: ${stage?.label ?? story.stage} (${story.stage})`,
     ...dependencyLines(story),
+    ...timeLines(story),
     ...project.customFields.map((field) => `${field.label}: ${formatValue(story.fields[field.key] ?? null)}`),
     ...(story.description ? ["", story.description] : []),
   ].join("\n");

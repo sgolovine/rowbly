@@ -16,6 +16,7 @@ import {
   noted,
   rel,
   reportChange,
+  runNow,
   withoutKey,
 } from "./doctor-run.js";
 
@@ -237,7 +238,7 @@ async function storyIssues(run: DoctorRun, check: DependencyCheck, config: Proje
   const issues = await listIssues(run, check, repair);
 
   if (repair.current.changed) {
-    await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } });
+    await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } }, runNow(run));
   }
 
   return { issues, story: dependencyStory(story, repair.current.list), file: story.file };

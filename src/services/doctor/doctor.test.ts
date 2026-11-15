@@ -100,7 +100,7 @@ describe("doctor", () => {
     expect(before.issues[1]?.fix).toBe("Change it to 3");
     expect(before.issues[3]?.fix).toBeUndefined();
 
-    const after = await doctor({ fix: true }, project.ctx);
+    const after = await doctor({ fix: true }, { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") });
     expect(after.issues.filter((issue) => !issue.fixed).map((issue) => issue.message)).toEqual([
       "Done must be true or false",
       "Title is missing",
@@ -108,7 +108,7 @@ describe("doctor", () => {
     ]);
     expect(after.ok).toBe(false);
     expect(await project.read("stories/ROW-01.md")).toBe(
-      "---\ntitle: A\nstage: DONE\npoints: 3\nowner: null\ndone: maybe\n---\n\n",
+      "---\ntitle: A\nstage: DONE\nupdatedAt: 2025-01-02T03:04:05.678Z\npoints: 3\nowner: null\ndone: maybe\n---\n\n",
     );
     expect(await project.read("stories/ROW-03.md")).toContain("stage: BACKLOG");
   });
@@ -182,6 +182,14 @@ describe("doctor", () => {
     });
   });
 
+  it("accepts createdAt and updatedAt in a story file", async () => {
+    await project.write(
+      "stories/ROW-01.md",
+      "---\ntitle: T\nstage: BACKLOG\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-01-01T00:00:00.000Z\n---\n",
+    );
+    expect((await doctor({}, project.ctx)).issues).toEqual([]);
+  });
+
   describe("old agent locks", () => {
     const BODY = "\nThe description.\n";
     const write = (lock: string) =>
@@ -203,8 +211,11 @@ describe("doctor", () => {
           fixed: false,
         },
       ]);
-      expect((await doctor({ fix: true }, project.ctx)).issues).toMatchObject([{ fixed: true }]);
-      expect(await project.read("stories/ROW-01.md")).toBe(`---\ntitle: T\nstage: BACKLOG\nposition: 1\n---\n${BODY}`);
+      const ctx = { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") };
+      expect((await doctor({ fix: true }, ctx)).issues).toMatchObject([{ fixed: true }]);
+      expect(await project.read("stories/ROW-01.md")).toBe(
+        `---\ntitle: T\nstage: BACKLOG\nposition: 1\nupdatedAt: 2025-01-02T03:04:05.678Z\n---\n${BODY}`,
+      );
       expect((await doctor({}, project.ctx)).issues).toEqual([]);
     });
   });

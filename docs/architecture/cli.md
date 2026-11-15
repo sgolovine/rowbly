@@ -32,7 +32,7 @@ test.
 | `test-cli/`                                            | `runCli()`, `createProgram()`: run commands in tests.                            |
 | `init/`                                                | The `rowbly init` command: flags and JSON input.                                 |
 | `init-wizard/`                                         | `askOnboarding()`: the `@clack/prompts` questions of `rowbly init`.              |
-| `project/`                                             | `project update`: `--name`, `--key`, `--specs` and `--compact-threads`.          |
+| `project/`                                             | `project update`: the name, the key, Specs and the display options.              |
 | `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
 | `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
@@ -65,6 +65,9 @@ attachment commands are at the top level. Commander gives `--help` for each subc
 - `--specs <on|off>` turns Specs on or off.
 - `--compact-threads <on|off>` sets `display.compactThreads`. When it is on, each Thread in the TUI
   uses one line. When the config does not have the value, the compact mode is on.
+- `--time-zone <zone>` sets `display.timeZone`, for example `Europe/Berlin`. The TUI shows the Story
+  times in this time zone. `--time-zone ""` removes the key, and the TUI uses the system time zone.
+  A name that `Intl.DateTimeFormat` does not accept gives a `VALIDATION` error and exit code 1.
 
 A value that is not `on` or `off` gives a Commander error and exit code 1.
 
@@ -89,6 +92,10 @@ A value that is not `on` or `off` gives a Commander error and exit code 1.
 `rowbly story get` calls `getStoryDetails`. The text output has the lines `Depends on`, `Blocks` and
 `Blocked` (`yes` with the IDs of the upstream Stories that are not complete, or `no`). An empty list
 shows `none`. The JSON result has the arrays `dependsOn`, `blocks` and `waitingFor`.
+
+The text output of `rowbly story get` also has the lines `Created` and `Updated`, with the saved UTC
+times. A missing time shows `—`. Each Story record of the JSON output has `createdAt` and `updatedAt`,
+an ISO 8601 UTC string or `null`.
 
 `rowbly story search --blocked` shows only the blocked Stories, and `--ready` shows only the ready
 Stories. The two flags together give a Commander error and exit code 1. Each flag works together with

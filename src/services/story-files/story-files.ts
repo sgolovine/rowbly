@@ -35,7 +35,12 @@ export type StoryDataChange = (data: Record<string, unknown>, file: StoryFile) =
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
 
 /** The keys that come first in the frontmatter, before the custom fields. */
-const LEADING_KEYS = ["title", "stage", "position", "dependsOn"];
+const LEADING_KEYS = ["title", "stage", "position", "dependsOn", "createdAt", "updatedAt"];
+
+/** The frontmatter keys of the creation time and the time of the last change of a story. */
+export const STORY_TIME_KEYS = ["createdAt", "updatedAt"] as const;
+
+export type StoryTimeKey = (typeof STORY_TIME_KEYS)[number];
 
 /** `ROW` and `1` → `ROW-01`. */
 export function formatStoryId(projectKey: string, number: number): string {
@@ -57,6 +62,21 @@ export function dependsOnOf(data: Record<string, unknown>): string[] {
   const value = data.dependsOn;
 
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+/**
+ * A time of the frontmatter as it is saved. A missing value or a value that is not a valid date string gives `null`,
+ * so that a bad value does not make the board unreadable.
+ */
+export function storyTimeOf(data: Record<string, unknown>, key: StoryTimeKey): string | null {
+  const value = data[key];
+
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+/** The frontmatter with `updatedAt` set to `now`, as an ISO 8601 UTC string. */
+export function withUpdatedAt(data: Record<string, unknown>, now: Date): Record<string, unknown> {
+  return { ...data, updatedAt: now.toISOString() };
 }
 
 /** The frontmatter with the `dependsOn` list. An empty list removes the key. */
@@ -120,7 +140,10 @@ export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
   return files.toSorted((a, b) => storyPosition(a) - storyPosition(b) || a.number - b.number);
 }
 
-/** Frontmatter in a stable order: title, stage, position, the custom fields as configured, then anything else. */
+/**
+ * Frontmatter in a stable order: title, stage, position, dependsOn, the times, the custom fields as configured, then
+ * anything else.
+ */
 export function orderStoryData(config: ProjectConfig, data: Record<string, unknown>): Record<string, unknown> {
   const leading = [...LEADING_KEYS, ...config.customFields.map((field) => field.key)].filter((key) => key in data);
   const keys = new Set([...leading, ...Object.keys(data)]);
@@ -128,13 +151,28 @@ export function orderStoryData(config: ProjectConfig, data: Record<string, unkno
   return Object.fromEntries([...keys].map((key) => [key, data[key]]));
 }
 
-/** Writes a story file, with the frontmatter in a stable order. */
-export async function writeStoryFile(config: ProjectConfig, path: string, doc: MarkdownDocument): Promise<void> {
-  await writeFileAtomic(path, serializeMarkdown({ data: orderStoryData(config, doc.data), body: doc.body }));
+/**
+ * Writes a story file, with the frontmatter in a stable order. With `updatedAt`, the file gets this time as the time
+ * of its last change. Without it, the saved time stays.
+ */
+export async function writeStoryFile(
+  config: ProjectConfig,
+  path: string,
+  doc: MarkdownDocument,
+  updatedAt?: Date,
+): Promise<void> {
+  const data = updatedAt === undefined ? doc.data : withUpdatedAt(doc.data, updatedAt);
+
+  await writeFileAtomic(path, serializeMarkdown({ data: orderStoryData(config, data), body: doc.body }));
 }
 
-/** Writes the story when `change` changes it. Gives 1 for a write and 0 for no change. */
-async function rewriteStory(config: ProjectConfig, file: StoryFile, change: StoryDataChange): Promise<number> {
+/** Writes the story when `change` changes it, with `now` as its `updatedAt`. Gives 1 for a write and 0 for no change. */
+async function rewriteStory(
+  config: ProjectConfig,
+  file: StoryFile,
+  change: StoryDataChange,
+  now: Date,
+): Promise<number> {
   const data = { ...file.doc.data };
   const result = change(data, file);
 
@@ -142,23 +180,25 @@ async function rewriteStory(config: ProjectConfig, file: StoryFile, change: Stor
     return 0;
   }
 
-  await writeStoryFile(config, file.path, { ...file.doc, data: result === true ? data : result });
+  await writeStoryFile(config, file.path, { ...file.doc, data: result === true ? data : result }, now);
 
   return 1;
 }
 
 /**
  * Applies `change` to the frontmatter of every story and rewrites the ones it changed. Used when a
- * stage or custom field changes, so a story that is otherwise invalid is still updated.
+ * stage or custom field changes, so a story that is otherwise invalid is still updated. Each rewritten story gets
+ * `now` as its `updatedAt`.
  */
 export async function rewriteStories(
   paths: ProjectPaths,
   config: ProjectConfig,
   change: StoryDataChange,
+  now: Date,
 ): Promise<number> {
   const files = await readStoryFiles(paths);
 
-  const counts = await mapInOrder(files, (file) => rewriteStory(config, file, change));
+  const counts = await mapInOrder(files, (file) => rewriteStory(config, file, change, now));
 
   return counts.reduce((sum, count) => sum + count, 0);
 }

@@ -12,6 +12,10 @@ export interface Story {
   position: number;
   /** The IDs of the upstream Stories, in the saved order. `[]` when the story has no dependencies. */
   dependsOn: string[];
+  /** The ISO 8601 UTC time when the story was created. `null` when the file has no valid value. */
+  createdAt: string | null;
+  /** The ISO 8601 UTC time of the last change of the story. `null` when the file has no valid value. */
+  updatedAt: string | null;
   /** The Markdown body. */
   description: string;
   /** A value for every custom field in the project, `null` when unset. */

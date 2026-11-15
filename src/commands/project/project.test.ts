@@ -32,6 +32,20 @@ describe("project commands", () => {
       expect(bad.exitCode).not.toBe(0);
     });
 
+    it("sets and removes the time zone, and rejects an unknown zone", async () => {
+      const cwd = project.ctx.cwd;
+      expect((await runCli(["project", "update", "--time-zone", "Europe/Berlin"], cwd)).stdout).toBe(
+        `Updated Rowbly (ROW) in ${cwd}\nCompact threads: on\nTime zone: Europe/Berlin`,
+      );
+      expect((await getProject(project.ctx)).display).toEqual({ timeZone: "Europe/Berlin" });
+      const bad = await runCli(["--json", "project", "update", "--time-zone", "Mars/Olympus"], cwd);
+      expect(bad.exitCode).toBe(1);
+      expect(JSON.parse(bad.stderr).error.code).toBe("VALIDATION");
+      expect((await getProject(project.ctx)).display).toEqual({ timeZone: "Europe/Berlin" });
+      expect((await runCli(["project", "update", "--time-zone", ""], cwd)).exitCode).toBe(0);
+      expect((await getProject(project.ctx)).display).toEqual({});
+    });
+
     it("updates the name and key", async () => {
       const cwd = project.ctx.cwd;
       const result = await runCli(["project", "update", "--name", "Renamed", "--key", "NEW"], cwd);

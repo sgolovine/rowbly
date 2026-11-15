@@ -1,4 +1,5 @@
 import { readFile, rm, writeFile } from "node:fs/promises";
+import { isDeepStrictEqual } from "node:util";
 import { attachmentDir, prepareImages, withAttachments } from "../attachment-files/attachment-files.js";
 import { type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { ValidationError } from "../errors/errors.js";
@@ -14,6 +15,7 @@ import {
   sortStoryFiles,
   storyPath,
   withDependsOn,
+  withUpdatedAt,
   writeStoryFile,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -31,8 +33,20 @@ interface Snapshot {
   readonly bytes: Buffer;
 }
 
-/** The frontmatter of a new story. Throws a `ValidationError` when the input is invalid. */
-function newStoryData(config: ProjectConfig, input: CreateStoryInput): Record<string, unknown> {
+/** The time of an update, and whether the update changes the story. */
+interface StoryChange {
+  readonly now: Date;
+  /** Whether the update changes the story itself, not only its place in the stage. */
+  readonly changed: boolean;
+}
+
+/** The current time of the service, which a test can set. */
+function nowOf(ctx: ServiceContext): Date {
+  return ctx.now?.() ?? new Date();
+}
+
+/** The frontmatter of a new story, created at `now`. Throws a `ValidationError` when the input is invalid. */
+function newStoryData(config: ProjectConfig, input: CreateStoryInput, now: Date): Record<string, unknown> {
   const stage =
     input.stage === undefined
       ? (config.stages.find((s) => s.enabled) ?? config.stages[0])
@@ -43,7 +57,9 @@ function newStoryData(config: ProjectConfig, input: CreateStoryInput): Record<st
 
   throwIfIssues("The story is invalid", [...stageIssues, ...titleIssues(input.title), ...fields.issues]);
 
-  return { title: input.title.trim(), stage: stage?.key, ...empty, ...fields.values };
+  const time = now.toISOString();
+
+  return { title: input.title.trim(), stage: stage?.key, createdAt: time, updatedAt: time, ...empty, ...fields.values };
 }
 
 /** Writes the file of a new story. A failure removes the file, so that no half story stays. */
@@ -67,9 +83,10 @@ async function writeNewStory(
 /** Creates a story with the next free number, in the given stage or the first enabled stage. */
 export async function createStory(input: CreateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
   const images = prepareImages(input.attachments ?? [], true);
+  const now = nowOf(ctx);
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
-  const data = newStoryData(config, input);
+  const data = newStoryData(config, input, now);
 
   const files = await readStoryFiles(paths);
   const number = Math.max(0, ...files.map((file) => file.number)) + 1;
@@ -77,11 +94,8 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   const dependsOn = checkedDependsOn(config, files, formatStoryId(config.projectKey, number), input.dependsOn ?? []);
   const doc = { data: withDependsOn(data, dependsOn), body: input.description ?? "" };
 
-  return withAttachments(
-    await attachmentDir(paths, formatStoryId(config.projectKey, number)),
-    images,
-    ctx.now?.() ?? new Date(),
-    () => writeNewStory(config, path, doc, number, ctx),
+  return withAttachments(await attachmentDir(paths, formatStoryId(config.projectKey, number)), images, now, () =>
+    writeNewStory(config, path, doc, number, ctx),
   );
 }
 
@@ -155,7 +169,10 @@ function updatedStoryData(
   return updatedDependsOn(config, files, file, data, input);
 }
 
-/** Writes the story at `position` in its stage. The moved story is always written. */
+/**
+ * Writes the story at `position` in its stage. The moved story is always written. A peer that gets a new `position`
+ * keeps its `updatedAt`, because the peer itself did not change.
+ */
 async function writePosition(config: ProjectConfig, file: StoryFile, position: number, moved: boolean): Promise<void> {
   if (!moved && file.doc.data.position === position) {
     return;
@@ -164,23 +181,40 @@ async function writePosition(config: ProjectConfig, file: StoryFile, position: n
   await writeStoryFile(config, file.path, { ...file.doc, data: { ...file.doc.data, position } });
 }
 
+/** The story file with `updatedAt` set to `now`. */
+function stamped(file: StoryFile, now: Date): StoryFile {
+  return { ...file, doc: { ...file.doc, data: withUpdatedAt(file.doc.data, now) } };
+}
+
 /** Puts the story at its new place in its stage. The other stories keep their order; each one that moves is rewritten. */
 async function placeStory(
   config: ProjectConfig,
   files: readonly StoryFile[],
   updated: StoryFile,
   position: number | undefined,
+  change: StoryChange,
 ): Promise<Story> {
   const peers = sortStoryFiles(files.filter((f) => f.id !== updated.id && f.doc.data.stage === updated.doc.data.stage));
   const at = Math.max(0, Math.min(peers.length, (position ?? peers.length + 1) - 1));
-  const order = [...peers.slice(0, at), updated, ...peers.slice(at)];
+  // A new place is a change of the moved story, also when nothing else of it changes.
+  const placed = change.changed || updated.doc.data.position !== at + 1 ? stamped(updated, change.now) : updated;
+  const order = [...peers.slice(0, at), placed, ...peers.slice(at)];
 
-  await mapInOrder(order, (f, i) => writePosition(config, f, i + 1, f.id === updated.id));
+  await mapInOrder(order, (f, i) => writePosition(config, f, i + 1, f.id === placed.id));
 
-  return toStory(config, updated, at + 1);
+  return toStory(config, placed, at + 1);
 }
 
-async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
+/** Whether the new frontmatter or body differs from the story file. */
+function changesStory(file: StoryFile, doc: MarkdownDocument): boolean {
+  return doc.body !== file.doc.body || !isDeepStrictEqual(doc.data, file.doc.data);
+}
+
+/**
+ * Writes the update. The story gets a new `updatedAt` when the update changes it, or when `touched` is true, for
+ * example because the update adds images.
+ */
+async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext, touched: boolean): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const files = await readStoryFiles(paths);
@@ -190,20 +224,24 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext): 
   const moved = data.stage !== file.doc.data.stage;
   const updated = { ...file, doc: { data, body: input.description ?? file.doc.body } };
 
+  const change: StoryChange = { now: nowOf(ctx), changed: touched || changesStory(file, updated.doc) };
+
   // Checked before writing, so an update never leaves a story invalid.
   toStory(config, updated);
 
   if (input.position === undefined && !moved) {
-    await writeStoryFile(config, file.path, updated.doc);
+    const written = change.changed ? stamped(updated, change.now) : updated;
 
-    return toStory(config, updated, positionIn(files, file));
+    await writeStoryFile(config, file.path, written.doc);
+
+    return toStory(config, written, positionIn(files, file));
   }
 
-  return placeStory(config, files, updated, input.position);
+  return placeStory(config, files, updated, input.position, change);
 }
 
 async function updateWithoutImages(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
-  const story = await updateStoryFields(input, ctx);
+  const story = await updateStoryFields(input, ctx, false);
 
   return { ...story, attachmentCount: await countAttachments(await findProject(ctx), story.id) };
 }
@@ -234,7 +272,7 @@ async function updateOrRestore(
   snapshots: readonly Snapshot[],
 ): Promise<Story> {
   try {
-    await updateStoryFields(input, ctx);
+    await updateStoryFields(input, ctx, true);
 
     return await getStory({ id: input.id }, ctx);
   } catch (err) {
@@ -255,9 +293,18 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
   const story = await getStory({ id: input.id }, ctx);
   const snapshots = await snapshotStories(paths, story, input);
 
-  return withAttachments(await attachmentDir(paths, story.id), images, ctx.now?.() ?? new Date(), () =>
+  return withAttachments(await attachmentDir(paths, story.id), images, nowOf(ctx), () =>
     updateOrRestore(input, ctx, snapshots),
   );
+}
+
+/** Sets the `updatedAt` of the story to the current time, for a change outside the story file, such as an image. */
+export async function touchStory(input: { id: string }, ctx: ServiceContext = {}): Promise<void> {
+  const paths = await findProject(ctx);
+  const config = await readConfig(paths);
+  const file = await findStoryFile(paths, config, input.id);
+
+  await writeStoryFile(config, file.path, file.doc, nowOf(ctx));
 }
 
 /**
@@ -270,7 +317,7 @@ export async function deleteStory(input: { id: string }, ctx: ServiceContext = {
   const files = await readStoryFiles(paths);
   const file = await findStoryFile(paths, config, input.id, files);
 
-  const warnings = await removeDependencies(config, files, file.id);
+  const warnings = await removeDependencies(config, files, file.id, nowOf(ctx));
 
   await rm(await attachmentDir(paths, file.id), { recursive: true, force: true });
   await rm(file.path);

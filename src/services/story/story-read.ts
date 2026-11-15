@@ -20,6 +20,7 @@ import {
   type StoryFile,
   sortStoryFiles,
   storyPath,
+  storyTimeOf,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { dependencyStories } from "./story-dependencies.js";
@@ -67,6 +68,8 @@ export function toStory(config: ProjectConfig, file: StoryFile, position = 1): S
     stage: data.stage as string,
     position,
     dependsOn: dependsOnOf(data),
+    createdAt: storyTimeOf(data, "createdAt"),
+    updatedAt: storyTimeOf(data, "updatedAt"),
     description: body,
     fields: fields as Record<string, FieldValue>,
     path: file.path,

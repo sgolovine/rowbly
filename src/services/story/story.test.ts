@@ -6,8 +6,14 @@ import { updateStage } from "../stage/stage.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createStory, deleteStory, getStory, searchStories, updateStory } from "./story.js";
 
+/** The text of a story file without the times, for the tests that do not examine the times. */
+function withoutTimes(text: string): string {
+  return text.replace(/^(createdAt|updatedAt): .*\n/gm, "");
+}
+
 describe("story", () => {
   const project = useTestProject();
+  const readUntimed = async (path: string) => withoutTimes(await project.read(path));
 
   async function addFields(): Promise<void> {
     await addCustomField({ label: "Points", type: "number" }, project.ctx);
@@ -28,11 +34,14 @@ describe("story", () => {
         stage: "DONE",
         position: 1,
         dependsOn: [],
+        createdAt: story.createdAt,
+        updatedAt: story.createdAt,
         description: "Body",
         fields: { points: null, priority: null, owner: null },
         path: join(project.paths.storiesDir, "ROW-01.md"),
       });
-      expect(await project.read("stories/ROW-01.md")).toBe(
+      expect(story.createdAt).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
+      expect(await readUntimed("stories/ROW-01.md")).toBe(
         "---\ntitle: First\nstage: DONE\npoints: null\npriority: null\nowner: null\n---\n\nBody\n",
       );
     });
@@ -129,7 +138,7 @@ describe("story", () => {
       const story = await updateStory({ id: "ROW-03", position: 1 }, project.ctx);
       expect(story.position).toBe(1);
       expect(await order("BACKLOG")).toEqual(["1:Three", "2:One", "3:Two"]);
-      expect(await project.read("stories/ROW-03.md")).toBe("---\ntitle: Three\nstage: BACKLOG\nposition: 1\n---\n\n");
+      expect(await readUntimed("stories/ROW-03.md")).toBe("---\ntitle: Three\nstage: BACKLOG\nposition: 1\n---\n\n");
       await updateStory({ id: "ROW-03", position: 99 }, project.ctx);
       expect(await order("BACKLOG")).toEqual(["1:One", "2:Two", "3:Three"]);
     });
@@ -178,7 +187,7 @@ describe("story", () => {
       await project.write("stories/ROW-01.md", "---\ntitle: One\nstage: BACKLOG\nextra: 1\n---\n\nBody\n");
       expect((await getStory({ id: "ROW-01" }, project.ctx)).dependsOn).toEqual([]);
       await updateStory({ id: "ROW-01", title: "Uno" }, project.ctx);
-      expect(await project.read("stories/ROW-01.md")).toBe("---\ntitle: Uno\nstage: BACKLOG\nextra: 1\n---\n\nBody\n");
+      expect(await readUntimed("stories/ROW-01.md")).toBe("---\ntitle: Uno\nstage: BACKLOG\nextra: 1\n---\n\nBody\n");
     });
 
     it("saves the list in order, without duplicates, in canonical form, after position and before the fields", async () => {
@@ -186,11 +195,11 @@ describe("story", () => {
       await seed(2);
       const created = await createStory({ title: "Three", dependsOn: ["2", "row-1", "ROW-02"] }, project.ctx);
       expect(created.dependsOn).toEqual(["ROW-02", "ROW-01"]);
-      expect(await project.read("stories/ROW-03.md")).toBe(
+      expect(await readUntimed("stories/ROW-03.md")).toBe(
         "---\ntitle: Three\nstage: BACKLOG\ndependsOn:\n  - ROW-02\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
       );
       await updateStory({ id: "ROW-03", position: 1, dependsOn: ["row-1"] }, project.ctx);
-      expect(await project.read("stories/ROW-03.md")).toBe(
+      expect(await readUntimed("stories/ROW-03.md")).toBe(
         "---\ntitle: Three\nstage: BACKLOG\nposition: 1\ndependsOn:\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
       );
     });
@@ -201,7 +210,7 @@ describe("story", () => {
       await updateStory({ id: "ROW-02", title: "Second" }, project.ctx);
       expect((await getStory({ id: "ROW-02" }, project.ctx)).dependsOn).toEqual(["ROW-01"]);
       await updateStory({ id: "ROW-02", dependsOn: [] }, project.ctx);
-      expect(await project.read("stories/ROW-02.md")).toBe("---\ntitle: Second\nstage: BACKLOG\n---\n\n");
+      expect(await readUntimed("stories/ROW-02.md")).toBe("---\ntitle: Second\nstage: BACKLOG\n---\n\n");
     });
 
     it.each([
@@ -238,7 +247,7 @@ describe("story", () => {
         warnings: ["Removed the dependency on ROW-01 from ROW-03", "Removed the dependency on ROW-01 from ROW-04"],
       });
       expect((await getStory({ id: "ROW-03" }, project.ctx)).dependsOn).toEqual(["ROW-02"]);
-      expect(await project.read("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
+      expect(await readUntimed("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
     });
   });
 
@@ -257,7 +266,7 @@ describe("story", () => {
       const removed = await updateStory({ id: "ROW-04", removeDependsOn: ["ROW-03", "ROW-01"] }, project.ctx);
       expect(removed.dependsOn).toEqual(["ROW-02"]);
       await updateStory({ id: "ROW-04", removeDependsOn: ["ROW-02"] }, project.ctx);
-      expect(await project.read("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
+      expect(await readUntimed("stories/ROW-04.md")).toBe("---\ntitle: Four\nstage: BACKLOG\n---\n\n");
     });
 
     it("changes nothing for an add of an ID in the list or a remove of a missing ID", async () => {

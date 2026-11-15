@@ -119,6 +119,7 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly project update [--name <name>] [--key <key>]` | Project     | `--key` renames all Story files and changes all Spec links. |
 | `rowbly project update --specs <on\|off>`             | Project     | Turns Specs on or off.                                      |
 | `rowbly project update --compact-threads <on\|off>`   | Project     | Shows each Thread on one line in the TUI. The default is on. |
+| `rowbly project update --time-zone <zone>`            | Project     | Sets the time zone of the Story times in the TUI. `""` uses the system time zone. |
 | `rowbly status`                                       | Status      | Shows the factory phase, the Thread counts and the Story count of each Stage. |
 
 `rowbly status --json` gives this object. `stages` is in config order and includes the disabled Stages.
@@ -168,6 +169,8 @@ A Story record has this shape:
   "stage": "BACKLOG",
   "position": 1,
   "dependsOn": ["APP-02"],
+  "createdAt": "2025-01-02T03:04:05.678Z",
+  "updatedAt": "2025-01-03T10:00:00.000Z",
   "description": "Markdown text",
   "fields": { "priority": "P1", "story_points": null },
   "path": "/abs/path/.rowbly/stories/APP-01.md"
@@ -191,6 +194,8 @@ A Story record has this shape:
   You cannot use them together with `--depends-on`.
 - **Bad dependencies.** An unknown ID, a self reference or a cycle gives `VALIDATION`. `details.unknown`,
   `details.self` or `details.cycle` has the IDs. Nothing is saved.
+- **Times.** `createdAt` and `updatedAt` are ISO 8601 UTC strings. Each change of a Story sets `updatedAt`.
+  An older Story can have `null`.
 - **Dependency state.** `story get` adds `blocks` (the downstream Stories) and `waitingFor` (the upstream
   Stories that are not complete). `story search --blocked` or `--ready` filters by this state.
 
