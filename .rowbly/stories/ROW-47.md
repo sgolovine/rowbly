@@ -1,7 +1,7 @@
 ---
 title: Build the website layout, header, footer and shared components
-stage: IN_REFINEMENT
-position: 6
+stage: IN_DEVELOPMENT
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-47
 pull_request: null
 ---
