@@ -15,7 +15,7 @@ Biome enforces part of the style. This guide also gives the rules that Biome can
 
 ## Scope
 
-The strict style applies to all non-test TypeScript in `src/`. The strict override of `biome.json` is
+The strict style applies to all non-test TypeScript in `src/`. The strict override of `biome.jsonc` is
 the entry with the `biome-plugins/` plugins. Its `includes` list is `src/**` without the test files.
 
 - Write all code in `src/` in the strict style.
@@ -32,7 +32,7 @@ All files and folders use dash-case names: lower-case words with a `-` between t
 - Extensions follow the first dot: `story-row.test.tsx`, `check-names.test.mjs`, `vitest.config.ts`.
 
 `pnpm lint` checks the names. Biome `useFilenamingConvention` checks script files. The global
-`linter` settings of `biome.json` have this rule, so it also applies to tests and config files.
+`linter` settings of `biome.jsonc` have this rule, so it also applies to tests and config files.
 `scripts/check-names.mjs` checks each path that Git tracks, also folders, Markdown and HTML.
 
 These names are exceptions. The script lists them.
@@ -45,7 +45,7 @@ These names are exceptions. The script lists them.
 
 ## Rules that Biome enforces
 
-These rules are in the strict override of `biome.json`.
+These rules are in the strict override of `biome.jsonc`.
 
 | Rule                                      | What it stops                                                          |
 | ----------------------------------------- | ---------------------------------------------------------------------- |
@@ -322,7 +322,7 @@ quadratic. Build the collection in one pass, for example with `map`, `filter`, `
 
 1. Look for a Biome rule first. Run `pnpm exec biome explain <rule>` to read about a rule.
 2. If Biome has no rule, write a GritQL plugin in `biome-plugins/`.
-3. Add the rule or the plugin to the strict override of `biome.json`. Add a rule that also applies to
+3. Add the rule or the plugin to the strict override of `biome.jsonc`. Add a rule that also applies to
    tests and config files to the global `linter` settings.
 4. Make a temporary file with a violation, and make sure that `pnpm lint` finds it.
 5. Add the rule to the table in this guide.
