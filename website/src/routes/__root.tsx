@@ -5,6 +5,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import appCss from "../styles/app.css?url";
 
+/** The `id` of `<main>`. The "Skip to content" link moves the focus to this element. */
+const MAIN_CONTENT_ID = "main-content";
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -27,9 +30,15 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
+      <a
+        href={`#${MAIN_CONTENT_ID}`}
+        className="sr-only rounded-md bg-brand-accent text-sm font-medium text-brand-background focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2"
+      >
+        Skip to content
+      </a>
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
-        <main className="flex-1">
+        <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 outline-none">
           <Outlet />
         </main>
         <SiteFooter />

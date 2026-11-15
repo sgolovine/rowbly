@@ -166,6 +166,14 @@ magick assets/icon.png -filter Lanczos -resize 32x32 website/public/favicon-32x3
 `public/images/` has copies of `assets/screenshot.png`, `assets/header.png` and `assets/icon.png`. If you
 change a file in `assets/`, copy it again.
 
+The pages show `board.webp` and `board-no-tags.webp`. These files are lossless WebP copies of `board.png` and
+`board-no-tags.png`. They are approximately 80% smaller than the PNG files. If you change a PNG file, make the
+WebP file again, for example:
+
+```sh
+cwebp -lossless -z 9 website/public/images/board.png -o website/public/images/board.webp
+```
+
 ## Site URL
 
 `src/lib/site.ts` exports `SITE_URL`. Use this constant for each absolute URL of the site.
