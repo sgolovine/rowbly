@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 /**
  * The crop box of `board.png` and `board-no-tags.png` in `assets/screenshot.png`.
  * All other values in this file are pixel positions in the original screenshot.
+ * The page loads the lossless WebP copies (`board.webp` and `board-no-tags.webp`), because they are much smaller.
  */
 const CROP = { left: 261, top: 130, right: 1612, bottom: 748 } as const;
 const CROP_WIDTH = CROP.right - CROP.left;
@@ -69,7 +70,7 @@ export function BoardShot({ mode, className }: BoardShotProps) {
     return (
       <div className={cn("relative", className)}>
         <img
-          src="/images/board-no-tags.png"
+          src="/images/board-no-tags.webp"
           alt={BOARD_ALT}
           width={CROP_WIDTH}
           height={CROP_HEIGHT}
@@ -80,7 +81,7 @@ export function BoardShot({ mode, className }: BoardShotProps) {
         {TAG_ROW_TOPS.map((top, index) => (
           <img
             key={top}
-            src="/images/board.png"
+            src="/images/board.webp"
             alt=""
             aria-hidden="true"
             width={CROP_WIDTH}
@@ -97,7 +98,7 @@ export function BoardShot({ mode, className }: BoardShotProps) {
   return (
     <div className={cn("relative", className)}>
       <img
-        src="/images/board.png"
+        src="/images/board.webp"
         alt={BOARD_ALT}
         width={CROP_WIDTH}
         height={CROP_HEIGHT}
