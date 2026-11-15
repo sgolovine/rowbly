@@ -46,7 +46,8 @@ GitHub Pages serves each of these files directly.
 
 The build also writes `404.html` from the `/404` route. After the build, `scripts/make-static-404.mjs` removes
 the scripts from this file, so that the 404 page is static HTML. GitHub Pages serves this page for each
-unknown path. The files in `public/` (`CNAME` and `.nojekyll`) go into the output without changes.
+unknown path. The files in `public/` (for example `CNAME`, `.nojekyll` and `robots.txt`) go into the output
+without changes.
 
 ## Deploy
 
@@ -58,7 +59,8 @@ The workflow `.github/workflows/website.yml` deploys the site to GitHub Pages. I
   the site.
 
 The `build` job installs the dependencies, builds the site, checks the types and makes sure that
-`dist/client/` has `index.html`, `404.html`, `CNAME` and `.nojekyll`. Then it uploads `dist/client/` as the
+`dist/client/` has `index.html`, `404.html`, `CNAME`, `.nojekyll`, `sitemap.xml`, `robots.txt` and
+`images/og-image.png`. Then it uploads `dist/client/` as the
 Pages artifact. The `deploy` job publishes the artifact. Only one deploy runs at a time. A new deploy does not
 cancel a deploy that is in progress.
 
@@ -167,3 +169,56 @@ change a file in `assets/`, copy it again.
 ## Site URL
 
 `src/lib/site.ts` exports `SITE_URL`. Use this constant for each absolute URL of the site.
+
+## SEO
+
+### Page head
+
+`src/lib/seo.ts` has the SEO helper `pageHead({ path, title, description })`. It gives the `meta` and `links`
+of the route `head` for one page:
+
+- The `<title>` and the meta description.
+- The canonical link. The home URL is `https://rowbly.com/`. Other URLs have no trailing slash, for example
+  `https://rowbly.com/install`.
+- The Open Graph tags (`og:*`) and the Twitter card tags (`twitter:*`). All pages use the same OG image.
+
+Use `pageHead` in the `head` of each page that search engines must index. A child route `head` overrides the
+`title` of the root route and each meta tag with the same `name` or `property`.
+
+The home route `src/routes/index.tsx` also adds the `SoftwareApplication` JSON-LD with
+`softwareApplicationScript()`. Only the home page has JSON-LD.
+
+The `/404` route does not use `pageHead`. It has a `noindex` meta tag, and it has no canonical link and no OG
+tags.
+
+### OG image
+
+`public/images/og-image.png` is the social card image (1200x630 PNG). The image has the `rowbly_` wordmark in
+JetBrains Mono with the amber cursor, the text "Your backlog, built by a factory of agents." in Inter, a crop
+of the agent tags of `public/images/board.png` and an amber line at the bottom. It uses only the brand
+colours.
+
+The image is a committed file. The build does not make it. To make the image again, do these steps one time:
+
+1. Make a temporary HTML page of 1200x630 px. Use the brand colours, and load the fonts from the
+   `@fontsource-variable` packages in `node_modules/`.
+2. Take a screenshot with a headless browser, for example:
+
+   ```sh
+   google-chrome --headless=new --hide-scrollbars --force-device-scale-factor=1 \
+     --window-size=1200,630 --screenshot=website/public/images/og-image.png file:///tmp/og/og.html
+   ```
+
+3. Make sure that `file website/public/images/og-image.png` shows `1200 x 630`. Keep the file small (less
+   than 300 KB).
+
+Do not commit the HTML page. Do not add a dependency or a build step for the image.
+
+### Sitemap and robots.txt
+
+The `sitemap` option of the `tanstackStart()` plugin in `vite.config.ts` writes `dist/client/sitemap.xml`.
+The host is `SITE_URL`. The sitemap has each prerendered page. The prerender crawl finds `/how-it-works` and
+`/install`. The `/404` page entry has `sitemap: { exclude: true }`, so the sitemap does not have it. The
+sitemap step also writes `dist/client/pages.json`. Search engines do not use this file.
+
+`public/robots.txt` allows all crawlers and gives the URL of the sitemap.

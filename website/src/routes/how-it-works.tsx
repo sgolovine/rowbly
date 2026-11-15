@@ -7,18 +7,16 @@ import { StayingInControl } from "@/components/how-it-works/staying-in-control";
 import { TheBoard } from "@/components/how-it-works/the-board";
 import { TheFactory } from "@/components/how-it-works/the-factory";
 import { YourModels } from "@/components/how-it-works/your-models";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/how-it-works")({
-  head: () => ({
-    meta: [
-      { title: "How it works | Rowbly" },
-      {
-        name: "description",
-        content:
-          "How Rowbly works: a Kanban board of Stories in your repo, a plain-English prompt for each Stage, and a factory of AI agents that does the work while you watch.",
-      },
-    ],
-  }),
+  head: () =>
+    pageHead({
+      path: "/how-it-works",
+      title: "How it works | Rowbly",
+      description:
+        "How Rowbly works: a Kanban board of Stories in your repo, a plain-English prompt for each Stage, and a factory of AI agents that does the work while you watch.",
+    }),
   component: HowItWorksPage,
 });
 
