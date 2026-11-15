@@ -1,7 +1,7 @@
 ---
 title: Build the closing landing sections and the install call to action
-stage: IN_REVIEW
-position: 2
+stage: DONE
+position: 59
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-51
 pull_request: https://github.com/sgolovine/rowbly/pull/247
 ---
@@ -102,8 +102,3 @@ Not in scope:
 - The "Get started" button of the final call to action goes to `/install`, not `#install`. Reason: the Story says so, and the button is already in the `#install` section.
 - "Needs Node 22 or later" stays as the Spec says, although `package.json` has `engines.node >=22.19.0`. Reason: the copy must match the Spec word for word. ROW-53 can give the exact version on the Install page.
 - The acceptance criterion "after Watch everything live" applies to the main branch after ROW-50 is merged. Reason: ROW-50 is in development now.
-
-## Review findings
-
-- The merge of `origin/main` (bc8cdba1) into `story/ROW-51` has a conflict in `website/src/routes/index.tsx`. ROW-50 is merged on main now. It adds the `HowItWorks` and `WatchLive` imports and sections at the same lines as the five sections of this Story.
-- Repair: merge `origin/main`. Keep all imports of the two sides. Use this order in `HomePage`: `Hero`, `ProofStrip`, `SeeItWork`, `HowItWorks`, `WatchLive`, `BringYourModels`, `FilesInRepo`, `TuiAndCli`, `SpecsAndAttachments`, `InstallCta`. Then examine the acceptance criterion about the order after `id="watch-live"` in the prerendered `index.html`.
