@@ -137,4 +137,39 @@ describe("watchdog state file", () => {
     await writeWatchdogState(project.paths, { ...(await state("backoff")), process: holder });
     expect(await liveWatchdog(project.paths)).toEqual({ process: holder, liveness: "alive" });
   });
+
+  it("finds a live claim holder when its state changes from missing to running between the reads", async () => {
+    const holder = await newOwner();
+    const running: WatchdogState = { ...(await state("running")), process: holder };
+    let stateReads = 0;
+    let claimReads = 0;
+    const reader = {
+      // The claim read sees the holder. The state file has no record yet.
+      claim: async () => {
+        claimReads += 1;
+        return holder;
+      },
+      // The holder writes its first `running` record after the claim read.
+      state: async () => {
+        stateReads += 1;
+        return running;
+      },
+    };
+    expect(await liveWatchdog(project.paths, async () => "alive", reader)).toEqual({
+      process: holder,
+      liveness: "alive",
+    });
+    expect({ claimReads, stateReads }).toEqual({ claimReads: 1, stateReads: 1 });
+
+    // The claim read sees no holder, and then the new holder takes the claim and writes `running`.
+    const late = { claim: async () => undefined, state: async () => running };
+    expect(await liveWatchdog(project.paths, async () => "alive", late)).toEqual({
+      process: holder,
+      liveness: "alive",
+    });
+
+    // The claim read sees the holder, and the state read sees its last phase: it is about to exit.
+    const done = { claim: async () => holder, state: async () => ({ ...running, phase: "stopped" as const }) };
+    expect(await liveWatchdog(project.paths, async () => "alive", done)).toBeUndefined();
+  });
 });

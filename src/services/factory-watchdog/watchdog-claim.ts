@@ -8,7 +8,7 @@ import {
 } from "../factory-ownership/factory-ownership.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
-import { activeWatchdog, readWatchdogState } from "./watchdog-state.js";
+import { readWatchdogState, type WatchdogState, watchdogActive } from "./watchdog-state.js";
 
 /** The paths of the exclusive watchdog claim and of its guard. */
 async function claimPaths(paths: ProjectPaths): Promise<{ lock: string; guard: string }> {
@@ -49,30 +49,50 @@ export interface LiveWatchdog {
   readonly liveness: "alive" | "uncertain";
 }
 
+/** Reads the watchdog claim and the watchdog state. Tests inject a reader to change the files between the reads. */
+interface WatchdogReader {
+  readonly claim: (paths: ProjectPaths) => Promise<Owner | undefined>;
+  readonly state: (paths: ProjectPaths) => Promise<WatchdogState | undefined>;
+}
+
+const fileReader: WatchdogReader = { claim: readWatchdogClaim, state: readWatchdogState };
+
+/** Gives the process when it is alive or uncertain. */
+async function liveProcess(process: Owner, probe: OwnerProbe): Promise<LiveWatchdog | undefined> {
+  const liveness = await probe(process);
+
+  return liveness === "dead" ? undefined : { process, liveness };
+}
+
 /**
  * Gives the watchdog that can still start a daemon: an active watchdog in the state file, or a claim holder that
- * did not write the state file yet. A claim holder that wrote its last phase is about to exit and is not live.
+ * did not write its last phase. A claim holder that wrote its last phase is about to exit and is not live.
+ *
+ * The function reads the claim one time and then the state one time, and decides from this one snapshot. The claim
+ * holder writes the state only after it takes the claim. Thus a state that changes between the two reads shows the
+ * new holder as active, and the function never misses a live holder.
  */
 export async function liveWatchdog(
   paths: ProjectPaths,
   probe: OwnerProbe = probeOwner,
+  reader: WatchdogReader = fileReader,
 ): Promise<LiveWatchdog | undefined> {
-  const active = await activeWatchdog(paths, probe);
+  const claim = await reader.claim(paths);
+  const state = await reader.state(paths);
 
-  if (active) {
-    return { process: active.state.process, liveness: active.liveness };
+  if (state && watchdogActive(state)) {
+    const active = await liveProcess(state.process, probe);
+
+    if (active) {
+      return active;
+    }
   }
 
-  const claim = await readWatchdogClaim(paths);
-  const state = await readWatchdogState(paths);
-
-  if (!claim || claim.token === state?.process.token) {
+  if (!claim || (state?.process.token === claim.token && !watchdogActive(state))) {
     return undefined;
   }
 
-  const liveness = await probe(claim);
-
-  return liveness === "dead" ? undefined : { process: claim, liveness };
+  return liveProcess(claim, probe);
 }
 
 /** Gives the holder of the watchdog claim while it is alive or uncertain, also when it is about to exit. */
