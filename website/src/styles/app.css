@@ -128,3 +128,32 @@
     animation: board-tag-in 400ms ease-out both;
   }
 }
+
+/* The fades of the animated board. A card fades out in Done and fades in again in Backlog. */
+@keyframes board-card-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes board-card-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board-card-enter {
+    animation: board-card-enter 500ms ease-out 300ms both;
+  }
+
+  .board-card-leave {
+    animation: board-card-leave 400ms ease-out both;
+  }
+}
