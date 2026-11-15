@@ -1,7 +1,7 @@
 ---
 title: Build the How it works and Watch everything live landing sections
-stage: CHANGELOG
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-50
 pull_request: https://github.com/sgolovine/rowbly/pull/246
 ---
