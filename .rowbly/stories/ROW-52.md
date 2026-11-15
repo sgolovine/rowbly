@@ -1,9 +1,9 @@
 ---
 title: Build the How it works page
-stage: IN_DEVELOPMENT
-position: 1
+stage: IN_REVIEW
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-52
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/248
 ---
 
 ## Goal
