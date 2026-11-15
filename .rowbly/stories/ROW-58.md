@@ -1,9 +1,9 @@
 ---
 title: Accept TanStack Router file names in the lint checks
-stage: IN_DEVELOPMENT
-position: 3
+stage: CHANGELOG
+position: 1
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-58
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/240
 ---
 
 ## Goal

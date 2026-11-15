@@ -2,7 +2,7 @@
 title: Scaffold the website with TanStack Start, Tailwind and shadcn/ui
 stage: IN_REFINEMENT
 position: 4
-worktree: null
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-45
 pull_request: null
 ---
 
