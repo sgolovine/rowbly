@@ -1,8 +1,8 @@
 ---
-title: Gap in list view.
+title: Fix Gap in list view.
 stage: BACKLOG
 worktree: null
 pull_request: null
 ---
 
-Gap on top of list view, see screenshots
+When done list is open, there is a gap in the top of the list view, but only when the accordion is expanded
