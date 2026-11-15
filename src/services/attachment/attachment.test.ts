@@ -152,4 +152,20 @@ describe("attachments", () => {
     await writeFile(join(dir, "manifest.json"), JSON.stringify([{ id: "../../bad" }]));
     await expect(listAttachments({ story: story.id }, p.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
   });
+  it("sets updatedAt of the Story when an attachment is added or removed", async () => {
+    const story = await createStory({ title: "Times" }, { ...p.ctx, now: () => new Date("2025-01-01T00:00:00.000Z") });
+    const added = await addAttachment(
+      { story: story.id, image: { name: "a.png", bytes: png } },
+      { ...p.ctx, now: () => new Date("2025-02-02T00:00:00.000Z") },
+    );
+    expect(await getStory({ id: story.id }, p.ctx)).toMatchObject({
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-02-02T00:00:00.000Z",
+    });
+    await removeAttachment(
+      { story: story.id, id: added?.id as string },
+      { ...p.ctx, now: () => new Date("2025-03-03T00:00:00.000Z") },
+    );
+    expect((await getStory({ id: story.id }, p.ctx)).updatedAt).toBe("2025-03-03T00:00:00.000Z");
+  });
 });

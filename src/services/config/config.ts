@@ -19,6 +19,11 @@ export function compactThreads(config: ProjectConfig): boolean {
   return config.display?.compactThreads !== false;
 }
 
+/** The time zone of the Story times in the TUI. `undefined` means the system time zone. */
+export function storyTimeZone(config: ProjectConfig): string | undefined {
+  return config.display?.timeZone;
+}
+
 /** Gives the parsed JSON, or the message of the syntax error. */
 function parseJson(text: string): { ok: true; value: unknown } | { ok: false; message: string } {
   try {

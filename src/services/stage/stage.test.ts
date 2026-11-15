@@ -144,4 +144,20 @@ describe("stage", () => {
       expect((await readConfig(project.paths)).stages).toHaveLength(1);
     });
   });
+
+  describe("story times", () => {
+    const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+    const updatedAt = async (id: string) => (await getStory({ id }, project.ctx)).updatedAt;
+
+    it("a rename and a delete set updatedAt only of each story that they move", async () => {
+      await createStory({ title: "A", stage: "BACKLOG" }, at("2025-01-01T00:00:00.000Z"));
+      await createStory({ title: "B", stage: "DONE" }, at("2025-01-01T00:00:00.000Z"));
+      await updateStage({ key: "BACKLOG", newKey: "TODO" }, at("2025-02-02T00:00:00.000Z"));
+      expect(await updatedAt("ROW-01")).toBe("2025-02-02T00:00:00.000Z");
+      expect(await updatedAt("ROW-02")).toBe("2025-01-01T00:00:00.000Z");
+      await deleteStage({ key: "DONE", moveStoriesTo: "TODO" }, at("2025-03-03T00:00:00.000Z"));
+      expect(await updatedAt("ROW-01")).toBe("2025-02-02T00:00:00.000Z");
+      expect(await updatedAt("ROW-02")).toBe("2025-03-03T00:00:00.000Z");
+    });
+  });
 });

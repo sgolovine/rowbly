@@ -52,8 +52,13 @@ const background = Number(process.env.COLORFGBG?.split(";").at(-1) ?? 0);
 export const theme = themes[[7, 15].includes(background) ? "light" : "dark"];
 export const stageColors = { backlog: theme.stageBacklog, board: theme.stageBoard, done: theme.stageDone };
 
-/** Local time for saved records. */
-export function formatDateTime(value: string): string {
+/** The time zone of the system, for example `Europe/Berlin`. */
+export function systemTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/** A saved time as `20 Oct 2026, 23:03`, in `timeZone` or, without one, in the time zone of the system. */
+export function formatDateTime(value: string, timeZone?: string): string {
   return new Date(value).toLocaleString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -61,5 +66,6 @@ export function formatDateTime(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    ...(timeZone === undefined ? {} : { timeZone }),
   });
 }

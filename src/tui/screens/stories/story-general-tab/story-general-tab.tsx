@@ -11,6 +11,7 @@ import { IMAGE_PASTE_HINT } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { StoryDependencyLists } from "../story-dependency-lists/index.js";
 import type { DependencyLists } from "../story-dependency-view.js";
+import { StoryTimeRows, type StoryTimes } from "../story-time-rows/index.js";
 
 const NO_HINTS: readonly KeyHint[] = [];
 /** One list for all renders, so that the Form does not report its keys again on each render. */
@@ -23,6 +24,8 @@ export interface StoryGeneralTabProps {
   readonly initialValues: FormValues;
   /** The saved upstream and downstream Stories, or undefined when the tab does not show them. */
   readonly dependencies: DependencyLists | undefined;
+  /** The saved times of the Story, or undefined when the tab does not show them. */
+  readonly times: StoryTimes | undefined;
   /** The rows of the scroll region, or undefined when the content sets the height. */
   readonly height: number | undefined;
   /** The scroll region and the Delete Button take the keys and the clicks. */
@@ -36,11 +39,15 @@ export interface StoryGeneralTabProps {
   readonly onDelete: () => void;
 }
 
-/** The General tab of the Story form: the Form of the Story, the saved dependencies, and the Delete Button under them. */
+/**
+ * The General tab of the Story form: the Form of the Story, the saved dependencies, the Created and Updated times,
+ * and the Delete Button under them.
+ */
 export function StoryGeneralTab({
   fields,
   initialValues,
   dependencies,
+  times,
   height,
   active,
   formActive,
@@ -61,6 +68,7 @@ export function StoryGeneralTab({
         />
       </FormNavigationContext.Provider>
       {dependencies && <StoryDependencyLists lists={dependencies} />}
+      {times && <StoryTimeRows times={times} />}
       <Box marginTop={1}>
         <Button label="Delete" keyName="ctrl+d" onClick={onDelete} clickable={active} compact destructive />
       </Box>

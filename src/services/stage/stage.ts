@@ -161,13 +161,20 @@ function updatedStages(
     : config.stages.toSpliced(index, 1).toSpliced(position - 1, 0, updated);
 }
 
-/** Renames the prompt file of a stage, and moves the stories of the stage to the new key. */
-async function renameStage(paths: ProjectPaths, config: ProjectConfig, oldKey: string, newKey: string): Promise<void> {
+/** Renames the prompt file of a stage, and moves the stories of the stage to the new key at the time `now`. */
+async function renameStage(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  keys: { readonly oldKey: string; readonly newKey: string },
+  now: Date,
+): Promise<void> {
+  const { oldKey, newKey } = keys;
+
   if (await pathExists(stageFile(paths, oldKey))) {
     await rename(stageFile(paths, oldKey), stageFile(paths, newKey));
   }
 
-  await rewriteStories(paths, config, (data) => (data.stage === oldKey ? { ...data, stage: newKey } : false));
+  await rewriteStories(paths, config, (data) => (data.stage === oldKey ? { ...data, stage: newKey } : false), now);
 }
 
 /** Changes a stage. A new key renames the prompt file and moves the stories of the stage. */
@@ -196,7 +203,7 @@ export async function updateStage(input: UpdateStageInput, ctx: ServiceContext =
   const next = { ...config, stages: updatedStages(config, stage, updated, input.position) };
 
   if (newKey !== oldKey) {
-    await renameStage(paths, next, oldKey, newKey);
+    await renameStage(paths, next, { oldKey, newKey }, ctx.now?.() ?? new Date());
   }
 
   if (input.prompt !== undefined) {
@@ -244,7 +251,12 @@ export async function deleteStage(
 
   const next = { ...config, stages: config.stages.filter((s) => s !== stage) };
   const movedStories = target
-    ? await rewriteStories(paths, next, (data) => (data.stage === stage.key ? { ...data, stage: target.key } : false))
+    ? await rewriteStories(
+        paths,
+        next,
+        (data) => (data.stage === stage.key ? { ...data, stage: target.key } : false),
+        ctx.now?.() ?? new Date(),
+      )
     : 0;
 
   await writeConfig(paths, next);

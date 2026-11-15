@@ -39,10 +39,12 @@ export interface ProjectConfig {
 export interface DisplayConfig {
   /** Shows each Thread on one line. A value that is not set is `true`. */
   compactThreads?: boolean;
+  /** The IANA time zone of the Story times, for example `Europe/Berlin`. A value that is not set is the system zone. */
+  timeZone?: string;
 }
 
 /** The names of the display options. */
-export const DISPLAY_OPTIONS = ["compactThreads"] as const;
+export const DISPLAY_OPTIONS = ["compactThreads", "timeZone"] as const;
 export type DisplayOption = (typeof DISPLAY_OPTIONS)[number];
 
 /** The optional features of a project, by name. */

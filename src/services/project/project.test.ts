@@ -82,12 +82,14 @@ describe("getProject and updateProject", () => {
   });
 
   it("changes the IDs in each dependsOn list to the new key", async () => {
-    await createStory({ title: "One" }, project.ctx);
-    await createStory({ title: "Two", dependsOn: ["ROW-01"] }, project.ctx);
-    await updateProject({ key: "web" }, project.ctx);
+    const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+    await createStory({ title: "One" }, at("2025-01-01T00:00:00.000Z"));
+    await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at("2025-01-01T00:00:00.000Z"));
+    await updateProject({ key: "web" }, at("2025-02-02T00:00:00.000Z"));
     expect(await project.read("stories/WEB-02.md")).toBe(
-      "---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - WEB-01\n---\n\n",
+      "---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - WEB-01\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-02-02T00:00:00.000Z\n---\n\n",
     );
+    expect((await getStory({ id: "WEB-01" }, project.ctx)).updatedAt).toBe("2025-01-01T00:00:00.000Z");
     expect((await getStory({ id: "WEB-02" }, project.ctx)).dependsOn).toEqual(["WEB-01"]);
   });
 
@@ -121,5 +123,20 @@ describe("getProject and updateProject", () => {
     expect((await getProject(project.ctx)).display).toEqual({ compactThreads: false });
     await updateProject({ display: { compactThreads: true } }, project.ctx);
     expect((await getProject(project.ctx)).display).toEqual({ compactThreads: true });
+  });
+
+  it("saves and removes the time zone, and rejects an unknown zone", async () => {
+    const updated = await updateProject({ display: { timeZone: "Europe/Berlin" } }, project.ctx);
+    expect(updated.display).toEqual({ timeZone: "Europe/Berlin" });
+    expect(JSON.parse(await project.read("rowbly.config.json")).display).toEqual({ timeZone: "Europe/Berlin" });
+    await updateProject({ display: { compactThreads: false } }, project.ctx);
+    expect((await getProject(project.ctx)).display).toEqual({ timeZone: "Europe/Berlin", compactThreads: false });
+    await updateProject({ display: { timeZone: "" } }, project.ctx);
+    expect(JSON.parse(await project.read("rowbly.config.json")).display).toEqual({ compactThreads: false });
+    const before = await project.read("rowbly.config.json");
+    await expect(updateProject({ display: { timeZone: "Mars/Olympus" } }, project.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    expect(await project.read("rowbly.config.json")).toBe(before);
   });
 });

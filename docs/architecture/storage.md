@@ -23,11 +23,11 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, display? {compactThreads}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, display? {compactThreads,timeZone}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, one key per custom field (null = unset); the body is the description
+  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -53,12 +53,18 @@ display options, the installed skills and the factory settings. The `config` ser
   use it. This keeps the files consistent.
 - The `skills` list holds the bundled skills that the Project has installed. Each entry has the `name`
   of a skill and the `harnesses` that have a copy. See [skills-and-stages.md](skills-and-stages.md).
-- The optional `display` key holds the display options of the TUI. It has one boolean key,
-  `compactThreads`. When `compactThreads` is `true` or is not set, each Thread in the Threads view
-  and in the Threads tab of a Story uses one line. When it is `false`, each Thread uses up to three
-  lines. Set it with `rowbly project update --compact-threads <on|off>` or in Settings › Display. A
-  `display` value that is not an object, an unknown key or a value that is not a boolean gives a
-  config issue.
+- The optional `display` key holds the display options of the TUI. It has two keys:
+  - `compactThreads` (boolean). When `compactThreads` is `true` or is not set, each Thread in the
+    Threads view and in the Threads tab of a Story uses one line. When it is `false`, each Thread uses
+    up to three lines. Set it with `rowbly project update --compact-threads <on|off>` or in
+    Settings › Display.
+  - `timeZone` (string). The IANA time zone of the Story times in the TUI, for example
+    `Europe/Berlin`. When it is not set, the TUI uses the time zone of the system. Set it with
+    `rowbly project update --time-zone <zone>` or in Settings › Display. `--time-zone ""` removes the
+    key. The time zone changes only the display. The Story files keep the times in UTC.
+
+  A `display` value that is not an object, an unknown key, a `compactThreads` value that is not a
+  boolean or a `timeZone` that `Intl.DateTimeFormat` does not accept gives a config issue.
 - The `factory` key holds the factory settings. See [Factory settings](#factory-settings). Each write
   of the config keeps this key.
 
@@ -149,13 +155,34 @@ read the settings continue to work.
 
 A Story file is `stories/<projectKey>-<n>.md`, for example `ROW-01.md`. The number has at least two
 digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list,
-and one key for each custom field. A `null` value means that the field has no value. The Markdown body
+the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
 
 The `position` of a Story sets its order in its Stage.
 
 - A Story without a `position` comes after the Stories that have one, in the order of their numbers.
 - When a Story moves, the service writes a new `position` to each Story of the Stage that changes place.
+
+### Times
+
+The `createdAt` key has the time when the Story was created. The `updatedAt` key has the time of the
+last change of the Story. Each value is an ISO 8601 UTC string from `Date.prototype.toISOString()`,
+for example `2025-01-02T03:04:05.678Z`. The services get the time from `ctx.now`, so that a test can
+set it.
+
+- `story create` writes the two keys with the same value.
+- Each write that changes a Story file sets `updatedAt`: a `story update`, a Stage rename, a Stage
+  delete that moves Stories, an add, rename or remove of a custom field, a Project key change that
+  changes `dependsOn`, the removal of a deleted Story from a `dependsOn` list, and a repair of
+  `rowbly doctor --fix`. An add or a remove of an attachment also sets `updatedAt`.
+- An update that does not change the Story file does not change `updatedAt`.
+- When a Story moves, the other Stories of the Stage that get a new `position` keep their
+  `updatedAt`. Only the moved Story gets a new time.
+- `createdAt` does not change after the create. Rowbly does not add `createdAt` to an older Story.
+- The two keys come after `dependsOn` and before the custom fields. The YAML parser keeps them as
+  strings, not as dates.
+- A missing value, or a value that is not a valid date string, reads as `null` in the `Story` record.
+- The TUI shows the times in the General tab of a Story, in the time zone of `display.timeZone`.
 
 ### Dependencies
 

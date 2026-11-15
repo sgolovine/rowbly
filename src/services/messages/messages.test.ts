@@ -82,6 +82,8 @@ function story(id: string, overrides: Partial<Story> = {}): Story {
     stage: "DONE",
     position: 1,
     dependsOn: [],
+    createdAt: null,
+    updatedAt: null,
     description: "",
     fields: {},
     path: `/repo/.rowbly/stories/${id}.md`,

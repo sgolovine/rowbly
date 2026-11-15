@@ -81,6 +81,7 @@ export function EditStoryForm({
   customFields,
   specs = false,
   compactThreads,
+  timeZone,
   onSaved,
   onDeleted,
   onBack,
@@ -96,6 +97,8 @@ export function EditStoryForm({
   specs?: boolean;
   /** Each thread of the Threads tab uses one line. */
   compactThreads?: boolean;
+  /** The time zone of the Created and Updated times. `undefined` is the time zone of the system. */
+  timeZone?: string;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
   /** `esc`: the Story sidebar gives the focus to the Story list. */
@@ -119,6 +122,7 @@ export function EditStoryForm({
       fields={storyFormFields(stages, customFields, dependencyChoices(stories, story.id, story.dependsOn))}
       initialValues={initialValues(story, customFields)}
       dependencies={dependencyLists(stories, stages, story.id, story.dependsOn)}
+      times={{ createdAt: story.createdAt, updatedAt: story.updatedAt, timeZone }}
       onSubmit={(values, attachments) => saveStory(env, values, attachments)}
       onRequestClose={onBack}
       onDelete={{
