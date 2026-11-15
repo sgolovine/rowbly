@@ -36,7 +36,7 @@ jobs:
       - run: pnpm --dir website typecheck
       - name: Check the static output
         run: |
-          for file in index.html 404.html CNAME .nojekyll; do
+          for file in index.html 404.html CNAME .nojekyll sitemap.xml robots.txt images/og-image.png; do
             if [ ! -f "website/dist/client/$file" ]; then
               echo "::error::website/dist/client/$file is missing"
               exit 1

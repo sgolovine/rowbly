@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Section } from "@/components/section";
+import { pageHead } from "@/lib/seo";
 import { DOCS_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/install")({
+  head: () =>
+    pageHead({
+      path: "/install",
+      title: "Install | Rowbly",
+      description:
+        "Install Rowbly with npm, open it in your Git repo and start the factory. Free and open source under MIT. Needs Node 22. The factory runs on Linux today.",
+    }),
   component: InstallPage,
 });
 
