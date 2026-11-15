@@ -28,7 +28,8 @@ export interface StoryListProps {
 /**
  * The rows of the Story list, from `storyListRows`, with the row at `cursor` highlighted. A Stage heading
  * starts a section, and the Stories below a heading are indented. When there are more rows than `height`,
- * the list shows the rows around the cursor and says how many more are above and below. The mouse wheel
+ * the list shows the rows around the cursor. A `↑ n more` line shows only when rows are above them, and a
+ * `↓ n more` line shows only when rows are below them, so that no blank line shows. The mouse wheel
  * calls `onCursor`. A click on the selected row calls `onActivate`. A click on another row selects it
  * through `onCursor`. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
  * shows the gap where it lands, and the release calls `onMove`. Over a Story above the dragged Story, the gap
@@ -63,7 +64,7 @@ export function StoryList({
 
   return (
     <Box ref={ref} flexDirection="column">
-      {view.overflow && <Text color={theme.inkFaint}>{view.above > 0 ? `↑ ${view.above} more` : " "}</Text>}
+      {view.above > 0 && <Text color={theme.inkFaint}>{`↑ ${view.above} more`}</Text>}
       {visibleItems(rows, view, slot).map((item) =>
         item.kind === "gap" ? (
           <DropSlotRow
@@ -94,7 +95,7 @@ export function StoryList({
           onDrop={(value) => dropStory(env, value, rows.length)}
         />
       )}
-      {view.overflow && <Text color={theme.inkFaint}>{view.below > 0 ? `↓ ${view.below} more` : " "}</Text>}
+      {view.below > 0 && <Text color={theme.inkFaint}>{`↓ ${view.below} more`}</Text>}
     </Box>
   );
 }
