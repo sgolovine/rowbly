@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 /** The branded "Page not found" page. The build writes it to `404.html`, and the router shows it for an unknown path. */
 export function NotFoundPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-brand-background px-6 text-center">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-6 py-24 text-center">
       <p className="font-mono text-5xl font-semibold text-brand-text">
         rowbly<span className="text-brand-accent">_</span>
       </p>
@@ -15,6 +15,6 @@ export function NotFoundPage() {
       <Button asChild>
         <Link to="/">Go to the home page</Link>
       </Button>
-    </main>
+    </div>
   );
 }
