@@ -1,7 +1,7 @@
 ---
 title: Restart the factory daemon automatically after a crash
-stage: IN_REVIEW
-position: 1
+stage: CHANGELOG
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
 pull_request: https://github.com/sgolovine/rowbly/pull/232
 ---
