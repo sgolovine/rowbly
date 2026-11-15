@@ -1,7 +1,7 @@
 ---
 title: "Optional: move a stuck upstream Story out of Backlog automatically"
 stage: IN_DEVELOPMENT
-position: 3
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-66
 pull_request: null
 ---
