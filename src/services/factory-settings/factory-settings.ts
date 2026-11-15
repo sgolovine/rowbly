@@ -13,6 +13,7 @@ import {
   mergeChecks,
   validChecks,
 } from "./check-settings.js";
+import { type Dependencies, type DependencyInput, dependencyChange, validDependencies } from "./dependency-settings.js";
 import {
   type GitInput,
   type GitSettings,
@@ -34,6 +35,7 @@ import {
 } from "./worker-overrides.js";
 
 export type { CheckItem, CheckSpec } from "./check-settings.js";
+export { pullUpstream } from "./dependency-settings.js";
 export type { GitInput, GitSync } from "./git-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
@@ -57,12 +59,13 @@ export interface FactorySettings {
   storyWorkerModels?: StoryWorkerModels;
   git?: GitSettings;
   checks?: CheckSettings;
+  dependencies?: Dependencies;
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
 export type FactorySettingsInput = Partial<FactorySettings>;
 
-interface ConfigureInput extends GitInput, CheckInput {
+interface ConfigureInput extends GitInput, CheckInput, DependencyInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -130,7 +133,8 @@ function validSettings(settings: FactorySettings): boolean {
     (settings.workerModel === undefined || validModel(settings.workerModel)) &&
     validOverrides(settings) &&
     (settings.git === undefined || validGit(settings.git)) &&
-    (settings.checks === undefined || validChecks(settings.checks))
+    (settings.checks === undefined || validChecks(settings.checks)) &&
+    validDependencies(settings.dependencies)
   );
 }
 
@@ -281,7 +285,8 @@ function overrideProblem(input: ConfigureInput): string | undefined {
     input.supervisorThinking !== undefined ||
     input.maxWorkers !== undefined ||
     hasGitInput(input) ||
-    hasCheckInput(input)
+    hasCheckInput(input) ||
+    input.pullUpstream !== undefined
   ) {
     return "A Stage override sets only the worker model";
   }
@@ -360,8 +365,10 @@ async function configureWorkerOverride(
   return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, choice) }), ctx);
 }
 
-/** Rejects an invalid commit author before the runtime starts. */
+/** Rejects an invalid commit author or dependency value before the runtime starts. */
 function checkGitInput(input: ConfigureInput): void {
+  dependencyChange(undefined, input);
+
   if (input.commitAuthor?.trim()) {
     parseAuthor(input.commitAuthor);
   }
@@ -401,6 +408,7 @@ export async function configureFactory(
       ...(worker.choice ? { workerModel: worker.choice } : {}),
       ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
       ...(hasCheckInput(input) ? { checks: mergeChecks(current.checks, input) } : {}),
+      ...dependencyChange(current.dependencies, input),
     }),
     ctx,
   );

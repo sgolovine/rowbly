@@ -5,7 +5,7 @@ import type { Stage } from "../../../../services/stage/stage.js";
 import { type FormValues, Tabs } from "../../../components/index.js";
 import { AiAddProviderPage } from "../ai-add-provider-page/index.js";
 import { AiChecksPage, type AiChecksPageProps } from "../ai-checks-page/index.js";
-import { AiLimitsPage } from "../ai-limits-page/index.js";
+import { AiLimitsPage, type AiLimitsPageProps } from "../ai-limits-page/index.js";
 import { AiModelsPage } from "../ai-models-page/index.js";
 import { AiProvidersPage } from "../ai-providers-page/index.js";
 import { AiTaskView } from "../ai-task/index.js";
@@ -22,6 +22,7 @@ import {
   saveModel,
   saveStageModel,
   signOut,
+  togglePullUpstream,
 } from "./ai-actions.js";
 import { openCheck, removeCheckItem, saveCheck, saveCheckLimits } from "./check-actions.js";
 import { useAiSection } from "./use-ai-section.js";
@@ -38,6 +39,16 @@ function taskHandlers(env: AiEnv) {
     onSaveCheck: (check: CheckSpec | undefined, values: FormValues) => saveCheck(env, check, values),
     onRemoveCheck: (check: CheckSpec) => removeCheckItem(env, check),
     onCancel: () => env.setTask(null),
+  };
+}
+
+/** The props of the Limits tab. */
+function limitsPageProps(env: AiEnv, idle: boolean): AiLimitsPageProps {
+  return {
+    settings: env.settings.data,
+    idle,
+    onLimit: () => env.setTask({ kind: "limit" }),
+    onPullUpstream: () => togglePullUpstream(env),
   };
 }
 
@@ -59,7 +70,8 @@ function checksPageProps(env: AiEnv, idle: boolean): AiChecksPageProps {
  *   to another provider. On that page, `enter` signs in and `esc` goes back.
  * - Models: the models of the supervisor and of the workers. `s` and `w` change them. Under them, `↑/↓` select a
  *   Stage, and `enter` or a click changes the worker model override of the Stage.
- * - Limits: the worker limit. `l` changes it.
+ * - Limits: the worker limit and the move of stuck upstream Stories. `l` changes the limit, and `u` switches the
+ *   move.
  * - Checks: the check limits and the checks that the factory runs for its workers. `c` changes the limits, `n` adds
  *   a check, `↑/↓` select a check, `enter` or a click edits it, and `d` asks before it removes it.
  *
@@ -126,9 +138,7 @@ export function AiSection({
           onStage={(index) => openStageModel(env, index)}
         />
       )}
-      {page === "limits" && (
-        <AiLimitsPage settings={settings.data} idle={idle} onLimit={() => env.setTask({ kind: "limit" })} />
-      )}
+      {page === "limits" && <AiLimitsPage {...limitsPageProps(env, idle)} />}
       {page === "checks" && <AiChecksPage {...checksPageProps(env, idle)} />}
       <AiTaskView
         task={model.task}

@@ -82,7 +82,7 @@ keys and the screen stay responsive.
 
 The `factory-settings/` service reads and writes the optional `factory` key of
 `.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels`, `git` and `checks`. See [../storage.md](../storage.md#factory-settings).
+`storyWorkerModels`, `git`, `checks` and `dependencies`. See [../storage.md](../storage.md#factory-settings).
 
 - Without the `factory` key, the worker limit is four and Pi selects default models.
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
@@ -125,6 +125,21 @@ The `checks` key of the `factory` section sets the checks that the factory runs 
 - `rowbly factory check add|update|remove|list` changes and shows the items.
 - A `checks` section that is not valid gives a `ValidationError`, and the config does not change.
 - Without a `checks` section, the factory has no checks, and the workers get no `run_check` tool.
+
+### Pull upstream Stories
+
+The `dependencies.pullUpstream` key of the `factory` section is a boolean. The default is `false`.
+An absent key is `false`.
+
+- When the key is `true`, the manager moves a stuck upstream Story out of the first Stage of the
+  board. See [README.md](README.md#parts-of-the-factory).
+- `rowbly factory configure --pull-upstream on` sets the key to `true`. `--pull-upstream off` sets it
+  to `false`. Other values give a `VALIDATION` error, and the config does not change.
+- A `dependencies` section that is not an object, or a `pullUpstream` value that is not a boolean, is
+  not valid. `rowbly doctor` shows the problem.
+- In the TUI, Settings › AI › Limits shows the card "Pull upstream Stories" with the value `On` or
+  `Off`. The `u` key or the Button of the card switches the value.
+- The key is off by default, because a move changes the board of the user.
 
 ### Worker model overrides
 
