@@ -9,6 +9,8 @@
   <a href="https://github.com/sgolovine/rowbly/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/rowbly" alt="License"></a>
 </p>
 
+<p align="center"><a href="https://rowbly.com"><strong>rowbly.com</strong></a></p>
+
 # Rowbly
 
 Rowbly keeps a Kanban board in Markdown and JSON files in your repository.
