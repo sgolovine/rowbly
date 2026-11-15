@@ -1,7 +1,7 @@
 ---
 title: Check the website for accessibility, motion and performance
-stage: IN_DEVELOPMENT
-position: 1
+stage: CHANGELOG
+position: 2
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-56
 pull_request: https://github.com/sgolovine/rowbly/pull/253
 ---
