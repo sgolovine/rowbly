@@ -44,7 +44,9 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 An unknown Story ID gives `NOT_FOUND`. For the order of priority of the overrides, see
 [pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
-`factory run` is a hidden command. `factory start` uses it to start the detached daemon.
+`factory run` and `factory watchdog` are hidden commands. `factory start` starts a detached
+`factory watchdog`, and the watchdog starts `factory run` as its child. See
+[recovery.md](recovery.md#automatic-restart-after-a-crash).
 
 ### The Git sync flags of `factory configure`
 

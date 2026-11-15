@@ -10,8 +10,11 @@ Read this page when you start a task on the factory. Then read only the sub-page
 ## Parts of the factory
 
 ```
- rowbly factory start  ──spawn──►  rowbly factory run  (detached daemon)
- TUI Factory controls                    │
+ rowbly factory start  ──spawn──►  rowbly factory watchdog  (detached)
+ TUI Factory controls                    │  starts again after a crash
+                                         ▼
+                                   rowbly factory run  (daemon)
+                                         │
                                          ├── factory manager (src/services/factory-manager/)
                                          │     ├── serial supervisor loop ── Pi supervisor session + tools
                                          │     ├── reservations and worker slots
@@ -22,8 +25,10 @@ Read this page when you start a task on the factory. Then read only the sub-page
                                          └── status.json, Thread metadata, logs (.rowbly/runtime/)
 ```
 
-- **Daemon.** `rowbly factory start` starts a detached `rowbly factory run` process. `--foreground`
-  runs the same daemon code in the current terminal (`src/commands/factory-runner/`). Close the TUI
+- **Daemon.** `rowbly factory start` starts a detached `rowbly factory watchdog` process. The
+  watchdog starts the `rowbly factory run` daemon, and starts it again after a crash. See
+  [recovery.md](recovery.md#automatic-restart-after-a-crash). `--foreground` runs the daemon code
+  in the current terminal, without a watchdog (`src/commands/factory-runner/`). Close the TUI
   without a stop to leave the daemon active.
 - **Supervisor.** One Pi session. Its message comes from `supervisorMessage()` in
   `src/services/messages/messages.ts`.

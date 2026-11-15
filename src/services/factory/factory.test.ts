@@ -8,6 +8,7 @@ import { build } from "tsup";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { newOwner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
+import { readWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { initProject } from "../project/project.js";
 import { createThread, getThread, listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
@@ -71,8 +72,11 @@ describe("detached factory with offline Pi", () => {
     if (root) {
       const owner = await readFactoryOwner(projectPaths(root)).catch(() => undefined);
       if (owner) pids.add(owner.pid);
+      const watchdog = await readWatchdogState(projectPaths(root)).catch(() => undefined);
+      if (watchdog) pids.add(watchdog.pid);
       await stopFactory({ timeoutMs: 3000 }, { cwd: root }).catch(() => {});
     }
+    pids.delete(process.pid);
     for (const pid of pids) {
       try {
         process.kill(pid, "SIGKILL");
@@ -83,7 +87,11 @@ describe("detached factory with offline Pi", () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     const ps = (await exec("ps", ["-eo", "pid,args"])).stdout;
     // No daemon from this private fixture survives either success or failure.
-    expect(ps.split("\n").filter((line) => line.includes(dir) && line.includes("factory run"))).toEqual([]);
+    expect(
+      ps
+        .split("\n")
+        .filter((line) => line.includes(dir) && (line.includes("factory run") || line.includes("factory watchdog"))),
+    ).toEqual([]);
     pids.clear();
     root = undefined;
   });
@@ -143,8 +151,11 @@ describe("detached factory with offline Pi", () => {
         { role: "worker", storyId: "D-99", stage: "BACKLOG", cwd: root, ownerToken: "older-dead-generation" },
         ctx,
       );
+      // The watchdog starts the daemon again after the back-off. The start waits for it and launches nothing.
       const restarted = await startFactory({ launch }, ctx);
       expect((await getThread(abandoned.id, ctx)).status).toBe("interrupted");
+      expect(await getFactoryStatus(ctx)).toMatchObject({ phase: "ready", restarts: 1 });
+      expect((await readWatchdogState(projectPaths(root)))?.lastExit).toBe("signal SIGKILL");
       pids.add(restarted.owner.pid);
       expect(restarted.owner.token).not.toBe(first.owner.token);
       const old = (await listThreads({ role: "supervisor" }, ctx)).threads[0];
@@ -152,8 +163,13 @@ describe("detached factory with offline Pi", () => {
       const final = await restartFactory({ launch }, ctx);
       pids.add(final.owner.pid);
       expect(final.phase).toBe("ready");
+      expect((await getFactoryStatus(ctx)).restarts).toBe(0);
+      const watchdog = await readWatchdogState(projectPaths(root));
       await stopFactory({}, ctx);
       expect((await getFactoryStatus(ctx)).phase).toBe("stopped");
+      // A stop command stops the daemon with code 0, so the watchdog also exits.
+      expect(await readWatchdogState(projectPaths(root))).toMatchObject({ phase: "stopped" });
+      await expect.poll(() => probeOwner(watchdog?.process as never)).toBe("dead");
     },
     30_000,
   );

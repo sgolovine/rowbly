@@ -5,7 +5,7 @@ import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
 import { FactoryList } from "../factory-list/index.js";
 import { checksText, PHASES, providerNotice, supervisorText, workersText } from "../factory-modal-text.js";
-import { factoryProblems, queueReason } from "../factory-status.js";
+import { factoryProblems, queueReason, restartText } from "../factory-status.js";
 
 /** The props of `FactoryOverview`. */
 export interface FactoryOverviewProps {
@@ -29,6 +29,13 @@ export interface FactoryOverviewProps {
 
 function failed(status: FactoryStatus | undefined): boolean {
   return status?.phase === "failed" || status?.phase === "unavailable";
+}
+
+/** The Restarts row, when the daemon crashed. */
+function restartRows(status: FactoryStatus | undefined): { label: string; value: string }[] {
+  const text = restartText(status);
+
+  return text === undefined ? [] : [{ label: "Restarts", value: text }];
 }
 
 /** The state of the factory and its supervisor, the problems and the queued Stories. */
@@ -63,6 +70,7 @@ export function FactoryOverview({
           { label: "Workers", value: workersText(live, status?.workers, limit) },
           ...(live && status?.checks ? [{ label: "Checks", value: checksText(status.checks) }] : []),
           ...(live && status?.owner ? [{ label: "Started", value: formatDateTime(status.owner.startedAt) }] : []),
+          ...restartRows(status),
         ]}
       />
       {!live && provider === false && (
