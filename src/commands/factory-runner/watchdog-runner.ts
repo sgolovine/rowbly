@@ -13,7 +13,7 @@ import {
   readFactoryOwner,
 } from "../../services/factory-ownership/factory-ownership.js";
 import {
-  activeWatchdog,
+  acquireWatchdogClaim,
   backoffMs,
   classifyExit,
   crashCountAfter,
@@ -21,8 +21,9 @@ import {
   type DaemonExit,
   DEFAULT_TIMING,
   exitText,
-  probeWatchdog,
+  liveWatchdog,
   readWatchdogState,
+  releaseWatchdogClaim,
   type WatchdogPhase,
   type WatchdogState,
   type WatchdogTiming,
@@ -81,23 +82,11 @@ function nextRecord(w: Watchdog, previous: WatchdogState | undefined, change: Re
   };
 }
 
-/** True when the file holds a different watchdog that is alive or uncertain. Then this watchdog does not write. */
-async function foreignWatchdog(w: Watchdog, current: WatchdogState | undefined): Promise<boolean> {
-  if (!current || current.process.token === w.self.token || !watchdogActive(current)) {
-    return false;
-  }
-
-  return (await probeWatchdog(current)) !== "dead";
-}
-
-/** Writes a change to the watchdog file and gives the new record. A file of a different live watchdog stays. */
+/** Writes a change to the watchdog file and gives the new record. Only the holder of the watchdog claim calls it. */
 async function record(w: Watchdog, written: Written, change: RecordChange): Promise<Written> {
   const state = nextRecord(w, written.state, change);
-  const current = await readWatchdogState(w.paths);
 
-  if (!(await foreignWatchdog(w, current))) {
-    await writeWatchdogState(w.paths, state);
-  }
+  await writeWatchdogState(w.paths, state);
 
   return { state };
 }
@@ -251,7 +240,42 @@ function keptCrash(previous: WatchdogState | undefined): RecordChange {
   return { lastCrashAt: previous?.lastCrashAt, lastExit: previous?.lastExit };
 }
 
-/** Runs the watchdog until it stops. A different live watchdog or a live owner at the start gives `already-running`. */
+/** The longest wait for the claim of a watchdog that wrote its last phase and is about to exit. */
+const CLAIM_WAIT_MS = 5000;
+
+/**
+ * Takes the exclusive watchdog claim. A different live watchdog gives `false` at once. A holder that wrote its last
+ * phase releases the claim when it exits, so the wait continues until the deadline.
+ */
+async function takeClaim(paths: ProjectPaths, self: Owner, deadline: number): Promise<boolean> {
+  const claim = await acquireWatchdogClaim(paths, self);
+
+  if (claim.acquired) {
+    return true;
+  }
+
+  if (Date.now() >= deadline || (await liveWatchdog(paths)) !== undefined) {
+    return false;
+  }
+
+  await sleep(50);
+
+  return takeClaim(paths, self, deadline);
+}
+
+/** Writes the first record of this watchdog and runs the loop. The caller holds the claim. */
+async function watchWithClaim(w: Watchdog): Promise<WatchdogResult> {
+  const previous = await readWatchdogState(w.paths);
+  const first = await record(w, { state: nextRecord(w, undefined, {}) }, keptCrash(previous));
+  const last = await watchLoop(w, first);
+
+  return { phase: last.state.phase, crashCount: last.state.crashCount, problem: last.state.problem };
+}
+
+/**
+ * Runs the watchdog until it stops. Only the holder of the exclusive watchdog claim continues. A different live
+ * watchdog or a live owner at the start gives `already-running`, and this watchdog does not write the state file.
+ */
 export async function runWatchdog(input: WatchdogInput, ctx: ServiceContext = {}): Promise<WatchdogResult> {
   assertAbsoluteLaunch(input.launch);
 
@@ -267,23 +291,16 @@ export async function runWatchdog(input: WatchdogInput, ctx: ServiceContext = {}
     timing: input.timing ?? DEFAULT_TIMING,
     signal: input.signal ?? new AbortController().signal,
   };
-  const other = await activeWatchdog(paths);
 
-  if ((other && other.state.process.token !== self.token) || (await ownerBlocks(paths))) {
+  if (!(await takeClaim(paths, self, Date.now() + CLAIM_WAIT_MS))) {
     return { phase: "already-running", crashCount: 0 };
   }
 
-  const previous = await readWatchdogState(paths);
-  const first = await record(w, { state: nextRecord(w, undefined, {}) }, keptCrash(previous));
-
-  // Two watchdogs that start at the same time both write. Only the watchdog of the last write continues.
-  if ((await readWatchdogState(paths))?.process.token !== self.token) {
-    return { phase: "already-running", crashCount: 0 };
+  try {
+    return (await ownerBlocks(paths)) ? { phase: "already-running", crashCount: 0 } : await watchWithClaim(w);
+  } finally {
+    await releaseWatchdogClaim(paths, self.token).catch(() => false);
   }
-
-  const last = await watchLoop(w, first);
-
-  return { phase: last.state.phase, crashCount: last.state.crashCount, problem: last.state.problem };
 }
 
 /** A signal handler that requests a stop. The same function must go to `process.on` and `process.off`. */

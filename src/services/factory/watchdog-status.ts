@@ -1,10 +1,12 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { ConflictError } from "../errors/errors.js";
-import { probeOwner } from "../factory-ownership/factory-ownership.js";
+import { type Owner, probeOwner } from "../factory-ownership/factory-ownership.js";
 import {
-  activeWatchdog,
   CRASH_LIMIT_KEY,
+  claimHeld,
   crashLimitText,
+  liveWatchdog,
+  readWatchdogClaim,
   type WatchdogState,
 } from "../factory-watchdog/factory-watchdog.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
@@ -28,60 +30,78 @@ export function crashLimitAttention(state: WatchdogState): [string, { text: stri
   return [CRASH_LIMIT_KEY, { text: crashLimitText(state) }];
 }
 
-/** True when an active watchdog process is alive or uncertain, so that it can still start a daemon. */
+/** True when a watchdog process is alive or uncertain and can still start a daemon. */
 export async function watchdogLive(paths: ProjectPaths): Promise<boolean> {
-  return (await activeWatchdog(paths)) !== undefined;
+  return (await liveWatchdog(paths)) !== undefined;
 }
 
-/** Waits until the watchdog process of `state` is dead. A timeout is an error. */
-async function waitForWatchdogExit(state: WatchdogState, timeoutMs: number): Promise<void> {
+/** Waits until the watchdog process is dead. A timeout is an error. */
+async function waitForWatchdogExit(watchdog: Owner, timeoutMs: number): Promise<void> {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
-    if ((await probeOwner(state.process)) === "dead") {
+    if ((await probeOwner(watchdog)) === "dead") {
       return;
     }
 
     await sleep(50);
   }
 
-  throw new ConflictError(`Factory watchdog did not stop: pid ${state.pid}`);
+  throw new ConflictError(`Factory watchdog did not stop: pid ${watchdog.pid}`);
 }
 
 /**
- * Stops an active watchdog with `SIGTERM` and waits until it exits. The process identity must match, so that the
+ * Stops a live watchdog with `SIGTERM` and waits until it exits. The process identity must match, so that the
  * signal never goes to a different process with a reused pid. An uncertain identity is an error.
  */
 export async function stopWatchdog(paths: ProjectPaths, timeoutMs: number): Promise<boolean> {
-  const active = await activeWatchdog(paths);
+  const live = await liveWatchdog(paths);
 
-  if (!active) {
+  if (!live) {
     return false;
   }
 
-  if (active.liveness !== "alive") {
+  if (live.liveness !== "alive") {
     throw new ConflictError("Factory watchdog is uncertain", {
-      hint: `Make sure that process ${active.state.pid} is the Rowbly watchdog, then stop it by hand.`,
+      hint: `Make sure that process ${live.process.pid} is the Rowbly watchdog, then stop it by hand.`,
     });
   }
 
   try {
-    process.kill(active.state.pid, "SIGTERM");
+    process.kill(live.process.pid, "SIGTERM");
   } catch {
     // The watchdog stopped after the probe.
     return true;
   }
 
-  await waitForWatchdogExit(active.state, timeoutMs);
+  await waitForWatchdogExit(live.process, timeoutMs);
 
   return true;
 }
 
-/** Waits until a watchdog that is active exits, for example after its daemon stopped with code 0. */
-export async function waitForActiveWatchdogExit(paths: ProjectPaths, timeoutMs: number): Promise<void> {
-  const active = await activeWatchdog(paths);
+/** Waits until the claim holder is dead or released the claim. */
+async function waitForClaimRelease(paths: ProjectPaths, holder: Owner, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
 
-  if (active?.liveness === "alive") {
-    await waitForWatchdogExit(active.state, timeoutMs);
+  while (Date.now() < deadline) {
+    if ((await readWatchdogClaim(paths))?.token !== holder.token || (await probeOwner(holder)) === "dead") {
+      return;
+    }
+
+    await sleep(50);
+  }
+
+  throw new ConflictError(`Factory watchdog did not stop: pid ${holder.pid}`);
+}
+
+/**
+ * Waits until a live watchdog releases its claim, for example after its daemon stopped with code 0. Then the next
+ * start can take the claim at once.
+ */
+export async function waitForActiveWatchdogExit(paths: ProjectPaths, timeoutMs: number): Promise<void> {
+  const holder = await claimHeld(paths);
+
+  if (holder && (await probeOwner(holder)) === "alive") {
+    await waitForClaimRelease(paths, holder, timeoutMs);
   }
 }

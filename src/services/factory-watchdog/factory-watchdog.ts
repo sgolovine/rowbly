@@ -1,4 +1,13 @@
 // The pure parts of the factory watchdog: the crash policy and the state file. The process loop is a command.
+
+export {
+  acquireWatchdogClaim,
+  claimHeld,
+  type LiveWatchdog,
+  liveWatchdog,
+  readWatchdogClaim,
+  releaseWatchdogClaim,
+} from "./watchdog-claim.js";
 export {
   BACKOFF_MS,
   backoffMs,

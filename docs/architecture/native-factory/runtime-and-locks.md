@@ -19,6 +19,8 @@ take or change a lock.
     lifecycle.guard   # short exclusive gate for ownership changes
     status.json       # heartbeat, workers, queue, holds, provider pauses, attention and checks
     watchdog.json     # watchdog phase, process identity, crashes in a row, last crash, last exit and last log
+    watchdog.lock     # watchdog claim: the identity of the one watchdog that can start a daemon
+    watchdog.guard    # short exclusive gate for changes of the watchdog claim
     control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
@@ -144,9 +146,29 @@ The daemon writes `status.json`, so the two processes never write the same file.
 - The watchdog is not an owner. It does not take `factory.lock` or `lifecycle.guard`.
 - `probeOwner` checks the identity of the watchdog process. A dead identity makes the file
   inactive, also if its phase is `running` or `backoff`.
-- A watchdog does not write the file while it holds the identity of a different live watchdog.
-- If two watchdogs start at the same time, only the watchdog of the last write continues. The
-  ownership of the daemon stops a second daemon.
+
+## The watchdog claim
+
+Only one watchdog can run for a Project. Before a watchdog writes `watchdog.json`, it takes the
+exclusive claim in `runtime/watchdog.lock`. The claim uses the same protocol as `factory.lock`, with
+its own guard `runtime/watchdog.guard`:
+
+- The claim file holds the identity of the watchdog process, in the format of an owner of
+  `factory.lock`. The watchdog creates the file with `O_EXCL` while it holds the guard.
+- A watchdog replaces a claim only when `probeOwner` gives `dead` for the holder. An alive or
+  uncertain holder keeps the claim.
+- A watchdog that does not get the claim returns `already-running`. It does not write
+  `watchdog.json` and does not start a daemon. If the holder wrote its last phase and is about to
+  exit, the new watchdog waits for the claim for a maximum of 5 seconds.
+- The watchdog writes its last phase, then releases the claim, then exits.
+- A watchdog is live when its process is alive or uncertain and it can start a daemon. This is an
+  active phase in `watchdog.json`, or a claim holder that did not write `watchdog.json` yet. The
+  status gives the phase `starting` while a watchdog is live, so a `factory start` that waits for
+  the daemon of a different watchdog does not fail.
+- `factory stop` sends `SIGTERM` to a live watchdog. After a stop command to the daemon, the stop
+  waits until the watchdog releases the claim or dies.
+- A crash inside the guard can leave `watchdog.guard` in place. Do not remove a guard because of its
+  age.
 
 See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart rules.
 

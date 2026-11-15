@@ -8,6 +8,8 @@ import {
   releaseFactoryOwnership,
 } from "../../services/factory-ownership/factory-ownership.js";
 import {
+  acquireWatchdogClaim,
+  readWatchdogClaim,
   readWatchdogState,
   type WatchdogTiming,
   writeWatchdogState,
@@ -191,5 +193,42 @@ describe("factory watchdog", () => {
     controller.abort();
     await first;
     expect(await fake.starts()).toBe(1);
+  });
+
+  it("lets only one of many concurrent watchdogs start a daemon and write the state file", async () => {
+    const fake = await fakeDaemon([{ sleepMs: 60_000, code: 0 }]);
+    const controller = new AbortController();
+    const settled: string[] = [];
+    const runs = Array.from({ length: 5 }, () =>
+      runWatchdog({ launch: fake.launch, timing, signal: controller.signal }, project.ctx).then((result) => {
+        settled.push(result.phase);
+        return result;
+      }),
+    );
+    await expect.poll(() => fake.starts()).toBe(1);
+    // The four other watchdogs see the live claim holder and return at once, before the stop.
+    await expect.poll(() => settled.length).toBe(4);
+    expect(settled).toEqual(Array.from({ length: 4 }, () => "already-running"));
+    const state = await readWatchdogState(project.paths);
+    expect(state?.phase).toBe("running");
+    expect((await readWatchdogClaim(project.paths))?.token).toBe(state?.process.token);
+    controller.abort();
+    const results = await Promise.all(runs);
+    expect(results.filter((result) => result.phase === "stopped")).toHaveLength(1);
+    expect(await fake.starts()).toBe(1);
+    expect(await readWatchdogClaim(project.paths)).toBeUndefined();
+  });
+
+  it("does not write the state file when a different live watchdog holds the claim", async () => {
+    const holder = await newOwner();
+    const fake = await fakeDaemon([{ code: 1 }]);
+    await acquireWatchdogClaim(project.paths, holder);
+    expect(await runWatchdog({ launch: fake.launch, timing }, project.ctx)).toMatchObject({
+      phase: "already-running",
+    });
+    expect(await readWatchdogState(project.paths)).toBeUndefined();
+    expect(await fake.starts()).toBe(0);
+    expect((await readWatchdogClaim(project.paths))?.token).toBe(holder.token);
+    expect((await getFactoryStatus(project.ctx)).phase).toBe("starting");
   });
 });

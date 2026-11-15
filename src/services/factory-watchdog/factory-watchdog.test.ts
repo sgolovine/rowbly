@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { newOwner } from "../factory-ownership/factory-ownership.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
+  acquireWatchdogClaim,
   activeWatchdog,
   BACKOFF_MS,
   backoffMs,
@@ -14,7 +15,10 @@ import {
   crashLimitReached,
   crashLimitText,
   exitText,
+  liveWatchdog,
+  readWatchdogClaim,
   readWatchdogState,
+  releaseWatchdogClaim,
   STABLE_MS,
   type WatchdogState,
   watchdogActive,
@@ -101,5 +105,36 @@ describe("watchdog state file", () => {
     expect(crashLimitText(failed)).toContain("crashed 5 times");
     expect(crashLimitText(failed)).toContain("signal SIGKILL");
     expect(crashLimitText(failed)).toContain("/tmp/x.jsonl");
+  });
+
+  it("gives the watchdog claim to one holder and replaces only a dead holder", async () => {
+    const first = await newOwner();
+    const second = await newOwner();
+    expect((await acquireWatchdogClaim(project.paths, first)).acquired).toBe(true);
+    expect(await acquireWatchdogClaim(project.paths, second)).toEqual({ acquired: false, owner: first });
+    expect((await acquireWatchdogClaim(project.paths, second, async () => "dead")).acquired).toBe(true);
+    expect((await readWatchdogClaim(project.paths))?.token).toBe(second.token);
+    expect(await releaseWatchdogClaim(project.paths, first.token)).toBe(false);
+    expect(await releaseWatchdogClaim(project.paths, second.token)).toBe(true);
+    expect(await readWatchdogClaim(project.paths)).toBeUndefined();
+  });
+
+  it("gives only one claim to concurrent holders", async () => {
+    const owners = await Promise.all(Array.from({ length: 5 }, () => newOwner()));
+    const results = await Promise.all(owners.map((owner) => acquireWatchdogClaim(project.paths, owner)));
+    expect(results.filter((result) => result.acquired)).toHaveLength(1);
+  });
+
+  it("finds a live claim holder before it writes the state file, but not after its last phase", async () => {
+    const holder = await newOwner();
+    await writeWatchdogState(project.paths, { ...(await state("stopped")), process: { ...holder, token: "old" } });
+    expect(await liveWatchdog(project.paths)).toBeUndefined();
+    await acquireWatchdogClaim(project.paths, holder);
+    expect(await liveWatchdog(project.paths)).toEqual({ process: holder, liveness: "alive" });
+    expect(await liveWatchdog(project.paths, async () => "dead")).toBeUndefined();
+    await writeWatchdogState(project.paths, { ...(await state("stopped")), process: holder });
+    expect(await liveWatchdog(project.paths)).toBeUndefined();
+    await writeWatchdogState(project.paths, { ...(await state("backoff")), process: holder });
+    expect(await liveWatchdog(project.paths)).toEqual({ process: holder, liveness: "alive" });
   });
 });

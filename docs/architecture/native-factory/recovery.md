@@ -117,6 +117,9 @@ loop is in `src/commands/factory-runner/watchdog-runner.ts`. The pure rules and 
 - Before each start, the watchdog probes the owner. If the owner is alive or uncertain, the watchdog
   does not start a daemon. It records the problem in its state file and exits.
 - The watchdog never takes ownership. The daemon is the owner in `factory.lock`.
+- Only one watchdog runs for a Project. Each watchdog takes the exclusive watchdog claim before it
+  starts a daemon. A watchdog without the claim exits with `already-running`. See
+  [runtime-and-locks.md](runtime-and-locks.md#the-watchdog-claim).
 - The watchdog does not load Pi.
 - If the watchdog dies, nothing starts it again. A reboot of the machine does not start the factory.
 
@@ -126,13 +129,15 @@ the time of the last crash (`lastCrashAt`). During a back-off, the phase is `sta
 ### Stop and start with a watchdog
 
 - `factory stop` with a live daemon sends the stop command. The daemon exits with code 0, so the
-  watchdog also exits. The stop waits for the exit of the watchdog.
+  watchdog also exits. The stop waits until the watchdog releases its claim.
 - `factory stop` during a back-off sends `SIGTERM` to the watchdog. First it compares the process
   identity of the watchdog with `watchdog.json`. The watchdog cancels its timer, does not start a
   daemon, writes the phase `stopped` and exits. If the identity is uncertain, the stop fails with
   `CONFLICT`.
 - `factory start` does not start a second watchdog while a live watchdog waits in its back-off. It
   waits for the daemon of that watchdog.
+- Many `factory start` commands at the same time start only one daemon. Each start can launch a
+  watchdog, but only the watchdog with the claim continues. The other starts wait for its daemon.
 - `factory start` after the `failed` phase starts a new watchdog. The new watchdog sets the count to 0.
   It keeps the time and the exit of the last crash.
 
