@@ -69,3 +69,5 @@ Not in scope:
 - The moves get a dedicated canonical commit with a message that names the moved and the waiting Story IDs. This commit also takes other uncommitted canonical changes at that time. Reason: the configured `git.commitMessage` is one subject for all commits and cannot name the move; a separate commit is the clear record that the author asks for.
 - The CLI flag takes `on|off` as written by the author, not `--pull-upstream`/`--no-pull-upstream`. Reason: keep the text of the author.
 - The TUI card is on the Limits tab of Settings › AI. Reason: it is the tab for factory behaviour settings that are not models, providers or checks.
+- While a Git sync runs, the move step waits for a later pass, and does not only skip the commit. Reason: the sync holds the Project write lock for a long time, and the move also needs that lock. A wait in the step stops the other steps of the pass.
+- The TUI key of the card is `u` on the Limits tab. Reason: the other keys of the AI settings (`s`, `w`, `l`, `r`, `n`, `d`, `c`) have a use. The Git section also uses `u` for a switch.
