@@ -1,8 +1,8 @@
 ---
 title: Show and edit Story dependencies in the TUI
 stage: IN_REFINEMENT
-position: 8
-worktree: null
+position: 1
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-65
 pull_request: null
 ---
 

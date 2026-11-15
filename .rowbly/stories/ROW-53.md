@@ -1,7 +1,7 @@
 ---
 title: Build the Install page
-stage: BACKLOG
-position: 11
+stage: IN_REFINEMENT
+position: 12
 worktree: null
 pull_request: null
 ---

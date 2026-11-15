@@ -1,7 +1,7 @@
 ---
 title: Link the website from the README and package metadata
-stage: BACKLOG
-position: 15
+stage: IN_REFINEMENT
+position: 16
 worktree: null
 pull_request: null
 ---
