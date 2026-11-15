@@ -1,7 +1,7 @@
 ---
 title: Restart the factory daemon automatically after a crash
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 64
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
 pull_request: https://github.com/sgolovine/rowbly/pull/232
 ---
@@ -75,9 +75,3 @@ Files and modules:
 - An exit with code 0 is always a clean exit, also for `already-running`. Reason: `factory run` returns code 0 for a requested stop and for `already-running`, and a restart in these cases is not necessary.
 - The crash-limit attention entry is not dismissible. The next `factory start` clears it. Reason: the dismiss command needs a live daemon.
 - If the watchdog itself dies, nothing restarts it. Reason: smallest scope. The daemon then works as now, without a watchdog.
-
-## Review findings
-
-The earlier finding (the non-atomic watchdog claim) is partly repaired. Commit `b4d173dd` adds an exclusive claim in `watchdog.lock`, and only the claim holder writes `watchdog.json`. The CI `Test` check passed on head `10b2213a`. But the same failure still occurs locally.
-
-1. `src/services/factory-watchdog/watchdog-claim.ts:55-75` (`liveWatchdog`), used by `watchdogLive` in `src/services/factory/watchdog-status.ts` and by `waitForReady` in `src/services/factory/factory.ts:133`. The race in concurrent `factory start` calls is not fully removed. I ran `pnpm vitest run src/services/factory/factory.test.ts src/commands/factory-runner/watchdog-runner.test.ts src/services/factory-watchdog` 10 times, and `src/services/factory/factory.test.ts` 50 more times. One run failed with the same error as before: "starts tsx after cwd changes, fences twenty clients, and recovers after SIGKILL", `factory.test.ts:131`, `ConflictError: Factory exited before ready. Factory watchdog already-running.` Probable cause: `liveWatchdog` reads `watchdog.json` two times. `activeWatchdog` reads it first, before the claim holder writes its first `running` record, and gets no state. Then `liveWatchdog` reads the claim, and then reads `watchdog.json` again. Now the file has the `running` record of the claim holder, so `claim.token === state.process.token`, and the function returns `undefined`. Thus `watchdogLive` is false while the claim holder is live and no daemon owner exists yet. A start whose watchdog returned `already-running` then sees phase `stopped` and throws "exited before ready". (The same false result in `startFactory` can launch an extra watchdog. The claim stops it, but it is not necessary.) Fix: read the claim and the state only one time each, and decide from that one snapshot. For example, read the claim first and then the state. The claim holder is live when it is alive or uncertain, and the state is not a final phase (`stopped` or `failed`) of the same token. Add a unit test for the case where the state changes from missing to `running` between the reads (an injected reader or probe is sufficient). Then run `src/services/factory/factory.test.ts` at least 50 times, also with other test files in parallel, and make sure that it never fails.

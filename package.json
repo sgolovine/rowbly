@@ -2,6 +2,7 @@
   "name": "rowbly",
   "version": "0.17.0",
   "description": "Rowbly CLI and TUI",
+  "homepage": "https://rowbly.com",
   "type": "module",
   "bin": {
     "rowbly": "./dist/cli.js"

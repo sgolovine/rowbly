@@ -141,7 +141,8 @@ to examine each change to the TUI layout in a real terminal.
 - Follow the [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 - The full reference for the tool is the [`agentic-tui` skill](../../.agents/skills/agentic-tui/SKILL.md).
   It is an unchanged copy from `@codebolt/agentic-tui` (see its `UPSTREAM.md`).
-- Do not draw screens by hand. Do not commit screenshots.
+- Do not draw screens by hand. Do not commit screenshots. The only exception is the website images in
+  `website/public/screenshots/`. Its `README.md` gives the alt text of each image.
 
 ## Agent skills for development
 

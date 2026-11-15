@@ -11,6 +11,7 @@ const KINDS: Readonly<Record<FactoryProblemKind, string>> = {
   attention: "Attention entry",
   issue: "Thread file issue",
   provider: "Provider pause",
+  watchdog: "Watchdog",
 };
 
 /** The props of `FactoryProblemDetail`. */
