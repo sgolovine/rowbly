@@ -13,3 +13,4 @@ This file records the changes to Rowbly that users can see.
 - Added: `rowbly doctor` finds bad `dependsOn` lists in Story files, for example unknown IDs, self dependencies, duplicates and cycles. `rowbly doctor --fix` repairs the safe problems. (ROW-61)
 - Added: `rowbly story create` and `rowbly story update` have the `--depends-on` flag, and `rowbly story update` has `--add-dependency` and `--remove-dependency`. `rowbly story get` shows `Depends on`, `Blocks` and `Blocked`, and `rowbly story search` has the `--blocked` and `--ready` filters. (ROW-60)
 - Added: The factory does not start a worker for a blocked Story. When the worker limit applies, the factory starts the upstream Stories first. (ROW-62)
+- Added: The message of a factory worker lists the upstream Stories of its Story, with the ID, the title, the Stage and each `url` field, for example `pull_request`. A rule tells the worker not to do the work of the upstream Stories again. (ROW-64)
