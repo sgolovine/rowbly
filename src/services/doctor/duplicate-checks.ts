@@ -1,4 +1,7 @@
 import {
+  type CopyGroup,
+  type CopyRemoval,
+  copyNotice,
   type DuplicateGroup,
   findDuplicateStoryIds,
   renumberNotice,
@@ -7,7 +10,7 @@ import {
 } from "../story-renumber/story-renumber.js";
 import { type DoctorIssue, type DoctorRun, rel } from "./doctor-run.js";
 
-/** A Story file that the repair gives a new number, and the Story that keeps the ID. */
+/** A Story file that the repair removes or gives a new number, and the Story that keeps the ID. */
 export interface PlannedFix {
   readonly keptId: string;
   readonly keptPath: string;
@@ -31,6 +34,24 @@ function fixedIssue(run: DoctorRun, change: StoryRenumber): DoctorIssue {
   };
 }
 
+function removedIssue(run: DoctorRun, removal: CopyRemoval): DoctorIssue {
+  return {
+    severity: "error",
+    message: copyNotice(removal),
+    file: rel(run, removal.path),
+    fix: `Remove the old copy. ${rel(run, removal.keptPath)} is the newest copy`,
+    fixed: true,
+  };
+}
+
+function plannedRemovals(run: DoctorRun, group: CopyGroup): [string, PlannedFix | undefined][] {
+  const keptPath = group.keep.path;
+  const fix = `Remove the old copy. ${rel(run, keptPath)} is the newest copy`;
+  const remove = group.remove.map((file): [string, PlannedFix] => [file.path, { keptId: group.id, keptPath, fix }]);
+
+  return [[keptPath, undefined], ...remove];
+}
+
 function plannedFixes(group: DuplicateGroup): [string, PlannedFix | undefined][] {
   const keptPath = group.keep.path;
   const renumber = group.renumber.map((file): [string, PlannedFix] => [
@@ -42,17 +63,20 @@ function plannedFixes(group: DuplicateGroup): [string, PlannedFix | undefined][]
 }
 
 /**
- * With `--fix`, gives the newer Story of each duplicate Story ID the next free number. Without it, plans the repair
+ * With `--fix`, removes the old copies of each Story, then gives the newer Story of each duplicate Story ID the next free number. Without it, plans the repair
  * and changes no file.
  */
 export async function repairDuplicates(run: DoctorRun): Promise<DuplicateRepair> {
   if (run.fix) {
     const result = await repairDuplicateStoryIds(run.ctx);
 
-    return { issues: result.changes.map((change) => fixedIssue(run, change)), planned: new Map() };
+    const removed = result.removed.map((removal) => removedIssue(run, removal));
+
+    return { issues: [...removed, ...result.changes.map((change) => fixedIssue(run, change))], planned: new Map() };
   }
 
   const plan = await findDuplicateStoryIds(run.ctx);
+  const copies = plan.copies.flatMap((group) => plannedRemovals(run, group));
 
-  return { issues: [], planned: new Map(plan.groups.flatMap(plannedFixes)) };
+  return { issues: [], planned: new Map([...copies, ...plan.groups.flatMap(plannedFixes)]) };
 }

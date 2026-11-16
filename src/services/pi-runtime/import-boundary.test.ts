@@ -60,7 +60,7 @@ describe("Pi import boundary", () => {
   });
 
   it("imports the host transport without loading Pi", async () => {
-    await expect(import("../host-transport/host-transport.js")).resolves.toHaveProperty("HOST_PROTOCOL_VERSION", 1);
+    await expect(import("../host-transport/host-transport.js")).resolves.toHaveProperty("HOST_PROTOCOL_VERSION", 2);
     await expect(import("../host-transport/host-handshake.js")).resolves.toHaveProperty("openHostChannel");
     await expect(import("../host-transport/host-errors.js")).resolves.toHaveProperty("classifySshExit");
     await expect(import("../host-transport/json-lines.js")).resolves.toHaveProperty("decodeChunk");

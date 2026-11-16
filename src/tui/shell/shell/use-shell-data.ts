@@ -5,7 +5,11 @@ import { recordProject } from "../../../services/known-project/known-project.js"
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
 import { type Story, searchStories } from "../../../services/story/story.js";
-import { renumberNotice, repairDuplicateStoryIds } from "../../../services/story-renumber/story-renumber.js";
+import {
+  copyNotice,
+  renumberNotice,
+  repairDuplicateStoryIds,
+} from "../../../services/story-renumber/story-renumber.js";
 import { hasProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   type AsyncState,
@@ -30,12 +34,17 @@ export interface ShellData {
 }
 
 /**
- * Gives the newer Story of each duplicate Story ID a new number, and shows a notice for each change. A failure shows
+ * Removes the old copies of each Story, then gives the newer Story of each duplicate Story ID a new number. It shows
+ * a notice for each change. A failure shows
  * an error, and the board still loads. The changed files reload the board one more time, and that repair finds nothing.
  */
 async function repairDuplicates(ctx: ServiceContext, toast: ToastStore): Promise<void> {
   try {
-    const { changes } = await repairDuplicateStoryIds(ctx);
+    const { removed, changes } = await repairDuplicateStoryIds(ctx);
+
+    for (const removal of removed) {
+      showToast(toast, "info", copyNotice(removal));
+    }
 
     for (const change of changes) {
       showToast(toast, "info", renumberNotice(change));

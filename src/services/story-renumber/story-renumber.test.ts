@@ -1,8 +1,8 @@
-import { mkdir, readdir, utimes } from "node:fs/promises";
+import { mkdir, readdir, rm, utimes } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { pathExists } from "../files/files.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { findDuplicateStoryIds, renumberNotice, repairDuplicateStoryIds } from "./story-renumber.js";
+import { copyNotice, findDuplicateStoryIds, renumberNotice, repairDuplicateStoryIds } from "./story-renumber.js";
 
 const NOW = new Date("2026-11-16T12:00:00.000Z");
 
@@ -71,6 +71,7 @@ describe("story renumber", () => {
     const result = await repair();
 
     expect(result).toEqual({
+      removed: [],
       changes: [
         {
           from: "ROW-77",
@@ -89,7 +90,7 @@ describe("story renumber", () => {
       "---\ntitle: Sidebar\nstage: IN_DEVELOPMENT\nposition: 2\ncreatedAt: 2026-02-01T00:00:00.000Z\n" +
         "updatedAt: 2026-11-16T12:00:00.000Z\npoints: 3\n---\n\nSidebar body.\n",
     );
-    expect(await repair()).toEqual({ changes: [], unrepaired: [] });
+    expect(await repair()).toEqual({ removed: [], changes: [], unrepaired: [] });
   });
 
   it("plans the repair without a change of a file", async () => {
@@ -212,6 +213,7 @@ describe("story renumber", () => {
     const result = await repair();
 
     expect(result).toEqual({
+      removed: [],
       changes: [],
       unrepaired: [
         {
@@ -301,8 +303,8 @@ describe("story renumber", () => {
     await project.write(tags, tagsText);
     await project.write("stories/BACKLOG/ROW-78.md", sidebarText);
 
-    expect(await findDuplicateStoryIds(ctx())).toEqual({ groups: [], unrepaired: [] });
-    expect(await repair()).toEqual({ changes: [], unrepaired: [] });
+    expect(await findDuplicateStoryIds(ctx())).toEqual({ copies: [], groups: [], unrepaired: [] });
+    expect(await repair()).toEqual({ removed: [], changes: [], unrepaired: [] });
     expect(await project.read(tags)).toBe(tagsText);
     expect(await project.read("stories/BACKLOG/ROW-78.md")).toBe(sidebarText);
   });
@@ -315,5 +317,162 @@ describe("story renumber", () => {
 
     expect(result.changes).toEqual([]);
     expect(result.unrepaired.map((item) => item.reason)).toEqual(["A Story file of the group cannot be read"]);
+  });
+});
+
+describe("story copies", () => {
+  const project = useTestProject({
+    name: "Rowbly",
+    key: "ROW",
+    stages: [...STAGES, { key: "IN_REVIEW", label: "In review", prompt: "" }],
+    customFields: CUSTOM_FIELDS,
+  });
+  const ctx = () => ({ ...project.ctx, now: () => NOW });
+  const repair = () => repairDuplicateStoryIds(ctx());
+
+  const uid = "8a3c3f0e-6a55-4f43-9a0b-6f5b1e2d7c11";
+  const done = "stories/DONE/ROW-78.md";
+  const review = "stories/IN_REVIEW/ROW-78.md";
+
+  interface CopyText {
+    stage: string;
+    updatedAt?: string;
+    title?: string;
+    body?: string;
+    position?: number;
+  }
+
+  const copyText = ({ stage, updatedAt, title, body, position }: CopyText): string =>
+    [
+      "---",
+      `title: ${title ?? "Search"}`,
+      `stage: ${stage}`,
+      `position: ${position ?? 1}`,
+      `uid: ${uid}`,
+      "createdAt: 2026-11-01T00:00:00.000Z",
+      ...(updatedAt ? [`updatedAt: ${updatedAt}`] : []),
+      "worktree: /tmp/ROW-78",
+      "pull_request: https://example.com/78",
+      "---",
+      "",
+      body ?? "Search body.",
+      "",
+    ].join("\n");
+
+  const doneText = copyText({ stage: "DONE", updatedAt: "2026-11-16T10:00:00.000Z", position: 3 });
+  const reviewText = copyText({ stage: "IN_REVIEW", updatedAt: "2026-11-16T11:00:00.000Z" });
+
+  it("removes the copy with the older updatedAt and keeps the newer copy without a change", async () => {
+    await project.write(done, doneText);
+    await project.write(review, reviewText);
+
+    const result = await repair();
+
+    expect(result).toEqual({
+      removed: [{ id: "ROW-78", stage: "DONE", path: project.path(done), keptPath: project.path(review) }],
+      changes: [],
+      unrepaired: [],
+    });
+    expect(copyNotice(result.removed[0] as { id: string; stage: string })).toBe("ROW-78: removed the old copy in DONE");
+    expect(await pathExists(project.path(done))).toBe(false);
+    expect(await pathExists(project.path("stories/DONE"))).toBe(false);
+    expect(await project.read(review)).toBe(reviewText);
+    expect(await repair()).toEqual({ removed: [], changes: [], unrepaired: [] });
+  });
+
+  it("does not change copies with a different body or title, and reports them as not repaired", async () => {
+    const bodyText = copyText({ stage: "IN_REVIEW", updatedAt: "2026-11-16T11:00:00.000Z", body: "Edited." });
+    const titleText = copyText({ stage: "IN_REVIEW", updatedAt: "2026-11-16T11:00:00.000Z", title: "Find" });
+
+    for (const other of [bodyText, titleText]) {
+      await project.write(done, doneText);
+      await project.write(review, other);
+
+      const result = await repair();
+
+      expect(result).toEqual({
+        removed: [],
+        changes: [],
+        unrepaired: [
+          {
+            id: "ROW-78",
+            paths: [project.path(done), project.path(review)],
+            reason: "The copies of the Story have different content. Merge them",
+          },
+        ],
+      });
+      expect(await project.read(done)).toBe(doneText);
+      expect(await project.read(review)).toBe(other);
+    }
+  });
+
+  it("removes no file when a copy changed or disappeared after the plan", async () => {
+    await project.write(done, doneText);
+    await project.write(review, reviewText);
+    const plan = await findDuplicateStoryIds(ctx());
+    const edited = reviewText.replace("Search body.", "Edited.");
+    await project.write(review, edited);
+
+    const changed = await repairDuplicateStoryIds(ctx(), plan);
+
+    expect(changed.removed).toEqual([]);
+    expect(changed.unrepaired.map((item) => item.reason)).toEqual(["A copy of the Story changed after the plan"]);
+    expect(await project.read(done)).toBe(doneText);
+    expect(await project.read(review)).toBe(edited);
+
+    await project.write(review, reviewText);
+    const second = await findDuplicateStoryIds(ctx());
+    await rm(project.path(review));
+
+    const gone = await repairDuplicateStoryIds(ctx(), second);
+
+    expect(gone.removed).toEqual([]);
+    expect(gone.unrepaired.map((item) => item.reason)).toEqual(["A copy of the Story changed after the plan"]);
+    expect(await project.read(done)).toBe(doneText);
+  });
+
+  it("uses the modification time, then the path, when updatedAt is equal", async () => {
+    const updatedAt = "2026-11-16T10:00:00.000Z";
+    const backlog = "stories/BACKLOG/ROW-78.md";
+    await project.write(backlog, copyText({ stage: "BACKLOG", updatedAt }));
+    await project.write(done, copyText({ stage: "DONE", updatedAt }));
+    await project.write(review, copyText({ stage: "IN_REVIEW", updatedAt }));
+    await utimes(project.path(backlog), 1000, 1000);
+    await utimes(project.path(done), 2000, 2000);
+    await utimes(project.path(review), 2000, 2000);
+
+    const plan = await findDuplicateStoryIds(ctx());
+
+    // DONE comes before IN_REVIEW in string order.
+    expect(plan.copies).toMatchObject([
+      {
+        id: "ROW-78",
+        keep: { path: project.path(done) },
+        remove: [{ path: project.path(review) }, { path: project.path(backlog) }],
+      },
+    ]);
+    expect(plan.groups).toEqual([]);
+
+    const { removed } = await repairDuplicateStoryIds(ctx(), plan);
+
+    expect(removed.map((removal) => removal.stage)).toEqual(["IN_REVIEW", "BACKLOG"]);
+    expect(await pathExists(project.path(done))).toBe(true);
+  });
+
+  it("removes the copies first, and gives the files that stay to the re-number rules", async () => {
+    await project.write(done, doneText);
+    await project.write(review, reviewText);
+    await project.write(
+      "stories/BACKLOG/ROW-78.md",
+      "---\ntitle: Other\nstage: BACKLOG\ncreatedAt: 2026-11-10T00:00:00.000Z\n---\n\nOther.\n",
+    );
+
+    const result = await repair();
+
+    expect(result.removed.map((removal) => removal.path)).toEqual([project.path(done)]);
+    expect(result.changes.map((change) => [change.previousPath, change.to])).toEqual([
+      [project.path("stories/BACKLOG/ROW-78.md"), "ROW-79"],
+    ]);
+    expect(await project.read(review)).toBe(reviewText);
   });
 });

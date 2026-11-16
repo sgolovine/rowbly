@@ -2,7 +2,7 @@ import pkg from "../../../package.json" with { type: "json" };
 import type { RowblyError } from "../errors/errors.js";
 
 /** The version of the protocol between the main machine and a worker host. Increase it for each change of a frame. */
-export const HOST_PROTOCOL_VERSION = 1;
+export const HOST_PROTOCOL_VERSION = 2;
 
 /** The default time limit of a request call or a bytes call: 30 seconds. */
 export const DEFAULT_CALL_TIMEOUT_MS = 30_000;

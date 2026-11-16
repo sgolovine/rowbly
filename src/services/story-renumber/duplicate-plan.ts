@@ -1,21 +1,11 @@
-import { readFile, stat } from "node:fs/promises";
 import type { ProjectConfig } from "../config/config.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
-import { parseMarkdown } from "../markdown/markdown.js";
 import { formatStoryId, listStoryFileNames, type StoryFileName, storyTimeOf } from "../story-files/story-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
+import { type CopyGroup, type PlannedFile, type ReadStory, readStory, splitCopies } from "./copy-plan.js";
 
-/** One Story file of a duplicate group, as the plan read it. */
-interface PlannedFile {
-  readonly path: string;
-  /** The ID of the file name, for example `ROW-77` or `ROW-7`. */
-  readonly id: string;
-  /** The text of the file when the plan read it. The repair stops when the file changed. */
-  readonly text: string;
-  /** The Stage of the frontmatter, or `null` when it is not a string. */
-  readonly stage: string | null;
-}
+export type { CopyGroup } from "./copy-plan.js";
 
 /** A Story file that gets a new number. */
 export interface PlannedRenumber extends PlannedFile {
@@ -40,6 +30,8 @@ export interface UnrepairedDuplicate {
 
 /** The duplicate Story IDs of the Project, and the changes that the repair makes. */
 export interface DuplicatePlan {
+  /** The copies of a Story. The repair removes them before it gives a new number. */
+  readonly copies: readonly CopyGroup[];
   readonly groups: readonly DuplicateGroup[];
   readonly unrepaired: readonly UnrepairedDuplicate[];
 }
@@ -60,7 +52,8 @@ interface StoryAttempt {
 
 type GroupDecision =
   | { readonly group: Omit<DuplicateGroup, "renumber"> & { readonly renumber: readonly PlannedFile[] } }
-  | { readonly unrepaired: UnrepairedDuplicate };
+  | { readonly unrepaired: UnrepairedDuplicate }
+  | { readonly copy: CopyGroup };
 
 const FACTORY_FIELDS = ["worktree", "pull_request"] as const;
 
@@ -106,27 +99,13 @@ function createdTime(data: Record<string, unknown>): number {
   return value === null ? Number.NEGATIVE_INFINITY : Date.parse(value);
 }
 
-/** Reads one Story file of a group. A file that cannot be read or parsed gives `undefined`. */
-async function readCandidate(
-  name: StoryFileName,
-  canonicalId: string,
-  attempts: readonly StoryAttempt[],
-): Promise<Candidate | undefined> {
-  try {
-    const text = await readFile(name.path, "utf8");
-    const { mtimeMs } = await stat(name.path);
-    const { data } = parseMarkdown(text, name.path);
-    const stage = typeof data.stage === "string" ? data.stage : null;
-
-    return {
-      file: { path: name.path, id: name.id, text, stage },
-      createdAt: createdTime(data),
-      mtimeMs,
-      factoryState: hasFactoryState(data, [name.id, canonicalId], attempts),
-    };
-  } catch {
-    return undefined;
-  }
+function candidateOf(story: ReadStory, canonicalId: string, attempts: readonly StoryAttempt[]): Candidate {
+  return {
+    file: story.file,
+    createdAt: createdTime({ ...story.data }),
+    mtimeMs: story.mtimeMs,
+    factoryState: hasFactoryState(story.data, [story.file.id, canonicalId], attempts),
+  };
 }
 
 function compareText(a: string, b: string): number {
@@ -142,38 +121,64 @@ function compareAge(a: Candidate, b: Candidate): number {
   return a.mtimeMs - b.mtimeMs || compareText(a.file.path, b.file.path);
 }
 
-function unrepairedGroup(id: string, names: readonly StoryFileName[], reason: string): GroupDecision {
-  return { unrepaired: { id, paths: names.map((name) => name.path), reason } };
+function unrepairedGroup(id: string, paths: readonly string[], reason: string): GroupDecision {
+  return { unrepaired: { id, paths, reason } };
 }
 
 /**
  * Selects the Story that keeps the ID: the only Story with factory state, or else the oldest Story. A group with
- * more than one Story with factory state, or with a file that cannot be read, is not repaired.
+ * more than one Story with factory state is not repaired.
  */
-async function decideGroup(
-  names: readonly StoryFileName[],
-  projectKey: string,
-  attempts: readonly StoryAttempt[],
-): Promise<GroupDecision> {
-  const id = formatStoryId(projectKey, names[0]?.number ?? 0);
-  const read = await mapInOrder(names, (name) => readCandidate(name, id, attempts));
-  const candidates = read.filter((candidate): candidate is Candidate => candidate !== undefined);
-
-  if (candidates.length !== names.length) {
-    return unrepairedGroup(id, names, "A Story file of the group cannot be read");
-  }
-
-  const ordered = candidates.toSorted(compareAge);
+function decideGroup(id: string, stories: readonly ReadStory[], attempts: readonly StoryAttempt[]): GroupDecision {
+  const ordered = stories.map((story) => candidateOf(story, id, attempts)).toSorted(compareAge);
   const withState = ordered.filter((candidate) => candidate.factoryState);
 
   if (withState.length > 1) {
-    return unrepairedGroup(id, names, "More than one Story with this ID has factory state");
+    const paths = stories.map((story) => story.file.path);
+
+    return unrepairedGroup(id, paths, "More than one Story with this ID has factory state");
   }
 
   const keep = withState[0] ?? (ordered[0] as Candidate);
   const renumber = ordered.filter((candidate) => candidate !== keep).map((candidate) => candidate.file);
 
   return { group: { id, keep: keep.file, renumber } };
+}
+
+/**
+ * Plans one group of Story files with the same number. The copies of a Story go first: the newest copy stays, and
+ * the other files go to the re-number rules. A group with copies that are different is not repaired.
+ */
+async function decideNumber(
+  names: readonly StoryFileName[],
+  projectKey: string,
+  attempts: readonly StoryAttempt[],
+): Promise<GroupDecision[]> {
+  const id = formatStoryId(projectKey, names[0]?.number ?? 0);
+  const read = await mapInOrder(names, readStory);
+  const stories = read.filter((story): story is ReadStory => story !== undefined);
+
+  if (stories.length !== names.length) {
+    return [
+      unrepairedGroup(
+        id,
+        names.map((name) => name.path),
+        "A Story file of the group cannot be read",
+      ),
+    ];
+  }
+
+  const split = splitCopies(id, stories);
+  const copies = split.copies.map((copy) => ({ copy }));
+  const different = split.different.map((paths) =>
+    unrepairedGroup(id, paths, "The copies of the Story have different content. Merge them"),
+  );
+
+  if (different.length > 0 || split.rest.length < 2) {
+    return [...copies, ...different];
+  }
+
+  return [...copies, decideGroup(id, split.rest, attempts)];
 }
 
 /** Gives each Story that gets a new number the ID that the repair expects, in the order of the repair. */
@@ -194,14 +199,16 @@ export async function planDuplicates(paths: ProjectPaths, config: ProjectConfig)
   const duplicates = duplicateNames(names, config.projectKey);
 
   if (duplicates.length === 0) {
-    return { groups: [], unrepaired: [] };
+    return { copies: [], groups: [], unrepaired: [] };
   }
 
   const attempts = await readAttempts(paths.root);
-  const decisions = await mapInOrder(duplicates, (group) => decideGroup(group, config.projectKey, attempts));
+  const planned = await mapInOrder(duplicates, (group) => decideNumber(group, config.projectKey, attempts));
+  const decisions = planned.flat();
   const highest = Math.max(0, ...names.map((name) => name.number));
 
   return {
+    copies: decisions.flatMap((decision) => ("copy" in decision ? [decision.copy] : [])),
     groups: withExpectedIds(decisions, config.projectKey, highest),
     unrepaired: decisions.flatMap((decision) => ("unrepaired" in decision ? [decision.unrepaired] : [])),
   };
