@@ -1,11 +1,11 @@
 ---
 title: Add the worker host registry and host add, list and remove
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 4
 dependsOn:
   - ROW-83
 createdAt: 2026-11-16T19:45:02.241Z
-updatedAt: 2026-11-16T20:23:50.420Z
+updatedAt: 2026-11-16T20:24:34.690Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-84
 pull_request: https://github.com/sgolovine/rowbly/pull/272
 ---
