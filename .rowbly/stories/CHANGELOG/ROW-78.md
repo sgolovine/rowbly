@@ -1,8 +1,8 @@
 ---
 title: Sort stories by updated by
-stage: IN_DEVELOPMENT
-position: 2
-updatedAt: 2026-11-16T20:02:03.621Z
+stage: CHANGELOG
+position: 1
+updatedAt: 2026-11-16T20:04:24.857Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-78
 pull_request: https://github.com/sgolovine/rowbly/pull/268
 ---
@@ -70,16 +70,3 @@ Not in scope:
 - A Story with no valid `updatedAt` goes last, then by number. Reason: this agrees with the existing rule for a Story with no `position`.
 - The factory launch order changes only in its last tie-break, to the most recently updated Story first. Reason: the factory uses the board order; a separate order is a larger change that the author did not ask for.
 - Old `position` keys stay in existing Story files. Reason: a migration writes all Story files and changes their `updatedAt` rules; the key has no effect now and doctor accepts it.
-
-## Review findings
-
-The Changelog Stage could not add the entry. The merge of `origin/main` into `story/ROW-78` (PR #268) has conflicts in these files:
-
-- `docs/architecture/storage.md`
-- `skills/rowbly-reference.md`
-- `skills/develop/references/rowbly-reference.md`
-- `skills/refine/references/rowbly-reference.md`
-- `skills/review/references/rowbly-reference.md`
-- `src/tui/shell/shell/shell-keys.ts`
-
-Merge `origin/main` into the branch and repair these conflicts. After the change to `skills/rowbly-reference.md`, copy it again to each `skills/<name>/references/rowbly-reference.md`. Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
