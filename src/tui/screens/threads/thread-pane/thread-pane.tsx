@@ -34,7 +34,8 @@ function conversationHeight(body: number | undefined, head: number): number | un
  * The content of a Thread in the Story sidebar of the Factory view. It shows the metadata of the Thread, its last
  * checks, then its conversation, which follows the new entries while the Thread runs. It is read-only. Its size comes from the
  * layout of the sidebar body. When the board has the Story of the Thread, an `Open Story` Button (`o`) opens it. `ctrl+f`
- * shows the conversation over the whole terminal. `esc` gives the focus back to the Thread list.
+ * shows the conversation over the whole terminal. `esc` gives the focus back to the Thread list. A wheel notch over the
+ * conversation scrolls it and gives the focus to the sidebar, also when a different pane has the focus.
  */
 export function ThreadPane(props: ThreadPaneProps) {
   const { ctx, onHints, onOpenStory } = props;
@@ -67,6 +68,8 @@ export function ThreadPane(props: ThreadPaneProps) {
           threadId={current.id}
           live={live}
           active={active}
+          wheel={props.clickable && !full.isOpen}
+          onWheelFocus={props.onFocus}
           width={layout.width}
           height={conversationHeight(layout.height, head)}
         />

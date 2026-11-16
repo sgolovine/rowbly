@@ -195,6 +195,12 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 - The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
   does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
   wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
+- The mouse wheel over the conversation of the Thread scrolls the conversation also when a different
+  pane has the focus. The wheel gives the focus to the Story sidebar, as the wheel over the Story list
+  gives the focus to the Story list. While an overlay or a confirmation covers the Story sidebar, the
+  wheel does not scroll the conversation and the focus does not move. `ThreadPane` gives
+  `wheel={clickable}` and `onWheelFocus` to its `ConversationView`. The keys of the conversation
+  operate only while the Thread has the focus.
 - `t` on a factory warning closes the Factory controls and opens the Thread in the Story sidebar
   (`openThread` of `OverlayHandlers`).
 
