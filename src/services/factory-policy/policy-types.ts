@@ -34,6 +34,8 @@ export interface PolicyAttempt extends PolicyWorker {
   stage: string;
   workerId: string;
   status: AttemptStatus;
+  /** The host ID of the machine that runs the attempt. An attempt without it ran on the local host. */
+  host?: string;
   reported?: boolean;
   startReported?: boolean;
   budgetReset?: boolean;

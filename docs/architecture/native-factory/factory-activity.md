@@ -19,6 +19,7 @@ The service uses only the attempts of a Story in its current Stage:
 
 - No `preparing` or `running` attempt gives no activity.
 - One active attempt that is also the last attempt gives the `model` of the attempt, or its `workerId`.
+  It also gives the `host` of the attempt. An attempt without `host` gives `local`.
 - Two active attempts, or an active attempt before a later attempt, give `conflict`.
 - An attempt without `stage`, `workerId` or `status` gives `unknown`.
 

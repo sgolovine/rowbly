@@ -20,6 +20,7 @@ const record = (changes: object = {}) => ({
 describe("thread validation", () => {
   it("accepts valid metadata and safe IDs", () => {
     expect(validateThread(record())).toMatchObject({ id: "t1" });
+    expect(validateThread(record({ host: "local" })).host).toBe("local");
     expect(validId("a_b-1")).toBe(true);
     expect(validId("../x")).toBe(false);
     expect(
@@ -37,6 +38,8 @@ describe("thread validation", () => {
       record({ attemptNumber: 0 }),
       record({ startedAt: "never" }),
       record({ worktree: "relative" }),
+      record({ host: "" }),
+      record({ host: 7 }),
       record({ usage: { input: -1, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 } }),
       record({ error: { class: "other", code: "x", message: "y" } }),
       record({ session: { id: "other", file: null } }),

@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { getThreadLog } from "../../services/conversation/conversation.js";
 import { sendFactoryCommand, steerThread } from "../../services/factory/factory.js";
-import { getThread, listThreads } from "../../services/thread/thread.js";
+import { getThread, LOCAL_HOST, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
 type ThreadLog = Awaited<ReturnType<typeof getThreadLog>>;
@@ -25,7 +25,7 @@ function logText(page: ThreadLog): string {
 function threadLine(t: ThreadList["threads"][number]): string {
   const model = t.model ? `${t.model.provider}/${t.model.modelId}` : "unresolved";
 
-  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}`;
+  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}  ${t.host ?? LOCAL_HOST}`;
 }
 
 function listText(result: ThreadList): string {

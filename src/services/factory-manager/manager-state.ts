@@ -43,6 +43,8 @@ export interface ProviderPause {
 
 interface ActiveWorker {
   readonly task: Promise<void>;
+  /** The host ID of the machine that runs the worker. */
+  readonly host: string;
   readonly session?: PiSession;
 }
 
