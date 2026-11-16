@@ -16,8 +16,8 @@ import { type ThreadPaneProps, useThreadPane } from "./use-thread-pane.js";
 const FULL_DETAIL_MIN_HEIGHT = THREAD_DETAIL_ROWS + 10;
 
 /**
- * The keys of the pane: the keys of the conversation, `m` for a running worker Thread, `o` when the Story can open, then
- * `tab` and `esc`. The steering input has only its own keys.
+ * The keys of the pane: the keys of the conversation, `ctrl+f`, `m` for a running worker Thread, `o` when the Story can
+ * open, then `tab` and `esc`. The steering input has only its own keys.
  */
 function threadPaneHints(live: boolean, steerable: boolean, story: boolean, steering: boolean): readonly KeyHint[] {
   if (steering) {
@@ -29,6 +29,7 @@ function threadPaneHints(live: boolean, steerable: boolean, story: boolean, stee
 
   return [
     ...conversationKeys(live),
+    { key: "ctrl+f", description: "full screen" },
     ...(steerable ? [{ key: "m", description: "message" }] : []),
     ...(story ? [{ key: "o", description: "open Story" }] : []),
     { key: "tab", description: "next pane", secondary: true },
@@ -50,12 +51,14 @@ function conversationHeight(body: number | undefined, head: number): number | un
  * The content of a Thread in the Story sidebar of the Factory view. It shows the metadata of the Thread, its last
  * checks, then its conversation, which follows the new entries while the Thread runs. It is read-only, except for the
  * steering input under the conversation of a running Thread: `m` or a click focuses it, and `enter` sends its text to
- * the agent. Its size comes from the layout of the sidebar body. When the board has the Story of the Thread, an `Open Story` Button (`o`) opens it. `esc`
- * gives the focus back to the Thread list.
+ * the agent. Its size comes from the layout of the sidebar body. When the board has the Story of the Thread, an
+ * `Open Story` Button (`o`) opens it. `ctrl+f` shows the conversation over the whole terminal. `esc` gives the focus
+ * back to the Thread list. A wheel notch over the conversation scrolls it and gives the focus to the sidebar, also
+ * when a different pane has the focus.
  */
 export function ThreadPane(props: ThreadPaneProps) {
   const { ctx, onHints, onOpenStory, stages } = props;
-  const { active, steering, setSteering, current, now, layout } = useThreadPane(props);
+  const { active, steering, setSteering, full, current, now, layout } = useThreadPane(props);
   const live = current.status === "running";
   // Only a worker takes a steering message. The supervisor is not in scope.
   const steerable = live && current.role === "worker";
@@ -69,7 +72,13 @@ export function ThreadPane(props: ThreadPaneProps) {
     <Box flexDirection="column" width={layout.width}>
       {onOpenStory && (
         <Box>
-          <Button label="Open Story" keyName="o" onClick={onOpenStory} clickable={props.clickable} compact />
+          <Button
+            label="Open Story"
+            keyName="o"
+            onClick={onOpenStory}
+            clickable={props.clickable && !full.isOpen}
+            compact
+          />
         </Box>
       )}
       <ThreadDetail thread={current} now={now} compact={compact} />
@@ -80,6 +89,8 @@ export function ThreadPane(props: ThreadPaneProps) {
           threadId={current.id}
           live={live}
           active={active && !steering}
+          wheel={props.clickable && !full.isOpen}
+          onWheelFocus={props.onFocus}
           width={layout.width}
           height={conversationHeight(layout.height, head)}
         />
@@ -97,6 +108,8 @@ export function ThreadPane(props: ThreadPaneProps) {
           onLeave={() => setSteering(false)}
         />
       )}
+      {/* Outside the shell there is nothing to cover, so the full-screen view shows here. */}
+      {full.inline}
     </Box>
   );
 }

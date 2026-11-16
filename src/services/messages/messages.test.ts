@@ -83,6 +83,7 @@ function story(id: string, overrides: Partial<Story> = {}): Story {
     stage: "DONE",
     position: 1,
     dependsOn: [],
+    tags: [],
     createdAt: null,
     updatedAt: null,
     description: "",

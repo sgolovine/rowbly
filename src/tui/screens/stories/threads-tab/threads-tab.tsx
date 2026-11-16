@@ -13,9 +13,10 @@ import { type ThreadsTabProps, useThreadsTab } from "./use-threads-tab.js";
  * then its conversation. In a narrow Modal they take turns. The list reads only metadata, and only after the
  * tab is selected the first time. It reads again when the threads or the factory status change. Only the
  * selected thread opens its conversation (a peek, which starts no agent), and it closes when the selection or
- * the tab changes. `x` asks before it interrupts an active thread, and `r` resumes a resumable thread. The two
- * keys send a command to the running factory. A running thread shows a steering input under its conversation: `m`
- * or a click focuses it, and `enter` sends its text to the agent. A note tells when the Story waits for a worker slot.
+ * the tab changes. `ctrl+f` shows the conversation over the whole terminal. `x` asks before it interrupts an active
+ * thread, and `r` resumes a resumable thread. The two keys send a command to the running factory. A running thread
+ * shows a steering input under its conversation: `m` or a click focuses it, and `enter` sends its text to the agent.
+ * A note tells when the Story waits for a worker slot.
  */
 export function ThreadsTab(props: ThreadsTabProps) {
   const { ctx, storyId, stages, selected, compactThreads } = props;
@@ -80,6 +81,8 @@ export function ThreadsTab(props: ThreadsTabProps) {
           onCancel={() => env.setConfirm(null)}
         />
       )}
+      {/* Outside the shell there is nothing to cover, so the full-screen view shows here. */}
+      {tab.full.inline}
     </Box>
   );
 }

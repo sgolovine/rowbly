@@ -23,11 +23,11 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
+  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -43,12 +43,14 @@ The files of `runtime/` and `state.json` belong to the native factory. See
 
 ## Config
 
-`rowbly.config.json` holds the Project name and key, the custom fields, the Stages, the features, the
+`rowbly.config.json` holds the Project name and key, the custom fields, the tags, the Stages, the features, the
 display options, the installed skills and the factory settings. The `config` service reads, checks and writes it.
 
 - The order of `stages` in the config is the order of the board.
 - The custom field types are `string`, `number`, `boolean`, `url`, `date` (YYYY-MM-DD) and `select`
   (with `options`).
+- The optional `tags` list holds the tags of the Project, in order. Each tag has a `value` and a
+  `label`. A config without `tags` has no tags. See [Tags](#tags).
 - If a service renames or removes a Stage or a field, it also writes the change to the Stories that
   use it. This keeps the files consistent.
 - The `skills` list holds the bundled skills that the Project has installed. Each entry has the `name`
@@ -160,7 +162,7 @@ read the settings continue to work.
 ## Stories
 
 A Story file is `stories/<stage key>/<projectKey>-<n>.md`, for example `stories/BACKLOG/ROW-01.md`.
-The number has at least two digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list,
+The number has at least two digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list, an optional `tags` list,
 the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
 
@@ -214,14 +216,15 @@ set it.
 
 - `story create` writes the two keys with the same value.
 - Each write that changes a Story file sets `updatedAt`: a `story update`, a Stage rename, a Stage
-  delete that moves Stories, an add, rename or remove of a custom field, a Project key change that
+  delete that moves Stories, an add, rename or remove of a custom field, the removal of a tag that the
+  Story has, a Project key change that
   changes `dependsOn`, the removal of a deleted Story from a `dependsOn` list, and a repair of
   `rowbly doctor --fix`. An add or a remove of an attachment also sets `updatedAt`.
 - An update that does not change the Story file does not change `updatedAt`.
 - When a Story moves, the other Stories of the Stage that get a new `position` keep their
   `updatedAt`. Only the moved Story gets a new time.
 - `createdAt` does not change after the create. Rowbly does not add `createdAt` to an older Story.
-- The two keys come after `dependsOn` and before the custom fields. The YAML parser keeps them as
+- The two keys come after `dependsOn` and `tags`, and before the custom fields. The YAML parser keeps them as
   strings, not as dates.
 - A missing value, or a value that is not a valid date string, reads as `null` in the `Story` record.
 - The TUI shows the times in the General tab of a Story, in the time zone of `display.timeZone`.
@@ -246,6 +249,27 @@ The `dependsOn` key is a list of the IDs of the upstream Stories of the Story, f
   Story. The result has one warning for each changed Story.
 - When the Project key changes, the service changes the IDs in each `dependsOn` list to the new key.
 - A `dependsOn` value that is not a list reads as `[]`. Items that are not strings are ignored.
+
+### Tags
+
+The `tags` key is a list of the values of the tags of the Story, for example `tags: [frontend, docs]`.
+The `tags` list of the config holds the tags of the Project. See
+[domain-concepts.md](domain-concepts.md#tags).
+
+- A tag value has only lower-case letters, digits, `_` and `-`. It starts with a letter or a digit.
+  Each value in the config must be unique. Each tag must have a label.
+- The `tag` service lists, adds and removes tags, and changes the label of a tag. It cannot change the
+  value of a tag.
+- A Story without tags has no `tags` key. When the list becomes empty, the service removes the key.
+- `tags` comes after `dependsOn` and before the times and the custom fields. A custom field cannot use
+  the key `tags`, because it is reserved.
+- On create and update, each value must be a tag of the Project. Else the service gives a
+  `ValidationError` and saves nothing. The service removes duplicates and keeps the order of the input.
+- When you remove a tag, the service removes its value from the `tags` list of each Story that has it,
+  in all Stage folders. The other Stories do not change, and they keep their `updatedAt`.
+- A `tags` value that is not a list reads as `[]`. Items that are not strings are ignored.
+- `rowbly doctor` reports a `tags` value that is not a list of strings, and each value that is not a
+  tag of the Project. `--fix` keeps only the string values, and removes each unknown value.
 
 Older versions of Rowbly wrote an agent lock to the `agentLock` key of a Story. Rowbly does not use
 this key now. `rowbly doctor` shows a warning for each Story file with an `agentLock` key. To remove

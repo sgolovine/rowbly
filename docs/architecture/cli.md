@@ -37,6 +37,7 @@ test.
 | `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
 | `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
 | `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                   |
+| `tag/`                                                 | `tag list`, `add`, `update`, `remove`: the tags of a Project.                    |
 | `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.    |
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt. |
 | `model/`                                               | `model list`.                                                                    |
@@ -52,7 +53,7 @@ The native commands are in [native-factory/controls.md](native-factory/controls.
 - `--json` prints the results and the errors as JSON.
 - `-C, --cwd <dir>` runs as if Rowbly started in `<dir>`.
 
-Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `spec`,
+Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `tag`, `spec`,
 `skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
 its help. A resource command with an unknown action gives an error. `init`, `doctor`, `status` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
@@ -100,6 +101,28 @@ an ISO 8601 UTC string or `null`.
 `rowbly story search --blocked` shows only the blocked Stories, and `--ready` shows only the ready
 Stories. The two flags together give a Commander error and exit code 1. Each flag works together with
 the query, `--stage` and `--field`.
+
+### Tags
+
+`rowbly tag` manages the tags of the Project through the `tag` service:
+
+- `tag list` shows the tags in config order. With `--json`, the result is an array of `{ value, label }`.
+- `tag add --label <label> --value <value>` adds a tag. A value that exists gives a `CONFLICT` error.
+  An empty label or a value that is not valid gives a `VALIDATION` error.
+- `tag update <value> --label <label>` changes only the label. The command has no option for the value.
+- `tag remove <value>` removes the tag from the config and from each Story that has it. It does not ask
+  for confirmation.
+- An unknown value for `tag update` or `tag remove` gives a `NOT_FOUND` error with the list of values.
+
+`rowbly story create --tag <value>` sets the tags of a new Story. On `rowbly story update`, `--tag`
+replaces the list, and `--add-tag` and `--remove-tag` change one item of the list. You can use each
+flag more than one time. `--tag ""` removes all tags. `--tag` with `--add-tag` or `--remove-tag` gives
+a `VALIDATION` error. A value that is not a tag of the Project gives a `VALIDATION` error, and no file
+changes.
+
+`rowbly story get` shows a `Tags` line, and the JSON result has the array `tags` (`[]` when the Story
+has no tags). `rowbly story search --tag <value>` shows only the Stories that have the tag. With more
+than one `--tag`, a Story must have all of the tags.
 
 ## Output and errors
 

@@ -3,7 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { type FactoryQueueEntry, type FactoryStatus, getFactoryStatus } from "../../../../services/factory/factory.js";
 import { listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { useCovered } from "../../../components/index.js";
+import {
+  type FullScreenConversationControl,
+  useCovered,
+  useFullScreenConversation,
+} from "../../../components/index.js";
 import {
   type AsyncState,
   type Layout,
@@ -20,9 +24,10 @@ import {
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { queueEntry } from "../../factory/index.js";
+import { threadPanelTitle } from "../thread-panel/index.js";
 import { type StageNames, sortThreads } from "../thread-text.js";
 import { handleListKey, handleThreadKey, type ThreadsTabEnv } from "./threads-tab-actions.js";
-import { type Focus, threadsHints } from "./threads-tab-view.js";
+import { type Focus, type HintsInput, threadsHints } from "./threads-tab-view.js";
 
 /** The conversation of a thread opens after the selection stays on the thread for this time. */
 const OPEN_DELAY_MS = 200;
@@ -64,6 +69,8 @@ export interface ThreadsTabState {
   readonly providers: FactoryStatus["providers"];
   readonly now: number;
   readonly shownId: string | undefined;
+  /** The conversation of the selected thread over the whole terminal, which `ctrl+f` opens. */
+  readonly full: FullScreenConversationControl;
 }
 
 /** Reads the threads, but only after the tab is selected the first time. */
@@ -149,7 +156,10 @@ function useNow(selected: boolean, running: boolean): number {
   return now;
 }
 
-/** Tells the parent the count of threads and the editing state when they change. */
+/**
+ * Tells the parent the count of threads and the editing state when they change. The thread region also edits while
+ * its full-screen view is open, so that `esc` does not close the Modal.
+ */
 function useParentReports(props: ThreadsTabProps, data: ThreadsData | undefined, viewing: boolean): void {
   const { onCount, onEditing } = props;
 
@@ -183,6 +193,39 @@ function useFocusReset(current: ThreadRecord | undefined, focus: Focus, setFocus
   }, [current, focus, setFocus]);
 }
 
+/** Gives the keys of the tab to the parent. While the full-screen view is open, the tab has no keys. */
+function useTabHints(onHints: (hints: readonly KeyHint[]) => void, input: HintsInput, fullOpen: boolean): void {
+  useReportHints(onHints, threadsHints({ ...input, keysOwn: input.keysOwn && !fullOpen }));
+}
+
+/**
+ * The keys of the list and the thread region. `esc` in the thread region gives the focus back to the list. While the
+ * steering input has the focus, the thread region takes no keys.
+ */
+function useTabKeys(
+  env: ThreadsTabEnv,
+  { viewing, steering, listing }: { readonly viewing: boolean; readonly steering: boolean; readonly listing: boolean },
+): void {
+  const regionKeys = viewing && !steering;
+
+  useEscape(regionKeys, () => env.setFocus("list"));
+  useInput((input, key) => handleThreadKey(env, input, key), { isActive: regionKeys });
+  useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
+}
+
+/** The conversation of the selected thread over the whole terminal. */
+function useThreadFullScreen(
+  { ctx, storyId, stages }: ThreadsTabProps,
+  current: ThreadRecord | undefined,
+): FullScreenConversationControl {
+  return useFullScreenConversation({
+    ctx,
+    threadId: current?.id ?? "",
+    live: current?.status === "running",
+    title: threadPanelTitle(storyId, current, stages),
+  });
+}
+
 /** The state, the effects and the keys of the Threads tab. */
 export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const { ctx, storyId, stages, selected, onHints } = props;
@@ -198,15 +241,17 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const status = useTabStatus(ctx, selected, opened);
   const threads = data.data?.threads ?? [];
   const keysOwn = active && selected && !covered && confirm === null;
+  // The full-screen view opens only from the thread region, so the list never takes the keys while it is open.
   const listing = keysOwn && focus === "list" && data.data !== undefined;
-  const viewing = keysOwn && focus !== "list";
-  const steering = viewing && focus === "steer";
   const [cursor, setCursor] = useCursor(threads.length, listing);
   const current = threads[cursor];
   const running = threads.some((thread) => thread.status === "running");
   const shownId = useShownId(current?.id);
   const now = useNow(selected, running);
-  const hints = threadsHints({ keysOwn, viewing, steering, current, count: threads.length });
+  const conversation = selected && current !== undefined && shownId === current.id;
+  const full = useThreadFullScreen(props, current);
+  const viewing = keysOwn && focus !== "list" && !full.isOpen;
+  const steering = viewing && focus === "steer";
 
   const env: ThreadsTabEnv = {
     ctx,
@@ -220,14 +265,13 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     setFocus,
     setConfirm,
     setCursor,
+    openFullScreen: conversation ? full.open : undefined,
   };
 
-  useParentReports(props, data.data, viewing);
+  useParentReports(props, data.data, viewing || full.isOpen);
   useFocusReset(current, focus, setFocus);
-  useEscape(viewing && !steering, () => setFocus("list"));
-  useInput((input, key) => handleThreadKey(env, input, key), { isActive: viewing && !steering });
-  useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
-  useReportHints(onHints, hints);
+  useTabKeys(env, { viewing, steering, listing });
+  useTabHints(onHints, { keysOwn, viewing, steering, current, count: threads.length, conversation }, full.isOpen);
 
   return {
     env,
@@ -244,5 +288,6 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     providers: status?.providers,
     now,
     shownId,
+    full,
   };
 }

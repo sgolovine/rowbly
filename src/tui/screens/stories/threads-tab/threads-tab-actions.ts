@@ -21,6 +21,8 @@ export interface ThreadsTabEnv {
   readonly setFocus: Dispatch<SetStateAction<Focus>>;
   readonly setConfirm: Dispatch<SetStateAction<ThreadRecord | null>>;
   readonly setCursor: (index: number) => void;
+  /** Opens the conversation full screen. `undefined` while the thread region shows no conversation. */
+  readonly openFullScreen: (() => void) | undefined;
 }
 
 type CommandType = "cancel" | "resume";
@@ -75,8 +77,14 @@ function handleActionKey(env: ThreadsTabEnv, input: string): void {
   }
 }
 
-/** The keys of the thread region: `tab` goes back to the list, and `m` focuses the steering input. */
+/** The keys of the thread region: `tab` goes back to the list, `m` focuses the steering input, and `ctrl+f` opens the conversation full screen. */
 export function handleThreadKey(env: ThreadsTabEnv, input: string, key: Key): void {
+  if (key.ctrl && input === "f") {
+    env.openFullScreen?.();
+
+    return;
+  }
+
   if (key.ctrl || key.meta) {
     return;
   }

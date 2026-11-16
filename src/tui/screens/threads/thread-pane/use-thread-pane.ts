@@ -2,8 +2,10 @@ import { type Key, useInput } from "ink";
 import { useEffect, useState } from "react";
 import { getThread, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
+import { type FullScreenConversationControl, useFullScreenConversation } from "../../../components/index.js";
 import { type Layout, useAsync, useEscape, useIsActive, useLayout, useThreadChanges } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
+import { threadName } from "../../stories/index.js";
 
 /** The props of `ThreadPane`. */
 export interface ThreadPaneProps {
@@ -18,7 +20,9 @@ export interface ThreadPaneProps {
   onBack(): void;
   /** `tab` (`1`) or `shift+tab` (`-1`): the focus goes to the next or the previous pane. */
   onTab(step: 1 | -1): void;
-  /** The Button of the pane takes the mouse. */
+  /** A wheel notch over the conversation while the pane does not have the focus: the focus goes to the pane. */
+  onFocus(): void;
+  /** The Button and the conversation of the pane take the mouse. */
   readonly clickable: boolean;
   /** `o` or the `Open Story` Button: opens the Story of the Thread. `undefined` when the board has no such Story. */
   readonly onOpenStory: (() => void) | undefined;
@@ -28,10 +32,13 @@ export interface ThreadPaneProps {
 
 /** The state of the Thread pane that its render reads. */
 export interface ThreadPaneModel {
+  /** The pane takes the keys: it has the focus, and the full-screen view is not open. */
   readonly active: boolean;
   /** The steering input takes the keys. */
   readonly steering: boolean;
   readonly setSteering: (steering: boolean) => void;
+  /** The conversation over the whole terminal, which `ctrl+f` opens. */
+  readonly full: FullScreenConversationControl;
   readonly current: ThreadRecord;
   readonly now: number;
   readonly layout: Layout;
@@ -54,18 +61,30 @@ function useNow(running: boolean): number {
   return now;
 }
 
-/** The handlers of the keys of the pane. */
+/** The handlers of the keys of the pane that are not the keys of the conversation. */
 interface PaneKeys extends Pick<ThreadPaneProps, "onTab" | "onOpenStory"> {
+  readonly full: FullScreenConversationControl;
   /** The Thread is a running worker, so that `m` can focus the steering input. */
   readonly steerable: boolean;
   readonly setSteering: (steering: boolean) => void;
 }
 
+/** The title of the full-screen view: the same text as the title of the Story sidebar. */
+function fullScreenTitle(thread: ThreadRecord, stages: Readonly<Record<string, string>>): string {
+  return `${thread.storyId ?? "—"} › ${threadName(thread, stages)}`;
+}
+
 /**
- * `tab` and `shift+tab` move the focus to another pane of the shell. `o` opens the Story of the Thread. `m` focuses
- * the steering input of a running Thread.
+ * `tab` and `shift+tab` move the focus to another pane of the shell. `o` opens the Story of the Thread. `ctrl+f`
+ * opens the conversation full screen. `m` focuses the steering input of a running Thread.
  */
 function paneKey(input: string, key: Key, keys: PaneKeys): void {
+  if (key.ctrl && input === "f") {
+    keys.full.open();
+
+    return;
+  }
+
   if (key.tab) {
     keys.onTab(key.shift ? -1 : 1);
 
@@ -95,16 +114,20 @@ function useSteerReset(steerable: boolean, steering: boolean, setSteering: (stee
 }
 
 /**
- * The live Thread, the run time and the keys of the Thread pane. `esc` gives the focus back to the list, `o` opens
- * the Story, and `m` focuses the steering input. While the input has the focus, the other keys do not act.
+ * The live Thread, the run time and the keys of the Thread pane. `esc` gives the focus back to the list, `o` opens the
+ * Story, `ctrl+f` opens the conversation full screen and `m` focuses the steering input. While the full-screen view is
+ * open, the pane takes no keys. While the input has the focus, the other keys do not act.
  */
-export function useThreadPane({ ctx, root, thread, onBack, onTab, onOpenStory }: ThreadPaneProps): ThreadPaneModel {
-  const active = useIsActive();
+export function useThreadPane(props: ThreadPaneProps): ThreadPaneModel {
+  const { ctx, root, thread, stages, onBack, onTab, onOpenStory } = props;
+  const focused = useIsActive();
   const layout = useLayout();
   const fresh = useAsync(() => getThread(thread.id, ctx), [ctx, thread.id]);
   const [steeringState, setSteering] = useState(false);
   const current = fresh.data ?? thread;
   const live = current.status === "running";
+  const full = useFullScreenConversation({ ctx, threadId: current.id, live, title: fullScreenTitle(current, stages) });
+  const active = focused && !full.isOpen;
   const steerable = live && current.role === "worker";
   const steering = active && steerable && steeringState;
   const paneKeys = active && !steering;
@@ -113,7 +136,9 @@ export function useThreadPane({ ctx, root, thread, onBack, onTab, onOpenStory }:
   useThreadChanges(root, fresh.refresh);
   useSteerReset(steerable, steeringState, setSteering);
   useEscape(paneKeys, onBack);
-  useInput((input, key) => paneKey(input, key, { onTab, onOpenStory, steerable, setSteering }), { isActive: paneKeys });
+  useInput((input, key) => paneKey(input, key, { onTab, onOpenStory, full, steerable, setSteering }), {
+    isActive: paneKeys,
+  });
 
-  return { active, steering, setSteering, current, now: useNow(live), layout };
+  return { active, steering, setSteering, full, current, now: useNow(live), layout };
 }

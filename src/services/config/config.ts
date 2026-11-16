@@ -11,6 +11,7 @@ import {
   type ProjectConfig,
   type StageConfig,
   type StorySidebarBehavior,
+  type TagConfig,
 } from "./config-types.js";
 
 export { configIssues } from "./config-issues.js";
@@ -20,6 +21,11 @@ export * from "./config-types.js";
 /** Tells if the optional feature is on in the config. */
 export function featureEnabled(config: ProjectConfig, feature: Feature): boolean {
   return config.features?.[feature] === true;
+}
+
+/** The tags of the project, in config order. A config without tags gives `[]`. */
+export function projectTags(config: ProjectConfig): TagConfig[] {
+  return config.tags ?? [];
 }
 
 /** Tells if the TUI shows each Thread on one line. The compact mode is on when the config does not set it. */
@@ -72,6 +78,7 @@ function normalizeConfig(config: ProjectConfig): ProjectConfig {
     customFields: config.customFields.map(({ key, label, type, options }) =>
       options === undefined ? { key, label, type } : { key, label, type, options },
     ),
+    ...(config.tags === undefined ? {} : { tags: config.tags.map(({ value, label }) => ({ value, label })) }),
     stages: config.stages.map(normalizeStage),
     ...(config.features === undefined
       ? {}
