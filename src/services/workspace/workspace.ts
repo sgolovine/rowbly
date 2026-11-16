@@ -1,4 +1,5 @@
 import { dirname, join, resolve } from "node:path";
+import type { RemoteAttachmentSource } from "../attachment-cache/attachment-source.js";
 import { NotFoundError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
 import type { WriteRecorder } from "../outbox/outbox.js";
@@ -21,6 +22,8 @@ export interface ServiceContext {
    * a remote worker cannot do. Without it, the services do not record writes.
    */
   recorder?: WriteRecorder;
+  /** Gives the attachment files that are not in the copy of a remote worker. Without it, a missing file is not found. */
+  remoteAttachments?: RemoteAttachmentSource;
 }
 
 export interface ProjectPaths {

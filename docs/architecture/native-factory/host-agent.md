@@ -14,26 +14,30 @@ a supervisor. Only the start of a run loads Pi.
 
 ## Modules
 
-| File                    | Contents                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `host-agent-paths.ts`   | The project id rule, the paths below `HOST_ROOT` and the folders with mode 0700. |
-| `host-agent-claim.ts`   | The claim of the agent, `agent.json` and `liveAgent`.                            |
-| `host-agent-control.ts` | `submitHostCommand`, the command scan and the receipts.                          |
-| `host-slots.ts`         | The machine limit and the slots of all Projects on the host.                     |
-| `host-agent-work.ts`    | The `HostWorkRunner` interface and the run commands.                             |
-| `host-agent-prepare.ts` | `prepareHostThread`: the copy and `launch.json` of a Thread.                     |
-| `host-agent-cache.ts`   | The attachment cache commands `cache-missing` and `cache-put`.                   |
-| `host-agent-input.ts`   | The bounded read of stdin.                                                       |
-| `host-runner.ts`        | `createHostRunner`: the real `HostWorkRunner`.                                   |
-| `host-run-events.ts`    | The events of the executor that write `run.json`.                                |
-| `host-run-state.ts`     | The read and the write of `run.json`.                                            |
-| `host-run-executor.ts`  | The only module that loads Pi. The runner imports it when a run starts.          |
-| `host-clone-update.ts`  | The fetch and the fast-forward of the clone.                                     |
-| `host-checks.ts`        | The check queue of the agent and the check records of each run.                  |
-| `host-agent.ts`         | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
-| `host-attach.ts`        | `runHostAttach`: the frames of `host attach`.                                    |
-| `host-session-lines.ts` | The read of the session files and the `session` frames of `host attach`.         |
-| `host-agent-launch.ts`  | `startHostAgent`: the detached start of `host serve --detach`.                   |
+| File                        | Contents                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `host-agent-paths.ts`       | The project id rule, the paths below `HOST_ROOT` and the folders with mode 0700. |
+| `host-agent-claim.ts`       | The claim of the agent, `agent.json` and `liveAgent`.                            |
+| `host-agent-control.ts`     | `submitHostCommand`, the command scan and the receipts.                          |
+| `host-slots.ts`             | The machine limit and the slots of all Projects on the host.                     |
+| `host-agent-work.ts`        | The `HostWorkRunner` interface and the run commands.                             |
+| `host-agent-prepare.ts`     | `prepareHostThread`: the copy and `launch.json` of a Thread.                     |
+| `host-agent-cache.ts`       | The attachment cache commands `cache-missing` and `cache-put`.                   |
+| `host-agent-input.ts`       | The bounded read of stdin.                                                       |
+| `host-runner.ts`            | `createHostRunner`: the real `HostWorkRunner`.                                   |
+| `host-run-events.ts`        | The events of the executor that write `run.json`.                                |
+| `host-run-state.ts`         | The read and the write of `run.json`.                                            |
+| `host-run-executor.ts`      | The only module that loads Pi. The runner imports it when a run starts.          |
+| `host-clone-update.ts`      | The fetch and the fast-forward of the clone.                                     |
+| `host-checks.ts`            | The check queue of the agent and the check records of each run.                  |
+| `host-agent.ts`             | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
+| `host-attach.ts`            | `runHostAttach`: the frames of `host attach`.                                    |
+| `host-session-lines.ts`     | The read of the session files and the `session` frames of `host attach`.         |
+| `host-attach-fetch.ts`      | The `attachment-request` and `attachment-failed` frames of `host attach`.        |
+| `host-fetch.ts`             | The fetch request files and their failure answers.                               |
+| `host-channel-mark.ts`      | The live mark of the attach channel (`channel.json`).                            |
+| `host-attachment-source.ts` | The attachment source of the worker CLI: the cache, then a fetch request.        |
+| `host-agent-launch.ts`      | `startHostAgent`: the detached start of `host serve --detach`.                   |
 
 `src/commands/host/host.ts` only registers the hidden commands and calls these services.
 
@@ -46,7 +50,7 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | ------------------------------------------------------------ | ------- | -------------------------------------------- | ------------------------------------------ |
 | `[<remote rowbly>, "host", "serve", "--detach"]`             | request | `{ "projectId": "<id>", "maxWorkers": <n> }` | `{ "started": boolean, "owner": <Owner> }` |
 | `[<remote rowbly>, "host", "submit", <project-id>]`          | request | One command                                  | The current receipt, or `null`             |
-| `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (ignored at this time)                | Frames                                     |
+| `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (see "Attachment fetch")              | Frames                                     |
 | `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`   |
 | `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                 |
 | `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                            |
@@ -86,6 +90,9 @@ All paths are below the home folder of the SSH user. Each folder that the agent 
 | `agent/runtime/checks/jobs.json`, `<job id>.log`           | The check records and the check logs.       |
 | `agent/attachments/<id>.png`                               | The attachment cache of the Project.        |
 | `agent/bin/rowbly`                                         | The CLI shim of the workers.                |
+| `agent/fetch/<id>.json`                                    | A fetch request of a worker CLI.            |
+| `agent/fetch/<id>.failed.json`                             | The failure answer of a fetch request.      |
+| `agent/channel.json`                                       | The live mark of the attach channel.        |
 | `.local/share/rowbly/slots/limit.json`                     | The machine limit: `{ "maxWorkers": <n> }`. |
 | `.local/share/rowbly/slots/<project-id>--<thread-id>.json` | One slot, with the owner of the agent.      |
 | `.local/share/rowbly/slots/slots.lock`                     | The file lock of the slots.                 |
@@ -248,8 +255,9 @@ For each `launch` or `resume`, the runner does these steps:
 6. The executor runs the Pi session with the prepared message, the result tool and, if the copy
    has checks, the `run_check` tool and the check gate. See [Checks](#checks).
 
-The worker shell has `ROWBLY_OUTBOX` (the outbox folder) and `ROWBLY_THREAD_ID`. Thus each CLI write
-of the worker goes to the copy and to the outbox.
+The worker shell has `ROWBLY_OUTBOX` (the outbox folder), `ROWBLY_THREAD_ID` and `ROWBLY_HOST_AGENT`
+(the absolute runtime folder of the agent). Thus each CLI write of the worker goes to the copy and to
+the outbox, and the CLI can get an attachment file that is not in the copy. See "Attachment fetch".
 
 ## Run state
 
@@ -325,9 +333,12 @@ stop the agent.
 4. A `run` frame `{ "type": "run", "run": <run.json> }` for each Thread when the channel opens, and
    again when its `run.json` changes. A bad `run.json` gives no frame.
 5. A `session` frame for the new lines of the session file of each Thread (see "Session frames").
+6. An `attachment-request` frame `{ "type": "attachment-request", "storyId": "<id>", "id": "<id>" }`
+   for each new fetch request (see "Attachment fetch").
 
-In each poll, the frames have this order: status, receipts, runs, then session lines. Thus the `run`
-frame that names a session file comes before the first `session` frame of that file.
+In each poll, the frames have this order: status, receipts, runs, session lines, then attachment
+requests. Thus the `run` frame that names a session file comes before the first `session` frame of
+that file.
 
 ### Session frames
 
@@ -381,8 +392,63 @@ The workers continue when the channel stops. The host never starts work without 
 `resume` command. `run.json` keeps the result until the next connection, also after the agent stops
 when idle. A new channel then sends the `run` frame with the result.
 
-The channel stops at the end of stdin. At this time, the frames that the main machine sends are
-ignored. Later Stories add their frames.
+The channel stops at the end of stdin. The channel reads the frames of the main machine on stdin, as
+JSON lines with the limit `DEFAULT_LINE_LIMIT`. It uses only the `attachment-failed` frame. It ignores
+bad frames and frames of other types.
+
+## Attachment fetch
+
+The copy of a Thread has the attachment files of the Story and of its upstream Stories. A worker
+can also read an attachment of a different Story with `rowbly get-attachment <story> <id>`. When
+the record is in the manifest of the copy but the file is not in the copy, the worker CLI gets the
+file through the host agent:
+
+1. If the cache has the file (`agent/attachments/<id>.png`), the CLI copies it into the copy
+   (`.rowbly/attachments/<story-id>/<file>`) and gives that path. It writes no fetch request.
+2. Else, if the attach channel is live, the CLI writes the fetch request `agent/fetch/<id>.json`
+   with `{ "version": 1, "storyId": "<id>", "id": "<id>", "requestedAt": "<time>" }`. A new request
+   first removes an old failure answer. The CLI then waits until the cache has the file, a failure
+   answer arrives, or the time limit (`DEFAULT_ATTACHMENT_FETCH_MS`, 30 seconds) ends. It checks
+   every 250 ms. Then it copies the file into the copy.
+3. Else, or after a failure answer, a closed channel or the time limit, the command fails with
+   `CONFLICT`. The message tells that the worker host is offline, or gives the reason of the main
+   machine, and that the attachment is not available on this host.
+
+At the end of its wait, the CLI removes the request and the failure answer. Two workers that read
+the same id share one request. The upload is idempotent, because the cache keeps the first file.
+
+The CLI finds the agent folder from `ROWBLY_HOST_AGENT`. Without this variable, or without
+`ROWBLY_OUTBOX`, the CLI does not fetch, and a missing file gives `NOT_FOUND`. A local worker and
+the main machine never write a fetch request.
+
+The parts of the fetch obey these rules:
+
+- **Channel mark.** `host attach` writes `agent/channel.json` with its process identity (an `Owner`)
+  after the hello frame. It removes the mark when the channel ends, if the mark still has its token.
+  The CLI treats the channel as live when the mark exists and the owner probe does not say `dead`.
+  An `uncertain` probe counts as live, as for the claim of the agent, because a host without process
+  identities (macOS) always gives `uncertain`.
+- **Request frames.** At each poll, the channel sends one `attachment-request` frame for each open
+  request that it did not send. It keeps the `requestedAt` of each sent request in memory. A new
+  request of the same id gets a new frame. A new channel sends each open request again.
+- **Failure frames.** The main machine sends `{ "type": "attachment-failed", "id": "<id>", "message": "<text>" }`
+  when it cannot send the file. The channel writes `agent/fetch/<id>.failed.json` with `{ "message" }`,
+  only when the request of the id is open.
+- **Upload.** The main machine never puts the bytes in a frame, because a frame has a limit of 1 MiB
+  and an attachment can have 10 MiB. It uploads the file with `cache-put`.
+- **Ids.** A bad attachment id or Story id gives `VALIDATION` before a path is made. No file is
+  written outside the copy, the cache or the fetch folder.
+
+The main machine handles the request in `src/services/remote-executor/remote-attachment.ts`. It
+finds the record in the canonical manifest of the named Story, reads the file and uploads it with
+`host cache-put <project-id> <id>`. When the Story or the attachment does not exist, the file is
+missing or larger than 10 MiB, or the upload fails, it sends `attachment-failed`. One request id
+gets at most one upload at a time on each channel. The handler only reads canonical files. It does
+not take the Project write lock or the state lock.
+
+Out of scope at this time: a queue of fetch requests on the main machine while no channel is live,
+the removal of old fetch request files and old cache entries, and a fetch through the read tool of
+Pi.
 
 ## Tests
 

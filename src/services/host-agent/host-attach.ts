@@ -2,7 +2,7 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { Owner, OwnerProbe } from "../factory-ownership/ownership-lock.js";
+import { newOwner, type Owner, type OwnerProbe } from "../factory-ownership/ownership-lock.js";
 import { helloFrame } from "../host-transport/host-transport.js";
 import { DEFAULT_LINE_LIMIT, encodeFrame } from "../host-transport/json-lines.js";
 import { mapInOrder } from "../in-order/in-order.js";
@@ -10,6 +10,8 @@ import { Store, withEntry } from "../store/store.js";
 import { agentStatus, type HostAgentPhase } from "./host-agent-claim.js";
 import { type HostReceipt, pendingCommandCount, readHostReceipt, validRequestId } from "./host-agent-control.js";
 import { type HostAgentPaths, hostAgentPaths, threadPaths } from "./host-agent-paths.js";
+import { readMainFrames, sendFetchRequests } from "./host-attach-fetch.js";
+import { removeChannelMark, writeChannelMark } from "./host-channel-mark.js";
 import { type HostRunState, hostThreadIds, readHostRun } from "./host-run-state.js";
 import { readSessionChunk, type SessionCursor, type SessionFrame, sessionFrames } from "./host-session-lines.js";
 import { type SlotUsage, slotUsage } from "./host-slots.js";
@@ -68,6 +70,8 @@ interface SentValues {
   readonly sessionFiles: ReadonlyMap<string, string>;
   /** The read position of the session file of each Thread. */
   readonly sessions: ReadonlyMap<string, SessionCursor>;
+  /** The `requestedAt` of each open fetch request that the channel sent. */
+  readonly requests: ReadonlyMap<string, string>;
   /** True after the first poll. A session file that the channel first sees after this time starts at offset 0. */
   readonly opened: boolean;
 }
@@ -191,17 +195,29 @@ async function sendSessions(channel: Channel): Promise<void> {
   await mapInOrder(files, ([threadId, file]) => sendSession(channel, threadId, file));
 }
 
-/** Sends the changes in this order: status, receipts, runs, then session lines. A run frame comes before its lines. */
+async function sendRequests(channel: Channel): Promise<void> {
+  const { paths, options, sent } = channel;
+  const requests = await sendFetchRequests(paths, sent.current.requests, options.write);
+
+  sent.update(() => ({ requests }));
+}
+
+/**
+ * Sends the changes in this order: status, receipts, runs, session lines, then fetch requests. A run frame comes
+ * before its lines.
+ */
 async function sendChanges(channel: Channel): Promise<void> {
   await sendStatus(channel);
   await sendReceipts(channel);
   await sendRuns(channel);
   await sendSessions(channel);
+  await sendRequests(channel);
   channel.sent.update(() => ({ opened: true }));
 }
 
-/** Reads and drops the frames of the main machine. Later Stories add their frames. Aborts at the end of the input. */
-function watchInput(input: Readable, ended: AbortController): void {
+/** Reads the frames of the main machine. Aborts at the end of the input. */
+function watchInput(input: Readable, paths: HostAgentPaths, ended: AbortController): void {
+  readMainFrames(input, paths);
   input.on("end", () => ended.abort());
   input.on("close", () => ended.abort());
   input.on("error", () => ended.abort());
@@ -216,6 +232,7 @@ function watchInput(input: Readable, ended: AbortController): void {
  * Runs the `host attach` channel. It sends the hello frame, then a status frame, the receipts and the run state of
  * each Thread, then each change and the new lines of each session file.
  * It reads only the files of the runtime folder. It does not start or stop the agent. It ends at the end of input.
+ * While it runs, `channel.json` marks the channel as live, and each `attachment-failed` frame writes a failure answer.
  */
 export async function runHostAttach(options: AttachOptions): Promise<void> {
   const paths = hostAgentPaths(options.projectId, options.home);
@@ -229,13 +246,25 @@ export async function runHostAttach(options: AttachOptions): Promise<void> {
       runs: new Map(),
       sessionFiles: new Map(),
       sessions: new Map(),
+      requests: new Map(),
       opened: false,
     }),
   };
-  const pollMs = options.pollMs ?? DEFAULT_ATTACH_POLL_MS;
+  const owner = await newOwner();
 
-  watchInput(options.input, channel.ended);
+  watchInput(options.input, paths, channel.ended);
   options.write(encodeFrame(helloFrame()));
+  await writeChannelMark(paths, owner);
+
+  try {
+    await pollChanges(channel);
+  } finally {
+    await removeChannelMark(paths, owner.token);
+  }
+}
+
+async function pollChanges(channel: Channel): Promise<void> {
+  const pollMs = channel.options.pollMs ?? DEFAULT_ATTACH_POLL_MS;
 
   while (!channel.ended.signal.aborted) {
     await sendChanges(channel);

@@ -216,6 +216,7 @@ describe("host runner checks", () => {
     expect(machine.started[0]?.env).toMatchObject({
       ROWBLY_OUTBOX: paths().outbox,
       ROWBLY_THREAD_ID: "t1",
+      ROWBLY_HOST_AGENT: paths().dir,
       ROWBLY_ROOT: copy,
       ROWBLY_CHECK: "1",
     });

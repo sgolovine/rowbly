@@ -1,6 +1,6 @@
 import { chmod, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { HOST_ROOT } from "../host-install/host-install.js";
 import { remoteWorktreesDir } from "../host-project/host-paths.js";
@@ -32,6 +32,10 @@ export interface HostAgentPaths {
   readonly attachments: string;
   /** The CLI shim of the workers. */
   readonly bin: string;
+  /** The fetch requests of the workers for attachment files that are not on the host: `fetch/<id>.json`. */
+  readonly fetch: string;
+  /** The live mark of the `host attach` channel. It holds the process identity of the channel. */
+  readonly channel: string;
 }
 
 /** The files of one Thread on the host. */
@@ -108,8 +112,24 @@ function hostRoot(home: string): string {
 
 /** Gives the paths of the runtime folder of the Project. A bad project id gives a ValidationError. */
 export function hostAgentPaths(projectId: string, home: string = homedir()): HostAgentPaths {
-  const dir = join(hostRoot(home), "projects", validateProjectId(projectId), "agent");
+  return agentPathsIn(join(hostRoot(home), "projects", validateProjectId(projectId), "agent"), projectId);
+}
 
+/**
+ * Gives the paths of the runtime folder `dir`, for example from `ROWBLY_HOST_AGENT`. The folder name above `dir` is
+ * the project id. A relative folder or a bad project id gives a ValidationError.
+ */
+export function hostAgentPathsAt(dir: string): HostAgentPaths {
+  if (!isAbsolute(dir)) {
+    throw new ValidationError(`The host agent folder must be an absolute path: ${dir}`);
+  }
+
+  const resolved = resolve(dir);
+
+  return agentPathsIn(resolved, validateProjectId(basename(dirname(resolved))));
+}
+
+function agentPathsIn(dir: string, projectId: string): HostAgentPaths {
   return {
     projectId,
     dir,
@@ -124,6 +144,8 @@ export function hostAgentPaths(projectId: string, home: string = homedir()): Hos
     runtime: join(dir, "runtime"),
     attachments: join(dir, "attachments"),
     bin: join(dir, "bin", "rowbly"),
+    fetch: join(dir, "fetch"),
+    channel: join(dir, "channel.json"),
   };
 }
 
@@ -204,8 +226,15 @@ export async function ensurePrivateDir(path: string): Promise<void> {
 export async function prepareAgentDirs(paths: HostAgentPaths): Promise<void> {
   await ensurePrivateDir(paths.dir);
   await Promise.all(
-    [paths.control, paths.receipts, paths.outbox, paths.logs, paths.threads, paths.runtime, paths.attachments].map(
-      ensurePrivateDir,
-    ),
+    [
+      paths.control,
+      paths.receipts,
+      paths.outbox,
+      paths.logs,
+      paths.threads,
+      paths.runtime,
+      paths.attachments,
+      paths.fetch,
+    ].map(ensurePrivateDir),
   );
 }
