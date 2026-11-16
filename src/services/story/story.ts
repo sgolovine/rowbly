@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -56,7 +57,7 @@ function newStoryData(config: ProjectConfig, input: CreateStoryInput, now: Date)
   throwIfIssues("The story is invalid", [...stageIssues, ...titleIssues(input.title), ...fields.issues]);
 
   const time = now.toISOString();
-  const data = { title: input.title.trim(), stage: stage?.key, createdAt: time, updatedAt: time };
+  const data = { title: input.title.trim(), stage: stage?.key, uid: randomUUID(), createdAt: time, updatedAt: time };
 
   return { ...withTags(data, checkedTags(config, input.tags ?? [], ["tags"])), ...empty, ...fields.values };
 }

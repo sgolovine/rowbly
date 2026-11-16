@@ -88,10 +88,11 @@ describe("getProject and updateProject", () => {
   it("changes the IDs in each dependsOn list to the new key", async () => {
     const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
     await createStory({ title: "One" }, at("2025-01-01T00:00:00.000Z"));
-    await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at("2025-01-01T00:00:00.000Z"));
+    const two = await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at("2025-01-01T00:00:00.000Z"));
     await updateProject({ key: "web" }, at("2025-02-02T00:00:00.000Z"));
+    expect(two.uid).toBeDefined();
     expect(await project.read("stories/BACKLOG/WEB-02.md")).toBe(
-      "---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - WEB-01\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-02-02T00:00:00.000Z\n---\n\n",
+      `---\ntitle: Two\nstage: BACKLOG\nuid: ${two.uid}\ndependsOn:\n  - WEB-01\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-02-02T00:00:00.000Z\n---\n\n`,
     );
     expect((await getStory({ id: "WEB-01" }, project.ctx)).updatedAt).toBe("2025-01-01T00:00:00.000Z");
     expect((await getStory({ id: "WEB-02" }, project.ctx)).dependsOn).toEqual(["WEB-01"]);

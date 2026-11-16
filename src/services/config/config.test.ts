@@ -54,6 +54,7 @@ describe("key checks", () => {
     expect(checkFieldKey("DueDate")).toHaveLength(1);
     expect(checkFieldKey("title")[0]?.message).toMatch(/reserved/);
     expect(checkFieldKey("tags")[0]?.message).toMatch(/reserved/);
+    expect(checkFieldKey("uid")[0]?.message).toMatch(/reserved/);
   });
 
   it("checkTagValue accepts lowercase letters, digits, _ and -, starting with a letter or a digit", () => {

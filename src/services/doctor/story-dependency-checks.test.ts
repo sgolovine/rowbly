@@ -9,10 +9,12 @@ import { doctor } from "./doctor.js";
 describe("doctor Story dependency checks", () => {
   const project = useTestProject();
 
+  /** A fixed uid for each Story ID, so that the files of the tests have no uid warning. */
+  const uidOf = (id: string) => `00000000-0000-4000-8000-${id.replace(/\D/g, "").padStart(12, "0")}`;
   const story = (id: string, dependsOn?: string) =>
     project.write(
       `stories/BACKLOG/${id}.md`,
-      `---\ntitle: Story ${id}\nstage: BACKLOG\n${dependsOn === undefined ? "" : `dependsOn: ${dependsOn}\n`}---\n\nBody of ${id}.\n`,
+      `---\ntitle: Story ${id}\nstage: BACKLOG\nuid: ${uidOf(id)}\n${dependsOn === undefined ? "" : `dependsOn: ${dependsOn}\n`}---\n\nBody of ${id}.\n`,
     );
   const storyFile = (id: string) => join(".rowbly", "stories", "BACKLOG", `${id}.md`);
   const readStory = async (id: string) =>
@@ -230,7 +232,7 @@ describe("doctor Story dependency checks", () => {
     await story("ROW-03");
     await project.write(
       "stories/BACKLOG/ROW-04.md",
-      "---\ntitle: Four\nstage: BACKLOG\nposition: 2\ndependsOn: [ROW-03, row-1, ROW-09, ROW-03, ROW-02]\nowner: Ann\n---\n\n## Goal\n\nKeep this text.\n",
+      `---\ntitle: Four\nstage: BACKLOG\nposition: 2\nuid: ${uidOf("ROW-04")}\ndependsOn: [ROW-03, row-1, ROW-09, ROW-03, ROW-02]\nowner: Ann\n---\n\n## Goal\n\nKeep this text.\n`,
     );
     const before = await readStory("ROW-04");
 
@@ -240,6 +242,7 @@ describe("doctor Story dependency checks", () => {
       title: "Four",
       stage: "BACKLOG",
       position: 2,
+      uid: uidOf("ROW-04"),
       dependsOn: ["ROW-03", "ROW-01", "ROW-02"],
       updatedAt: "2025-01-02T03:04:05.678Z",
       owner: "Ann",

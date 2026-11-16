@@ -27,7 +27,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
+  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, uid?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and one <id>[.<ext>] file for each attachment of a story
@@ -166,7 +166,7 @@ read the settings continue to work.
 ## Stories
 
 A Story file is `stories/<stage key>/<projectKey>-<n>.md`, for example `stories/BACKLOG/ROW-01.md`.
-The number has at least two digits. The frontmatter has `title`, `stage`, an optional `dependsOn` list, an optional `tags` list,
+The number has at least two digits. The frontmatter has `title`, `stage`, a `uid`, an optional `dependsOn` list, an optional `tags` list,
 the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
 
@@ -254,6 +254,32 @@ The Stories of a Stage are in the order of their `updatedAt` times. The most rec
 - You cannot set the place of a Story in its Stage. `story update` has no `--position` option.
 - Older versions of Rowbly wrote a `position` key to the Story files. This key has no effect now. The
   services keep it in the file, and `rowbly doctor` does not report it.
+
+### uid
+
+The `uid` key is the permanent identity of the Story. Its value is a lower-case UUID v4, for example
+`uid: 0b7c6f3e-2d4a-4f1e-9c8b-5a6d7e8f9a0b`. The Story ID (`ROW-01`) can change, but the `uid` does not
+change. Thus two Story files with the same `uid` are copies of the same Story.
+
+- `story create` writes a new `uid` from `crypto.randomUUID()`.
+- No other write changes the `uid` or adds a `uid`: a `story update`, a Stage move, a Project key change
+  and the doctor fix of a duplicate Story ID keep the key as it is.
+- The `Story` record gives `uid` when the frontmatter has a string value. An older Story without `uid`
+  has no `uid` in the record.
+- `uid` comes after `stage` (and an old `position` key) and before `dependsOn`. A custom field cannot
+  use the key `uid`, because it is reserved.
+- No CLI flag and no TUI control sets or shows the `uid`.
+
+`rowbly doctor` examines the `uid` of each Story:
+
+| Problem                         | Severity | `--fix`                                           |
+| ------------------------------- | -------- | ------------------------------------------------- |
+| The Story has no `uid`.         | warning  | Adds a new `uid`. It does not change `updatedAt`. |
+| The `uid` is not a UUID string. | error    | None. Repair the key by hand.                     |
+
+A new `uid` is not a change of the content of the Story. Thus the fix keeps `updatedAt` and the order
+of the Stories in the Stage. If `--fix` also repairs a different key of the same Story, the Story gets
+a new `updatedAt` for that repair.
 
 ### Times
 

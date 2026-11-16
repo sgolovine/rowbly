@@ -17,7 +17,10 @@ describe("doctor command", () => {
 
   it("lists each problem, suggests --fix and sets exit code 1", async () => {
     await rm(join(project.paths.stagesDir, "DONE.md"));
-    await project.write("stories/ROW-01.md", "---\ntitle: One\nstage: NOPE\n---\n");
+    await project.write(
+      "stories/ROW-01.md",
+      "---\ntitle: One\nstage: NOPE\nuid: 06c2cea1-8679-4643-8978-3748fa367bdd\n---\n",
+    );
     const result = await runCli(["doctor"], project.ctx.cwd);
     expect(result.exitCode).toBe(1);
     expect(result.stdout.split("\n")).toEqual([
