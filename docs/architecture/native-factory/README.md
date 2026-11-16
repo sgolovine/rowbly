@@ -209,7 +209,7 @@ gives them to the manager. The service only reads the file. It does not record `
   current Project. `maxWorkers` comes from the registry.
 - **Check.** The check of a host runs in the background. It does these steps:
   1. `ensureHostVersion` installs the exact Rowbly build when the host has a different version. If
-     the version stays different, the state is `wrong-version`.
+     the version stays different, the state is `version-mismatch`.
   2. `quickHostCheck` checks the version and the Pi providers. If the host is ready, the state is
      `connected` with the providers of the check. Otherwise, the state is `not-ready`.
   3. A transport failure or a different error gives `disconnected`.

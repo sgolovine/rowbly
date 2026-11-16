@@ -21,7 +21,7 @@ async function probe(input: ProbeInput): Promise<ProbedHost> {
   const install = await ensureHostVersion(transport, { build });
 
   if (install.state === "version-mismatch") {
-    return { state: "wrong-version" };
+    return { state: "version-mismatch" };
   }
 
   const quick = await quickHostCheck(transport, build);

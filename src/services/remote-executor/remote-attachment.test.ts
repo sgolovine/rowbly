@@ -27,7 +27,12 @@ describe("remote attachment requests", () => {
     });
     const env: RemoteEnv = {
       input: { projectId: "p1", paths: project.paths, ctx: project.ctx } as unknown as RemoteEnv["input"],
-      state: new Store<RemoteState>({ runs: new Map(), links: new Map() }),
+      state: new Store<RemoteState>({
+        runs: new Map(),
+        links: new Map(),
+        queueChain: Promise.resolve(),
+        reconnects: new Map(),
+      }),
     };
     await ensureLink(env, "mini", { transport, rowbly: "/r/rowbly", clone: "repo" }, hooks);
     const remote = remotes[0] as FakeRemoteChannel;
