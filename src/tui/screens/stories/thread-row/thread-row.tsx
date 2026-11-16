@@ -9,11 +9,13 @@ import {
   threadModel,
   threadName,
   threadOutcome,
+  threadWaitsForNetwork,
 } from "../thread-text.js";
 
 /**
  * One thread in the Threads tab of a Story, or in the Factory view. Row 1: the Story id when `storyId` is set, the
- * status glyph and text, the attempt and the Stage, and the run time on the right. Row 2: the model id and the creation time. Row 3, if there is one: the error in `danger`,
+ * status glyph and text, the attempt and the Stage, `waiting for network` for a thread that waits for the network,
+ * and the run time on the right. Row 2: the model id and the creation time. Row 3, if there is one: the error in `danger`,
  * or the summary of the result. When `compact` is true, only row 1 shows.
  */
 export function ThreadRow({
@@ -58,6 +60,7 @@ export function ThreadRow({
               {thread.status}
             </Text>
             <Text color={theme.inkMuted}> {threadName(thread, stages)}</Text>
+            {threadWaitsForNetwork(thread) && <Text color={theme.stageBoard}> · waiting for network</Text>}
           </Text>
         </Box>
         <Box flexShrink={0} paddingLeft={1}>

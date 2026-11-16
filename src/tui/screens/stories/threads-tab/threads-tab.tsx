@@ -35,6 +35,7 @@ export function ThreadsTab(props: ThreadsTabProps) {
           now={tab.now}
           cursor={env.cursor}
           waiting={tab.waiting}
+          providers={tab.providers}
           listing={tab.listing}
           viewing={tab.viewing}
           width={view.split ? LIST_WIDTH : layout.width}
