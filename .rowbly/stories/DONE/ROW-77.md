@@ -1,11 +1,11 @@
 ---
 title: Expand and collapse the Story sidebar
-stage: IN_DEVELOPMENT
-position: 2
+stage: DONE
+position: 74
 createdAt: 2026-11-16T18:36:13.319Z
-updatedAt: 2026-11-16T18:38:19.454Z
+updatedAt: 2026-11-16T19:34:45.797Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-77
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/261
 ---
 
 The Story sidebar (the panel on the right that shows a Story form or a Thread) must have a button that expands it to the full width of the main area, and collapses it again.

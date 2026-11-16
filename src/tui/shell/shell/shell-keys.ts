@@ -13,7 +13,7 @@ import {
 } from "./shell-selection.js";
 import type { Pane, ShellEnv, ShellView, StoryListRow } from "./shell-state.js";
 import { moveStage, moveStoryStage, shiftStory } from "./story-changes.js";
-import { editStory, newStory, requestStoryPane } from "./story-pane.js";
+import { editStory, listPane, newStory, requestStoryPane, toggleStoryExpanded } from "./story-pane.js";
 
 /** The keys that open an overlay, also without a Project. */
 const APP_OVERLAYS: ReadonlyMap<string, Overlay> = new Map<string, Overlay>([
@@ -34,13 +34,15 @@ function checksKey(env: ShellEnv): void {
   }
 }
 
-/** `ctrl` keys: hide the sidebar, find a Story, or move a Story to another Stage. */
+/** `ctrl` keys: hide the sidebar, expand the Story sidebar, find a Story, or move a Story to another Stage. */
 function ctrlKey(env: ShellEnv, input: string, key: Key): void {
   const { board, listFocused, row, mode } = env.view;
   const group = groupDelta(key);
 
   if (key.ctrl && input === "b") {
     toggleSidebar(env);
+  } else if (key.ctrl && input === "o") {
+    toggleStoryExpanded(env);
   } else if (key.ctrl && input === "p" && board) {
     env.setOverlay({ kind: "finder" });
   } else if (group && board && listFocused && mode === "stories" && row?.kind === "story") {
@@ -102,9 +104,14 @@ function listKey(env: ShellEnv, input: string, key: Key, delta: number, shift: -
   }
 }
 
-/** The panes that can take the focus, in the order of `tab`: the Stage sidebar, the Story list, the Story sidebar. */
-function paneOrder(view: ShellView): readonly Pane[] {
-  return [...(view.sidebar ? (["stages"] as const) : []), "stories", ...(view.storyPane ? (["story"] as const) : [])];
+/**
+ * The panes that can take the focus, in the order of `tab`: the Stage sidebar, the Story list, the Story sidebar.
+ * The Story list does not show while the Story sidebar is expanded, so it cannot take the focus.
+ */
+function paneOrder(view: ShellView, expanded: boolean): readonly Pane[] {
+  const list = expanded && view.storyPane ? [] : (["stories"] as const);
+
+  return [...(view.sidebar ? (["stages"] as const) : []), ...list, ...(view.storyPane ? (["story"] as const) : [])];
 }
 
 /** The pane in focus. The Story list has the focus when no other pane has it. */
@@ -117,17 +124,20 @@ function focusedPane(view: ShellView): Pane {
 }
 
 /** The pane after the pane in focus (`tab`), or before it (`shift+tab`). The last pane goes back to the first. */
-export function cyclePane(view: ShellView, step: 1 | -1): Pane {
-  const order = paneOrder(view);
+export function cyclePane(view: ShellView, step: 1 | -1, expanded = false): Pane {
+  const order = paneOrder(view, expanded);
   const at = Math.max(0, order.indexOf(focusedPane(view)));
 
   return order[(at + step + order.length) % order.length] ?? "stories";
 }
 
-/** `esc` gives the focus from the Stage sidebar to the Story list. In the Story list, it closes the Story sidebar. */
+/**
+ * `esc` gives the focus from the Stage sidebar to the Story list, or to an expanded Story sidebar that covers the
+ * list. In the Story list, it closes the Story sidebar.
+ */
 function escapeKey(env: ShellEnv): void {
   if (env.view.sidebarFocused) {
-    env.setPane("stories");
+    env.setPane(listPane(env));
   } else if (env.view.storyPane) {
     requestStoryPane(env, null);
   }
@@ -140,7 +150,7 @@ function paneKey(env: ShellEnv, input: string, key: Key): void {
   const shift = reorderDelta(input, key);
 
   if (key.tab) {
-    env.setPane(cyclePane(env.view, key.shift ? -1 : 1));
+    env.setPane(cyclePane(env.view, key.shift ? -1 : 1, env.storyExpanded));
   } else if (key.escape) {
     escapeKey(env);
   } else if (input === "[" || input === "]") {

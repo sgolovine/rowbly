@@ -3,7 +3,7 @@ import { withMember, withoutMember } from "../../../services/store/store.js";
 import type { Story } from "../../../services/story/story.js";
 import { stageRowId } from "../../screens/stories/index.js";
 import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
-import { editStory, showStoryPane } from "./story-pane.js";
+import { editStory, listPane, showStoryPane } from "./story-pane.js";
 
 /** Closes the overlay that is open. */
 export function closeOverlay(env: ShellEnv): void {
@@ -79,7 +79,7 @@ export function toggleMode(env: ShellEnv): void {
 /** Hides or shows the Stage sidebar. A hidden sidebar gives the focus to the list. */
 export function toggleSidebar(env: ShellEnv): void {
   if (env.sidebarShown) {
-    env.setPane("stories");
+    env.setPane(listPane(env));
   }
 
   env.setSidebarShown(!env.sidebarShown);

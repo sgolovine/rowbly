@@ -18,6 +18,8 @@ export function useShellState() {
   // What the Story sidebar shows, and its width after a drag (`null` for the default width).
   const [storyPane, setStoryPane] = useState<SidePane | null>(null);
   const [storyWidth, setStoryWidth] = useState<number | null>(null);
+  // The Story sidebar takes the columns of the Story list. With the `remember` option, it is also the last selection.
+  const [storyExpanded, setStoryExpanded] = useState(false);
   const [storyHints, setStoryHints] = useState<readonly KeyHint[]>([]);
   const [stageKey, setStageKey] = useState<string | null>(null);
   // The id of the selected row: a Story id, or the `stageRowId` of a section heading.
@@ -36,6 +38,7 @@ export function useShellState() {
       sidebarShown,
       storyPane,
       storyWidth,
+      storyExpanded,
       storyHints,
       stageKey,
       selectedId,
@@ -51,6 +54,7 @@ export function useShellState() {
       setSidebarShown,
       setStoryPane,
       setStoryWidth,
+      setStoryExpanded,
       setStoryHints,
       setStageKey,
       setSelectedId,

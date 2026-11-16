@@ -29,6 +29,8 @@ export interface ShellFrame {
   readonly shownWidth: number;
   /** The columns inside the Story panel. */
   readonly mainWidth: number;
+  /** The Story list is on the screen. An expanded Story sidebar takes its columns. */
+  readonly listShown: boolean;
   readonly listHeight: number | undefined;
   /** The rows inside the Story panel, without the factory status line. */
   readonly listInnerHeight: number | undefined;
@@ -50,6 +52,8 @@ interface StoryFrame {
   readonly shown: boolean;
   /** The Story sidebar covers the main area, so the Stage sidebar and the Story list do not show. */
   readonly cover: boolean;
+  /** The Story sidebar beside the list is expanded: it takes the columns of the Story list, which does not show. */
+  readonly expanded: boolean;
   /** The columns of the Story sidebar, with its border. */
   readonly width: number;
   /** The most columns that a drag can give the Story sidebar. */
@@ -124,7 +128,15 @@ function storyWidthOf(layout: Layout, room: number, storyWidth: number | null): 
 function fullStory(view: ShellView, layout: Layout, mainHeight: number | undefined): StoryFrame {
   const shown = view.storyActive;
 
-  return { mode: "full", shown, cover: shown, width: layout.width, room: layout.width, height: mainHeight };
+  return {
+    mode: "full",
+    shown,
+    cover: shown,
+    expanded: false,
+    width: layout.width,
+    room: layout.width,
+    height: mainHeight,
+  };
 }
 
 /** Sizes the regions of the shell when the Story sidebar covers the main area. */
@@ -142,6 +154,7 @@ function coverFrame(layout: Layout, view: ShellView, story: StoryFrame): ShellFr
     room: 0,
     shownWidth: 0,
     mainWidth,
+    listShown: false,
     listHeight: mainHeight,
     listInnerHeight: less(mainHeight, 2),
     statusLine: hasStatusLine(view),
@@ -152,15 +165,47 @@ function coverFrame(layout: Layout, view: ShellView, story: StoryFrame): ShellFr
   };
 }
 
+/** The values that give the width of the Story sidebar beside the list. */
+interface StoryColumns {
+  readonly layout: Layout;
+  /** The columns at the right of the Stage sidebar. */
+  readonly free: number;
+  /** The most columns that a drag can give the Story sidebar. */
+  readonly room: number;
+  readonly storyWidth: number | null;
+}
+
+/** The columns of the Story sidebar: none while it is not beside the list, all the columns of the list when expanded. */
+function storyColumnsOf(storyMode: StoryFrame["mode"], expanded: boolean, columns: StoryColumns): number {
+  if (storyMode !== "beside") {
+    return 0;
+  }
+
+  return expanded ? columns.free : storyWidthOf(columns.layout, columns.room, columns.storyWidth);
+}
+
+/** The Story sidebar when it does not cover the main area. */
+function sideStory(
+  storyMode: StoryFrame["mode"],
+  expanded: boolean,
+  frame: Omit<StoryFrame, "mode" | "shown" | "cover" | "expanded">,
+): StoryFrame {
+  return storyMode === "beside"
+    ? { mode: storyMode, shown: true, cover: false, expanded, ...frame }
+    : { mode: storyMode, shown: false, cover: false, expanded: false, ...frame };
+}
+
 /**
  * Sizes the regions of the shell in `layout`, with a sidebar of `sidebarWidth` columns and a Story sidebar of
- * `storyWidth` columns (`null` for the default width).
+ * `storyWidth` columns (`null` for the default width). An `expanded` Story sidebar beside the list takes the columns
+ * of the Story list. It has no effect when the Story sidebar covers the main area.
  */
 export function shellFrame(
   layout: Layout,
   view: ShellView,
   sidebarWidth: number,
   storyWidth: number | null = null,
+  expanded = false,
 ): ShellFrame {
   const mainHeight = mainHeightOf(layout);
   const storyMode = storyModeOf(view, layout);
@@ -173,24 +218,27 @@ export function shellFrame(
   const stackedHeight = stackedHeightOf(view, stacked, mainHeight);
   const beside = view.sidebar && !stacked;
   const gap = beside ? 1 : 0;
+  const isExpanded = expanded && storyMode === "beside";
   // Beside the list, the Story sidebar keeps its narrowest width and the column before it.
   const storyReserve = storyMode === "beside" ? STORY_SIDEBAR_MIN_WIDTH + 1 : 0;
   const room = layout.width - gap - MAIN_MIN_WIDTH - storyReserve;
   const shownWidth = shownWidthOf(beside, room, sidebarWidth);
-  const storyRoom = layout.width - shownWidth - gap - MAIN_MIN_WIDTH - 1;
-  const storyColumns = storyMode === "beside" ? storyWidthOf(layout, storyRoom, storyWidth) : 0;
-  const storyBeside = storyColumns > 0 ? storyColumns + 1 : 0;
+  const free = layout.width - shownWidth - gap;
+  const storyRoom = free - MAIN_MIN_WIDTH - 1;
+  const storyColumns = storyColumnsOf(storyMode, isExpanded, { layout, free, room: storyRoom, storyWidth });
+  const storyBeside = storyColumns > 0 && !isExpanded ? storyColumns + 1 : 0;
   // The border and the padding of the Panel take two columns on each side.
-  const mainWidth = Math.max(20, layout.width - shownWidth - gap - storyBeside - 4);
+  const mainWidth = Math.max(20, (isExpanded ? free : free - storyBeside) - 4);
   const listHeight = less(mainHeight, stackedHeight);
   const statusLine = hasStatusLine(view);
   const overlayHeight = less(mainHeight, 2);
   // A Modal over a Story list that the Story sidebar makes narrow also takes the room of the Story sidebar.
-  const overlayWidth = mainWidth + storyBeside;
-  const story: StoryFrame =
-    storyMode === "beside"
-      ? { mode: storyMode, shown: true, cover: false, width: storyColumns, room: storyRoom, height: mainHeight }
-      : { mode: storyMode, shown: false, cover: false, width: layout.width, room: layout.width, height: mainHeight };
+  const overlayWidth = isExpanded ? mainWidth : mainWidth + storyBeside;
+  const story = sideStory(storyMode, isExpanded, {
+    width: storyMode === "beside" ? storyColumns : layout.width,
+    room: storyMode === "beside" ? storyRoom : layout.width,
+    height: mainHeight,
+  });
 
   return {
     width: layout.width,
@@ -201,6 +249,7 @@ export function shellFrame(
     room,
     shownWidth,
     mainWidth,
+    listShown: !isExpanded,
     listHeight,
     listInnerHeight: less(listHeight, 2 + (statusLine ? 1 : 0)),
     statusLine,

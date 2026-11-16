@@ -287,11 +287,27 @@ visible.
   sidebar also shows a Thread of the Factory view. See [The Factory view](#the-factory-view).
 - The top border shows `New Story` or `Edit <story-id>`, and a `✕` at its right end. The border is
   `accent` when the Story sidebar has the focus.
+- The top border also shows an expand button (`ExpandButton`) at the left of the `✕`: `⤢` when the
+  Story sidebar has the regular width, and `⤡` when it is expanded. A click on the button and
+  `ctrl+o` expand or collapse the Story sidebar. `ctrl+o` works in the Story list and in the Story
+  sidebar while the Story sidebar is open.
+- An expanded Story sidebar takes all the columns of the main area at the right of the Stage sidebar.
+  The Story list does not show. When the Stage sidebar is hidden (`ctrl+b`), the Story sidebar takes
+  the full width of the main area. The left edge does not drag while the Story sidebar is expanded.
+  The shell keeps the state in `storyExpanded` (`use-shell-state.ts`), and `shellFrame` gives the
+  sizes.
+- The `display.storySidebar` option of the config sets the state when the Story sidebar opens from
+  closed: `regular` (the default) opens it at the regular width, `expanded` opens it expanded, and
+  `remember` opens it in the last state that the user selected while Rowbly runs. A different Story
+  or Thread in an open Story sidebar keeps the current state. Settings › Display shows the option,
+  and `w` or a click on the value selects the next value.
 - `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the
   Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
-  it the focus.
+  it the focus. While the Story sidebar is expanded, `tab` and `shift+tab` do not go to the Story
+  list, and `esc` in the Stage sidebar gives the focus to the Story sidebar.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
-  form keeps its draft. In the Story list, `esc` closes the Story sidebar.
+  form keeps its draft. An expanded Story sidebar collapses before the Story list gets the focus. In
+  the Story list, `esc` closes the Story sidebar.
 - The mouse wheel over the Story list moves the cursor also when the Story sidebar has the focus. The
   wheel gives the focus to the Story list, and the Story sidebar stays open.
 - When the form has unsaved text or images, Rowbly asks before it closes the form or shows a
@@ -300,6 +316,8 @@ visible.
   `STORY_SIDEBAR_WIDTH` of the terminal width. The minimum is `STORY_SIDEBAR_MIN_WIDTH`, and the Story
   list keeps `MAIN_MIN_WIDTH`. The width stays until Rowbly quits.
 - Below `STACKED_BELOW_WIDTH`, the Story sidebar takes the full main area while it has the focus.
+  The Story sidebar also takes the full main area when the narrowest Stage sidebar, Story list and
+  Story sidebar do not fit. In this mode, the expand button does not show and `ctrl+o` does nothing.
 - `PaneBody` gives the form the contexts of a Modal body, so a `ConfirmDialog` of the form shows over
   the Story sidebar. The keys of the form go to the footer.
 

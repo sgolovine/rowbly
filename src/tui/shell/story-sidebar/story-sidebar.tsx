@@ -1,9 +1,10 @@
-import { Box, type DOMElement } from "ink";
+import { Box, type DOMElement, type Key, useInput } from "ink";
 import { useMemo, useRef, useState } from "react";
 import type { Story } from "../../../services/story/story.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   CloseButton,
+  ExpandButton,
   PaneBody,
   Panel,
   ResizeEdge,
@@ -34,6 +35,8 @@ export interface StorySidebarProps {
   readonly maxWidth: number;
   /** A drag of the left edge calls it with the new width; `undefined` when the edge does not drag. */
   readonly onResize: ((width: number) => void) | undefined;
+  /** The expand button and `ctrl+o`; `undefined` when the Story sidebar covers the main area of a narrow terminal. */
+  readonly expand: StorySidebarExpand | undefined;
 
   // The focus.
   /** The Story sidebar is on the screen. A hidden Story sidebar keeps its form and its draft. */
@@ -60,6 +63,21 @@ export interface StorySidebarProps {
   onHints(hints: readonly KeyHint[]): void;
 }
 
+/** The state of the expand button of the Story sidebar. */
+export interface StorySidebarExpand {
+  /** The Story sidebar takes the columns of the Story list. */
+  readonly expanded: boolean;
+  /** Expands or collapses the Story sidebar. */
+  onToggle(): void;
+}
+
+/** `ctrl+o` in the Story sidebar expands or collapses it. */
+function handleExpandKey(expand: StorySidebarExpand | undefined, input: string, key: Key): void {
+  if (expand && key.ctrl && input === "o") {
+    expand.onToggle();
+  }
+}
+
 /** The key of the content: a different Story or Thread, a new Story or a different Project mounts new content. */
 function formKey(ctx: ServiceContext, pane: SidePane): string {
   if (pane.kind === "thread") {
@@ -71,8 +89,9 @@ function formKey(ctx: ServiceContext, pane: SidePane): string {
 
 /**
  * The Story sidebar on the right of the list: a `Panel` with the form of a new Story, the edit form of a Story,
- * or a Thread of the Factory view. Its title is in the top border, with a `✕` at the right end. A drag of its
- * left edge changes its width. The confirmations of the form show over its body. Its keys go to the footer.
+ * or a Thread of the Factory view. Its title is in the top border, with a `✕` at the right end. The button at the left
+ * of the `✕` and `ctrl+o` expand it over the Story list and collapse it again. A drag of its left edge changes its
+ * width. The confirmations of the form show over its body. Its keys go to the footer.
  */
 export function StorySidebar(props: StorySidebarProps) {
   const { pane, width, height, shown, focused, clickable } = props;
@@ -81,12 +100,13 @@ export function StorySidebar(props: StorySidebarProps) {
   const [ownHints, setOwnHints] = useState<readonly KeyHint[]>(NO_HINTS);
 
   // The new Story form has only the keys of its Form.
-  const hints = storySidebarHints(layers.leads, pane.kind === "new" ? NO_HINTS : ownHints);
+  const hints = storySidebarHints(layers.leads, pane.kind === "new" ? NO_HINTS : ownHints, props.expand?.expanded);
   const mouse = clickable && !layers.covered;
   // Kept stable, so the form does not render again when the hints change.
   const layout = useMemo(() => storyBodyLayout(pane, width, height), [pane, width, height]);
 
   useReportHints(props.onHints, hints);
+  useInput((input, key) => handleExpandKey(props.expand, input, key), { isActive: focused && !layers.covered });
 
   return (
     <Box ref={ref} display={shown ? "flex" : "none"} flexShrink={0} width={width} height={height}>
@@ -94,7 +114,12 @@ export function StorySidebar(props: StorySidebarProps) {
         <Panel
           title={storySidebarTitle(pane, stageNames(props.board))}
           paddingX={0}
-          aside={<CloseButton onClick={props.onClose} />}
+          aside={
+            <Box flexShrink={0}>
+              {props.expand && <ExpandButton expanded={props.expand.expanded} onClick={props.expand.onToggle} />}
+              <CloseButton onClick={props.onClose} />
+            </Box>
+          }
           focused={focused}
           width={width}
           height={height}
