@@ -33,6 +33,7 @@ import {
 import { type PlannedFix, repairDuplicates } from "./duplicate-checks.js";
 import { fieldIssues } from "./story-field-checks.js";
 import { tagIssues } from "./story-tag-checks.js";
+import { uidIssues } from "./story-uid-checks.js";
 
 interface NumberedFile {
   readonly entry: StoryEntry;
@@ -213,6 +214,7 @@ async function unknownKeyIssues(
     "tags",
     ...STORY_TIME_KEYS,
     "agentLock",
+    "uid",
     ...config.customFields.map((field) => field.key),
   ]);
   const unknown = Object.keys(repair.current.data).filter((key) => !known.has(key));
@@ -220,7 +222,10 @@ async function unknownKeyIssues(
   return mapInOrder(unknown, (key) => unknownKeyIssue(run, repair, key, file));
 }
 
-/** Checks one Story in order, and gives the frontmatter after the fixes. */
+/**
+ * Checks one Story in order, and gives the frontmatter after the fixes. A fix of the content gives the Story a new
+ * `updatedAt`. A new `uid` alone does not, because it does not change the content of the Story.
+ */
 async function checkStory(
   run: DoctorRun,
   config: ProjectConfig,
@@ -238,11 +243,15 @@ async function checkStory(
     ...(await unknownKeyIssues(run, config, repair, file)),
   ];
 
-  if (repair.current.changed) {
-    await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } }, runNow(run));
+  const identity = new Store<DocRepair>({ data: repair.current.data, changed: false });
+  const uid = await uidIssues(run, identity, file);
+  const updatedAt = repair.current.changed ? runNow(run) : undefined;
+
+  if (repair.current.changed || identity.current.changed) {
+    await writeStoryFile(config, story.path, { ...story.doc, data: { ...identity.current.data } }, updatedAt);
   }
 
-  return { issues, data: repair.current.data };
+  return { issues: [...issues, ...uid], data: identity.current.data };
 }
 
 function fixOf(fix: string | undefined): { readonly fix?: string } {

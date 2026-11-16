@@ -4,9 +4,9 @@ import { addTag } from "../tag/tag.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createStory, getStory, searchStories, updateStory } from "./story.js";
 
-/** The text of a story file without the times. */
+/** The text of a story file without the times and the uid. */
 function withoutTimes(text: string): string {
-  return text.replace(/^(createdAt|updatedAt): .*\n/gm, "");
+  return text.replace(/^(uid|createdAt|updatedAt): .*\n/gm, "");
 }
 
 describe("story tags", () => {

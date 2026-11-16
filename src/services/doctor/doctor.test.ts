@@ -64,8 +64,14 @@ describe("doctor", () => {
 
   it("reports bad story file names, foreign keys and duplicate numbers", async () => {
     await project.write("stories/notes.md", "");
-    await project.write("stories/BACKLOG/ROW-1.md", "---\ntitle: A\nstage: BACKLOG\n---\n");
-    await project.write("stories/BACKLOG/WEB-01.md", "---\ntitle: B\nstage: BACKLOG\n---\n");
+    await project.write(
+      "stories/BACKLOG/ROW-1.md",
+      "---\ntitle: A\nstage: BACKLOG\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\n---\n",
+    );
+    await project.write(
+      "stories/BACKLOG/WEB-01.md",
+      "---\ntitle: B\nstage: BACKLOG\nuid: 9d5ed678-fe57-4cca-8101-40957afab571\n---\n",
+    );
     expect(await messages()).toEqual([
       "File name should be ROW-<number>.md",
       "Story key WEB does not match the project key ROW",
@@ -74,8 +80,14 @@ describe("doctor", () => {
   });
 
   it("warns about a Story file outside the folder of its Stage, and --fix moves it", async () => {
-    await project.write("stories/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\n---\n\nFlat.\n");
-    await project.write("stories/DONE/ROW-02.md", "---\ntitle: B\nstage: BACKLOG\n---\n\nWrong folder.\n");
+    await project.write(
+      "stories/ROW-01.md",
+      "---\ntitle: A\nstage: BACKLOG\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\n---\n\nFlat.\n",
+    );
+    await project.write(
+      "stories/DONE/ROW-02.md",
+      "---\ntitle: B\nstage: BACKLOG\nuid: 9d5ed678-fe57-4cca-8101-40957afab571\n---\n\nWrong folder.\n",
+    );
     const before = await doctor({}, project.ctx);
     expect(before.ok).toBe(true);
     expect(before.issues).toEqual([
@@ -96,20 +108,27 @@ describe("doctor", () => {
     ]);
 
     expect((await doctor({ fix: true }, project.ctx)).issues.map((issue) => issue.fixed)).toEqual([true, true]);
-    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe("---\ntitle: A\nstage: BACKLOG\n---\n\nFlat.\n");
+    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(
+      "---\ntitle: A\nstage: BACKLOG\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\n---\n\nFlat.\n",
+    );
     expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(
-      "---\ntitle: B\nstage: BACKLOG\n---\n\nWrong folder.\n",
+      "---\ntitle: B\nstage: BACKLOG\nuid: 9d5ed678-fe57-4cca-8101-40957afab571\n---\n\nWrong folder.\n",
     );
     expect(await readdir(project.paths.storiesDir)).toEqual(["BACKLOG"]);
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
   it("reports a duplicate Story ID with a fix, and --fix gives the newer Story the next free number", async () => {
-    const older = "---\ntitle: Older\nstage: DONE\ncreatedAt: 2026-01-01T00:00:00.000Z\n---\n\nOlder.\n";
-    const newer = "---\ntitle: Newer\nstage: BACKLOG\ncreatedAt: 2026-02-01T00:00:00.000Z\n---\n\nNewer.\n";
+    const older =
+      "---\ntitle: Older\nstage: DONE\nuid: 625fd297-49d9-4880-8631-43cfd589bd8f\ncreatedAt: 2026-01-01T00:00:00.000Z\n---\n\nOlder.\n";
+    const newer =
+      "---\ntitle: Newer\nstage: BACKLOG\nuid: 236c7642-a79e-4b1b-8154-eb4712bd4068\ncreatedAt: 2026-02-01T00:00:00.000Z\n---\n\nNewer.\n";
     await project.write("stories/DONE/ROW-77.md", older);
     await project.write("stories/BACKLOG/ROW-77.md", newer);
-    await project.write("stories/DONE/ROW-78.md", "---\ntitle: Last\nstage: DONE\n---\n");
+    await project.write(
+      "stories/DONE/ROW-78.md",
+      "---\ntitle: Last\nstage: DONE\nuid: d55b3060-7c2a-4a26-8634-7d6edb789f6b\n---\n",
+    );
 
     const before = await doctor({}, project.ctx);
     expect(before.ok).toBe(false);
@@ -137,10 +156,22 @@ describe("doctor", () => {
   });
 
   it("reports two files with the same Story ID and factory state with no fix, and --fix does not change them", async () => {
-    await project.write("stories/ROW-01.md", "---\ntitle: Flat\nstage: BACKLOG\n---\n");
-    await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: Folder\nstage: BACKLOG\n---\n");
-    await project.write("stories/DONE/ROW-02.md", "---\ntitle: Two\nstage: DONE\n---\n");
-    await project.write("stories/BACKLOG/ROW-02.md", "---\ntitle: Two again\nstage: BACKLOG\n---\n");
+    await project.write(
+      "stories/ROW-01.md",
+      "---\ntitle: Flat\nstage: BACKLOG\nuid: 745e3db6-a7ff-450e-8a72-b39482f0882d\n---\n",
+    );
+    await project.write(
+      "stories/BACKLOG/ROW-01.md",
+      "---\ntitle: Folder\nstage: BACKLOG\nuid: b0f2b97d-c5d2-476b-86e0-40408bb1d8af\n---\n",
+    );
+    await project.write(
+      "stories/DONE/ROW-02.md",
+      "---\ntitle: Two\nstage: DONE\nuid: aada29da-ee1d-44ed-8fe9-07043855cb7e\n---\n",
+    );
+    await project.write(
+      "stories/BACKLOG/ROW-02.md",
+      "---\ntitle: Two again\nstage: BACKLOG\nuid: 8fff7b05-2f31-42bf-8ad8-efe58882da0c\n---\n",
+    );
     const attempts = [
       { story: "ROW-01", stage: "BACKLOG" },
       { story: "ROW-02", stage: "DONE" },
@@ -174,13 +205,22 @@ describe("doctor", () => {
         false,
       ],
     ]);
-    expect(await project.read("stories/ROW-01.md")).toBe("---\ntitle: Flat\nstage: BACKLOG\n---\n");
-    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe("---\ntitle: Folder\nstage: BACKLOG\n---\n");
-    expect(await project.read("stories/DONE/ROW-02.md")).toBe("---\ntitle: Two\nstage: DONE\n---\n");
+    expect(await project.read("stories/ROW-01.md")).toBe(
+      "---\ntitle: Flat\nstage: BACKLOG\nuid: 745e3db6-a7ff-450e-8a72-b39482f0882d\n---\n",
+    );
+    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(
+      "---\ntitle: Folder\nstage: BACKLOG\nuid: b0f2b97d-c5d2-476b-86e0-40408bb1d8af\n---\n",
+    );
+    expect(await project.read("stories/DONE/ROW-02.md")).toBe(
+      "---\ntitle: Two\nstage: DONE\nuid: aada29da-ee1d-44ed-8fe9-07043855cb7e\n---\n",
+    );
   });
 
   it("warns about a subfolder of stories/ with a name that is not a Stage key", async () => {
-    await project.write("stories/old-files/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\n---\n");
+    await project.write(
+      "stories/old-files/ROW-01.md",
+      "---\ntitle: A\nstage: BACKLOG\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\n---\n",
+    );
     expect((await doctor({}, project.ctx)).issues).toEqual([
       {
         severity: "warning",
@@ -213,9 +253,18 @@ describe("doctor", () => {
     await addCustomField({ label: "Points", type: "number" }, project.ctx);
     await addCustomField({ label: "Owner", type: "string" }, project.ctx);
     await addCustomField({ label: "Done", type: "boolean" }, project.ctx);
-    await project.write("stories/ROW-01.md", "---\ntitle: A\nstage: done\npoints: '3'\ndone: maybe\nextra: 1\n---\n");
-    await project.write("stories/ROW-02.md", "---\nstage: NOPE\npoints: null\nowner: null\ndone: null\n---\n");
-    await project.write("stories/ROW-03.md", "---\ntitle: C\npoints: null\nowner: null\ndone: null\n---\n");
+    await project.write(
+      "stories/ROW-01.md",
+      "---\ntitle: A\nstage: done\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\npoints: '3'\ndone: maybe\nextra: 1\n---\n",
+    );
+    await project.write(
+      "stories/ROW-02.md",
+      "---\nstage: NOPE\nuid: 00000000-0000-4000-8000-000000000002\npoints: null\nowner: null\ndone: null\n---\n",
+    );
+    await project.write(
+      "stories/ROW-03.md",
+      "---\ntitle: C\nuid: 00000000-0000-4000-8000-000000000003\npoints: null\nowner: null\ndone: null\n---\n",
+    );
 
     const before = await doctor({}, project.ctx);
     expect(before.issues.map(({ file, message, fixed }) => [file.split("/").at(-1), message, fixed])).toEqual([
@@ -239,14 +288,17 @@ describe("doctor", () => {
     ]);
     expect(after.ok).toBe(false);
     expect(await project.read("stories/DONE/ROW-01.md")).toBe(
-      "---\ntitle: A\nstage: DONE\nupdatedAt: 2025-01-02T03:04:05.678Z\npoints: 3\nowner: null\ndone: maybe\n---\n\n",
+      "---\ntitle: A\nstage: DONE\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\nupdatedAt: 2025-01-02T03:04:05.678Z\npoints: 3\nowner: null\ndone: maybe\n---\n\n",
     );
     expect(await project.read("stories/BACKLOG/ROW-03.md")).toContain("stage: BACKLOG");
     expect(await project.read("stories/ROW-02.md")).toContain("stage: NOPE");
   });
 
   it("accepts the position of a story", async () => {
-    await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\nposition: 0\n---\n");
+    await project.write(
+      "stories/BACKLOG/ROW-01.md",
+      "---\ntitle: A\nstage: BACKLOG\nposition: 0\nuid: 7fc56270-e7a7-4fa8-8a59-35b72eacbe29\n---\n",
+    );
     expect(await messages()).toEqual([]);
   });
 
@@ -317,7 +369,7 @@ describe("doctor", () => {
   it("accepts createdAt and updatedAt in a story file", async () => {
     await project.write(
       "stories/BACKLOG/ROW-01.md",
-      "---\ntitle: T\nstage: BACKLOG\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-01-01T00:00:00.000Z\n---\n",
+      "---\ntitle: T\nstage: BACKLOG\nuid: b9ece18c-950a-4bfa-8b0f-dbfa4ff731d3\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-01-01T00:00:00.000Z\n---\n",
     );
     expect((await doctor({}, project.ctx)).issues).toEqual([]);
   });
@@ -325,7 +377,10 @@ describe("doctor", () => {
   describe("old agent locks", () => {
     const BODY = "\nThe description.\n";
     const write = (lock: string) =>
-      project.write("stories/BACKLOG/ROW-01.md", `---\ntitle: T\nstage: BACKLOG\nposition: 1\n${lock}\n---\n${BODY}`);
+      project.write(
+        "stories/BACKLOG/ROW-01.md",
+        `---\ntitle: T\nstage: BACKLOG\nposition: 1\nuid: b9ece18c-950a-4bfa-8b0f-dbfa4ff731d3\n${lock}\n---\n${BODY}`,
+      );
 
     it.each([
       ["a well-formed lock", "agentLock:\n  agent: claude\n  stage: BACKLOG\n  lockedAt: 2026-11-09T10:00:00.000Z"],
@@ -346,7 +401,7 @@ describe("doctor", () => {
       const ctx = { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") };
       expect((await doctor({ fix: true }, ctx)).issues).toMatchObject([{ fixed: true }]);
       expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(
-        `---\ntitle: T\nstage: BACKLOG\nposition: 1\nupdatedAt: 2025-01-02T03:04:05.678Z\n---\n${BODY}`,
+        `---\ntitle: T\nstage: BACKLOG\nposition: 1\nuid: b9ece18c-950a-4bfa-8b0f-dbfa4ff731d3\nupdatedAt: 2025-01-02T03:04:05.678Z\n---\n${BODY}`,
       );
       expect((await doctor({}, project.ctx)).issues).toEqual([]);
     });

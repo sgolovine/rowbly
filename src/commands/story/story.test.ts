@@ -202,7 +202,7 @@ describe("story commands", () => {
       await seed(1);
       await cli("story", "create", "--title", "Two", "--depends-on", "ROW-01");
       expect((await cli("story", "update", "ROW-02", "--depends-on", "")).exitCode).toBe(0);
-      expect((await project.read("stories/BACKLOG/ROW-02.md")).replace(/^(createdAt|updatedAt): .*\n/gm, "")).toBe(
+      expect((await project.read("stories/BACKLOG/ROW-02.md")).replace(/^(uid|createdAt|updatedAt): .*\n/gm, "")).toBe(
         "---\ntitle: Two\nstage: BACKLOG\n---\n\n",
       );
     });
@@ -283,6 +283,7 @@ describe("story commands", () => {
         "stage",
         "tags",
         "title",
+        "uid",
         "updatedAt",
         "waitingFor",
       ]);

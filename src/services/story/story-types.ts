@@ -5,6 +5,8 @@ export interface Story {
   /** `ROW-01`. */
   id: string;
   number: number;
+  /** The permanent identity of the story: a UUID. It does not change when the number changes. `undefined` when the file has no `uid`. */
+  uid?: string;
   title: string;
   /** A stage key. */
   stage: string;
