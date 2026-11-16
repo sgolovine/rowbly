@@ -9,10 +9,10 @@ relate.
 ## The concept tree
 
 ```
-Project ── configuration: custom field definitions, stages (each with an optional prompt)
+Project ── configuration: custom field definitions, tags, stages (each with an optional prompt)
   ├── Factory ── native supervisor and independent workers
   │     └── Thread ── one Pi session, with one or more runs
-  └── Story ── custom field values, exactly one stage, optional PNG attachments, upstream Stories
+  └── Story ── custom field values, tags, exactly one stage, optional PNG attachments, upstream Stories
         ├── Thread ── the history of one worker attempt
         └── Spec ── a Markdown document, linked to one or more stories
 ```
@@ -21,7 +21,7 @@ Project ── configuration: custom field definitions, stages (each with an opt
 
 The Project is the top-level concept. Rowbly keeps all of its data in a Project. Data at the "top
 level" is data at the Project level. Each Project has a configuration that sets how the Project
-operates. The configuration contains the custom fields and the Stages of the Project.
+operates. The configuration contains the custom fields, the tags and the Stages of the Project.
 
 A Project also has user prompts in `.rowbly/prompts/`. The Project prompt goes to all agents of the
 factory. The Supervisor prompt and the Worker prompt go to one role. See [prompts.md](prompts.md).
@@ -31,6 +31,16 @@ factory. The Supervisor prompt and the Worker prompt go to one role. See [prompt
 A Project contains Stories. You define each custom field one time, at the Project level. The field
 then applies to all Stories in that Project, and each Story has its own value for it. Each Story is in
 a Stage. A Story can have PNG attachments. See [storage.md](storage.md#attachments).
+
+### Tags
+
+You define each tag one time, at the Project level, in the `tags` list of the config. A Story can have
+zero, one or more tags. See [storage.md](storage.md#tags).
+
+- A tag has a value and a label. The value identifies the tag. You cannot change the value after you
+  create the tag. You can change the label.
+- A Story keeps the values of its tags in its `tags` list.
+- When you remove a tag, Rowbly removes its value from all Stories.
 
 ### Story dependencies
 
