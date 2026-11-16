@@ -2,6 +2,7 @@
 title: Move New/Edit story modal to sidebar
 stage: DONE
 position: 12
+uid: 3775280a-2125-4920-a5c9-b4633050c1a7
 createdAt: 2026-11-14T00:17:09.000Z
 updatedAt: 2026-11-14T00:47:06.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-11
