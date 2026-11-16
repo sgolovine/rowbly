@@ -13,6 +13,7 @@ This file records the changes to Rowbly that users can see.
 - Added: Each Stage in `.rowbly/rowbly.config.json` can have the optional `expandedByDefault` key. When it is `false`, the section of that Stage in the All Stages view of the TUI is collapsed when a Project opens. (ROW-72)
 - Changed: Each Story file is now in the folder of its Stage, for example `.rowbly/stories/BACKLOG/ROW-1.md`, and Rowbly moves the file when the Stage of the Story changes. Rowbly still reads Story files directly in `.rowbly/stories/`, `rowbly doctor` shows a warning for a Story file that is not in the folder of its Stage, and `rowbly doctor --fix` moves it. (ROW-69)
 - Added: When the connection to an AI provider fails, the factory pauses that provider for 1 minute, and doubles the pause for each new connection failure up to 15 minutes. The factory then continues the stopped Threads automatically, the Factory controls show `Provider <id> is paused (network)`, and `rowbly factory status --json` has the new `connectivity` field (`online`, `degraded` or `offline`). (ROW-71)
+- Added: The TUI shows the connection state of the factory. The Factory button in the header shows `Factory offline` or `Factory degraded`, a Thread that stopped because of a network failure shows `waiting for network`, and a queued Story whose provider is paused because of the network shows `waiting for the network until <time>`. (ROW-73)
 
 ### 0.18.0
 
