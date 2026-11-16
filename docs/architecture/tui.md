@@ -99,6 +99,15 @@ shows the default.
 The section calls `configureGit` of the `factory-settings` service. The `rowbly factory configure`
 command uses the same Git rules. The section does not load Pi or `agent-auth`.
 
+## The Stage sections
+
+In All Stages, the Story list shows one section for each Stage. Each heading shows `▾` or `▸`.
+`enter`, a click or `←/→` expands or collapses a section. When a Project opens, at the start or
+after a Project switch, `useStageDefaults` in `src/tui/shell/shell/` collapses each Stage with
+`expandedByDefault: false` in the config. `collapsedStageKeys` of the `stage` service gives these
+keys. All other sections are expanded. A reload of the board does not change the sections. See
+[storage.md](storage.md#stages).
+
 ## The Factory view
 
 The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the
