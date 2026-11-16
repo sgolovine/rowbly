@@ -1,7 +1,7 @@
 ---
 title: Threads Improvements - full-screen view.
 stage: IN_DEVELOPMENT
-position: 3
+position: 1
 createdAt: 2026-11-16T17:00:18.867Z
 updatedAt: 2026-11-16T19:32:31.620Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-75
