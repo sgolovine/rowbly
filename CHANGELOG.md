@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: In the Factory view, a Thread that is open in the Story sidebar has an `Open Story` button with the key `o`. The button shows the Story list and opens the Story of the Thread in the Story sidebar. (ROW-70)
+
 ### 0.18.0
 
 - Added: Story files can have a `dependsOn` list of upstream Stories. `rowbly story delete` removes the deleted Story from each `dependsOn` list and shows a warning for each changed Story. (ROW-59)
