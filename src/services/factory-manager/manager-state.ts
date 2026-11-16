@@ -9,6 +9,7 @@ import { type Store, withEntry, withoutEntry } from "../store/store.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import { isAuthenticationError, isConnectivityError, isQuotaError, networkPauseDelay } from "./connectivity.js";
+import type { WorkerControl, WorkerExecutor } from "./worker-executor.js";
 
 export interface FactoryDependencies {
   runtime: ModelRuntime;
@@ -21,6 +22,8 @@ export interface FactoryDependencies {
   onModel?: (role: string, model: ModelChoice) => void;
   /** The readers, spawn and clock of the check queue. Tests give fakes. */
   checkDeps?: CheckQueueDeps;
+  /** Runs the workers. Without a value, the manager runs each worker in a Pi session of this process. */
+  executor?: WorkerExecutor;
 }
 
 export interface Hold {
@@ -45,7 +48,8 @@ interface ActiveWorker {
   readonly task: Promise<void>;
   /** The host ID of the machine that runs the worker. */
   readonly host: string;
-  readonly session?: PiSession;
+  /** The operations of the executor for the worker. The manager sets it when the session opens. */
+  readonly control?: WorkerControl;
 }
 
 /** The state of one factory manager. Each change replaces the whole value in the store. */
@@ -114,6 +118,7 @@ export interface Manager {
   readonly ctx: ServiceContext;
   readonly owner: Owner;
   readonly checks: CheckQueue;
+  readonly executor: WorkerExecutor;
   readonly store: Store<ManagerState>;
 }
 

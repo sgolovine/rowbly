@@ -3,6 +3,7 @@ import { steeringMessage } from "../messages/messages.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import { Store } from "../store/store.js";
 import type { ThreadRecord } from "../thread/thread.js";
+import { sessionControl } from "./local-executor.js";
 import type { Manager, ManagerState } from "./manager-state.js";
 import { steerWorker } from "./worker-steer.js";
 
@@ -17,6 +18,10 @@ function fakeSession(isStreaming = true) {
   const session = { session: { isStreaming, steer, prompt }, prompt } as unknown as PiSession;
 
   return { session, steer, prompt };
+}
+
+function active(session: PiSession) {
+  return { task: Promise.resolve(), host: "local", control: sessionControl(session) };
 }
 
 function thread(patch: Partial<ThreadRecord> = {}): ThreadRecord {
@@ -46,9 +51,7 @@ describe("steerWorker", () => {
 
   it("gives the steering message to the Pi session of the running worker", async () => {
     const fake = fakeSession();
-    const manager = createManager(
-      new Map([["thread", { task: Promise.resolve(), host: "local", session: fake.session }]]),
-    );
+    const manager = createManager(new Map([["thread", active(fake.session)]]));
     mocks.getThread.mockResolvedValue(thread());
 
     await steerWorker(manager, "thread", "run", "Use the new API");
@@ -59,9 +62,7 @@ describe("steerWorker", () => {
 
   it("rejects a different run or owner token", async () => {
     const fake = fakeSession();
-    const manager = createManager(
-      new Map([["thread", { task: Promise.resolve(), host: "local", session: fake.session }]]),
-    );
+    const manager = createManager(new Map([["thread", active(fake.session)]]));
 
     mocks.getThread.mockResolvedValue(thread());
     await expect(steerWorker(manager, "thread", "old-run", "text")).rejects.toThrow("Worker run changed");
@@ -80,9 +81,7 @@ describe("steerWorker", () => {
       message: "Worker is not running",
     });
 
-    const manager = createManager(
-      new Map([["thread", { task: Promise.resolve(), host: "local", session: fake.session }]]),
-    );
+    const manager = createManager(new Map([["thread", active(fake.session)]]));
 
     mocks.getThread.mockResolvedValue(thread({ status: "pending" }));
     await expect(steerWorker(manager, "thread", "run", "text")).rejects.toThrow("Worker is not running");
@@ -101,9 +100,7 @@ describe("steerWorker", () => {
 
   it("rejects a session that does not stream, and starts no new prompt", async () => {
     const fake = fakeSession(false);
-    const manager = createManager(
-      new Map([["thread", { task: Promise.resolve(), host: "local", session: fake.session }]]),
-    );
+    const manager = createManager(new Map([["thread", active(fake.session)]]));
     mocks.getThread.mockResolvedValue(thread());
 
     await expect(steerWorker(manager, "thread", "run", "text")).rejects.toMatchObject({

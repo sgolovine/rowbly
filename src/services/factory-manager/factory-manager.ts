@@ -19,9 +19,11 @@ import { runtimePath } from "../runtime-files/runtime-files.js";
 import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { shutdownFactory } from "./factory-shutdown.js";
+import { createLocalExecutor } from "./local-executor.js";
 import {
   type Attention,
   type FactoryDependencies,
+  getState,
   type Manager,
   type ManagerState,
   notify,
@@ -61,12 +63,24 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
   const stored = await loadStoredStatus(paths);
 
   const checks = await openCheckQueue(paths, owner.token, () => manager, deps.checkDeps);
+  const executor =
+    deps.executor ??
+    createLocalExecutor({
+      paths,
+      ctx,
+      runtime: deps.runtime,
+      agentDir: deps.agentDir,
+      shim: deps.shim,
+      checks,
+      settings: () => getState(manager).settings,
+    });
   const manager: Manager = {
     deps,
     paths,
     ctx,
     owner,
     checks,
+    executor,
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 

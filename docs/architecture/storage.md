@@ -460,17 +460,23 @@ Each line of `outbox.jsonl` has this shape:
 
 ## `~/.rowblyrc.json`
 
-Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` service reads and writes
-it.
+Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` and `host` services read
+and write it. They use the `user-rc` module for each read and write, so that the safety rules below
+apply in one place.
 
 ```
-~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId
+~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId;
+                      # hosts [{id,ssh,maxWorkers,enabled}], in the order that the user added them
 ```
 
 - The TUI adds a Project to this file when the Project opens.
 - The Project switcher in the header reads the list.
 - `deviceId` is a nonsecret installation ID. `rowbly auth login` creates it at the first login and
   gives it to Pi.
+- `hosts` is the list of the worker hosts of the user. `rowbly host` changes it. A missing key is an
+  empty list. If the value is not an array, or an entry does not have the four fields with the
+  correct types, the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
+  A write keeps the other keys of each entry.
 - Rowbly v1 uses the same file for its own keys. Keep all other keys when you write the file.
 - If the file is a symlink, for example from a dotfile manager, Rowbly writes through the link and
   keeps it.
