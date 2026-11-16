@@ -1,9 +1,9 @@
 ---
 title: Put worker execution behind an executor interface
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 2
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T20:17:56.733Z
+updatedAt: 2026-11-16T20:18:49.347Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82
 pull_request: https://github.com/sgolovine/rowbly/pull/271
 ---
@@ -74,3 +74,14 @@ Not in scope:
 - `stop` and `cancel` are separate operations, although the local executor does the same abort for both. Reason: the Spec gives them different effects on a remote host (an abandon after a cancel while offline).
 - The executor comes through an optional `FactoryDependencies.executor`, with the `LocalExecutor` as default. Reason: this is the smallest change that lets a test give a fake and lets ROW-96 add a remote executor. It is not a production faux-provider flag, because it is a code dependency and not a user setting.
 - The manager writes all Thread changes; the executor never calls `changeThread`. Reason: the Story says that the Thread changes stay in the manager, and ROW-96 needs the same handlers for the events of a host.
+
+## Review findings
+
+The CHANGELOG Stage found merge conflicts between `story/ROW-82` and `origin/main` (commit `f734b01c`, the merge of PR #269 for ROW-83). The merge was aborted. No changelog entry was written.
+
+Files with conflicts:
+
+- `src/services/factory-manager/manager-state.ts`
+- `src/services/factory-manager/worker-steer.test.ts`
+
+Merge `origin/main` into `story/ROW-82`, repair the conflicts, run all checks and push. Then the Story can go to the CHANGELOG Stage again.
