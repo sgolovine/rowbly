@@ -61,7 +61,7 @@ export function remotePackagePath(buildId: string): string {
 }
 
 /** Gives the version that the remote executable of the build prints, or `null` when it cannot run. */
-async function remoteVersion(transport: HostTransport, buildId: string): Promise<string | null> {
+export async function remoteVersion(transport: HostTransport, buildId: string): Promise<string | null> {
   const result = await transport.bytes([remoteRowblyPath(buildId), "--version"], null, { limit: VERSION_OUTPUT_LIMIT });
   const text = result.bytes.toString("utf8").trim();
 
