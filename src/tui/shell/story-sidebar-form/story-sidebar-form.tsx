@@ -13,21 +13,36 @@ export interface StorySidebarFormProps {
   readonly ctx: ServiceContext;
   /** The Stage that a new Story starts in. */
   readonly cursorStage: string | undefined;
+  /** The Story sidebar takes the mouse. */
+  readonly clickable: boolean;
   /** `esc` in the form or the Thread. */
   onBack(): void;
   /** `tab` or `shift+tab` in a Thread. A Story form keeps `tab` for its fields. */
   onTab(step: 1 | -1): void;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
+  /** `o` or the `Open Story` Button of a Thread: opens the Story of the Thread. */
+  onOpenStory(story: Story): void;
   /** The keys of the tab of the edit form, or the keys of the Thread. */
   onHints(hints: readonly KeyHint[]): void;
+}
+
+/** Opens the Story `id` of a Thread, or `undefined` when the board does not have that Story. */
+function openStoryHandler(
+  stories: readonly Story[],
+  id: string | undefined,
+  onOpenStory: (story: Story) => void,
+): (() => void) | undefined {
+  const story = id === undefined ? undefined : stories.find((s) => s.id === id);
+
+  return story ? () => onOpenStory(story) : undefined;
 }
 
 /**
  * The content of the Story sidebar: the form of a new Story, the edit form of a Story with its tabs, or a Thread
  * of the Factory view with its conversation.
  */
-export function StorySidebarForm({ pane, board, ctx, cursorStage, ...on }: StorySidebarFormProps) {
+export function StorySidebarForm({ pane, board, ctx, cursorStage, clickable, ...on }: StorySidebarFormProps) {
   if (pane.kind === "thread") {
     return (
       <ThreadPane
@@ -37,6 +52,8 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, ...on }: Story
         stages={stageNames(board)}
         onBack={on.onBack}
         onTab={on.onTab}
+        clickable={clickable}
+        onOpenStory={openStoryHandler(board.stories, pane.thread.storyId, on.onOpenStory)}
         onHints={on.onHints}
       />
     );
