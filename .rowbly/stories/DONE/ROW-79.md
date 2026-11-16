@@ -1,8 +1,8 @@
 ---
 title: Add support for story tags.
-stage: IN_REVIEW
-position: 1
-updatedAt: 2026-11-16T19:41:47.087Z
+stage: DONE
+position: 76
+updatedAt: 2026-11-16T19:43:10.621Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-79
 pull_request: https://github.com/sgolovine/rowbly/pull/263
 ---
@@ -76,10 +76,3 @@ Not in scope:
 - `story search --tag` with more than one tag uses AND. Reason: the same as `--field`, which also must match all values.
 - The TUI work is split to ROW-80. Reason: one pull request cannot hold the service, CLI, doctor, docs and TUI work together.
 - A Project whose existing custom field has the key `tags` is not migrated. Only new custom fields cannot use the key. Reason: smallest scope; no existing Project in this repository has such a field.
-
-## Review findings
-
-- Merge conflicts with `origin/main` (Changelog Stage). A merge of `origin/main` into `story/ROW-79` has conflicts in these files:
-  - `docs/architecture/storage.md`
-  - `src/services/config/config.ts`
-- Merge `origin/main` into the branch, repair the conflicts, run all checks and push. The merge was aborted; the branch did not change.
