@@ -1,9 +1,9 @@
 ---
 title: Add `expandedByDefault` to rowbly config
-stage: IN_DEVELOPMENT
-position: 3
+stage: CHANGELOG
+position: 1
 createdAt: 2026-11-16T16:34:16.401Z
-updatedAt: 2026-11-16T16:39:41.802Z
+updatedAt: 2026-11-16T16:39:44.493Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-72
 pull_request: https://github.com/sgolovine/rowbly/pull/257
 ---
