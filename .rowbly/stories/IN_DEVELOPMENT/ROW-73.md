@@ -5,9 +5,9 @@ position: 2
 dependsOn:
   - ROW-71
 createdAt: 2026-11-16T16:41:21.272Z
-updatedAt: 2026-11-16T17:11:47.898Z
+updatedAt: 2026-11-16T18:35:14.645Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-73
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/260
 ---
 
 Split from ROW-71.
