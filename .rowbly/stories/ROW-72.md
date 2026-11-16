@@ -1,10 +1,10 @@
 ---
 title: Add `expandedByDefault` to rowbly config
 stage: IN_REFINEMENT
-position: 1
+position: 2
 createdAt: 2026-11-16T16:34:16.401Z
-updatedAt: 2026-11-16T16:35:48.113Z
-worktree: null
+updatedAt: 2026-11-16T16:35:52.464Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-72
 pull_request: null
 ---
 
