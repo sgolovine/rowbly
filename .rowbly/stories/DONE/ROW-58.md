@@ -2,6 +2,7 @@
 title: Accept TanStack Router file names in the lint checks
 stage: DONE
 position: 52
+uid: bdd78ce6-a695-4a8b-89f8-54a948550b3a
 createdAt: 2026-11-14T23:19:31.000Z
 updatedAt: 2026-11-15T00:20:44.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-58
