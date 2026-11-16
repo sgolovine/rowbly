@@ -291,6 +291,7 @@ need a Project.
 | Command                                                 | JSON result              |
 | ------------------------------------------------------- | ------------------------ |
 | `rowbly host list`                                      | Array of Host            |
+| `rowbly host update <id> [--max-workers <n>] [--enable \| --disable]` | Host        |
 | `rowbly host add <id> --ssh <target> --max-workers <n>` | Host, `install`, `check` |
 | `rowbly host check <id>`                                | `{ host, ready, items }` |
 | `rowbly host login <id>`                                | None; terminal only      |
@@ -323,6 +324,10 @@ A Host record has this shape:
   The check does not install, log in or clone.
 - **Login.** `host login` runs `ssh -t <target> <remote rowbly> auth login`. It must run in a terminal.
   With `--json`, or without a terminal, it gives `VALIDATION`.
+- **Update.** `host update` changes the worker limit, or turns the host on or off for all Projects. A
+  command without a change, or with `--enable` and `--disable` together, gives `VALIDATION`.
+- **Last check.** `host check` and `host add` write `lastCheck: { at, ready, failed }` to the host entry
+  of `~/.rowblyrc.json`. `failed` has the ids of the `fail` items. `host list` does not show it.
 - **Removal.** `host remove` gives `CONFLICT` while a known Project has a `pending` or `running` Thread
   on the host. `--purge` does no work at this time.
 - **Use.** `host use` turns the host on for the current Project. Without `--path`, it clones the local

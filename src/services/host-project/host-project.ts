@@ -1,5 +1,5 @@
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
-import { type HostEntry, type HostProject, hostProjects, rcHosts } from "../host/host-rules.js";
+import { type HostEntry, type HostProject, hostProjectRecord, hostProjects, rcHosts } from "../host/host-rules.js";
 import { activeThreadsIn } from "../host/host-threads.js";
 import type { HostTransport } from "../host-transport/host-transport.js";
 import { createSshTransport } from "../host-transport/ssh-transport.js";
@@ -64,12 +64,8 @@ function findHost(hosts: readonly HostEntry[], id: string): HostEntry {
   return host;
 }
 
-function projectRecord(host: HostEntry, root: string): HostProject | undefined {
-  return hostProjects(host).find((project) => project.root === root);
-}
-
 function assertNotUsed(host: HostEntry, root: string): void {
-  const record = projectRecord(host, root);
+  const record = hostProjectRecord(host, root);
 
   if (record) {
     throw new ConflictError(`Host "${host.id}" already uses this Project`, {
@@ -197,7 +193,7 @@ export async function unuseHost(input: { readonly id: string }, ctx: ServiceCont
   const { root } = await findProject(ctx);
   const { file, rc, hosts } = await readHosts(ctx);
   const host = findHost(hosts, input.id);
-  const found = projectRecord(host, root);
+  const found = hostProjectRecord(host, root);
 
   if (!found) {
     throw new NotFoundError(`Host "${input.id}" does not use this Project`, { details: { root } });
@@ -217,5 +213,5 @@ export async function hostProjectFor(hostId: string, ctx: ServiceContext = {}): 
   const { root } = await findProject(ctx);
   const { hosts } = await readHosts(ctx);
 
-  return projectRecord(findHost(hosts, hostId), root);
+  return hostProjectRecord(findHost(hosts, hostId), root);
 }
