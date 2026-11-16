@@ -4,7 +4,15 @@ import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
 import { ValidationError } from "../../services/errors/errors.js";
 import type { FactoryLaunch } from "../../services/factory/factory-launch.js";
-import { type AddedHost, addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
+import {
+  type AddedHost,
+  addHost,
+  type Host,
+  type HostUpdate,
+  listHosts,
+  removeHost,
+  updateHost,
+} from "../../services/host/host.js";
 import { runHostAgent } from "../../services/host-agent/host-agent.js";
 import { submitHostCommand } from "../../services/host-agent/host-agent-control.js";
 import { startHostAgent } from "../../services/host-agent/host-agent-launch.js";
@@ -95,6 +103,44 @@ async function loginOnHost(
   setExitCode(exitCode === 0 ? undefined : exitCode);
 
   return { host: login.host, exitCode };
+}
+
+interface UpdateOptions {
+  readonly maxWorkers?: string;
+  readonly enable?: boolean;
+  readonly disable?: boolean;
+}
+
+/** The input of `host update`. The service checks the number, so a bad value gives a VALIDATION error. */
+function updateInput(id: string, opts: UpdateOptions): HostUpdate {
+  if (opts.enable && opts.disable) {
+    throw new ValidationError("Use --enable or --disable, not both");
+  }
+
+  const enabled = opts.enable || opts.disable ? opts.enable === true : undefined;
+
+  return {
+    id,
+    ...(opts.maxWorkers === undefined ? {} : { maxWorkers: Number(opts.maxWorkers) }),
+    ...(enabled === undefined ? {} : { enabled }),
+  };
+}
+
+/** Registers `host update`. */
+function registerUpdateCommand(program: Command): void {
+  program
+    .command("update <id>")
+    .description("Change the worker limit of a worker host, or turn it on or off for all Projects")
+    .option("--max-workers <n>", "largest number of workers on the host at one time")
+    .option("--enable", "turn the host on for all Projects")
+    .option("--disable", "turn the host off for all Projects")
+    .action((id: string, opts: UpdateOptions, command: Command) =>
+      run(
+        command,
+        (ctx) => updateHost(updateInput(id, opts), ctx),
+        (host) => `Updated worker host ${describe(host)}`,
+      ),
+    );
 }
 
 function listText(hosts: readonly Host[]): string {
@@ -226,6 +272,8 @@ export function registerHostCommands(program: Command): void {
     .command("list")
     .description("List the worker hosts")
     .action((_opts: unknown, command: Command) => run(command, (ctx) => listHosts(ctx), listText));
+
+  registerUpdateCommand(program);
 
   program
     .command("remove <id>")
