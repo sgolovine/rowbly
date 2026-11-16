@@ -1,13 +1,13 @@
 ---
 title: Add host check and host login
-stage: IN_REVIEW
+stage: DONE
 position: 6
 dependsOn:
   - ROW-84
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:03.991Z
-updatedAt: 2026-11-16T21:51:30.593Z
+updatedAt: 2026-11-16T21:53:35.207Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-87
 pull_request: https://github.com/sgolovine/rowbly/pull/281
 ---
@@ -104,19 +104,3 @@ Not in scope:
 - The short check is not called from the manager in this Story. Reason: no dispatch to a host exists before ROW-96, and the heartbeat comes in ROW-97.
 - `host login` has no `[provider]` argument. Reason: the Story gives the exact command `auth login`, and the remote `auth login` asks for the provider.
 - `host login` keeps `BatchMode=yes`. Reason: the Spec requires SSH with a key and without a password; the remote `auth login` prompt is not an SSH prompt, so `-t` is sufficient.
-
-## Review findings
-
-The Changelog Stage could not merge `origin/main` into `story/ROW-87`. These files have merge conflicts with the base branch:
-
-- `docs/architecture/cli.md`
-- `skills/rowbly-reference.md`
-- `skills/develop/references/rowbly-reference.md`
-- `skills/refine/references/rowbly-reference.md`
-- `skills/review/references/rowbly-reference.md`
-- `src/commands/host/host.ts`
-- `src/commands/host/host.test.ts`
-- `src/commands/register-commands/register-commands.test.ts`
-- `src/services/pi-runtime/import-boundary.test.ts`
-
-Merge `origin/main` into the branch, repair the conflicts, run the checks and push. Then move the Story to the Changelog Stage again.
