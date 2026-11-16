@@ -36,6 +36,7 @@ const resources = {
     "cache-put",
     "run-paths",
     "prepare",
+    "ping",
     "attach",
   ],
 };
@@ -54,6 +55,7 @@ const hidden = [
   "cache-put",
   "run-paths",
   "prepare",
+  "ping",
 ];
 
 describe("registerCommands", () => {

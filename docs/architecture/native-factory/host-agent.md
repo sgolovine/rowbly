@@ -32,6 +32,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-checks.ts`        | The check queue of the agent and the check records of each run.                  |
 | `host-agent.ts`         | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
 | `host-attach.ts`        | `runHostAttach`: the frames of `host attach`.                                    |
+| `host-ping.ts`          | `hostPing`: the answer of the heartbeat `host ping`.                             |
 | `host-session-lines.ts` | The read of the session files and the `session` frames of `host attach`.         |
 | `host-agent-launch.ts`  | `startHostAgent`: the detached start of `host serve --detach`.                   |
 
@@ -42,18 +43,19 @@ a supervisor. Only the start of a run loads Pi.
 The main machine runs these commands. `<remote rowbly>` is `remoteRowblyPath(buildId)`. Each token
 obeys the safe token rule of the transport. The data goes on stdin.
 
-| Command                                                      | Call    | Input on stdin                               | Output                                     |
-| ------------------------------------------------------------ | ------- | -------------------------------------------- | ------------------------------------------ |
-| `[<remote rowbly>, "host", "serve", "--detach"]`             | request | `{ "projectId": "<id>", "maxWorkers": <n> }` | `{ "started": boolean, "owner": <Owner> }` |
-| `[<remote rowbly>, "host", "submit", <project-id>]`          | request | One command                                  | The current receipt, or `null`             |
-| `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (ignored at this time)                | Frames                                     |
-| `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`   |
-| `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                 |
-| `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                            |
-| `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`            |
-| `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                     |
-| `[<remote rowbly>, "host", "outbox-ack", <project-id>]`      | request | `{ "seq": <n> }`                             | `{ "removed": <n>, "blobs": [...] }`       |
-| `[<remote rowbly>, "host", "blob", <sha256>, <project-id>]`  | bytes   | None                                         | The bytes of the outbox file               |
+| Command                                                      | Call    | Input on stdin                               | Output                                        |
+| ------------------------------------------------------------ | ------- | -------------------------------------------- | --------------------------------------------- |
+| `[<remote rowbly>, "host", "serve", "--detach"]`             | request | `{ "projectId": "<id>", "maxWorkers": <n> }` | `{ "started": boolean, "owner": <Owner> }`    |
+| `[<remote rowbly>, "host", "submit", <project-id>]`          | request | One command                                  | The current receipt, or `null`                |
+| `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (ignored at this time)                | Frames                                        |
+| `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`      |
+| `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                    |
+| `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                               |
+| `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`               |
+| `[<remote rowbly>, "host", "ping", <project-id>]`            | request | `{}`                                         | `{ protocol, rowbly, agent, slots, pending }` |
+| `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                        |
+| `[<remote rowbly>, "host", "outbox-ack", <project-id>]`      | request | `{ "seq": <n> }`                             | `{ "removed": <n>, "blobs": [...] }`          |
+| `[<remote rowbly>, "host", "blob", <sha256>, <project-id>]`  | bytes   | None                                         | The bytes of the outbox file                  |
 
 The project id is a dash-case token of 1 to 64 characters: `^[a-z0-9]+(-[a-z0-9]+)*$`. The main
 machine makes it. A bad id gives `VALIDATION` before Rowbly writes a file.
@@ -309,6 +311,21 @@ The agent stops and releases its claim when all of these conditions are true for
 
 An open attach channel does not keep the agent alive. After a `stop` command, the agent stops when it
 has no active work, without the idle period.
+
+## Heartbeat
+
+The main machine sends `host ping` to each worker host at a fixed interval. `hostPing` gives the
+versions of `localVersions()` and the values of the `status` frame: the agent phase, the slots and the
+number of pending commands. It does not start the agent and does not change a file. The main machine
+compares the versions with `checkHello`. See
+[README.md](README.md#disconnects-and-reconnects) for the host states.
+
+## Reconnect
+
+When the connection comes back, the main machine submits the queued commands again with the same
+request ids. A command file that exists does not change, so a command that arrives two times has one
+effect. Then it opens a new `host attach` channel. A new channel starts with no sent values, so it
+sends the status, each receipt and each run state again.
 
 ## Attach channel
 

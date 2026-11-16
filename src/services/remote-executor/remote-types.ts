@@ -43,6 +43,16 @@ export interface RemoteExecutor extends WorkerExecutor {
    * problem of each host whose sync failed.
    */
   readonly syncHosts: () => Promise<ReadonlyMap<string, string>>;
+  /**
+   * Does the reconnect steps of a host whose heartbeat succeeded: sends the queued commands, opens the channel again
+   * for the active runs, and applies the outbox. Gives the problem of a step that failed.
+   */
+  readonly reconnect: (host: string) => Promise<string | undefined>;
+  /**
+   * Stops each active run for a factory stop. A run on a host with an open channel ends normally, with a time limit.
+   * For a host without a channel, `stop-thread` goes in the queue and the wait of the run ends.
+   */
+  readonly shutdown: (timeoutMs?: number) => Promise<void>;
 }
 
 /** The short-lived state of one remote run, from the launch to the end of its wait. */
@@ -56,6 +66,8 @@ export interface RemoteRunState {
   readonly ended?: HostRunState;
   /** A stop or a cancel of the manager. The launch command does not go to the host after it. */
   readonly stopRequested?: "stop" | "cancel";
+  /** The `launch` or `resume` command is in the queue of the host, because its submit failed in the transport. */
+  readonly launchQueued?: boolean;
   /** The run sent its last event, or its wait ended. Later frames do nothing. */
   readonly closed: boolean;
   /** The frames of the run, one at a time. */
@@ -81,6 +93,10 @@ export interface HostLink {
 export interface RemoteState {
   readonly runs: ReadonlyMap<string, RemoteRun>;
   readonly links: ReadonlyMap<string, HostLink>;
+  /** The changes of the queue files, one at a time. */
+  readonly queueChain: Promise<void>;
+  /** The reconnect of each host that runs now. */
+  readonly reconnects: ReadonlyMap<string, Promise<string | undefined>>;
 }
 
 /** The fixed environment of the remote executor, and the store of its runs and channels. */

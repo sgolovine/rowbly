@@ -76,6 +76,14 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/remote-channel.js")).resolves.toHaveProperty("ensureLink");
     await expect(import("../remote-executor/remote-run.js")).resolves.toHaveProperty("takeRunFrame");
     await expect(import("../remote-executor/run-frames.js")).resolves.toHaveProperty("newFacts");
+    await expect(import("../remote-executor/remote-heartbeat.js")).resolves.toHaveProperty("nextHostState");
+    await expect(import("../remote-executor/host-command-queue.js")).resolves.toHaveProperty("queueCommand");
+    await expect(import("../remote-executor/remote-commands.js")).resolves.toHaveProperty("sendQueued");
+    await expect(import("../remote-executor/remote-reconnect.js")).resolves.toHaveProperty("reconnectHost");
+    await expect(import("../remote-executor/remote-stop.js")).resolves.toHaveProperty("shutdownRemote");
+    await expect(import("../remote-executor/remote-sync.js")).resolves.toHaveProperty("syncHosts");
+    await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
+    await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
     await expect(import("../test-project/scripted-host.js")).resolves.toHaveProperty("createScriptedHost");
   });

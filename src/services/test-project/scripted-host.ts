@@ -5,6 +5,7 @@ import { HostUnreachableError } from "../host-transport/host-errors.js";
 import {
   type HostVersions,
   helloFrame,
+  localVersions,
   type RemoteCommand,
   type RequestResult,
 } from "../host-transport/host-transport.js";
@@ -33,6 +34,11 @@ export interface ScriptedHostOptions {
   readonly onSubmit?: (command: ScriptedCommand, host: ScriptedHost) => void;
   /** The receipt that `host submit` gives. The default is null. */
   readonly receipt?: (command: ScriptedCommand) => unknown;
+  /**
+   * Called after the host wrote a submitted command. When it gives true, the answer is lost: the call fails with the
+   * unreachable error of the transport.
+   */
+  readonly loseAnswer?: (command: ScriptedCommand, host: ScriptedHost) => boolean;
 }
 
 export interface ScriptedHost {
@@ -40,6 +46,8 @@ export interface ScriptedHost {
   readonly requests: readonly ScriptedRequest[];
   /** The commands of `host submit`, in order. */
   readonly commands: readonly ScriptedCommand[];
+  /** Each request and each new channel, in order: the name of the request, `submit:<type>` or `attach`. */
+  readonly events: readonly string[];
   /** Sends a frame on each open channel. */
   readonly send: (frame: unknown) => void;
   /** Sends a `run` frame of the last `launch` or `resume` command of the Thread, with the fields of `patch`. */
@@ -52,6 +60,7 @@ export interface ScriptedHost {
 
 interface ScriptedState {
   readonly requests: readonly ScriptedRequest[];
+  readonly events: readonly string[];
   readonly channels: readonly FakeRemoteChannel[];
   readonly failOutbox: boolean;
 }
@@ -100,13 +109,21 @@ function submitted(scripted: Scripted, input: unknown): RequestResult {
     queueMicrotask(() => scripted.options.onSubmit?.(command, host));
   }
 
+  if (host && scripted.options.loseAnswer?.(command, host)) {
+    throw new HostUnreachableError("Cannot reach fake-host: Connection closed.");
+  }
+
   return ok(scripted.options.receipt?.(command) ?? null);
 }
 
 function answer(scripted: Scripted, command: RemoteCommand, input: unknown): RequestResult {
-  scripted.state.update((state) => ({ requests: [...state.requests, { command: [...command], input }] }));
-
   const name = command[2] ?? "";
+  const event = name === "submit" ? `submit:${(input as ScriptedCommand).type}` : name;
+
+  scripted.state.update((state) => ({
+    requests: [...state.requests, { command: [...command], input }],
+    events: [...state.events, event],
+  }));
 
   if (name === "outbox" || name === "outbox-ack") {
     checkOutbox(scripted);
@@ -122,11 +139,20 @@ function answer(scripted: Scripted, command: RemoteCommand, input: unknown): Req
     return ok(runPaths(input));
   }
 
+  if (name === "ping") {
+    return ok({
+      ...(scripted.options.versions ?? localVersions()),
+      agent: "running",
+      slots: { used: 0, max: 2 },
+      pending: 0,
+    });
+  }
+
   return name === "submit" ? submitted(scripted, input) : ok({});
 }
 
 function openChannel(scripted: Scripted, remote: FakeRemoteChannel): undefined {
-  scripted.state.update((state) => ({ channels: [...state.channels, remote] }));
+  scripted.state.update((state) => ({ channels: [...state.channels, remote], events: [...state.events, "attach"] }));
   remote.send(helloFrame(scripted.options.versions));
 
   return undefined;
@@ -169,7 +195,7 @@ function closeAll(scripted: Scripted): void {
 export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedHost {
   const scripted: Scripted = {
     options,
-    state: new Store<ScriptedState>({ requests: [], channels: [], failOutbox: false }),
+    state: new Store<ScriptedState>({ requests: [], events: [], channels: [], failOutbox: false }),
     host: new Store<{ readonly value?: ScriptedHost }>({}),
   };
   const transport = createFakeHostTransport({
@@ -183,6 +209,9 @@ export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedH
     },
     get commands() {
       return commandsOf(scripted);
+    },
+    get events() {
+      return scripted.state.current.events;
     },
     send: (frame) => sendAll(scripted, frame),
     sendRun: (threadId, patch) => sendRun(scripted, threadId, patch),
