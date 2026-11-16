@@ -19,6 +19,8 @@ export interface StorySidebarFormProps {
   onBack(): void;
   /** `tab` or `shift+tab` in a Thread. A Story form keeps `tab` for its fields. */
   onTab(step: 1 | -1): void;
+  /** A wheel notch over the conversation of a Thread while the sidebar does not have the focus. */
+  onFocus(): void;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
   /** `o` or the `Open Story` Button of a Thread: opens the Story of the Thread. */
@@ -52,6 +54,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, clickable, ...
         stages={stageNames(board)}
         onBack={on.onBack}
         onTab={on.onTab}
+        onFocus={on.onFocus}
         clickable={clickable}
         onOpenStory={openStoryHandler(board.stories, pane.thread.storyId, on.onOpenStory)}
         onHints={on.onHints}

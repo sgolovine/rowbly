@@ -111,6 +111,7 @@ export function StorySidebar(props: StorySidebarProps) {
                 clickable={mouse}
                 onBack={props.onBack}
                 onTab={props.onTab}
+                onFocus={props.onFocus}
                 onSaved={props.onSaved}
                 onDeleted={props.onDeleted}
                 onOpenStory={props.onOpenStory}
