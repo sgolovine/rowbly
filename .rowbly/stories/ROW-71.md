@@ -1,7 +1,7 @@
 ---
 title: Better offline handling
 stage: IN_DEVELOPMENT
-position: 2
+position: 1
 createdAt: 2026-11-16T16:32:19.285Z
 updatedAt: 2026-11-16T16:42:01.207Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-71
