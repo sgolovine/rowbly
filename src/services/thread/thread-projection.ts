@@ -25,6 +25,7 @@ function projectedAttempt(
 ): PolicyAttempt {
   const base: PolicyAttempt = existing ?? {
     story,
+    ...(t.storyUid === undefined ? {} : { storyUid: t.storyUid }),
     stage,
     workerId: t.id,
     threadId: t.id,

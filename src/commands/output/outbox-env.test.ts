@@ -40,7 +40,7 @@ describe("CLI writes with an outbox", () => {
   });
 
   it("writes the change and appends one entry for each story update", async () => {
-    await createStory({ title: "First" }, project.ctx);
+    const { uid } = await createStory({ title: "First" }, project.ctx);
     vi.stubEnv("ROWBLY_OUTBOX", outbox.path);
     vi.stubEnv("ROWBLY_THREAD_ID", "thread-7");
 
@@ -55,6 +55,7 @@ describe("CLI writes with an outbox", () => {
         opId: expect.any(String),
         threadId: "thread-7",
         storyId: "ROW-01",
+        storyUid: uid,
         changes: [{ path: "stage", before: "BACKLOG", after: "DONE" }],
       },
       {
@@ -62,6 +63,7 @@ describe("CLI writes with an outbox", () => {
         opId: expect.any(String),
         threadId: "thread-7",
         storyId: "ROW-01",
+        storyUid: uid,
         changes: [{ path: "title", before: "First", after: "Renamed" }],
       },
     ]);
