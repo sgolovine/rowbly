@@ -25,6 +25,7 @@ This file records the changes to Rowbly that users can see.
 - Added: Each worker Thread records the host that runs it, for now always `local`. `rowbly thread list` and `rowbly thread get` show the host, and `rowbly factory status --json` has the new `host` field on each Thread. (ROW-83)
 - Changed: Rowbly has a new internal SSH transport for the connection from the main machine to remote worker hosts. No command uses it yet. (ROW-85)
 - Changed: The factory now starts, stops, cancels and steers each worker through one executor interface, so that a later version can run workers on a different host. The behavior of the factory does not change. (ROW-82)
+- Added: The new `rowbly host add <id> --ssh <target> --max-workers <n>`, `rowbly host list` and `rowbly host remove <id> [--purge]` commands record the remote worker hosts in the `hosts` key of `~/.rowblyrc.json`. `rowbly host remove` refuses to remove a host while a Thread of a known Project is active on it. (ROW-84)
 
 ### 0.18.0
 

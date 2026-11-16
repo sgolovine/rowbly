@@ -43,6 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
+| `host/`                                                | `host add`, `list`, `remove`: the worker hosts of the user.                      |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -54,7 +55,7 @@ The native commands are in [native-factory/controls.md](native-factory/controls.
 - `-C, --cwd <dir>` runs as if Rowbly started in `<dir>`.
 
 Most commands belong to a resource command, for example `story`, `stage`, `custom-field`, `tag`, `spec`,
-`skill`, `project`, `prompt`, `factory`, `auth`, `model` and `thread`. A resource command with no action prints
+`skill`, `project`, `prompt`, `factory`, `auth`, `model`, `thread` and `host`. A resource command with no action prints
 its help. A resource command with an unknown action gives an error. `init`, `doctor`, `status` and the
 attachment commands are at the top level. Commander gives `--help` for each subcommand automatically.
 
@@ -123,6 +124,31 @@ changes.
 `rowbly story get` shows a `Tags` line, and the JSON result has the array `tags` (`[]` when the Story
 has no tags). `rowbly story search --tag <value>` shows only the Stories that have the tag. With more
 than one `--tag`, a Story must have all of the tags.
+
+### Worker hosts
+
+`rowbly host` manages the worker hosts through the `host` service. A worker host is a remote machine
+that runs factory workers only. The hosts belong to the user, not to a Project. Thus the commands do
+not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. See
+[storage.md](storage.md#rowblyrcjson).
+
+- `host add <id> --ssh <target> --max-workers <n>` adds a host at the end of the list. A new host is
+  on (`enabled: true`). The result is the host.
+- `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
+  `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
+- `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or
+  `false`). At this time, `--purge` does no work, because no clone or worktree exists on a host.
+- The id must be dash-case (`^[a-z0-9]+(-[a-z0-9]+)*$`). The id `local` is reserved for the main
+  machine.
+- The SSH target must not be empty. It must not start with `-`, and it must not have whitespace or
+  control characters. Rowbly gives the target to `ssh` as one argument, never in a shell string.
+- `--max-workers` must be a whole number of 1 or more.
+- A bad id, SSH target or worker limit gives a `VALIDATION` error. An id that exists gives `CONFLICT`
+  on `host add`. An unknown id gives `NOT_FOUND` on `host remove`.
+- `host remove` gives `CONFLICT` while a Thread on the host is `pending` or `running`. The check reads
+  the Threads of each known Project in `~/.rowblyrc.json` that is not missing.
+- If Rowbly cannot read `~/.rowblyrc.json`, each `host` command gives a `VALIDATION` error, and the
+  file does not change.
 
 ## Output and errors
 

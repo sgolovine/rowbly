@@ -105,7 +105,7 @@ Each command has `--help`. These options apply to all commands:
 | `-v, --version`   | Shows the version.                                     |
 
 Resource commands use `<resource> <action>`.
-The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `tag`, `spec` and `skill`.
+The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `tag`, `spec`, `skill` and `host`.
 Run `rowbly <resource>` or `rowbly <resource> --help` to see its actions.
 Run `rowbly <resource> <action> --help` to see its arguments and options.
 The old flat resource commands do not work.
@@ -281,6 +281,33 @@ A Tag record has this shape:
   A value that exists gives `CONFLICT`.
 - **No value change.** The value of a tag cannot change. `tag update` changes only the label.
 - **Removal.** `tag remove` removes the tag from the config and from each Story that has it.
+
+### Host
+
+A worker host is a remote machine that runs factory workers only. The hosts belong to the user, not to
+a Project. Rowbly keeps them in the `hosts` key of `~/.rowblyrc.json`. These commands do not need a
+Project.
+
+| Command                                                  | JSON result    |
+| -------------------------------------------------------- | -------------- |
+| `rowbly host list`                                       | Array of Host  |
+| `rowbly host add <id> --ssh <target> --max-workers <n>`  | Host           |
+| `rowbly host remove <id> [--purge]`                      | Host, `purge`  |
+
+A Host record has this shape:
+
+```json
+{ "id": "mini", "ssh": "user@mini.lan", "maxWorkers": 2, "enabled": true }
+```
+
+- **Ids.** An id is dash-case, for example `mac-mini`. The id `local` is reserved for the main machine.
+  An id that exists gives `CONFLICT`. An unknown id gives `NOT_FOUND`.
+- **SSH target.** The target must not be empty. It must not start with `-`, and it must not have
+  whitespace or control characters. A bad target gives `VALIDATION`.
+- **Worker limit.** `--max-workers` is a whole number of 1 or more. A bad value gives `VALIDATION`.
+- **Removal.** `host remove` gives `CONFLICT` while a known Project has a `pending` or `running` Thread
+  on the host. `--purge` does no work at this time.
+- **Bad file.** If `~/.rowblyrc.json` is not valid, each command gives `VALIDATION` and does not change the file.
 
 ### Spec
 
