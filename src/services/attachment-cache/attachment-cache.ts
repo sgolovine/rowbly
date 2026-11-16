@@ -1,17 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { link, mkdir, open, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { noSymlink, validateAttachmentId, validatePng } from "../attachment-files/attachment-files.js";
+import { noSymlink, validateAttachmentBytes, validateAttachmentId } from "../attachment-files/attachment-files.js";
 import { NotFoundError } from "../errors/errors.js";
 import { pathExists, syncDirectory } from "../files/files.js";
 
-/** One PNG of the cache folder. `dir` is the cache folder. The caller selects it. */
+/**
+ * One attachment file of the cache folder. `dir` is the cache folder. The caller selects it. The file name stays
+ * `<id>.png` for all file types, for compatibility with the cache of an earlier version.
+ */
 interface CacheEntry {
   readonly dir: string;
   readonly id: string;
 }
 
-/** The path of the PNG of the id, after the checks of the id and of symlinks. */
+/** The path of the file of the id, after the checks of the id and of symlinks. */
 async function cachePath(entry: CacheEntry): Promise<string> {
   validateAttachmentId(entry.id);
 
@@ -50,11 +53,11 @@ async function linkOnce(temporary: string, path: string): Promise<boolean> {
 }
 
 /**
- * Puts the PNG of an attachment in the cache folder. The write is atomic. An id that is in the cache keeps its first
+ * Puts the bytes of an attachment in the cache folder. The write is atomic. An id that is in the cache keeps its first
  * file, because the content of an attachment never changes. Gives whether the function wrote a new file.
  */
 export async function putCachedAttachment(input: CacheEntry & { readonly bytes: Uint8Array }): Promise<boolean> {
-  validatePng(input.bytes);
+  validateAttachmentBytes(input.bytes);
 
   const path = await cachePath(input);
   const temporary = join(input.dir, `.${randomUUID()}.tmp`);
@@ -74,7 +77,7 @@ export async function putCachedAttachment(input: CacheEntry & { readonly bytes: 
   }
 }
 
-/** Gives the bytes of the PNG of an attachment. A missing PNG gives a NotFoundError. */
+/** Gives the bytes of an attachment. A missing file gives a NotFoundError. */
 export async function readCachedAttachment(input: CacheEntry): Promise<Buffer> {
   const path = await cachePath(input);
 
@@ -89,7 +92,7 @@ export async function readCachedAttachment(input: CacheEntry): Promise<Buffer> {
   }
 }
 
-/** Tells whether the cache folder has the PNG of an attachment. */
+/** Tells whether the cache folder has the file of an attachment. */
 export async function hasCachedAttachment(input: CacheEntry): Promise<boolean> {
   return pathExists(await cachePath(input));
 }

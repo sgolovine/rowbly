@@ -15,12 +15,12 @@ export interface AttachmentListProps {
   readonly onSelect: (index: number) => void;
 }
 
-/** The text of an empty list: a loading note, or how to add an image. */
+/** The text of an empty list: a loading note, or how to add a file. */
 function emptyText(loading: boolean): string {
-  return loading ? "Loading attachments…" : "No attachments. Paste an image or press n to add a PNG file.";
+  return loading ? "Loading attachments…" : "No attachments. Paste an image or press n to add a file.";
 }
 
-/** The saved images of a Story: the name, the size and the creation time of each image. */
+/** The saved attachments of a Story: the name, the size and the creation time of each file. */
 export function AttachmentList({ items, item, active, loading, height, onSelect }: AttachmentListProps) {
   return (
     <ScrollBody active={active} height={height}>

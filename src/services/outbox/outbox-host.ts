@@ -53,7 +53,7 @@ export async function hostOutboxEntries(input: HostRequestInput): Promise<Outbox
   return { entries: await readOutboxEntries(dir, afterSeq) };
 }
 
-/** Removes the entries up to the `seq` of the request, and the PNG files that no remaining entry points to. */
+/** Removes the entries up to the `seq` of the request, and the attachment files that no remaining entry points to. */
 export async function hostOutboxAck(input: HostRequestInput): Promise<AcknowledgeResult> {
   const dir = checkOutboxDir(input.dir);
   const seq = numberOf(parseRequest(input.text), "seq");

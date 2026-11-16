@@ -66,7 +66,7 @@ export async function writeAppliedSeq(paths: ProjectPaths, host: string, seq: nu
   await writeFileAtomic(file, `${JSON.stringify({ seq })}\n`, { durable: true, mode: 0o600 });
 }
 
-/** Keeps the PNG of a conflict in `runtime/hosts/<host>/conflicts/<sha256>.png` for recovery. Gives the path. */
+/** Keeps the file of a conflict in `runtime/hosts/<host>/conflicts/<sha256>.png` for recovery. Gives the path. */
 export async function keepConflictPng(paths: ProjectPaths, host: string, bytes: Uint8Array): Promise<string> {
   const dir = await preparedHostDir(paths, host);
   const conflicts = await runtimeChild(dir, CONFLICTS_DIR);

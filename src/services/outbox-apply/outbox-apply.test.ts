@@ -67,11 +67,11 @@ const OTHER = Buffer.from("89504e470d0a1a0a00000000", "hex");
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const ID_1 = `a${"1".repeat(36)}`;
 const ID_2 = `a${"2".repeat(36)}`;
-const record = (id: string, name = "shot.png") => ({
+const record = (id: string, name = "shot.png", type = "image/png", size = 16) => ({
   id,
   name,
-  type: "image/png" as const,
-  size: 16,
+  type,
+  size,
   createdAt: "2026-11-16T10:00:00.000Z",
 });
 
@@ -245,14 +245,36 @@ describe("outbox apply", () => {
     expect(await readdir(join(outbox.path, "blobs"))).toEqual([]);
   });
 
+  it("adds a file that is not a PNG with the same bytes, name and type", async () => {
+    const pdf = Buffer.from("%PDF-1.7\nreport\n");
+    await writeOutboxBlob(outbox.path, pdf);
+    await append({
+      storyId: "ROW-02",
+      type: "attachment.add",
+      attachment: record(ID_1, "report.pdf", "application/pdf", pdf.length),
+      sha256: sha(pdf),
+    });
+
+    const result = await sync();
+
+    expect(result.conflicts).toEqual([]);
+    expect(await listAttachments({ story: "ROW-02" }, project.ctx)).toMatchObject([
+      { id: ID_1, name: "report.pdf", type: "application/pdf", size: pdf.length },
+    ]);
+    const dir = await attachmentDir(project.paths, "ROW-02");
+    expect((await readFile(join(dir, `${ID_1}.pdf`))).equals(pdf)).toBe(true);
+
+    await appendAdd("ROW-02", ID_1, pdf);
+
+    expect((await sync()).conflicts).toEqual([]);
+  });
+
   const large = Buffer.concat([PNG, Buffer.alloc(MAX_ATTACHMENT_BYTES + 1 - PNG.length)]);
-  const text = Buffer.from("not a png file");
 
   it.each([
-    ["a hash that is not equal", OTHER, sha(PNG), "The PNG does not have the sha256 of the entry"],
-    ["more than 10 MiB", large, sha(large), "The PNG is larger than 10 MiB"],
-    ["bytes that are not a PNG", text, sha(text), "Attachment must be a PNG image"],
-  ])("gives a conflict for %s and keeps the PNG", async (_name, bytes, hash, reason) => {
+    ["a hash that is not equal", OTHER, sha(PNG), "The file does not have the sha256 of the entry"],
+    ["more than 10 MiB", large, sha(large), "The file is larger than 10 MiB"],
+  ])("gives a conflict for %s and keeps the file", async (_name, bytes, hash, reason) => {
     blobs.set(hash, bytes);
     await append({ storyId: "ROW-02", type: "attachment.add", attachment: record(ID_1), sha256: hash });
 
@@ -286,7 +308,7 @@ describe("outbox apply", () => {
     const result = await sync();
 
     expect(result.conflicts).toEqual([
-      expect.objectContaining({ seq: 2, attachmentId: ID_2, reason: expect.stringContaining("different PNG") }),
+      expect.objectContaining({ seq: 2, attachmentId: ID_2, reason: expect.stringContaining("different file") }),
     ]);
     expect((await listAttachments({ story: "ROW-02" }, project.ctx)).map((a) => a.name)).toEqual([
       "local.png",

@@ -10,8 +10,8 @@ function listHeight(height: number | undefined): number | undefined {
 }
 
 /**
- * The saved images of one Story. The arrows select an image, `n` attaches a PNG from a path, `o` opens the
- * selected image and `d` asks before it removes the image. The list reads again when the tab is selected.
+ * The saved attachments of one Story. The arrows select a file, `n` attaches a file from a path, `o` opens the
+ * selected file and `d` asks before it removes the file. The list reads again when the tab is selected.
  */
 export function AttachmentsTab(props: AttachmentsTabProps) {
   const { env, state, layout, items, task, idle } = useAttachmentsTab(props);
@@ -28,7 +28,7 @@ export function AttachmentsTab(props: AttachmentsTabProps) {
         onSelect={setCursor}
       />
       <Box gap={2} marginTop={1}>
-        <Button compact label="New PNG" keyName="n" onClick={() => setTask("path")} clickable={idle} />
+        <Button compact label="New file" keyName="n" onClick={() => setTask("path")} clickable={idle} />
         <Button compact label="Open" keyName="o" onClick={() => openItem(env)} clickable={idle && !!item} />
         <Button
           compact
@@ -41,8 +41,8 @@ export function AttachmentsTab(props: AttachmentsTabProps) {
       </Box>
       {task === "path" && (
         <FormModal
-          title="Attach PNG"
-          fields={[{ name: "path", label: "PNG path", kind: "text", required: true }]}
+          title="Attach file"
+          fields={[{ name: "path", label: "File path", kind: "text", required: true }]}
           initialValues={{ path: "" }}
           onClose={() => setTask(null)}
           submitOnEnter

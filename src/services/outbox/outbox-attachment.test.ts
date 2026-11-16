@@ -62,6 +62,28 @@ describe("attachment writes with the file recorder", () => {
     expect(await readFile(join(outboxPaths(outbox.path).blobsDir, `${sha(PNG)}.png`))).toEqual(PNG);
   });
 
+  it("records a file that is not a PNG with its name, type and bytes", async () => {
+    const { ctx, dir } = await setUp();
+    const pdf = Buffer.from("%PDF-1.7\nreport\n");
+
+    const added = await addAttachment({ story: "ROW-01", image: { name: "report.pdf", bytes: pdf } }, ctx);
+
+    expect(added).toMatchObject({ name: "report.pdf", type: "application/pdf", size: pdf.length });
+    expect(await readFile(join(dir, `${added.id}.pdf`))).toEqual(pdf);
+    expect(await readEntries(outbox.path)).toEqual([
+      expect.objectContaining({ type: "attachment.add", attachment: added, sha256: sha(pdf) }),
+    ]);
+    expect(await readFile(join(outboxPaths(outbox.path).blobsDir, `${sha(pdf)}.png`))).toEqual(pdf);
+
+    await removeAttachment({ story: "ROW-01", id: added.id }, ctx);
+
+    expect((await readEntries(outbox.path)).at(-1)).toMatchObject({
+      type: "attachment.remove",
+      id: added.id,
+      sha256: sha(pdf),
+    });
+  });
+
   it("writes one blob and two entries for two adds of the same bytes", async () => {
     const { ctx } = await setUp();
 

@@ -14,6 +14,7 @@ import {
   withAttachments,
   writeAttachments,
 } from "../attachment-files/attachment-files.js";
+import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { recordAttachmentAdd, recordAttachmentRemove, sha256Hex } from "../outbox/outbox.js";
@@ -72,7 +73,8 @@ async function readUntilFull(handle: FileHandle, bytes: Buffer, length: number):
   return readUntilFull(handle, bytes, length + result.bytesRead);
 }
 
-async function readPngFile(file: string, ctx: ServiceContext = {}): Promise<PendingImage> {
+/** Reads a file of any type. A file that is larger than 10 MiB fails. */
+async function readAttachmentFile(file: string, ctx: ServiceContext = {}): Promise<PendingImage> {
   const handle = await open(resolve(ctx.cwd ?? process.cwd(), file), "r").catch(() => {
     throw new NotFoundError(`Cannot read file: ${file}`);
   });
@@ -92,10 +94,10 @@ async function readPngFile(file: string, ctx: ServiceContext = {}): Promise<Pend
   }
 }
 
-/** Gives the image of the one source that the input names. */
+/** Gives the file of the one source that the input names. The clipboard gives a PNG image only. */
 async function sourceImage(input: AddAttachmentInput, ctx: ServiceContext): Promise<PendingImage> {
   if (input.file !== undefined) {
-    return readPngFile(input.file, ctx);
+    return readAttachmentFile(input.file, ctx);
   }
 
   if (input.fromClipboard) {
@@ -111,13 +113,13 @@ async function sourceImage(input: AddAttachmentInput, ctx: ServiceContext): Prom
   return input.image as PendingImage;
 }
 
-/** Adds one PNG to a Story from a file, the clipboard or an image in memory. */
+/** Adds one file to a Story from a file path, the clipboard or bytes in memory. */
 export async function addAttachment(input: AddAttachmentInput, ctx: ServiceContext = {}) {
   const sources =
     Number(input.file !== undefined) + Number(input.fromClipboard === true) + Number(input.image !== undefined);
 
   if (sources !== 1) {
-    throw new ValidationError("Supply exactly one PNG file or --from-clipboard");
+    throw new ValidationError("Supply exactly one file or --from-clipboard");
   }
 
   const story = await getStory({ id: input.story }, ctx);
@@ -131,7 +133,7 @@ export async function addAttachment(input: AddAttachmentInput, ctx: ServiceConte
     [input.id],
   );
 
-  // The copy has the attachment now. The recorder writes the PNG, then the entry.
+  // The copy has the attachment now. The recorder writes the file, then the entry.
   await recordAttachmentAdd(ctx, { storyId: story.id, attachment, bytes: (images[0] as PendingImage).bytes });
 
   return attachment;
@@ -149,7 +151,7 @@ async function selected(story: string, id: string, ctx: ServiceContext) {
     throw new NotFoundError(`Attachment ${id} not found on ${story}`);
   }
 
-  const path = join(dir, `${id}.png`);
+  const path = join(dir, attachmentFileName(record));
 
   await noSymlink(path);
 
@@ -169,7 +171,7 @@ function openCommand(path: string): { command: string; args: string[] } {
   return { command: "xdg-open", args: [path] };
 }
 
-/** Opens an attachment in the default image application of the platform. */
+/** Opens an attachment in the default application of the platform for its file type. */
 export async function openAttachment(input: { story: string; id: string }, ctx: ServiceContext = {}) {
   const { path } = await selected(input.story, input.id, ctx);
 
@@ -180,17 +182,17 @@ export async function openAttachment(input: { story: string; id: string }, ctx: 
 
     await promisify(execFile)(command, args, { timeout: 10000, maxBuffer: 65536 });
   } catch {
-    throw new ValidationError("Cannot open attachment", { hint: `Open the PNG at ${path} with an image application.` });
+    throw new ValidationError("Cannot open attachment", { hint: `Open the file at ${path}.` });
   }
 
   return { opened: input.id };
 }
 
-/** Removes an attachment. A failure restores the PNG and the index. */
+/** Removes an attachment. A failure restores the file and the index. */
 export async function removeAttachment(input: { story: string; id: string }, ctx: ServiceContext = {}) {
   const { storyId, dir, records, path } = await selected(input.story, input.id, ctx);
   const temporary = `${path}.removed`;
-  // Only a remote worker needs the hash, so a local remove does not read the PNG.
+  // Only a remote worker needs the hash, so a local remove does not read the file.
   const sha256 = ctx.recorder ? sha256Hex(await readFile(path)) : "";
 
   await rename(path, temporary);
