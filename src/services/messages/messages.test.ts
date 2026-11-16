@@ -50,6 +50,27 @@ describe("runSection", () => {
   });
 });
 
+describe("a remote worker", () => {
+  it("gives the copy, the worktree of the host and the write.lock and shim of the host, without checks", () => {
+    const agent = "/home/u/.local/share/rowbly/projects/web-0123456789ab/agent";
+    const text = runSection({
+      ...run,
+      root: `${agent}/threads/t1/copy`,
+      worktree: "/home/u/repo-worktrees/WEB-42",
+      shim: `${agent}/bin/rowbly`,
+      lock: `${agent}/threads/t1/write.lock`,
+      checks: [],
+    });
+
+    expect(text).toContain(`Canonical Project root: \`${agent}/threads/t1/copy\``);
+    expect(text).toContain("Worktree: `/home/u/repo-worktrees/WEB-42`");
+    expect(text).toContain(
+      `Command prefix: \`flock -w 60 '${agent}/threads/t1/write.lock' '${agent}/bin/rowbly' -C '${agent}/threads/t1/copy' --json\``,
+    );
+    expect(text).not.toContain("Checks");
+  });
+});
+
 describe("checks", () => {
   it("lists the checks in the Run section only when the Project has checks", () => {
     expect(runSection(run)).not.toContain("Checks");

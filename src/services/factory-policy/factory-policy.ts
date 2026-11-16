@@ -44,6 +44,9 @@ export type * from "./policy-types.js";
 
 type ScanWorker = PolicyWorker & { status: AttemptStatus };
 
+/** The skip reason of a Story whose remote worker Thread has outbox entries that are not applied, or no final status. */
+export const HOST_SYNC_REASON = "waiting for host sync";
+
 /** The facts of one scan that each step reads. */
 interface ScanFacts {
   stories: PolicyStory[];
@@ -54,6 +57,7 @@ interface ScanFacts {
   time: Date;
   count: number;
   limits: PolicyLimits;
+  hostSync: ReadonlySet<string>;
 }
 
 interface StoryPlan {
@@ -211,6 +215,11 @@ function stageSkipReason(stage: PolicyStage | undefined): string | undefined {
 
 /** Plans one Story. */
 function planStory(previous: PolicyState, story: PolicyStory, facts: ScanFacts): StoryPlan {
+  // The changes of a remote worker are not all on this machine yet, so no rule can use the Story now.
+  if (facts.hostSync.has(story.id)) {
+    return { state: previous, decision: makeDecision(story, "skip", HOST_SYNC_REASON) };
+  }
+
   const parked = previous.parked?.[story.id];
   // A person released the Story: a Stage move or an edit of the Story gives it a new budget.
   const released = !!parked && (parked.stage !== story.stage || parked.hash !== storyHash(story));
@@ -349,6 +358,7 @@ export function evaluateScan(previous: PolicyState, input: ScanInput): ScanResul
     time: new Date(input.now ?? new Date()),
     count: (cloned.scan?.count ?? 0) + 1,
     limits: { ...DEFAULT_LIMITS, ...input.limits },
+    hostSync: new Set(input.hostSync ?? []),
   };
   const reconciled: PolicyState = {
     ...cloned,

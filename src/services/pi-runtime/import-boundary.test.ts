@@ -70,6 +70,16 @@ describe("Pi import boundary", () => {
     await expect(import("../test-project/fake-host-transport.js")).resolves.toHaveProperty("createFakeHostTransport");
   });
 
+  it("imports the remote executor and its modules without loading Pi", async () => {
+    await expect(import("../remote-executor/remote-executor.js")).resolves.toHaveProperty("createRemoteExecutor");
+    await expect(import("../remote-executor/remote-calls.js")).resolves.toHaveProperty("submit");
+    await expect(import("../remote-executor/remote-channel.js")).resolves.toHaveProperty("ensureLink");
+    await expect(import("../remote-executor/remote-run.js")).resolves.toHaveProperty("takeRunFrame");
+    await expect(import("../remote-executor/run-frames.js")).resolves.toHaveProperty("newFacts");
+    await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
+    await expect(import("../test-project/scripted-host.js")).resolves.toHaveProperty("createScriptedHost");
+  });
+
   it("imports the outbox apply and the host outbox commands without loading Pi", async () => {
     await expect(import("../outbox/outbox-compare.js")).resolves.toHaveProperty("compareChange");
     await expect(import("../outbox/outbox-host.js")).resolves.toHaveProperty("hostOutboxEntries");

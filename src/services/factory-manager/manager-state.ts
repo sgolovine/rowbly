@@ -5,6 +5,7 @@ import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
+import type { HostConnection, RemoteExecutor } from "../remote-executor/remote-executor.js";
 import { type Store, withEntry, withoutEntry } from "../store/store.js";
 import type { Story } from "../story/story.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
@@ -29,6 +30,11 @@ export interface FactoryDependencies {
   executor?: WorkerExecutor;
   /** The worker hosts that the manager can use. Without a value, the manager uses only `local`. */
   workerHosts?: () => Promise<readonly WorkerHostView[]>;
+  /**
+   * Gives the connection of a worker host: the transport, the path of `rowbly` and the clone of the Project. Without
+   * it, the manager cannot send a worker to a worker host.
+   */
+  hostConnection?: (host: string) => Promise<HostConnection>;
   /** Reads the Git facts of the local worktree of a Story. Tests give fakes. */
   worktreeFacts?: (root: string, story: Story) => Promise<LocalWorktreeFacts | undefined>;
 }
@@ -85,6 +91,8 @@ export interface ManagerState {
   readonly active: ReadonlyMap<string, ActiveWorker>;
   readonly promptClaims: ReadonlyMap<string, string>;
   readonly requests: ReadonlyMap<string, string>;
+  /** The Stories of the remote worker Threads that are not synchronized: their outbox or final status did not arrive. */
+  readonly hostSync: ReadonlySet<string>;
 
   // Supervisor
   readonly supervisor?: PiSession;
@@ -128,7 +136,10 @@ export interface Manager {
   readonly ctx: ServiceContext;
   readonly owner: Owner;
   readonly checks: CheckQueue;
+  /** The local executor. */
   readonly executor: WorkerExecutor;
+  /** The executor of the worker hosts. Only a manager with `hostConnection` has it. */
+  readonly remote?: RemoteExecutor;
   readonly store: Store<ManagerState>;
 }
 

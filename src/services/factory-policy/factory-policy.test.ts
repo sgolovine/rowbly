@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_LIMITS,
   evaluateScan,
+  HOST_SYNC_REASON,
   markReported,
   normalizeStatus,
   type PolicyDecision,
@@ -265,6 +266,28 @@ describe("a parked Story", () => {
 });
 
 describe("assignment guards", () => {
+  it("skips a Story whose remote Thread is not synchronized, before all other rules, and starts it after the sync", () => {
+    const stopped = evaluateScan(
+      running(),
+      facts([{ story: story.id, threadId: "worker-1", status: "completed" }]),
+    ).state;
+    const waiting = evaluateScan(stopped, facts([], [story], { hostSync: [story.id] }));
+
+    expect(first(waiting)).toEqual({ story: story.id, stage: story.stage, action: "skip", reason: HOST_SYNC_REASON });
+    // The rule comes before the dependency rule and before the Stage rules.
+    const blocked = { ...story, dependsOn: ["ROW-02"] } as PolicyStory;
+    const upstream: PolicyStory = { id: "ROW-02", stage: "IN_REFINEMENT" };
+    expect(reason(evaluateScan(empty(), facts([], [blocked, upstream], { hostSync: [story.id] })))).toBe(
+      HOST_SYNC_REASON,
+    );
+    expect(reason(evaluateScan(empty(), facts([], [{ ...story, stage: "DONE" }], { hostSync: [story.id] })))).toBe(
+      HOST_SYNC_REASON,
+    );
+    // A Story that is not in the list keeps the normal decision.
+    expect(action(evaluateScan(empty(), facts([], [story], { hostSync: ["ROW-09"] })))).toBe("start");
+    expect(action(evaluateScan(waiting.state, facts()))).not.toBe("skip");
+  });
+
   it("does not assume that a missing harness worker stopped", () => {
     expect(action(evaluateScan(running(), facts()))).toBe("skip");
   });

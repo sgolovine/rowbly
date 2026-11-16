@@ -33,6 +33,7 @@ import {
   setState,
 } from "./manager-state.js";
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
+import { createManagerRemote } from "./remote-dispatch.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { openCheckQueue } from "./worker-checks.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
@@ -83,6 +84,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     owner,
     checks,
     executor,
+    remote: createManagerRemote(deps, paths, ctx, () => manager),
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 
@@ -134,6 +136,7 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     active: new Map(),
     promptClaims: new Map(),
     requests: new Map(),
+    hostSync: new Set(),
 
     supervisorBorn: Date.now(),
     wakeCount: 0,

@@ -32,6 +32,31 @@ describe("transportOutboxSource", () => {
     ]);
   });
 
+  it("puts the project id at the end of each host command when the input has one", async () => {
+    const commands: RemoteCommand[] = [];
+    const transport = createFakeHostTransport({
+      request: (command) => {
+        commands.push(command);
+        return { exitCode: 0, value: { entries: [] }, stderr: "" };
+      },
+      bytes: (command) => {
+        commands.push(command);
+        return { exitCode: 0, bytes: Buffer.from("png"), stderr: "" };
+      },
+    });
+    const source = transportOutboxSource({ transport, rowbly: ROWBLY, projectId: "web-0123456789ab" });
+
+    await source.entriesAfter(0);
+    await source.blob(SHA);
+    await source.acknowledge(1);
+
+    expect(commands).toEqual([
+      [ROWBLY, "host", "outbox", "web-0123456789ab"],
+      [ROWBLY, "host", "blob", SHA, "web-0123456789ab"],
+      [ROWBLY, "host", "outbox-ack", "web-0123456789ab"],
+    ]);
+  });
+
   it("gives a HOST_PROTOCOL error with the stderr text for a remote exit code other than 0", async () => {
     const transport = createFakeHostTransport({
       request: () => ({ exitCode: 1, value: undefined, stderr: "ROWBLY_OUTBOX is not set\n" }),

@@ -17,6 +17,7 @@ This file records the changes to Rowbly that users can see.
 - Fixed: When two Story files have the same Story ID and the same `uid`, for example in two Stage folders, `rowbly doctor --fix` and the TUI board load now remove the old copy and keep the copy with the newest `updatedAt`, for example `ROW-78: removed the old copy in DONE`. If the copies have different content, `rowbly doctor` shows an error and Rowbly does not change a file. (ROW-114)
 - Changed: New factory attempts in `.rowbly/state.json`, worker Threads, outbox entries of worker hosts and attachment records in `.rowbly/attachments/<ID>/manifest.json` now keep the `storyUid` of their Story. Rowbly finds the Story of these records by its `uid` first and then by the Story ID, so old records stay valid. (ROW-113)
 - Added: A worker that the host agent runs on a worker host now has the `run_check` tool, and runs each check of the `checks` config in its worktree on that host. `rowbly host attach` sends the status of the checks of each run, and a stop or cancel of the run also stops its checks. (ROW-93)
+- Added: The factory can now send a worker to a worker host, follow its run, apply the outbox of the host to the board before the Thread completes, and skip the Story with `waiting for host sync` until the host is synchronized. The hidden `rowbly host outbox`, `rowbly host outbox-ack` and `rowbly host blob` commands accept a project id, and the new hidden `rowbly host run-paths` command gives the run paths of the host, but the factory does not use real worker hosts yet. (ROW-96)
 
 ### 0.19.0
 

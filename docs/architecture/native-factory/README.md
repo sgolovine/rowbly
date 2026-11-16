@@ -46,6 +46,9 @@ Read this page when you start a task on the factory. Then read only the sub-page
   (`factory-manager/worker-executor.ts`). See [The worker executor](#the-worker-executor).
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
   parked Stories. The policy state is in `state.json`.
+  - **Host sync.** The policy skips a Story whose remote worker Thread is not synchronized, with the
+    reason `waiting for host sync`. This rule comes before all other rules of the Story. See
+    [Dispatch to a worker host](#dispatch-to-a-worker-host).
   - **Dependency gate.** The policy does not start a worker for a blocked Story. A blocked Story has one or
     more upstream Stories that are not complete. The decision is `skip`, with the reason
     `waiting for <IDs>` and the `waitingFor` list. A Story in a hold Stage keeps the reason `hold stage`.
@@ -145,9 +148,10 @@ The function applies these rules in this order:
 refused placement, or an unknown host, gives a `ConflictError` with the reason, and the manager
 creates no Thread. The manager reads the Git facts of the local worktree (`readWorktreeFacts` in
 `worker-worktree/`) only when the list has a worker host. The new worker Thread and the active entry
-get the selected host. The dispatch to a worker host is not available yet. Thus a placement on a
-worker host gives a `ConflictError` ("Remote dispatch is not available"), and the manager creates no
-Thread.
+get the selected host. A manager without the dependency `hostConnection` cannot send a worker to a
+worker host. Then a placement on a worker host gives a `ConflictError` ("Remote dispatch is not
+available"), and the manager creates no Thread. With `hostConnection`, the manager sends the worker
+to the host. See [Dispatch to a worker host](#dispatch-to-a-worker-host).
 
 ## The worker executor
 
@@ -176,9 +180,83 @@ interface lets a different executor, for example a remote executor, run a worker
   daemon. It holds the worktree preparation, the session, the result tool, the check tools, the
   activity timer, the collection of the result and the close of the session. It loads Pi only through
   the lazy boundary of `pi-runtime/`. The interface file does not import Pi.
-- **Selection.** `FactoryDependencies.executor` gives the executor. Without a value,
+- **Remote executor.** `remote-executor/` runs each worker of a worker host in the host agent of
+  that host. It does not load Pi, and it does not start a process. See
+  [Dispatch to a worker host](#dispatch-to-a-worker-host).
+- **Selection.** `FactoryDependencies.executor` gives the local executor. Without a value,
   `createFactoryManager` makes the local executor. Tests give a fake executor
-  (`worker-executor.test.ts`).
+  (`worker-executor.test.ts`). The manager makes the remote executor only when it has the dependency
+  `hostConnection`.
+- **Routing.** `executorFor(manager, host)` in `factory-manager/remote-dispatch.ts` gives the executor
+  of a host: the local executor for `local`, and the remote executor for each worker host. The launch
+  uses the host of the Thread. The control of the active worker, and thus `stop`, `cancel` and `steer`,
+  uses the host of the active entry.
+- **Message location.** `message(worktree, model, location)` has an optional location: the Project
+  root of `-C`, the CLI shim, the lock of the command prefix and the checks flag. Without a location,
+  the message has the canonical Project root, the shim of the daemon, the Project write lock and the
+  configured checks.
+- **Stop reason.** `completed(result, stop)` has an optional stop reason. `stopped` makes the Thread
+  `interrupted`, and `cancelled` makes it `cancelled`. The local executor does not send it.
+
+## Dispatch to a worker host
+
+When the placement selects a worker host, the remote executor sends the worker to the host agent of
+that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`, sections
+"Placement", "The copy and inbound updates" and "The outbox".
+
+- **Connection.** The manager dependency `hostConnection(host)` gives the transport, the path of
+  `rowbly` on the host and the clone of the Project on the host. At this time, only tests give it.
+  Each remote command uses the project id `hostProjectId(root)`.
+- **Launch.** The remote executor does these steps, in this order:
+  1. It builds the copy of the `.rowbly/` files with `buildThreadCopy`.
+  2. It sends `host cache-missing`, and it uploads only the missing attachment files with
+     `host cache-put`.
+  3. It gets the run paths of the host with `host run-paths`.
+  4. It asks the manager for the worker message with the paths of the host.
+  5. It sends `host prepare` with the Thread, the Story, the clone, the model, the message and the copy.
+  6. It writes the base of the copy (see below).
+  7. It starts the host agent with `host serve --detach`. Then it submits a `launch` command with
+     `host submit`. A Thread with more than one run gets a `resume` command.
+  8. It follows the `run` frames of the Thread on the `host attach` channel until the run ends.
+- **Model.** The model is the model of the Thread, else the worker model of the factory settings.
+- **Message.** The Run section of a remote worker has the copy as the Project root, the worktree of
+  the host (`<clone>-worktrees/<story-id>`), and a command prefix with the `write.lock` of the Thread,
+  the shim of the host and `-C <copy>`. It has no checks block.
+- **Channel.** The executor opens one `host attach` channel for each host with an active remote run.
+  The host must send a hello frame with the same versions. The channel gives each `run` frame to the
+  run of its Thread. Only the frames of the `launch` or `resume` command of the run apply. A
+  `rejected` receipt of that command fails the run. The channel closes when the host has no active
+  remote run.
+- **Events.** The executor maps the fields of each `run` frame to the events of the manager:
+  `worktree` to `worktreeReady`, `session` to `sessionOpened`, `activity` to `activity` and `result`
+  to `resultReported`. A frame that repeats a value sends no event. The end has these events:
+  1. The outbox sync of the host.
+  2. `completed` for the end reasons `completed`, `stopped` and `cancelled`, or `failed` with the code
+     and the message of the host. The Thread error keeps the code of the host.
+  3. `finished` with the final usage, when the session opened.
+- **Outbox.** Before the manager completes a remote Thread, it applies all outbox entries of the host
+  with `syncHostOutbox` and `transportOutboxSource`. Thus a Stage move of the worker is on the board
+  before the manager examines the Story Stage. On each scan (`reconcilePolicy`), the manager also
+  applies the outbox of each host with an active remote Thread. The scan does not apply the outbox of a
+  host while a run of the host has no open session, because the Stage checks of the session must see
+  the Story before the worker changes it. A failed sync sets the attention entry `host-sync:<host>`.
+- **Sync failure.** When the sync after the end fails, the Thread does not complete. The next scan
+  applies the entries and completes the Thread.
+- **Disconnect.** When the channel closes before the run ends, the launch waits without an event.
+  The Thread keeps its last status. A `stop` or a `cancel` while the channel is closed ends the wait
+  without an event. ROW-97 adds the reconnect.
+- **Controls.** `stop` submits `stop-thread`, and `cancel` submits `cancel-thread`. A remote worker
+  cannot get a steering message: `steer` gives a `ConflictError`. The manager keeps the control on the
+  active worker from the start of the launch, so that a stop reaches the host also before the session
+  opens.
+- **Host sync.** While a remote Thread has outbox entries that are not applied, or its final status
+  did not arrive, the Story is in the `hostSync` set of the manager state. The policy skips it with
+  the reason `waiting for host sync`. This rule comes before all other skip and start rules of the
+  Story. The manager removes the Story from the set when the launch of the remote executor ends.
+- **Base of the copy.** For each remote Thread, the main machine keeps the copy that it sent last in
+  `runtime/hosts/<host>/threads/<thread-id>/base.json`: `{ version, threadId, host, sentAt, files,
+  attachments }`. The file has mode 0600, and its folders have mode 0700. ROW-98 uses it for the
+  inbound updates.
 
 ## Prerequisites and limits
 

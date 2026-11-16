@@ -31,6 +31,21 @@ export interface WorkerFailure {
 }
 
 /**
+ * The place of a worker run for its message: the Project root of `-C`, the CLI shim and the lock of the command
+ * prefix. A remote run gives the copy, the shim and the `write.lock` of the host.
+ */
+export interface RunLocation {
+  readonly root: string;
+  readonly shim: string;
+  readonly lock: string;
+  /** True when the message has the checks block. A remote worker has no checks. */
+  readonly checks: boolean;
+}
+
+/** How a run that completed stopped: a stop of the worker or a cancel. */
+export type RunStop = "stopped" | "cancelled";
+
+/**
  * One reserved worker run. The Thread record tells if the run is new or a resume: a resume has more than one run
  * and keeps the worktree of the Thread.
  */
@@ -47,8 +62,11 @@ export interface WorkerEvents {
   // Steps of the launch
   readonly worktreeReady: (worktree: WorkerWorktree) => Promise<void>;
   readonly sessionOpened: (session: WorkerSession) => Promise<void>;
-  /** Gives the worker message. The message needs the worktree path and the model of the session. */
-  readonly message: (worktree: string, model: ModelChoice) => Promise<string>;
+  /**
+   * Gives the worker message. The message needs the worktree path and the model of the session. Without a location,
+   * the message has the canonical Project root, the shim of the daemon and the Project write lock.
+   */
+  readonly message: (worktree: string, model: ModelChoice, location?: RunLocation) => Promise<string>;
   /** The first prompt of the worker completed without a provider error. */
   readonly prompted: (model: ModelChoice) => void;
 
@@ -59,8 +77,11 @@ export interface WorkerEvents {
   readonly stopping: () => boolean;
 
   // End of the run
-  /** The worker run ended. `result` is undefined when the worker did not report a result. */
-  readonly completed: (result: WorkerResult | undefined) => Promise<void>;
+  /**
+   * The worker run ended. `result` is undefined when the worker did not report a result. `stop` tells that a stop or a
+   * cancel ended the run, for example on a worker host.
+   */
+  readonly completed: (result: WorkerResult | undefined, stop?: RunStop) => Promise<void>;
   readonly failed: (failure: WorkerFailure) => Promise<void>;
   /** The session closes. Only a run with an open session sends it, with the final activity and usage. */
   readonly finished: (activity: WorkerActivity) => Promise<void>;
