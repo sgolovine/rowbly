@@ -18,7 +18,9 @@ export interface ThreadPaneProps {
   onBack(): void;
   /** `tab` (`1`) or `shift+tab` (`-1`): the focus goes to the next or the previous pane. */
   onTab(step: 1 | -1): void;
-  /** The Button of the pane takes the mouse. */
+  /** A wheel notch over the conversation while the pane does not have the focus: the focus goes to the pane. */
+  onFocus(): void;
+  /** The Button and the conversation of the pane take the mouse. */
   readonly clickable: boolean;
   /** `o` or the `Open Story` Button: opens the Story of the Thread. `undefined` when the board has no such Story. */
   readonly onOpenStory: (() => void) | undefined;

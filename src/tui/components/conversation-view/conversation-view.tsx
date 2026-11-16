@@ -18,13 +18,26 @@ interface ConversationViewProps {
   threadId: string;
   /** The thread runs: new entries can arrive. */
   live: boolean;
-  /** The view takes the keys and the wheel. */
+  /** The view takes the keys, and the wheel when `wheel` is not given. */
   active: boolean;
+  /** The view takes the wheel; the default is the value for the keys. A view can take the wheel without the focus. */
+  wheel?: boolean;
+  /** Called on a wheel notch while the view does not have the keys, for example to give the focus to its pane. */
+  onWheelFocus?: () => void;
   width: number;
   /** The rows of the view with its status row. Without it, all rows of the window show. */
   height?: number;
   /** Opens the conversation; tests replace it. */
   open?: typeof openConversation;
+}
+
+/** A wheel notch scrolls the view. When the view does not have the keys, it also asks for the focus. */
+function wheelScroll(env: ViewEnv, direction: number, keys: boolean, onWheelFocus: (() => void) | undefined): void {
+  scrollBy(env, direction * WHEEL_LINES);
+
+  if (!keys) {
+    onWheelFocus?.();
+  }
 }
 
 /**
@@ -33,7 +46,7 @@ interface ConversationViewProps {
  * when it reaches the end. It never starts an agent. Each entry shows its label and time, the text, the tool
  * calls and the tool results. While the thread runs (`live`), the view follows the new entries. A scroll up
  * stops this, so the history stays in place; `end` or `f` follows again. `↑/↓`, `pgup/pgdn`, the wheel and
- * `home/end` scroll. When the view closes or the thread changes, the conversation, its index and its watch close.
+ * `home/end` scroll. With `wheel`, the wheel scrolls also without the focus and calls `onWheelFocus`. When the view closes or the thread changes, the conversation, its index and its watch close.
  */
 export function ConversationView({
   ctx,
@@ -42,6 +55,8 @@ export function ConversationView({
   active,
   width,
   height,
+  wheel,
+  onWheelFocus,
   open = openConversation,
 }: ConversationViewProps) {
   const keys = useIsActive() && active;
@@ -60,7 +75,7 @@ export function ConversationView({
     }
   }, [port.start, view.older, view.status, height]);
   useInput((input, key) => handleConversationKey(env, input, key), { isActive: keys });
-  useMouse(ref, { onWheel: (direction) => scrollBy(env, direction * WHEEL_LINES) }, keys);
+  useMouse(ref, { onWheel: (direction) => wheelScroll(env, direction, keys, onWheelFocus) }, wheel ?? keys);
 
   if (view.status !== "ok") {
     return <ConversationNotice status={view.status} error={view.error} />;
