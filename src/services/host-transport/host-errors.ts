@@ -60,3 +60,13 @@ export function classifySshExit(exitCode: number | null, stderr: string, target:
     hint: "Make sure that the host is on and that `ssh <target>` works.",
   });
 }
+
+/** A worker host has no free worker slot, because the machine limit of all Projects on the host is reached. */
+export class HostNoFreeSlotError extends RowblyError {
+  readonly code = "HOST_NO_FREE_SLOT";
+}
+
+/** The host agent cannot run a worker, because it has no worker runner. */
+export class HostWorkerUnavailableError extends RowblyError {
+  readonly code = "HOST_WORKER_UNAVAILABLE";
+}

@@ -87,6 +87,40 @@ describe("Pi import boundary", () => {
     await expect(import("../host/host.js")).resolves.toHaveProperty("addHost");
   });
 
+  it("imports and runs the host check and the host login without loading Pi", async () => {
+    const { runHostCheck } = await import("../host-check/host-check.js");
+    const answers = await import("../test-project/fake-host-answers.js");
+    const { createFakeHostTransport } = await import("../test-project/fake-host-transport.js");
+    const transport = createFakeHostTransport({
+      bytes: (command) => answers.answerFor(answers.healthyAnswers(), command),
+    });
+    const build = { id: "0.18.0", version: "0.18.0", released: true };
+
+    await expect(
+      runHostCheck({ hostId: "mini", transport, build }, project.ctx, {
+        cloneFor: async () => "/srv/rowbly",
+        localAhead: async () => 0,
+      }),
+    ).resolves.toHaveProperty("ready", true);
+    await expect(import("../host-check/check-item.js")).resolves.toHaveProperty("CHECK_ITEM_IDS");
+    await expect(import("../host-check/host-items.js")).resolves.toHaveProperty("linuxItem");
+    await expect(import("../host-check/pi-items.js")).resolves.toHaveProperty("piLoginItem");
+    await expect(import("../host-check/project-items.js")).resolves.toHaveProperty("localAheadItem");
+    await expect(import("../host-check/host-login.js")).resolves.toHaveProperty("hostLoginArguments");
+    await expect(import("../host-check/clone-finder.js")).resolves.toHaveProperty("hostCloneFinder");
+  });
+
+  it("imports the host agent without loading Pi", async () => {
+    await expect(import("../host-agent/host-agent.js")).resolves.toHaveProperty("runHostAgent");
+    await expect(import("../host-agent/host-agent-paths.js")).resolves.toHaveProperty("hostAgentPaths");
+    await expect(import("../host-agent/host-agent-claim.js")).resolves.toHaveProperty("liveAgent");
+    await expect(import("../host-agent/host-agent-control.js")).resolves.toHaveProperty("submitHostCommand");
+    await expect(import("../host-agent/host-agent-work.js")).resolves.toHaveProperty("executeCommand");
+    await expect(import("../host-agent/host-slots.js")).resolves.toHaveProperty("acquireSlot");
+    await expect(import("../host-agent/host-attach.js")).resolves.toHaveProperty("runHostAttach");
+    await expect(import("../host-agent/host-agent-launch.js")).resolves.toHaveProperty("startHostAgent");
+  });
+
   it("imports the host project service without loading Pi", async () => {
     await expect(import("../host-project/host-project.js")).resolves.toHaveProperty("useHost");
     await expect(import("../host-project/host-clone.js")).resolves.toHaveProperty("cloneStatus");

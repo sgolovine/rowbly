@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { LocalBuild } from "../host-install/local-build.js";
 import type { BytesResult, RemoteCommand } from "../host-transport/host-transport.js";
 import { recordProject } from "../known-project/known-project.js";
+import { answerFor, healthyAnswers } from "../test-project/fake-host-answers.js";
 import { createFakeHostTransport } from "../test-project/fake-host-transport.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createThread, transitionThread } from "../thread/thread.js";
@@ -27,6 +28,10 @@ function fakeDeps(answers: Record<string, BytesResult> = {}, installWorks = fals
   const transport = createFakeHostTransport({
     bytes: (command) => {
       commands.push(command);
+      const isVersion = command[0]?.endsWith("/rowbly") === true && command[1] === "--version";
+      if (command[0] !== "node" && command[0] !== "npm" && !isVersion) {
+        return answerFor(healthyAnswers(), command);
+      }
       const program = command[0] === "node" || command[0] === "npm" ? command[0] : "rowbly";
       if (program === "npm" && installWorks) {
         state.installed = true;
@@ -41,6 +46,8 @@ function fakeDeps(answers: Record<string, BytesResult> = {}, installWorks = fals
       return transport;
     },
     build: async () => BUILD,
+    cloneFor: async () => "/srv/rowbly",
+    localAhead: async () => 0,
   };
   return { deps, commands, targets };
 }
@@ -78,9 +85,11 @@ describe("host", () => {
         nodeVersion: "v22.19.0",
         stderr: "",
       },
+      check: expect.objectContaining({ host: "mini", ready: true }),
     });
     expect(targets).toEqual(["user@mini.lan"]);
-    expect(commands.map((command) => command[0])).toEqual(["node", host.install.remoteExecutable]);
+    expect(commands.slice(0, 2).map((command) => command[0])).toEqual(["node", host.install.remoteExecutable]);
+    expect(commands.slice(2).some((command) => command[0] === "npm")).toBe(false);
     expect((await stored()).hosts).toEqual([{ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true }]);
   });
 
@@ -93,6 +102,28 @@ describe("host", () => {
     expect(commands.filter((command) => command[0] === "npm")).toEqual([
       ["npm", "install", "--prefix", ".local/share/rowbly/versions/0.18.0", "--no-save", "--omit=dev", "rowbly@0.18.0"],
     ]);
+    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true }]);
+  });
+
+  it("gives the check after the install, and records the host when items fail", async () => {
+    const answers = healthyAnswers();
+    const transport = createFakeHostTransport({
+      bytes: (command) =>
+        command[0] === "gh"
+          ? { exitCode: 1, bytes: Buffer.alloc(0), stderr: "not logged in" }
+          : answerFor(answers, command),
+    });
+    const deps: AddHostDeps = { transportFor: () => transport, build: async () => BUILD, localAhead: async () => 0 };
+
+    const host = await add(mini, p.ctx, deps);
+
+    expect(host.check.ready).toBe(false);
+    expect(host.check.items.map((item) => item.id)).toHaveLength(13);
+    expect(host.check.items.find((item) => item.id === "gh")).toMatchObject({
+      state: "fail",
+      action: "Run gh auth login on the host.",
+    });
+    expect(transport.uploads).toEqual([]);
     expect((await stored()).hosts).toEqual([{ ...mini, enabled: true }]);
   });
 

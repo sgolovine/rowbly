@@ -288,13 +288,15 @@ A worker host is a remote machine that runs factory workers only. The hosts belo
 a Project. Rowbly keeps them in the `hosts` key of `~/.rowblyrc.json`. Only `host use` and `host unuse`
 need a Project.
 
-| Command                                                  | JSON result     |
-| -------------------------------------------------------- | --------------- |
-| `rowbly host list`                                       | Array of Host   |
-| `rowbly host add <id> --ssh <target> --max-workers <n>`  | Host, `install` |
-| `rowbly host remove <id> [--purge]`                      | Host, `purge`   |
-| `rowbly host use <id> [--path <dir>]`                    | Clone record    |
-| `rowbly host unuse <id>`                                 | Clone record    |
+| Command                                                 | JSON result              |
+| ------------------------------------------------------- | ------------------------ |
+| `rowbly host list`                                      | Array of Host            |
+| `rowbly host add <id> --ssh <target> --max-workers <n>` | Host, `install`, `check` |
+| `rowbly host check <id>`                                | `{ host, ready, items }` |
+| `rowbly host login <id>`                                | None; terminal only      |
+| `rowbly host remove <id> [--purge]`                     | Host, `purge`            |
+| `rowbly host use <id> [--path <dir>]`                   | Clone record             |
+| `rowbly host unuse <id>`                                | Clone record             |
 
 A Host record has this shape:
 
@@ -313,6 +315,14 @@ A Host record has this shape:
   `HOST_NODE_MISSING`. An old Node gives `HOST_NODE_TOO_OLD`. A failed install gives
   `HOST_INSTALL_FAILED`. Then the host is not recorded. The `install` object has `state`, `buildId`,
   `localVersion`, `remoteVersion`, `remoteExecutable`, `installed`, `nodeVersion` and `stderr`.
+- **Check.** `host check` shows if the host is ready. Each item is `{ id, label, state, detail, action? }`.
+  `state` is `ok`, `warning`, `fail` or `skipped`. A `fail` item has an action for the user on the host.
+  `ready` is `true` only when no item is `fail`. The exit code is 0 also when items fail. The items are
+  `ssh`, `linux`, `flock`, `git`, `node`, `rowbly`, `pi-login`, `models`, `clone`, `git-push`, `gh`,
+  `git-identity` and `local-ahead`. `host add` runs the check after the install and gives it in `check`.
+  The check does not install, log in or clone.
+- **Login.** `host login` runs `ssh -t <target> <remote rowbly> auth login`. It must run in a terminal.
+  With `--json`, or without a terminal, it gives `VALIDATION`.
 - **Removal.** `host remove` gives `CONFLICT` while a known Project has a `pending` or `running` Thread
   on the host. `--purge` does no work at this time.
 - **Use.** `host use` turns the host on for the current Project. Without `--path`, it clones the local

@@ -43,7 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `list`, `remove`, `use`, `unuse`, hidden `blob`: the worker hosts.   |
+| `host/`                                                | `host add`, `check`, `login`, `list`, `remove`, `use`, `unuse`, hidden commands. |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -138,7 +138,16 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   the host at the end of the list. A new host is on (`enabled: true`). The result is the host with an
   `install` object. See [host-install.md](native-factory/host-install.md). If the Node check or the
   install fails, `host add` gives `HOST_NODE_MISSING`, `HOST_NODE_TOO_OLD` or `HOST_INSTALL_FAILED`,
-  and `~/.rowblyrc.json` does not change.
+  and `~/.rowblyrc.json` does not change. After the install, `host add` runs the host check and gives
+  it in the `check` key. The text output lists the `fail` and `warning` items with their actions. A
+  failed item does not make `host add` fail.
+- `host check <id>` shows if the host is ready. With `--json`, the result is `{ host, ready, items }`.
+  The text output has one line for each item with its state, and the action of each `fail` or
+  `warning` item. The exit code is 0 also when items fail. An unknown id gives `NOT_FOUND`. See
+  [host-check.md](native-factory/host-check.md).
+- `host login <id>` runs `ssh -t <target> <remote rowbly> auth login`, so that the user logs in to Pi
+  on the host. It must run in a terminal. With `--json`, or without a terminal, it gives
+  `VALIDATION` and starts no process. The exit code is the exit code of SSH.
 - `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
   `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
 - `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or
@@ -190,6 +199,18 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
+- `host serve`, `host submit` and `host attach` are hidden. The main machine runs them on a worker
+  host over SSH. The data goes on stdin. The output is JSON. See
+  [native-factory/host-agent.md](native-factory/host-agent.md).
+  - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
+    limit and starts a detached host agent, if no live agent holds the claim. It writes
+    `{ "started": boolean, "owner": <Owner> }`.
+  - `host serve <project-id>` is the host agent itself. The detached start runs it.
+  - `host submit <project-id>` reads one command. It writes the command to a file and writes the
+    current receipt, or `null`.
+  - `host attach <project-id>` writes frames: first the hello frame, then `status` and `receipt`
+    frames. It stops at the end of stdin.
+  - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
   apply the outbox. Each command reads one JSON object on stdin and the outbox folder from
   `ROWBLY_OUTBOX`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.

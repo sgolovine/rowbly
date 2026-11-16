@@ -48,7 +48,7 @@ function filterArg(filter: ArgvFilter, arg: string): ArgvFilter {
 }
 
 /** Removes inspector and test-runner flags, and their values, so that the daemon does not inherit them. */
-function daemonExecArgv(execArgv: readonly string[]): string[] {
+export function daemonExecArgv(execArgv: readonly string[]): string[] {
   return [...execArgv.reduce(filterArg, { kept: [], skipNext: false }).kept];
 }
 
