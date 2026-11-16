@@ -1,5 +1,6 @@
 import { Box, type DOMElement, Text } from "ink";
 import { useRef, useState } from "react";
+import type { TagConfig } from "../../../../services/config/config.js";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import { useMouse, WHEEL_LINES } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
@@ -13,6 +14,8 @@ export interface StoryListProps {
   readonly rows: readonly StoryListRow[];
   /** The factory activity by Story ID. */
   readonly activity?: Readonly<Record<string, StoryActivity>>;
+  /** The tags of the project. A Story row shows the labels of its tags. */
+  readonly tags?: readonly TagConfig[];
   readonly cursor: number;
   readonly clickable: boolean;
   /** Rows available; `undefined` shows every row. */
@@ -39,6 +42,7 @@ export interface StoryListProps {
 export function StoryList({
   rows,
   activity = {},
+  tags = [],
   cursor,
   clickable,
   height,
@@ -79,6 +83,7 @@ export function StoryList({
             key={item.row.id}
             row={item.row}
             activity={item.row.kind === "story" ? activity[item.row.story.id] : undefined}
+            tags={tags}
             selected={item.index === cursor}
             clickable={clickable}
             indented={sections}
