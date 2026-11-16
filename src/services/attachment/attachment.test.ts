@@ -168,4 +168,41 @@ describe("attachments", () => {
     );
     expect((await getStory({ id: story.id }, p.ctx)).updatedAt).toBe("2025-03-03T00:00:00.000Z");
   });
+  it("adds the attachment with a given id", async () => {
+    const { story, file, dir } = await setup();
+    const id = "a00000000-0000-4000-8000-000000000001";
+
+    const added = await addAttachment({ story: story.id, file, id }, p.ctx);
+
+    expect(added.id).toBe(id);
+    expect((await readAttachments(dir)).map((record) => record.id)).toEqual([id]);
+    expect(await readFile(join(dir, `${id}.png`))).toEqual(png);
+  });
+
+  it("refuses an invalid or a used given id and writes no file", async () => {
+    const { story, file, dir } = await setup();
+    const id = "a00000000-0000-4000-8000-000000000001";
+    await addAttachment({ story: story.id, file, id }, p.ctx);
+    const before = await readdir(dir);
+    const manifest = await readFile(join(dir, "manifest.json"), "utf8");
+
+    for (const bad of ["../x", "a1", "A00000000-0000-4000-8000-000000000001"]) {
+      await expect(addAttachment({ story: story.id, file, id: bad }, p.ctx)).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
+    }
+    await expect(addAttachment({ story: story.id, file, id }, p.ctx)).rejects.toMatchObject({ code: "CONFLICT" });
+
+    expect(await readdir(dir)).toEqual(before);
+    expect(await readFile(join(dir, "manifest.json"), "utf8")).toBe(manifest);
+  });
+
+  it("refuses an invalid given id on a Story without attachments and makes no folder", async () => {
+    const { story, file, dir } = await setup();
+
+    await expect(addAttachment({ story: story.id, file, id: "bad" }, p.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    await expect(readdir(dir)).rejects.toMatchObject({ code: "ENOENT" });
+  });
 });

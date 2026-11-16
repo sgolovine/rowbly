@@ -83,9 +83,9 @@ export interface AtomicWriteOptions {
 }
 
 /** Writes the content, and syncs it to the disk when the write must be durable. */
-async function writeTemp(file: FileHandle, content: string, durable: boolean | undefined): Promise<void> {
+async function writeTemp(file: FileHandle, content: string | Uint8Array, durable: boolean | undefined): Promise<void> {
   try {
-    await file.writeFile(content, "utf8");
+    await file.writeFile(content, typeof content === "string" ? "utf8" : undefined);
 
     if (durable) {
       await file.sync();
@@ -95,8 +95,8 @@ async function writeTemp(file: FileHandle, content: string, durable: boolean | u
   }
 }
 
-/** Syncs the folder so that the rename survives a crash. */
-async function syncDirectory(parent: string): Promise<void> {
+/** Syncs the folder so that a rename or a new file in it survives a crash. */
+export async function syncDirectory(parent: string): Promise<void> {
   const directory = await open(parent, "r");
 
   try {
@@ -107,7 +107,11 @@ async function syncDirectory(parent: string): Promise<void> {
 }
 
 /** Writes a complete file through an exclusive temporary file and atomic rename. */
-export async function writeFileAtomic(path: string, content: string, options: AtomicWriteOptions = {}): Promise<void> {
+export async function writeFileAtomic(
+  path: string,
+  content: string | Uint8Array,
+  options: AtomicWriteOptions = {},
+): Promise<void> {
   const parent = dirname(path);
 
   await mkdir(parent, { recursive: true });

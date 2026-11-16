@@ -18,8 +18,11 @@ const resources = {
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
   thread: ["cancel", "resume", "steer", "log", "list", "show"],
-  host: ["add", "list", "remove"],
+  host: ["add", "list", "remove", "blob"],
 };
+
+/** The hidden actions. They do not show in the help of their resource. */
+const hidden = ["run", "watchdog", "blob"];
 
 describe("registerCommands", () => {
   const outside = useTempDir();
@@ -104,8 +107,9 @@ describe("registerCommands", () => {
         expect(result.exitCode).toBe(0);
         expect(result.stderr).toBe("");
         expect(result.stdout).toContain(`Usage: rowbly ${resource}`);
-        for (const action of actions.filter((a) => a !== "run" && a !== "watchdog"))
-          expect(result.stdout).toContain(action);
+        for (const action of actions.filter((a) => !hidden.includes(a))) expect(result.stdout).toContain(action);
+        for (const action of actions.filter((a) => hidden.includes(a)))
+          expect(result.stdout).not.toMatch(new RegExp(`^\\s+${action}\\b`, "m"));
         expect(await readdir(outside.path)).toEqual(before);
       });
     }
