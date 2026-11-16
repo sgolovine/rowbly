@@ -1,9 +1,9 @@
 ---
 title: Put worker execution behind an executor interface
-stage: IN_REVIEW
+stage: DONE
 position: 2
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T20:25:33.325Z
+updatedAt: 2026-11-16T20:26:19.526Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82
 pull_request: https://github.com/sgolovine/rowbly/pull/271
 ---
@@ -74,15 +74,3 @@ Not in scope:
 - `stop` and `cancel` are separate operations, although the local executor does the same abort for both. Reason: the Spec gives them different effects on a remote host (an abandon after a cancel while offline).
 - The executor comes through an optional `FactoryDependencies.executor`, with the `LocalExecutor` as default. Reason: this is the smallest change that lets a test give a fake and lets ROW-96 add a remote executor. It is not a production faux-provider flag, because it is a code dependency and not a user setting.
 - The manager writes all Thread changes; the executor never calls `changeThread`. Reason: the Story says that the Thread changes stay in the manager, and ROW-96 needs the same handlers for the events of a host.
-
-## Review findings
-
-The review of PR #271 found no defects in the code. All acceptance criteria are satisfied, and the CI checks `Lint and format` and `Test` passed on commit `43269419`. Local `pnpm lint`, `pnpm typecheck` and `pnpm build` passed. The earlier conflicts with the merge of ROW-83 are repaired.
-
-Blocking findings:
-
-1. The merge failed. `origin/main` now has the merge of PR #270 (ROW-85, commit `2538984b`). It conflicts with `story/ROW-82` in these files:
-   - `src/services/pi-runtime/import-boundary.test.ts`, near line 58. Both branches add an `it(...)` block after the `factory.phase` test: ROW-85 adds "imports the host transport without loading Pi" and ROW-82 adds "imports the worker executor interface without loading Pi". Fix: merge `origin/main` into `story/ROW-82` and keep both tests.
-   - `CHANGELOG.md`, the `### Pre Release` section. Fix: keep the ROW-85 entry and the ROW-82 entry.
-
-   Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, and push.
