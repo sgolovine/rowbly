@@ -2,6 +2,7 @@
 title: Load the TUI only when rowbly starts without a command
 stage: DONE
 position: 39
+uid: 12398e33-278f-499d-968c-f46a56a90385
 createdAt: 2026-11-14T21:25:51.000Z
 updatedAt: 2026-11-14T22:29:59.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-43
