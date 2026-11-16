@@ -57,6 +57,30 @@ function storyDeleted(env: EditStoryEnv, id: string): void {
   env.onDeleted(id);
 }
 
+/**
+ * Opens a Story of the dependency lists by its ID, or `undefined` when the lists do not open Stories. An ID that the
+ * Project does not have opens nothing.
+ */
+function dependencyOpener(
+  stories: readonly Story[],
+  onOpenStory: ((story: Story) => void) | undefined,
+  clickable: boolean,
+): ((id: string) => void) | undefined {
+  if (!onOpenStory || !clickable) {
+    return undefined;
+  }
+
+  return (id) => openStoryById(stories, onOpenStory, id);
+}
+
+function openStoryById(stories: readonly Story[], onOpenStory: (story: Story) => void, id: string): void {
+  const story = stories.find((s) => s.id === id);
+
+  if (story) {
+    onOpenStory(story);
+  }
+}
+
 /** The values of the form: the fields of the Story and its custom field values. */
 function initialValues(story: Story, customFields: readonly CustomField[]): FormValues {
   return {
@@ -74,7 +98,7 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
  * `Depends on` and `Blocks` lists of the saved Story. Attachments has the
  * saved PNG images. Specs appears between these tabs when the Project has Specs on, and Threads is last.
  * The form keeps pasted images until save. The Delete Button and `ctrl+d` ask before they delete the Story.
- * `esc` calls `onBack`, and the form keeps its text.
+ * `esc` calls `onBack`, and the form keeps its text. A click on an item of the dependency lists calls `onOpenStory`.
  */
 export function EditStoryForm({
   ctx,
@@ -90,6 +114,8 @@ export function EditStoryForm({
   onDeleted,
   onBack,
   onHints,
+  onOpenStory,
+  clickable = true,
 }: {
   ctx: ServiceContext;
   story: Story;
@@ -111,6 +137,10 @@ export function EditStoryForm({
   onBack(): void;
   /** The keys of the tab on the screen. */
   onHints(hints: readonly KeyHint[]): void;
+  /** A click on an item of the `Depends on` or `Blocks` list: opens that Story. */
+  onOpenStory?(story: Story): void;
+  /** The Story sidebar takes the mouse. */
+  clickable?: boolean;
 }) {
   const toast = useToast();
   const [confirming, setConfirming] = useState<StoryConfirm>(null);
@@ -144,6 +174,7 @@ export function EditStoryForm({
       confirming={confirming}
       onConfirming={setConfirming}
       onHints={onHints}
+      onOpenStory={dependencyOpener(stories, onOpenStory, clickable)}
     />
   );
 }

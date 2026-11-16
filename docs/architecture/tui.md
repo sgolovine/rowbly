@@ -415,8 +415,14 @@ functions into the data that the components show.
   service shows under the `Depends on` field, and nothing is saved.
 - **The General tab lists.** Under the form, `StoryDependencyLists` shows the saved `Depends on` and
   `Blocks` lists of the Story. Each item shows the ID, the title and the `StageBadge` of the Stage.
-  An empty list shows `none`. The lists are read-only. To change a `Blocks` item, edit the
-  `Depends on` field of the downstream Story.
+  An empty list shows `none`. A click on an item opens that Story in the Story sidebar. The click
+  uses `openThreadStory`: the Story list shows the Story and selects it, and the Story sidebar edits
+  it. If the form has unsaved changes, the discard confirmation shows first. An item under the mouse
+  shows the `selection` background. An item of an ID that the Project does not have has no title,
+  and a click on it does nothing. The items take the clicks only while the General tab has the
+  focus and no overlay or confirmation covers it. The lists are in the `ScrollBody` of the tab, thus
+  the mouse wheel and `pgup/pgdn` scroll to all items of a long list. The lists do not change the
+  dependencies. To change a `Blocks` item, edit the `Depends on` field of the downstream Story.
 - **The Story times.** Under the lists, `StoryTimeRows` shows the `Created` and `Updated` times of
   the Story, in the time zone of `display.timeZone`, or in the system time zone when the config does
   not set it. A missing time shows `—`. Settings › Display shows the time zone, and `e` edits it in a

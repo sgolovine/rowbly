@@ -48,6 +48,7 @@ export function StoryModalBody(props: StoryModalBodyProps) {
             submitRequest={body.submitRequest}
             onSubmit={(values) => submitStory(env, values)}
             onDelete={() => onConfirming("delete")}
+            onOpenStory={props.onOpenStory}
           />
         </Box>
       </LayoutContext.Provider>

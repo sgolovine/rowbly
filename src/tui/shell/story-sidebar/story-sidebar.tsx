@@ -57,7 +57,10 @@ export interface StorySidebarProps {
   onTab(step: 1 | -1): void;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
-  /** `o` or the `Open Story` Button of a Thread: the Story list shows the Story, and the Story sidebar edits it. */
+  /**
+   * `o` or the `Open Story` Button of a Thread, or a click on an item of the dependency lists of the edit form: the
+   * Story list shows the Story, and the Story sidebar edits it.
+   */
   onOpenStory(story: Story): void;
   /** The keys of the Story sidebar, for the footer. */
   onHints(hints: readonly KeyHint[]): void;
