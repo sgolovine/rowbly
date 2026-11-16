@@ -43,7 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `check`, `login`, `list`, `remove`, `use`, `unuse`, hidden `blob`.   |
+| `host/`                                                | `host add`, `check`, `login`, `list`, `remove`, `use`, `unuse`, hidden commands. |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -199,6 +199,18 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
+- `host serve`, `host submit` and `host attach` are hidden. The main machine runs them on a worker
+  host over SSH. The data goes on stdin. The output is JSON. See
+  [native-factory/host-agent.md](native-factory/host-agent.md).
+  - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
+    limit and starts a detached host agent, if no live agent holds the claim. It writes
+    `{ "started": boolean, "owner": <Owner> }`.
+  - `host serve <project-id>` is the host agent itself. The detached start runs it.
+  - `host submit <project-id>` reads one command. It writes the command to a file and writes the
+    current receipt, or `null`.
+  - `host attach <project-id>` writes frames: first the hello frame, then `status` and `receipt`
+    frames. It stops at the end of stdin.
+  - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
   apply the outbox. Each command reads one JSON object on stdin and the outbox folder from
   `ROWBLY_OUTBOX`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.
