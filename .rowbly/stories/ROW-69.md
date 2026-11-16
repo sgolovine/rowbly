@@ -1,9 +1,9 @@
 ---
 title: Organize story by stage within `stories` folder.
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 71
 createdAt: 2026-11-16T16:07:13.306Z
-updatedAt: 2026-11-16T17:07:01.038Z
+updatedAt: 2026-11-16T17:09:02.086Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-69
 pull_request: https://github.com/sgolovine/rowbly/pull/258
 ---
@@ -88,7 +88,3 @@ Not in scope:
 - The folder name is the Stage key (for example `IN_REFINEMENT`), not the label. Reason: the example of the author uses the keys, and `stages/` uses the keys.
 - The attachments stay in `attachments/<ID>/`. Reason: the author asked only about Story files, and an attachment folder does not depend on the Stage.
 - An empty Stage folder is not created for a Stage with no Stories, and an empty Stage folder is removed after the last Story moves out. Reason: Git does not keep empty folders, so empty folders give no value.
-
-## Review findings
-
-- The CHANGELOG Stage merge of `origin/main` into `story/ROW-69` has a merge conflict in `src/services/stage/stage.test.ts`. The merge was aborted. Merge `origin/main` into the branch, resolve the conflict in `src/services/stage/stage.test.ts`, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, then push.
