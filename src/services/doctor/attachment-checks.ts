@@ -8,6 +8,7 @@ import {
   readAttachments,
   writeAttachments,
 } from "../attachment-files/attachment-files.js";
+import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
@@ -34,14 +35,22 @@ function addIssue(scan: Store<OwnerScan>, issue: DoctorIssue): void {
   scan.update((state) => ({ issues: [...state.issues, issue] }));
 }
 
-/** A record without its PNG has a fix that removes only that record. */
+/** The name of an attachment file: the attachment ID and an optional extension. */
+const ATTACHMENT_FILE = /^a[0-9a-f-]{36}(\.[a-z0-9]{1,16})?$/;
+
+/** Tells whether the name is an attachment file. A temporary file of a write or of a remove is not one. */
+function isAttachmentFile(name: string): boolean {
+  return ATTACHMENT_FILE.test(name) && !name.endsWith(".removed") && !name.endsWith(".tmp");
+}
+
+/** A record without its file has a fix that removes only that record. */
 async function checkRecord(run: DoctorRun, folder: OwnerFolder, record: Attachment): Promise<void> {
   const { dir, records, scan } = folder;
-  const png = join(dir, `${record.id}.png`);
+  const path = join(dir, attachmentFileName(record));
 
-  await noSymlink(png);
+  await noSymlink(path);
 
-  if (await pathExists(png)) {
+  if (await pathExists(path)) {
     scan.update((state) => ({ kept: [...state.kept, record] }));
 
     return;
@@ -51,8 +60,8 @@ async function checkRecord(run: DoctorRun, folder: OwnerFolder, record: Attachme
     run,
     {
       severity: "error",
-      message: `Attachment ${record.name} has no PNG`,
-      file: rel(run, png),
+      message: `Attachment ${record.name} has no file`,
+      file: rel(run, path),
       fix: "Remove the missing-file reference",
     },
     () =>
@@ -77,7 +86,7 @@ async function checkManifest(run: DoctorRun, folder: OwnerFolder, file: string):
     run,
     {
       severity: "warning",
-      message: "Attachment metadata references missing PNGs",
+      message: "Attachment metadata references missing files",
       file: rel(run, file),
       fix: "Remove missing-file references",
     },
@@ -87,15 +96,18 @@ async function checkManifest(run: DoctorRun, folder: OwnerFolder, file: string):
   addIssue(folder.scan, issue);
 }
 
-/** A PNG without a record, or in the folder of a Story that does not exist, stays for recovery. */
+/** A file without a record, or in the folder of a Story that does not exist, stays for recovery. */
 async function checkOrphans(run: DoctorRun, folder: OwnerFolder, owned: boolean): Promise<void> {
   const { dir, records } = folder;
   const names = await readdir(dir);
-  const orphans = names.filter(
-    (name) => name.endsWith(".png") && (!owned || !records.some((a) => `${a.id}.png` === name)),
-  );
+  const ownedNames = new Set(owned ? records.map(attachmentFileName) : []);
+  const orphans = names.filter((name) => isAttachmentFile(name) && !ownedNames.has(name));
   const issues = orphans.map((name) =>
-    noted({ severity: "warning", message: "Orphan PNG: preserve it for recovery", file: rel(run, join(dir, name)) }),
+    noted({
+      severity: "warning",
+      message: "Orphan attachment file: preserve it for recovery",
+      file: rel(run, join(dir, name)),
+    }),
   );
 
   folder.scan.update((state) => ({ issues: [...state.issues, ...issues] }));
@@ -137,7 +149,7 @@ async function readOwners(run: DoctorRun): Promise<string[] | DoctorIssue> {
   }
 }
 
-/** Each attachment record must have its PNG. A folder that cannot be read gives one error. */
+/** Each attachment record must have its file. A folder that cannot be read gives one error. */
 export async function checkAttachments(run: DoctorRun): Promise<DoctorIssue[]> {
   const owners = await readOwners(run);
 

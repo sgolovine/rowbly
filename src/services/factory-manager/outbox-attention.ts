@@ -22,7 +22,7 @@ function valuesText(conflict: OutboxConflict): string {
 /** Gives the text of one conflict: the host, the `seq`, the path or the attachment id, and the values. */
 export function conflictText(conflict: OutboxConflict): string {
   const start = `Outbox conflict from host ${conflict.host}, seq ${conflict.seq}`;
-  const png = conflict.png ? ` The PNG is in ${conflict.png}.` : "";
+  const png = conflict.png ? ` The file is in ${conflict.png}.` : "";
 
   if (conflict.path) {
     return `${start}, ${conflict.path}: ${valuesText(conflict)}. ${conflict.reason}.`;

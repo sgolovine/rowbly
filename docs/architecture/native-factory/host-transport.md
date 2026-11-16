@@ -27,7 +27,7 @@ Each call runs a fixed remote command, for example `[<remote rowbly>, "host", "a
 
 - **Request call.** The transport sends one JSON value on stdin. It reads one JSON value from stdout.
 - **Bytes call.** The transport sends one JSON value on stdin. It gives the exact bytes of stdout, for
-  example a PNG file. Stdout must not be larger than the limit (default 10 MiB).
+  example an attachment file. Stdout must not be larger than the limit (default 10 MiB).
 - **Upload call.** The transport sends the exact bytes of a buffer on stdin, for example a package
   file. It gives the exit code and the stderr. [host-install.md](host-install.md) uses it with `dd`.
 - **Channel.** A long-lived connection. Each frame is one JSON value on one line, in the two directions.

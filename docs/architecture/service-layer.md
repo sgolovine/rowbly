@@ -123,7 +123,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `stage/`            | List, create, update, delete and get Stages and their prompts.                                       |
 | `custom-field/`     | Add, update and remove custom fields.                                                                |
 | `spec/`             | Specs and their links to Stories.                                                                    |
-| `attachment/`       | PNG attachments of a Story.                                                                          |
+| `attachment/`       | File attachments of a Story.                                                                         |
 | `doctor/`           | Compare the files with the config, and repair problems.                                              |
 | `onboarding/`       | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.                          |
 | `skill/`            | Install, list and remove the bundled skills for each harness.                                        |

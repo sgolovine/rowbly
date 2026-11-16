@@ -96,7 +96,7 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
 /**
  * The form that edits a Story in the Story sidebar. General has the Story fields with `Depends on`, and the
  * `Depends on` and `Blocks` lists of the saved Story. Attachments has the
- * saved PNG images. Specs appears between these tabs when the Project has Specs on, and Threads is last.
+ * saved attachment files. Specs appears between these tabs when the Project has Specs on, and Threads is last.
  * The form keeps pasted images until save. The Delete Button and `ctrl+d` ask before they delete the Story.
  * `esc` calls `onBack`, and the form keeps its text. A click on an item of the dependency lists calls `onOpenStory`.
  */

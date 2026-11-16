@@ -6,13 +6,15 @@ import { pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
+import { attachmentFileName, attachmentType, isMimeType } from "./attachment-type.js";
 
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 export interface Attachment {
   id: string;
   name: string;
-  type: "image/png";
+  /** The MIME type, for example `image/png` or `application/octet-stream`. */
+  type: string;
   size: number;
   createdAt: string;
 }
@@ -39,16 +41,11 @@ interface MoveProgress {
 }
 
 const ID = /^a[0-9a-f-]{36}$/;
-const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
-/** Throws a ValidationError when the bytes are larger than 10 MiB or are not a PNG image. */
-export function validatePng(bytes: Uint8Array): void {
+/** Throws a ValidationError when the bytes are larger than 10 MiB. An attachment can have any file type. */
+export function validateAttachmentBytes(bytes: Uint8Array): void {
   if (bytes.length > MAX_ATTACHMENT_BYTES) {
     throw new ValidationError("Attachment exceeds 10 MiB");
-  }
-
-  if (!PNG_SIGNATURE.every((v, i) => bytes[i] === v)) {
-    throw new ValidationError("Attachment must be a PNG image");
   }
 }
 
@@ -91,9 +88,9 @@ function isAttachment(a: unknown): a is Attachment {
     ID.test(record.id) &&
     typeof record.name === "string" &&
     isSafeName(record.name) &&
-    record.type === "image/png" &&
+    isMimeType(record.type) &&
     Number.isInteger(record.size) &&
-    (record.size as number) >= 8 &&
+    (record.size as number) >= 0 &&
     (record.size as number) <= MAX_ATTACHMENT_BYTES &&
     isCreatedAt(record.createdAt)
   );
@@ -194,7 +191,7 @@ export async function writeAttachments(dir: string, records: Attachment[]): Prom
 function prepareImage({ name, bytes }: PendingImage): PendingImage {
   const copy = new Uint8Array(bytes);
 
-  validatePng(copy);
+  validateAttachmentBytes(copy);
 
   const clean = basename(name.replaceAll("\\", "/"));
 
@@ -220,10 +217,10 @@ export function prepareImages(images: readonly PendingImage[], totalLimit = fals
 async function writeImage(
   dir: string,
   image: PendingImage,
-  record: Attachment | undefined,
+  record: Attachment,
   progress: Store<SaveProgress>,
 ): Promise<void> {
-  const path = join(dir, `${record?.id}.png`);
+  const path = join(dir, attachmentFileName(record));
   const handle = await open(path, "wx");
 
   progress.update((state) => ({ written: [...state.written, path] }));
@@ -242,7 +239,7 @@ async function writeImages(
   records: readonly Attachment[],
   progress: Store<SaveProgress>,
 ): Promise<void> {
-  await mapInOrder(images, (image, i) => writeImage(dir, image, records[i], progress));
+  await mapInOrder(images, (image, i) => writeImage(dir, image, records[i] as Attachment, progress));
 }
 
 async function rollBackSave(
@@ -300,7 +297,7 @@ export async function withAttachments<T>(
     (image, index): Attachment => ({
       id: ids[index] ?? `a${randomUUID()}`,
       name: image.name,
-      type: "image/png",
+      type: attachmentType(image.name, image.bytes),
       size: image.bytes.length,
       createdAt: now.toISOString(),
     }),

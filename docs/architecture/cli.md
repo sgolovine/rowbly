@@ -180,7 +180,7 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
   [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
 - `host blob <sha256>` is hidden. It does not show in `rowbly host --help`. The main machine runs it
-  on a worker host to get the PNG of an `attachment.add` entry. The command reads the outbox folder
+  on a worker host to get the file of an `attachment.add` entry. The command reads the outbox folder
   from `ROWBLY_OUTBOX`. It does not need `ROWBLY_THREAD_ID`. It writes the exact bytes of
   `$ROWBLY_OUTBOX/blobs/<sha256>.png` to stdout and exits with 0.
   - A value that is not 64 lowercase hex characters gives a `VALIDATION` error. A missing
@@ -196,7 +196,7 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - `host outbox` reads `{ "afterSeq": <n> }`. It gives `{ "entries": [...] }`: the complete entries
     with a `seq` greater than `afterSeq`, in `seq` order.
   - `host outbox-ack` reads `{ "seq": <n> }`. It removes the entries with a `seq` equal to or less
-    than `seq`, and each PNG that no remaining entry points to. It gives `{ "removed": <n>, "blobs":
+    than `seq`, and each file of `blobs/` that no remaining entry points to. It gives `{ "removed": <n>, "blobs":
     [<sha256>, ...] }`.
   - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.

@@ -14,7 +14,7 @@ import type { OutboxSource } from "./outbox-source.js";
 
 export type { OutboxConflict } from "./apply-state.js";
 
-/** The entries of one worker host, and the source of their PNG files. */
+/** The entries of one worker host, and the source of their attachment files. */
 export interface ApplyOutboxInput {
   /** The ID of the worker host. */
   readonly host: string;

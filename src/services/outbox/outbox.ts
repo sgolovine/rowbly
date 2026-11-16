@@ -19,21 +19,21 @@ export interface StoryWrite {
   readonly changes: readonly FieldChange[];
 }
 
-/** A new attachment of a Story, with the bytes of its PNG. */
+/** A new attachment of a Story, with the bytes of its file. */
 export interface AttachmentAddWrite {
   readonly storyId: string;
   readonly attachment: Attachment;
   readonly bytes: Uint8Array;
 }
 
-/** A removed attachment of a Story, with the lowercase hex SHA-256 of the removed PNG. */
+/** A removed attachment of a Story, with the lowercase hex SHA-256 of the removed file. */
 export interface AttachmentRemoveWrite {
   readonly storyId: string;
   readonly id: string;
   readonly sha256: string;
 }
 
-/** The body of an `attachment.add` entry. The PNG is in `blobs/<sha256>.png` of the outbox folder. */
+/** The body of an `attachment.add` entry. The file is in `blobs/<sha256>.png` of the outbox folder. */
 interface AttachmentAddBody {
   readonly storyId: string;
   readonly type: "attachment.add";
