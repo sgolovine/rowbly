@@ -2,6 +2,7 @@
 title: Add SEO metadata, the OG image and the sitemap to the website
 stage: DONE
 position: 62
+uid: 0a67f205-48c8-47c2-915b-63b040bedda4
 createdAt: 2026-11-14T23:14:06.000Z
 updatedAt: 2026-11-15T01:11:52.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-54
