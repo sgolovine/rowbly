@@ -3,8 +3,8 @@ title: Record canonical writes in an outbox
 stage: IN_REFINEMENT
 position: 9
 createdAt: 2026-11-16T19:45:06.450Z
-updatedAt: 2026-11-16T20:06:52.999Z
-worktree: null
+updatedAt: 2026-11-16T20:22:33.889Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-90
 pull_request: null
 ---
 
