@@ -9,7 +9,8 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { Store, withEntry } from "../store/store.js";
 import { agentStatus, type HostAgentPhase } from "./host-agent-claim.js";
 import { type HostReceipt, pendingCommandCount, readHostReceipt, validRequestId } from "./host-agent-control.js";
-import { type HostAgentPaths, hostAgentPaths } from "./host-agent-paths.js";
+import { type HostAgentPaths, hostAgentPaths, threadPaths } from "./host-agent-paths.js";
+import { type HostRunState, hostThreadIds, readHostRun } from "./host-run-state.js";
 import { type SlotUsage, slotUsage } from "./host-slots.js";
 
 /** The default time between two reads of the runtime folder. */
@@ -30,6 +31,12 @@ export interface ReceiptFrame {
   readonly receipt: HostReceipt;
 }
 
+/** The run state of one Thread, from `threads/<thread-id>/run.json`. */
+export interface RunFrame {
+  readonly type: "run";
+  readonly run: HostRunState;
+}
+
 export interface AttachOptions {
   readonly projectId: string;
   /** The frames of the main machine. The channel stops at the end of this stream. */
@@ -46,7 +53,14 @@ interface Channel {
   readonly paths: HostAgentPaths;
   readonly options: AttachOptions;
   readonly ended: AbortController;
-  readonly sent: Store<{ status: string; receipts: ReadonlyMap<string, string> }>;
+  readonly sent: Store<SentValues>;
+}
+
+/** The last sent values: the status frame, and the file stamp of each receipt and each run state. */
+interface SentValues {
+  readonly status: string;
+  readonly receipts: ReadonlyMap<string, string>;
+  readonly runs: ReadonlyMap<string, string>;
 }
 
 async function statusFrame(channel: Channel): Promise<StatusFrame> {
@@ -71,11 +85,36 @@ async function sendStatus(channel: Channel): Promise<void> {
   channel.sent.update(() => ({ status: key }));
 }
 
-/** The file stamp of a receipt. A receipt is read again only when its stamp changed. */
-async function receiptStamp(paths: HostAgentPaths, id: string): Promise<string> {
-  const info = await stat(join(paths.receipts, `${id}.json`)).catch(() => undefined);
+/** The stamp of a file. A file is read again only when its stamp changed. */
+async function fileStamp(path: string): Promise<string> {
+  const info = await stat(path).catch(() => undefined);
 
   return info ? `${info.mtimeMs}:${info.size}:${info.ino}` : "";
+}
+
+function receiptStamp(paths: HostAgentPaths, id: string): Promise<string> {
+  return fileStamp(join(paths.receipts, `${id}.json`));
+}
+
+/** Sends the run state of the Thread when it is new or changed. A bad file is not sent. */
+async function sendRun(channel: Channel, threadId: string): Promise<void> {
+  const stamp = await fileStamp(threadPaths(channel.paths, threadId).run);
+
+  if (stamp === "" || channel.sent.current.runs.get(threadId) === stamp) {
+    return;
+  }
+
+  const run = await readHostRun(channel.paths, threadId).catch(() => undefined);
+
+  channel.sent.update((sent) => ({ runs: withEntry(sent.runs, threadId, stamp) }));
+
+  if (run) {
+    channel.options.write(encodeFrame({ type: "run", run } satisfies RunFrame));
+  }
+}
+
+async function sendRuns(channel: Channel): Promise<void> {
+  await mapInOrder(await hostThreadIds(channel.paths), (threadId) => sendRun(channel, threadId));
 }
 
 /** Sends the receipt when it is new or changed. A corrupt receipt is not sent. */
@@ -109,6 +148,7 @@ async function sendReceipts(channel: Channel): Promise<void> {
 async function sendChanges(channel: Channel): Promise<void> {
   await sendStatus(channel);
   await sendReceipts(channel);
+  await sendRuns(channel);
 }
 
 /** Reads and drops the frames of the main machine. Later Stories add their frames. Aborts at the end of the input. */
@@ -124,7 +164,8 @@ function watchInput(input: Readable, ended: AbortController): void {
 }
 
 /**
- * Runs the `host attach` channel. It sends the hello frame, then a status frame and the receipts, then each change.
+ * Runs the `host attach` channel. It sends the hello frame, then a status frame, the receipts and the run state of
+ * each Thread, then each change.
  * It reads only the files of the runtime folder. It does not start or stop the agent. It ends at the end of input.
  */
 export async function runHostAttach(options: AttachOptions): Promise<void> {
@@ -133,7 +174,7 @@ export async function runHostAttach(options: AttachOptions): Promise<void> {
     paths,
     options,
     ended: new AbortController(),
-    sent: new Store({ status: "", receipts: new Map() }),
+    sent: new Store<SentValues>({ status: "", receipts: new Map(), runs: new Map() }),
   };
   const pollMs = options.pollMs ?? DEFAULT_ATTACH_POLL_MS;
 

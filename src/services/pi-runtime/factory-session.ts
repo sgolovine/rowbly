@@ -16,7 +16,14 @@ export interface FactorySessionOptions {
   choice?: ModelChoice;
   tools: NonNullable<CreateAgentSessionOptions["customTools"]>;
   /** The worker shell. Its bash tool rejects the commands of the `checks`. */
-  worker?: { cwd: string; root: string; shim: string; checks?: readonly CheckSpec[] };
+  worker?: {
+    cwd: string;
+    root: string;
+    shim: string;
+    checks?: readonly CheckSpec[];
+    /** Extra variables of the worker shell. */
+    env?: Readonly<Record<string, string>>;
+  };
 }
 type FactoryTools = FactorySessionOptions["tools"];
 

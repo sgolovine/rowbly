@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachmentFileName, attachmentType, isMimeType } from "./attachment-type.js";
+import { attachmentFileName, attachmentType, isAttachmentFileName, isMimeType } from "./attachment-type.js";
 
 const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1]);
 const TEXT = new TextEncoder().encode("hello");
@@ -63,5 +63,17 @@ describe("attachmentFileName", () => {
     expect(attachmentFileName({ id: ID, name: "file.tar-gz", type })).toBe(ID);
     expect(attachmentFileName({ id: ID, name: `file.${"x".repeat(17)}`, type })).toBe(ID);
     expect(attachmentFileName({ id: ID, name: "file.é", type })).toBe(ID);
+  });
+});
+
+describe("isAttachmentFileName", () => {
+  it("accepts the id alone or with one safe extension", () => {
+    for (const file of [ID, `${ID}.png`, `${ID}.pdf`]) expect(isAttachmentFileName(ID, file)).toBe(true);
+  });
+
+  it("refuses a name of a different id, a path or an unsafe extension", () => {
+    for (const file of [undefined, "", "x.png", `${ID}/a`, `${ID}..png`, `${ID}.PNG`, `../${ID}.png`, `${ID}.a/b`]) {
+      expect(isAttachmentFileName(ID, file)).toBe(false);
+    }
   });
 });

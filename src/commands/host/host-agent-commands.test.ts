@@ -19,7 +19,7 @@ interface Exit {
 }
 
 /** Runs `rowbly <args>` in a child process with the input on stdin, as SSH does on a worker host. */
-function rowbly(home: string, args: string[], input: string): Promise<Exit> {
+function rowbly(home: string, args: string[], input: string | Buffer): Promise<Exit> {
   const child = spawn(process.execPath, ["--import", tsx, join(repo, "src/cli.ts"), ...args], {
     cwd: home,
     env: { ...process.env, HOME: home },
@@ -28,6 +28,7 @@ function rowbly(home: string, args: string[], input: string): Promise<Exit> {
   const err: Buffer[] = [];
   child.stdout.on("data", (chunk: Buffer) => out.push(chunk));
   child.stderr.on("data", (chunk: Buffer) => err.push(chunk));
+  child.stdin.on("error", () => undefined);
   child.stdin.end(input);
   return new Promise((done) =>
     child.on("close", (code) =>
@@ -78,5 +79,31 @@ describe("hidden host agent commands", () => {
 
     const second = await rowbly(home.path, ["host", "serve", "--detach"], input);
     expect(JSON.parse(second.stdout)).toEqual({ started: false, owner: started.owner });
+  }, 60_000);
+
+  it("host cache-missing and host cache-put use the attachment cache, and refuse bad input with VALIDATION", async () => {
+    const png = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
+    const id = "a00000000-0000-4000-8000-000000000001";
+    const ids = JSON.stringify({ ids: [id] });
+
+    const before = await rowbly(home.path, ["host", "cache-missing", "p1"], ids);
+    expect(JSON.parse(before.stdout)).toEqual({ missing: [id] });
+
+    const put = await rowbly(home.path, ["host", "cache-put", "p1", id], png);
+    expect(JSON.parse(put.stdout)).toEqual({ id, added: true });
+
+    const after = await rowbly(home.path, ["host", "cache-missing", "p1"], ids);
+    expect(JSON.parse(after.stdout)).toEqual({ missing: [] });
+
+    const large = Buffer.concat([png, Buffer.alloc(10 * 1024 * 1024)]);
+    for (const [args, input] of [
+      [["host", "cache-put", "p1", "bad id"], png],
+      [["host", "cache-put", "p1", id], large],
+      [["host", "prepare", "p1"], "{}"],
+    ] as const) {
+      const result = await rowbly(home.path, ["--json", ...args], input);
+      expect(result.code).toBe(1);
+      expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    }
   }, 60_000);
 });

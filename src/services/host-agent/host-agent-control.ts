@@ -4,21 +4,24 @@ import { join } from "node:path";
 import { RowblyError, ValidationError } from "../errors/errors.js";
 import { syncDirectory, writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
-import { type HostAgentPaths, prepareAgentDirs } from "./host-agent-paths.js";
+import { type HostAgentPaths, prepareAgentDirs, validRequestId } from "./host-agent-paths.js";
 
-/** The kinds of command that the host agent runs. */
-export type HostCommandType = "launch" | "stop";
+/** The kinds of command that the host agent runs. `stop` stops the full agent. */
+export type HostCommandType = "launch" | "resume" | "stop-thread" | "cancel-thread" | "stop";
 
-const COMMAND_TYPES: readonly string[] = ["launch", "stop"];
+const COMMAND_TYPES: readonly string[] = ["launch", "resume", "stop-thread", "cancel-thread", "stop"];
+
+/** The command types that act on one Thread. Each needs a `threadId`. */
+const THREAD_COMMANDS: readonly string[] = ["launch", "resume", "stop-thread", "cancel-thread"];
 
 /** A durable command from the main machine. The main machine makes the id. */
 export interface HostCommand {
   readonly version: 1;
   readonly id: string;
   readonly type: HostCommandType;
-  /** The Thread of a `launch`. */
+  /** The Thread of a `launch`, `resume`, `stop-thread` or `cancel-thread`. */
   readonly threadId?: string;
-  /** The free data of a `launch`. ROW-92 defines it. */
+  /** Free data of a `launch`. The runner reads its data from the prepare step, not from the payload. */
   readonly payload?: Record<string, unknown>;
 }
 
@@ -41,10 +44,7 @@ interface LoadedCommand {
   readonly failure?: { readonly error: unknown };
 }
 
-/** True for a request id or a Thread id: `[A-Za-z0-9_-]{1,128}`. */
-export function validRequestId(id: unknown): id is string {
-  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(id);
-}
+export { validRequestId } from "./host-agent-paths.js";
 
 function receiptPath(paths: HostAgentPaths, id: string): string {
   return join(paths.receipts, `${id}.json`);
@@ -192,8 +192,12 @@ function acceptedCommand(loaded: LoadedCommand, id: string): HostCommand {
     throw new ValidationError("Invalid host command");
   }
 
-  if (command.type === "launch" && (!validRequestId(command.threadId) || !validPayload(command.payload))) {
-    throw new ValidationError("A launch needs a valid threadId and an object payload");
+  if (THREAD_COMMANDS.includes(command.type as string) && !validRequestId(command.threadId)) {
+    throw new ValidationError(`A ${command.type} command needs a valid threadId`);
+  }
+
+  if (!validPayload(command.payload)) {
+    throw new ValidationError("The payload of a command must be an object");
   }
 
   return command as HostCommand;

@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { type FileHandle, open, readFile, rename, rm } from "node:fs/promises";
+import { type FileHandle, open, readFile, rename, rm, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import {
@@ -15,7 +15,7 @@ import {
   writeAttachments,
 } from "../attachment-files/attachment-files.js";
 import { attachmentFileName } from "../attachment-files/attachment-type.js";
-import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
+import { type ClipboardImageType, clipboardFailure, readClipboard } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { recordAttachmentAdd, recordAttachmentRemove, sha256Hex } from "../outbox/outbox.js";
 import { getStory, touchStory } from "../story/story.js";
@@ -33,11 +33,18 @@ interface AddAttachmentInput {
   id?: string;
 }
 
-/** Gives the file name of a clipboard image, from the UTC date and minute. */
-export function clipboardName(now: Date): string {
+const CLIPBOARD_EXTENSIONS: Readonly<Record<ClipboardImageType, string>> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+};
+
+/** Gives the file name of a clipboard image, from the UTC date and minute and the image type. */
+export function clipboardName(now: Date, type: ClipboardImageType = "image/png"): string {
   const iso = now.toISOString();
 
-  return `image-${iso.slice(0, 10).replaceAll("-", "")}-${iso.slice(11, 16).replace(":", "")}.png`;
+  return `image-${iso.slice(0, 10).replaceAll("-", "")}-${iso.slice(11, 16).replace(":", "")}${CLIPBOARD_EXTENSIONS[type]}`;
 }
 
 async function directory(story: string, ctx: ServiceContext): Promise<string> {
@@ -94,20 +101,42 @@ async function readAttachmentFile(file: string, ctx: ServiceContext = {}): Promi
   }
 }
 
-/** Gives the file of the one source that the input names. The clipboard gives a PNG image only. */
+/** Reads a file that the user copied. A path that is not a regular file fails before the read. */
+async function readClipboardFile(path: string, ctx: ServiceContext): Promise<PendingImage> {
+  const stats = await stat(path).catch(() => {
+    throw new NotFoundError(`Cannot read file: ${path}`);
+  });
+
+  if (!stats.isFile()) {
+    throw new ValidationError("The clipboard file is not a regular file");
+  }
+
+  return readAttachmentFile(path, ctx);
+}
+
+/** Gives the attachment on the clipboard: a copied file with its name, or an image with a name from the time. */
+export async function readClipboardAttachment(ctx: ServiceContext = {}, story?: string): Promise<PendingImage> {
+  const result = await readClipboard();
+
+  if ("reason" in result) {
+    throw clipboardFailure(result.reason, story);
+  }
+
+  if (result.kind === "file") {
+    return readClipboardFile(result.path, ctx);
+  }
+
+  return { name: clipboardName(ctx.now?.() ?? new Date(), result.type), bytes: result.bytes };
+}
+
+/** Gives the file of the one source that the input names. */
 async function sourceImage(input: AddAttachmentInput, ctx: ServiceContext): Promise<PendingImage> {
   if (input.file !== undefined) {
     return readAttachmentFile(input.file, ctx);
   }
 
   if (input.fromClipboard) {
-    const result = await readClipboardImage();
-
-    if ("reason" in result) {
-      throw clipboardFailure(result.reason, input.story);
-    }
-
-    return { name: clipboardName(ctx.now?.() ?? new Date()), bytes: result.bytes };
+    return readClipboardAttachment(ctx, input.story);
   }
 
   return input.image as PendingImage;
