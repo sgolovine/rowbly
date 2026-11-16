@@ -129,6 +129,9 @@ describe("Pi import boundary", () => {
     await expect(import("../host-project/local-origin.js")).resolves.toHaveProperty("localOrigin");
     await expect(import("../host-project/host-project-errors.js")).resolves.toHaveProperty("HostGitAccessError");
     await expect(import("../host/host-threads.js")).resolves.toHaveProperty("activeThreadsIn");
+    await expect(import("../host-project/host-rows.js")).resolves.toHaveProperty("hostRows");
+    await expect(import("../host/host-last-check.js")).resolves.toHaveProperty("recordLastCheck");
+    await expect(import("../host/host.js")).resolves.toHaveProperty("updateHost");
   });
 
   it("imports the TUI without loading Pi", async () => {

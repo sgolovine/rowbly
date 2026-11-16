@@ -38,14 +38,14 @@ src/tui/
 
 The screen areas in `screens/` are:
 
-| Area          | Contents                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads, Models).   |
-| `stages/`     | The Stage form modal.                                                                                                                            |
-| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                     |
-| `settings/`   | The Settings modal and its sections, the Prompts section, the AI section, the Git section, the model picker and the list of Stage worker models. |
-| `factory/`    | The Factory controls modal and the factory status helpers.                                                                                       |
-| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                             |
+| Area          | Contents                                                                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stories/`    | The Story list and rows, the new and edit Story forms of the Story sidebar, and the Story tabs (General, Specs, Attachments, Threads, Models).                      |
+| `stages/`     | The Stage form modal.                                                                                                                                               |
+| `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                                        |
+| `settings/`   | The Settings modal and its sections, the Prompts section, the AI section, the Git section, the Hosts section, the model picker and the list of Stage worker models. |
+| `factory/`    | The Factory controls modal and the factory status helpers.                                                                                                          |
+| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                                                |
 
 ## The Factory controls
 
@@ -98,6 +98,48 @@ shows the default.
 
 The section calls `configureGit` of the `factory-settings` service. The `rowbly factory configure`
 command uses the same Git rules. The section does not load Pi or `agent-auth`.
+
+## The Hosts section of Settings
+
+The Factory group of Settings has a Hosts section under the Git section (`HostsSection` in
+`src/tui/screens/settings/hosts-section/`). The section shows the placement of new workers and the
+worker hosts of the user.
+
+- The placement card at the top shows the `placement` value of the factory settings. A config
+  without the `placement` key shows `prefer-local`. `p` opens a `FormModal` with the policies of
+  `PLACEMENT_POLICIES`: `prefer-local`, `most-free` and `prefer-remote`. The section calls
+  `updateFactorySettings({ placement })`.
+- The list shows the hosts of `~/.rowblyrc.json`, in the order of the file. Each row shows the id,
+  the SSH target, the worker limit, the switch for this Project, the switch for all Projects
+  (`enabled`) and the last check. Before the first check, the row shows `not checked`.
+- Without hosts, the section shows the command that adds a host:
+  `rowbly host add <id> --ssh <target> --max-workers <n>`. The TUI does not add, remove or log in to
+  a host. Use the CLI for these operations.
+- A box under the list has the controls of the selected host. Each control has a key, and the
+  mouse can also click it.
+
+| Key   | Operation on the selected host                                            |
+| ----- | ------------------------------------------------------------------------- |
+| `↑/↓` | Select a host.                                                            |
+| `u`   | Turn the host on or off for this Project (`useHost` or `unuseHost`).      |
+| `e`   | Turn the host on or off for all Projects (`updateHost` with `enabled`).   |
+| `w`   | Open a `FormModal` for the worker limit (`updateHost` with `maxWorkers`). |
+| `c`   | Run the check (`checkHost`).                                              |
+
+- `u` on a host that the Project does not use clones the Project into the managed folder on the
+  host. The TUI does not use `--path`. The clone can take minutes. While it runs, the row shows a
+  spinner, and the keys of the section stay available. Only one remote operation runs at a time.
+- An error, for example `HOST_GIT_ACCESS`, or `CONFLICT` for an active Thread, shows its message and
+  its hint in a toast. The list does not change.
+- `c` runs the check with a spinner in the row. Then the section shows each item under the list,
+  with its state, its detail and, for a `fail` or `warning` item, its action. The row shows the new
+  last check.
+- An incorrect worker limit shows the `VALIDATION` message under the field, and the file does not
+  change.
+
+The section gets its rows from `hostRows` of the `host-project` service. It calls only the `host`,
+`host-project`, `host-check` and `factory-settings` services. When Settings or the section opens, the
+section reads only local files. Only `u` and `c` open SSH. The section does not load Pi.
 
 ## The Stage sections
 

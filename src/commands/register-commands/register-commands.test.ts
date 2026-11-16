@@ -23,6 +23,7 @@ const resources = {
     "check",
     "login",
     "list",
+    "update",
     "remove",
     "use",
     "unuse",

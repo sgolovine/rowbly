@@ -1,6 +1,6 @@
 ---
 title: Run remote workers in the host agent
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 11
 dependsOn:
   - ROW-82
@@ -9,9 +9,9 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:07.547Z
-updatedAt: 2026-11-16T21:54:27.984Z
+updatedAt: 2026-11-16T22:26:20.482Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-92
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/285
 ---
 
 ## Goal

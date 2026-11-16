@@ -1,7 +1,7 @@
 import { ValidationError } from "../errors/errors.js";
 
 /** The placement policies of the manager, in the order of the documentation. */
-const PLACEMENT_POLICIES = ["prefer-local", "most-free", "prefer-remote"] as const;
+export const PLACEMENT_POLICIES = ["prefer-local", "most-free", "prefer-remote"] as const;
 
 /** How the manager selects the machine of a new worker. */
 export type PlacementPolicy = (typeof PLACEMENT_POLICIES)[number];

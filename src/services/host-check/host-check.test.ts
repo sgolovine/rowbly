@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
@@ -337,7 +337,82 @@ describe("host check", () => {
     expect(targets).toEqual(["u@mini"]);
     await expect(checkHost({ id: "other" }, p.ctx, deps)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
+
+  const rcFile = () => join(p.ctx.home as string, RC_FILE);
+  const project = { root: "/work/rowbly", path: CLONE, managed: true };
+  const hostDeps = (overrides: FakeHostAnswers = {}): HostCheckDeps => ({
+    ...withClone,
+    transportFor: () => fakeHost(overrides).transport,
+    build: async () => BUILD,
+  });
+
+  it("records the lastCheck of the host after the check and keeps all other keys", async () => {
+    const now = new Date("2026-11-16T10:00:00.000Z");
+    const file = {
+      theme: "dark",
+      hosts: [
+        { id: "mini", ssh: "u@mini", maxWorkers: 2, enabled: false, projects: [project], note: "kept" },
+        { id: "box", ssh: "box", maxWorkers: 1, enabled: true },
+      ],
+    };
+    await writeFile(rcFile(), JSON.stringify(file));
+
+    const check = await checkHost({ id: "mini" }, { ...p.ctx, now: () => now }, hostDeps({ gh: output(1, "", "no") }));
+
+    const failed = check.items.filter((entry) => entry.state === "fail").map((entry) => entry.id);
+    expect(failed).toContain("gh");
+    expect(JSON.parse(await readFile(rcFile(), "utf8"))).toEqual({
+      ...file,
+      hosts: [{ ...file.hosts[0], lastCheck: { at: "2026-11-16T10:00:00.000Z", ready: false, failed } }, file.hosts[1]],
+    });
+  });
+
+  it("replaces the lastCheck at the next check", async () => {
+    const old = { at: "2020-01-01T00:00:00.000Z", ready: false, failed: ["gh"] };
+    await writeFile(
+      rcFile(),
+      JSON.stringify({ hosts: [{ id: "mini", ssh: "u@mini", maxWorkers: 1, enabled: true, lastCheck: old }] }),
+    );
+    await useWorkerModelFor(p.ctx);
+
+    const check = await checkHost({ id: "mini" }, p.ctx, hostDeps());
+
+    expect(check.ready).toBe(true);
+    const stored = JSON.parse(await readFile(rcFile(), "utf8"));
+    expect(stored.hosts[0].lastCheck).toEqual({ at: expect.any(String), ready: true, failed: [] });
+    expect(stored.hosts[0].lastCheck.at).not.toBe(old.at);
+  });
+
+  it("does not write and does not fail when the host was removed during the check", async () => {
+    await writeFile(rcFile(), JSON.stringify({ hosts: [{ id: "mini", ssh: "u@mini", maxWorkers: 1, enabled: true }] }));
+    const deps: HostCheckDeps = {
+      ...hostDeps(),
+      cloneFor: async () => {
+        await writeFile(rcFile(), JSON.stringify({ hosts: [] }));
+        return CLONE;
+      },
+    };
+
+    await expect(checkHost({ id: "mini" }, p.ctx, deps)).resolves.toMatchObject({ host: "mini" });
+    expect(await readFile(rcFile(), "utf8")).toBe(JSON.stringify({ hosts: [] }));
+  });
+
+  it("gives VALIDATION for a host with an invalid lastCheck and keeps the bytes", async () => {
+    const text = JSON.stringify({
+      hosts: [
+        { id: "mini", ssh: "u@mini", maxWorkers: 1, enabled: true, lastCheck: { at: 1, ready: true, failed: [] } },
+      ],
+    });
+    await writeFile(rcFile(), text);
+
+    await expect(checkHost({ id: "mini" }, p.ctx, hostDeps())).rejects.toMatchObject({ code: "VALIDATION" });
+    expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
 });
+
+function useWorkerModelFor(ctx: Parameters<typeof updateFactorySettings>[1]) {
+  return updateFactorySettings({ workerModel: { provider: "anthropic", modelId: "claude-opus-4-5" } }, ctx);
+}
 
 describe("quick host check", () => {
   const quick = (overrides: FakeHostAnswers = {}, failOn?: { key: string; error: Error }) => {

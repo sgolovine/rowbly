@@ -10,7 +10,7 @@ import { useTestProject } from "../test-project/test-project.js";
 import { createThread, transitionThread } from "../thread/thread.js";
 import type { ThreadStatus } from "../thread/thread-types.js";
 import { RC_FILE } from "../user-rc/user-rc.js";
-import { type AddHostDeps, addHost, type HostInput, listHosts, removeHost } from "./host.js";
+import { type AddHostDeps, addHost, type HostInput, listHosts, removeHost, updateHost } from "./host.js";
 
 const BUILD: LocalBuild = { id: "0.18.0", version: "0.18.0", released: true };
 
@@ -57,6 +57,7 @@ describe("host", () => {
   const rcFile = () => join(p.ctx.home as string, RC_FILE);
   const stored = async () => JSON.parse(await readFile(rcFile(), "utf8"));
   const mini = { id: "mini", ssh: "user@mini.lan", maxWorkers: 2 };
+  const checked = (ready: boolean, failed: string[] = []) => ({ at: expect.any(String), ready, failed });
 
   const add = (input: HostInput, ctx = p.ctx, deps: AddHostDeps = fakeDeps().deps) => addHost(input, ctx, deps);
 
@@ -90,7 +91,9 @@ describe("host", () => {
     expect(targets).toEqual(["user@mini.lan"]);
     expect(commands.slice(0, 2).map((command) => command[0])).toEqual(["node", host.install.remoteExecutable]);
     expect(commands.slice(2).some((command) => command[0] === "npm")).toBe(false);
-    expect((await stored()).hosts).toEqual([{ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true }]);
+    expect((await stored()).hosts).toEqual([
+      { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true, lastCheck: checked(true) },
+    ]);
   });
 
   it("installs the build on a host without Rowbly before it records the host", async () => {
@@ -102,7 +105,7 @@ describe("host", () => {
     expect(commands.filter((command) => command[0] === "npm")).toEqual([
       ["npm", "install", "--prefix", ".local/share/rowbly/versions/0.18.0", "--no-save", "--omit=dev", "rowbly@0.18.0"],
     ]);
-    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true }]);
+    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true, lastCheck: checked(true) }]);
   });
 
   it("gives the check after the install, and records the host when items fail", async () => {
@@ -124,7 +127,7 @@ describe("host", () => {
       action: "Run gh auth login on the host.",
     });
     expect(transport.uploads).toEqual([]);
-    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true }]);
+    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true, lastCheck: checked(false, ["clone", "gh"]) }]);
   });
 
   it.each([
@@ -179,7 +182,7 @@ describe("host", () => {
       projects: [{ path: "/a", name: "A" }],
       hosts: [
         { id: "old", ssh: "o", maxWorkers: 1, enabled: false, later: "kept" },
-        { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true },
+        { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true, lastCheck: checked(true) },
       ],
     });
     expect(await listHosts(p.ctx)).toEqual([
@@ -192,7 +195,7 @@ describe("host", () => {
     expect(await stored()).toEqual({
       deviceId: "device",
       projects: [{ path: "/a", name: "A" }],
-      hosts: [{ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true }],
+      hosts: [{ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true, lastCheck: checked(true) }],
     });
   });
 
@@ -293,12 +296,93 @@ describe("host", () => {
       "a host with a field of the wrong type",
       JSON.stringify({ hosts: [{ id: "mini", ssh: "u@h", maxWorkers: "1", enabled: true }] }),
     ],
+    [
+      "a host with a lastCheck that is not an object",
+      JSON.stringify({ hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true, lastCheck: "yes" }] }),
+    ],
+    [
+      "a host with a lastCheck without failed IDs",
+      JSON.stringify({
+        hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true, lastCheck: { at: "x", ready: true } }],
+      }),
+    ],
   ])("fails each command with VALIDATION for %s and keeps the bytes", async (_name, text) => {
     await writeFile(rcFile(), text);
 
     expect(await errorCode(listHosts(p.ctx))).toBe("VALIDATION");
     expect(await errorCode(add(mini, p.ctx))).toBe("VALIDATION");
     expect(await errorCode(removeHost({ id: "mini" }, p.ctx))).toBe("VALIDATION");
+    expect(await errorCode(updateHost({ id: "mini", maxWorkers: 3 }, p.ctx))).toBe("VALIDATION");
     expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
+
+  describe("updateHost", () => {
+    const lastCheck = { at: "2026-11-16T10:00:00.000Z", ready: false, failed: ["gh"] };
+    const project = { root: "/work/rowbly", path: ".local/share/rowbly/projects/rowbly", managed: true };
+    const fileWithHost = () => ({
+      projects: [{ path: "/work/rowbly" }],
+      theme: "dark",
+      hosts: [
+        { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true, projects: [project], lastCheck, note: "x" },
+        { id: "box", ssh: "box", maxWorkers: 1, enabled: true },
+      ],
+    });
+
+    it("writes a new worker limit and keeps the other keys of the entry and the file", async () => {
+      await writeFile(rcFile(), JSON.stringify(fileWithHost()));
+
+      const host = await updateHost({ id: "mini", maxWorkers: 3 }, p.ctx);
+
+      expect(host).toEqual({ id: "mini", ssh: "user@mini.lan", maxWorkers: 3, enabled: true });
+      const expected = fileWithHost();
+      expect(await stored()).toEqual({
+        ...expected,
+        hosts: [{ ...expected.hosts[0], maxWorkers: 3 }, expected.hosts[1]],
+      });
+    });
+
+    it("writes enabled false and true", async () => {
+      await writeFile(rcFile(), JSON.stringify(fileWithHost()));
+
+      expect(await updateHost({ id: "mini", enabled: false }, p.ctx)).toMatchObject({ enabled: false });
+      expect((await stored()).hosts[0]).toMatchObject({
+        enabled: false,
+        maxWorkers: 2,
+        lastCheck,
+        projects: [project],
+      });
+      expect(await updateHost({ id: "mini", enabled: true, maxWorkers: 4 }, p.ctx)).toMatchObject({
+        enabled: true,
+        maxWorkers: 4,
+      });
+    });
+
+    it.each([
+      ["a worker limit of 0", { maxWorkers: 0 }],
+      ["a worker limit that is not an integer", { maxWorkers: 1.5 }],
+      ["a worker limit that is not a number", { maxWorkers: Number.NaN }],
+      ["no change", {}],
+    ])("gives VALIDATION for %s and keeps the bytes", async (_name, change) => {
+      const text = JSON.stringify(fileWithHost());
+      await writeFile(rcFile(), text);
+
+      expect(await errorCode(updateHost({ id: "mini", ...change }, p.ctx))).toBe("VALIDATION");
+      expect(await readFile(rcFile(), "utf8")).toBe(text);
+    });
+
+    it("gives NOT_FOUND for an unknown ID", async () => {
+      await writeFile(rcFile(), JSON.stringify(fileWithHost()));
+
+      expect(await errorCode(updateHost({ id: "gone", maxWorkers: 3 }, p.ctx))).toBe("NOT_FOUND");
+    });
+
+    it("keeps the shape of listHosts with a lastCheck in the file", async () => {
+      await writeFile(rcFile(), JSON.stringify(fileWithHost()));
+
+      expect(await listHosts(p.ctx)).toEqual([
+        { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true },
+        { id: "box", ssh: "box", maxWorkers: 1, enabled: true },
+      ]);
+    });
   });
 });
