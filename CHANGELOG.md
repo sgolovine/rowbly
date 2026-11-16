@@ -21,6 +21,7 @@ This file records the changes to Rowbly that users can see.
 - Fixed: When two different Stories (different `uid`) have the same Story ID, `rowbly doctor --fix` and the TUI board load now give the newer Story a new number also when the two Stories have factory state. The re-numbered Story keeps its worktree, branch, attempts, Threads and attachments, and `rowbly doctor --fix` lists the references that stay with the Story that keeps the ID. (ROW-115)
 - Added: `rowbly factory run` now sends workers to the worker hosts in `~/.rowblyrc.json` that are on and that use the Project. The factory checks each host in the background, installs the same Rowbly version on the host when it is different, and does not send new workers to a host that is not ready. (ROW-116)
 - Added: The new `rowbly get-attachment <story> <id>` command shows an attachment and the absolute path of its file. On a worker host, it gets a file that is not on the host from the main machine through `rowbly host attach`, and gives `CONFLICT` with the reason when the host is offline or the main machine cannot send the file. (ROW-110)
+- Fixed: When a worker host disconnects while the factory runs, its remote Threads keep their status, and the factory sends no new workers to the host. A stop or cancel of a remote Thread waits in `.rowbly/runtime/hosts/<host>/commands.json` until the host reconnects, `rowbly factory stop` also stops the workers on the worker hosts, and the new hidden `rowbly host ping` command shows that a host is alive. (ROW-97)
 
 ### 0.19.0
 
