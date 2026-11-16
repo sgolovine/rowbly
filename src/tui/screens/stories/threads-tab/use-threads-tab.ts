@@ -62,6 +62,8 @@ export interface ThreadsTabState {
   readonly confirm: ThreadRecord | null;
   readonly listing: boolean;
   readonly viewing: boolean;
+  /** The steering input of the thread region takes the keys. */
+  readonly steering: boolean;
   readonly waiting: FactoryQueueEntry | undefined;
   /** The provider pauses of the factory status, for the network reason of the queue note. */
   readonly providers: FactoryStatus["providers"];
@@ -171,11 +173,22 @@ function useParentReports(props: ThreadsTabProps, data: ThreadsData | undefined,
   }, [viewing, onEditing]);
 }
 
-/** Goes back to the list when the selected thread goes away. */
+/** The focus after a change of the selected thread: the list without a thread, the thread when it stops running. */
+function resetFocus(current: ThreadRecord | undefined, focus: Focus): Focus {
+  if (!current) {
+    return "list";
+  }
+
+  return focus === "steer" && current.status !== "running" ? "thread" : focus;
+}
+
+/** Goes back to the list when the selected thread goes away, and leaves the input when the thread stops running. */
 function useFocusReset(current: ThreadRecord | undefined, focus: Focus, setFocus: (focus: Focus) => void): void {
   useEffect(() => {
-    if (!current && focus === "thread") {
-      setFocus("list");
+    const next = resetFocus(current, focus);
+
+    if (next !== focus) {
+      setFocus(next);
     }
   }, [current, focus, setFocus]);
 }
@@ -183,6 +196,21 @@ function useFocusReset(current: ThreadRecord | undefined, focus: Focus, setFocus
 /** Gives the keys of the tab to the parent. While the full-screen view is open, the tab has no keys. */
 function useTabHints(onHints: (hints: readonly KeyHint[]) => void, input: HintsInput, fullOpen: boolean): void {
   useReportHints(onHints, threadsHints({ ...input, keysOwn: input.keysOwn && !fullOpen }));
+}
+
+/**
+ * The keys of the list and the thread region. `esc` in the thread region gives the focus back to the list. While the
+ * steering input has the focus, the thread region takes no keys.
+ */
+function useTabKeys(
+  env: ThreadsTabEnv,
+  { viewing, steering, listing }: { readonly viewing: boolean; readonly steering: boolean; readonly listing: boolean },
+): void {
+  const regionKeys = viewing && !steering;
+
+  useEscape(regionKeys, () => env.setFocus("list"));
+  useInput((input, key) => handleThreadKey(env, input, key), { isActive: regionKeys });
+  useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
 }
 
 /** The conversation of the selected thread over the whole terminal. */
@@ -222,7 +250,8 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const now = useNow(selected, running);
   const conversation = selected && current !== undefined && shownId === current.id;
   const full = useThreadFullScreen(props, current);
-  const viewing = keysOwn && focus === "thread" && !full.isOpen;
+  const viewing = keysOwn && focus !== "list" && !full.isOpen;
+  const steering = viewing && focus === "steer";
 
   const env: ThreadsTabEnv = {
     ctx,
@@ -241,10 +270,8 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
 
   useParentReports(props, data.data, viewing || full.isOpen);
   useFocusReset(current, focus, setFocus);
-  useEscape(viewing, () => setFocus("list"));
-  useInput((input, key) => handleThreadKey(env, input, key), { isActive: viewing });
-  useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
-  useTabHints(onHints, { keysOwn, viewing, current, count: threads.length, conversation }, full.isOpen);
+  useTabKeys(env, { viewing, steering, listing });
+  useTabHints(onHints, { keysOwn, viewing, steering, current, count: threads.length, conversation }, full.isOpen);
 
   return {
     env,
@@ -256,6 +283,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     confirm,
     listing,
     viewing,
+    steering,
     waiting: queueEntry(status, storyId),
     providers: status?.providers,
     now,

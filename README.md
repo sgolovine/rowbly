@@ -155,6 +155,7 @@ rowbly thread show <id>
 rowbly thread log <id> --tail 20
 rowbly thread cancel <id>
 rowbly thread resume <id>
+rowbly thread steer <id> --message "Use the new API"
 ```
 
 `thread log` has a maximum of 100 entries. Metadata lists do not load transcripts.
