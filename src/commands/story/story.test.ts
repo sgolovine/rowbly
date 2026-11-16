@@ -199,7 +199,7 @@ describe("story commands", () => {
       await seed(1);
       await cli("story", "create", "--title", "Two", "--depends-on", "ROW-01");
       expect((await cli("story", "update", "ROW-02", "--depends-on", "")).exitCode).toBe(0);
-      expect((await project.read("stories/ROW-02.md")).replace(/^(createdAt|updatedAt): .*\n/gm, "")).toBe(
+      expect((await project.read("stories/BACKLOG/ROW-02.md")).replace(/^(createdAt|updatedAt): .*\n/gm, "")).toBe(
         "---\ntitle: Two\nstage: BACKLOG\n---\n\n",
       );
     });
@@ -207,7 +207,7 @@ describe("story commands", () => {
     it("gives exit 1 and the details of a cycle or an unknown ID, and changes no file", async () => {
       await seed(2);
       await cli("story", "update", "ROW-01", "--depends-on", "ROW-02");
-      const before = await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/${id}.md`)));
+      const before = await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/BACKLOG/${id}.md`)));
       const cycle = await cli("--json", "story", "update", "ROW-02", "--add-dependency", "ROW-01");
       expect(cycle.exitCode).toBe(1);
       expect(JSON.parse(cycle.stderr).error).toMatchObject({
@@ -218,7 +218,9 @@ describe("story commands", () => {
       const unknown = await cli("--json", "story", "update", "ROW-02", "--depends-on", "ROW-09");
       expect(unknown.exitCode).toBe(1);
       expect(JSON.parse(unknown.stderr).error.details).toMatchObject({ unknown: ["ROW-09"] });
-      expect(await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/${id}.md`)))).toEqual(before);
+      expect(await Promise.all(["ROW-01", "ROW-02"].map((id) => project.read(`stories/BACKLOG/${id}.md`)))).toEqual(
+        before,
+      );
     });
 
     it("shows the dependency state in story get", async () => {

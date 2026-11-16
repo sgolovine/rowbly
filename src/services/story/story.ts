@@ -1,4 +1,5 @@
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { attachmentDir, prepareImages, withAttachments } from "../attachment-files/attachment-files.js";
 import { type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
@@ -11,9 +12,11 @@ import {
   dependsOnOf,
   formatStoryId,
   readStoryFiles,
+  removeStoryFile,
   type StoryFile,
+  saveStoryFile,
   sortStoryFiles,
-  storyPath,
+  storyHomePath,
   withDependsOn,
   withUpdatedAt,
   writeStoryFile,
@@ -64,6 +67,7 @@ function newStoryData(config: ProjectConfig, input: CreateStoryInput, now: Date)
 
 /** Writes the file of a new story. A failure removes the file, so that no half story stays. */
 async function writeNewStory(
+  paths: ProjectPaths,
   config: ProjectConfig,
   path: string,
   doc: MarkdownDocument,
@@ -75,7 +79,7 @@ async function writeNewStory(
 
     return await getStory({ id: String(number) }, ctx);
   } catch (err) {
-    await rm(path, { force: true });
+    await removeStoryFile(paths, path);
     throw err;
   }
 }
@@ -90,12 +94,17 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
 
   const files = await readStoryFiles(paths);
   const number = Math.max(0, ...files.map((file) => file.number)) + 1;
-  const path = storyPath(paths, config.projectKey, number);
+  const path = storyHomePath(
+    paths,
+    config,
+    join(paths.storiesDir, `${formatStoryId(config.projectKey, number)}.md`),
+    data,
+  );
   const dependsOn = checkedDependsOn(config, files, formatStoryId(config.projectKey, number), input.dependsOn ?? []);
   const doc = { data: withDependsOn(data, dependsOn), body: input.description ?? "" };
 
   return withAttachments(await attachmentDir(paths, formatStoryId(config.projectKey, number)), images, now, () =>
-    writeNewStory(config, path, doc, number, ctx),
+    writeNewStory(paths, config, path, doc, number, ctx),
   );
 }
 
@@ -170,15 +179,21 @@ function updatedStoryData(
 }
 
 /**
- * Writes the story at `position` in its stage. The moved story is always written. A peer that gets a new `position`
- * keeps its `updatedAt`, because the peer itself did not change.
+ * Writes the story at `position` in its stage, and gives the path of its file. The moved story is always written. A
+ * peer that gets a new `position` keeps its `updatedAt`, because the peer itself did not change.
  */
-async function writePosition(config: ProjectConfig, file: StoryFile, position: number, moved: boolean): Promise<void> {
+async function writePosition(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  file: StoryFile,
+  position: number,
+  moved: boolean,
+): Promise<string> {
   if (!moved && file.doc.data.position === position) {
-    return;
+    return file.path;
   }
 
-  await writeStoryFile(config, file.path, { ...file.doc, data: { ...file.doc.data, position } });
+  return saveStoryFile(paths, config, file.path, { ...file.doc, data: { ...file.doc.data, position } });
 }
 
 /** The story file with `updatedAt` set to `now`. */
@@ -188,6 +203,7 @@ function stamped(file: StoryFile, now: Date): StoryFile {
 
 /** Puts the story at its new place in its stage. The other stories keep their order; each one that moves is rewritten. */
 async function placeStory(
+  paths: ProjectPaths,
   config: ProjectConfig,
   files: readonly StoryFile[],
   updated: StoryFile,
@@ -200,9 +216,9 @@ async function placeStory(
   const placed = change.changed || updated.doc.data.position !== at + 1 ? stamped(updated, change.now) : updated;
   const order = [...peers.slice(0, at), placed, ...peers.slice(at)];
 
-  await mapInOrder(order, (f, i) => writePosition(config, f, i + 1, f.id === placed.id));
+  const written = await mapInOrder(order, (f, i) => writePosition(paths, config, f, i + 1, f.id === placed.id));
 
-  return toStory(config, placed, at + 1);
+  return toStory(config, { ...placed, path: written[at] ?? placed.path }, at + 1);
 }
 
 /** Whether the new frontmatter or body differs from the story file. */
@@ -232,12 +248,12 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext, t
   if (input.position === undefined && !moved) {
     const written = change.changed ? stamped(updated, change.now) : updated;
 
-    await writeStoryFile(config, file.path, written.doc);
+    const path = await saveStoryFile(paths, config, file.path, written.doc);
 
-    return toStory(config, written, positionIn(files, file));
+    return toStory(config, { ...written, path }, positionIn(files, file));
   }
 
-  return placeStory(config, files, updated, input.position, change);
+  return placeStory(paths, config, files, updated, input.position, change);
 }
 
 async function updateWithoutImages(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
@@ -257,16 +273,41 @@ async function snapshotStories(paths: ProjectPaths, story: Story, input: UpdateS
   return Promise.all(before.map(async (file) => ({ path: file.path, bytes: await readFile(file.path) })));
 }
 
-async function restoreSnapshot(snapshot: Snapshot): Promise<void> {
-  const current = await readFile(snapshot.path);
+/** The bytes of the file, or `undefined` when the file is missing, for example after a move to a new Stage folder. */
+async function readIfPresent(path: string): Promise<Buffer | undefined> {
+  try {
+    return await readFile(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return undefined;
+    }
 
-  if (!current.equals(snapshot.bytes)) {
+    throw error;
+  }
+}
+
+async function restoreSnapshot(snapshot: Snapshot): Promise<void> {
+  const current = await readIfPresent(snapshot.path);
+
+  if (!current?.equals(snapshot.bytes)) {
+    await mkdir(dirname(snapshot.path), { recursive: true });
     await writeFile(snapshot.path, snapshot.bytes);
   }
 }
 
+/** Removes the copy of a story file that a failed update wrote in a new Stage folder. */
+async function removeMovedCopies(paths: ProjectPaths, snapshots: readonly Snapshot[]): Promise<void> {
+  const before = new Set(snapshots.map((snapshot) => snapshot.path));
+  const files = await readStoryFiles(paths);
+  const ids = new Set(files.filter((file) => before.has(file.path)).map((file) => file.id));
+  const copies = files.filter((file) => ids.has(file.id) && !before.has(file.path));
+
+  await mapInOrder(copies, (file) => removeStoryFile(paths, file.path));
+}
+
 /** Updates the story. A failure puts back each story file that the update changed. */
 async function updateOrRestore(
+  paths: ProjectPaths,
   input: UpdateStoryInput,
   ctx: ServiceContext,
   snapshots: readonly Snapshot[],
@@ -277,6 +318,7 @@ async function updateOrRestore(
     return await getStory({ id: input.id }, ctx);
   } catch (err) {
     await mapInOrder(snapshots, (snapshot) => restoreSnapshot(snapshot));
+    await removeMovedCopies(paths, snapshots);
     throw err;
   }
 }
@@ -294,7 +336,7 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
   const snapshots = await snapshotStories(paths, story, input);
 
   return withAttachments(await attachmentDir(paths, story.id), images, nowOf(ctx), () =>
-    updateOrRestore(input, ctx, snapshots),
+    updateOrRestore(paths, input, ctx, snapshots),
   );
 }
 
@@ -304,7 +346,7 @@ export async function touchStory(input: { id: string }, ctx: ServiceContext = {}
   const config = await readConfig(paths);
   const file = await findStoryFile(paths, config, input.id);
 
-  await writeStoryFile(config, file.path, file.doc, nowOf(ctx));
+  await saveStoryFile(paths, config, file.path, file.doc, nowOf(ctx));
 }
 
 /**
@@ -320,7 +362,7 @@ export async function deleteStory(input: { id: string }, ctx: ServiceContext = {
   const warnings = await removeDependencies(config, files, file.id, nowOf(ctx));
 
   await rm(await attachmentDir(paths, file.id), { recursive: true, force: true });
-  await rm(file.path);
+  await removeStoryFile(paths, file.path);
   // A spec that loses its last Story stays, and `doctor` reports it as an orphan.
   await rewriteSpecLinks(paths, (stories) => stories.filter((id) => id !== file.id));
 

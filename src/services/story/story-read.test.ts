@@ -29,10 +29,18 @@ describe("story-read", () => {
   }
 
   async function writeBoard(): Promise<void> {
+    await project.write("stories/BACKLOG/ROW-01.md", story("One", "BACKLOG", 1));
+    await project.write("stories/BACKLOG/ROW-02.md", story("Two", "BACKLOG", 2));
+    await project.write("stories/DONE/ROW-03.md", story("Three", "DONE", 1));
+    await project.write("stories/BACKLOG/ROW-04.md", story("Four", "BACKLOG"));
+  }
+
+  /** The same board, with ROW-01 and ROW-03 in the old flat layout. */
+  async function writeMixedBoard(): Promise<void> {
     await project.write("stories/ROW-01.md", story("One", "BACKLOG", 1));
-    await project.write("stories/ROW-02.md", story("Two", "BACKLOG", 2));
+    await project.write("stories/BACKLOG/ROW-02.md", story("Two", "BACKLOG", 2));
     await project.write("stories/ROW-03.md", story("Three", "DONE", 1));
-    await project.write("stories/ROW-04.md", story("Four", "BACKLOG"));
+    await project.write("stories/BACKLOG/ROW-04.md", story("Four", "BACKLOG"));
   }
 
   /** The number of reads of each story file since the last clear. */
@@ -65,7 +73,7 @@ describe("story-read", () => {
 
     it("places a story with no position after the positioned stories of its stage", async () => {
       await writeBoard();
-      await project.write("stories/ROW-05.md", story("Five", "BACKLOG"));
+      await project.write("stories/BACKLOG/ROW-05.md", story("Five", "BACKLOG"));
 
       expect((await getStory({ id: "ROW-04" }, project.ctx)).position).toBe(3);
       expect((await getStory({ id: "ROW-05" }, project.ctx)).position).toBe(4);
@@ -73,12 +81,27 @@ describe("story-read", () => {
 
     it("throws a ValidationError with the doctor hint for a stage that is not in the config", async () => {
       await writeBoard();
-      await project.write("stories/ROW-05.md", story("Five", "NOPE"));
+      await project.write("stories/NOPE/ROW-05.md", story("Five", "NOPE"));
 
       const error = await getStory({ id: "ROW-05" }, project.ctx).catch((e: unknown) => e);
 
       expect(error).toBeInstanceOf(ValidationError);
       expect((error as ValidationError).hint).toMatch(/rowbly doctor/);
+    });
+
+    it("reads Story files in Stage folders and directly in stories/ together", async () => {
+      await writeMixedBoard();
+
+      expect(await getStory({ id: "ROW-01" }, project.ctx)).toMatchObject({
+        stage: "BACKLOG",
+        position: 1,
+        path: join(project.paths.storiesDir, "ROW-01.md"),
+      });
+      expect(await getStory({ id: "ROW-02" }, project.ctx)).toMatchObject({
+        position: 2,
+        path: join(project.paths.storiesDir, "BACKLOG", "ROW-02.md"),
+      });
+      expect((await getStory({ id: "ROW-03" }, project.ctx)).stage).toBe("DONE");
     });
   });
 
@@ -93,7 +116,7 @@ describe("story-read", () => {
       expect(file.doc.data.title).toBe("One");
     });
 
-    it("reads only the canonical file when it exists", async () => {
+    it("reads only the file of the story", async () => {
       await writeBoard();
       const config = await readConfig(project.paths);
       vi.mocked(fs.readFile).mockClear();
@@ -102,8 +125,15 @@ describe("story-read", () => {
       const file = await findStoryFile(project.paths, config, "3");
 
       expect(file.id).toBe("ROW-03");
-      expect([...storyReads().keys()]).toEqual([join(project.paths.storiesDir, "ROW-03.md")]);
-      expect(storiesDirListed()).toBe(false);
+      expect([...storyReads().keys()]).toEqual([join(project.paths.storiesDir, "DONE", "ROW-03.md")]);
+    });
+
+    it("prefers the canonical file name to a name that is not canonical", async () => {
+      await project.write("stories/ROW-3.md", story("Old", "DONE", 1));
+      await project.write("stories/DONE/ROW-03.md", story("Three", "DONE", 1));
+      const config = await readConfig(project.paths);
+
+      expect((await findStoryFile(project.paths, config, "3")).doc.data.title).toBe("Three");
     });
 
     it("throws a NotFoundError for an unknown number", async () => {
@@ -162,13 +192,27 @@ describe("story-read", () => {
       await expect(searchStories({}, project.ctx)).rejects.toBeInstanceOf(ValidationError);
     });
 
+    it("finds Story files in Stage folders and directly in stories/ in board order", async () => {
+      await writeMixedBoard();
+
+      const found = await searchStories({}, project.ctx);
+
+      expect(found.map((s) => [s.id, s.stage, s.position])).toEqual([
+        ["ROW-01", "BACKLOG", 1],
+        ["ROW-02", "BACKLOG", 2],
+        ["ROW-04", "BACKLOG", 3],
+        ["ROW-03", "DONE", 1],
+      ]);
+      expect((await searchStories({ query: "three" }, project.ctx)).map((s) => s.id)).toEqual(["ROW-03"]);
+    });
+
     it("does not read the manifest of a story that a field filter removes", async () => {
       await writeBoard();
       await writeManifest("ROW-03", "not json");
       await writeManifest("ROW-02", manifest(["shot.png"]));
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
       await project.write(
-        "stories/ROW-02.md",
+        "stories/BACKLOG/ROW-02.md",
         `---\ntitle: Two\nstage: BACKLOG\nposition: 2\nowner: ann\n---\n\nBody\n`,
       );
       vi.mocked(fs.readFile).mockClear();

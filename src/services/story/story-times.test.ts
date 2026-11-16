@@ -20,7 +20,7 @@ describe("story times", () => {
     await createStory({ title: "One" }, at(T1));
     const story = await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at(T1));
     expect(story).toMatchObject({ createdAt: T1, updatedAt: T1 });
-    expect(await project.read("stories/ROW-02.md")).toBe(
+    expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(
       `---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - ROW-01\ncreatedAt: ${T1}\nupdatedAt: ${T1}\nowner: null\n---\n\n`,
     );
     expect((await searchStories({}, project.ctx)).map((s) => s.createdAt)).toEqual([T1, T1]);
@@ -46,11 +46,11 @@ describe("story times", () => {
   it("an update that does not change the file keeps updatedAt", async () => {
     await createStory({ title: "One" }, at(T1));
     await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at(T1));
-    const before = await project.read("stories/ROW-02.md");
+    const before = await project.read("stories/BACKLOG/ROW-02.md");
     const story = await updateStory({ id: "ROW-02", addDependsOn: ["ROW-01"], removeDependsOn: ["ROW-09"] }, at(T2));
     expect(story.updatedAt).toBe(T1);
     await updateStory({ id: "ROW-02", title: "Two" }, at(T2));
-    expect(await project.read("stories/ROW-02.md")).toBe(before);
+    expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(before);
   });
 
   it("the other stories of the stage keep updatedAt when a story moves", async () => {
@@ -70,7 +70,7 @@ describe("story times", () => {
     expect(await times("ROW-01")).toEqual({ createdAt: null, updatedAt: null });
     expect(await times("ROW-02")).toEqual({ createdAt: null, updatedAt: null });
     await updateStory({ id: "ROW-01", title: "Older" }, at(T2));
-    expect(await project.read("stories/ROW-01.md")).toBe(
+    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(
       `---\ntitle: Older\nstage: BACKLOG\nupdatedAt: ${T2}\n---\n\nBody\n`,
     );
   });
