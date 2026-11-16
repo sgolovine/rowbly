@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
+import type { CheckQueueDeps } from "../check-queue/check-types.js";
 import { newOwner, type Owner, type OwnerProbe, probeOwner } from "../factory-ownership/ownership-lock.js";
 import { outboxPaths } from "../outbox/outbox-file.js";
 import { Store } from "../store/store.js";
@@ -20,6 +21,7 @@ import {
   type HostWorkRunner,
   stopAllWork,
 } from "./host-agent-work.js";
+import { closeHostChecks, type HostChecks, openHostChecks } from "./host-checks.js";
 
 /** The default idle period: the agent stops after 60 seconds without work. */
 export const DEFAULT_IDLE_MS = 60_000;
@@ -41,6 +43,8 @@ export interface HostAgentOptions {
   /** An abort stops the agent: it asks each work to stop and stops when the work ended. */
   readonly signal?: AbortSignal;
   readonly probe?: OwnerProbe;
+  /** The parts of the check queue that touch the machine. Tests give fakes. The default uses `/proc` and `bash`. */
+  readonly checkDeps?: CheckQueueDeps;
 }
 
 /** The result of `runHostAgent`. `already-running` means that a different live agent held the claim. */
@@ -168,7 +172,45 @@ async function takeClaim(
   return takeClaim(paths, self, probe, deadline);
 }
 
-function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner): AgentLoop {
+/**
+ * Writes `agent.json` without active work, before the loop has a state, for example before the check queue opens.
+ * Gives the key of the content, so that the loop does not write the same content again.
+ */
+async function recordPhase(
+  paths: HostAgentPaths,
+  self: Owner,
+  startedAt: string,
+  phase: HostAgentPhase,
+): Promise<string> {
+  const state: Omit<HostAgentState, "updatedAt"> = { version: 1, owner: self, phase, startedAt, active: [] };
+
+  await writeAgentState(paths, { ...state, updatedAt: new Date().toISOString() });
+
+  return JSON.stringify(state);
+}
+
+/** Opens the check queue. When the queue does not open, the agent writes `stopped` and gives the error. */
+async function openChecks(
+  options: HostAgentOptions,
+  paths: HostAgentPaths,
+  self: Owner,
+  startedAt: string,
+): Promise<HostChecks> {
+  try {
+    return await openHostChecks(paths, self.token, options.checkDeps);
+  } catch (error) {
+    await recordPhase(paths, self, startedAt, "stopped").catch(() => undefined);
+    throw error;
+  }
+}
+
+function newLoop(
+  options: HostAgentOptions,
+  paths: HostAgentPaths,
+  self: Owner,
+  checks: HostChecks,
+  start: { readonly startedAt: string; readonly key: string },
+): AgentLoop {
   const store = new Store<AgentState>({ active: new Map(), stopping: false, stopRequested: false, busyAt: Date.now() });
   const agent: HostAgent = {
     paths,
@@ -176,6 +218,7 @@ function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner):
     self,
     runner: options.runner,
     probe: options.probe,
+    checks,
     store,
   };
 
@@ -184,9 +227,21 @@ function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner):
     idleMs: options.idleMs ?? DEFAULT_IDLE_MS,
     pollMs: options.pollMs ?? DEFAULT_POLL_MS,
     signal: options.signal ?? new AbortController().signal,
-    startedAt: new Date().toISOString(),
-    written: new Store({ key: "" }),
+    startedAt: start.startedAt,
+    written: new Store({ key: start.key }),
   };
+}
+
+/** Runs the loop. When the loop ends, it stops the check queue, then writes `stopped`. */
+async function serveAgent(loop: AgentLoop, checks: HostChecks): Promise<void> {
+  try {
+    await recordState(loop, "running");
+    await agentLoop(loop);
+  } finally {
+    await closeHostChecks(checks);
+  }
+
+  await recordState(loop, "stopped");
 }
 
 /**
@@ -202,12 +257,14 @@ export async function runHostAgent(options: HostAgentOptions): Promise<HostAgent
     return { outcome: "already-running", owner: claim.owner };
   }
 
-  const loop = newLoop(options, paths, self);
+  const startedAt = new Date().toISOString();
 
   try {
-    await recordState(loop, "running");
-    await agentLoop(loop);
-    await recordState(loop, "stopped");
+    // Write `running` immediately after the claim, so that a reader of the claim also finds `agent.json`.
+    const key = await recordPhase(paths, self, startedAt, "running");
+    const checks = await openChecks(options, paths, self, startedAt);
+
+    await serveAgent(newLoop(options, paths, self, checks, { startedAt, key }), checks);
   } finally {
     await releaseAgentClaim(paths, self.token).catch(() => false);
   }
