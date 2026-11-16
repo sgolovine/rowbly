@@ -7,7 +7,7 @@ dependsOn:
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:04.969Z
-updatedAt: 2026-11-16T21:36:34.831Z
+updatedAt: 2026-11-16T21:46:15.492Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-88
 pull_request: https://github.com/sgolovine/rowbly/pull/279
 ---
@@ -98,11 +98,3 @@ Not in scope:
 - `host unuse` refuses while an active Thread of the current Project is on the host. Reason: the same rule as `host remove`, so that a running worker keeps its clone record.
 - `host use` does not run `ensureHostVersion`. Reason: Git does not need Rowbly on the host, and `host add` and each connection (ROW-97) already install the version.
 - A clone failure is a Git access failure when its stderr has one of the known Git authentication messages. Reason: Git has no exit code for an access failure. Other failures get a separate code, so the hint is not wrong.
-
-## Review findings
-
-- The merge of `origin/main` (9baa754a) into `story/ROW-88` has conflicts in files other than `CHANGELOG.md`. The changelog worker stopped the merge (`git merge --abort`) and did not write the changelog entry.
-- Files with conflicts:
-  - `src/commands/host/host.test.ts`
-  - `src/commands/register-commands/register-commands.test.ts`
-- Merge `origin/main` into the Story branch, repair these conflicts, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, and push the branch.
