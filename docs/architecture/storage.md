@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -53,7 +53,7 @@ display options, the installed skills and the factory settings. The `config` ser
   use it. This keeps the files consistent.
 - The `skills` list holds the bundled skills that the Project has installed. Each entry has the `name`
   of a skill and the `harnesses` that have a copy. See [skills-and-stages.md](skills-and-stages.md).
-- The optional `display` key holds the display options of the TUI. It has two keys:
+- The optional `display` key holds the display options of the TUI. It has three keys:
   - `compactThreads` (boolean). When `compactThreads` is `true` or is not set, each Thread in the
     Threads view and in the Threads tab of a Story uses one line. When it is `false`, each Thread uses
     up to three lines. Set it with `rowbly project update --compact-threads <on|off>` or in
@@ -62,9 +62,15 @@ display options, the installed skills and the factory settings. The `config` ser
     `Europe/Berlin`. When it is not set, the TUI uses the time zone of the system. Set it with
     `rowbly project update --time-zone <zone>` or in Settings › Display. `--time-zone ""` removes the
     key. The time zone changes only the display. The Story files keep the times in UTC.
+  - `storySidebar` (`"regular"`, `"expanded"` or `"remember"`). The state of the Story sidebar when it
+    opens from closed. `regular` (or a value that is not set) opens it at the regular width.
+    `expanded` opens it over the Story list. `remember` opens it in the last state that the user
+    selected while the TUI runs. Rowbly does not keep this state after it quits. Set it in
+    Settings › Display. `rowbly project update` has no flag for it.
 
   A `display` value that is not an object, an unknown key, a `compactThreads` value that is not a
-  boolean or a `timeZone` that `Intl.DateTimeFormat` does not accept gives a config issue.
+  boolean, a `timeZone` that `Intl.DateTimeFormat` does not accept or a `storySidebar` value that is
+  not one of the three values gives a config issue.
 - The `factory` key holds the factory settings. See [Factory settings](#factory-settings). Each write
   of the config keeps this key.
 

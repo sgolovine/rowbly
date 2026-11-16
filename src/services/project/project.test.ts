@@ -129,6 +129,21 @@ describe("getProject and updateProject", () => {
     expect((await getProject(project.ctx)).display).toEqual({ compactThreads: true });
   });
 
+  it("saves the Story sidebar option and keeps the other display options", async () => {
+    await updateProject({ display: { compactThreads: false, timeZone: "Europe/Berlin" } }, project.ctx);
+    const updated = await updateProject({ display: { storySidebar: "expanded" } }, project.ctx);
+    const expected = { compactThreads: false, timeZone: "Europe/Berlin", storySidebar: "expanded" };
+    expect(updated.display).toEqual(expected);
+    expect(JSON.parse(await project.read("rowbly.config.json")).display).toEqual(expected);
+    await updateProject({ display: { storySidebar: "remember" } }, project.ctx);
+    expect((await getProject(project.ctx)).display).toEqual({ ...expected, storySidebar: "remember" });
+    const before = await project.read("rowbly.config.json");
+    await expect(updateProject({ display: { storySidebar: "wide" as "regular" } }, project.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    expect(await project.read("rowbly.config.json")).toBe(before);
+  });
+
   it("saves and removes the time zone, and rejects an unknown zone", async () => {
     const updated = await updateProject({ display: { timeZone: "Europe/Berlin" } }, project.ctx);
     expect(updated.display).toEqual({ timeZone: "Europe/Berlin" });

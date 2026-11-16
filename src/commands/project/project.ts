@@ -1,5 +1,5 @@
 import { type Command, InvalidArgumentError } from "commander";
-import { compactThreads, type DisplayConfig } from "../../services/config/config.js";
+import { compactThreads, type DisplayConfig, storySidebarBehavior } from "../../services/config/config.js";
 import { type Project, updateProject } from "../../services/project/project.js";
 import { run } from "../output/output.js";
 
@@ -7,8 +7,10 @@ function describe(project: Project): string {
   const specs = project.features?.specs ? "\nSpecs: on" : "";
   const compact = project.display === undefined ? "" : `\nCompact threads: ${compactThreads(project) ? "on" : "off"}`;
   const timeZone = project.display?.timeZone === undefined ? "" : `\nTime zone: ${project.display.timeZone}`;
+  const sidebar =
+    project.display?.storySidebar === undefined ? "" : `\nStory sidebar: ${storySidebarBehavior(project)}`;
 
-  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}${compact}${timeZone}`;
+  return `${project.projectName} (${project.projectKey}) in ${project.root}${specs}${compact}${timeZone}${sidebar}`;
 }
 
 /** Parses `on` or `off`. */
