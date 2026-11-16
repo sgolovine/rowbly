@@ -1,8 +1,9 @@
 ---
 title: Put worker execution behind an executor interface
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T19:45:01.115Z
+updatedAt: 2026-11-16T20:06:48.816Z
 worktree: null
 pull_request: null
 ---
