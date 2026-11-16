@@ -48,9 +48,19 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`   |
 | `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                 |
 | `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                            |
+| `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`            |
+| `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                     |
+| `[<remote rowbly>, "host", "outbox-ack", <project-id>]`      | request | `{ "seq": <n> }`                             | `{ "removed": <n>, "blobs": [...] }`       |
+| `[<remote rowbly>, "host", "blob", <sha256>, <project-id>]`  | bytes   | None                                         | The bytes of the outbox file               |
 
 The project id is a dash-case token of 1 to 64 characters: `^[a-z0-9]+(-[a-z0-9]+)*$`. The main
 machine makes it. A bad id gives `VALIDATION` before Rowbly writes a file.
+
+The outbox commands use the outbox of the agent of the project id, because a command over SSH has no
+`ROWBLY_OUTBOX`. Without the project id, they read the folder from `ROWBLY_OUTBOX`.
+
+The remote executor of the main machine sends these commands. See
+[Dispatch to a worker host](README.md#dispatch-to-a-worker-host).
 
 ## Runtime folder
 
@@ -203,8 +213,10 @@ file in `.rowbly/attachments/<story-id>/<file>`, and renames the folder over `co
 `prepare` replaces the old copy. `run.json` stays.
 
 `hostRunPaths({ home, projectId, clone, threadId, storyId })` gives the copy, the worktree
-(`<clone>-worktrees/<story-id>`), the lock, the shim and the outbox of a run. The main machine uses
-it to write the Run section of the worker message.
+(`<clone>-worktrees/<story-id>`), the lock, the shim and the outbox of a run. The main machine does
+not know the home folder of the host. Thus it gets these paths with `host run-paths`
+(`hostRunPathsAnswer`), before the prepare step. It uses them to write the Run section of the worker
+message.
 
 ## Worker runner
 
