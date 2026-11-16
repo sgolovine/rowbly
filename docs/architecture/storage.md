@@ -527,7 +527,7 @@ apply in one place.
 
 ```
 ~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId;
-                      # hosts [{id,ssh,maxWorkers,enabled}], in the order that the user added them
+                      # hosts [{id,ssh,maxWorkers,enabled,projects?}], in the order that the user added them
 ```
 
 - The TUI adds a Project to this file when the Project opens.
@@ -538,6 +538,15 @@ apply in one place.
   empty list. If the value is not an array, or an entry does not have the four fields with the
   correct types, the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
   A write keeps the other keys of each entry.
+- `projects` of a host entry is the list of the Projects that the host uses:
+  `[{ "root": string, "path": string, "managed": boolean }]`. `rowbly host use` adds a record and
+  `rowbly host unuse` removes it. A missing key is an empty list.
+  - `root` is the absolute path of the local Project root, the same value as the `path` of the
+    `projects` list of known Projects.
+  - `path` is the clone on the host, relative to the home folder of the SSH user, or absolute.
+  - `managed` is `true` when Rowbly made the clone in its own folder on the host.
+  - If the value is not an array, or a record does not have the three fields with the correct types,
+    the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
 - Rowbly v1 uses the same file for its own keys. Keep all other keys when you write the file.
 - If the file is a symlink, for example from a dotfile manager, Rowbly writes through the link and
   keeps it.

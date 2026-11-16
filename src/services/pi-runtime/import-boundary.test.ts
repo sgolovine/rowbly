@@ -78,6 +78,16 @@ describe("Pi import boundary", () => {
     await expect(import("../host/host.js")).resolves.toHaveProperty("addHost");
   });
 
+  it("imports the host project service without loading Pi", async () => {
+    await expect(import("../host-project/host-project.js")).resolves.toHaveProperty("useHost");
+    await expect(import("../host-project/host-clone.js")).resolves.toHaveProperty("cloneStatus");
+    await expect(import("../host-project/host-paths.js")).resolves.toHaveProperty("managedClonePath");
+    await expect(import("../host-project/repo-url.js")).resolves.toHaveProperty("sameRepository");
+    await expect(import("../host-project/local-origin.js")).resolves.toHaveProperty("localOrigin");
+    await expect(import("../host-project/host-project-errors.js")).resolves.toHaveProperty("HostGitAccessError");
+    await expect(import("../host/host-threads.js")).resolves.toHaveProperty("activeThreadsIn");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });
