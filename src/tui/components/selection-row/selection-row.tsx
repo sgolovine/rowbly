@@ -1,6 +1,6 @@
 import { Box, type DOMElement, Text } from "ink";
 import { type ReactNode, useRef } from "react";
-import { useMouse } from "../../hooks/index.js";
+import { type ClickEvent, useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import { useScrollFocus } from "../scroll-focus.js";
 
@@ -28,7 +28,7 @@ export function SelectionRow({
 }: {
   selected: boolean;
   active: boolean;
-  onClick?(): void;
+  onClick?(event: ClickEvent): void;
   children: ReactNode;
 } & RowDragProps) {
   const ref = useRef<DOMElement>(null);

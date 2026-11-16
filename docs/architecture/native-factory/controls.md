@@ -16,6 +16,7 @@ viewer or the AI section of Settings.
 | `model list [--provider <id>]`                                             | Show configured models and supported thinking levels.                 |
 | `factory configure`                                                        | Set workers, role models, thinking levels, commits, Git sync, checks. |
 | `factory configure --pull-upstream on\|off`                                | Turn on or turn off the move of stuck upstream Stories.               |
+| `factory configure --placement <policy>`                                   | Set the placement policy of new workers.                              |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
@@ -36,8 +37,9 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 - `--clear-worker` without `--stage`.
 - `--clear-worker` together with `--worker` or `--worker-thinking`.
 - `--pull-upstream` with a value that is not `on` or `off`.
+- `--placement` with a value that is not `prefer-local`, `most-free` or `prefer-remote`.
 - `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers`,
-  `--pull-upstream`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
+  `--pull-upstream`, `--placement`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
   `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
 - An unknown Stage key.
@@ -73,6 +75,17 @@ An unknown Story ID gives `NOT_FOUND`. For the order of priority of the override
 - The default is `off`. The other keys of the config do not change.
 - When the setting is `on`, the manager moves each stuck upstream Story in the first Stage to the
   first enabled `work` Stage. See [README.md](README.md#parts-of-the-factory).
+- The command prints all the settings.
+
+### The placement flag of `factory configure`
+
+| Flag                   | Key in `factory` | Effect                                                                  |
+| ---------------------- | ---------------- | ----------------------------------------------------------------------- |
+| `--placement <policy>` | `placement`      | Set `prefer-local`, `most-free` or `prefer-remote` for the new workers. |
+
+- The default is `prefer-local`. The other keys of the config do not change.
+- See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#placement) for the policies and
+  [README.md](README.md#placement) for the rules.
 - The command prints all the settings.
 
 ### The check commands

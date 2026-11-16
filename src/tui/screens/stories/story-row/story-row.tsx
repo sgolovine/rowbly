@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import type { Story } from "../../../../services/story/story.js";
 import { type RowDragProps, SelectionRow, StageBadge, type StageCategory } from "../../../components/index.js";
+import type { ClickEvent } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { waitingText } from "../story-dependency-view.js";
 
@@ -19,6 +20,18 @@ function activityLabel(activity: StoryActivity): string {
   return chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
 }
 
+/**
+ * The text before the key of the Story: the `●` mark of a Story in the multi-selection, or the indent. In a list with
+ * Stage sections, the mark takes the place of the indent, so the key does not move.
+ */
+function markText(marked: boolean, indented: boolean): string {
+  if (marked) {
+    return "● ";
+  }
+
+  return indented ? "  " : "";
+}
+
 /** A blocked Story in a work Stage with no factory activity shows the Stories that it waits for. */
 function showsWaiting(
   waitingFor: readonly string[],
@@ -34,7 +47,7 @@ function showsWaiting(
  * Stories in `waitingFor`) shows `⊘` before the other slots. A Story with factory `activity`
  * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. A blocked Story in a work Stage
  * without activity shows `waiting for` and the IDs there. `indented` moves the key and title two columns to the
- * right, below the heading of a Stage section. The `RowDragProps` let the mouse drag the row and drop on it.
+ * right, below the heading of a Stage section. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it.
  */
 export function StoryRow({
   story,
@@ -45,6 +58,7 @@ export function StoryRow({
   selected,
   clickable,
   indented = false,
+  marked = false,
   onClick,
   ...dragProps
 }: {
@@ -59,13 +73,16 @@ export function StoryRow({
   selected: boolean;
   clickable: boolean;
   indented?: boolean;
-  onClick(): void;
+  /** The Story is in the multi-selection of the Story list. */
+  marked?: boolean;
+  onClick(event: ClickEvent): void;
 } & RowDragProps) {
   return (
     <SelectionRow selected={selected} active={clickable} onClick={onClick} {...dragProps}>
-      <Box paddingLeft={indented ? 2 : 0} paddingRight={1}>
+      <Box paddingRight={1}>
         <Box flexGrow={1} flexShrink={1}>
           <Text wrap="truncate-end" color={theme.ink} bold={selected}>
+            <Text color={theme.accent}>{markText(marked, indented)}</Text>
             <Text color={theme.accent}>{story.id}</Text> {story.title}
           </Text>
         </Box>

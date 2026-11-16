@@ -12,7 +12,8 @@ import {
   toggleSidebar,
 } from "./shell-selection.js";
 import type { Pane, ShellEnv, ShellView, StoryListRow } from "./shell-state.js";
-import { moveStage, moveStoryStage } from "./story-changes.js";
+import { moveMarkedStories, moveStage, moveStoryStage } from "./story-changes.js";
+import { clearMarks, endRange, hasMarks, startRange } from "./story-marks.js";
 import { editStory, listPane, newStory, requestStoryPane, toggleStoryExpanded } from "./story-pane.js";
 
 /** The keys that open an overlay, also without a Project. */
@@ -74,9 +75,11 @@ function headingKey(env: ShellEnv, row: Extract<StoryListRow, { kind: "stage" }>
   }
 }
 
-/** The keys of a Story in the list: open, delete, and collapse its section. */
+/** The keys of a Story in the list: start the range mode, open, delete, and collapse its section. */
 function storyKey(env: ShellEnv, row: Extract<StoryListRow, { kind: "story" }>, input: string, key: Key): void {
-  if (key.return) {
+  if (input === " ") {
+    startRange(env, row.id);
+  } else if (key.return) {
     editStory(env, row.story);
   } else if (input === "d") {
     env.setOverlay({ kind: "deleteStory", story: row.story });
@@ -85,14 +88,32 @@ function storyKey(env: ShellEnv, row: Extract<StoryListRow, { kind: "story" }>, 
   }
 }
 
-/** The keys of the Story list. */
-function listKey(env: ShellEnv, input: string, key: Key, delta: number, shift: -1 | 0 | 1): void {
-  const { row, rows, cursor } = env.view;
+/**
+ * `shift+↑/↓` moves the selected Stories to the previous or next Stage. Without a selection, it moves the Story of
+ * the cursor. In the range mode, it does nothing.
+ */
+function shiftKey(env: ShellEnv, shift: -1 | 1): void {
+  const { row, ranging, marked } = env.view;
 
-  if (shift) {
-    if (row?.kind === "story") {
-      moveStoryStage(env, row.story, shift);
-    }
+  if (ranging) {
+    return;
+  }
+
+  if (marked.size > 0) {
+    moveMarkedStories(env, shift);
+  } else if (row?.kind === "story") {
+    moveStoryStage(env, row.story, shift);
+  }
+}
+
+/** The keys of the Story list. In the range mode, `space` ends the mode before the other keys. */
+function listKey(env: ShellEnv, input: string, key: Key, delta: number, shift: -1 | 0 | 1): void {
+  const { row, rows, cursor, ranging } = env.view;
+
+  if (ranging && input === " ") {
+    endRange(env);
+  } else if (shift) {
+    shiftKey(env, shift);
   } else if (delta) {
     selectStory(env, Math.max(0, Math.min(rows.length - 1, cursor + delta)));
   } else if (input === "n") {
@@ -133,11 +154,14 @@ export function cyclePane(view: ShellView, step: 1 | -1, expanded = false): Pane
 
 /**
  * `esc` gives the focus from the Stage sidebar to the Story list, or to an expanded Story sidebar that covers the
- * list. In the Story list, it closes the Story sidebar.
+ * list. In the Story list, it ends the range mode or clears the multi-selection first. Then it closes the Story
+ * sidebar.
  */
 function escapeKey(env: ShellEnv): void {
   if (env.view.sidebarFocused) {
     env.setPane(listPane(env));
+  } else if (env.view.mode === "stories" && hasMarks(env)) {
+    clearMarks(env);
   } else if (env.view.storyPane) {
     requestStoryPane(env, null);
   }

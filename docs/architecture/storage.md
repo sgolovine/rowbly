@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -91,6 +91,10 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
 | `checks`            | object  | none               | The check queue and the named checks of the workers.   |
 | `dependencies`      | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
+| `placement`         | string  | `prefer-local`     | The machine of a new worker. See below.                |
+
+`placement` is `prefer-local`, `most-free` or `prefer-remote`. See
+[native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 
 A model choice has `provider`, `modelId` and an optional `thinkingLevel`. Without the `factory` key,
 the worker limit is four and Pi selects the default models. Without the `checks` key, the factory has

@@ -24,6 +24,7 @@ import {
 } from "./shell-selection.js";
 import { ALL_STAGES, type Board, type ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
+import { clearMarks, markRange } from "./story-marks.js";
 import {
   discardStory,
   leaveStoryPane,
@@ -116,7 +117,7 @@ function factoryViewProps(env: ShellEnv, board: Board): ComponentProps<typeof Fa
 }
 
 function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
-  const { board, loading, noProject, rows, cursor, stage, idle } = env.view;
+  const { board, loading, noProject, rows, cursor, stage, idle, marked } = env.view;
 
   if (loading && !board) {
     return { kind: "loading" };
@@ -141,12 +142,15 @@ function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
       activity: board.activity.stories,
       tags: projectTags(board.project),
       cursor,
+      marked,
       clickable: idle,
       height: frame.listInnerHeight,
       emptyText: stage ? `No Stories in ${stage.label}.` : "No Stories yet. Press n to create one.",
       onCursor: (index) => pointRow(env, index),
       onMove: (id, gap) => dropStory(env, id, gap),
       onActivate: (index) => clickRow(env, index),
+      onRange: (index) => markRange(env, index),
+      onClear: () => clearMarks(env),
     },
   };
 }

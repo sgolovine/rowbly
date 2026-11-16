@@ -79,6 +79,14 @@ describe("Pi import boundary", () => {
     await expect(import("../factory-manager/outbox-attention.js")).resolves.toHaveProperty("syncHostOutbox");
   });
 
+  it("imports the host install service without loading Pi", async () => {
+    await expect(import("../host-install/host-install.js")).resolves.toHaveProperty("ensureHostVersion");
+    await expect(import("../host-install/node-check.js")).resolves.toHaveProperty("checkHostNode");
+    await expect(import("../host-install/local-build.js")).resolves.toHaveProperty("localBuild");
+    await expect(import("../host-install/host-install-errors.js")).resolves.toHaveProperty("HostInstallFailedError");
+    await expect(import("../host/host.js")).resolves.toHaveProperty("addHost");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });

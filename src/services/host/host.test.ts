@@ -1,18 +1,57 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import type { LocalBuild } from "../host-install/local-build.js";
+import type { BytesResult, RemoteCommand } from "../host-transport/host-transport.js";
 import { recordProject } from "../known-project/known-project.js";
+import { createFakeHostTransport } from "../test-project/fake-host-transport.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createThread, transitionThread } from "../thread/thread.js";
 import type { ThreadStatus } from "../thread/thread-types.js";
 import { RC_FILE } from "../user-rc/user-rc.js";
-import { addHost, listHosts, removeHost } from "./host.js";
+import { type AddHostDeps, addHost, type HostInput, listHosts, removeHost } from "./host.js";
+
+const BUILD: LocalBuild = { id: "0.18.0", version: "0.18.0", released: true };
+
+const output = (exitCode: number, text: string, stderr = ""): BytesResult => ({
+  exitCode,
+  bytes: Buffer.from(text),
+  stderr,
+});
+
+/** A fake host with Node and the same Rowbly build. A test can change the answer of each program. */
+function fakeDeps(answers: Record<string, BytesResult> = {}, installWorks = false) {
+  const commands: RemoteCommand[] = [];
+  const state = { installed: false };
+  const targets: string[] = [];
+  const transport = createFakeHostTransport({
+    bytes: (command) => {
+      commands.push(command);
+      const program = command[0] === "node" || command[0] === "npm" ? command[0] : "rowbly";
+      if (program === "npm" && installWorks) {
+        state.installed = true;
+      }
+      const answer = state.installed && program === "rowbly" ? undefined : answers[program];
+      return answer ?? output(0, program === "node" ? "v22.19.0\n" : "0.18.0\n");
+    },
+  });
+  const deps: AddHostDeps = {
+    transportFor: (target) => {
+      targets.push(target);
+      return transport;
+    },
+    build: async () => BUILD,
+  };
+  return { deps, commands, targets };
+}
 
 describe("host", () => {
   const p = useTestProject();
   const rcFile = () => join(p.ctx.home as string, RC_FILE);
   const stored = async () => JSON.parse(await readFile(rcFile(), "utf8"));
   const mini = { id: "mini", ssh: "user@mini.lan", maxWorkers: 2 };
+
+  const add = (input: HostInput, ctx = p.ctx, deps: AddHostDeps = fakeDeps().deps) => addHost(input, ctx, deps);
 
   const errorCode = (promise: Promise<unknown>) =>
     promise.then(
@@ -21,17 +60,73 @@ describe("host", () => {
     );
 
   it("adds a host to the hosts array of the file and gives it back", async () => {
-    const host = await addHost(mini, p.ctx);
+    const { deps, commands, targets } = fakeDeps();
+    const host = await add(mini, p.ctx, deps);
 
-    expect(host).toEqual({ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true });
+    expect(host).toEqual({
+      id: "mini",
+      ssh: "user@mini.lan",
+      maxWorkers: 2,
+      enabled: true,
+      install: {
+        state: "ready",
+        buildId: "0.18.0",
+        localVersion: "0.18.0",
+        remoteVersion: "0.18.0",
+        remoteExecutable: ".local/share/rowbly/versions/0.18.0/node_modules/.bin/rowbly",
+        installed: false,
+        nodeVersion: "v22.19.0",
+        stderr: "",
+      },
+    });
+    expect(targets).toEqual(["user@mini.lan"]);
+    expect(commands.map((command) => command[0])).toEqual(["node", host.install.remoteExecutable]);
     expect((await stored()).hosts).toEqual([{ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true }]);
+  });
+
+  it("installs the build on a host without Rowbly before it records the host", async () => {
+    const { deps, commands } = fakeDeps({ rowbly: output(127, "", "not found") }, true);
+
+    const host = await add(mini, p.ctx, deps);
+
+    expect(host.install).toMatchObject({ state: "ready", installed: true });
+    expect(commands.filter((command) => command[0] === "npm")).toEqual([
+      ["npm", "install", "--prefix", ".local/share/rowbly/versions/0.18.0", "--no-save", "--omit=dev", "rowbly@0.18.0"],
+    ]);
+    expect((await stored()).hosts).toEqual([{ ...mini, enabled: true }]);
+  });
+
+  it.each([
+    ["a missing Node", { node: output(127, "", "node: not found") }, "HOST_NODE_MISSING"],
+    ["an old Node", { node: output(0, "v20.11.1\n") }, "HOST_NODE_TOO_OLD"],
+    ["a failed install", { rowbly: output(127, ""), npm: output(1, "", "npm ERR! network") }, "HOST_INSTALL_FAILED"],
+    ["an install with a different version", { rowbly: output(0, "0.17.0\n") }, "HOST_INSTALL_FAILED"],
+  ])("fails with %s and keeps the bytes of the file", async (_name, answers, code) => {
+    const text = JSON.stringify({ deviceId: "device", hosts: [] }, null, 4);
+
+    await writeFile(rcFile(), text);
+
+    const error = await add(mini, p.ctx, fakeDeps(answers).deps).catch((caught: unknown) => caught);
+
+    expect(error).toMatchObject({ code });
+    expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
+
+  it("gives the install result in the details of HOST_INSTALL_FAILED", async () => {
+    const answers = { rowbly: output(127, ""), npm: output(1, "", "npm ERR! network") };
+    const error = await add(mini, p.ctx, fakeDeps(answers).deps).catch((caught: unknown) => caught);
+
+    expect(error).toMatchObject({
+      code: "HOST_INSTALL_FAILED",
+      details: { install: { state: "version-mismatch", localVersion: "0.18.0", stderr: "npm ERR! network" } },
+    });
   });
 
   it("lists the hosts in the order of the file, and an empty list without the key", async () => {
     expect(await listHosts(p.ctx)).toEqual([]);
 
-    await addHost({ id: "zeta", ssh: "z", maxWorkers: 1 }, p.ctx);
-    await addHost({ id: "alpha", ssh: "a", maxWorkers: 3 }, p.ctx);
+    await add({ id: "zeta", ssh: "z", maxWorkers: 1 }, p.ctx);
+    await add({ id: "alpha", ssh: "a", maxWorkers: 3 }, p.ctx);
 
     expect((await listHosts(p.ctx)).map((host) => host.id)).toEqual(["zeta", "alpha"]);
   });
@@ -46,7 +141,7 @@ describe("host", () => {
       }),
     );
 
-    await addHost(mini, p.ctx);
+    await add(mini, p.ctx);
 
     expect(await stored()).toEqual({
       deviceId: "device",
@@ -87,23 +182,25 @@ describe("host", () => {
     ["a worker limit that is not an integer", { id: "mini", ssh: "u@h", maxWorkers: 1.5 }, "maxWorkers"],
     ["a worker limit that is not a number", { id: "mini", ssh: "u@h", maxWorkers: Number.NaN }, "maxWorkers"],
   ])("refuses %s with VALIDATION and writes nothing", async (_name, input, field) => {
-    const error = await addHost(input, p.ctx).catch((caught: unknown) => caught);
+    const { deps, targets } = fakeDeps();
+    const error = await add(input, p.ctx, deps).catch((caught: unknown) => caught);
 
     expect(error).toMatchObject({ code: "VALIDATION", details: { issues: [{ path: [field] }] } });
+    expect(targets).toEqual([]);
     expect(await listHosts(p.ctx)).toEqual([]);
   });
 
   it("gives CONFLICT for an ID that exists and NOT_FOUND for an unknown ID", async () => {
-    await addHost(mini, p.ctx);
+    await add(mini, p.ctx);
 
-    expect(await errorCode(addHost({ ...mini, ssh: "other" }, p.ctx))).toBe("CONFLICT");
+    expect(await errorCode(add({ ...mini, ssh: "other" }, p.ctx))).toBe("CONFLICT");
     expect(await errorCode(removeHost({ id: "nope" }, p.ctx))).toBe("NOT_FOUND");
     expect(await listHosts(p.ctx)).toEqual([{ ...mini, enabled: true }]);
   });
 
   it("removes a host and gives it back with purge", async () => {
-    await addHost(mini, p.ctx);
-    await addHost({ id: "other", ssh: "o", maxWorkers: 1 }, p.ctx);
+    await add(mini, p.ctx);
+    await add({ id: "other", ssh: "o", maxWorkers: 1 }, p.ctx);
 
     expect(await removeHost({ id: "mini" }, p.ctx)).toEqual({ ...mini, enabled: true, purge: false });
     expect(await removeHost({ id: "other", purge: true }, p.ctx)).toEqual({
@@ -125,7 +222,7 @@ describe("host", () => {
   it.each(["pending", "running"] as ThreadStatus[])(
     "refuses to remove a host with a %s Thread in a known Project",
     async (status) => {
-      await addHost(mini, p.ctx);
+      await add(mini, p.ctx);
       await recordProject({ path: p.paths.root, name: "Rowbly" }, p.ctx);
       const thread = await worker("mini");
 
@@ -144,7 +241,7 @@ describe("host", () => {
   );
 
   it("removes a host when its Threads ended, or when the active Threads are on other hosts", async () => {
-    await addHost(mini, p.ctx);
+    await add(mini, p.ctx);
     await recordProject({ path: p.paths.root, name: "Rowbly" }, p.ctx);
     await recordProject({ path: join(p.paths.root, "gone"), name: "Gone" }, p.ctx);
     const done = await worker("mini");
@@ -169,7 +266,7 @@ describe("host", () => {
     await writeFile(rcFile(), text);
 
     expect(await errorCode(listHosts(p.ctx))).toBe("VALIDATION");
-    expect(await errorCode(addHost(mini, p.ctx))).toBe("VALIDATION");
+    expect(await errorCode(add(mini, p.ctx))).toBe("VALIDATION");
     expect(await errorCode(removeHost({ id: "mini" }, p.ctx))).toBe("VALIDATION");
     expect(await readFile(rcFile(), "utf8")).toBe(text);
   });

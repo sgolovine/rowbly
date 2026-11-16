@@ -288,11 +288,11 @@ A worker host is a remote machine that runs factory workers only. The hosts belo
 a Project. Rowbly keeps them in the `hosts` key of `~/.rowblyrc.json`. These commands do not need a
 Project.
 
-| Command                                                  | JSON result    |
-| -------------------------------------------------------- | -------------- |
-| `rowbly host list`                                       | Array of Host  |
-| `rowbly host add <id> --ssh <target> --max-workers <n>`  | Host           |
-| `rowbly host remove <id> [--purge]`                      | Host, `purge`  |
+| Command                                                  | JSON result     |
+| -------------------------------------------------------- | --------------- |
+| `rowbly host list`                                       | Array of Host   |
+| `rowbly host add <id> --ssh <target> --max-workers <n>`  | Host, `install` |
+| `rowbly host remove <id> [--purge]`                      | Host, `purge`   |
 
 A Host record has this shape:
 
@@ -305,6 +305,12 @@ A Host record has this shape:
 - **SSH target.** The target must not be empty. It must not start with `-`, and it must not have
   whitespace or control characters. A bad target gives `VALIDATION`.
 - **Worker limit.** `--max-workers` is a whole number of 1 or more. A bad value gives `VALIDATION`.
+- **Install.** `host add` needs SSH access with a key. It checks Node 22.19.0 or later on the host, and
+  installs the exact Rowbly build in `~/.local/share/rowbly/versions/<build-id>/` on the host. `node`
+  and `npm` must be on the `PATH` of a non-interactive SSH session. A missing Node gives
+  `HOST_NODE_MISSING`. An old Node gives `HOST_NODE_TOO_OLD`. A failed install gives
+  `HOST_INSTALL_FAILED`. Then the host is not recorded. The `install` object has `state`, `buildId`,
+  `localVersion`, `remoteVersion`, `remoteExecutable`, `installed`, `nodeVersion` and `stderr`.
 - **Removal.** `host remove` gives `CONFLICT` while a known Project has a `pending` or `running` Thread
   on the host. `--purge` does no work at this time.
 - **Bad file.** If `~/.rowblyrc.json` is not valid, each command gives `VALIDATION` and does not change the file.

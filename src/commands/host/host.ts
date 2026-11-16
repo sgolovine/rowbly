@@ -1,6 +1,6 @@
 import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
-import { addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
+import { type AddedHost, addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
 import { run, runBytes, runWithoutContext } from "../output/output.js";
@@ -16,6 +16,12 @@ async function hostRequest() {
   return { dir: process.env.ROWBLY_OUTBOX, text: await streamText(process.stdin) };
 }
 
+function addedText(host: AddedHost): string {
+  const action = host.install.installed ? "installed" : "found";
+
+  return `Added worker host ${describe(host)}\nRowbly ${host.install.buildId} ${action} at ${host.install.remoteExecutable}`;
+}
+
 function listText(hosts: readonly Host[]): string {
   return hosts.length === 0 ? "No worker hosts." : hosts.map(describe).join("\n");
 }
@@ -24,7 +30,7 @@ function listText(hosts: readonly Host[]): string {
 export function registerHostCommands(program: Command): void {
   program
     .command("add <id>")
-    .description("Record a worker host in ~/.rowblyrc.json")
+    .description("Check Node, install this Rowbly version on a worker host, and record it in ~/.rowblyrc.json")
     .requiredOption("--ssh <target>", "SSH target of the host, e.g. user@mini.lan")
     .requiredOption("--max-workers <n>", "largest number of workers on the host at one time")
     .action((id: string, opts: { ssh: string; maxWorkers: string }, command: Command) =>
@@ -32,7 +38,7 @@ export function registerHostCommands(program: Command): void {
         command,
         // The service checks the number, so a bad value gives a VALIDATION error.
         (ctx) => addHost({ id, ssh: opts.ssh, maxWorkers: Number(opts.maxWorkers) }, ctx),
-        (host) => `Added worker host ${describe(host)}`,
+        addedText,
       ),
     );
 
