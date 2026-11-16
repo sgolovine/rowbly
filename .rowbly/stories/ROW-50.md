@@ -2,6 +2,7 @@
 title: Build the How it works and Watch everything live landing sections
 stage: DONE
 position: 58
+uid: f64c047d-9335-4a6f-8800-f686eab3f8ff
 createdAt: 2026-11-14T23:14:02.000Z
 updatedAt: 2026-11-15T00:55:09.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-50
