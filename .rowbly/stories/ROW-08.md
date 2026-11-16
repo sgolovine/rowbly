@@ -2,6 +2,8 @@
 title: Store factory state in .rowbly/state.json
 stage: DONE
 position: 8
+createdAt: 2026-11-10T21:35:49.000Z
+updatedAt: 2026-11-10T22:26:40.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-08-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/187
 ---

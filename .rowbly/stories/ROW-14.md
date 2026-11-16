@@ -2,6 +2,8 @@
 title: Click and dismiss warnings
 stage: DONE
 position: 14
+createdAt: 2026-11-14T15:44:41.000Z
+updatedAt: 2026-11-14T16:04:19.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-14
 pull_request: https://github.com/sgolovine/rowbly/pull/197
 ---

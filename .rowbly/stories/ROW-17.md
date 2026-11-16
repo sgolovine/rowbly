@@ -2,6 +2,8 @@
 title: "Factory Git settings: commit author and message"
 stage: DONE
 position: 16
+createdAt: 2026-11-14T16:46:46.000Z
+updatedAt: 2026-11-14T17:04:06.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-17
 pull_request: https://github.com/sgolovine/rowbly/pull/200
 ---
