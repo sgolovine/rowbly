@@ -3,6 +3,7 @@ import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path";
 import { missingCachedAttachments, readCachedAttachment } from "../attachment-cache/attachment-cache.js";
 import { validateAttachmentId } from "../attachment-files/attachment-files.js";
+import { isAttachmentFileName } from "../attachment-files/attachment-type.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import type { OwnerProbe } from "../factory-ownership/ownership-lock.js";
 import { type ModelChoice, validModel } from "../factory-settings/factory-settings.js";
@@ -99,11 +100,15 @@ function validFile(file: unknown): CopyFile {
 }
 
 function validAttachment(attachment: unknown): CopyAttachment {
-  const { storyId, id } = (attachment ?? {}) as Partial<CopyAttachment>;
+  const { storyId, id, file } = (attachment ?? {}) as Partial<CopyAttachment>;
 
   validateAttachmentId(id as string);
 
-  return { storyId: validateStoryId(storyId), id: id as string };
+  if (!isAttachmentFileName(id as string, file)) {
+    throw invalid("The file of an attachment must be its id with one safe extension", { id, file });
+  }
+
+  return { storyId: validateStoryId(storyId), id: id as string, file };
 }
 
 function validCopy(copy: unknown): HostPrepareInput["copy"] {
@@ -165,7 +170,7 @@ async function checkCache(paths: HostAgentPaths, attachments: readonly CopyAttac
   const missing = await missingCachedAttachments({ dir: paths.attachments, ids });
 
   if (missing.length > 0) {
-    throw invalid(`The PNG cache does not have ${missing.length} attachment(s)`, { missing });
+    throw invalid(`The attachment cache does not have ${missing.length} attachment(s)`, { missing });
   }
 }
 
@@ -181,7 +186,7 @@ async function writeCopyFile(root: string, path: string, content: string | Uint8
 async function writeAttachment(paths: HostAgentPaths, root: string, attachment: CopyAttachment): Promise<void> {
   const bytes = await readCachedAttachment({ dir: paths.attachments, id: attachment.id });
 
-  await writeCopyFile(root, `.rowbly/attachments/${attachment.storyId}/${attachment.id}.png`, bytes);
+  await writeCopyFile(root, `.rowbly/attachments/${attachment.storyId}/${attachment.file}`, bytes);
 }
 
 /** Writes the copy to a new folder, then puts it in place of `copy/`. A failure leaves the old copy. */
@@ -251,7 +256,7 @@ async function writePrepared(paths: HostAgentPaths, input: HostPrepareInput, opt
 
 /**
  * Writes the copy of the main machine to `threads/<thread-id>/copy/` and records the launch data. It checks the full
- * input and the PNG cache first, and it holds the slot lock, so that no work of the Thread starts during the write.
+ * input and the attachment cache first, and it holds the slot lock, so that no work of the Thread starts during the write.
  */
 export async function prepareHostThread(
   paths: HostAgentPaths,

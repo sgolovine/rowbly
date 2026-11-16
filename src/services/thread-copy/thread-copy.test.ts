@@ -1,3 +1,5 @@
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { addAttachment } from "../attachment/attachment.js";
 import { createStory } from "../story/story.js";
@@ -40,13 +42,47 @@ describe("thread copy", () => {
     expect(paths.some((path) => path.endsWith(".png"))).toBe(false);
     expect(copy.files.find((file) => file.path === ".rowbly/prompts/WORKER.md")?.content).toBe("Worker prompt");
     expect(copy.attachments).toEqual([
-      { storyId: story.id, id: own.id },
-      { storyId: upstream.id, id: fromUpstream.id },
+      { storyId: story.id, id: own.id, file: `${own.id}.png` },
+      { storyId: upstream.id, id: fromUpstream.id, file: `${fromUpstream.id}.png` },
     ]);
   });
 
-  it("excludes the private runtime files and the PNG files", () => {
-    for (const path of ["state.json", "state.json.lock", "runtime/a.json", "attachments/ROW-1/a.png"]) {
+  it("lists an attachment file of a different type with its file name and does not send it as text", async () => {
+    const story = await createStory({ title: "Work" }, project.ctx);
+    const pdf = await addAttachment(
+      { story: story.id, image: { name: "report.pdf", bytes: Buffer.from("%PDF-1.7") } },
+      project.ctx,
+    );
+    const raw = await addAttachment(
+      { story: story.id, image: { name: "blob", bytes: Buffer.from([0, 1, 2, 255]) } },
+      project.ctx,
+    );
+    const dir = join(project.paths.dir, "attachments", story.id);
+    expect((await readdir(dir)).toSorted()).toEqual([`${pdf.id}.pdf`, raw.id, "manifest.json"].toSorted());
+
+    const copy = await buildThreadCopy({ storyId: story.id }, project.ctx);
+    const paths = copy.files.map((file) => file.path);
+
+    expect(paths.filter((path) => path.startsWith(`.rowbly/attachments/${story.id}/`))).toEqual([
+      `.rowbly/attachments/${story.id}/manifest.json`,
+    ]);
+    expect(copy.attachments).toEqual([
+      { storyId: story.id, id: pdf.id, file: `${pdf.id}.pdf` },
+      { storyId: story.id, id: raw.id, file: raw.id },
+    ]);
+  });
+
+  it("excludes the private runtime files and all attachment files", () => {
+    const excluded = [
+      "state.json",
+      "state.json.lock",
+      "runtime/a.json",
+      "attachments/ROW-1/a.png",
+      "attachments/ROW-1/a.pdf",
+      "attachments/ROW-1/a",
+      "attachments/ROW-1/x/manifest.json",
+    ];
+    for (const path of excluded) {
       expect(excludedFromCopy(path)).toBe(true);
     }
     for (const path of ["rowbly.config.json", "stories/TODO/ROW-1.md", "attachments/ROW-1/manifest.json"]) {

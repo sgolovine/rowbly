@@ -214,7 +214,7 @@ function registerHostServeCommands(program: Command, launch: FactoryLaunch): voi
     );
 }
 
-/** Registers the hidden request and upload calls of a remote run: the PNG cache and the prepare step. */
+/** Registers the hidden request and upload calls of a remote run: the attachment cache and the prepare step. */
 function registerHostRunCommands(program: Command): void {
   program
     .command("cache-missing <project-id>", { hidden: true })

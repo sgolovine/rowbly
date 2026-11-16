@@ -216,9 +216,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
     It writes the copy to the Thread folder and writes `{ threadId, copy, files, attachments }`.
     It gives `CONFLICT` while the Thread has active work.
   - `host cache-missing <project-id>` reads `{ "ids": [<attachment id>, …] }`. It writes
-    `{ "missing": [<id>, …] }` with the ids that are not in the PNG cache.
-  - `host cache-put <project-id> <attachment-id>` reads the PNG bytes (10 MiB or less). It puts
-    them in the PNG cache and writes `{ id, added }`.
+    `{ "missing": [<id>, …] }` with the ids that are not in the attachment cache.
+  - `host cache-put <project-id> <attachment-id>` reads the bytes of an attachment file of any
+    type (10 MiB or less). It puts them in the attachment cache and writes `{ id, added }`.
   - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
   apply the outbox. Each command reads one JSON object on stdin and the outbox folder from

@@ -68,3 +68,17 @@ export function attachmentFileName(record: { readonly id: string; readonly name:
 
   return SAFE_EXTENSION.test(extension) ? `${record.id}${extension}` : record.id;
 }
+
+/**
+ * Tells whether `file` is a name that `attachmentFileName` can give for the id: the id alone, or the id with one safe
+ * extension, for example `<id>.png` or `<id>.pdf`. Such a name is one safe path segment.
+ */
+export function isAttachmentFileName(id: string, file: unknown): file is string {
+  if (typeof file !== "string" || !file.startsWith(id)) {
+    return false;
+  }
+
+  const extension = file.slice(id.length);
+
+  return extension === "" || SAFE_EXTENSION.test(extension);
+}

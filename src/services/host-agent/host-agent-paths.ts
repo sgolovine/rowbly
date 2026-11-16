@@ -28,7 +28,7 @@ export interface HostAgentPaths {
   readonly threads: string;
   /** The runtime folder of the local executor. The session files are in `runtime/sessions/<thread-id>/`. */
   readonly runtime: string;
-  /** The PNG cache of the Project, by attachment id. */
+  /** The attachment cache of the Project, by attachment id. The files have any type. */
   readonly attachments: string;
   /** The CLI shim of the workers. */
   readonly bin: string;

@@ -22,7 +22,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-slots.ts`         | The machine limit and the slots of all Projects on the host.                     |
 | `host-agent-work.ts`    | The `HostWorkRunner` interface and the run commands.                             |
 | `host-agent-prepare.ts` | `prepareHostThread`: the copy and `launch.json` of a Thread.                     |
-| `host-agent-cache.ts`   | The PNG cache commands `cache-missing` and `cache-put`.                          |
+| `host-agent-cache.ts`   | The attachment cache commands `cache-missing` and `cache-put`.                   |
 | `host-agent-input.ts`   | The bounded read of stdin.                                                       |
 | `host-runner.ts`        | `createHostRunner`: the real `HostWorkRunner`.                                   |
 | `host-run-events.ts`    | The events of the executor that write `run.json`.                                |
@@ -47,7 +47,7 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (ignored at this time)                | Frames                                     |
 | `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`   |
 | `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                 |
-| `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The PNG bytes (10 MiB or less)               | `{ id, added }`                            |
+| `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                            |
 
 The project id is a dash-case token of 1 to 64 characters: `^[a-z0-9]+(-[a-z0-9]+)*$`. The main
 machine makes it. A bad id gives `VALIDATION` before Rowbly writes a file.
@@ -71,7 +71,7 @@ All paths are below the home folder of the SSH user. Each folder that the agent 
 | `agent/threads/<thread-id>/run.json`                       | The run state.                              |
 | `agent/threads/<thread-id>/write.lock`                     | The `flock` file of the worker CLI prefix.  |
 | `agent/runtime/sessions/<thread-id>/`                      | The Pi session files of the Thread.         |
-| `agent/attachments/<id>.png`                               | The PNG cache of the Project.               |
+| `agent/attachments/<id>.png`                               | The attachment cache of the Project.        |
 | `agent/bin/rowbly`                                         | The CLI shim of the workers.                |
 | `.local/share/rowbly/slots/limit.json`                     | The machine limit: `{ "maxWorkers": <n> }`. |
 | `.local/share/rowbly/slots/<project-id>--<thread-id>.json` | One slot, with the owner of the agent.      |
@@ -163,12 +163,13 @@ The worker limit applies to the full host, for all Projects. Each `host serve --
 
 A `launch` takes a slot before it starts the work. The agent releases the slot when the work ends.
 
-## PNG cache
+## Attachment cache
 
-The PNG cache of the Project is `agent/attachments/`. The main machine first sends `cache-missing`
-with the ids of the copy. Then it sends `cache-put` for each missing id. A bad attachment id, bytes
-that are not a PNG and bytes larger than 10 MiB give `VALIDATION`. An id that is in the cache keeps
-its first file, because the content of an attachment never changes.
+The attachment cache of the Project is `agent/attachments/`. An attachment can have any file type.
+The cache file is `<id>.png` for all types, for compatibility with earlier versions. The main
+machine first sends `cache-missing` with the ids of the copy. Then it sends `cache-put` for each
+missing id. A bad attachment id and bytes larger than 10 MiB give `VALIDATION`. An id that is in the
+cache keeps its first file, because the content of an attachment never changes.
 
 ## Prepare step
 
@@ -180,20 +181,24 @@ The input of `host prepare` is
 `{ threadId, thread, storyId, clone, model, message, copy: { files, attachments } }`.
 `thread` is the Thread record. `clone` is the clone path of the host record; a relative path is
 relative to the home folder. `message` is the full worker message. The host does not change it.
-Each file is `{ path, content }`, and each attachment is `{ storyId, id }`. The `thread-copy`
-service (`buildThreadCopy`) makes the copy on the main machine.
+Each file is `{ path, content }`, and each attachment is `{ storyId, id, file }`. `file` is the
+name of the attachment file, from `attachmentFileName` of the record: `<id>.png` for a PNG, else
+the id with the safe extension of the name, or the id alone. The `thread-copy` service
+(`buildThreadCopy`) makes the copy on the main machine. The copy files have no attachment file,
+only the manifests. All attachment files go through the cache, not as text.
 
 `prepareHostThread` checks the full input before it writes:
 
 - Each path must be below `.rowbly/`. A path with `..`, an empty part or a `\`, an absolute path,
   `state.json*` and `runtime/` give `VALIDATION`.
-- A PNG that is not in the cache gives `VALIDATION`. The `details.missing` list has the ids.
+- An attachment `file` that is not the id, or the id with one safe extension, gives `VALIDATION`.
+- An attachment that is not in the cache gives `VALIDATION`. The `details.missing` list has the ids.
 - The Thread record must be the worker Thread of the Story.
 - While the Thread has a slot with a live owner, `prepare` gives `CONFLICT`. The check and the write
   hold the slot lock, so no work of the Thread starts during the write.
 
-Then it writes the copy to a temporary folder, puts each listed PNG in
-`.rowbly/attachments/<story-id>/<id>.png`, and renames the folder over `copy/`. Each folder has mode
+Then it writes the copy to a temporary folder, puts each listed attachment
+file in `.rowbly/attachments/<story-id>/<file>`, and renames the folder over `copy/`. Each folder has mode
 0700 and each file mode 0600. Last, it writes `launch.json` durably. A failure writes no copy. A new
 `prepare` replaces the old copy. `run.json` stays.
 

@@ -81,7 +81,7 @@ describe("hidden host agent commands", () => {
     expect(JSON.parse(second.stdout)).toEqual({ started: false, owner: started.owner });
   }, 60_000);
 
-  it("host cache-missing and host cache-put use the PNG cache, and refuse bad input with VALIDATION", async () => {
+  it("host cache-missing and host cache-put use the attachment cache, and refuse bad input with VALIDATION", async () => {
     const png = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
     const id = "a00000000-0000-4000-8000-000000000001";
     const ids = JSON.stringify({ ids: [id] });
@@ -98,7 +98,6 @@ describe("hidden host agent commands", () => {
     const large = Buffer.concat([png, Buffer.alloc(10 * 1024 * 1024)]);
     for (const [args, input] of [
       [["host", "cache-put", "p1", "bad id"], png],
-      [["host", "cache-put", "p1", id], Buffer.from("not a png")],
       [["host", "cache-put", "p1", id], large],
       [["host", "prepare", "p1"], "{}"],
     ] as const) {

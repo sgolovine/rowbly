@@ -12,6 +12,7 @@ import { acquireSlot, writeSlotLimit } from "./host-slots.js";
 const PNG = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
 const ID = "a00000000-0000-4000-8000-000000000001";
 const ID2 = "a00000000-0000-4000-8000-000000000002";
+const PDF = Buffer.from("%PDF-1.7");
 
 function thread(id = "t1", storyId = "ROW-1"): ThreadRecord {
   const createdAt = new Date().toISOString();
@@ -66,15 +67,21 @@ describe("host prepare", () => {
   const paths = () => hostAgentPaths("p1", home.path);
   const options = () => ({ home: home.path });
 
-  it("writes the copy and each listed PNG with private modes, and records the launch data", async () => {
+  it("writes the copy and each listed attachment file with private modes, and records the launch data", async () => {
     await hostCachePut(paths(), ID, PNG);
+    await hostCachePut(paths(), ID2, PDF);
+    const attachments = [
+      { storyId: "ROW-1", id: ID, file: `${ID}.png` },
+      { storyId: "ROW-1", id: ID2, file: `${ID2}.pdf` },
+    ];
 
-    const result = await prepareHostThread(paths(), input({}, undefined, [{ storyId: "ROW-1", id: ID }]), options());
+    const result = await prepareHostThread(paths(), input({}, undefined, attachments), options());
     const files = threadPaths(paths(), "t1");
 
-    expect(result).toEqual({ threadId: "t1", copy: files.copy, files: 2, attachments: 1 });
+    expect(result).toEqual({ threadId: "t1", copy: files.copy, files: 2, attachments: 2 });
     expect(await readFile(join(files.copy, ".rowbly/stories/WORK/ROW-1.md"), "utf8")).toBe("# Story\n");
     expect(await readFile(join(files.copy, `.rowbly/attachments/ROW-1/${ID}.png`))).toEqual(PNG);
+    expect(await readFile(join(files.copy, `.rowbly/attachments/ROW-1/${ID2}.pdf`))).toEqual(PDF);
     for (const entry of await modes(files.copy)) expect(entry.mode).toBe(entry.dir ? 0o700 : 0o600);
     expect((await stat(files.copy)).mode & 0o777).toBe(0o700);
     expect((await stat(files.launch)).mode & 0o777).toBe(0o600);
@@ -123,11 +130,29 @@ describe("host prepare", () => {
     await expect(readdir(threadPaths(paths(), "t1").dir)).rejects.toMatchObject({ code: "ENOENT" });
   });
 
-  it("gives VALIDATION with the missing ids for a PNG that is not in the cache", async () => {
+  it("writes an attachment file without an extension with its id as the name", async () => {
+    await hostCachePut(paths(), ID, PDF);
+
+    await prepareHostThread(paths(), input({}, undefined, [{ storyId: "ROW-1", id: ID, file: ID }]), options());
+
+    expect(await readFile(join(threadPaths(paths(), "t1").copy, `.rowbly/attachments/ROW-1/${ID}`))).toEqual(PDF);
+  });
+
+  it("gives VALIDATION for an attachment file name that is not the id with one safe extension", async () => {
+    await hostCachePut(paths(), ID, PNG);
+    for (const file of [undefined, "../x.png", `${ID}/x.png`, `${ID}.p/df`, `${ID}..png`, `${ID2}.png`, `${ID}.PNG`]) {
+      await expect(
+        prepareHostThread(paths(), input({}, undefined, [{ storyId: "ROW-1", id: ID, file }]), options()),
+      ).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+    await expect(readdir(threadPaths(paths(), "t1").dir)).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it("gives VALIDATION with the missing ids for an attachment file that is not in the cache", async () => {
     await hostCachePut(paths(), ID, PNG);
     const attachments = [
-      { storyId: "ROW-1", id: ID },
-      { storyId: "ROW-1", id: ID2 },
+      { storyId: "ROW-1", id: ID, file: `${ID}.png` },
+      { storyId: "ROW-1", id: ID2, file: `${ID2}.png` },
     ];
 
     await expect(prepareHostThread(paths(), input({}, undefined, attachments), options())).rejects.toMatchObject({

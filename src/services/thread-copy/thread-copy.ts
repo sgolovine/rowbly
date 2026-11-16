@@ -2,6 +2,7 @@ import type { Dirent } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { attachmentDir, readAttachments } from "../attachment-files/attachment-files.js";
+import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -15,10 +16,14 @@ export interface CopyFile {
   readonly content: string;
 }
 
-/** One PNG attachment that the copy needs. The host takes the bytes from its cache. */
+/**
+ * One attachment file that the copy needs. The host takes the bytes from its cache and writes them to
+ * `.rowbly/attachments/<storyId>/<file>`. `file` is the name that `attachmentFileName` gives for the record.
+ */
 export interface CopyAttachment {
   readonly storyId: string;
   readonly id: string;
+  readonly file: string;
 }
 
 /** The copy of the tracked `.rowbly/` files that goes to a worker host with a launch. */
@@ -27,13 +32,30 @@ export interface ThreadCopy {
   readonly attachments: readonly CopyAttachment[];
 }
 
-/** True for a path, relative to `.rowbly/`, that the copy does not contain: private runtime files and PNG files. */
-export function excludedFromCopy(relativePath: string): boolean {
-  const top = relativePath.split("/")[0] ?? "";
+/** The name of the attachment manifest in each `attachments/<story-id>/` folder. */
+const MANIFEST = "manifest.json";
 
+/** True for an attachment file: each file below `attachments/<story-id>/` other than the manifest. */
+function isAttachmentFile(parts: readonly string[]): boolean {
+  return parts[0] === "attachments" && parts.length >= 3 && !(parts.length === 3 && parts[2] === MANIFEST);
+}
+
+/**
+ * True for a path, relative to `.rowbly/`, that the copy does not contain: private runtime files, attachment files of
+ * any type and PNG files. The attachment files go to the host through its cache, not as text.
+ */
+export function excludedFromCopy(relativePath: string): boolean {
+  const parts = relativePath.split("/");
+  const top = parts[0] ?? "";
   const lower = relativePath.toLowerCase();
 
-  return top.startsWith("state.json") || top === "runtime" || lower.endsWith(".png") || lower.endsWith(".tmp");
+  return (
+    top.startsWith("state.json") ||
+    top === "runtime" ||
+    isAttachmentFile(parts) ||
+    lower.endsWith(".png") ||
+    lower.endsWith(".tmp")
+  );
 }
 
 /** Gives the paths of the regular files below the folder, relative to `.rowbly/`. Symlinks are skipped. */
@@ -65,13 +87,13 @@ async function copyFile(paths: ProjectPaths, path: string): Promise<CopyFile> {
 async function storyAttachments(paths: ProjectPaths, storyId: string): Promise<CopyAttachment[]> {
   const records = await readAttachments(await attachmentDir(paths, storyId));
 
-  return records.map((record) => ({ storyId, id: record.id }));
+  return records.map((record) => ({ storyId, id: record.id, file: attachmentFileName(record) }));
 }
 
 /**
  * Reads the tracked `.rowbly/` files of the Project for a remote launch of the Story: Stories, Stages, config, prompts,
- * Specs and the attachment manifests. It skips `state.json*`, `runtime/` and the PNG files. It also gives the PNG
- * attachments of the Story and of its upstream Stories.
+ * Specs and the attachment manifests. It skips `state.json*`, `runtime/` and all attachment files. It also gives the
+ * attachment files of the Story and of its upstream Stories, of any file type.
  */
 export async function buildThreadCopy(
   input: { readonly storyId: string },

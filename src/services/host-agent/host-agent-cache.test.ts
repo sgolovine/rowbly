@@ -10,7 +10,7 @@ const PNG = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
 const ID = "a00000000-0000-4000-8000-000000000001";
 const ID2 = "a00000000-0000-4000-8000-000000000002";
 
-describe("host PNG cache", () => {
+describe("host attachment cache", () => {
   const home = useTempDir();
   const paths = () => hostAgentPaths("p1", home.path);
 
@@ -23,13 +23,17 @@ describe("host PNG cache", () => {
     expect(await hostCacheMissing(paths(), { ids: [ID, ID2] })).toEqual({ missing: [ID2] });
   });
 
-  it("gives VALIDATION for a bad id, bytes that are not a PNG and bytes larger than 10 MiB", async () => {
+  it("accepts an attachment file of any type", async () => {
+    expect(await hostCachePut(paths(), ID, Buffer.from("%PDF-1.7"))).toEqual({ id: ID, added: true });
+    expect(await hostCacheMissing(paths(), { ids: [ID] })).toEqual({ missing: [] });
+  });
+
+  it("gives VALIDATION for a bad id and bytes larger than 10 MiB", async () => {
     const validation = expect.objectContaining({ code: "VALIDATION" });
 
     await expect(hostCacheMissing(paths(), { ids: ["../x"] })).rejects.toEqual(validation);
     await expect(hostCacheMissing(paths(), { ids: "x" })).rejects.toEqual(validation);
     await expect(hostCachePut(paths(), "../x", PNG)).rejects.toEqual(validation);
-    await expect(hostCachePut(paths(), ID, Buffer.from("not a png"))).rejects.toEqual(validation);
 
     const large = Buffer.concat([PNG, Buffer.alloc(MAX_ATTACHMENT_BYTES)]);
     await expect(hostCachePut(paths(), ID, large)).rejects.toEqual(validation);
