@@ -5,7 +5,7 @@ import { HostProtocolError } from "../host-transport/host-errors.js";
 import type { HostTransport, RemoteCommand } from "../host-transport/host-transport.js";
 import type { OutboxEntry } from "../outbox/outbox.js";
 
-/** Gives the outbox entries and the PNG files of one worker host, and takes the acknowledgement. */
+/** Gives the outbox entries and the attachment files of one worker host, and takes the acknowledgement. */
 export interface OutboxSource {
   /** The entries with a `seq` greater than `seq`, in `seq` order. */
   entriesAfter(seq: number): Promise<readonly OutboxEntry[]>;
@@ -54,7 +54,7 @@ async function entriesAfter(input: TransportSourceInput, seq: number): Promise<r
 
 async function blob(input: TransportSourceInput, sha256: string): Promise<Uint8Array> {
   const command: RemoteCommand = [input.rowbly, "host", "blob", sha256];
-  // One byte more than the limit tells the apply that the PNG is too large.
+  // One byte more than the limit tells the apply that the file is too large.
   const result = await input.transport.bytes(command, null, { limit: MAX_ATTACHMENT_BYTES + 1 });
 
   if (result.exitCode !== 0) {

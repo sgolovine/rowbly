@@ -11,7 +11,7 @@ import type { FormValues } from "../../../components/index.js";
 import { showToast, type ToastStore } from "../../../hooks/index.js";
 import { moveDelta } from "../../../keymap.js";
 
-/** The question that the Attachments tab asks: the path of a new PNG, or the removal of an image. */
+/** The question that the Attachments tab asks: the path of a new file, or the removal of a file. */
 export type AttachmentTask = "path" | "remove" | null;
 
 /** The environment of the handlers of the Attachments tab. */
@@ -27,14 +27,14 @@ export interface AttachmentsTabEnv {
   readonly reload: () => void;
 }
 
-/** Opens the selected attachment in the viewer of the system. */
+/** Opens the selected attachment in the application of the system for its file type. */
 export function openItem(env: AttachmentsTabEnv): void {
   if (env.item) {
     void openAttachment({ story: env.storyId, id: env.item.id }, env.ctx).catch(env.toast.error);
   }
 }
 
-/** The arrows move the selection, `n` adds a PNG, `o` opens and `d` removes the selected image. */
+/** The arrows move the selection, `n` adds a file, `o` opens and `d` removes the selected file. */
 export function handleKey(env: AttachmentsTabEnv, input: string, key: Key): void {
   const delta = moveDelta(input, key);
 
@@ -49,12 +49,12 @@ export function handleKey(env: AttachmentsTabEnv, input: string, key: Key): void
   }
 }
 
-/** Attaches the PNG at the path from the form. */
+/** Attaches the file at the path from the form. */
 export async function attachFile(env: AttachmentsTabEnv, values: FormValues): Promise<void> {
   await addAttachment({ story: env.storyId, file: String(values.path) }, env.ctx);
   env.setTask(null);
   env.reload();
-  showToast(env.toast, "info", "PNG attached");
+  showToast(env.toast, "info", "File attached");
 }
 
 /** Closes the question and removes `item`. */

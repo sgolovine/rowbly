@@ -35,7 +35,7 @@ describe("outbox attention", () => {
 
   it("gives the attachment id and the path of the kept PNG", () => {
     expect(conflictText(conflict({ attachmentId: "a1", reason: "The Story does not exist", png: "/r/x.png" }))).toBe(
-      "Outbox conflict from host mini, seq 7, attachment a1: The Story does not exist. The PNG is in /r/x.png.",
+      "Outbox conflict from host mini, seq 7, attachment a1: The Story does not exist. The file is in /r/x.png.",
     );
   });
 

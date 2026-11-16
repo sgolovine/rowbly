@@ -67,17 +67,23 @@ describe("attachment cache", () => {
     }
   });
 
-  it("refuses bytes that are not a PNG or are larger than 10 MiB, and writes no file", async () => {
+  it("refuses bytes that are larger than 10 MiB, and writes no file", async () => {
     const large = Buffer.alloc(MAX_ATTACHMENT_BYTES + 1);
     PNG.copy(large);
 
-    for (const bytes of [Buffer.from("not a png"), large]) {
-      await expect(putCachedAttachment({ dir: cache(), id: ID, bytes })).rejects.toMatchObject({
-        code: "VALIDATION",
-      });
-    }
+    await expect(putCachedAttachment({ dir: cache(), id: ID, bytes: large })).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
 
     expect(await hasCachedAttachment({ dir: cache(), id: ID })).toBe(false);
+  });
+
+  it("keeps the bytes of a file that is not a PNG, in the same `<id>.png` name", async () => {
+    const pdf = Buffer.from("%PDF-1.7\n");
+
+    expect(await putCachedAttachment({ dir: cache(), id: ID, bytes: pdf })).toBe(true);
+    expect(await readCachedAttachment({ dir: cache(), id: ID })).toEqual(pdf);
+    expect(await readdir(cache())).toEqual([`${ID}.png`]);
   });
 
   it("refuses a symlink in place of a cached PNG", async () => {

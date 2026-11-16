@@ -11,8 +11,8 @@ import { run } from "../output/output.js";
 export function registerAttachmentCommands(program: Command): void {
   program
     .command("add-attachment <story> [file]")
-    .description("Attach a PNG image to a Story")
-    .option("--from-clipboard", "read a PNG from the clipboard")
+    .description("Attach a file to a Story")
+    .option("--from-clipboard", "read a PNG image from the clipboard")
     .action((story: string, file: string | undefined, opts: { fromClipboard?: boolean }, command: Command) =>
       run(
         command,
@@ -23,7 +23,7 @@ export function registerAttachmentCommands(program: Command): void {
 
   program
     .command("list-attachments <story>")
-    .description("List the PNG images of a Story")
+    .description("List the attachments of a Story")
     .action((story: string, _opts: unknown, command: Command) =>
       run(
         command,
@@ -35,7 +35,7 @@ export function registerAttachmentCommands(program: Command): void {
 
   program
     .command("open-attachment <story> <id>")
-    .description("Open a PNG with the associated application")
+    .description("Open an attachment with the associated application")
     .action((story: string, id: string, _opts: unknown, command: Command) =>
       run(
         command,
@@ -46,7 +46,7 @@ export function registerAttachmentCommands(program: Command): void {
 
   program
     .command("remove-attachment <story> <id>")
-    .description("Remove an attachment and its PNG")
+    .description("Remove an attachment and its file")
     .action((story: string, id: string, _opts: unknown, command: Command) =>
       run(
         command,

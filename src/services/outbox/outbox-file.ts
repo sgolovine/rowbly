@@ -105,8 +105,9 @@ export async function appendOutboxEntry(target: OutboxTarget, body: EntryBody): 
 }
 
 /**
- * Writes the PNG to `blobs/<sha256>.png` and syncs it and the folder to the disk. A blob that exists has the same
- * bytes, so the function keeps it. Gives the `sha256`.
+ * Writes the attachment file to `blobs/<sha256>.png` and syncs it and the folder to the disk. The name stays `.png`
+ * for all file types, for compatibility with the outbox of an earlier version. A blob that exists has the same bytes,
+ * so the function keeps it. Gives the `sha256`.
  */
 export async function writeOutboxBlob(dir: string, bytes: Uint8Array): Promise<string> {
   const { blobsDir } = outboxPaths(dir);
@@ -128,7 +129,7 @@ export async function writeOutboxBlob(dir: string, bytes: Uint8Array): Promise<s
   return sha256;
 }
 
-/** Writes the PNG, then appends the entry. The caller holds the outbox lock. */
+/** Writes the file, then appends the entry. The caller holds the outbox lock. */
 async function appendAttachmentLocked(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
   const sha256 = await writeOutboxBlob(target.dir, write.bytes);
 
@@ -136,8 +137,8 @@ async function appendAttachmentLocked(target: OutboxTarget, write: AttachmentAdd
 }
 
 /**
- * Writes the PNG first, then the entry. Thus an entry never points to a missing PNG. The outbox lock covers both
- * writes, so that an acknowledgement cannot remove the PNG before the entry is there.
+ * Writes the file first, then the entry. Thus an entry never points to a missing file. The outbox lock covers both
+ * writes, so that an acknowledgement cannot remove the file before the entry is there.
  */
 async function appendAttachmentAdd(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
   await mkdir(target.dir, { recursive: true });
@@ -267,11 +268,11 @@ export async function readOutboxEntries(dir: string, afterSeq: number): Promise<
 export interface AcknowledgeResult {
   /** The number of removed lines. */
   readonly removed: number;
-  /** The `sha256` of each removed PNG. */
+  /** The `sha256` of each removed file. */
   readonly blobs: readonly string[];
 }
 
-/** The `sha256` of each PNG that an `attachment.add` line points to. */
+/** The `sha256` of each file that an `attachment.add` line points to. */
 function blobsInUse(lines: readonly string[]): Set<string> {
   const entries = lines.map((line) => parseLine(line));
 
@@ -293,7 +294,7 @@ async function fileNames(dir: string): Promise<string[]> {
   }
 }
 
-/** Removes each PNG of `blobs/` that no line points to. Gives the `sha256` of each removed PNG. */
+/** Removes each file of `blobs/` that no line points to. Gives the `sha256` of each removed file. */
 async function removeUnusedBlobs(blobsDir: string, lines: readonly string[]): Promise<string[]> {
   await noSymlink(blobsDir);
 
@@ -307,7 +308,7 @@ async function removeUnusedBlobs(blobsDir: string, lines: readonly string[]): Pr
   return unused;
 }
 
-/** Removes the acknowledged lines and the PNG files that no line points to. The caller holds the outbox lock. */
+/** Removes the acknowledged lines and the files that no line points to. The caller holds the outbox lock. */
 async function acknowledgeLocked(dir: string, seq: number): Promise<AcknowledgeResult> {
   const paths = outboxPaths(dir);
   const last = await lastSeq(dir);
@@ -326,7 +327,7 @@ async function acknowledgeLocked(dir: string, seq: number): Promise<AcknowledgeR
 
 /**
  * Removes the lines with a `seq` equal to or less than `seq` under the outbox lock. A line that is not a complete
- * entry is also removed. Then removes each PNG of `blobs/` that no remaining `attachment.add` entry points to.
+ * entry is also removed. Then removes each file of `blobs/` that no remaining `attachment.add` entry points to.
  */
 export async function acknowledgeOutbox(dir: string, seq: number): Promise<AcknowledgeResult> {
   checkSeq(seq);

@@ -9,7 +9,7 @@ import { type AttachmentsTabEnv, type AttachmentTask, handleKey } from "./attach
 
 const HINTS: readonly KeyHint[] = [
   { key: "↑/↓", description: "select" },
-  { key: "n", description: "new PNG" },
+  { key: "n", description: "new file" },
   { key: "o", description: "open" },
   { key: "d", description: "remove" },
 ];
