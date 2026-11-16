@@ -42,11 +42,14 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   useStageDefaults(data.data, setters.setCollapsed);
 
   const view = shellView({ data, active, ...values });
+  const frame = shellFrame(layout, view, values.sidebarWidth, values.storyWidth, values.storyExpanded);
   const env: ShellEnv = {
     ctx,
     view,
     stageKey,
     sidebarShown,
+    storyExpandable: frame.story.mode === "beside",
+    storyExpanded: frame.story.expanded,
     factory: factory.data,
     registry,
     toast,
@@ -64,7 +67,7 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
     factory: factory.data,
     factoryState: factory,
     layout,
-    frame: shellFrame(layout, view, values.sidebarWidth, values.storyWidth),
+    frame,
     hints: shellHints(view, sidebarShown, values.onboardingHints, values.storyHints, values.threadHints),
   };
 }

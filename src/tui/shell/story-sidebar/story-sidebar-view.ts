@@ -41,16 +41,27 @@ export function storyBodyLayout(pane: SidePane, width: number, height: number | 
   };
 }
 
+/** `ctrl+o` expands or collapses the Story sidebar. A Story sidebar that cannot expand has no hint. */
+function expandHints(expanded: boolean | undefined): KeyHint[] {
+  if (expanded === undefined) {
+    return [];
+  }
+
+  return [{ key: "ctrl+o", description: expanded ? "collapse" : "expand" }];
+}
+
 /**
- * The keys of the Story sidebar for the footer: the keys of the Form first, then the keys of the tab, and `esc`
- * last. A region of a tab that takes `esc` keeps its own `esc`, else `esc` goes back to the Story list.
+ * The keys of the Story sidebar for the footer: the keys of the Form first, then the keys of the tab, `ctrl+o` and
+ * `esc` last. A region of a tab that takes `esc` keeps its own `esc`, else `esc` goes back to the Story list.
+ * `expanded` is `undefined` when the Story sidebar cannot expand.
  */
-export function storySidebarHints(leads: readonly FormLead[], own: readonly KeyHint[]): KeyHint[] {
+export function storySidebarHints(leads: readonly FormLead[], own: readonly KeyHint[], expanded?: boolean): KeyHint[] {
   const esc = own.find((hint) => hint.key === "esc") ?? BACK_HINT;
 
   return uniqueKeys([
     ...leads.flatMap((lead) => lead.keys).filter((hint) => hint.key !== "esc"),
     ...own.filter((hint) => hint.key !== "esc"),
+    ...expandHints(expanded),
     esc,
   ]);
 }

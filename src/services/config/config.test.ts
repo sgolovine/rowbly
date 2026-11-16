@@ -20,6 +20,7 @@ import {
   parseConfig,
   projectTags,
   readConfig,
+  storySidebarBehavior,
   storyTimeZone,
   throwIfIssues,
   toFieldKey,
@@ -311,6 +312,24 @@ describe("parseConfig", () => {
     expect(compactThreads(VALID)).toBe(true);
     expect(compactThreads({ ...VALID, display: {} })).toBe(true);
     expect(configIssues(VALID)).toEqual([]);
+  });
+
+  it("reads the Story sidebar option, which is regular when it is not set", () => {
+    expect(storySidebarBehavior(VALID)).toBe("regular");
+    expect(storySidebarBehavior({ ...VALID, display: {} })).toBe("regular");
+    for (const value of ["regular", "expanded", "remember"] as const) {
+      const { config, issues } = parseConfig(JSON.stringify({ ...VALID, display: { storySidebar: value } }));
+      expect(issues).toEqual([]);
+      expect(config && storySidebarBehavior(config)).toBe(value);
+    }
+  });
+
+  it("reports a Story sidebar option that is not one of the 3 values", () => {
+    for (const bad of ["wide", true, 1, null]) {
+      expect(configIssues({ ...VALID, display: { storySidebar: bad } })).toEqual([
+        { path: ["display", "storySidebar"], message: "storySidebar must be one of: regular, expanded, remember" },
+      ]);
+    }
   });
 
   it("reports a display value that is not an object, an unknown option or a value that is not a boolean", () => {

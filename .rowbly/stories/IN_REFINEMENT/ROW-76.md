@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - Allow user to steer thread.
-stage: BACKLOG
+stage: IN_REFINEMENT
 position: 3
 createdAt: 2026-11-16T17:01:49.320Z
-updatedAt: 2026-11-16T17:01:49.320Z
+updatedAt: 2026-11-16T19:29:40.650Z
 worktree: null
 pull_request: null
 ---
