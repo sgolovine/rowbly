@@ -12,7 +12,7 @@ import {
   toggleSidebar,
 } from "./shell-selection.js";
 import type { Pane, ShellEnv, ShellView, StoryListRow } from "./shell-state.js";
-import { moveMarkedStories, moveStage, moveStoryStage, shiftStory } from "./story-changes.js";
+import { moveMarkedStories, moveStage, moveStoryStage } from "./story-changes.js";
 import { clearMarks, endRange, hasMarks, startRange } from "./story-marks.js";
 import { editStory, listPane, newStory, requestStoryPane, toggleStoryExpanded } from "./story-pane.js";
 
@@ -90,7 +90,7 @@ function storyKey(env: ShellEnv, row: Extract<StoryListRow, { kind: "story" }>, 
 
 /**
  * `shift+↑/↓` moves the selected Stories to the previous or next Stage. Without a selection, it moves the Story of
- * the cursor in its Stage. In the range mode, it does nothing.
+ * the cursor. In the range mode, it does nothing.
  */
 function shiftKey(env: ShellEnv, shift: -1 | 1): void {
   const { row, ranging, marked } = env.view;
@@ -102,7 +102,7 @@ function shiftKey(env: ShellEnv, shift: -1 | 1): void {
   if (marked.size > 0) {
     moveMarkedStories(env, shift);
   } else if (row?.kind === "story") {
-    shiftStory(env, row.story, shift);
+    moveStoryStage(env, row.story, shift);
   }
 }
 

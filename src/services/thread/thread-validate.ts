@@ -61,7 +61,8 @@ function hasOptionalFields(t: ThreadRecord): boolean {
   return (
     [t.startedAt, t.completedAt, t.lastActivityAt].every(optionalDate) &&
     [t.branch, t.lastTool].every((value) => value === undefined || typeof value === "string") &&
-    (t.worktree === undefined || (typeof t.worktree === "string" && isAbsolute(t.worktree)))
+    (t.worktree === undefined || (typeof t.worktree === "string" && isAbsolute(t.worktree))) &&
+    (t.host === undefined || (typeof t.host === "string" && t.host.length > 0))
   );
 }
 

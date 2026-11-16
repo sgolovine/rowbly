@@ -20,7 +20,7 @@ import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
-import { readAuthStamp } from "./manager-state.js";
+import { getState, readAuthStamp, setState } from "./manager-state.js";
 import { scan } from "./manager-status.js";
 import { startProjectSync } from "./project-sync-step.js";
 
@@ -47,7 +47,7 @@ vi.mock("../project-write/project-write.js", async (importOriginal) => {
 });
 vi.mock("./manager-state.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-state.js")>();
-  return { ...actual, readAuthStamp: vi.fn(actual.readAuthStamp) };
+  return { ...actual, readAuthStamp: vi.fn(actual.readAuthStamp), setState: vi.fn(actual.setState) };
 });
 vi.mock("./manager-status.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-status.js")>();
@@ -112,7 +112,11 @@ describe("foreground factory", () => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
-  async function fixture(beforeLaunch?: Parameters<typeof createFactoryManager>[0]["beforeLaunch"], classify = true) {
+  async function fixture(
+    beforeLaunch?: Parameters<typeof createFactoryManager>[0]["beforeLaunch"],
+    classify = true,
+    extra: Partial<Parameters<typeof createFactoryManager>[0]> = {},
+  ) {
     const sdk = await loadPi();
     const runtime = await sdk.ModelRuntime.create({
       credentials: new InMemoryCredentialStore(),
@@ -150,7 +154,7 @@ describe("foreground factory", () => {
       { cwd: root },
     );
     manager = await createFactoryManager(
-      { runtime, agentDir: join(dir.path, "agent"), shim, beforeLaunch },
+      { runtime, agentDir: join(dir.path, "agent"), shim, beforeLaunch, ...extra },
       { cwd: root },
     );
     return { supervisor, worker, shim, manager };
@@ -267,6 +271,16 @@ describe("foreground factory", () => {
       expect(await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "a" })).toEqual(reservation);
       expect((await f.manager.snapshot()).workers.pending).toBe(1);
       expect((await readFactoryState(root)).attempts[0]?.status).toBe("preparing");
+      // The worker Thread, its attempt, the active entry and the status snapshot record the local host.
+      const threadFile = join(root, ".rowbly/runtime/threads", `${reservation.threadId}.json`);
+      expect(JSON.parse(await readFile(threadFile, "utf8")).host).toBe("local");
+      expect((await readFactoryState(root)).attempts[0]?.host).toBe("local");
+      const managerArg = vi.mocked(setState).mock.calls.at(-1)?.[0];
+      if (!managerArg) throw new Error("Missing manager");
+      expect(getState(managerArg).active.get(reservation.threadId)?.host).toBe("local");
+      expect((await f.manager.snapshot()).threads).toContainEqual(
+        expect.objectContaining({ id: reservation.threadId, host: "local" }),
+      );
       // The status file lists queued work for the TUI, without the Stories that wait for no worker.
       const status = JSON.parse(await readFile(join(root, ".rowbly/runtime/status.json"), "utf8"));
       expect(status.queue).toContainEqual(
@@ -287,6 +301,80 @@ describe("foreground factory", () => {
       );
     } finally {
       release();
+    }
+  });
+  it("places workers with injected worker hosts, and shows the slots of each host", async () => {
+    let release = () => {};
+    const barrier = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const story = await createStory({ title: "Placed", stage: "WORK" }, { cwd: root });
+    const other = await createStory({ title: "Other", stage: "WORK" }, { cwd: root });
+    const hosts = [
+      { id: "remote-a", maxWorkers: 2, state: "connected" as const, providers: ["worker"] },
+      { id: "remote-b", maxWorkers: 1, state: "disconnected" as const, providers: ["worker"] },
+    ];
+    const worktreeFacts = vi.fn(async () => undefined);
+    const f = await fixture(() => barrier, true, { workerHosts: async () => hosts, worktreeFacts });
+    const workers = async () => (await listThreads({ role: "worker" }, { cwd: root })).threads;
+    try {
+      await expect(
+        f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "unknown", host: "nowhere" }),
+      ).rejects.toMatchObject({ code: "CONFLICT", message: expect.stringContaining("unknown host nowhere") });
+      await expect(
+        f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "refused", host: "remote-b" }),
+      ).rejects.toMatchObject({ code: "CONFLICT", message: expect.stringContaining("remote-b is disconnected") });
+      await expect(
+        f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "remote", host: "remote-a" }),
+      ).rejects.toMatchObject({ code: "CONFLICT", message: "Remote dispatch is not available" });
+      expect(await workers()).toHaveLength(0);
+      expect(worktreeFacts).toHaveBeenCalled();
+      const local = await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "a", host: "local" });
+      expect((await workers()).find((t) => t.id === local.threadId)?.host).toBe("local");
+      // The local slot is full, so prefer-local places the other Story on the worker host.
+      await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "b" })).rejects.toThrow(
+        "Remote dispatch is not available",
+      );
+      expect(await workers()).toHaveLength(1);
+      // The policy limit is the sum of the slots of the connected hosts.
+      expect((await f.manager.reconcile()).find((d) => d.story === other.id)?.action).toBe("start");
+      expect((await f.manager.snapshot()).hosts).toEqual([
+        { id: "local", state: "connected", max: 1, used: 1, free: 0 },
+        { id: "remote-a", state: "connected", max: 2, used: 0, free: 2 },
+        { id: "remote-b", state: "disconnected", max: 1, used: 0, free: 1 },
+      ]);
+      const status = JSON.parse(await readFile(join(root, ".rowbly/runtime/status.json"), "utf8"));
+      expect(status.hosts).toHaveLength(3);
+    } finally {
+      release();
+    }
+    await settled();
+  });
+  it("gives the slots of each host in the supervisor digest", async () => {
+    await createStory({ title: "Digest", stage: "WORK" }, { cwd: root });
+    const hosts = [{ id: "remote-a", maxWorkers: 2, state: "connected" as const, providers: ["worker"] }];
+    const f = await fixture(undefined, false, { workerHosts: async () => hosts, worktreeFacts: async () => undefined });
+    const digests: string[] = [];
+    f.supervisor.setResponses([
+      (context) => {
+        digests.push(JSON.stringify(context.messages.at(-1)));
+        return fauxAssistantMessage("Wait");
+      },
+    ]);
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(() => expect(digests).toHaveLength(1), { timeout: 10000, interval: 20 });
+      const text = JSON.parse(digests[0] as string)
+        .content.map((part: { text?: string }) => part.text ?? "")
+        .join("");
+      const digest = JSON.parse(text.slice(text.indexOf('{"settings"'), text.lastIndexOf("}") + 1));
+      expect(digest.hosts.items).toEqual([
+        { id: "local", state: "connected", max: 1, used: 0, free: 1 },
+        { id: "remote-a", state: "connected", max: 2, used: 0, free: 2 },
+      ]);
+    } finally {
+      await f.manager.shutdown();
+      await run;
     }
   });
   it("retains dirty worktrees and records assistant errors as failures", async () => {
@@ -599,14 +687,18 @@ describe("foreground factory", () => {
   it("moves the indirect upstream Stories in one pass", async () => {
     const indirect = await createStory({ title: "Indirect", stage: "BACKLOG" }, { cwd: root });
     const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
-    await updateStory({ id: upstream.id, dependsOn: [indirect.id] }, { cwd: root });
+    // A later time puts the upstream Story first in the board order, and so first in the commit message.
+    await updateStory(
+      { id: upstream.id, dependsOn: [indirect.id] },
+      { cwd: root, now: () => new Date(Date.now() + 60_000) },
+    );
     f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
     await runUntil(f, async () => {
       expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BUILD");
       expect((await getStory({ id: indirect.id }, { cwd: root })).stage).toBe("BUILD");
     });
     expect(await subjects()).toContain(
-      `chore(rowbly): move ${indirect.id}, ${upstream.id} out of Backlog for ${downstream.id}`,
+      `chore(rowbly): move ${upstream.id}, ${indirect.id} out of Backlog for ${downstream.id}`,
     );
   });
   it("does not move a parked upstream Story or an upstream Story in a hold Stage", async () => {

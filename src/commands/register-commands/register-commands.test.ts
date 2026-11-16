@@ -17,8 +17,12 @@ const resources = {
   factory: ["status", "run", "watchdog", "stop", "restart", "logs", "start", "configure", "check"],
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
-  thread: ["cancel", "resume", "log", "list", "show"],
+  thread: ["cancel", "resume", "steer", "log", "list", "show"],
+  host: ["add", "list", "remove", "blob"],
 };
+
+/** The hidden actions. They do not show in the help of their resource. */
+const hidden = ["run", "watchdog", "blob"];
 
 describe("registerCommands", () => {
   const outside = useTempDir();
@@ -40,7 +44,8 @@ describe("registerCommands", () => {
     expect(result.stderr).toContain("too many arguments");
     expect(result.stdout).toBe("");
     expect(service).not.toHaveBeenCalled();
-    expect(await storyService.searchStories({}, project.ctx)).toEqual([first, second]);
+    const stories = await storyService.searchStories({}, project.ctx);
+    expect(stories.map((story) => story.id).toSorted()).toEqual([first.id, second.id]);
   });
 
   it.each([
@@ -79,6 +84,7 @@ describe("registerCommands", () => {
       "auth",
       "model",
       "thread",
+      "host",
     ]);
     for (const [resource, actions] of Object.entries(resources)) {
       expect(
@@ -101,8 +107,9 @@ describe("registerCommands", () => {
         expect(result.exitCode).toBe(0);
         expect(result.stderr).toBe("");
         expect(result.stdout).toContain(`Usage: rowbly ${resource}`);
-        for (const action of actions.filter((a) => a !== "run" && a !== "watchdog"))
-          expect(result.stdout).toContain(action);
+        for (const action of actions.filter((a) => !hidden.includes(a))) expect(result.stdout).toContain(action);
+        for (const action of actions.filter((a) => hidden.includes(a)))
+          expect(result.stdout).not.toMatch(new RegExp(`^\\s+${action}\\b`, "m"));
         expect(await readdir(outside.path)).toEqual(before);
       });
     }

@@ -3,7 +3,7 @@ import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { writeFileAtomic } from "../files/files.js";
 import { checkRuntimeDir, type RuntimeDir, runtimeChild, runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
-import type { ThreadRecord } from "./thread-types.js";
+import { LOCAL_HOST, type ThreadRecord } from "./thread-types.js";
 import { validateThread, validId } from "./thread-validate.js";
 
 const MAX_METADATA_BYTES = 1024 * 1024;
@@ -96,7 +96,12 @@ export async function readThreadFile(
 
   await checkSessionIn(t, dirs);
 
-  return t;
+  return withHost(t);
+}
+
+/** Gives the Thread with its host. All readers get the default here, so that an old file reads as local. */
+function withHost(t: ThreadRecord): ThreadRecord {
+  return t.host === undefined ? { ...t, host: LOCAL_HOST } : t;
 }
 
 async function readThread(id: string, dirs: ThreadDirs): Promise<ThreadRecord> {
@@ -132,7 +137,7 @@ export async function getThread(id: string, ctx: ServiceContext = {}): Promise<T
   return readThreadIn(id, await checkThreadDirs(await findProject(ctx)));
 }
 
-/** Validates the metadata of a Thread and writes it durably. */
+/** Validates the metadata of a Thread and writes it durably. Gives the Thread as a read gives it. */
 export async function saveThread(t: ThreadRecord, ctx: ServiceContext): Promise<ThreadRecord> {
   validateThread(t);
   await checkSession(t, ctx);
@@ -145,5 +150,5 @@ export async function saveThread(t: ThreadRecord, ctx: ServiceContext): Promise<
 
   await writeFileAtomic(await threadPath(t.id, ctx), text, { mode: 0o600, durable: true });
 
-  return t;
+  return withHost(t);
 }

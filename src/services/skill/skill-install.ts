@@ -4,6 +4,7 @@ import { type ProjectConfig, readConfig, type SkillHarness, writeConfig } from "
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import { pathExists, pathOccupied } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { Store, withMember } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { bundledSkills, copySkill } from "./bundled-skills.js";
@@ -140,6 +141,8 @@ async function applyInstall(
 
 /** Installs a bundled skill for each harness. Any conflict stops the install before it writes anything. */
 export async function installSkill(input: InstallSkillInput, ctx: ServiceContext = {}): Promise<InstallSkillResult> {
+  refuseRemoteWrite(ctx, "install a skill");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const { name } = input;

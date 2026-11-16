@@ -42,6 +42,8 @@ Read this page when you start a task on the factory. Then read only the sub-page
   message from `workerMessage()` in `src/services/messages/messages.ts`. It works in one worktree for the
   Story (`worker-worktree/`). It makes canonical Project changes only through the CLI shim
   `runtime/bin/rowbly`, under the Project write lock.
+- **Worker executor.** The manager runs each worker through a `WorkerExecutor`
+  (`factory-manager/worker-executor.ts`). See [The worker executor](#the-worker-executor).
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
   parked Stories. The policy state is in `state.json`.
   - **Dependency gate.** The policy does not start a worker for a blocked Story. A blocked Story has one or
@@ -84,6 +86,77 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 
+## Placement
+
+The manager places each new worker on a machine: the main machine (`local`) or a worker host. The pure
+function `placeWorker` in `factory-manager/placement.ts` selects the host. The slots of each host come
+from `factory-manager/host-slots.ts`. These modules do no I/O.
+
+- **Hosts.** The manager dependency `workerHosts` gives the worker hosts, each with `id`, `maxWorkers`,
+  `state` and `providers`. Without the dependency, the list is empty, and all work runs on `local`. At
+  this time, production gives no worker hosts.
+- **Slots.** Each host has `{ id, state, max, used, free }`. For `local`, `max` is the worker limit,
+  and the state is always `connected`. For a worker host, `max` is its `maxWorkers`. `used` is the
+  number of active workers on the host.
+- **Policy limit.** The policy limit is the sum of `max` of the hosts that are `connected`. Without
+  worker hosts, it is the worker limit.
+- **Status.** `factory_snapshot`, `status.json` and the supervisor digest have a `hosts` list with the
+  slots of each host. The digest shows a maximum of 12 hosts.
+
+The function applies these rules in this order:
+
+1. A host is eligible only if its state is `connected`, it has a free slot, and it has the provider of
+   the worker model. `local` always has the provider. A worker host without a known provider list, or
+   a worker model without a known provider, is not eligible.
+2. When the local worktree of the Story has commits that are not on `origin`, or uncommitted changes,
+   only `local` is permitted.
+3. When the last worker Thread of the Story ran on host H, and H is eligible, the Story goes to H.
+   When H is not eligible, the Story can go to a different host only when its old worktree is known
+   to be pushed and clean. If not, the Story waits, and the result gives the reason.
+4. The policy orders the other eligible hosts. A tie between two worker hosts goes to the first host
+   in the list.
+5. A requested host must be eligible and must agree with rules 2 and 3. The policy does not apply to
+   it.
+
+`start_worker` has an optional `host` (a string). Without a host, the placement selects one. A
+refused placement, or an unknown host, gives a `ConflictError` with the reason, and the manager
+creates no Thread. The manager reads the Git facts of the local worktree (`readWorktreeFacts` in
+`worker-worktree/`) only when the list has a worker host. The new worker Thread and the active entry
+get the selected host. The dispatch to a worker host is not available yet. Thus a placement on a
+worker host gives a `ConflictError` ("Remote dispatch is not available"), and the manager creates no
+Thread.
+
+## The worker executor
+
+The manager does not use the Pi session of a worker directly. It uses a `WorkerExecutor`. This
+interface lets a different executor, for example a remote executor, run a worker.
+
+- **Interface.** `factory-manager/worker-executor.ts` has the interface. It has these operations:
+  - `launch` prepares the worktree, opens the session, prompts the worker and collects the result.
+    A resume uses `launch` also. The Thread record tells if the run is new or a resume.
+  - `stop` stops the worker. The manager makes the Thread `interrupted`. Shutdown and `stop_worker`
+    use it.
+  - `cancel` stops the worker. The manager makes the Thread `cancelled`. `cancelWorker` uses it.
+  - `steer` gives a steering message to a worker. It refuses a worker that does not work now.
+- **Events.** The executor sends events to the manager through `WorkerEvents`: `worktreeReady`,
+  `sessionOpened`, `activity`, `resultReported`, `completed`, `failed` and `finished`. The executor
+  also asks the manager for the worker message (`message`) and for the `stopping` flag. It tells the
+  manager when the first prompt succeeds (`prompted`).
+- **Order.** The executor waits for each event before the next step. An event that throws, for example
+  `Factory is stopping`, stops the launch.
+- **Manager side.** `factory-manager/worker-launch.ts` keeps the decisions: the `pending`, `stopping`
+  and Stage checks, the prompt-claim check, the provider pause, the worker message and the release of
+  the slot. Only the manager changes the Thread record.
+- **Control.** When the session opens, the manager keeps a `WorkerControl` on the active worker.
+  Cancel, stop, steer and shutdown use the control. They do not use a Pi session.
+- **Local executor.** `factory-manager/local-executor.ts` runs each worker in a Pi session of the
+  daemon. It holds the worktree preparation, the session, the result tool, the check tools, the
+  activity timer, the collection of the result and the close of the session. It loads Pi only through
+  the lazy boundary of `pi-runtime/`. The interface file does not import Pi.
+- **Selection.** `FactoryDependencies.executor` gives the executor. Without a value,
+  `createFactoryManager` makes the local executor. Tests give a fake executor
+  (`worker-executor.test.ts`).
+
 ## Prerequisites and limits
 
 - Native execution must have Linux, Git, local files and util-linux `flock`.
@@ -112,6 +185,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 
 ## Related
 

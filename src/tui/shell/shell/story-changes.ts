@@ -6,17 +6,10 @@ import { closeOverlay, fold } from "./shell-selection.js";
 import type { ShellEnv, ShellView } from "./shell-state.js";
 import { closeDeletedStory } from "./story-pane.js";
 
-/** A Stage and a 1-based position in it. */
-interface Place {
-  readonly key: string;
-  readonly position: number;
-}
-
-/** A Story of the multi-selection and its new Stage. `position` is `undefined` for the end of the Stage. */
+/** A Story of the multi-selection and its new Stage. */
 interface MarkedMove {
   readonly story: Story;
   readonly to: string;
-  readonly position: number | undefined;
 }
 
 /** Moves the Stage `key` to the 1-based `position` in board order. The selection stays on the Stage. */
@@ -32,13 +25,16 @@ export function moveStage(env: ShellEnv, key: string, position: number): void {
   updateStage({ key, position: to }, env.ctx).then(env.reload, (err: unknown) => env.toast.error(err));
 }
 
-/** Puts the Story `story` at the 1-based `position` in the Stage `key`. The selection stays on the Story. */
-function placeStory(env: ShellEnv, story: Story, key: string, position: number): void {
-  if (key === story.stage && position === story.position) {
+/**
+ * Moves the Story `story` to the Stage `key`. A Story in a Stage is in `updatedAt` order, so the moved Story goes to
+ * the top of the Stage. The selection stays on the Story.
+ */
+function placeStory(env: ShellEnv, story: Story, key: string): void {
+  if (key === story.stage) {
     return;
   }
 
-  updateStory({ id: story.id, stage: key, position }, env.ctx).then(
+  updateStory({ id: story.id, stage: key }, env.ctx).then(
     (moved) => storyPlaced(env, moved),
     (err: unknown) => env.toast.error(err),
   );
@@ -55,19 +51,16 @@ function storyPlaced(env: ShellEnv, moved: Story): void {
   env.reload();
 }
 
-/**
- * Moves the Story `story` `delta` Stages along the board order: to the top of the next Stage, or to the
- * bottom of the previous Stage.
- */
+/** Moves the Story `story` `delta` Stages along the board order, to the top of that Stage. */
 export function moveStoryStage(env: ShellEnv, story: Story, delta: -1 | 1): void {
-  const { stages, stories } = env.view;
+  const { stages } = env.view;
   const to = stages[stages.findIndex((s) => s.key === story.stage) + delta];
 
   if (!to) {
     return;
   }
 
-  placeStory(env, story, to.key, delta > 0 ? 1 : stories.filter((s) => s.stage === to.key).length + 1);
+  placeStory(env, story, to.key);
 }
 
 /** The selected Stories in list order: by the order of their Stages, then by their positions. */
@@ -87,34 +80,28 @@ function nextStage(stages: readonly Stage[], story: Story, delta: -1 | 1): Stage
 }
 
 /**
- * The moves of the selected Stories, in list order. Each Story moves one Stage from its own Stage. A Story in the
- * first or the last Stage that cannot move is not in the list. Down, the Stories go to positions 1, 2, 3, … of their
- * target Stage. Up, each Story goes to the end of its target Stage. Thus they keep their relative order.
+ * The moves of the selected Stories, in the order of the writes. Each Story moves one Stage from its own Stage. A
+ * Story in the first or the last Stage that cannot move is not in the list. A Stage shows the most recent Story at the
+ * top, so the writes go in reverse list order. Thus the Stories keep their relative order in the target Stage.
  */
 function markedMoves(view: ShellView, delta: -1 | 1): readonly MarkedMove[] {
-  const targets = markedInOrder(view).flatMap((story) => {
-    const to = nextStage(view.stages, story, delta);
+  return markedInOrder(view)
+    .flatMap((story) => {
+      const to = nextStage(view.stages, story, delta);
 
-    return to ? [{ story, to: to.key }] : [];
-  });
-
-  return targets.map((target, index) => ({
-    ...target,
-    position: delta > 0 ? targets.slice(0, index).filter((t) => t.to === target.to).length + 1 : undefined,
-  }));
+      return to ? [{ story, to: to.key }] : [];
+    })
+    .toReversed();
 }
 
-/** Writes one move. The calls run one at a time, because each call rewrites the positions of its Stage. */
+/** Writes one move. The calls run one at a time, so that each Story gets a later `updatedAt` than the one before. */
 function writeMove(env: ShellEnv, move: MarkedMove): Promise<Story> {
-  return updateStory(
-    { id: move.story.id, stage: move.to, ...(move.position === undefined ? {} : { position: move.position }) },
-    env.ctx,
-  );
+  return updateStory({ id: move.story.id, stage: move.to }, env.ctx);
 }
 
 /** The selected Stories moved. A Stage filter follows the first Story, and each target Stage section expands. */
 function markedPlaced(env: ShellEnv, moved: readonly Story[]): void {
-  const first = moved[0];
+  const first = moved.at(-1);
 
   if (first && env.stageKey !== null) {
     env.setStageKey(first.stage);
@@ -133,10 +120,7 @@ function markedFailed(env: ShellEnv, err: unknown): void {
   env.reload();
 }
 
-/**
- * Moves each selected Story one Stage along the board order: to the top of the next Stage, or to the bottom of the
- * previous Stage. The Stories stay selected.
- */
+/** Moves each selected Story one Stage along the board order, to the top of that Stage. The Stories stay selected. */
 export function moveMarkedStories(env: ShellEnv, delta: -1 | 1): void {
   const moves = markedMoves(env.view, delta);
 
@@ -150,44 +134,24 @@ export function moveMarkedStories(env: ShellEnv, delta: -1 | 1): void {
   );
 }
 
-/** Moves the Story `story` one place up or down in its Stage, and past the end into the next Stage. */
-export function shiftStory(env: ShellEnv, story: Story, delta: -1 | 1): void {
-  const count = env.view.stories.filter((s) => s.stage === story.stage).length;
-  const position = story.position + delta;
-
-  if (position >= 1 && position <= count) {
-    placeStory(env, story, story.stage, position);
-
-    return;
-  }
-
-  moveStoryStage(env, story, delta);
-}
-
 /**
- * The place of the Story `story` that was dropped in the gap before the row at `gap`. It goes below the
- * Story above the gap, or to the top of the Stage whose heading is above the gap.
+ * The Stage of the Story `story` that was dropped in the gap before the row at `gap`: the Stage of the row above the
+ * gap, or the selected Stage when no row is above the gap.
  */
-function dropPlace(view: ShellView, story: Story, gap: number): Place {
+function dropStage(view: ShellView, story: Story, gap: number): string {
   const above = view.rows
     .slice(0, gap)
     .filter((r) => r.id !== story.id)
     .at(-1);
 
   if (!above) {
-    return { key: view.stage?.key ?? story.stage, position: 1 };
+    return view.stage?.key ?? story.stage;
   }
 
-  if (above.kind === "stage") {
-    return { key: above.key, position: 1 };
-  }
-
-  const peers = view.stories.filter((s) => s.stage === above.story.stage && s.id !== story.id);
-
-  return { key: above.story.stage, position: peers.indexOf(above.story) + 2 };
+  return above.kind === "stage" ? above.key : above.story.stage;
 }
 
-/** The Story `id` was dropped in the gap before the row at `gap`. */
+/** The Story `id` was dropped in the gap before the row at `gap`. A drop in its own Stage does nothing. */
 export function dropStory(env: ShellEnv, id: string, gap: number): void {
   const story = env.view.stories.find((s) => s.id === id);
 
@@ -197,9 +161,7 @@ export function dropStory(env: ShellEnv, id: string, gap: number): void {
     return;
   }
 
-  const place = dropPlace(env.view, story, gap);
-
-  placeStory(env, story, place.key, place.position);
+  placeStory(env, story, dropStage(env.view, story, gap));
 }
 
 /**

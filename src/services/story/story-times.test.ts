@@ -29,7 +29,6 @@ describe("story times", () => {
   it.each([
     ["title", { title: "New" }],
     ["stage", { stage: "DONE" }],
-    ["position", { position: 2 }],
     ["description", { description: "New body" }],
     ["custom field", { fields: { owner: "Ann" } }],
     ["dependencies", { addDependsOn: ["ROW-02"] }],
@@ -53,15 +52,22 @@ describe("story times", () => {
     expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(before);
   });
 
-  it("the other stories of the stage keep updatedAt when a story moves", async () => {
+  it("the other stories of the stage keep updatedAt and their bytes when a story moves", async () => {
     for (const title of ["One", "Two", "Three"]) {
       await createStory({ title }, at(T1));
     }
-    await updateStory({ id: "ROW-03", position: 1 }, at(T2));
+    await createStory({ title: "Shipped", stage: "DONE" }, at(T1));
+    const before = await Promise.all(
+      ["BACKLOG/ROW-01.md", "BACKLOG/ROW-02.md", "DONE/ROW-04.md"].map((path) => project.read(`stories/${path}`)),
+    );
+    const moved = await updateStory({ id: "ROW-03", stage: "DONE" }, at(T2));
+    expect(moved.position).toBe(1);
     expect(await times("ROW-03")).toEqual({ createdAt: T1, updatedAt: T2 });
-    expect(await times("ROW-01")).toEqual({ createdAt: T1, updatedAt: T1 });
-    expect(await times("ROW-02")).toEqual({ createdAt: T1, updatedAt: T1 });
-    expect((await getStory({ id: "ROW-01" }, project.ctx)).position).toBe(2);
+    const after = await Promise.all(
+      ["BACKLOG/ROW-01.md", "BACKLOG/ROW-02.md", "DONE/ROW-04.md"].map((path) => project.read(`stories/${path}`)),
+    );
+    expect(after).toEqual(before);
+    expect((await getStory({ id: "ROW-04" }, project.ctx)).position).toBe(2);
   });
 
   it("reads a story without times or with invalid times as null, and an update adds only updatedAt", async () => {

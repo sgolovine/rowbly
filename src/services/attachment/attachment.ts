@@ -3,6 +3,7 @@ import { type FileHandle, open, readFile, rename, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import {
+  type Attachment,
   attachmentDir,
   MAX_ATTACHMENT_BYTES,
   noSymlink,
@@ -15,6 +16,7 @@ import {
 } from "../attachment-files/attachment-files.js";
 import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
+import { recordAttachmentAdd, recordAttachmentRemove, sha256Hex } from "../outbox/outbox.js";
 import { getStory, touchStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
@@ -26,6 +28,8 @@ interface AddAttachmentInput {
   file?: string;
   fromClipboard?: boolean;
   image?: PendingImage;
+  /** The id of the new attachment. Without an id, the service makes a new id. */
+  id?: string;
 }
 
 /** Gives the file name of a clipboard image, from the UTC date and minute. */
@@ -45,7 +49,7 @@ async function addedAttachment(dir: string, story: string, ctx: ServiceContext) 
 
   await touchStory({ id: story }, ctx);
 
-  return records[records.length - 1];
+  return records[records.length - 1] as Attachment;
 }
 
 /** Lists the attachments of a Story. */
@@ -116,18 +120,28 @@ export async function addAttachment(input: AddAttachmentInput, ctx: ServiceConte
     throw new ValidationError("Supply exactly one PNG file or --from-clipboard");
   }
 
-  const dir = await directory(input.story, ctx);
-  const image = await sourceImage(input, ctx);
-
-  return withAttachments(dir, prepareImages([image]), ctx.now?.() ?? new Date(), () =>
-    addedAttachment(dir, input.story, ctx),
+  const story = await getStory({ id: input.story }, ctx);
+  const dir = await attachmentDir(await findProject(ctx), story.id);
+  const images = prepareImages([await sourceImage(input, ctx)]);
+  const attachment = await withAttachments(
+    dir,
+    images,
+    ctx.now?.() ?? new Date(),
+    () => addedAttachment(dir, input.story, ctx),
+    [input.id],
   );
+
+  // The copy has the attachment now. The recorder writes the PNG, then the entry.
+  await recordAttachmentAdd(ctx, { storyId: story.id, attachment, bytes: (images[0] as PendingImage).bytes });
+
+  return attachment;
 }
 
 async function selected(story: string, id: string, ctx: ServiceContext) {
   validateAttachmentId(id);
 
-  const dir = await directory(story, ctx);
+  const storyId = (await getStory({ id: story }, ctx)).id;
+  const dir = await attachmentDir(await findProject(ctx), storyId);
   const records = await readAttachments(dir);
   const record = records.find((a) => a.id === id);
 
@@ -139,7 +153,7 @@ async function selected(story: string, id: string, ctx: ServiceContext) {
 
   await noSymlink(path);
 
-  return { dir, records, record, path };
+  return { storyId, dir, records, record, path };
 }
 
 /** Gives the command of the platform that opens a file in its default application. */
@@ -174,8 +188,10 @@ export async function openAttachment(input: { story: string; id: string }, ctx: 
 
 /** Removes an attachment. A failure restores the PNG and the index. */
 export async function removeAttachment(input: { story: string; id: string }, ctx: ServiceContext = {}) {
-  const { dir, records, path } = await selected(input.story, input.id, ctx);
+  const { storyId, dir, records, path } = await selected(input.story, input.id, ctx);
   const temporary = `${path}.removed`;
+  // Only a remote worker needs the hash, so a local remove does not read the PNG.
+  const sha256 = ctx.recorder ? sha256Hex(await readFile(path)) : "";
 
   await rename(path, temporary);
 
@@ -191,6 +207,8 @@ export async function removeAttachment(input: { story: string; id: string }, ctx
     await writeAttachments(dir, records);
     throw err;
   }
+
+  await recordAttachmentRemove(ctx, { storyId, id: input.id, sha256 });
 
   return { removed: input.id };
 }

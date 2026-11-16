@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { PendingImage } from "../../../../services/attachment/attachment.js";
-import type { CustomField } from "../../../../services/config/config.js";
+import type { CustomField, TagConfig } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { deleteStory, type Story, updateStory } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -12,6 +12,7 @@ import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import { dependencyChoices, dependencyLists, dependsOnChanges, dependsOnValue } from "../story-dependency-view.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
 import { StoryModalBody } from "../story-modal-body/index.js";
+import { tagChoices, tagsChange, tagsValue } from "../story-tag-view.js";
 
 /** The environment of the save and the delete of the Story. */
 interface EditStoryEnv {
@@ -34,6 +35,7 @@ async function saveStory(env: EditStoryEnv, values: FormValues, attachments?: re
       description: String(values.description ?? ""),
       fields: customFieldInput(env.customFields, values),
       ...dependsOnChanges(env.story.dependsOn, dependsOnValue(values.dependsOn)),
+      ...tagsChange(env.story.tags, tagsValue(values.tags)),
     },
     env.ctx,
   );
@@ -62,6 +64,7 @@ function initialValues(story: Story, customFields: readonly CustomField[]): Form
     stage: story.stage,
     description: story.description,
     dependsOn: [...story.dependsOn],
+    tags: [...story.tags],
     ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, story.fields[f.key] ?? null)])),
   };
 }
@@ -79,6 +82,7 @@ export function EditStoryForm({
   stories,
   stages,
   customFields,
+  tags,
   specs = false,
   compactThreads,
   timeZone,
@@ -93,6 +97,8 @@ export function EditStoryForm({
   stories: readonly Story[];
   stages: readonly Stage[];
   customFields: readonly CustomField[];
+  /** The tags of the project, for the `Tags` field. */
+  tags: readonly TagConfig[];
   /** The project has Specs on. */
   specs?: boolean;
   /** Each thread of the Threads tab uses one line. */
@@ -119,7 +125,12 @@ export function EditStoryForm({
       stages={stageNames}
       specs={specs}
       compactThreads={compactThreads}
-      fields={storyFormFields(stages, customFields, dependencyChoices(stories, story.id, story.dependsOn))}
+      fields={storyFormFields(
+        stages,
+        customFields,
+        dependencyChoices(stories, story.id, story.dependsOn),
+        tagChoices(tags, story.tags),
+      )}
       initialValues={initialValues(story, customFields)}
       dependencies={dependencyLists(stories, stages, story.id, story.dependsOn)}
       times={{ createdAt: story.createdAt, updatedAt: story.updatedAt, timeZone }}

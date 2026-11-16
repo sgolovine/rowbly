@@ -34,6 +34,7 @@ describe("factorySettings", () => {
     expect(await getFactorySettings(p.ctx)).toEqual({
       maxWorkers: 4,
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
+      placement: "prefer-local",
     });
     await updateFactorySettings({ maxWorkers: 2, workerModel: { provider: "faux", modelId: "test" } }, p.ctx);
     await updateProject({ name: "Other" }, p.ctx);
@@ -50,7 +51,11 @@ describe("factorySettings", () => {
   });
   it("gives the default limit when the section has no maxWorkers", async () => {
     await writeFactory(p, JSON.stringify({ git: { push: true } }));
-    expect(await getFactorySettings(p.ctx)).toEqual({ maxWorkers: 4, git: { ...git, push: true } });
+    expect(await getFactorySettings(p.ctx)).toEqual({
+      maxWorkers: 4,
+      git: { ...git, push: true },
+      placement: "prefer-local",
+    });
   });
   it("writes the factory section and keeps the other config keys", async () => {
     await addCustomField({ label: "Owner", type: "string" }, p.ctx);
@@ -87,7 +92,7 @@ describe("factorySettings", () => {
       storyWorkerModels: { "ROW-1": { BACKLOG: { ...model, thinkingLevel: "high" } } },
     };
     await writeFactory(p, JSON.stringify(settings));
-    expect(await getFactorySettings(p.ctx)).toEqual({ ...settings, git });
+    expect(await getFactorySettings(p.ctx)).toEqual({ ...settings, git, placement: "prefer-local" });
     for (const bad of [
       { stageWorkerModels: { BACKLOG: { provider: "faux" } } },
       { stageWorkerModels: [model] },
@@ -143,6 +148,7 @@ describe("factorySettings", () => {
       workerModel: model,
       stageWorkerModels: { BACKLOG: model, DONE: model },
       git,
+      placement: "prefer-local",
     });
     await configureFactory({ stage: "BACKLOG", clearWorker: true }, p.ctx);
     expect((await getFactorySettings(p.ctx)).stageWorkerModels).toEqual({ DONE: model });
@@ -159,6 +165,7 @@ describe("factorySettings", () => {
       stageWorkerModels: { BACKLOG: high },
       storyWorkerModels: { [story.id]: { BACKLOG: model } },
       git,
+      placement: "prefer-local",
     });
     await setWorkerOverride({ stage: "BACKLOG", storyId: story.id }, undefined, p.ctx);
     await setWorkerOverride({ stage: "BACKLOG" }, undefined, p.ctx);
@@ -258,6 +265,38 @@ describe("factorySettings", () => {
     await expect(configureFactory({ stage: "BACKLOG", pullUpstream: "on" }, p.ctx)).rejects.toMatchObject({
       code: "VALIDATION",
     });
+    expect(await p.read("rowbly.config.json")).toBe(before);
+  });
+  it("gives prefer-local without a placement key, and writes a policy without a change of the other keys", async () => {
+    await writeFactory(p, JSON.stringify({ maxWorkers: 3, git: { push: true }, dependencies: { pullUpstream: true } }));
+    const { factory: _before, ...others } = JSON.parse(await p.read("rowbly.config.json"));
+    expect((await getFactorySettings(p.ctx)).placement).toBe("prefer-local");
+    await updateFactorySettings({ maxWorkers: 2 }, p.ctx);
+    expect((await readFactory(p)).placement).toBeUndefined();
+    await updateFactorySettings({ placement: "most-free" }, p.ctx);
+    expect(await readFactory(p)).toEqual({
+      maxWorkers: 2,
+      git: { push: true },
+      dependencies: { pullUpstream: true },
+      placement: "most-free",
+    });
+    const { factory: _after, ...kept } = JSON.parse(await p.read("rowbly.config.json"));
+    expect(kept).toEqual(others);
+    expect((await getFactorySettings(p.ctx)).placement).toBe("most-free");
+    await configureFactory({ placement: "prefer-remote" }, p.ctx);
+    expect((await readFactory(p)).placement).toBe("prefer-remote");
+  });
+  it("rejects an unknown placement policy in the config and in configureFactory", async () => {
+    await writeFactory(p, JSON.stringify({ maxWorkers: 3, placement: "random" }));
+    expect(validFactorySettings({ maxWorkers: 3, placement: "random" })).toBe(false);
+    expect(validFactorySettings({ maxWorkers: 3, placement: "most-free" })).toBe(true);
+    await expect(getFactorySettings(p.ctx)).rejects.toBeInstanceOf(ValidationError);
+    await writeFactory(p, JSON.stringify({ maxWorkers: 3 }));
+    const before = await p.read("rowbly.config.json");
+    await expect(configureFactory({ placement: "random" }, p.ctx)).rejects.toBeInstanceOf(ValidationError);
+    await expect(configureFactory({ stage: "BACKLOG", placement: "most-free" }, p.ctx)).rejects.toThrow(
+      "only the worker model",
+    );
     expect(await p.read("rowbly.config.json")).toBe(before);
   });
   it("does not write an invalid sync interval", async () => {

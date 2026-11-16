@@ -1,6 +1,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import {
+  assertSteerMessage,
   type FactoryCommandType,
   publishCommand,
   readReceipt,
@@ -10,6 +11,7 @@ import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState, type WatchdogState } from "../factory-watchdog/factory-watchdog.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
@@ -146,6 +148,8 @@ async function waitForReady(input: StartFactoryInput, launch: Store<LaunchState>
 
 /** Starts a detached daemon when no live owner exists, and waits until it is ready. */
 export async function startFactory(input: StartFactoryInput, ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "start the factory");
+
   const paths = await findProject(ctx);
 
   await prepareRuntime(paths);
@@ -170,9 +174,10 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
 /** Publishes a command to the live daemon and waits for its receipt. A stop also waits for the owner release. */
 export async function sendFactoryCommand(
   type: FactoryCommandType,
-  input: { threadId?: string; attentionKey?: string; timeoutMs?: number } = {},
+  input: { threadId?: string; attentionKey?: string; message?: string; timeoutMs?: number } = {},
   ctx: ServiceContext = {},
 ) {
+  const message = type === "steer" ? steerText(input.message) : undefined;
   const paths = await findProject(ctx);
   const owner = await readFactoryOwner(paths);
 
@@ -189,6 +194,7 @@ export async function sendFactoryCommand(
     threadId: thread?.id,
     expectedRunId: thread?.runs.at(-1)?.id,
     attentionKey: input.attentionKey,
+    message,
   });
   const deadline = Date.now() + (input.timeoutMs ?? 30_000);
 
@@ -210,6 +216,23 @@ export async function sendFactoryCommand(
   }
 
   throw new ConflictError(`Factory command timed out: ${command.id}`);
+}
+
+/** Gives the trimmed steering message, or throws a ValidationError when it is not valid. */
+function steerText(message: string | undefined): string {
+  assertSteerMessage(message);
+
+  return message.trim();
+}
+
+/** Gives a message of a person to the running worker of the Thread, through the live daemon. */
+export function steerThread(
+  threadId: string,
+  message: string,
+  input: { timeoutMs?: number } = {},
+  ctx: ServiceContext = {},
+) {
+  return sendFactoryCommand("steer", { ...input, threadId, message }, ctx);
 }
 
 /** Asks the live daemon to remove the attention entry `key` from its state and from the status file. */
@@ -257,6 +280,8 @@ export async function stopFactory(input: { timeoutMs?: number } = {}, ctx: Servi
 
 /** Stops the daemon, waits for the owner release, and starts a new daemon. */
 export async function restartFactory(input: Parameters<typeof startFactory>[0], ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "restart the factory");
+
   await stopFactory({ timeoutMs: input.timeoutMs }, ctx);
 
   return startFactory(input, ctx);

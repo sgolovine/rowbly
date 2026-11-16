@@ -1,6 +1,7 @@
 import { dirname, join, resolve } from "node:path";
 import { NotFoundError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import type { WriteRecorder } from "../outbox/outbox.js";
 
 /** The folder, inside the directory Rowbly runs in, that holds a project. */
 const ROWBLY_DIR = ".rowbly";
@@ -15,6 +16,11 @@ export interface ServiceContext {
   now?: () => Date;
   /** The folder of the bundled skills. Defaults to `skills/` in the Rowbly package. */
   skillsDir?: string;
+  /**
+   * Records each Story write of a remote worker in its outbox. With a recorder, the services refuse each write that
+   * a remote worker cannot do. Without it, the services do not record writes.
+   */
+  recorder?: WriteRecorder;
 }
 
 export interface ProjectPaths {

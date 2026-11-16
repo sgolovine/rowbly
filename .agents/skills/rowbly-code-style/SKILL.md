@@ -115,7 +115,7 @@ Some state must be shared by tasks that run at the same time. Put this state in 
   can replace it.
 - Change the state with `setState(manager, (state) => ({ … }))`. The function gives only the changed
   fields.
-- Give a short-lived task its own `Store`, for example `WorkerRun` in `worker-launch.ts`.
+- Give a short-lived task its own `Store`, for example `WorkerRun` in `local-executor.ts`.
 
 Run async work one item at a time with `mapInOrder` from `src/services/in-order/in-order.ts`. It
 replaces a `for` loop with `await`, and it keeps the order of the results. A failure stops the later

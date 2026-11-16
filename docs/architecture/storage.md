@@ -23,11 +23,11 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
+  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -91,6 +91,10 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
 | `checks`            | object  | none               | The check queue and the named checks of the workers.   |
 | `dependencies`      | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
+| `placement`         | string  | `prefer-local`     | The machine of a new worker. See below.                |
+
+`placement` is `prefer-local`, `most-free` or `prefer-remote`. See
+[native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 
 A model choice has `provider`, `modelId` and an optional `thinkingLevel`. Without the `factory` key,
 the worker limit is four and Pi selects the default models. Without the `checks` key, the factory has
@@ -162,7 +166,7 @@ read the settings continue to work.
 ## Stories
 
 A Story file is `stories/<stage key>/<projectKey>-<n>.md`, for example `stories/BACKLOG/ROW-01.md`.
-The number has at least two digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list, an optional `tags` list,
+The number has at least two digits. The frontmatter has `title`, `stage`, an optional `dependsOn` list, an optional `tags` list,
 the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
 
@@ -176,7 +180,6 @@ who reads the files or a Git diff can see the Stage of each Story from its path.
 - A write that changes the Stage moves the file: `story update --stage`, a Stage rename and a Stage
   delete with `moveStoriesTo`. The service writes the new file first, then it removes the old file.
   Thus a failure does not delete the Story.
-- A change of `position` in the same Stage does not move the file.
 - A Project key change renames the files in their Stage folders.
 - The service removes a Stage folder when its last Story moves out. Rowbly does not make an empty
   Stage folder.
@@ -194,18 +197,63 @@ the folder of its Stage:
 
 `rowbly doctor` examines the Story folders:
 
-| Problem                                                                                | Severity | `--fix`                                   |
-| -------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
-| A Story file is directly in `stories/`, or in the folder of a different Stage.         | warning  | Moves the file to `stories/<stage key>/`. |
-| Two files have the same Story ID or number, in one folder or in different folders.     | error    | None. The files stay.                     |
-| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it. | warning  | None.                                     |
+| Problem                                                                                         | Severity | `--fix`                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A Story file is directly in `stories/`, or in the folder of a different Stage.                  | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
+| Two files of the Project key have the same Story number, in one folder or in different folders. | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
+| Two Stories with the same number have factory state, or a file of the group cannot be read.     | error    | None. The files stay.                                                                                                                     |
+| Two files with a different key have the same Story number.                                      | error    | None. The files stay.                                                                                                                     |
+| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.          | warning  | None.                                                                                                                                     |
+
+### Duplicate Story IDs
+
+Two Story files can get the same Story ID. For example, an older build of `rowbly` reads only the flat
+`stories/` folder and gives out a number again, or a Git merge adds a second file with the same ID.
+`ROW-7.md` and `ROW-07.md` also have the same ID.
+
+The repair runs in `rowbly doctor --fix` and each time that the TUI loads or reloads the board. It does not
+run in other commands or in the factory daemon. The TUI shows one info toast for each change, and
+`rowbly doctor --fix` shows one fixed issue for each change. Without `--fix`, `rowbly doctor` shows the
+change as the fix of the error, and it does not change a file.
+
+These rules select the Story that keeps the ID. The other Stories of the group get the next free number:
+
+1. The Story with the earliest valid `createdAt` keeps the ID. A Story with no valid `createdAt` is older
+   than a Story with one.
+2. If the times are equal, the file with the earlier modification time keeps the ID.
+3. If the times are equal, the path that comes first in string order keeps the ID.
+
+The factory state rule comes before these rules. A Story has factory state when its `worktree` or
+`pull_request` value is not empty, or when `.rowbly/state.json` has an attempt with its ID and its Stage.
+
+- If one Story of the group has factory state, that Story keeps the ID.
+- If more than one Story of the group has factory state, Rowbly does not change the group. `rowbly doctor`
+  reports the error with no fix.
+
+The repair writes the new file at `stories/<stage key>/<projectKey>-<n>.md`. The file has the same
+frontmatter and body, and a new `updatedAt`. The repair does not change the references to the old ID:
+the `dependsOn` lists, the Spec links, the attachment folder, the Threads, the factory attempts, the
+worktrees and the branches stay with the Story that keeps the ID.
+
+The repair takes no lock. It creates the new file only if no file is at its path, and it removes the
+old file only if the old file did not change. Thus two repairs at the same time do not lose or copy
+a Story.
 
 ### Position
 
-The `position` of a Story sets its order in its Stage.
+The Stories of a Stage are in the order of their `updatedAt` times. The most recent Story is at the top.
+`sortStoryFiles` in `src/services/story-files/story-files.ts` sets this order.
 
-- A Story without a `position` comes after the Stories that have one, in the order of their numbers.
-- When a Story moves, the service writes a new `position` to each Story of the Stage that changes place.
+- The service compares the times, not the strings.
+- A Story without a valid `updatedAt` comes after the Stories that have one.
+- Stories with the same time, or with no valid time, are in the order of their numbers.
+- The `position` value of a `Story` record is the 1-based place of the Story in this order. The service
+  calculates it. It does not write it to the file.
+- A Story that changes goes to the top of its Stage, because the change sets its `updatedAt`. A new
+  Story is also at the top.
+- You cannot set the place of a Story in its Stage. `story update` has no `--position` option.
+- Older versions of Rowbly wrote a `position` key to the Story files. This key has no effect now. The
+  services keep it in the file, and `rowbly doctor` does not report it.
 
 ### Times
 
@@ -221,8 +269,8 @@ set it.
   changes `dependsOn`, the removal of a deleted Story from a `dependsOn` list, and a repair of
   `rowbly doctor --fix`. An add or a remove of an attachment also sets `updatedAt`.
 - An update that does not change the Story file does not change `updatedAt`.
-- When a Story moves, the other Stories of the Stage that get a new `position` keep their
-  `updatedAt`. Only the moved Story gets a new time.
+- When a Story moves to a different Stage, the service writes only the file of that Story. The other
+  Stories keep their files and their `updatedAt`.
 - `createdAt` does not change after the create. Rowbly does not add `createdAt` to an older Story.
 - The two keys come after `dependsOn` and `tags`, and before the custom fields. The YAML parser keeps them as
   strings, not as dates.
@@ -237,7 +285,7 @@ The `dependsOn` key is a list of the IDs of the upstream Stories of the Story, f
 - Only the downstream Story keeps the relation. The services calculate the reverse list (`blocks`).
 - A Story without dependencies has no `dependsOn` key. When the list becomes empty, the service
   removes the key. A change of a different key does not add `dependsOn`.
-- `dependsOn` comes after `position` and before the custom fields. A custom field cannot have this
+- `dependsOn` comes after `stage` (and an old `position` key) and before the custom fields. A custom field cannot have this
   key, because a custom field key has only lower-case letters, digits and `_`.
 - The service saves each ID in the canonical form (`row-1` and `1` become `ROW-01`). It removes
   duplicates and keeps the order of the input.
@@ -377,19 +425,119 @@ its rules, in the order of the check:
 - Only a person can select the dependency to remove. Use
   `rowbly story update <id> --remove-dependency <id>`.
 
-## `~/.rowblyrc.json`
+## Outbox of a remote worker
 
-Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` service reads and writes
-it.
+A remote worker writes to a copy of the Project on its host. With `ROWBLY_OUTBOX`, the CLI records
+each Story write and each attachment write in the outbox folder of the host. The main machine applies the entries to the board
+later. The folder is not in `.rowbly/`.
 
 ```
-~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId
+$ROWBLY_OUTBOX/
+  outbox.jsonl    # one JSON entry for each line
+  seq             # the last seq that the folder gave
+  outbox.lock     # the flock of the writers
+  blobs/          # <sha256>.png: the PNG of each attachment.add entry
+```
+
+A field entry of `outbox.jsonl` has this shape. It has no `type` key:
+
+```json
+{
+  "seq": 1,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "changes": [{ "path": "stage", "before": "BACKLOG", "after": "DONE" }]
+}
+```
+
+- The service writes the Story file first. Then the recorder adds the entry. If the Story write fails,
+  the outbox gets no entry. If the process stops between the two writes, the entry is lost.
+- A writer holds an exclusive `flock` on `outbox.lock` while it adds an entry. Thus two writers do
+  not get the same `seq`.
+- `seq` starts at 1 and increases by 1 for each entry. The next `seq` is one more than the largest of
+  the `seq` file and the lines of `outbox.jsonl`. The `seq` file keeps the order after the host removes
+  the first lines.
+- The writer syncs `outbox.jsonl`, the `seq` file and the folder to the disk before the command
+  returns.
+- `opId` is a new unique ID for each entry.
+- The paths of a change are `title`, `description`, `stage`, `fields.<key>`, `tags` and `dependsOn`.
+
+An attachment entry has a `type` key. `addAttachment` writes an `attachment.add` entry, and
+`removeAttachment` writes an `attachment.remove` entry:
+
+```json
+{
+  "seq": 2,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "type": "attachment.add",
+  "attachment": { "id": "a<uuid>", "name": "shot.png", "type": "image/png", "size": 1234, "createdAt": "<iso>" },
+  "sha256": "<64 lowercase hex characters>"
+}
+```
+
+```json
+{
+  "seq": 3,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "type": "attachment.remove",
+  "id": "a<uuid>",
+  "sha256": "<64 lowercase hex characters>"
+}
+```
+
+- `sha256` is the lowercase hex SHA-256 of the PNG bytes.
+- For an add, the service writes the PNG and the manifest of the copy first. Then the recorder writes
+  the PNG to `blobs/<sha256>.png`. Then it adds the entry. Thus an entry never points to a missing
+  PNG. A crash after the PNG write leaves only a PNG without an entry. This is harmless.
+- The recorder writes a PNG through a temporary file in `blobs/`. It syncs the file, renames it and
+  syncs the folder. If `<sha256>.png` exists, the recorder keeps it, because it has the same bytes.
+  Thus two adds of the same bytes give one PNG and two entries.
+- For a remove, the service calculates `sha256` from the PNG of the copy. It adds the entry after the
+  remove succeeds.
+- `addAttachment` accepts an optional `id`. The main machine uses it when it applies an
+  `attachment.add` entry. An id that is not valid gives `VALIDATION`. An id that is in the manifest
+  gives `CONFLICT`. Both errors occur before the first write.
+- `updateStory` with `attachments` stays refused for a remote worker.
+- The main machine gets a PNG with `rowbly host blob <sha256>`. See
+  [cli.md](cli.md#worker-hosts).
+
+### Attachment cache of a host
+
+The `attachment-cache` service keeps PNG files by attachment id, in a folder that the caller gives.
+Each file is `<dir>/<attachment-id>.png`. The content of an attachment never changes, so a file never
+becomes old.
+
+- `putCachedAttachment` checks the id and the PNG bytes (10 MiB or less) first. It writes the file
+  atomically. If the id is in the cache, the first file stays.
+- `readCachedAttachment` gives the bytes. A missing file gives `NOT_FOUND`.
+- `hasCachedAttachment` tells if the id is in the cache. `missingCachedAttachments` gives the ids of
+  a list that are not in the cache.
+- An invalid id gives `VALIDATION`. The service refuses a symlink in place of the folder or a file.
+
+## `~/.rowblyrc.json`
+
+Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` and `host` services read
+and write it. They use the `user-rc` module for each read and write, so that the safety rules below
+apply in one place.
+
+```
+~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId;
+                      # hosts [{id,ssh,maxWorkers,enabled}], in the order that the user added them
 ```
 
 - The TUI adds a Project to this file when the Project opens.
 - The Project switcher in the header reads the list.
 - `deviceId` is a nonsecret installation ID. `rowbly auth login` creates it at the first login and
   gives it to Pi.
+- `hosts` is the list of the worker hosts of the user. `rowbly host` changes it. A missing key is an
+  empty list. If the value is not an array, or an entry does not have the four fields with the
+  correct types, the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
+  A write keeps the other keys of each entry.
 - Rowbly v1 uses the same file for its own keys. Keep all other keys when you write the file.
 - If the file is a symlink, for example from a dotfile manager, Rowbly writes through the link and
   keeps it.

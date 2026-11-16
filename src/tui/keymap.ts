@@ -19,7 +19,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "n", description: "new Story, or new Stage in the Stage sidebar" },
   { key: "e", description: "edit the Stage (in the Stage sidebar)" },
   { key: "shift+↑/↓", description: "move the Stage up or down (in the Stage sidebar)" },
-  { key: "shift+↑/↓", description: "move the Story up or down, then into the next Stage (in the Story list)" },
+  { key: "shift+↑/↓", description: "move the Story to the previous or next Stage (in the Story list)" },
   { key: "ctrl+shift+↑/↓", description: "move the Story to the previous or next Stage (in the Story list)" },
   { key: "space", description: "start the range mode, or select the Stories of the range (in the Story list)" },
   { key: "shift+click", description: "select the Stories from the cursor to the Story (in the Story list)" },

@@ -42,6 +42,7 @@ describe("thread projection", () => {
       threadId: t.id,
       status: "interrupted",
       model: "p/m",
+      host: "local",
       result,
     });
     expect(attempts[0]?.stoppedAt).toEqual(expect.any(String));

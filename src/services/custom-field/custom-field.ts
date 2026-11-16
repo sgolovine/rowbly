@@ -13,6 +13,7 @@ import {
 } from "../config/config.js";
 import { ConflictError, NotFoundError } from "../errors/errors.js";
 import { coerceFieldValue, type FieldValue } from "../fields/fields.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { readStoryFiles, rewriteStories } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
@@ -60,6 +61,8 @@ export async function listCustomFields(ctx: ServiceContext = {}): Promise<Custom
 
 /** Adds a field to the project, and to every story with no value (`null`). */
 export async function addCustomField(input: AddCustomFieldInput, ctx: ServiceContext = {}): Promise<CustomField> {
+  refuseRemoteWrite(ctx, "add a custom field");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const label = input.label.trim();
@@ -140,6 +143,8 @@ function renameValue(
 
 /** Changes a field. Existing values follow a new key or a new type. */
 export async function updateCustomField(input: UpdateCustomFieldInput, ctx: ServiceContext = {}): Promise<CustomField> {
+  refuseRemoteWrite(ctx, "change a custom field");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const field = requireField(config, input.key);
@@ -178,6 +183,8 @@ export async function updateCustomField(input: UpdateCustomFieldInput, ctx: Serv
 
 /** Removes a field from the project and its value from every story. */
 export async function removeCustomField(input: { key: string }, ctx: ServiceContext = {}): Promise<CustomField> {
+  refuseRemoteWrite(ctx, "remove a custom field");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const field = requireField(config, input.key);

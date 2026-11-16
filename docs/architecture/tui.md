@@ -108,6 +108,18 @@ after a Project switch, `useStageDefaults` in `src/tui/shell/shell/` collapses e
 keys. All other sections are expanded. A reload of the board does not change the sections. See
 [storage.md](storage.md#stages).
 
+## The order and the moves of Stories
+
+In each Stage, the Story list shows the Stories in the order of their `updatedAt` times. The most
+recent Story is at the top. See [storage.md](storage.md#position). You cannot change the place of a
+Story in its Stage. `story-changes.ts` in `src/tui/shell/shell/` moves a Story to a different Stage:
+
+- `shift+↓` (or `ctrl+shift+↓`) moves the Story of the cursor to the next Stage. `shift+↑` (or
+  `ctrl+shift+↑`) moves it to the previous Stage. A move sets `updatedAt`, so the Story goes to the
+  top of the new Stage. The selection stays on the Story.
+- A drop of a dragged Story in a different Stage moves the Story to that Stage. A drop in the same
+  Stage does nothing.
+
 ## The multi-selection of Stories
 
 In the `stories` view mode, the user can select more than one Story and move all of them in one
@@ -125,15 +137,16 @@ step. The shell keeps the selection as a set of Story IDs, and the range anchor 
   `shift+click` for their own text selection. In these terminals, use the range mode.
 - **The mark.** Each selected Story row shows `●` in `accent` at the left of its ID. The cursor row
   keeps its `▌` bar and its `selection` fill.
-- **The move.** With a selection, `shift+↓` (or `J`) moves each selected Story to the top of the
-  Stage after its own Stage. `shift+↑` (or `K`) moves each selected Story to the bottom of the Stage
-  before its own Stage. The Stories keep their relative order. A Story in the last Stage (for
-  `shift+↓`) or in the first Stage (for `shift+↑`) does not move. The shell calls `updateStory` for
-  one Story at a time, because each call writes the positions of its Stage again. Then it reloads
-  the board one time. The target sections expand, and a Stage filter follows the first moved Story.
+- **The move.** With a selection, `shift+↓` (or `J`) moves each selected Story to the Stage after
+  its own Stage. `shift+↑` (or `K`) moves each selected Story to the Stage before its own Stage. A
+  move sets `updatedAt`, so each Story goes to the top of its new Stage. A Story in the last Stage
+  (for `shift+↓`) or in the first Stage (for `shift+↑`) does not move. The shell calls `updateStory`
+  for one Story at a time, in the reverse list order. Thus each Story gets a later `updatedAt` than
+  the Story below it, and the Stories keep their relative order. Then the shell reloads the board
+  one time. The target sections expand, and a Stage filter follows the first moved Story.
   The Stories stay selected, so the next `shift+↓` moves them one more Stage. If a move fails, the
   TUI shows the error as a toast and reloads the board. The Stories that moved stay moved.
-- **No selection.** `shift+↑/↓` and `K/J` move the Story of the cursor in its Stage, as before.
+- **No selection.** `shift+↑/↓` and `K/J` move the Story of the cursor to a different Stage, as before.
   `space` on a Stage heading expands or collapses the section.
 - **Clear.** `esc` in the Story list clears the selection first. A second `esc` closes the Story
   sidebar. A Project switch clears the selection. After a reload, the IDs of Stories that do not
@@ -207,11 +220,17 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   Thread in the Story sidebar and gets the focus. The form opens on its General tab.
   `openThreadStory` in `src/tui/shell/shell/shell-selection.ts` does this. When the Thread has no
   `storyId`, or the board does not have the Story, the Button does not show and `o` does nothing.
-- The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
+- A running worker Thread shows `ThreadSteerInput` (`screens/stories/thread-steer-input/`) under
+  the conversation. `m` or a click on the input gives it the focus. `enter` sends the text with
+  `steerThread`, and `esc` gives the focus back to the Thread. While the input has the focus, `tab`,
+  `o`, `esc` to the list and the conversation keys do not act. The Threads tab of a Story uses the
+  same component, with the focus value `steer` of the tab. See
+  [Steering input](native-factory/controls.md#steering-input).
+- The Thread is read-only, except for the steering input, and it is never dirty. A Story form with unsaved changes asks before a
   Thread replaces it (`discardStory` overlay).
 - In the Thread, `esc` gives the focus to the Thread list, and the Thread stays open. `tab` and
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
-  keys, `ctrl+f` (`full screen`), `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
+  keys, `m` (`message`) for a running worker Thread, `ctrl+f` (`full screen`), `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
 - `ctrl+f` in the Thread shows the conversation over the whole terminal, in the same area as a
   `FullScreenEditor`. `useFullScreenConversation` (`components/use-full-screen-conversation.tsx`)
@@ -286,6 +305,14 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | `use-story-paste.ts`        | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
 | `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 | `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
+
+## Board load
+
+`useShellData` loads the board. Before it reads the Stories, it calls `repairDuplicateStoryIds`. This
+service gives the newer Story of each duplicate Story ID the next free number. The shell shows one info
+toast for each change, for example `ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast
+shows and the board loads. The repair runs again each time that `useStoryChanges` reloads the board.
+See [Duplicate Story IDs](storage.md#duplicate-story-ids).
 
 ## Factory status
 
@@ -403,6 +430,38 @@ functions into the data that the components show.
   factory activity shows `waiting for ROW-01, ROW-02` in the activity slot, in `ink-muted`. The text
   shows a maximum of three IDs, then `+<count>`. If the row is narrow, the text is cut. When a worker
   is active, the slot shows `▶ <agent>`.
+
+## Story tags
+
+The TUI shows and changes the tags of the Project and the tags of each Story. The tag service
+(`src/services/tag/tag.ts`), `createStory` and `updateStory` give the rules. A component does not
+contain a tag rule. `src/tui/screens/stories/story-tag-view.ts` changes the tags into the data that
+the components show.
+
+- **The Tags section.** Settings has a Tags section in the Project group, after Custom Fields
+  (`TagsSection`). It shows each tag of `listTags` in config order, with its label and its value in
+  two columns. With no tags, it shows `No Tags. Press n to add one.`
+- **Add.** `n` or the `+ New Tag` Button opens `TagFormModal` with the `Label` and `Value` fields.
+  The save calls `addTag`. An error of the service shows under its field or as a toast, and the
+  Modal stays open.
+- **Edit.** `enter`, `e` or a click on a row opens `TagFormModal` with only the `Label` field. The
+  title shows the value, for example `Edit Tag › frontend`. The value cannot change. The save calls
+  `updateTag`.
+- **Remove.** `d` opens a destructive `ConfirmDialog`. The message tells that Rowbly also removes
+  the tag from each Story. The confirmation calls `removeTag`.
+- **Reload.** After each change, the section reads the tags again and calls `onChange()`. Then the
+  Story list and the Story forms show the new tags.
+- **The `Tags` field.** The new Story form and the General tab have a `Tags` field after
+  `Depends on`. It is a `multiselect` field. Its options are the tag values, and each option shows
+  the tag label. A Story value that is not a tag of the Project shows as its value, and the user can
+  remove it. When the Project has no tags, the field does not show.
+- **Save.** The new Story form gives the list to `createStory` as `tags`. The edit form gives the
+  full list to `updateStory` as `tags`, only when the list changes. An empty list removes the `tags`
+  key from the Story file.
+- **The tag slot.** A Story row with tags shows the labels of its tags after the title, in
+  `ink-muted`, in the order of the Story. A value that is not a tag of the Project shows as its
+  value. If the row is narrow, the tag slot is cut before the title. A Story without tags has no tag
+  slot.
 
 ## Worker model overrides
 

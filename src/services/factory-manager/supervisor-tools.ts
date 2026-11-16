@@ -104,7 +104,7 @@ function workerTools(manager: Manager) {
       name: "start_worker",
       label: "Start worker",
       description:
-        "Reserve an eligible worker. A Story or Stage worker model override in the factory settings has priority over the model argument",
+        "Reserve an eligible worker. A Story or Stage worker model override in the factory settings has priority over the model argument. Without a host, the placement policy selects one. A host must be connected, have a free slot and the worker provider; unpushed local work stays on local, and a Story stays on the host of its last worker",
       parameters: toolParameters(
         z.object({
           storyId: z.string(),
@@ -112,6 +112,7 @@ function workerTools(manager: Manager) {
           requestId: z.string().min(1).max(128),
           resumeThreadId: z.string().optional(),
           model: MODEL_CHOICE_SCHEMA.optional(),
+          host: z.string().min(1).max(64).optional(),
         }),
       ),
       execute: async (_id: string, args: ReserveWorkerInput) => textResult(await reserveWorker(manager, args)),
@@ -317,7 +318,7 @@ async function raiseAttention(manager: Manager, args: { key: string; text: strin
 }
 
 async function stopWorker(manager: Manager, threadId: string, expectedRunId: string) {
-  const session = await serial(manager, async () => {
+  const control = await serial(manager, async () => {
     const thread = await getThread(threadId, manager.ctx);
 
     if (thread.runs.at(-1)?.id !== expectedRunId || !getState(manager).active.has(thread.id)) {
@@ -326,10 +327,10 @@ async function stopWorker(manager: Manager, threadId: string, expectedRunId: str
 
     await changeThread(manager, thread.id, "interrupted", { resumable: !!thread.session.file });
 
-    return getState(manager).active.get(thread.id)?.session;
+    return getState(manager).active.get(thread.id)?.control;
   });
 
-  await session?.session.abort();
+  await control?.stop();
 
   return { interrupted: threadId };
 }

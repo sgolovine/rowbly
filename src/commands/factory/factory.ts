@@ -32,6 +32,7 @@ interface ConfigureOptions {
   maxChecks?: number;
   checkMemoryReserve?: number;
   pullUpstream?: string;
+  placement?: string;
 }
 
 interface StartOptions {
@@ -153,7 +154,7 @@ function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync, check limits and pull-upstream",
+      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync, check limits, pull-upstream and placement",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
@@ -173,6 +174,7 @@ function registerConfigure(program: Command): void {
     .option("--max-checks <n>", "checks that run at the same time, 1 to 32", parseInteger)
     .option("--check-memory-reserve <mb>", "memory that the check queue always keeps free", parseInteger)
     .option("--pull-upstream <on|off>", "move a stuck upstream Story out of the first Stage")
+    .option("--placement <policy>", "worker placement: prefer-local, most-free or prefer-remote")
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,

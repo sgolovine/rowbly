@@ -61,6 +61,13 @@ function resume(env: ThreadsTabEnv): void {
   }
 }
 
+/** Gives the focus to the steering input, if the selected thread runs. */
+function focusSteer(env: ThreadsTabEnv): void {
+  if (env.current?.status === "running") {
+    env.setFocus("steer");
+  }
+}
+
 /** `x` interrupts and `r` resumes, in the list and in the thread region. */
 function handleActionKey(env: ThreadsTabEnv, input: string): void {
   if (input === "x") {
@@ -70,7 +77,7 @@ function handleActionKey(env: ThreadsTabEnv, input: string): void {
   }
 }
 
-/** The keys of the thread region: `tab` goes back to the list, and `ctrl+f` opens the conversation full screen. */
+/** The keys of the thread region: `tab` goes back to the list, `m` focuses the steering input, and `ctrl+f` opens the conversation full screen. */
 export function handleThreadKey(env: ThreadsTabEnv, input: string, key: Key): void {
   if (key.ctrl && input === "f") {
     env.openFullScreen?.();
@@ -84,6 +91,12 @@ export function handleThreadKey(env: ThreadsTabEnv, input: string, key: Key): vo
 
   if (key.tab && !key.shift) {
     env.setFocus("list");
+
+    return;
+  }
+
+  if (input === "m") {
+    focusSteer(env);
 
     return;
   }

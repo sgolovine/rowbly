@@ -39,8 +39,7 @@ function rowHints(row: StoryListRow | undefined, marks: boolean): KeyHint[] {
     ? [
         { key: "enter", description: "edit Story" },
         ...(marks ? [] : [{ key: "space", description: "select" }]),
-        ...(marks ? [] : [{ key: "shift+↑/↓", description: "move Story" }]),
-        { key: "ctrl+shift+↑/↓", description: "change Stage", secondary: true },
+        ...(marks ? [] : [{ key: "shift+↑/↓", description: "change Stage" }]),
       ]
     : [];
 }

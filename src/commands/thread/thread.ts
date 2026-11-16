@@ -1,7 +1,7 @@
 import type { Command } from "commander";
 import { getThreadLog } from "../../services/conversation/conversation.js";
-import { sendFactoryCommand } from "../../services/factory/factory.js";
-import { getThread, listThreads } from "../../services/thread/thread.js";
+import { sendFactoryCommand, steerThread } from "../../services/factory/factory.js";
+import { getThread, LOCAL_HOST, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
 type ThreadLog = Awaited<ReturnType<typeof getThreadLog>>;
@@ -25,7 +25,7 @@ function logText(page: ThreadLog): string {
 function threadLine(t: ThreadList["threads"][number]): string {
   const model = t.model ? `${t.model.provider}/${t.model.modelId}` : "unresolved";
 
-  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}`;
+  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}  ${t.host ?? LOCAL_HOST}`;
 }
 
 function listText(result: ThreadList): string {
@@ -44,6 +44,20 @@ function registerControl(program: Command, action: "cancel" | "resume"): void {
       run(
         command,
         (ctx) => sendFactoryCommand(action, { threadId: id }, ctx),
+        (receipt) => JSON.stringify(receipt),
+      ),
+    );
+}
+
+function registerSteer(program: Command): void {
+  program
+    .command("steer <id>")
+    .description("send a message to a running worker through the running factory")
+    .requiredOption("--message <text>", "the message, from 1 to 4000 characters")
+    .action((id: string, opts: { message: string }, command: Command) =>
+      run(
+        command,
+        (ctx) => steerThread(id, opts.message, {}, ctx),
         (receipt) => JSON.stringify(receipt),
       ),
     );
@@ -94,6 +108,7 @@ function registerShow(program: Command): void {
 export function registerThreadCommands(program: Command): void {
   registerControl(program, "cancel");
   registerControl(program, "resume");
+  registerSteer(program);
   registerLog(program);
   registerList(program);
   registerShow(program);

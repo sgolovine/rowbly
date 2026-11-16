@@ -3,6 +3,7 @@ import { commitCanonicalProject } from "../project-write/project-write.js";
 import { withEntry, withoutEntries, withoutEntry } from "../store/store.js";
 import { getState, type Manager, readAuthStamp, setState } from "./manager-state.js";
 import { startProjectSync } from "./project-sync-step.js";
+import { refreshHosts } from "./worker-placement.js";
 
 const ATTENTION_LIMIT = 500;
 
@@ -25,6 +26,7 @@ export function failureText(label: string, error: unknown): string {
  */
 export async function runSideSteps(manager: Manager): Promise<void> {
   await runStep(manager, "settings", "Factory settings refresh failed", () => refreshSettings(manager));
+  await runStep(manager, "hosts", "Worker host refresh failed", () => refreshWorkerHosts(manager));
   await runStep(manager, "providers", "Provider pause check failed", () => clearProviderPauses(manager));
   await runStep(manager, "commit", "Canonical commit failed", () => commitProject(manager));
   await runStep(manager, "sync", "Git sync start failed", () => startSync(manager));
@@ -73,6 +75,13 @@ async function refreshSettings(manager: Manager): Promise<StepResult> {
   }));
 
   return read.problem;
+}
+
+/** Reads the worker hosts again. A failed read keeps the current hosts. */
+async function refreshWorkerHosts(manager: Manager): Promise<StepResult> {
+  await refreshHosts(manager);
+
+  return undefined;
 }
 
 /** Clears authentication pauses after a credential change, and pauses whose retry time has passed. */
