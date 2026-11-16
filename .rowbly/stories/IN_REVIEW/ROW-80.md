@@ -1,11 +1,11 @@
 ---
 title: Story tags in the TUI
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 1
 dependsOn:
   - ROW-79
 createdAt: 2026-11-16T19:30:18.067Z
-updatedAt: 2026-11-16T19:50:24.692Z
+updatedAt: 2026-11-16T19:55:48.680Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-80
 pull_request: https://github.com/sgolovine/rowbly/pull/266
 ---
