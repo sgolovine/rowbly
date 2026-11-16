@@ -7,7 +7,7 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:08.648Z
-updatedAt: 2026-11-16T21:09:53.853Z
+updatedAt: 2026-11-16T21:21:40.178Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-94
 pull_request: null
 ---
@@ -101,3 +101,9 @@ Not in scope:
 - `createdAt` of an added attachment is the time of the apply on the main machine. Reason: `addAttachment` sets it, and the Spec permits derived values to be calculated again.
 - A conflict PNG goes to `runtime/hosts/<host>/conflicts/<sha256>.png`. Reason: the Story says "stays in `runtime/hosts/<host>/`" and gives no exact name.
 - An attention entry for each Story (`outbox:<storyId>`), and a new conflict replaces the text of the entry. Reason: the key in the Story is `outbox:ROW-5`.
+- (Development) The recorder now holds the outbox lock while it writes the PNG and adds the `attachment.add` entry. Reason: else an acknowledgement between the two writes can remove the new PNG, because no entry points to it yet.
+- (Development) The hidden host commands use a new `runWithoutContext` output helper. Reason: `run()` makes an outbox context, and that context needs `ROWBLY_THREAD_ID` when `ROWBLY_OUTBOX` is set.
+- (Development) A failure of the connection (unreachable, authentication, time limit, version) during a PNG fetch stops the apply without a record of the entry. The next sync tries it again. A different failure of the fetch, for example a missing blob or a PNG larger than the transport limit, is a conflict without a kept PNG.
+- (Development) An entry without a valid `seq` or Story ID is a conflict and does not advance the applied `seq`. Its attention key is `outbox:<host>`.
+- (Development) A failed acknowledgement with a `RowblyError` is given as `acknowledgeProblem` in the result, so that the conflicts of the apply still get attention entries. Each other error is thrown.
+- (Development) An unknown path, a `fields.<key>` that the config does not have, or a new value with a bad form (for example a `title` that is not text) is a conflict. A write that `updateStory` refuses makes each change of that write a conflict.
