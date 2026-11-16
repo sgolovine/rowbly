@@ -1,11 +1,11 @@
 ---
 title: Run checks of remote workers on their host
-stage: IN_REVIEW
+stage: DONE
 position: 12
 dependsOn:
   - ROW-92
 createdAt: 2026-11-16T19:45:08.084Z
-updatedAt: 2026-11-16T23:08:55.929Z
+updatedAt: 2026-11-16T23:10:56.053Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-93
 pull_request: https://github.com/sgolovine/rowbly/pull/289
 ---
@@ -72,7 +72,3 @@ Not in scope:
 - ROW-96 maps the `checks` list to the Thread record and keeps the checks block in the message of a remote worker. Reason: ROW-96 owns the handler of the `run` frame and the build of the remote worker message, and it is not done yet.
 - A check gets the outbox variables of the worker shell. Reason: the docs say that a check uses the environment of the worker `bash` tool. Without them, a CLI write in a check goes to the copy only and never to the main machine.
 - The check queue of a host is not in `status.json` in this Story. Reason: the Story does not ask for it, and the host status in the TUI is a separate Story of the Spec.
-
-## Review findings
-
-1. **CI `Test` fails because of the pull request.** `src/services/host-agent/host-agent.test.ts:84`, test "holds one claim for each Project; a second agent of the Project exits with no effect", fails in CI two times (run 43974877762, first run and rerun) with `ENOENT ... agent/agent.json`. The same test passes on `main` (b89ceb6f). Cause: `src/services/host-agent/host-agent.ts:223` now calls `openHostChecks` (`ensurePrivateDir`, `stopOrphanChecks`, `createCheckQueue`) between the claim and `recordState(loop, "running")` (line 200). The test waits for the claim (`liveAgent`) and then reads `agent.json` at once, so the wider window makes the read fail. Fix: write the `running` state immediately after the claim, before the check queue opens (and keep `stopped` in the `finally` path, also when `openHostChecks` fails), or make the test wait until `agent.json` exists. Then make sure that the CI `Test` check passes.
