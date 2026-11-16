@@ -168,11 +168,18 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   `src/services/conversation/json-tokens.ts` finds the tokens. Keys are `accent`, strings are `ink`,
   numbers and literals are `ink-muted`, and punctuation is `ink-faint`.
 - `ThreadPane` reads the Thread again when the worker writes its file (`useThreadChanges`).
+- When the board has the Story of the Thread (`storyId`), the first row of `ThreadPane` shows an
+  `Open Story` Button with the key `o`. A click on the Button, or `o` while the Thread has the focus,
+  sets the view mode to `stories`. Then the Story list selects the Story row: it clears a Stage
+  filter that hides the Story and expands its Stage section. The edit form of the Story replaces the
+  Thread in the Story sidebar and gets the focus. The form opens on its General tab.
+  `openThreadStory` in `src/tui/shell/shell/shell-selection.ts` does this. When the Thread has no
+  `storyId`, or the board does not have the Story, the Button does not show and `o` does nothing.
 - The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
   Thread replaces it (`discardStory` overlay).
 - In the Thread, `esc` gives the focus to the Thread list, and the Thread stays open. `tab` and
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
-  keys and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
+  keys, `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
 - The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
   does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the

@@ -15,6 +15,7 @@ import {
   editStageByKey,
   filterStage,
   openFoundStory,
+  openThreadStory,
   pointRow,
   showSavedStage,
   showSavedStory,
@@ -180,6 +181,7 @@ export function storySidebarProps(env: ShellEnv, frame: ShellFrame): StorySideba
     onTab: (step) => env.setPane(cyclePane(env.view, step)),
     onSaved: (saved) => showSavedStory(env, saved),
     onDeleted: (id) => afterDelete(env, id),
+    onOpenStory: (opened) => openThreadStory(env, opened),
     onHints: env.setStoryHints,
   };
 }

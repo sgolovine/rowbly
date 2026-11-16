@@ -108,6 +108,13 @@ export function openFoundStory(env: ShellEnv, story: Story): void {
   editStory(env, story);
 }
 
+/** Opens the Story `story` of the Thread in the Story sidebar: the right Panel shows the Story list with the Story. */
+export function openThreadStory(env: ShellEnv, story: Story): void {
+  env.setMode("stories");
+  reveal(env, story);
+  editStory(env, story);
+}
+
 /** Shows a Story that the Story sidebar created or saved, and closes the Story sidebar. */
 export function showSavedStory(env: ShellEnv, story: Story): void {
   reveal(env, story);
