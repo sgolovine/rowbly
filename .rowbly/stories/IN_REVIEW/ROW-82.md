@@ -1,9 +1,9 @@
 ---
 title: Put worker execution behind an executor interface
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 2
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T20:20:18.682Z
+updatedAt: 2026-11-16T20:21:08.396Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82
 pull_request: https://github.com/sgolovine/rowbly/pull/271
 ---
