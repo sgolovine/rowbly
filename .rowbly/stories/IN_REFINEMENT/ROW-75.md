@@ -1,8 +1,9 @@
 ---
 title: Threads Improvements - full-screen view.
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 2
 createdAt: 2026-11-16T17:00:18.867Z
-updatedAt: 2026-11-16T17:00:18.867Z
+updatedAt: 2026-11-16T19:29:42.569Z
 worktree: null
 pull_request: null
 ---

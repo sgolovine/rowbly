@@ -1,9 +1,9 @@
 ---
 title: Expand and collapse the Story sidebar
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 1
 createdAt: 2026-11-16T18:36:13.319Z
-updatedAt: 2026-11-16T18:38:15.280Z
+updatedAt: 2026-11-16T18:38:19.454Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-77
 pull_request: null
 ---
