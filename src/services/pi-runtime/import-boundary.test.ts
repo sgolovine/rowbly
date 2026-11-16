@@ -59,6 +59,17 @@ describe("Pi import boundary", () => {
     await expect(import("../factory-manager/worker-executor.js")).resolves.toHaveProperty("workerControl");
   });
 
+  it("imports the host transport without loading Pi", async () => {
+    await expect(import("../host-transport/host-transport.js")).resolves.toHaveProperty("HOST_PROTOCOL_VERSION", 1);
+    await expect(import("../host-transport/host-handshake.js")).resolves.toHaveProperty("openHostChannel");
+    await expect(import("../host-transport/host-errors.js")).resolves.toHaveProperty("classifySshExit");
+    await expect(import("../host-transport/json-lines.js")).resolves.toHaveProperty("decodeChunk");
+    await expect(import("../host-transport/ssh-transport.js")).resolves.toHaveProperty("createSshTransport");
+    await expect(import("../host-transport/ssh-process.js")).resolves.toHaveProperty("runSshCall");
+    await expect(import("../host-transport/ssh-channel.js")).resolves.toHaveProperty("startSshChannel");
+    await expect(import("../test-project/fake-host-transport.js")).resolves.toHaveProperty("createFakeHostTransport");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });
