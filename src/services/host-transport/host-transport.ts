@@ -40,6 +40,12 @@ export interface BytesResult {
   readonly stderr: string;
 }
 
+/** The result of an upload call. The remote command reads the bytes on stdin. */
+export interface UploadResult {
+  readonly exitCode: number;
+  readonly stderr: string;
+}
+
 /** How a channel ended. `error` is set when the transport failed, for example when the host became unreachable. */
 export interface ChannelEnd {
   readonly exitCode: number | null;
@@ -70,6 +76,8 @@ export interface HostTransport {
   request(command: RemoteCommand, input: unknown, options?: CallOptions): Promise<RequestResult>;
   /** Sends one JSON value on stdin, and gives the bytes of stdout, for example a PNG file. */
   bytes(command: RemoteCommand, input: unknown, options?: CallOptions): Promise<BytesResult>;
+  /** Sends the exact bytes of `data` on stdin, for example a package file. The remote command writes them to a file. */
+  upload(command: RemoteCommand, data: Buffer, options?: CallOptions): Promise<UploadResult>;
   /** Opens a channel. The data of the main machine goes on stdin as frames. */
   channel(command: RemoteCommand, handlers: ChannelHandlers, options?: ChannelOptions): Promise<HostChannel>;
 }

@@ -144,6 +144,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `worker-worktree/`                  | One worktree for each Story. Existing work stays.                 |
 | `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.            |
 | `host-transport/`                   | The SSH transport and the handshake to a worker host. No Pi.      |
+| `host-install/`                     | The Node check and the install of Rowbly on a worker host. No Pi. |
 
 See [native-factory/README.md](native-factory/README.md) for how these modules work together.
 

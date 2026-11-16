@@ -14,8 +14,9 @@ import {
   type HostTransport,
   type RemoteCommand,
   type RequestResult,
+  type UploadResult,
 } from "./host-transport.js";
-import { parseFrame } from "./json-lines.js";
+import { encodeFrame, parseFrame } from "./json-lines.js";
 import { startSshChannel } from "./ssh-channel.js";
 import { runSshCall, type SshOutput } from "./ssh-process.js";
 
@@ -45,8 +46,11 @@ export interface SshSettings {
   readonly controlPersist: number;
 }
 
-/** The characters that a remote command token can have. The remote shell does not change these characters. */
-const SAFE_TOKEN = /^[A-Za-z0-9._/=:-]+$/;
+/**
+ * The characters that a remote command token can have. The remote shell does not change these characters.
+ * `@` is safe in `sh`, `bash`, `zsh` and `fish`, and npm needs it in a package spec such as `rowbly@1.0.0`.
+ */
+const SAFE_TOKEN = /^[A-Za-z0-9._/=:@-]+$/;
 
 function hasControlCharacter(text: string): boolean {
   return [...text].some((character) => {
@@ -75,7 +79,7 @@ export function validateCommand(command: RemoteCommand): void {
     throw new ValidationError("The remote command has a token that is not safe.", {
       details: {
         token: bad,
-        issues: [{ path: ["command"], message: "Each token can have only A-Z, a-z, 0-9 and . _ / = : -." }],
+        issues: [{ path: ["command"], message: "Each token can have only A-Z, a-z, 0-9 and . _ / = : @ -." }],
       },
     });
   }
@@ -130,7 +134,7 @@ async function ensureControlDir(settings: SshSettings): Promise<void> {
   await chmod(settings.controlDir, 0o700);
 }
 
-async function call(settings: SshSettings, command: RemoteCommand, input: unknown, options: CallOptions) {
+async function call(settings: SshSettings, command: RemoteCommand, stdin: string | Buffer, options: CallOptions) {
   const args = sshArguments(settings, command);
 
   await ensureControlDir(settings);
@@ -139,7 +143,7 @@ async function call(settings: SshSettings, command: RemoteCommand, input: unknow
     executable: settings.sshExecutable,
     args,
     target: settings.target,
-    input,
+    stdin,
     timeoutMs: options.timeoutMs ?? DEFAULT_CALL_TIMEOUT_MS,
     limit: options.limit ?? DEFAULT_OUTPUT_LIMIT,
   });
@@ -168,7 +172,7 @@ async function request(
   input: unknown,
   options: CallOptions = {},
 ): Promise<RequestResult> {
-  return requestResult(await call(settings, command, input, options));
+  return requestResult(await call(settings, command, encodeFrame(input), options));
 }
 
 async function bytes(
@@ -177,9 +181,20 @@ async function bytes(
   input: unknown,
   options: CallOptions = {},
 ): Promise<BytesResult> {
-  const output = await call(settings, command, input, options);
+  const output = await call(settings, command, encodeFrame(input), options);
 
   return { exitCode: output.exitCode, bytes: output.stdout, stderr: output.stderr };
+}
+
+async function upload(
+  settings: SshSettings,
+  command: RemoteCommand,
+  data: Buffer,
+  options: CallOptions = {},
+): Promise<UploadResult> {
+  const output = await call(settings, command, data, options);
+
+  return { exitCode: output.exitCode, stderr: output.stderr };
 }
 
 async function channel(
@@ -207,6 +222,7 @@ export function createSshTransport(options: SshTransportOptions): HostTransport 
   return {
     request: (command, input, callOptions) => request(settings, command, input, callOptions),
     bytes: (command, input, callOptions) => bytes(settings, command, input, callOptions),
+    upload: (command, data, callOptions) => upload(settings, command, data, callOptions),
     channel: (command, handlers, channelOptions) => channel(settings, command, handlers, channelOptions),
   };
 }
