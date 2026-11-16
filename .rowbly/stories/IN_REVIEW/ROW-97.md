@@ -1,12 +1,12 @@
 ---
 title: Survive worker host disconnects and reconnects
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 16
 uid: 46c3414b-e2fd-43af-95d5-cbfee713f080
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:51:48.265Z
+updatedAt: 2026-11-16T23:52:38.869Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
 pull_request: https://github.com/sgolovine/rowbly/pull/296
 ---
