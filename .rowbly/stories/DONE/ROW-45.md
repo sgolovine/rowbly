@@ -2,6 +2,7 @@
 title: Scaffold the website with TanStack Start, Tailwind and shadcn/ui
 stage: DONE
 position: 53
+uid: 1e29d5c7-5a55-4839-aa01-2159beea8ee2
 createdAt: 2026-11-14T23:07:37.000Z
 updatedAt: 2026-11-15T00:25:27.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-45
