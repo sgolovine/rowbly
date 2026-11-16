@@ -254,6 +254,22 @@ of `runtime/status.json` causes one call of `getFactoryStatus`.
 - Outside of the shell, for example in a test of the component, the Threads tab reads the status
   itself.
 
+The TUI shows the connectivity of a live factory in three locations:
+
+- **The Factory Button.** When the status of a live, `ready` factory has `connectivity: "offline"`,
+  the Button shows `Factory offline`. When it has `connectivity: "degraded"`, the Button shows
+  `Factory degraded`. This word replaces the worker counts (`factoryState`). `offline` is in `danger`
+  and `degraded` is in `stage-board`. The other states stay in `ink-muted`. The `! n` problem count
+  still shows. For `online`, or when the status has no `connectivity` field, the text does not change.
+- **The Threads.** A Thread that is `failed` with the error class `transient` and the code `NETWORK`
+  waits for the network (`threadWaitsForNetwork`). The factory resumes it. `ThreadRow` and the status
+  line of `ThreadDetail` add `· waiting for network` in `stage-board`. This also applies to compact
+  rows and to the Thread pane of the Story sidebar.
+- **The queue reason.** Each queue entry of `status.json` has the `provider` of the worker model of its
+  Story, when a model resolves. When this provider has a `network` pause in `providers`, `queueReason`
+  gives `waiting for the network until <time>`. The Factory controls and the queue note of the Threads
+  tab show this reason. A pause without `retryAt` gives `waiting for the network`.
+
 ## Story sidebar
 
 The new Story form and the edit form of a Story show in the Story sidebar, not in a Modal. The Story

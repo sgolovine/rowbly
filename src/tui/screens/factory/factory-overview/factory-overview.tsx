@@ -106,7 +106,7 @@ export function FactoryOverview({
               <Text color={theme.accent}>{entry.story}</Text>
               <Text color={theme.inkMuted}> {stages[entry.stage] ?? entry.stage}</Text>
               <Text color={theme.inkFaint}> · </Text>
-              <Text color={theme.ink}>{queueReason(entry)}</Text>
+              <Text color={theme.ink}>{queueReason(entry, status?.providers)}</Text>
             </Text>
           ),
         }))}

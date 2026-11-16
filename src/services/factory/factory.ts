@@ -49,6 +49,8 @@ export interface FactoryQueueEntry {
   action: "start" | "retry" | "skip";
   reason: string;
   retryAt?: string;
+  /** The provider of the worker model of the Story, when one resolves. The TUI finds its pause with it. */
+  provider?: string;
 }
 
 interface StartFactoryInput extends DaemonOptions {
