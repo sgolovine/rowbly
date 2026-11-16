@@ -1,6 +1,6 @@
-import { durationSeconds } from "../check-queue/check-order.js";
 import { type CheckJob, type CheckQueue, createCheckQueue, submitCheck } from "../check-queue/check-queue.js";
 import { realCheckDeps } from "../check-queue/proc-readers.js";
+import { threadCheck, withCheck } from "../check-queue/thread-checks.js";
 import { type CheckSpec, checkLimits } from "../factory-settings/check-settings.js";
 import type { FactorySettings } from "../factory-settings/factory-settings.js";
 import { type CheckCall, createCheckTool } from "../factory-worker/check-tool.js";
@@ -11,7 +11,6 @@ import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import { changeThread, getState, type Manager, serial } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
 
-const THREAD_CHECKS = 20;
 const SHORT_HEAD = 12;
 
 type CheckTool = ReturnType<typeof createCheckTool>;
@@ -29,6 +28,8 @@ export interface CheckToolInput {
   readonly root: string;
   readonly shim: string;
   readonly settings: () => FactorySettings;
+  /** Extra variables of the check shell, as in the worker shell. A remote worker gives its outbox variables. */
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 /** The last result of one check key and scope, for the supervisor digest. */
@@ -97,7 +98,7 @@ async function runCheck(
       files: call.files,
       command: call.command,
       cwd: worktree,
-      env: workerShellEnv({ root: input.root, shim: input.shim }, process.env),
+      env: workerShellEnv({ root: input.root, shim: input.shim, env: input.env }, process.env),
       memoryMb: call.spec.memoryMb,
       timeoutMinutes: call.spec.timeoutMinutes,
     },
@@ -105,31 +106,11 @@ async function runCheck(
   );
 }
 
-function threadCheck(manager: Manager, job: CheckJob): ThreadCheck {
-  return {
-    id: job.id,
-    key: job.key,
-    scope: job.scope,
-    status: job.status,
-    ...(job.head ? { head: job.head } : {}),
-    ...(job.startedAt ? { durationSeconds: durationSeconds(job, manager.checks.deps.now()) } : {}),
-  };
-}
-
-/** Gives the short check list of a Thread with the change of one job. The list keeps its order. */
-function withCheck(checks: readonly ThreadCheck[], entry: ThreadCheck): readonly ThreadCheck[] {
-  if (checks.some((check) => check.id === entry.id)) {
-    return checks.map((check) => (check.id === entry.id ? entry : check));
-  }
-
-  return [...checks, entry].slice(-THREAD_CHECKS);
-}
-
 async function writeThreadCheck(manager: Manager, job: CheckJob): Promise<void> {
   const thread = await getThread(job.threadId, manager.ctx);
 
   await changeThread(manager, thread.id, thread.status, {
-    checks: withCheck(thread.checks ?? [], threadCheck(manager, job)),
+    checks: withCheck(thread.checks ?? [], threadCheck(job, manager.checks.deps.now())),
   });
   await persistStatus(manager);
 }

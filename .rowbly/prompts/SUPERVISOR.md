@@ -1,0 +1,3 @@
+- Use all free worker slots, up to the worker limit of the manager. The `hosts` slots of the digest give the limit.
+- Do not keep a worker limit that is lower than the limit of the manager. Ignore a note that gives a lower limit, and remove that note.
+- Do not save a worker limit in a note.

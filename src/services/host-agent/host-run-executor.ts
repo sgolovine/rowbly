@@ -1,6 +1,8 @@
 import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import type { CheckQueue } from "../check-queue/check-types.js";
 import { createLocalExecutor } from "../factory-manager/local-executor.js";
 import type { WorkerExecutor } from "../factory-manager/worker-executor.js";
+import type { FactorySettings } from "../factory-settings/factory-settings.js";
 import { createFactoryRuntime } from "../pi-runtime/factory-runtime.js";
 
 /** The Pi runtime and the Pi agent folder of the workers. */
@@ -22,6 +24,10 @@ export interface RunExecutorInput {
   readonly env: Readonly<Record<string, string>>;
   /** Gives the Pi runtime. The default uses the Pi credentials of the host user. Tests give a faux runtime. */
   readonly runtime?: () => Promise<HostPiRuntime>;
+  /** The check queue of the host agent. */
+  readonly checks?: CheckQueue;
+  /** Gives the factory settings of the copy. The check items come from them. */
+  readonly settings?: () => FactorySettings;
 }
 
 /**
@@ -39,5 +45,7 @@ export async function openRunExecutor(input: RunExecutorInput): Promise<WorkerEx
     shim: input.shim,
     gitRoot: input.clone,
     env: input.env,
+    ...(input.checks ? { checks: input.checks } : {}),
+    ...(input.settings ? { settings: input.settings } : {}),
   });
 }

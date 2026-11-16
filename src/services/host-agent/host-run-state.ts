@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import type { WorkerActivity, WorkerSession, WorkerUsage, WorkerWorktree } from "../factory-manager/worker-executor.js";
 import { writeFileAtomic } from "../files/files.js";
-import type { WorkerResult } from "../thread/thread.js";
+import type { ThreadCheck, WorkerResult } from "../thread/thread.js";
 import { ensurePrivateDir, type HostAgentPaths, threadPaths, validRequestId } from "./host-agent-paths.js";
 
 /** The phase of a run. A run in `ended` has an end reason. */
@@ -34,6 +34,8 @@ export interface HostRunState {
   readonly worktree?: WorkerWorktree;
   readonly session?: WorkerSession;
   readonly activity?: WorkerActivity;
+  /** The last checks of the worker on this host, oldest first. The list keeps the last 20 checks. */
+  readonly checks?: readonly ThreadCheck[];
 
   // End
   readonly result?: WorkerResult;
