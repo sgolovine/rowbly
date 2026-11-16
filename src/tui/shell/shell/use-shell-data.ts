@@ -5,9 +5,11 @@ import { recordProject } from "../../../services/known-project/known-project.js"
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
 import { type Story, searchStories } from "../../../services/story/story.js";
+import { renumberNotice, repairDuplicateStoryIds } from "../../../services/story-renumber/story-renumber.js";
 import { hasProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   type AsyncState,
+  showToast,
   type ToastStore,
   useAsync,
   useFactoryChanges,
@@ -27,11 +29,29 @@ export interface ShellData {
   readonly reload: () => void;
 }
 
+/**
+ * Gives the newer Story of each duplicate Story ID a new number, and shows a notice for each change. A failure shows
+ * an error, and the board still loads. The changed files reload the board one more time, and that repair finds nothing.
+ */
+async function repairDuplicates(ctx: ServiceContext, toast: ToastStore): Promise<void> {
+  try {
+    const { changes } = await repairDuplicateStoryIds(ctx);
+
+    for (const change of changes) {
+      showToast(toast, "info", renumberNotice(change));
+    }
+  } catch (error) {
+    toast.error(error);
+  }
+}
+
 /** Reads the board. No project is a state of the screen, not a failure. A project in a parent directory does not open. */
-async function loadBoard(ctx: ServiceContext): Promise<Board | null> {
+async function loadBoard(ctx: ServiceContext, toast: ToastStore): Promise<Board | null> {
   if (!(await hasProject(ctx))) {
     return null;
   }
+
+  await repairDuplicates(ctx, toast);
 
   const [project, stages, stories] = await Promise.all([getProject(ctx), listStages(ctx), searchStories({}, ctx)]);
   // A problem with the factory state file is a status, not a failure, so the Stories still load.
@@ -113,7 +133,7 @@ function showsProject(data: AsyncState<Board | null>): boolean {
 export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void>): ShellData {
   const toast = useToast();
   const [version, setVersion] = useState(0);
-  const data = useAsync(() => loadBoard(ctx), [ctx, version]);
+  const data = useAsync(() => loadBoard(ctx, toast), [ctx, version]);
   const projectRoot = data.data?.project.root;
   const projectName = data.data?.project.projectName;
 

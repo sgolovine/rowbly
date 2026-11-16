@@ -244,6 +244,14 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 | `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
 
+## Board load
+
+`useShellData` loads the board. Before it reads the Stories, it calls `repairDuplicateStoryIds`. This
+service gives the newer Story of each duplicate Story ID the next free number. The shell shows one info
+toast for each change, for example `ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast
+shows and the board loads. The repair runs again each time that `useStoryChanges` reloads the board.
+See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+
 ## Factory status
 
 The shell reads the factory status one time for all views (`useShellData`). `Shell` gives this
