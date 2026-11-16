@@ -37,6 +37,8 @@ export interface StoryGeneralTabProps {
   readonly onSubmit: (values: FormValues) => Promise<void>;
   /** Asks before it deletes the Story. */
   readonly onDelete: () => void;
+  /** A click on an item of the dependency lists: opens the Story `id`. */
+  readonly onOpenStory?: (id: string) => void;
 }
 
 /**
@@ -54,6 +56,7 @@ export function StoryGeneralTab({
   submitRequest,
   onSubmit,
   onDelete,
+  onOpenStory,
 }: StoryGeneralTabProps) {
   return (
     <ScrollBody active={active} height={height}>
@@ -67,7 +70,7 @@ export function StoryGeneralTab({
           submitRequest={submitRequest}
         />
       </FormNavigationContext.Provider>
-      {dependencies && <StoryDependencyLists lists={dependencies} />}
+      {dependencies && <StoryDependencyLists lists={dependencies} onOpen={onOpenStory} clickable={active} />}
       {times && <StoryTimeRows times={times} />}
       <Box marginTop={1}>
         <Button label="Delete" keyName="ctrl+d" onClick={onDelete} clickable={active} compact destructive />
