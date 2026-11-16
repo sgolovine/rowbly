@@ -1,13 +1,13 @@
 ---
 title: Add host use to clone the Project on a worker host
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 7
 dependsOn:
   - ROW-84
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:04.969Z
-updatedAt: 2026-11-16T21:24:11.101Z
+updatedAt: 2026-11-16T21:24:14.734Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-88
 pull_request: null
 ---
