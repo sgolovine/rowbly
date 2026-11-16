@@ -1,8 +1,9 @@
 ---
 title: Add `expandedByDefault` to rowbly config
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 createdAt: 2026-11-16T16:34:16.401Z
-updatedAt: 2026-11-16T16:34:16.401Z
+updatedAt: 2026-11-16T16:35:48.113Z
 worktree: null
 pull_request: null
 ---
