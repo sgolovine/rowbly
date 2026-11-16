@@ -155,6 +155,39 @@ describe("doctor", () => {
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
+  it("reports an old copy of a Story with a fix, and --fix removes it", async () => {
+    const copy = (stage: string, updatedAt: string) =>
+      `---\ntitle: Search\nstage: ${stage}\nuid: 8a3c3f0e-6a55-4f43-9a0b-6f5b1e2d7c11\n` +
+      `createdAt: 2026-11-01T00:00:00.000Z\nupdatedAt: ${updatedAt}\n---\n\nSearch.\n`;
+    const older = copy("DONE", "2026-11-16T10:00:00.000Z");
+    const newer = copy("BACKLOG", "2026-11-16T11:00:00.000Z");
+    await project.write("stories/DONE/ROW-78.md", older);
+    await project.write("stories/BACKLOG/ROW-78.md", newer);
+
+    const before = await doctor({}, project.ctx);
+    expect(before.ok).toBe(false);
+    expect(before.issues).toEqual([
+      {
+        severity: "error",
+        message: `Story ID ROW-78 is also used by ${join(".rowbly", "stories", "BACKLOG", "ROW-78.md")}`,
+        file: join(".rowbly", "stories", "DONE", "ROW-78.md"),
+        fix: `Remove the old copy. ${join(".rowbly", "stories", "BACKLOG", "ROW-78.md")} is the newest copy`,
+        fixed: false,
+      },
+    ]);
+    expect(await project.read("stories/DONE/ROW-78.md")).toBe(older);
+    expect(await project.read("stories/BACKLOG/ROW-78.md")).toBe(newer);
+
+    const fixed = await doctor({ fix: true }, project.ctx);
+    expect(fixed.ok).toBe(true);
+    expect(fixed.issues.map(({ message, file, fixed }) => [message, file, fixed])).toEqual([
+      ["ROW-78: removed the old copy in DONE", join(".rowbly", "stories", "DONE", "ROW-78.md"), true],
+    ]);
+    expect(await pathExists(project.path("stories/DONE/ROW-78.md"))).toBe(false);
+    expect(await project.read("stories/BACKLOG/ROW-78.md")).toBe(newer);
+    expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
   it("reports two files with the same Story ID and factory state with no fix, and --fix does not change them", async () => {
     await project.write(
       "stories/ROW-01.md",

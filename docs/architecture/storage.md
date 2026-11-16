@@ -197,13 +197,43 @@ the folder of its Stage:
 
 `rowbly doctor` examines the Story folders:
 
-| Problem                                                                                         | Severity | `--fix`                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| A Story file is directly in `stories/`, or in the folder of a different Stage.                  | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
-| Two files of the Project key have the same Story number, in one folder or in different folders. | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
-| Two Stories with the same number have factory state, or a file of the group cannot be read.     | error    | None. The files stay.                                                                                                                     |
-| Two files with a different key have the same Story number.                                      | error    | None. The files stay.                                                                                                                     |
-| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.          | warning  | None.                                                                                                                                     |
+| Problem                                                                                                                 | Severity | `--fix`                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A Story file is directly in `stories/`, or in the folder of a different Stage.                                          | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
+| Two files have the same Story number and the same `uid`, and are different only in `stage`, `position` and `updatedAt`. | error    | Removes the old copy, for example `ROW-78: removed the old copy in DONE`. See [Copies of a Story](#copies-of-a-story).                    |
+| Two files have the same Story number and the same `uid`, and other content is different.                                | error    | None. The files stay. Merge them.                                                                                                         |
+| Two files of the Project key have the same Story number, in one folder or in different folders.                         | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
+| Two Stories with the same number have factory state, or a file of the group cannot be read.                             | error    | None. The files stay.                                                                                                                     |
+| Two files with a different key have the same Story number.                                                              | error    | None. The files stay.                                                                                                                     |
+| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.                                  | warning  | None.                                                                                                                                     |
+
+### Copies of a Story
+
+Two or more Story files with the same Story number and the same `uid` are copies of one Story. For example,
+a Stage move writes the new file and the old file stays in the folder of the old Stage.
+
+The repair runs at the same places as the repair of a duplicate Story ID, and before it. The TUI shows one
+info toast for each removed copy, and `rowbly doctor --fix` shows one fixed issue for each removed copy, for
+example `ROW-78: removed the old copy in DONE`. Without `--fix`, `rowbly doctor` shows the fix of the error,
+and it does not change a file.
+
+- If the copies are different only in `stage`, `position` and `updatedAt`, the repair keeps one copy and
+  removes the other copies.
+- If the copies are different in a different frontmatter key or in the body, the repair does not change a
+  file. Merge the copies yourself.
+
+These rules select the copy that stays:
+
+1. The copy with the newest valid `updatedAt` stays.
+2. If the times are equal, the file with the newest modification time stays.
+3. If the times are equal, the path that comes first in string order stays.
+
+After the repair, the files that stay go to the rules of [Duplicate Story IDs](#duplicate-story-ids), for
+example a file with no `uid` or with a different `uid`. If a group has copies with different content, the
+repair does not change a file of the group.
+
+The repair takes no lock. It reads each file again before it removes a copy. If a copy changed or
+disappeared after the plan, the repair removes no file of the group.
 
 ### Duplicate Story IDs
 
