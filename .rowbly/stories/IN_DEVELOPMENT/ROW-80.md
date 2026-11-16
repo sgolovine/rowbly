@@ -5,9 +5,9 @@ position: 2
 dependsOn:
   - ROW-79
 createdAt: 2026-11-16T19:30:18.067Z
-updatedAt: 2026-11-16T19:45:47.813Z
+updatedAt: 2026-11-16T19:50:20.371Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-80
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/266
 ---
 
 Split from ROW-79.
