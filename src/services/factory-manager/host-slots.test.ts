@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countByHost, hostSlots, placementCapacity } from "./host-slots.js";
+import { countByHost, hostSlots, placementCapacity, withHeartbeatStates } from "./host-slots.js";
 
 describe("hostSlots", () => {
   const hosts = [
@@ -19,5 +19,26 @@ describe("hostSlots", () => {
   it("counts only the hosts that can take work in the capacity", () => {
     expect(placementCapacity(4, [])).toBe(4);
     expect(placementCapacity(4, hosts)).toBe(6);
+  });
+});
+
+describe("withHeartbeatStates", () => {
+  it("uses the heartbeat state of a listed connected host, and the list state before the first heartbeat", () => {
+    const hosts = [
+      { id: "a", maxWorkers: 1, state: "connected" as const },
+      { id: "b", maxWorkers: 1, state: "connected" as const },
+      { id: "c", maxWorkers: 1, state: "not-ready" as const },
+    ];
+    const heartbeat = new Map([
+      ["a", { state: "degraded" as const }],
+      ["c", { state: "connected" as const }],
+    ]);
+
+    expect(withHeartbeatStates(hosts, heartbeat).map((host) => [host.id, host.state])).toEqual([
+      ["a", "degraded"],
+      ["b", "connected"],
+      ["c", "not-ready"],
+    ]);
+    expect(placementCapacity(1, withHeartbeatStates(hosts, heartbeat))).toBe(2);
   });
 });

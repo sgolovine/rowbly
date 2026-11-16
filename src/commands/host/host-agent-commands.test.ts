@@ -81,6 +81,17 @@ describe("hidden host agent commands", () => {
     expect(JSON.parse(second.stdout)).toEqual({ started: false, owner: started.owner });
   }, 60_000);
 
+  it("host ping gives the versions and the state of the agent, and does not start the agent", async () => {
+    const result = await rowbly(home.path, ["host", "ping", "p1"], "");
+    const { localVersions } = await import("../../services/host-transport/host-transport.js");
+    expect(JSON.parse(result.stdout)).toEqual({
+      ...localVersions(),
+      agent: "stopped",
+      slots: { used: 0, max: expect.any(Number) },
+      pending: 0,
+    });
+  }, 60_000);
+
   it("host cache-missing and host cache-put use the attachment cache, and refuse bad input with VALIDATION", async () => {
     const png = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
     const id = "a00000000-0000-4000-8000-000000000001";

@@ -5,9 +5,13 @@ import { hostCacheMissing, hostCachePut } from "../../services/host-agent/host-a
 import { parseJsonInput, readBoundedInput } from "../../services/host-agent/host-agent-input.js";
 import { hostAgentPaths, hostRunPathsAnswer } from "../../services/host-agent/host-agent-paths.js";
 import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
+import { hostPing } from "../../services/host-agent/host-ping.js";
 import { runWithoutContext } from "../output/output.js";
 
-/** Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths and the prepare step. */
+/**
+ * Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths, the prepare step
+ * and the heartbeat.
+ */
 export function registerHostRunCommands(program: Command): void {
   program
     .command("cache-missing <project-id>", { hidden: true })
@@ -59,4 +63,12 @@ export function registerHostRunCommands(program: Command): void {
         (answer) => JSON.stringify(answer),
       ),
     );
+
+  program.command("ping <project-id>", { hidden: true }).action((projectId: string, _opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      () => hostPing(hostAgentPaths(projectId)),
+      (answer) => JSON.stringify(answer),
+    ),
+  );
 }

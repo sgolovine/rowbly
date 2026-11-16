@@ -4,8 +4,10 @@ import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
+import { isHostTransportError } from "../host-transport/host-errors.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import type { HostConnection, RemoteExecutor } from "../remote-executor/remote-executor.js";
+import type { HeartbeatLimits, HostHealth } from "../remote-executor/remote-heartbeat.js";
 import { type Store, withEntry, withoutEntry } from "../store/store.js";
 import type { Story } from "../story/story.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
@@ -35,6 +37,10 @@ export interface FactoryDependencies {
    * it, the manager cannot send a worker to a worker host.
    */
   hostConnection?: (host: string) => Promise<HostConnection>;
+  /** The limits and the clock of the heartbeat of the worker hosts. Tests give a short interval. */
+  hostHeartbeat?: Partial<HeartbeatLimits> & { readonly now?: () => number };
+  /** The time that a factory stop waits for the runs of the connected worker hosts. */
+  remoteStopTimeoutMs?: number;
   /** Reads the Git facts of the local worktree of a Story. Tests give fakes. */
   worktreeFacts?: (root: string, story: Story) => Promise<LocalWorktreeFacts | undefined>;
 }
@@ -86,6 +92,10 @@ export interface ManagerState {
   readonly authStamp: number;
   /** The worker hosts from the last read of `workerHosts`. */
   readonly hosts: readonly WorkerHostView[];
+  /** The heartbeat facts of each worker host, after its first heartbeat. */
+  readonly hostHealth: ReadonlyMap<string, HostHealth>;
+  /** The heartbeat of all worker hosts that runs now. */
+  readonly heartbeatTask?: Promise<void>;
 
   // Workers
   readonly active: ReadonlyMap<string, ActiveWorker>;
@@ -123,6 +133,8 @@ export interface ManagerState {
   readonly unwatch?: () => void;
   readonly timer?: NodeJS.Timeout;
   readonly heartbeat?: NodeJS.Timeout;
+  /** The timer of the heartbeat of the worker hosts. */
+  readonly hostHeartbeat?: NodeJS.Timeout;
   readonly deadlineTimer?: NodeJS.Timeout;
 }
 
@@ -201,7 +213,8 @@ export function pausedProviders(
   error: unknown,
   failures = 0,
 ): ReadonlyMap<string, ProviderPause> {
-  if (!provider) {
+  // A failure of the connection to a worker host does not pause the provider of the model.
+  if (!provider || isHostTransportError(error)) {
     return providers;
   }
 

@@ -223,7 +223,12 @@ describe("remote executor", () => {
     expect(f.log.filter((entry) => entry[0] === "completed")).toEqual([["completed", RESULT, undefined]]);
   });
 
-  it("waits without an event when the channel closes before the end, and a stop ends the wait", async () => {
+  const queueFile = () => join(project.paths.runtimeDir, "hosts", "mini", "commands.json");
+  const readQueue = async () => JSON.parse(await readFile(queueFile(), "utf8"));
+  const pending = (done: Promise<void>) =>
+    Promise.race([done.then(() => "done"), new Promise((r) => setTimeout(() => r("wait"), 50))]);
+
+  it("keeps the wait of a stopped run while the host is disconnected, and the reconnect sends the stop first", async () => {
     const story = await createStory({ title: "Remote" }, project.ctx);
     const f = setup({
       onSubmit: (command, host) => {
@@ -233,15 +238,162 @@ describe("remote executor", () => {
 
     const done = f.executor.launch({ thread: threadRecord(story.id), story }, f.events);
     await vi.waitFor(() => expect(f.host.commands).toHaveLength(1));
-    f.host.closeChannels();
+    f.host.transport.disconnect();
     await vi.waitFor(() => expect(f.host.transport.openChannels).toBe(0));
-    const settled = await Promise.race([done.then(() => "done"), new Promise((r) => setTimeout(() => r("wait"), 50))]);
-    expect(settled).toBe("wait");
+    expect(await pending(done)).toBe("wait");
 
     await f.executor.stop("t1");
-    await done;
-    expect(f.log.filter((entry) => ["completed", "failed", "finished"].includes(entry[0] as string))).toEqual([]);
+    expect(await pending(done)).toBe("wait");
+    expect(await readQueue()).toEqual({
+      version: 1,
+      commands: [{ id: expect.any(String), type: "stop-thread", threadId: "t1", queuedAt: expect.any(String) }],
+    });
+    expect((await stat(queueFile())).mode & 0o777).toBe(0o600);
+    expect((await stat(join(queueFile(), ".."))).mode & 0o777).toBe(0o700);
     expect(f.host.commands.map((command) => command.type)).toEqual(["launch"]);
+
+    // The heartbeat fails while the host is offline; the reconnect does nothing and keeps the queue.
+    expect(await f.executor.reconnect("mini")).toEqual(expect.stringContaining("Cannot reach"));
+    expect((await readQueue()).commands).toHaveLength(1);
+
+    f.host.transport.reconnect();
+    const events = f.host.events.length;
+    expect(await f.executor.reconnect("mini")).toBeUndefined();
+    expect(f.host.events.slice(events)).toEqual(["submit:stop-thread", "attach"]);
+    expect((await readQueue()).commands).toEqual([]);
+
+    f.host.sendRun("t1", { phase: "ended", endReason: "stopped" });
+    await done;
+    expect(f.log.filter((entry) => ["completed", "failed"].includes(entry[0] as string))).toEqual([
+      ["completed", undefined, "stopped"],
+    ]);
+    expect(await f.executor.reconnect("mini")).toBeUndefined();
+    expect(f.host.transport.openChannels).toBe(0);
+  });
+
+  it("queues a cancel while the host is disconnected and ends the wait without an event", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const f = setup();
+
+    const done = f.executor.launch({ thread: threadRecord(story.id), story }, f.events);
+    await vi.waitFor(() => expect(f.host.commands).toHaveLength(1));
+    f.host.transport.disconnect();
+    await f.executor.cancel("t1");
+    await done;
+
+    expect((await readQueue()).commands.map((command: { type: string }) => command.type)).toEqual(["cancel-thread"]);
+    expect(f.log.filter((entry) => ["completed", "failed", "finished"].includes(entry[0] as string))).toEqual([]);
+
+    f.host.transport.reconnect();
+    expect(await f.executor.reconnect("mini")).toBeUndefined();
+    expect(f.host.commands.map((command) => command.type)).toEqual(["launch", "cancel-thread"]);
+    expect(f.host.events.at(-1)).toBe("submit:cancel-thread");
+    expect((await readQueue()).commands).toEqual([]);
+  });
+
+  it("queues the launch with the same id when its answer is lost, and the reconnect sends it again", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const lost = { on: true };
+    const f = setup({
+      loseAnswer: (command, host) => {
+        if (command.type !== "launch" || !lost.on) return false;
+        lost.on = false;
+        host.transport.disconnect();
+        return true;
+      },
+    });
+
+    const done = f.executor.launch({ thread: threadRecord(story.id), story }, f.events);
+    await vi.waitFor(async () => expect((await readQueue()).commands).toHaveLength(1));
+    const [queued] = (await readQueue()).commands;
+    expect(queued).toMatchObject({ type: "launch", threadId: "t1", id: f.host.commands[0]?.id });
+    expect(await pending(done)).toBe("wait");
+
+    f.host.transport.reconnect();
+    expect(await f.executor.reconnect("mini")).toBeUndefined();
+    expect(f.host.commands.map((command) => [command.type, command.id])).toEqual([
+      ["launch", queued.id],
+      ["launch", queued.id],
+    ]);
+    expect((await readQueue()).commands).toEqual([]);
+
+    for (const frame of progress(story.id)) f.host.sendRun("t1", frame);
+    f.host.sendRun("t1", { ...progress(story.id).at(-1), phase: "ended", endReason: "completed", usage: USAGE });
+    await done;
+    expect(f.log.filter((entry) => ["completed", "failed"].includes(entry[0] as string))).toEqual([
+      ["completed", RESULT, undefined],
+    ]);
+    expect(f.log.filter((entry) => entry[0] === "result")).toHaveLength(1);
+  });
+
+  it("drops a queued launch when the run is stopped, and ends the wait", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const f = setup({
+      loseAnswer: (command, host) => {
+        if (command.type !== "launch") return false;
+        host.transport.disconnect();
+        return true;
+      },
+    });
+
+    const done = f.executor.launch({ thread: threadRecord(story.id), story }, f.events);
+    await vi.waitFor(async () => expect((await readQueue()).commands).toHaveLength(1));
+    await f.executor.stop("t1");
+    await done;
+
+    expect((await readQueue()).commands.map((command: { type: string }) => command.type)).toEqual(["stop-thread"]);
+    expect(f.log.filter((entry) => ["completed", "failed"].includes(entry[0] as string))).toEqual([]);
+  });
+
+  it("fails the launch with the host error when the connection is cut before the launch submit", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const f = setup();
+    const request = f.host.transport.request.bind(f.host.transport);
+    f.host.transport.request = async (command, input, options) => {
+      if (command[2] === "serve") f.host.transport.disconnect();
+      return request(command, input, options);
+    };
+
+    await f.executor.launch({ thread: threadRecord(story.id), story }, f.events);
+
+    expect(f.log.at(-1)).toEqual([
+      "failed",
+      { error: expect.objectContaining({ code: "HOST_UNREACHABLE" }), sessionOpened: false },
+    ]);
+    expect(f.host.commands).toEqual([]);
+    await expect(readQueue()).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it("stops each run for a factory stop: it waits on a connected host and queues the stop for a disconnected host", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const connected = setup({
+      onSubmit: (command, host) => {
+        if (command.type === "stop-thread") host.sendRun(command.threadId, { phase: "ended", endReason: "stopped" });
+      },
+    });
+    const done = connected.executor.launch({ thread: threadRecord(story.id), story }, connected.events);
+    await vi.waitFor(() => expect(connected.host.commands).toHaveLength(1));
+    await connected.executor.shutdown(5000);
+    await done;
+    expect(connected.host.commands.map((command) => command.type)).toEqual(["launch", "stop-thread"]);
+    expect(connected.log.filter((entry) => entry[0] === "completed")).toEqual([["completed", undefined, "stopped"]]);
+
+    const offline = setup();
+    const waiting = offline.executor.launch({ thread: threadRecord(story.id), story }, offline.events);
+    await vi.waitFor(() => expect(offline.host.commands).toHaveLength(1));
+    offline.host.transport.disconnect();
+    await offline.executor.shutdown(60_000);
+    await waiting;
+    expect((await readQueue()).commands.map((command: { type: string }) => command.type)).toEqual(["stop-thread"]);
+    expect(offline.log.filter((entry) => ["completed", "failed"].includes(entry[0] as string))).toEqual([]);
+
+    // A connected host that does not end the run in the time limit ends the wait.
+    const slow = setup();
+    const slowRun = slow.executor.launch({ thread: threadRecord(story.id), story }, slow.events);
+    await vi.waitFor(() => expect(slow.host.commands).toHaveLength(1));
+    await slow.executor.shutdown(20);
+    await slowRun;
+    expect(slow.host.commands.map((command) => command.type)).toEqual(["launch", "stop-thread"]);
   });
 
   it("submits stop-thread and cancel-thread to the host, and refuses a steering message", async () => {
