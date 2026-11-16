@@ -14,6 +14,21 @@ export interface Host {
   readonly enabled: boolean;
 }
 
+/** The record of one Project that a worker host uses. */
+export interface HostProject {
+  /** The absolute path of the local Project root, the same value as the list of known Projects. */
+  readonly root: string;
+  /** The clone on the host, relative to the home folder of the SSH user, or absolute. */
+  readonly path: string;
+  /** `true` when Rowbly made the clone in its own folder on the host. */
+  readonly managed: boolean;
+}
+
+/** A host entry of the file. `projects` is the list of the Projects that the host uses. */
+export interface HostEntry extends Host {
+  readonly projects?: readonly HostProject[];
+}
+
 export interface HostInput {
   readonly id: string;
   readonly ssh: string;
@@ -30,8 +45,24 @@ const HOST_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 // Whitespace would split the target into more arguments, and a control character can change the terminal.
 const UNSAFE_SSH = /[\s\p{Cc}]/u;
 
-function isHost(value: unknown): value is Host {
-  const host = value as Partial<Host> | null;
+function isHostProject(value: unknown): value is HostProject {
+  const project = value as Partial<HostProject> | null;
+
+  return (
+    typeof project === "object" &&
+    project !== null &&
+    typeof project.root === "string" &&
+    typeof project.path === "string" &&
+    typeof project.managed === "boolean"
+  );
+}
+
+function hasValidProjects(host: Partial<HostEntry>): boolean {
+  return host.projects === undefined || (Array.isArray(host.projects) && host.projects.every(isHostProject));
+}
+
+function isHost(value: unknown): value is HostEntry {
+  const host = value as Partial<HostEntry> | null;
 
   return (
     typeof host === "object" &&
@@ -39,12 +70,13 @@ function isHost(value: unknown): value is Host {
     typeof host.id === "string" &&
     typeof host.ssh === "string" &&
     typeof host.maxWorkers === "number" &&
-    typeof host.enabled === "boolean"
+    typeof host.enabled === "boolean" &&
+    hasValidProjects(host)
   );
 }
 
 /** The `hosts` entries of the file, in the order of the file. A missing key is an empty list. Any bad entry throws. */
-export function rcHosts(rc: UserRc, file: string): readonly Host[] {
+export function rcHosts(rc: UserRc, file: string): readonly HostEntry[] {
   const { hosts = [] } = rc;
 
   if (!Array.isArray(hosts) || !hosts.every(isHost)) {
@@ -52,6 +84,11 @@ export function rcHosts(rc: UserRc, file: string): readonly Host[] {
   }
 
   return hosts;
+}
+
+/** The Projects that the host uses. A missing key is an empty list. */
+export function hostProjects(host: HostEntry): readonly HostProject[] {
+  return host.projects ?? [];
 }
 
 /** Gives only the fields of a host. An entry in the file can have more keys, which a write keeps. */
