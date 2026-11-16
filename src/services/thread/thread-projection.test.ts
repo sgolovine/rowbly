@@ -14,6 +14,25 @@ describe("thread projection", () => {
     expect((await readFactoryState(p.paths.root, p.ctx)).attempts).toEqual([]);
   });
 
+  it("gives the attempt the storyUid of the worker Thread, and no storyUid for a Thread without one", async () => {
+    const uid = "11111111-1111-4111-8111-111111111111";
+    const base = { role: "worker" as const, stage: "DEVELOP", cwd: p.paths.root, ownerToken: "owner" };
+    const withUid = await createThread({ ...base, storyId: "ROW-1", storyUid: uid }, p.ctx);
+    const old = await createThread({ ...base, storyId: "ROW-2" }, p.ctx);
+
+    await projectNativeAttempt(withUid.id, p.ctx);
+    await projectNativeAttempt(old.id, p.ctx);
+
+    const { attempts } = await readFactoryState(p.paths.root, p.ctx);
+
+    expect(withUid.storyUid).toBe(uid);
+    expect(attempts.map((attempt) => [attempt.story, attempt.storyUid])).toEqual([
+      ["ROW-1", uid],
+      ["ROW-2", undefined],
+    ]);
+    expect("storyUid" in (attempts[1] ?? {})).toBe(false);
+  });
+
   it("follows the status, model and result of a worker Thread in one attempt", async () => {
     const t = await createThread(
       {

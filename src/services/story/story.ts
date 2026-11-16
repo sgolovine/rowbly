@@ -27,10 +27,12 @@ import { findProject, type ProjectPaths, type ServiceContext } from "../workspac
 import { changedDependsOn, checkedDependsOn, removeDependencies } from "./story-dependencies.js";
 import { fieldUpdates, titleIssues } from "./story-input.js";
 import { countAttachments, findStoryFile, getStory, positionIn, toStory } from "./story-read.js";
+import { storyUidField } from "./story-ref.js";
 import { checkedTags, updatedTags } from "./story-tags.js";
 import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
-export { getStory, getStoryDetails, searchStories } from "./story-read.js";
+export { getStory, getStoryDetails, listStoryRefs, resolveStoryRef, searchStories } from "./story-read.js";
+export { matchStoryRef, recordRef, refersToStory, type StoryRef, storyUidField } from "./story-ref.js";
 export * from "./story-types.js";
 
 /** The bytes of a story file before an update, so that a failed save of the images can restore it. */
@@ -102,8 +104,12 @@ export async function createStory(input: CreateStoryInput, ctx: ServiceContext =
   const dependsOn = checkedDependsOn(config, files, formatStoryId(config.projectKey, number), input.dependsOn ?? []);
   const doc = { data: withDependsOn(data, dependsOn), body: input.description ?? "" };
 
-  return withAttachments(await attachmentDir(paths, formatStoryId(config.projectKey, number)), images, now, () =>
-    writeNewStory(paths, config, path, doc, number, ctx),
+  return withAttachments(
+    await attachmentDir(paths, formatStoryId(config.projectKey, number)),
+    images,
+    now,
+    () => writeNewStory(paths, config, path, doc, number, ctx),
+    storyUidField(data),
   );
 }
 
@@ -208,7 +214,11 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext, t
   const fieldKeys = config.customFields.map((field) => field.key);
 
   // The entry follows the Story write, so that a failed write records no change.
-  await recordStoryWrite(ctx, { storyId: file.id, changes: storyChanges(fieldKeys, file.doc, updated.doc) });
+  await recordStoryWrite(ctx, {
+    storyId: file.id,
+    ...storyUidField(file.doc.data),
+    changes: storyChanges(fieldKeys, file.doc, updated.doc),
+  });
 
   return toStory(config, placed, positionIn([...files.filter((f) => f.id !== file.id), placed], placed));
 }
@@ -292,8 +302,12 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
   const story = await getStory({ id: input.id }, ctx);
   const snapshots = await snapshotStories(paths, story);
 
-  return withAttachments(await attachmentDir(paths, story.id), images, nowOf(ctx), () =>
-    updateOrRestore(paths, input, ctx, snapshots),
+  return withAttachments(
+    await attachmentDir(paths, story.id),
+    images,
+    nowOf(ctx),
+    () => updateOrRestore(paths, input, ctx, snapshots),
+    storyUidField(story),
   );
 }
 

@@ -415,6 +415,9 @@ A Story can have attachments of all file types. The `attachment` service keeps t
 `attachments/<story ID>/`, with a `manifest.json` file and one file for each attachment.
 
 - Each attachment must be a file of 10 MiB or less. An empty file is valid.
+- A record can also have `storyUid`: the `uid` of the Story when the record was made. Each new
+  record of a Story with a `uid` gets it. An old record without `storyUid` stays valid. A `storyUid`
+  that is not a string makes the manifest malformed. The folder name stays the Story ID.
 - Each record of the manifest has `id`, `name`, `type`, `size` and `createdAt`. `type` is a
   lower-case MIME type. Bytes with the PNG signature get `image/png`. Else the extension of the name
   gives the type from a small table, for example `.pdf` gives `application/pdf`. An unknown extension
@@ -530,9 +533,14 @@ A field entry of `outbox.jsonl` has this shape. It has no `type` key:
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "changes": [{ "path": "stage", "before": "BACKLOG", "after": "DONE" }]
 }
 ```
+
+- Each entry has `storyUid`, the `uid` of the Story, when the Story has a `uid`. An entry of an older
+  build has no `storyUid`. The apply accepts an entry with or without `storyUid`. A `storyUid` that is
+  not a string is a conflict.
 
 - The service writes the Story file first. Then the recorder adds the entry. If the Story write fails,
   the outbox gets no entry. If the process stops between the two writes, the entry is lost.
@@ -555,8 +563,16 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "type": "attachment.add",
-  "attachment": { "id": "a<uuid>", "name": "shot.png", "type": "image/png", "size": 1234, "createdAt": "<iso>" },
+  "attachment": {
+    "id": "a<uuid>",
+    "name": "shot.png",
+    "type": "image/png",
+    "size": 1234,
+    "createdAt": "<iso>",
+    "storyUid": "<uuid>"
+  },
   "sha256": "<64 lowercase hex characters>"
 }
 ```
@@ -567,6 +583,7 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "type": "attachment.remove",
   "id": "a<uuid>",
   "sha256": "<64 lowercase hex characters>"
@@ -636,6 +653,10 @@ body for `description`.
 | Equal to `after`          | The change is already there. Skip it. |
 | Other                     | Conflict. Do not write.               |
 
+- The apply finds the Story of an entry with `resolveStoryRef`. The Story with the `storyUid` of the
+  entry comes first. If the entry has no `storyUid`, or no Story has it, the Story with the `storyId`
+  comes next. Thus an entry applies to its Story also after the number of the Story changes. See
+  [Story references](native-factory/README.md#story-references).
 - The apply writes the changes of one field entry that do not conflict in one `updateStory` call. It
   records each conflicting change.
 - A missing Story makes each change of the entry a conflict.

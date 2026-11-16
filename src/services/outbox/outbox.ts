@@ -16,12 +16,16 @@ export interface FieldChange {
 /** The changes of one Story write. */
 export interface StoryWrite {
   readonly storyId: string;
+  /** The `uid` of the Story. A Story without a `uid`, or an entry of an older build, has none. */
+  readonly storyUid?: string;
   readonly changes: readonly FieldChange[];
 }
 
 /** A new attachment of a Story, with the bytes of its file. */
 export interface AttachmentAddWrite {
   readonly storyId: string;
+  /** The `uid` of the Story. A Story without a `uid`, or an entry of an older build, has none. */
+  readonly storyUid?: string;
   readonly attachment: Attachment;
   readonly bytes: Uint8Array;
 }
@@ -29,6 +33,8 @@ export interface AttachmentAddWrite {
 /** A removed attachment of a Story, with the lowercase hex SHA-256 of the removed file. */
 export interface AttachmentRemoveWrite {
   readonly storyId: string;
+  /** The `uid` of the Story. A Story without a `uid`, or an entry of an older build, has none. */
+  readonly storyUid?: string;
   readonly id: string;
   readonly sha256: string;
 }
@@ -36,6 +42,8 @@ export interface AttachmentRemoveWrite {
 /** The body of an `attachment.add` entry. The file is in `blobs/<sha256>.png` of the outbox folder. */
 interface AttachmentAddBody {
   readonly storyId: string;
+  /** The `uid` of the Story. A Story without a `uid`, or an entry of an older build, has none. */
+  readonly storyUid?: string;
   readonly type: "attachment.add";
   readonly attachment: Attachment;
   readonly sha256: string;
