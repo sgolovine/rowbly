@@ -1,9 +1,9 @@
 ---
 title: Re-number a Story automatically when two Story files have the same ID
-stage: CHANGELOG
-position: 2
+stage: IN_REVIEW
+position: 1
 createdAt: 2026-11-16T19:31:02.777Z
-updatedAt: 2026-11-16T19:54:13.279Z
+updatedAt: 2026-11-16T19:58:02.149Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-81
 pull_request: https://github.com/sgolovine/rowbly/pull/267
 ---
