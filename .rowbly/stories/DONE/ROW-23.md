@@ -2,6 +2,7 @@
 title: Sometimes factory will get stuck on "stage prompt not classified"
 stage: DONE
 position: 23
+uid: 43d2a4f3-556d-48a6-8419-45893846c4a9
 createdAt: 2026-11-14T20:13:23.000Z
 updatedAt: 2026-11-14T20:35:16.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-23
