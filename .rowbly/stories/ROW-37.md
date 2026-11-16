@@ -2,6 +2,7 @@
 title: Make threads tab compact
 stage: DONE
 position: 42
+uid: 173e8335-7e9f-4112-b0d0-1adc0413d45c
 createdAt: 2026-11-14T21:15:26.000Z
 updatedAt: 2026-11-14T23:05:29.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-37
