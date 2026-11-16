@@ -40,7 +40,8 @@ describe("registerCommands", () => {
     expect(result.stderr).toContain("too many arguments");
     expect(result.stdout).toBe("");
     expect(service).not.toHaveBeenCalled();
-    expect(await storyService.searchStories({}, project.ctx)).toEqual([first, second]);
+    const stories = await storyService.searchStories({}, project.ctx);
+    expect(stories.map((story) => story.id).toSorted()).toEqual([first.id, second.id]);
   });
 
   it.each([

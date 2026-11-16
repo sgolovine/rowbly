@@ -609,14 +609,18 @@ describe("foreground factory", () => {
   it("moves the indirect upstream Stories in one pass", async () => {
     const indirect = await createStory({ title: "Indirect", stage: "BACKLOG" }, { cwd: root });
     const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
-    await updateStory({ id: upstream.id, dependsOn: [indirect.id] }, { cwd: root });
+    // A later time puts the upstream Story first in the board order, and so first in the commit message.
+    await updateStory(
+      { id: upstream.id, dependsOn: [indirect.id] },
+      { cwd: root, now: () => new Date(Date.now() + 60_000) },
+    );
     f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
     await runUntil(f, async () => {
       expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BUILD");
       expect((await getStory({ id: indirect.id }, { cwd: root })).stage).toBe("BUILD");
     });
     expect(await subjects()).toContain(
-      `chore(rowbly): move ${indirect.id}, ${upstream.id} out of Backlog for ${downstream.id}`,
+      `chore(rowbly): move ${upstream.id}, ${indirect.id} out of Backlog for ${downstream.id}`,
     );
   });
   it("does not move a parked upstream Story or an upstream Story in a hold Stage", async () => {
