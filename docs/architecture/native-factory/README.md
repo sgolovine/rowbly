@@ -112,6 +112,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 
 ## Related
 
