@@ -3,6 +3,7 @@ import { withMember, withoutMember } from "../../../services/store/store.js";
 import type { Story } from "../../../services/story/story.js";
 import { stageRowId } from "../../screens/stories/index.js";
 import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
+import { clearMarks } from "./story-marks.js";
 import { editStory, listPane, showStoryPane } from "./story-pane.js";
 
 /** Closes the overlay that is open. */
@@ -142,5 +143,6 @@ export function switchProject(env: ShellEnv, path: string): void {
   env.setStageKey(null);
   env.setSelectedId(null);
   env.setCollapsed(new Set());
+  clearMarks(env);
   env.setPane("stories");
 }

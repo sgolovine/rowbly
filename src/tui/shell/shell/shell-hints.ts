@@ -26,8 +26,11 @@ function sidebarHints(stage: Stage | undefined): KeyHint[] {
   ];
 }
 
-/** The keys of the selected row: a heading expands or collapses, and a Story opens or moves. */
-function rowHints(row: StoryListRow | undefined): KeyHint[] {
+/**
+ * The keys of the selected row: a heading expands or collapses, and a Story opens, starts the range mode or moves.
+ * With a multi-selection, `shift+↑/↓` moves the selected Stories, so the row does not show it.
+ */
+function rowHints(row: StoryListRow | undefined, marks: boolean): KeyHint[] {
   if (row?.kind === "stage") {
     return [{ key: "enter", description: row.collapsed ? "expand" : "collapse" }];
   }
@@ -35,23 +38,43 @@ function rowHints(row: StoryListRow | undefined): KeyHint[] {
   return row?.kind === "story"
     ? [
         { key: "enter", description: "edit Story" },
-        { key: "shift+↑/↓", description: "change Stage" },
+        ...(marks ? [] : [{ key: "space", description: "select" }]),
+        ...(marks ? [] : [{ key: "shift+↑/↓", description: "change Stage" }]),
+      ]
+    : [];
+}
+
+/** The keys of the multi-selection: end or cancel the range mode, or move and clear the selected Stories. */
+function markHints(view: ShellView): KeyHint[] {
+  const count = view.marked.size;
+
+  if (view.ranging) {
+    return [
+      { key: "space", description: "select" },
+      { key: "esc", description: "cancel" },
+    ];
+  }
+
+  return count > 0
+    ? [
+        { key: "shift+↑/↓", description: `move ${count} ${count === 1 ? "Story" : "Stories"}` },
+        { key: "esc", description: "clear selection" },
       ]
     : [];
 }
 
 /**
- * `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar. The
- * hints name what the Story sidebar shows: a Story, or a Thread.
+ * `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar, but not
+ * while `esc` clears a multi-selection (`marks`). The hints name what the Story sidebar shows: a Story, or a Thread.
  */
-function focusHints(view: ShellView): KeyHint[] {
+function focusHints(view: ShellView, marks = false): KeyHint[] {
   if (view.storyPane) {
     const shown = view.storyPane.kind === "thread" ? "Thread" : "Story";
 
     return [
       { key: "tab", description: shown },
       ...(view.sidebar ? [{ key: "shift+tab", description: "Stages", secondary: true }] : []),
-      { key: "esc", description: `close ${shown}` },
+      ...(marks ? [] : [{ key: "esc", description: `close ${shown}` }]),
     ];
   }
 
@@ -59,12 +82,15 @@ function focusHints(view: ShellView): KeyHint[] {
 }
 
 function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
+  const marks = view.ranging || view.marked.size > 0;
+
   return [
     { key: "↑/↓", description: "select" },
-    ...rowHints(view.row),
+    ...markHints(view),
+    ...rowHints(view.row, marks),
     { key: "n", description: "new Story" },
     ...(view.row?.kind === "story" ? [{ key: "d", description: "delete" }] : []),
-    ...focusHints(view),
+    ...focusHints(view, marks),
     { key: "ctrl+p", description: "find" },
     { key: "p", description: "switch Project", secondary: true },
     { key: "f", description: "factory", secondary: true },

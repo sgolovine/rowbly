@@ -53,6 +53,13 @@ export interface ShellView {
   readonly cursorStage: string | undefined;
   /** The selected sidebar entry. Entry 0 is All Stages. */
   readonly stageIndex: number;
+  /**
+   * The IDs of the Stories of the multi-selection that exist. In the range mode, the Story rows from the anchor to
+   * the cursor.
+   */
+  readonly marked: ReadonlySet<string>;
+  /** The range mode is on: `↑/↓` extend the range from the anchor, and `space` selects it. */
+  readonly ranging: boolean;
 
   // The Story sidebar. It also shows a Thread of the Factory view.
   /** What the Story sidebar shows, or `null` when it is closed. */
@@ -111,4 +118,8 @@ export interface ShellEnv {
   readonly setStageKey: Dispatch<SetStateAction<string | null>>;
   readonly setSelectedId: Dispatch<SetStateAction<string | null>>;
   readonly setCollapsed: Dispatch<SetStateAction<ReadonlySet<string>>>;
+  /** Replaces the IDs of the Stories of the multi-selection. */
+  readonly setMarked: Dispatch<SetStateAction<ReadonlySet<string>>>;
+  /** The Story where the range mode started, or `null` when the range mode is off. */
+  readonly setAnchor: Dispatch<SetStateAction<string | null>>;
 }
