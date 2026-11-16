@@ -1,14 +1,14 @@
 ---
 title: Add the host agent (rowbly host serve)
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 8
 dependsOn:
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:05.891Z
-updatedAt: 2026-11-16T21:39:20.606Z
+updatedAt: 2026-11-16T21:39:43.507Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-89
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/280
 ---
 
 ## Goal
