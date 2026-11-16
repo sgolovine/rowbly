@@ -2,6 +2,7 @@
 title: Replace story agent locks with factory state activity
 stage: DONE
 position: 9
+uid: 12d29d5d-e859-4db6-9a75-ae7676afa844
 createdAt: 2026-11-10T23:23:54.000Z
 updatedAt: 2026-11-11T00:21:17.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-09-in_development
