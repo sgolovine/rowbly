@@ -9,6 +9,7 @@ function fakeManager() {
     shutdown: vi.fn(async () => {}),
     cancelWorker: vi.fn(async () => {}),
     resumeWorker: vi.fn(async () => {}),
+    steerWorker: vi.fn(async () => {}),
     dismissAttention: vi.fn(async () => {}),
   };
 }
@@ -61,6 +62,35 @@ describe("control poller", () => {
     expect(manager.dismissAttention).toHaveBeenCalledWith("commit");
     expect((await readReceipt(project.paths, dismiss.id))?.status).toBe("completed");
     expect((await readReceipt(project.paths, missing.id))?.status).toBe("rejected");
+  });
+
+  it("gives a steer with its Thread, run and message to the manager", async () => {
+    await prepareRuntime(project.paths);
+    const manager = fakeManager();
+    const steer = await publishCommand(project.paths, {
+      targetOwnerToken: "owner",
+      type: "steer",
+      threadId: "thread",
+      expectedRunId: "run",
+      message: "Use the new API",
+    });
+    const noRun = await publishCommand(project.paths, {
+      targetOwnerToken: "owner",
+      type: "steer",
+      threadId: "thread",
+      message: "Use the new API",
+    });
+    const poller = createControlPoller(project.paths, "owner", manager as unknown as ControlTarget);
+
+    pollControl(poller);
+    await settledControl(poller);
+
+    expect(manager.steerWorker).toHaveBeenCalledExactlyOnceWith("thread", "run", "Use the new API");
+    expect((await readReceipt(project.paths, steer.id))?.status).toBe("completed");
+    expect(await readReceipt(project.paths, noRun.id)).toMatchObject({
+      status: "rejected",
+      error: { message: "Thread and run IDs are necessary" },
+    });
   });
 
   it("starts no second scan while one waits, and polls again after it ends", async () => {

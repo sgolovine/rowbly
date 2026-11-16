@@ -1,6 +1,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import {
+  assertSteerMessage,
   type FactoryCommandType,
   publishCommand,
   readReceipt,
@@ -170,9 +171,10 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
 /** Publishes a command to the live daemon and waits for its receipt. A stop also waits for the owner release. */
 export async function sendFactoryCommand(
   type: FactoryCommandType,
-  input: { threadId?: string; attentionKey?: string; timeoutMs?: number } = {},
+  input: { threadId?: string; attentionKey?: string; message?: string; timeoutMs?: number } = {},
   ctx: ServiceContext = {},
 ) {
+  const message = type === "steer" ? steerText(input.message) : undefined;
   const paths = await findProject(ctx);
   const owner = await readFactoryOwner(paths);
 
@@ -189,6 +191,7 @@ export async function sendFactoryCommand(
     threadId: thread?.id,
     expectedRunId: thread?.runs.at(-1)?.id,
     attentionKey: input.attentionKey,
+    message,
   });
   const deadline = Date.now() + (input.timeoutMs ?? 30_000);
 
@@ -210,6 +213,23 @@ export async function sendFactoryCommand(
   }
 
   throw new ConflictError(`Factory command timed out: ${command.id}`);
+}
+
+/** Gives the trimmed steering message, or throws a ValidationError when it is not valid. */
+function steerText(message: string | undefined): string {
+  assertSteerMessage(message);
+
+  return message.trim();
+}
+
+/** Gives a message of a person to the running worker of the Thread, through the live daemon. */
+export function steerThread(
+  threadId: string,
+  message: string,
+  input: { timeoutMs?: number } = {},
+  ctx: ServiceContext = {},
+) {
+  return sendFactoryCommand("steer", { ...input, threadId, message }, ctx);
 }
 
 /** Asks the live daemon to remove the attention entry `key` from its state and from the status file. */

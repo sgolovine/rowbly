@@ -6,6 +6,7 @@ import { useTestProject } from "../test-project/test-project.js";
 import {
   composeMessage,
   runSection,
+  steeringMessage,
   supervisorMessage,
   USER_PROMPT_LIMIT,
   upstreamOf,
@@ -248,5 +249,14 @@ describe("factory messages", () => {
     const message = await supervisorMessage(project.paths, "Digest text.");
 
     expect(message).toContain(`# Project prompt\n\n${"x".repeat(USER_PROMPT_LIMIT)}\n\n# Digest`);
+  });
+});
+
+describe("steeringMessage", () => {
+  it("puts a note that a person wrote the text above the trimmed text", () => {
+    const message = steeringMessage("  Use the new API.\n");
+
+    expect(message.startsWith("# Message from the user\n\nA person sent this message to you")).toBe(true);
+    expect(message.endsWith("\n\nUse the new API.")).toBe(true);
   });
 });
