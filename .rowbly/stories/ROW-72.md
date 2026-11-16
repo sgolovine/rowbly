@@ -2,6 +2,7 @@
 title: Add `expandedByDefault` to rowbly config
 stage: DONE
 position: 70
+uid: 7fb0a5bf-26f3-475e-8a48-0bac19d18de1
 createdAt: 2026-11-16T16:34:16.401Z
 updatedAt: 2026-11-16T16:42:44.107Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-72
