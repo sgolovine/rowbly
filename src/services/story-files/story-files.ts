@@ -49,7 +49,15 @@ export type StoryDataChange = (data: Record<string, unknown>, file: StoryFile) =
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
 
 /** The keys that come first in the frontmatter, before the custom fields. */
-const LEADING_KEYS = ["title", "stage", "position", "dependsOn", "tags", "createdAt", "updatedAt"];
+const LEADING_KEYS = ["title", "stage", "position", "uid", "dependsOn", "tags", "createdAt", "updatedAt"];
+
+/** A UUID in any case, for example `0b7c6f3e-2d4a-4f1e-9c8b-5a6d7e8f9a0b`. */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Tells if a frontmatter value is a valid Story `uid`: a UUID string. */
+export function isStoryUid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
 
 /** The frontmatter keys of the creation time and the time of the last change of a story. */
 export const STORY_TIME_KEYS = ["createdAt", "updatedAt"] as const;
@@ -196,7 +204,7 @@ export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
 }
 
 /**
- * Frontmatter in a stable order: title, stage, position, dependsOn, tags, the times, the custom fields as configured,
+ * Frontmatter in a stable order: title, stage, position, uid, dependsOn, tags, the times, the custom fields as configured,
  * then anything else.
  */
 export function orderStoryData(config: ProjectConfig, data: Record<string, unknown>): Record<string, unknown> {

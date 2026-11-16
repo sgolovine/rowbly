@@ -66,6 +66,7 @@ export function toStory(config: ProjectConfig, file: StoryFile, position = 1): S
   return {
     id: file.id,
     number: file.number,
+    ...(typeof data.uid === "string" ? { uid: data.uid } : {}),
     title: data.title as string,
     stage: data.stage as string,
     position,

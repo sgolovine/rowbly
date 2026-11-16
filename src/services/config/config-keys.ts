@@ -8,7 +8,7 @@ const TAG_VALUE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 const SKILL_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const SKILL_NAME_MAX_LENGTH = 64;
 /** Story frontmatter keys Rowbly owns; a custom field cannot use them. */
-const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description", "tags"];
+const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description", "tags", "uid"];
 
 /** Throws a `ValidationError` carrying `issues` when there are any. */
 export function throwIfIssues(message: string, issues: Issue[], hint?: string): void {

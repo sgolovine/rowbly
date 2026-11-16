@@ -21,7 +21,7 @@ describe("story times", () => {
     const story = await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at(T1));
     expect(story).toMatchObject({ createdAt: T1, updatedAt: T1 });
     expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(
-      `---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - ROW-01\ncreatedAt: ${T1}\nupdatedAt: ${T1}\nowner: null\n---\n\n`,
+      `---\ntitle: Two\nstage: BACKLOG\nuid: ${story.uid}\ndependsOn:\n  - ROW-01\ncreatedAt: ${T1}\nupdatedAt: ${T1}\nowner: null\n---\n\n`,
     );
     expect((await searchStories({}, project.ctx)).map((s) => s.createdAt)).toEqual([T1, T1]);
   });
