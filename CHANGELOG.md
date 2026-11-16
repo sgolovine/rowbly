@@ -28,6 +28,7 @@ This file records the changes to Rowbly that users can see.
 - Added: The new `rowbly host add <id> --ssh <target> --max-workers <n>`, `rowbly host list` and `rowbly host remove <id> [--purge]` commands record the remote worker hosts in the `hosts` key of `~/.rowblyrc.json`. `rowbly host remove` refuses to remove a host while a Thread of a known Project is active on it. (ROW-84)
 - Added: When the `ROWBLY_OUTBOX` and `ROWBLY_THREAD_ID` environment variables are set, each Story change that a `rowbly` command makes adds one line to `$ROWBLY_OUTBOX/outbox.jsonl`, and Rowbly refuses all other changes to the Project with a `CONFLICT` error. A later version uses this outbox to send the changes of remote workers to the main machine. (ROW-90)
 - Added: When the `ROWBLY_OUTBOX` and `ROWBLY_THREAD_ID` environment variables are set, `rowbly add-attachment` and `rowbly remove-attachment` also add one line to `$ROWBLY_OUTBOX/outbox.jsonl`, and each added PNG is kept in `$ROWBLY_OUTBOX/blobs/`. The new hidden `rowbly host blob <sha256>` command writes one of these PNG files to stdout. (ROW-91)
+- Added: The new `placement` key in the `factory` section of `.rowbly/rowbly.config.json` and the new `rowbly factory configure --placement <policy>` flag set how the factory selects the host of a worker: `prefer-local` (the default), `most-free` or `prefer-remote`. `rowbly factory status --json` has the new `hosts` list with the worker slots of each host, and the supervisor can request a host for a worker. (ROW-95)
 
 ### 0.18.0
 

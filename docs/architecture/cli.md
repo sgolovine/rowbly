@@ -149,6 +149,9 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
   the Threads of each known Project in `~/.rowblyrc.json` that is not missing.
 - If Rowbly cannot read `~/.rowblyrc.json`, each `host` command gives a `VALIDATION` error, and the
   file does not change.
+- `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
+  worker: `prefer-local`, `most-free` or `prefer-remote`. See
+  [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
 - `host blob <sha256>` is hidden. It does not show in `rowbly host --help`. The main machine runs it
   on a worker host to get the PNG of an `attachment.add` entry. The command reads the outbox folder
   from `ROWBLY_OUTBOX`. It does not need `ROWBLY_THREAD_ID`. It writes the exact bytes of

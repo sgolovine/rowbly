@@ -42,6 +42,10 @@ take or change a lock.
   `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
 - Without the `factory` key of the config, the worker limit is four and Pi selects default models. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
+- `placement` selects the machine of a new worker: `prefer-local` (the default), `most-free` or
+  `prefer-remote`. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#placement).
+- `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
+  `id`, `state`, `max`, `used` and `free`. See [README.md](README.md#placement).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
   priority over the `start_worker` model and `workerModel`. See

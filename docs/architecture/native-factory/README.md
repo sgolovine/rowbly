@@ -86,6 +86,46 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 
+## Placement
+
+The manager places each new worker on a machine: the main machine (`local`) or a worker host. The pure
+function `placeWorker` in `factory-manager/placement.ts` selects the host. The slots of each host come
+from `factory-manager/host-slots.ts`. These modules do no I/O.
+
+- **Hosts.** The manager dependency `workerHosts` gives the worker hosts, each with `id`, `maxWorkers`,
+  `state` and `providers`. Without the dependency, the list is empty, and all work runs on `local`. At
+  this time, production gives no worker hosts.
+- **Slots.** Each host has `{ id, state, max, used, free }`. For `local`, `max` is the worker limit,
+  and the state is always `connected`. For a worker host, `max` is its `maxWorkers`. `used` is the
+  number of active workers on the host.
+- **Policy limit.** The policy limit is the sum of `max` of the hosts that are `connected`. Without
+  worker hosts, it is the worker limit.
+- **Status.** `factory_snapshot`, `status.json` and the supervisor digest have a `hosts` list with the
+  slots of each host. The digest shows a maximum of 12 hosts.
+
+The function applies these rules in this order:
+
+1. A host is eligible only if its state is `connected`, it has a free slot, and it has the provider of
+   the worker model. `local` always has the provider. A worker host without a known provider list, or
+   a worker model without a known provider, is not eligible.
+2. When the local worktree of the Story has commits that are not on `origin`, or uncommitted changes,
+   only `local` is permitted.
+3. When the last worker Thread of the Story ran on host H, and H is eligible, the Story goes to H.
+   When H is not eligible, the Story can go to a different host only when its old worktree is known
+   to be pushed and clean. If not, the Story waits, and the result gives the reason.
+4. The policy orders the other eligible hosts. A tie between two worker hosts goes to the first host
+   in the list.
+5. A requested host must be eligible and must agree with rules 2 and 3. The policy does not apply to
+   it.
+
+`start_worker` has an optional `host` (a string). Without a host, the placement selects one. A
+refused placement, or an unknown host, gives a `ConflictError` with the reason, and the manager
+creates no Thread. The manager reads the Git facts of the local worktree (`readWorktreeFacts` in
+`worker-worktree/`) only when the list has a worker host. The new worker Thread and the active entry
+get the selected host. The dispatch to a worker host is not available yet. Thus a placement on a
+worker host gives a `ConflictError` ("Remote dispatch is not available"), and the manager creates no
+Thread.
+
 ## The worker executor
 
 The manager does not use the Pi session of a worker directly. It uses a `WorkerExecutor`. This

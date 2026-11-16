@@ -6,9 +6,12 @@ import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import { type Store, withEntry, withoutEntry } from "../store/store.js";
+import type { Story } from "../story/story.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
+import type { LocalWorktreeFacts } from "../worker-worktree/worker-worktree.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import { isAuthenticationError, isConnectivityError, isQuotaError, networkPauseDelay } from "./connectivity.js";
+import type { WorkerHostView } from "./host-slots.js";
 import type { WorkerControl, WorkerExecutor } from "./worker-executor.js";
 
 export interface FactoryDependencies {
@@ -24,6 +27,10 @@ export interface FactoryDependencies {
   checkDeps?: CheckQueueDeps;
   /** Runs the workers. Without a value, the manager runs each worker in a Pi session of this process. */
   executor?: WorkerExecutor;
+  /** The worker hosts that the manager can use. Without a value, the manager uses only `local`. */
+  workerHosts?: () => Promise<readonly WorkerHostView[]>;
+  /** Reads the Git facts of the local worktree of a Story. Tests give fakes. */
+  worktreeFacts?: (root: string, story: Story) => Promise<LocalWorktreeFacts | undefined>;
 }
 
 export interface Hold {
@@ -68,8 +75,11 @@ export interface ManagerState {
 
   // Settings
   readonly settings: FactorySettings;
+  /** The worker limit of `local`. */
   readonly limit: number;
   readonly authStamp: number;
+  /** The worker hosts from the last read of `workerHosts`. */
+  readonly hosts: readonly WorkerHostView[];
 
   // Workers
   readonly active: ReadonlyMap<string, ActiveWorker>;
