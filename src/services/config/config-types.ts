@@ -10,6 +10,14 @@ export interface CustomField {
   options?: string[];
 }
 
+/** A tag that a Story can have. The value is the identifier and cannot change. */
+export interface TagConfig {
+  /** The identifier in the `tags` list of each Story. */
+  value: string;
+  /** The display name. */
+  label: string;
+}
+
 export interface StageConfig {
   /** Also the stage's file name: `stages/<key>.md`. */
   key: string;
@@ -25,6 +33,8 @@ export interface ProjectConfig {
   /** The prefix of every story ID: `ROW` in `ROW-01`. */
   projectKey: string;
   customFields: CustomField[];
+  /** The tags that a Story can have. A config without the key has no tags. */
+  tags?: TagConfig[];
   /** In board order. */
   stages: StageConfig[];
   /** The optional features that are on. A feature that is not here is off. */

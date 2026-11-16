@@ -8,6 +8,7 @@ import {
   checkFieldOptions,
   checkProjectKey,
   checkStageKey,
+  checkTagValue,
   checkTimeZone,
   compactThreads,
   configIssues,
@@ -17,6 +18,7 @@ import {
   labelFromKey,
   type ProjectConfig,
   parseConfig,
+  projectTags,
   readConfig,
   storyTimeZone,
   throwIfIssues,
@@ -50,6 +52,60 @@ describe("key checks", () => {
     expect(checkFieldKey("due_date")).toEqual([]);
     expect(checkFieldKey("DueDate")).toHaveLength(1);
     expect(checkFieldKey("title")[0]?.message).toMatch(/reserved/);
+    expect(checkFieldKey("tags")[0]?.message).toMatch(/reserved/);
+  });
+
+  it("checkTagValue accepts lowercase letters, digits, _ and -, starting with a letter or a digit", () => {
+    expect(checkTagValue("frontend")).toEqual([]);
+    expect(checkTagValue("2nd_try-a")).toEqual([]);
+    expect(checkTagValue("Front")).toHaveLength(1);
+    expect(checkTagValue("-x")).toHaveLength(1);
+    expect(checkTagValue("a b")).toHaveLength(1);
+    expect(checkTagValue("", ["tags", 0, "value"])[0]?.path).toEqual(["tags", 0, "value"]);
+  });
+});
+
+describe("tags in the config", () => {
+  it("accepts a config without tags, and it has no tags", () => {
+    expect(configIssues(VALID)).toEqual([]);
+    expect(projectTags(VALID)).toEqual([]);
+  });
+
+  it("accepts valid tags and keeps them in order", () => {
+    const tags = [
+      { value: "frontend", label: "Front end" },
+      { value: "backend", label: "Back end" },
+    ];
+    const text = JSON.stringify({ ...VALID, tags: tags.map((tag) => ({ ...tag, color: "red" })) });
+    const { config, issues } = parseConfig(text);
+    expect(issues).toEqual([]);
+    expect(config?.tags).toEqual(tags);
+    expect(projectTags(config as ProjectConfig)).toEqual(tags);
+  });
+
+  it("reports tags that are not a list", () => {
+    expect(configIssues({ ...VALID, tags: {} })).toEqual([{ path: ["tags"], message: "tags must be an array" }]);
+  });
+
+  it("reports a tag with no value, no label, a bad value or a duplicate value", () => {
+    const issues = configIssues({
+      ...VALID,
+      tags: [
+        "x",
+        { label: "No value" },
+        { value: "nolabel" },
+        { value: "Bad Value", label: "Bad" },
+        { value: "docs", label: "Docs" },
+        { value: "docs", label: "Docs again" },
+      ],
+    });
+    expect(issues).toEqual([
+      { path: ["tags", 0], message: "A tag must be an object" },
+      { path: ["tags", 1, "value"], message: "value is required" },
+      { path: ["tags", 2, "label"], message: "label is required" },
+      { path: ["tags", 3, "value"], message: expect.stringContaining('Tag value "Bad Value"') },
+      { path: ["tags", 5, "value"], message: 'Duplicate tag value "docs"' },
+    ]);
   });
 });
 
@@ -306,6 +362,19 @@ describe("readConfig and writeConfig", () => {
     await writeConfig(project.paths, VALID);
     expect(await readConfig(project.paths)).toEqual(VALID);
     expect(await project.read("rowbly.config.json")).toBe(`${JSON.stringify(VALID, null, 2)}\n`);
+  });
+
+  it("writes the tags after the custom fields, and omits the key when a config has no tags", async () => {
+    await writeConfig(project.paths, VALID);
+    expect(await project.read("rowbly.config.json")).not.toContain("tags");
+    await writeConfig(project.paths, { ...VALID, tags: [{ value: "docs", label: "Docs" }] });
+    expect(Object.keys(JSON.parse(await project.read("rowbly.config.json")))).toEqual([
+      "projectName",
+      "projectKey",
+      "customFields",
+      "tags",
+      "stages",
+    ]);
   });
 
   it("omits the skills key when a config has no skills", async () => {

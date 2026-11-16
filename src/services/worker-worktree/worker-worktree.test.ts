@@ -37,6 +37,7 @@ describe("Story worktree", () => {
       description: "",
       position: 1,
       dependsOn: [],
+      tags: [],
       createdAt: null,
       updatedAt: null,
       fields: {},

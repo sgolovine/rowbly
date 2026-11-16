@@ -21,6 +21,9 @@ interface StoryOptions {
   dependsOn?: string[];
   addDependency?: string[];
   removeDependency?: string[];
+  tag?: string[];
+  addTag?: string[];
+  removeTag?: string[];
 }
 
 interface SearchOptions {
@@ -28,9 +31,10 @@ interface SearchOptions {
   field?: string[];
   blocked?: boolean;
   ready?: boolean;
+  tag?: string[];
 }
 
-/** A list of Story IDs, or `none`. */
+/** A list of Story IDs or tag values, or `none`. */
 function formatIds(ids: readonly string[]): string {
   return ids.length === 0 ? "none" : ids.join(", ");
 }
@@ -57,6 +61,7 @@ async function formatStory(story: StoryDetails, ctx: ServiceContext): Promise<st
     `${story.id}  ${story.title}`,
     `Stage: ${stage?.label ?? story.stage} (${story.stage})`,
     ...dependencyLines(story),
+    `Tags: ${formatIds(story.tags)}`,
     ...timeLines(story),
     ...project.customFields.map((field) => `${field.label}: ${formatValue(story.fields[field.key] ?? null)}`),
     ...(story.description ? ["", story.description] : []),
@@ -78,6 +83,7 @@ function registerCreate(program: Command): void {
     .option("--description <markdown>", "story description")
     .option("--field <key=value>", "set a custom field (repeatable)", collect)
     .option("--depends-on <ids>", "upstream Story IDs, comma-separated (repeatable)", collect)
+    .option("--tag <value>", "a tag value (repeatable)", collect)
     .action((opts: StoryOptions & { title: string }, command: Command) =>
       run(
         command,
@@ -89,6 +95,7 @@ function registerCreate(program: Command): void {
               description: opts.description,
               fields: parseFieldFlags(opts.field),
               dependsOn: parseIdList(opts.dependsOn),
+              tags: parseIdList(opts.tag),
             },
             ctx,
           ),
@@ -117,6 +124,9 @@ function registerUpdate(program: Command): void {
     )
     .option("--add-dependency <id>", "add an upstream Story (repeatable)", collect)
     .option("--remove-dependency <id>", "remove an upstream Story (repeatable)", collect)
+    .option("--tag <value>", 'replace the tag values; "" removes all (repeatable)', collect)
+    .option("--add-tag <value>", "add a tag value (repeatable)", collect)
+    .option("--remove-tag <value>", "remove a tag value (repeatable)", collect)
     .action((id: string, opts: StoryOptions, command: Command) =>
       run(
         command,
@@ -132,6 +142,9 @@ function registerUpdate(program: Command): void {
               dependsOn: parseIdList(opts.dependsOn),
               addDependsOn: parseIdList(opts.addDependency),
               removeDependsOn: parseIdList(opts.removeDependency),
+              tags: parseIdList(opts.tag),
+              addTags: parseIdList(opts.addTag),
+              removeTags: parseIdList(opts.removeTag),
             },
             ctx,
           ),
@@ -178,17 +191,24 @@ function dependencyFilter(opts: SearchOptions): "blocked" | "ready" | undefined 
 function registerSearch(program: Command): void {
   program
     .command("search [query]")
-    .description("Find stories by text, stage or custom field values")
+    .description("Find stories by text, stage, custom field values or tags")
     .option("--stage <stage>", "only stories in this stage")
     .option("--field <key=value>", "only stories with this field value (repeatable)", collect)
     .addOption(new Option("--blocked", "only blocked stories").conflicts("ready"))
     .option("--ready", "only ready stories")
+    .option("--tag <value>", "only stories with this tag (repeatable)", collect)
     .action((query: string | undefined, opts: SearchOptions, command: Command) =>
       run(
         command,
         (ctx) =>
           searchStories(
-            { query, stage: opts.stage, fields: parseFieldFlags(opts.field), dependency: dependencyFilter(opts) },
+            {
+              query,
+              stage: opts.stage,
+              fields: parseFieldFlags(opts.field),
+              dependency: dependencyFilter(opts),
+              tags: parseIdList(opts.tag),
+            },
             ctx,
           ),
         (stories) => searchText(stories),
