@@ -317,7 +317,7 @@ async function raiseAttention(manager: Manager, args: { key: string; text: strin
 }
 
 async function stopWorker(manager: Manager, threadId: string, expectedRunId: string) {
-  const session = await serial(manager, async () => {
+  const control = await serial(manager, async () => {
     const thread = await getThread(threadId, manager.ctx);
 
     if (thread.runs.at(-1)?.id !== expectedRunId || !getState(manager).active.has(thread.id)) {
@@ -326,10 +326,10 @@ async function stopWorker(manager: Manager, threadId: string, expectedRunId: str
 
     await changeThread(manager, thread.id, "interrupted", { resumable: !!thread.session.file });
 
-    return getState(manager).active.get(thread.id)?.session;
+    return getState(manager).active.get(thread.id)?.control;
   });
 
-  await session?.session.abort();
+  await control?.stop();
 
   return { interrupted: threadId };
 }

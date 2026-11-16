@@ -42,6 +42,8 @@ Read this page when you start a task on the factory. Then read only the sub-page
   message from `workerMessage()` in `src/services/messages/messages.ts`. It works in one worktree for the
   Story (`worker-worktree/`). It makes canonical Project changes only through the CLI shim
   `runtime/bin/rowbly`, under the Project write lock.
+- **Worker executor.** The manager runs each worker through a `WorkerExecutor`
+  (`factory-manager/worker-executor.ts`). See [The worker executor](#the-worker-executor).
 - **Policy.** The v1 policy rules (`factory-policy/`) decide eligibility, delays, the worker limit and
   parked Stories. The policy state is in `state.json`.
   - **Dependency gate.** The policy does not start a worker for a blocked Story. A blocked Story has one or
@@ -84,6 +86,37 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 
+## The worker executor
+
+The manager does not use the Pi session of a worker directly. It uses a `WorkerExecutor`. This
+interface lets a different executor, for example a remote executor, run a worker.
+
+- **Interface.** `factory-manager/worker-executor.ts` has the interface. It has these operations:
+  - `launch` prepares the worktree, opens the session, prompts the worker and collects the result.
+    A resume uses `launch` also. The Thread record tells if the run is new or a resume.
+  - `stop` stops the worker. The manager makes the Thread `interrupted`. Shutdown and `stop_worker`
+    use it.
+  - `cancel` stops the worker. The manager makes the Thread `cancelled`. `cancelWorker` uses it.
+  - `steer` gives a steering message to a worker. It refuses a worker that does not work now.
+- **Events.** The executor sends events to the manager through `WorkerEvents`: `worktreeReady`,
+  `sessionOpened`, `activity`, `resultReported`, `completed`, `failed` and `finished`. The executor
+  also asks the manager for the worker message (`message`) and for the `stopping` flag. It tells the
+  manager when the first prompt succeeds (`prompted`).
+- **Order.** The executor waits for each event before the next step. An event that throws, for example
+  `Factory is stopping`, stops the launch.
+- **Manager side.** `factory-manager/worker-launch.ts` keeps the decisions: the `pending`, `stopping`
+  and Stage checks, the prompt-claim check, the provider pause, the worker message and the release of
+  the slot. Only the manager changes the Thread record.
+- **Control.** When the session opens, the manager keeps a `WorkerControl` on the active worker.
+  Cancel, stop, steer and shutdown use the control. They do not use a Pi session.
+- **Local executor.** `factory-manager/local-executor.ts` runs each worker in a Pi session of the
+  daemon. It holds the worktree preparation, the session, the result tool, the check tools, the
+  activity timer, the collection of the result and the close of the session. It loads Pi only through
+  the lazy boundary of `pi-runtime/`. The interface file does not import Pi.
+- **Selection.** `FactoryDependencies.executor` gives the executor. Without a value,
+  `createFactoryManager` makes the local executor. Tests give a fake executor
+  (`worker-executor.test.ts`).
+
 ## Prerequisites and limits
 
 - Native execution must have Linux, Git, local files and util-linux `flock`.
@@ -112,6 +145,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 
 ## Related
 
