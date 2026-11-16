@@ -1,8 +1,8 @@
 ---
 title: Sort stories by updated by
-stage: BACKLOG
-position: 5
-updatedAt: 2026-11-16T19:01:27.259Z
+stage: IN_REFINEMENT
+position: 1
+updatedAt: 2026-11-16T19:04:33.966Z
 worktree: null
 pull_request: null
 ---
