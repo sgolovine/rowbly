@@ -2,6 +2,7 @@
 title: items should be selectable in factory issues view
 stage: DONE
 position: 15
+uid: cf511e78-4ddb-457b-a82a-4197ccb1b28d
 createdAt: 2026-11-14T16:38:03.000Z
 updatedAt: 2026-11-14T16:46:07.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-15
