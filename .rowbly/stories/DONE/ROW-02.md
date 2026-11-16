@@ -2,6 +2,7 @@
 title: Attach items to stories
 stage: DONE
 position: 7
+uid: 37c7af9b-36cb-43b6-bcfb-66e82bfacf01
 createdAt: 2026-11-10T20:18:08.000Z
 updatedAt: 2026-11-10T22:26:24.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-02-in_development

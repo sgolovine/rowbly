@@ -2,6 +2,7 @@
 title: Manage skills via TUI
 stage: DONE
 position: 4
+uid: 992c6527-3a2c-4125-bc64-5f28687410b6
 createdAt: 2026-11-10T20:23:25.000Z
 updatedAt: 2026-11-10T22:13:05.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-03-in_development
