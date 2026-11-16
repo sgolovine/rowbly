@@ -1,8 +1,10 @@
 ---
 title: Show factory connectivity state in the TUI
 stage: IN_REFINEMENT
+dependsOn:
+  - ROW-71
 createdAt: 2026-11-16T16:41:21.272Z
-updatedAt: 2026-11-16T16:41:21.272Z
+updatedAt: 2026-11-16T16:41:56.225Z
 worktree: null
 pull_request: null
 ---
