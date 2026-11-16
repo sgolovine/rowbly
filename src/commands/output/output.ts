@@ -2,6 +2,7 @@ import { type Command, InvalidArgumentError } from "commander";
 import { RowblyError, ValidationError } from "../../services/errors/errors.js";
 import type { FieldValue } from "../../services/fields/fields.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { commandContext } from "./outbox-env.js";
 
 /**
  * Sets the exit code of the process. The process stops by itself after all output is written, so a command does
@@ -61,9 +62,9 @@ export async function run<T>(
   text: (result: T, ctx: ServiceContext) => string | Promise<string>,
 ): Promise<void> {
   const { json, cwd } = command.optsWithGlobals<{ json?: boolean; cwd?: string }>();
-  const ctx = { cwd };
 
   try {
+    const ctx = commandContext(cwd, process.env);
     const result = await call(ctx);
 
     console.log(json ? JSON.stringify(result, null, 2) : await text(result, ctx));
