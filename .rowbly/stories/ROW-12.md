@@ -2,6 +2,7 @@
 title: "Chore: Revert test changes"
 stage: DONE
 position: 11
+uid: 3d6b9e4b-e49e-4071-a536-e86dc8cc72b5
 createdAt: 2026-11-14T00:19:32.000Z
 updatedAt: 2026-11-14T00:25:02.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-12
