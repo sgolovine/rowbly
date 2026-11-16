@@ -1,5 +1,6 @@
 import { readConfig } from "../config/config.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { type DuplicatePlan, planDuplicates, type UnrepairedDuplicate } from "./duplicate-plan.js";
 import { type RenumberOutcome, renumberStory, type StoryRenumber } from "./renumber-file.js";
@@ -32,6 +33,8 @@ export async function findDuplicateStoryIds(ctx: ServiceContext = {}): Promise<D
  * create and a check of the old file make two repairs at the same time safe. References to the ID do not change.
  */
 export async function repairDuplicateStoryIds(ctx: ServiceContext = {}, plan?: DuplicatePlan): Promise<RenumberResult> {
+  refuseRemoteWrite(ctx, "renumber Stories");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const env = { paths, config, now: ctx.now?.() ?? new Date() };
