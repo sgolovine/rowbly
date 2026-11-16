@@ -2,6 +2,7 @@
 title: Skip conversation polls when the session file did not change
 stage: DONE
 position: 33
+uid: 240d481f-0148-4e2c-b0fe-c3480fda2add
 createdAt: 2026-11-14T21:06:45.000Z
 updatedAt: 2026-11-14T21:51:05.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-32
