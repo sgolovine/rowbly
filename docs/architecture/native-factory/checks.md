@@ -68,8 +68,9 @@ named checks. `factory-settings/check-settings.ts` reads and validates it.
 ## The `run_check` tool
 
 `createCheckTool` in `factory-worker/check-tool.ts` makes the tool. `openWorkerSession` in
-`factory-manager/worker-launch.ts` gives it to each worker through `workerChecks`
-(`factory-manager/worker-checks.ts`). `WORKER_TOOLS` in `pi-runtime/factory-session.ts` has its name.
+`factory-manager/local-executor.ts` gives it to each worker through `workerChecks`
+(`factory-manager/worker-checks.ts`). The local executor gets the check queue and the settings when
+the manager makes it. `WORKER_TOOLS` in `pi-runtime/factory-session.ts` has its name.
 The session turns the tool on only when the factory gives it.
 
 | Field   | Type              | Meaning                                                          |
