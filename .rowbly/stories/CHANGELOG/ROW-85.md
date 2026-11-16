@@ -1,9 +1,9 @@
 ---
 title: Add the SSH transport for worker hosts
-stage: IN_REVIEW
+stage: CHANGELOG
 position: 3
 createdAt: 2026-11-16T19:45:02.850Z
-updatedAt: 2026-11-16T20:18:20.632Z
+updatedAt: 2026-11-16T20:20:13.699Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-85
 pull_request: https://github.com/sgolovine/rowbly/pull/270
 ---
