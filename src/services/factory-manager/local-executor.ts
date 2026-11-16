@@ -197,7 +197,7 @@ function executorChecks(input: LocalExecutorInput, launch: WorkerLaunch, worktre
   }
 
   return workerChecks(
-    { queue, ctx: input.ctx, root: input.paths.root, shim: input.shim, settings },
+    { queue, ctx: input.ctx, root: input.paths.root, shim: input.shim, settings, env: input.env },
     launch.thread,
     worktreePath,
   );

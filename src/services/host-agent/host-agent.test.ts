@@ -81,7 +81,7 @@ describe("host agent", () => {
   it("holds one claim for each Project; a second agent of the Project exits with no effect", async () => {
     const first = start();
     const owner = await waitFor(() => liveAgent(paths()));
-    const stateBefore = await readFile(paths().state, "utf8");
+    const stateBefore = await waitFor(() => readFile(paths().state, "utf8").catch(() => undefined));
 
     const second = await runHostAgent({ projectId: "p1", home: home.path, pollMs: 10 });
 
@@ -207,6 +207,7 @@ describe("host agent", () => {
       threadId: "t1",
       requestId: "r1",
       payload: { story: "ROW-1" },
+      checks: expect.objectContaining({ queue: expect.objectContaining({ ownerToken: expect.any(String) }) }),
     });
 
     await submitHostCommand(paths("p1"), launch("r3", "t3"));

@@ -1,3 +1,6 @@
+import { isFinalCheck } from "../check-queue/check-order.js";
+import type { CheckJob } from "../check-queue/check-types.js";
+import { threadCheck, withCheck } from "../check-queue/thread-checks.js";
 import { ConflictError, RowblyError } from "../errors/errors.js";
 import type {
   WorkerActivity,
@@ -111,6 +114,16 @@ export function runEvents(run: HostRun): WorkerEvents {
     failed: (failure) => changeRun(run, { failure: failureOf(failure) }),
     finished: (activity) => finished(run, activity),
   };
+}
+
+/**
+ * Writes a job change to the `checks` list of `run.json`. A final status writes durably. A change after the end of
+ * the run also writes. A failed write waits for the next change.
+ */
+export function recordRunCheck(run: HostRun, job: CheckJob, now: number): void {
+  const checks = withCheck(run.store.current.state.checks ?? [], threadCheck(job, now));
+
+  void changeRun(run, { checks }, isFinalCheck(job.status)).catch(() => undefined);
 }
 
 /** The end reason: the stop request, else `failed` after a failure, else `completed`. */
