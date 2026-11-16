@@ -119,8 +119,9 @@ function `placeWorker` in `factory-manager/placement.ts` selects the host. The s
 from `factory-manager/host-slots.ts`. These modules do no I/O.
 
 - **Hosts.** The manager dependency `workerHosts` gives the worker hosts, each with `id`, `maxWorkers`,
-  `state` and `providers`. Without the dependency, the list is empty, and all work runs on `local`. At
-  this time, production gives no worker hosts.
+  `state` and `providers`. Without the dependency, the list is empty, and all work runs on `local`.
+  The daemon gets the dependency from `createWorkerHostSource` in `worker-hosts/`. See
+  "Worker hosts of the registry".
 - **Slots.** Each host has `{ id, state, max, used, free }`. For `local`, `max` is the worker limit,
   and the state is always `connected`. For a worker host, `max` is its `maxWorkers`. `used` is the
   number of active workers on the host.
@@ -198,6 +199,28 @@ interface lets a different executor, for example a remote executor, run a worker
 - **Stop reason.** `completed(result, stop)` has an optional stop reason. `stopped` makes the Thread
   `interrupted`, and `cancelled` makes it `cancelled`. The local executor does not send it.
 
+## Worker hosts of the registry
+
+`createWorkerHostSource(ctx, deps)` in `src/services/worker-hosts/` makes the manager dependencies
+`workerHosts` and `hostConnection` from the host registry in `~/.rowblyrc.json`. `rowbly factory run`
+gives them to the manager. The service only reads the file. It does not record `lastCheck`.
+
+- **List.** `workerHosts()` gives one view for each host that is on and that has a record for the
+  current Project. `maxWorkers` comes from the registry.
+- **Check.** The check of a host runs in the background. It does these steps:
+  1. `ensureHostVersion` installs the exact Rowbly build when the host has a different version. If
+     the version stays different, the state is `wrong-version`.
+  2. `quickHostCheck` checks the version and the Pi providers. If the host is ready, the state is
+     `connected` with the providers of the check. Otherwise, the state is `not-ready`.
+  3. A transport failure or a different error gives `disconnected`.
+- **Interval.** `workerHosts()` does not wait for SSH. It gives the result of the last check at once.
+  A host without a completed check is `not-ready`. When the last check is older than the check interval
+  (60 seconds), and no check of the host runs, the call starts a new check. The checks of different
+  hosts run in parallel. A host that is off, or that leaves the list, loses its last check. When it
+  comes back, it gets a new check.
+- **Build and transport.** The source gets the local build one time, and only when a host needs it. It
+  makes one SSH transport for each host, and uses it again for each check and each connection.
+
 ## Dispatch to a worker host
 
 When the placement selects a worker host, the remote executor sends the worker to the host agent of
@@ -205,7 +228,9 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
 "Placement", "The copy and inbound updates" and "The outbox".
 
 - **Connection.** The manager dependency `hostConnection(host)` gives the transport, the path of
-  `rowbly` on the host and the clone of the Project on the host. At this time, only tests give it.
+  `rowbly` on the host and the clone of the Project on the host. The daemon gets it from
+  `createWorkerHostSource`. It also gives the connection of a host that is off, so that the active
+  remote Threads of that host can complete and sync.
   Each remote command uses the project id `hostProjectId(root)`.
 - **Launch.** The remote executor does these steps, in this order:
   1. It builds the copy of the `.rowbly/` files with `buildThreadCopy`.
