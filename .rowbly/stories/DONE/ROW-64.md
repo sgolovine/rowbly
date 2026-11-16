@@ -2,6 +2,7 @@
 title: Tell workers about the upstream Stories of their Story
 stage: DONE
 position: 48
+uid: 59dc4753-eefa-452e-b0bb-6a183a0ff5ea
 createdAt: 2026-11-14T23:26:46.000Z
 updatedAt: 2026-11-14T23:59:44.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-64
