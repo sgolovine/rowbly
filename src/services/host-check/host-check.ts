@@ -1,4 +1,5 @@
 import { NotFoundError, RowblyError } from "../errors/errors.js";
+import { recordLastCheck } from "../host/host-last-check.js";
 import { type Host, hostView, rcHosts } from "../host/host-rules.js";
 import { remoteVersion } from "../host-install/host-install.js";
 import { type LocalBuild, localBuild } from "../host-install/local-build.js";
@@ -108,15 +109,7 @@ async function laterItems(env: CheckEnv, ctx: ServiceContext, deps: HostCheckDep
   return [...system, ...pi, clone.item, push, gh, identity, ahead];
 }
 
-/**
- * Runs each item of the check on a host with a known connection and build. It does not install, log in or clone.
- * A failed item does not throw. `addHost` uses it after the install.
- */
-export async function runHostCheck(
-  run: HostCheckRun,
-  ctx: ServiceContext = {},
-  deps: HostCheckDeps = {},
-): Promise<HostCheck> {
+async function checkItems(run: HostCheckRun, ctx: ServiceContext, deps: HostCheckDeps): Promise<HostCheck> {
   const project: ProjectFacts | undefined = await projectFacts(ctx);
   const env: CheckEnv = { ...run, project };
   const first = await runRemote(env, UNAME_COMMAND);
@@ -128,6 +121,23 @@ export async function runHostCheck(
   const items = await laterItems(env, ctx, deps);
 
   return result(env.hostId, [item("ssh", "ok", "SSH connects without a password"), linuxItem(first.result), ...items]);
+}
+
+/**
+ * Runs each item of the check on a host with a known connection and build. It does not install, log in or clone.
+ * A failed item does not throw. It records the summary as the `lastCheck` of the host. `addHost` uses it after the
+ * install.
+ */
+export async function runHostCheck(
+  run: HostCheckRun,
+  ctx: ServiceContext = {},
+  deps: HostCheckDeps = {},
+): Promise<HostCheck> {
+  const check = await checkItems(run, ctx, deps);
+
+  await recordLastCheck(run.hostId, check, ctx);
+
+  return check;
 }
 
 /** Finds a recorded worker host, or throws `NOT_FOUND`. */

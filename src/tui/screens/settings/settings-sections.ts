@@ -5,6 +5,7 @@ import { CustomFieldsSection } from "./custom-fields-section/index.js";
 import { DisplaySection } from "./display-section/index.js";
 import { DoctorSection } from "./doctor-section/index.js";
 import { GitSection } from "./git-section/index.js";
+import { HostsSection } from "./hosts-section/index.js";
 import { ProjectSection } from "./project-section/index.js";
 import { PromptsSection } from "./prompts-section/index.js";
 import { SkillsSection } from "./skills-section/index.js";
@@ -106,6 +107,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Git",
         description: "The commits of the canonical checkout and its periodic sync.",
         Component: GitSection,
+      },
+      {
+        id: "hosts",
+        label: "Hosts",
+        description: "The worker hosts and the placement of new workers.",
+        Component: HostsSection,
       },
     ],
   },

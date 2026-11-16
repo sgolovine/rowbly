@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: The new Hosts section in the Factory group of the TUI Settings shows the worker hosts and their last check, and sets the placement of new workers. It turns a host on or off for this Project or for all Projects, changes the worker limit and runs the check, and the new `rowbly host update <id> [--max-workers <n>] [--enable | --disable]` command changes a host from the CLI. (ROW-103)
+
 ### 0.19.0
 
 - Added: In the Factory view, a Thread that is open in the Story sidebar has an `Open Story` button with the key `o`. The button shows the Story list and opens the Story of the Thread in the Story sidebar. (ROW-70)
