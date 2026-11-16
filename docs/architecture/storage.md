@@ -687,7 +687,13 @@ The main machine keeps the files of each host in `runtime/hosts/<host>/`. The fo
 .rowbly/runtime/hosts/<host>/
   outbox-applied.json   # { "seq": <n> }: the last applied seq. A missing file is 0.
   conflicts/            # <sha256>.png: the file of each attachment.add conflict, for recovery
+  threads/<thread-id>/
+    base.json           # the copy that the main machine sent last to the host for the Thread
 ```
+
+`base.json` is `{ version, threadId, host, sentAt, files, attachments }` with mode `0600`. The remote
+executor writes it after each `host prepare`. See
+[native-factory/README.md](native-factory/README.md#dispatch-to-a-worker-host).
 
 ### Attachment cache of a host
 

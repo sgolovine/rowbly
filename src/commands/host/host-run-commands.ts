@@ -3,11 +3,11 @@ import type { Command } from "commander";
 import { MAX_ATTACHMENT_BYTES } from "../../services/attachment-files/attachment-files.js";
 import { hostCacheMissing, hostCachePut } from "../../services/host-agent/host-agent-cache.js";
 import { parseJsonInput, readBoundedInput } from "../../services/host-agent/host-agent-input.js";
-import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
+import { hostAgentPaths, hostRunPathsAnswer } from "../../services/host-agent/host-agent-paths.js";
 import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
 import { runWithoutContext } from "../output/output.js";
 
-/** Registers the hidden request and upload calls of a remote run: the attachment cache and the prepare step. */
+/** Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths and the prepare step. */
 export function registerHostRunCommands(program: Command): void {
   program
     .command("cache-missing <project-id>", { hidden: true })
@@ -31,6 +31,16 @@ export function registerHostRunCommands(program: Command): void {
             id,
             await readBoundedInput(process.stdin, MAX_ATTACHMENT_BYTES, "An attachment"),
           ),
+        (answer) => JSON.stringify(answer),
+      ),
+    );
+
+  program
+    .command("run-paths <project-id>", { hidden: true })
+    .action((projectId: string, _opts: unknown, command: Command) =>
+      runWithoutContext(
+        command,
+        async () => hostRunPathsAnswer(projectId, parseJsonInput(await readBoundedInput(process.stdin, 65_536))),
         (answer) => JSON.stringify(answer),
       ),
     );

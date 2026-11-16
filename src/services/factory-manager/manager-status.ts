@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { checkQueueStatus } from "../check-queue/check-queue.js";
-import { evaluateScan, storyHash } from "../factory-policy/factory-policy.js";
+import { evaluateScan, HOST_SYNC_REASON, storyHash } from "../factory-policy/factory-policy.js";
 import { resolveWorkerModel } from "../factory-settings/worker-overrides.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
@@ -145,7 +145,8 @@ async function networkWaitStories(manager: Manager, stories: readonly Story[], r
 
 /**
  * Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds, and Stories whose
- * network Thread can resume. `resumeThreadId` is the Thread of a resume: its Story is not skipped for it.
+ * network Thread can resume. `resumeThreadId` is the Thread of a resume: its Story is not skipped for it. A Story
+ * whose remote Thread is not synchronized keeps the reason `waiting for host sync`, because that rule comes first.
  */
 export async function scan(
   manager: Manager,
@@ -156,12 +157,16 @@ export async function scan(
   const stages = await classifiedStages(manager);
   const state = await readFactoryState(manager.paths.root, manager.ctx);
 
-  const policy = evaluateScan(state, { stories, stages, maxActive });
+  const { holds, hostSync } = getState(manager);
+  const policy = evaluateScan(state, { stories, stages, maxActive, hostSync: [...hostSync] });
   const cancelled = (state.nativeCancelled ?? {}) as CancelledStories;
-  const { holds } = getState(manager);
   const networkWaits = await networkWaitStories(manager, stories, resumeThreadId);
 
   const decisions = policy.decisions.map((decision) => {
+    if (decision.reason === HOST_SYNC_REASON) {
+      return decision;
+    }
+
     const story = stories.find((s) => s.id === decision.story);
     const reason =
       skipReason(decision, story, cancelled, holds.get(decision.story)) ??

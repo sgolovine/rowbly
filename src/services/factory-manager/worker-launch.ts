@@ -7,7 +7,7 @@ import { listStages } from "../stage/stage.js";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { getStory, type Story, searchStories, updateStory } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
-import { getThread, type ThreadRecord, type WorkerResult } from "../thread/thread.js";
+import { getThread, LOCAL_HOST, type ThreadRecord, type WorkerResult } from "../thread/thread.js";
 import {
   changeThread,
   getState,
@@ -23,11 +23,15 @@ import {
 } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
 import { workerFailure } from "./network-wait.js";
+import { executorFor, hostSynced, waitForHostSync } from "./remote-dispatch.js";
 import { configuredChecks } from "./worker-checks.js";
 import {
+  type RunLocation,
+  type RunStop,
   type WorkerActivity,
   type WorkerControl,
   type WorkerEvents,
+  type WorkerExecutor,
   type WorkerFailure,
   type WorkerLaunch,
   type WorkerSession,
@@ -43,7 +47,7 @@ interface LaunchState {
 
 type LaunchStore = Store<LaunchState>;
 
-/** Checks the reserved worker Thread, runs it through the executor and frees the slot. */
+/** Checks the reserved worker Thread, runs it through the executor of its host and frees the slot. */
 export async function launchWorker(manager: Manager, id: string): Promise<void> {
   const launch = new Store<LaunchState>({ id });
 
@@ -51,10 +55,50 @@ export async function launchWorker(manager: Manager, id: string): Promise<void> 
     const request = await checkedLaunch(manager, launch);
 
     if (request) {
-      await manager.executor.launch(request, workerEvents(manager, launch, request));
+      await runOnHost(manager, launch, request);
     }
   } finally {
     await releaseWorker(manager, id);
+  }
+}
+
+/** Runs the worker with the executor of the host of its Thread. */
+async function runOnHost(manager: Manager, launch: LaunchStore, request: WorkerLaunch): Promise<void> {
+  const host = request.thread.host ?? LOCAL_HOST;
+  const events = workerEvents(manager, launch, request);
+
+  if (host === LOCAL_HOST) {
+    await manager.executor.launch(request, events);
+    return;
+  }
+
+  try {
+    await runRemote(manager, request, events, executorFor(manager, host));
+  } catch (error) {
+    await failWorker(manager, launch.current, { error, sessionOpened: false });
+  }
+}
+
+/**
+ * Runs a remote worker. Its Story waits for the host sync until the executor applied the outbox of the host and sent
+ * the end of the run, or until its wait ended.
+ */
+async function runRemote(
+  manager: Manager,
+  request: WorkerLaunch,
+  events: WorkerEvents,
+  executor: WorkerExecutor,
+): Promise<void> {
+  const { thread, story } = request;
+
+  // A stop or a cancel must reach the host also before the session opens.
+  setState(manager, (state) => attachControl(state.active, thread.id, workerControl(executor, thread.id)));
+  waitForHostSync(manager, story.id);
+
+  try {
+    await executor.launch(request, events);
+  } finally {
+    hostSynced(manager, story.id);
   }
 }
 
@@ -99,12 +143,14 @@ function workerEvents(manager: Manager, launch: LaunchStore, request: WorkerLaun
   return {
     worktreeReady: (worktree) => serial(manager, () => assignWorktree(manager, id, intent, story.id, worktree)),
     sessionOpened: (session) => openedSession(manager, launch, intent, story.id, session),
-    message: (worktree, model) => buildWorkerPrompt(manager, id, intent, story, worktree, model),
+    message: (worktree, model, location) =>
+      buildWorkerPrompt(manager, { id, intent, story, worktree, model, location }),
     prompted: (model) => recordPromptSuccess(manager, model),
     activity: (activity) => serial(manager, () => persistActivity(manager, id, activity)),
     resultReported: (result) => serial(manager, () => recordResult(manager, id, result)),
     stopping: () => getState(manager).stopping,
-    completed: (result) => serial(manager, () => completeWorker(manager, id, intent, story.id, result)),
+    completed: (result, stop) =>
+      serial(manager, () => completeWorker(manager, { id, intent, storyId: story.id, result, stop })),
     failed: (failure) => failWorker(manager, launch.current, failure),
     finished: (activity) => serial(manager, () => persistFinalActivity(manager, id, activity)),
   };
@@ -147,7 +193,7 @@ async function openedSession(
   const { id } = launch.current;
 
   launch.update(() => ({ provider: session.model.provider }));
-  setState(manager, (state) => attachControl(state.active, id, workerControl(manager.executor, id)));
+  setState(manager, (state) => attachControl(state.active, id, workerControl(executorFor(manager, intent.host), id)));
   manager.deps.onModel?.("worker", session.model);
 
   await serial(manager, () => startWorkerRun(manager, id, intent, storyId, session));
@@ -195,14 +241,25 @@ async function startWorkerRun(
   await changeThread(manager, id, "running", { model: session.model, session: { id, file: session.file } });
 }
 
-async function buildWorkerPrompt(
-  manager: Manager,
-  id: string,
-  intent: ThreadRecord,
-  story: Story,
-  worktreePath: string,
-  model: ModelChoice,
-): Promise<string> {
+/** The facts of one worker message. Without a location, the message uses the canonical Project and the daemon. */
+interface PromptRequest {
+  readonly id: string;
+  readonly intent: ThreadRecord;
+  readonly story: Story;
+  readonly worktree: string;
+  readonly model: ModelChoice;
+  readonly location?: RunLocation;
+}
+
+/** Gives the place of a local run: the canonical Project root, the shim of the daemon and the Project write lock. */
+async function localLocation(manager: Manager): Promise<RunLocation> {
+  const { root } = manager.paths;
+
+  return { root, shim: manager.deps.shim, lock: await projectWriteLockPath(root), checks: true };
+}
+
+async function buildWorkerPrompt(manager: Manager, request: PromptRequest): Promise<string> {
+  const { id, intent, story, model } = request;
   const stage = (await listStages(manager.ctx)).find((s) => s.key === intent.stage);
 
   if (stage && getState(manager).promptClaims.get(id) !== promptHash(stage.prompt)) {
@@ -213,18 +270,19 @@ async function buildWorkerPrompt(
     throw new ConflictError("Stage is disabled");
   }
 
-  const { root } = manager.paths;
+  const location = request.location ?? (await localLocation(manager));
+  const checks = location.checks ? configuredChecks(manager) : [];
 
   return workerMessage(manager.paths, {
     story: story.id,
     stage: story.stage,
     stagePrompt: stage.prompt,
-    root,
-    worktree: worktreePath,
+    root: location.root,
+    worktree: request.worktree,
     model: `${model.provider}/${model.modelId}`,
-    shim: manager.deps.shim,
-    lock: await projectWriteLockPath(root),
-    checks: configuredChecks(manager).map((c) => ({ key: c.key, label: c.label, narrow: !!c.narrowCommand })),
+    shim: location.shim,
+    lock: location.lock,
+    checks: checks.map((c) => ({ key: c.key, label: c.label, narrow: !!c.narrowCommand })),
     upstream: await readUpstream(manager, story),
   });
 }
@@ -258,14 +316,25 @@ async function persistFinalActivity(manager: Manager, id: string, activity: Work
   await changeThread(manager, id, thread.status, activity);
 }
 
-async function completeWorker(
-  manager: Manager,
-  id: string,
-  intent: ThreadRecord,
-  storyId: string,
-  reported: WorkerResult | undefined,
-): Promise<void> {
-  if (["interrupted", "cancelled"].includes((await getThread(id, manager.ctx)).status)) {
+/** The end of one worker run. `stop` is set when a stop or a cancel on a worker host ended the run. */
+interface Completion {
+  readonly id: string;
+  readonly intent: ThreadRecord;
+  readonly storyId: string;
+  readonly result: WorkerResult | undefined;
+  readonly stop?: RunStop;
+}
+
+async function completeWorker(manager: Manager, completion: Completion): Promise<void> {
+  const { id, intent, storyId, result: reported, stop } = completion;
+  const thread = await getThread(id, manager.ctx);
+
+  if (["interrupted", "cancelled"].includes(thread.status)) {
+    return;
+  }
+
+  if (stop) {
+    await stopWorkerThread(manager, thread, reported, stop);
     return;
   }
 
@@ -285,6 +354,19 @@ async function completeWorker(
   await changeThread(manager, id, stopping ? "interrupted" : "completed", {
     result: { ...result, problems },
     resumable: stopping,
+  });
+}
+
+/** A run that a stop ends is `interrupted`, and a run that a cancel ends is `cancelled`. Both can resume. */
+async function stopWorkerThread(
+  manager: Manager,
+  thread: ThreadRecord,
+  result: WorkerResult | undefined,
+  stop: RunStop,
+): Promise<void> {
+  await changeThread(manager, thread.id, stop === "cancelled" ? "cancelled" : "interrupted", {
+    resumable: !!thread.session.file,
+    ...(result ? { result } : {}),
   });
 }
 
