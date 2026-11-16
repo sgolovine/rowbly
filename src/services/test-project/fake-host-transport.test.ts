@@ -20,6 +20,18 @@ describe("fake host transport", () => {
     expect([...(await transport.bytes(COMMAND, {})).bytes]).toEqual([1, 2, 3]);
   });
 
+  it("records the exact bytes of each upload and gives the result of the handler", async () => {
+    const data = Buffer.from([0, 1, 2, 255, 10]);
+    const transport = createFakeHostTransport({ upload: () => ({ exitCode: 2, stderr: "full" }) });
+    const result = await transport.upload(["dd", "of=a.tgz"], data);
+    data[0] = 9;
+    expect(result).toEqual({ exitCode: 2, stderr: "full" });
+    expect(transport.uploads).toHaveLength(1);
+    expect(transport.uploads[0]?.command).toEqual(["dd", "of=a.tgz"]);
+    expect([...(transport.uploads[0]?.data ?? [])]).toEqual([0, 1, 2, 255, 10]);
+    await expect(createFakeHostTransport().upload(["dd"], data)).resolves.toEqual({ exitCode: 0, stderr: "" });
+  });
+
   it("validates the remote command as the SSH transport does", async () => {
     await expect(createFakeHostTransport().request(["rowbly; id"], {})).rejects.toBeInstanceOf(ValidationError);
   });

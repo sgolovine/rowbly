@@ -2,17 +2,16 @@ import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import type { RowblyError } from "../errors/errors.js";
 import { Store } from "../store/store.js";
 import { classifySshExit, HostProtocolError, HostTimeoutError, HostUnreachableError } from "./host-errors.js";
-import { encodeFrame } from "./json-lines.js";
 
 /** The maximum number of bytes of stderr that a call keeps. SSH and Rowbly write short errors. */
 export const STDERR_LIMIT = 64 * 1024;
 
-/** One SSH process with one JSON value on stdin. */
+/** One SSH process with the bytes of `stdin`: one JSON line, or the exact bytes of an upload. */
 export interface SshCall {
   readonly executable: string;
   readonly args: readonly string[];
   readonly target: string;
-  readonly input: unknown;
+  readonly stdin: string | Buffer;
   readonly timeoutMs: number;
   readonly limit: number;
 }
@@ -148,11 +147,11 @@ function startCall(call: SshCall, resolve: (output: SshOutput) => void, reject: 
   child.stdin.on("error", () => undefined);
   child.on("error", (error) => spawnFailed(running, error));
   child.on("close", (exitCode) => finishCall(running, exitCode));
-  child.stdin.end(encodeFrame(call.input));
+  child.stdin.end(call.stdin);
 }
 
 /**
- * Runs one SSH process. It writes the input on stdin as one JSON line, and collects stdout up to the limit.
+ * Runs one SSH process. It writes the bytes of `stdin`, and collects stdout up to the limit.
  * It never uses a shell. It rejects with a transport error, and resolves with the output of the remote command.
  */
 export function runSshCall(call: SshCall): Promise<SshOutput> {

@@ -7,6 +7,7 @@ import type {
   HostTransport,
   RemoteCommand,
   RequestResult,
+  UploadResult,
 } from "../host-transport/host-transport.js";
 import { validateCommand } from "../host-transport/ssh-transport.js";
 import { Store, withMember, withoutMember } from "../store/store.js";
@@ -25,6 +26,8 @@ export interface FakeRemoteChannel {
 export interface FakeHostHandlers {
   readonly request?: (command: RemoteCommand, input: unknown) => RequestResult | Promise<RequestResult>;
   readonly bytes?: (command: RemoteCommand, input: unknown) => BytesResult | Promise<BytesResult>;
+  /** Receives the remote command and a copy of the uploaded bytes. */
+  readonly upload?: (command: RemoteCommand, data: Buffer) => UploadResult | Promise<UploadResult>;
   /** Starts the host side of a channel. It can return a listener for the frames of the main machine. */
   readonly channel?: (command: RemoteCommand, remote: FakeRemoteChannel) => ((frame: unknown) => void) | undefined;
 }
@@ -37,6 +40,14 @@ export interface FakeHostTransport extends HostTransport {
   reconnect(): void;
   readonly connected: boolean;
   readonly openChannels: number;
+  /** Each upload, in order, with a copy of its exact bytes. */
+  readonly uploads: readonly FakeUpload[];
+}
+
+/** One upload that the fake host received. */
+export interface FakeUpload {
+  readonly command: RemoteCommand;
+  readonly data: Buffer;
 }
 
 interface FakeChannelState {
@@ -52,6 +63,7 @@ interface FakeChannel {
 
 interface FakeState {
   readonly connected: boolean;
+  readonly uploads: readonly FakeUpload[];
   readonly channels: ReadonlySet<FakeChannel>;
 }
 
@@ -101,6 +113,16 @@ async function fakeBytes(fake: Fake, command: RemoteCommand, input: unknown): Pr
   });
 
   return { ...result, bytes: Buffer.from(result.bytes) };
+}
+
+async function fakeUpload(fake: Fake, command: RemoteCommand, data: Buffer): Promise<UploadResult> {
+  checkConnected(fake, command);
+
+  const upload: FakeUpload = { command: [...command], data: Buffer.from(data) };
+
+  fake.state.update((state) => ({ uploads: [...state.uploads, upload] }));
+
+  return (await fake.handlers.upload?.(command, Buffer.from(data))) ?? { exitCode: 0, stderr: "" };
 }
 
 function endFakeChannel(fake: Fake, channel: FakeChannel, end: ChannelEnd): void {
@@ -171,11 +193,12 @@ function disconnect(fake: Fake): void {
 
 /** Makes a fake transport. A handler that is not given answers with an empty result. */
 export function createFakeHostTransport(handlers: FakeHostHandlers = {}): FakeHostTransport {
-  const fake: Fake = { handlers, state: new Store<FakeState>({ connected: true, channels: new Set() }) };
+  const fake: Fake = { handlers, state: new Store<FakeState>({ connected: true, uploads: [], channels: new Set() }) };
 
   return {
     request: (command, input) => fakeRequest(fake, command, input),
     bytes: (command, input) => fakeBytes(fake, command, input),
+    upload: (command, data) => fakeUpload(fake, command, data),
     channel: (command, channelHandlers) => fakeChannel(fake, command, channelHandlers),
     disconnect: () => disconnect(fake),
     reconnect: () => fake.state.update(() => ({ connected: true })),
@@ -184,6 +207,9 @@ export function createFakeHostTransport(handlers: FakeHostHandlers = {}): FakeHo
     },
     get openChannels() {
       return fake.state.current.channels.size;
+    },
+    get uploads() {
+      return fake.state.current.uploads;
     },
   };
 }

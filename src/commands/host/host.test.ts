@@ -7,6 +7,26 @@ import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
 
+// The command must never use real SSH or npm in a test. The fake host has Node and the same Rowbly build.
+// The factory cannot import the fake transport, because the fake transport imports this mocked module.
+vi.mock("../../services/host-transport/ssh-transport.js", async (original) => {
+  const actual = await original<typeof import("../../services/host-transport/ssh-transport.js")>();
+  const bytes = async (command: readonly string[]) => ({
+    exitCode: 0,
+    bytes: Buffer.from(command[0] === "node" ? "v22.19.0\n" : "0.18.0\n"),
+    stderr: "",
+  });
+  const fail = async () => {
+    throw new Error("The host command test uses only bytes calls.");
+  };
+  return { ...actual, createSshTransport: () => ({ bytes, request: fail, upload: fail, channel: fail }) };
+});
+
+vi.mock("../../services/host-install/local-build.js", async (original) => {
+  const actual = await original<typeof import("../../services/host-install/local-build.js")>();
+  return { ...actual, localBuild: async () => ({ id: "0.18.0", version: "0.18.0", released: true }) };
+});
+
 describe("host commands", () => {
   const home = useTempDir();
   const outside = useTempDir();
@@ -26,10 +46,35 @@ describe("host commands", () => {
     const result = await cli("--json", "host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
 
     expect(result.exitCode).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({ id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true });
+    expect(JSON.parse(result.stdout)).toEqual({
+      id: "mini",
+      ssh: "user@mini.lan",
+      maxWorkers: 2,
+      enabled: true,
+      install: {
+        state: "ready",
+        buildId: "0.18.0",
+        localVersion: "0.18.0",
+        remoteVersion: "0.18.0",
+        remoteExecutable: ".local/share/rowbly/versions/0.18.0/node_modules/.bin/rowbly",
+        installed: false,
+        nodeVersion: "v22.19.0",
+        stderr: "",
+      },
+    });
     expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts).toEqual([
       { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true },
     ]);
+  });
+
+  it("host add prints the host and the Rowbly build on the host as text", async () => {
+    const result = await cli("host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toBe(
+      "Added worker host mini  user@mini.lan  2 worker(s)  on\n" +
+        "Rowbly 0.18.0 found at .local/share/rowbly/versions/0.18.0/node_modules/.bin/rowbly",
+    );
   });
 
   it("host list prints [] without hosts, then the hosts in the order of the file", async () => {

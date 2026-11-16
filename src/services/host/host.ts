@@ -1,4 +1,9 @@
 import { ConflictError, NotFoundError } from "../errors/errors.js";
+import { ensureHostVersion, type HostVersionResult } from "../host-install/host-install.js";
+import { HostInstallFailedError } from "../host-install/host-install-errors.js";
+import { type LocalBuild, localBuild } from "../host-install/local-build.js";
+import type { HostTransport } from "../host-transport/host-transport.js";
+import { createSshTransport } from "../host-transport/ssh-transport.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { listKnownProjects } from "../known-project/known-project.js";
 import { listThreads } from "../thread/thread-list.js";
@@ -8,6 +13,17 @@ import type { ServiceContext } from "../workspace/workspace.js";
 import { type Host, type HostInput, hostView, rcHosts, validateHostInput } from "./host-rules.js";
 
 export type { Host, HostInput } from "./host-rules.js";
+
+/** The connection and the build that `addHost` uses. Tests give a fake transport and a fake build. */
+export interface AddHostDeps {
+  readonly transportFor?: (target: string) => HostTransport;
+  readonly build?: () => Promise<LocalBuild>;
+}
+
+/** A recorded host with the result of the install of the Rowbly version. */
+export interface AddedHost extends Host {
+  readonly install: HostVersionResult;
+}
 
 export interface RemoveHostInput {
   readonly id: string;
@@ -34,23 +50,50 @@ export async function listHosts(ctx: ServiceContext = {}): Promise<Host[]> {
   return rcHosts(await readRc(file), file).map(hostView);
 }
 
-/** Adds a worker host at the end of the list. A new host is on. */
-export async function addHost(input: HostInput, ctx: ServiceContext = {}): Promise<Host> {
+function assertNewHost(hosts: readonly { readonly id: string }[], id: string): void {
+  if (hosts.some((host) => host.id === id)) {
+    throw new ConflictError(`Host "${id}" exists`, { hint: "Remove the host first, or use a different ID." });
+  }
+}
+
+/** Checks Node on the host and installs the Rowbly build there. It throws when the host cannot run the build. */
+async function installOnHost(input: HostInput, deps: AddHostDeps): Promise<HostVersionResult> {
+  const transport = (deps.transportFor ?? ((target) => createSshTransport({ target })))(input.ssh);
+  const build = await (deps.build ?? localBuild)();
+  const install = await ensureHostVersion(transport, { build });
+
+  if (install.state !== "ready") {
+    throw new HostInstallFailedError(`Rowbly ${install.buildId} could not be installed on ${input.ssh}.`, {
+      details: { install },
+      hint: "Make sure that npm works on the host in a non-interactive SSH session, then add the host again.",
+    });
+  }
+
+  return install;
+}
+
+/**
+ * Adds a worker host at the end of the list. A new host is on. It checks Node and installs the exact Rowbly build
+ * on the host first. When that fails, the file does not change.
+ */
+export async function addHost(input: HostInput, ctx: ServiceContext = {}, deps: AddHostDeps = {}): Promise<AddedHost> {
   const file = rcPath(ctx);
+
+  validateHostInput(input);
+  assertNewHost(rcHosts(await readRc(file), file), input.id);
+
+  const install = await installOnHost(input, deps);
+  // The install can take minutes, so read the file again to keep a change of a different process.
   const rc = await readRc(file);
   const hosts = rcHosts(rc, file);
 
-  validateHostInput(input);
-
-  if (hosts.some((host) => host.id === input.id)) {
-    throw new ConflictError(`Host "${input.id}" exists`, { hint: "Remove the host first, or use a different ID." });
-  }
+  assertNewHost(hosts, input.id);
 
   const host: Host = { id: input.id, ssh: input.ssh, maxWorkers: input.maxWorkers, enabled: true };
 
   await writeRc(file, { ...rc, hosts: [...hosts, host] });
 
-  return host;
+  return { ...host, install };
 }
 
 /** Removes a worker host. It refuses while a Thread of a known Project is active on the host. */

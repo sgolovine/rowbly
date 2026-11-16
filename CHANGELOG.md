@@ -30,6 +30,7 @@ This file records the changes to Rowbly that users can see.
 - Added: When the `ROWBLY_OUTBOX` and `ROWBLY_THREAD_ID` environment variables are set, `rowbly add-attachment` and `rowbly remove-attachment` also add one line to `$ROWBLY_OUTBOX/outbox.jsonl`, and each added PNG is kept in `$ROWBLY_OUTBOX/blobs/`. The new hidden `rowbly host blob <sha256>` command writes one of these PNG files to stdout. (ROW-91)
 - Added: The new `placement` key in the `factory` section of `.rowbly/rowbly.config.json` and the new `rowbly factory configure --placement <policy>` flag set how the factory selects the host of a worker: `prefer-local` (the default), `most-free` or `prefer-remote`. `rowbly factory status --json` has the new `hosts` list with the worker slots of each host, and the supervisor can request a host for a worker. (ROW-95)
 - Added: In the Story list of the TUI, you can select more than one Story. Push `space` on a Story, move the cursor with `↑/↓` and push `space` again, or use `shift+click`, then push `shift+↑/↓` to move all selected Stories to the previous or next Stage, and push `esc` to clear the selection. (ROW-106)
+- Added: `rowbly host add` now checks that the host has Node 22.19.0 or later, and installs the exact Rowbly version of the main machine in `~/.local/share/rowbly/versions/<build-id>/` on the host when that version is missing. If the check or the install fails, `host add` fails and does not change `~/.rowblyrc.json`, and the JSON result has the new `install` object. (ROW-86)
 
 ### 0.18.0
 
