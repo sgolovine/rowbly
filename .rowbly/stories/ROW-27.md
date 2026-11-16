@@ -2,6 +2,7 @@
 title: Make getStory read one Story file instead of the whole folder twice
 stage: DONE
 position: 27
+uid: 8bf2e9d7-18d7-4cda-8fc8-bf5a2bb37350
 createdAt: 2026-11-14T21:06:40.000Z
 updatedAt: 2026-11-14T21:20:52.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-27
