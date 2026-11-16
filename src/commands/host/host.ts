@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { resolve } from "node:path";
+import { homedir } from "node:os";
+import { dirname, resolve } from "node:path";
 import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
 import { ValidationError } from "../../services/errors/errors.js";
@@ -16,15 +17,18 @@ import {
 import { runHostAgent } from "../../services/host-agent/host-agent.js";
 import { submitHostCommand } from "../../services/host-agent/host-agent-control.js";
 import { startHostAgent } from "../../services/host-agent/host-agent-launch.js";
-import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
+import { ensurePrivateDir, hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
 import { runHostAttach } from "../../services/host-agent/host-attach.js";
+import { createHostRunner } from "../../services/host-agent/host-runner.js";
 import { type CheckItem, checkHost, type HostCheck } from "../../services/host-check/host-check.js";
 import { type HostLogin, hostLogin } from "../../services/host-check/host-login.js";
 import { type UnusedHost, type UsedHost, unuseHost, useHost } from "../../services/host-project/host-project.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { type LaunchDescriptor, writeCliShim } from "../factory-runner/cli-shim.js";
 import { run, runBytes, runQuiet, runWithoutContext, setExitCode } from "../output/output.js";
+import { registerHostRunCommands } from "./host-run-commands.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
@@ -182,12 +186,23 @@ function abortOnSignal(controller: AbortController): () => void {
   return () => controller.abort();
 }
 
+/** Writes the CLI shim of the workers and makes the runner of the agent. */
+async function hostRunner(projectId: string, launch: LaunchDescriptor) {
+  const home = homedir();
+  const paths = hostAgentPaths(projectId, home);
+
+  await ensurePrivateDir(dirname(paths.bin));
+
+  return createHostRunner({ paths, home, shim: await writeCliShim(launch, paths.bin) });
+}
+
 /** Runs the host agent of the Project. `SIGTERM` and `SIGINT` stop it. */
-async function serveAgent(projectId: string | undefined) {
+async function serveAgent(projectId: string | undefined, launch: LaunchDescriptor) {
   if (projectId === undefined) {
     throw new ValidationError("A project id is necessary without --detach");
   }
 
+  const runner = await hostRunner(projectId, launch);
   const controller = new AbortController();
   const stop = abortOnSignal(controller);
 
@@ -195,7 +210,7 @@ async function serveAgent(projectId: string | undefined) {
   process.on("SIGINT", stop);
 
   try {
-    return await runHostAgent({ projectId, signal: controller.signal });
+    return await runHostAgent({ projectId, runner, signal: controller.signal });
   } finally {
     process.off("SIGTERM", stop);
     process.off("SIGINT", stop);
@@ -216,7 +231,7 @@ function registerHostServeCommands(program: Command, launch: FactoryLaunch): voi
           )
         : run(
             command,
-            () => serveAgent(projectId),
+            () => serveAgent(projectId, launch),
             (result) => JSON.stringify(result),
           ),
     );
@@ -230,6 +245,8 @@ function registerHostServeCommands(program: Command, launch: FactoryLaunch): voi
         (receipt) => JSON.stringify(receipt),
       ),
     );
+
+  registerHostRunCommands(program);
 
   program
     .command("attach <project-id>", { hidden: true })

@@ -1,9 +1,11 @@
 import type { CheckSpec } from "../factory-settings/check-settings.js";
 
-/** The shell of a worker: the canonical Project root and the exact Rowbly CLI shim. */
+/** The shell of a worker: the Project root, the exact Rowbly CLI shim and extra variables. */
 export interface WorkerShell {
   readonly root: string;
   readonly shim: string;
+  /** Extra variables, for example `ROWBLY_OUTBOX` and `ROWBLY_THREAD_ID` of a remote worker. */
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 /** Gives the environment of the worker shell. It finds the exact Rowbly CLI shim first on the PATH. */
@@ -13,6 +15,7 @@ export function workerShellEnv(
 ): Record<string, string | undefined> {
   return {
     ...env,
+    ...worker.env,
     PATH: `${worker.shim.slice(0, worker.shim.lastIndexOf("/"))}:${env.PATH ?? ""}`,
     ROWBLY_ROOT: worker.root,
     ROWBLY_CLI: worker.shim,

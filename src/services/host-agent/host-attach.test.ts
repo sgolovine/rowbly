@@ -8,6 +8,7 @@ import { type HostAgentResult, runHostAgent } from "./host-agent.js";
 import { submitHostCommand } from "./host-agent-control.js";
 import { hostAgentPaths } from "./host-agent-paths.js";
 import { runHostAttach } from "./host-attach.js";
+import { type HostRunState, writeHostRun } from "./host-run-state.js";
 import { writeSlotLimit } from "./host-slots.js";
 
 async function waitFor(check: () => boolean, timeoutMs = 10_000): Promise<void> {
@@ -119,5 +120,34 @@ describe("host attach", () => {
     await channel.done;
 
     expect(channel.frames().slice(1)).toEqual([expect.objectContaining({ type: "status", agent: "stopped" })]);
+  });
+
+  it("sends a run frame for each Thread when the channel opens, and a new run frame when the result arrives", async () => {
+    const paths = hostAgentPaths("p1", home.path);
+    const now = new Date().toISOString();
+    const base = { version: 1, requestId: "l1", kind: "launch", startedAt: now, updatedAt: now } as const;
+    const running: HostRunState = { ...base, threadId: "t1", phase: "running" };
+    await writeHostRun(paths, running, true);
+    await writeHostRun(paths, { ...base, threadId: "t2", phase: "ended", endReason: "failed" }, true);
+
+    const channel = attach();
+    const runs = () =>
+      channel.frames().filter((frame) => (frame as { type: string }).type === "run") as {
+        run: HostRunState;
+      }[];
+    await waitFor(() => runs().length >= 2);
+    expect(runs().map((frame) => frame.run.threadId)).toEqual(["t1", "t2"]);
+
+    const result = { outcome: "complete", summary: "Done", blockers: [], problems: [] };
+    await writeHostRun(paths, { ...running, phase: "ended", result, endReason: "completed" }, true);
+    await waitFor(() => runs().length >= 3);
+    channel.input.end();
+    await channel.done;
+
+    expect(runs()[2]).toEqual({
+      type: "run",
+      run: expect.objectContaining({ threadId: "t1", result, endReason: "completed" }),
+    });
+    expect(runs()).toHaveLength(3);
   });
 });

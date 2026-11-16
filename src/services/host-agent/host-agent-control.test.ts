@@ -82,6 +82,9 @@ describe("host agent commands", () => {
       "bad-version": JSON.stringify({ version: 2, id: "bad-version", type: "stop" }),
       "bad-launch": JSON.stringify({ version: 1, id: "bad-launch", type: "launch", threadId: "a/b" }),
       "bad-payload": JSON.stringify({ version: 1, id: "bad-payload", type: "launch", threadId: "t1", payload: [] }),
+      "bad-resume": JSON.stringify({ version: 1, id: "bad-resume", type: "resume" }),
+      "bad-stop-thread": JSON.stringify({ version: 1, id: "bad-stop-thread", type: "stop-thread", threadId: "" }),
+      "bad-cancel-thread": JSON.stringify({ version: 1, id: "bad-cancel-thread", type: "cancel-thread" }),
       "too-large": JSON.stringify({ version: 1, id: "too-large", type: "stop", pad: "x".repeat(HOST_COMMAND_LIMIT) }),
     };
     for (const [id, text] of Object.entries(files)) await writeFile(join(paths().control, `${id}.json`), text);
@@ -139,5 +142,16 @@ describe("host agent commands", () => {
     await processHostCommands(paths(), "token-1", execute);
 
     expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts the Thread commands with a valid threadId", async () => {
+    for (const type of ["launch", "resume", "stop-thread", "cancel-thread"]) {
+      await submitHostCommand(paths(), JSON.stringify({ version: 1, id: `c-${type}`, type, threadId: "t1" }));
+    }
+    const types: string[] = [];
+
+    await processHostCommands(paths(), "token-1", async (command) => void types.push(command.type));
+
+    expect(types.toSorted()).toEqual(["cancel-thread", "launch", "resume", "stop-thread"]);
   });
 });

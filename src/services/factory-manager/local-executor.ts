@@ -26,14 +26,20 @@ type SessionEvent = Parameters<Parameters<PiSession["session"]["subscribe"]>[0]>
 
 /** The dependencies of the local executor. It gets no full manager. */
 export interface LocalExecutorInput {
-  readonly paths: ProjectPaths;
+  /** `root` goes to `ROWBLY_ROOT` of the worker shell. The session files are below `runtimeDir`. */
+  readonly paths: Pick<ProjectPaths, "root" | "runtimeDir">;
   readonly ctx: ServiceContext;
   readonly runtime: ModelRuntime;
   readonly agentDir: string;
   readonly shim: string;
-  readonly checks: CheckQueue;
-  /** Gives the current factory settings. */
-  readonly settings: () => FactorySettings;
+  /** Without a check queue, a worker gets no check tools and no check gate. */
+  readonly checks?: CheckQueue;
+  /** Gives the current factory settings. Without it, each Thread must have a model. */
+  readonly settings?: () => FactorySettings;
+  /** The Git root of the worktrees. The default is `paths.root`. A worker host gives its clone. */
+  readonly gitRoot?: string;
+  /** Extra variables of the worker shell. */
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 /** The controls of the open sessions, by Thread ID. */
@@ -125,7 +131,8 @@ async function launchLocal(executor: LocalExecutor, launch: WorkerLaunch, events
 }
 
 async function runWorker(executor: LocalExecutor, run: RunStore, launch: WorkerLaunch, events: WorkerEvents) {
-  const worktree = await prepareWorkerWorktree(executor.input.paths.root, worktreeStory(launch));
+  const { input } = executor;
+  const worktree = await prepareWorkerWorktree(input.gitRoot ?? input.paths.root, worktreeStory(launch));
 
   await events.worktreeReady(worktree);
 
@@ -162,18 +169,14 @@ async function openWorkerSession(
 ): Promise<OpenedSession> {
   const { input } = executor;
   const resultTool = createResultTool((result) => recordResult(run, events, result));
-  const checks = workerChecks(
-    { queue: input.checks, ctx: input.ctx, root: input.paths.root, shim: input.shim, settings: input.settings },
-    launch.thread,
-    worktreePath,
-  );
+  const checks = executorChecks(input, launch, worktreePath);
   const opened = await openFactorySession({
     thread: launch.thread,
     runtimeDir: input.paths.runtimeDir,
     runtime: input.runtime,
     agentDir: input.agentDir,
-    choice: launch.thread.model ?? input.settings().workerModel,
-    worker: { cwd: worktreePath, root: input.paths.root, shim: input.shim, checks: checks.checks },
+    choice: launch.thread.model ?? input.settings?.().workerModel,
+    worker: { cwd: worktreePath, root: input.paths.root, shim: input.shim, checks: checks.checks, env: input.env },
     tools: [resultTool, ...checks.tools],
   });
 
@@ -183,6 +186,21 @@ async function openWorkerSession(
   }));
 
   return opened;
+}
+
+/** Gives the check tools of a worker. An executor without a check queue or settings gives none. */
+function executorChecks(input: LocalExecutorInput, launch: WorkerLaunch, worktreePath: string) {
+  const { checks: queue, settings } = input;
+
+  if (!queue || !settings) {
+    return { tools: [], checks: [] };
+  }
+
+  return workerChecks(
+    { queue, ctx: input.ctx, root: input.paths.root, shim: input.shim, settings },
+    launch.thread,
+    worktreePath,
+  );
 }
 
 async function recordResult(run: RunStore, events: WorkerEvents, result: WorkerResult): Promise<void> {
@@ -271,7 +289,9 @@ async function finishWorker(executor: LocalExecutor, run: WorkerRun, events: Wor
   try {
     clearInterval(run.activityTimer);
     run.unsubscribe?.();
-    await cancelThreadChecks(executor.input.checks, run.id);
+    if (executor.input.checks) {
+      await cancelThreadChecks(executor.input.checks, run.id);
+    }
 
     if (run.handle) {
       await events.finished(activityOf(run, finalUsage(run.handle)));
