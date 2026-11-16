@@ -77,4 +77,16 @@ describe("worker shell", () => {
       ROWBLY_CLI: "/r/bin/rowbly",
     });
   });
+
+  it("adds the extra variables of a remote worker shell", () => {
+    const env = { ROWBLY_OUTBOX: "/a/outbox", ROWBLY_THREAD_ID: "t1" };
+    expect(workerShellEnv({ root: "/copy", shim: "/a/bin/rowbly", env }, { PATH: "/usr/bin", HOME: "/h" })).toEqual({
+      PATH: "/a/bin:/usr/bin",
+      HOME: "/h",
+      ROWBLY_ROOT: "/copy",
+      ROWBLY_CLI: "/a/bin/rowbly",
+      ROWBLY_OUTBOX: "/a/outbox",
+      ROWBLY_THREAD_ID: "t1",
+    });
+  });
 });

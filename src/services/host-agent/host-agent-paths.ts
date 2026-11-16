@@ -1,13 +1,16 @@
 import { chmod, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { HOST_ROOT } from "../host-install/host-install.js";
+import { remoteWorktreesDir } from "../host-project/host-paths.js";
 
 /** A project id is a dash-case token of 1 to 64 characters. The main machine makes it. */
 const PROJECT_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 const PROJECT_ID_LIMIT = 64;
+
+const STORY_ID = /^[A-Z][A-Z0-9]*-\d+$/;
 
 /** The private runtime files of the host agent of one Project. */
 export interface HostAgentPaths {
@@ -21,6 +24,47 @@ export interface HostAgentPaths {
   readonly receipts: string;
   readonly outbox: string;
   readonly logs: string;
+  /** The folder of each Thread: `threads/<thread-id>/`. */
+  readonly threads: string;
+  /** The runtime folder of the local executor. The session files are in `runtime/sessions/<thread-id>/`. */
+  readonly runtime: string;
+  /** The PNG cache of the Project, by attachment id. */
+  readonly attachments: string;
+  /** The CLI shim of the workers. */
+  readonly bin: string;
+}
+
+/** The files of one Thread on the host. */
+export interface ThreadPaths {
+  readonly dir: string;
+  /** The copy root. It contains `.rowbly/`. */
+  readonly copy: string;
+  /** The prepared launch data. */
+  readonly launch: string;
+  /** The run state. */
+  readonly run: string;
+  /** The `flock` file of the worker command prefix. */
+  readonly lock: string;
+}
+
+/** The input of `hostRunPaths`. A relative clone path is relative to the home folder. */
+export interface HostRunInput {
+  readonly home: string;
+  readonly projectId: string;
+  readonly clone: string;
+  readonly threadId: string;
+  readonly storyId: string;
+}
+
+/** The paths of a remote worker run that the worker message gives. */
+export interface HostRunPaths {
+  readonly clone: string;
+  /** The copy root. The worker CLI gets `-C <copy>`. */
+  readonly copy: string;
+  readonly worktree: string;
+  readonly lock: string;
+  readonly shim: string;
+  readonly outbox: string;
 }
 
 /** The files of the machine slots, for all Projects on the host. */
@@ -28,6 +72,22 @@ export interface SlotPaths {
   readonly dir: string;
   readonly limit: string;
   readonly lock: string;
+}
+
+/** True for a request id or a Thread id: `[A-Za-z0-9_-]{1,128}`. */
+export function validRequestId(id: unknown): id is string {
+  return typeof id === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(id);
+}
+
+/** Gives the Thread id, or throws a ValidationError before a path is made from it. */
+export function validateThreadId(threadId: unknown): string {
+  if (!validRequestId(threadId)) {
+    throw new ValidationError("A Thread id must have 1 to 128 characters A-Z, a-z, 0-9, _ or -", {
+      details: { threadId },
+    });
+  }
+
+  return threadId;
 }
 
 /** Gives the project id, or throws a ValidationError before a file is written. */
@@ -60,6 +120,50 @@ export function hostAgentPaths(projectId: string, home: string = homedir()): Hos
     receipts: join(dir, "receipts"),
     outbox: join(dir, "outbox"),
     logs: join(dir, "logs"),
+    threads: join(dir, "threads"),
+    runtime: join(dir, "runtime"),
+    attachments: join(dir, "attachments"),
+    bin: join(dir, "bin", "rowbly"),
+  };
+}
+
+/** Gives the files of one Thread. A bad Thread id gives a ValidationError. */
+export function threadPaths(paths: HostAgentPaths, threadId: string): ThreadPaths {
+  const dir = join(paths.threads, validateThreadId(threadId));
+
+  return {
+    dir,
+    copy: join(dir, "copy"),
+    launch: join(dir, "launch.json"),
+    run: join(dir, "run.json"),
+    lock: join(dir, "write.lock"),
+  };
+}
+
+/** Gives the Story id, or throws a ValidationError before a path is made from it. */
+export function validateStoryId(storyId: unknown): string {
+  if (typeof storyId !== "string" || !STORY_ID.test(storyId)) {
+    throw new ValidationError("Invalid Story ID", { details: { storyId } });
+  }
+
+  return storyId;
+}
+
+/** Gives the absolute paths of a remote worker run on the host. It reads no file. */
+export function hostRunPaths(input: HostRunInput): HostRunPaths {
+  validateStoryId(input.storyId);
+
+  const paths = hostAgentPaths(input.projectId, input.home);
+  const thread = threadPaths(paths, input.threadId);
+  const clone = resolve(input.home, input.clone);
+
+  return {
+    clone,
+    copy: thread.copy,
+    worktree: join(remoteWorktreesDir(clone), input.storyId),
+    lock: thread.lock,
+    shim: paths.bin,
+    outbox: paths.outbox,
   };
 }
 
@@ -79,5 +183,9 @@ export async function ensurePrivateDir(path: string): Promise<void> {
 /** Makes the runtime folder of the Project and its subfolders, each with mode 0700. */
 export async function prepareAgentDirs(paths: HostAgentPaths): Promise<void> {
   await ensurePrivateDir(paths.dir);
-  await Promise.all([paths.control, paths.receipts, paths.outbox, paths.logs].map(ensurePrivateDir));
+  await Promise.all(
+    [paths.control, paths.receipts, paths.outbox, paths.logs, paths.threads, paths.runtime, paths.attachments].map(
+      ensurePrivateDir,
+    ),
+  );
 }

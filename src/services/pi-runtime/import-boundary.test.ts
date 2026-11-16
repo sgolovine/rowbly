@@ -119,6 +119,14 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-slots.js")).resolves.toHaveProperty("acquireSlot");
     await expect(import("../host-agent/host-attach.js")).resolves.toHaveProperty("runHostAttach");
     await expect(import("../host-agent/host-agent-launch.js")).resolves.toHaveProperty("startHostAgent");
+    await expect(import("../host-agent/host-agent-cache.js")).resolves.toHaveProperty("hostCachePut");
+    await expect(import("../host-agent/host-agent-input.js")).resolves.toHaveProperty("readBoundedInput");
+    await expect(import("../host-agent/host-agent-prepare.js")).resolves.toHaveProperty("prepareHostThread");
+    await expect(import("../host-agent/host-clone-update.js")).resolves.toHaveProperty("updateClone");
+    await expect(import("../host-agent/host-run-events.js")).resolves.toHaveProperty("runEvents");
+    await expect(import("../host-agent/host-run-state.js")).resolves.toHaveProperty("readHostRun");
+    await expect(import("../host-agent/host-runner.js")).resolves.toHaveProperty("createHostRunner");
+    await expect(import("../thread-copy/thread-copy.js")).resolves.toHaveProperty("buildThreadCopy");
   });
 
   it("imports the host project service without loading Pi", async () => {

@@ -7,8 +7,9 @@ import type { HostCommand } from "./host-agent-control.js";
 import type { HostAgentPaths } from "./host-agent-paths.js";
 import { acquireSlot, releaseSlot, type SlotKey } from "./host-slots.js";
 
-/** The data of one accepted `launch` that goes to the worker runner. */
+/** The data of one accepted `launch` or `resume` that goes to the worker runner. */
 export interface HostLaunchRequest {
+  readonly kind: "launch" | "resume";
   readonly projectId: string;
   readonly threadId: string;
   readonly requestId: string;
@@ -20,9 +21,11 @@ export interface HostWork {
   readonly ended: Promise<void>;
   /** Asks the work to stop. `ended` resolves when it stopped. */
   readonly stop: () => Promise<void>;
+  /** Asks the work to stop because the Thread is cancelled. Without it, a cancel stops the work. */
+  readonly cancel?: () => Promise<void>;
 }
 
-/** Starts the work of a launch. ROW-92 adds the runner that loads Pi. Tests use a fake runner. */
+/** Starts the work of a launch or a resume. `host-runner.ts` loads Pi. Tests use a fake runner. */
 export interface HostWorkRunner {
   readonly start: (request: HostLaunchRequest) => Promise<HostWork>;
 }
@@ -76,6 +79,7 @@ function startWork(agent: HostAgent, command: HostCommand, threadId: string): Pr
   }
 
   return agent.runner.start({
+    kind: command.type === "resume" ? "resume" : "launch",
     projectId: agent.paths.projectId,
     threadId,
     requestId: command.id,
@@ -117,10 +121,27 @@ async function launch(agent: HostAgent, command: HostCommand): Promise<void> {
   }
 }
 
+/** Stops or cancels the work of the Thread. A Thread without work gives no effect. */
+async function stopThread(agent: HostAgent, threadId: string, cancel: boolean): Promise<void> {
+  const running = agent.store.current.active.get(threadId);
+
+  if (!running) {
+    return;
+  }
+
+  await (cancel && running.work.cancel ? running.work.cancel() : running.work.stop());
+}
+
 /** Runs one command. A `stop` makes the agent start no new work and stop when its work ends. */
 export async function executeCommand(agent: HostAgent, command: HostCommand): Promise<void> {
   if (command.type === "stop") {
     agent.store.update(() => ({ stopping: true }));
+
+    return;
+  }
+
+  if (command.type === "stop-thread" || command.type === "cancel-thread") {
+    await stopThread(agent, command.threadId as string, command.type === "cancel-thread");
 
     return;
   }

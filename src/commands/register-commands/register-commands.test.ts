@@ -31,12 +31,27 @@ const resources = {
     "outbox-ack",
     "serve",
     "submit",
+    "cache-missing",
+    "cache-put",
+    "prepare",
     "attach",
   ],
 };
 
 /** The hidden actions. They do not show in the help of their resource. */
-const hidden = ["run", "watchdog", "blob", "outbox", "outbox-ack", "serve", "submit", "attach"];
+const hidden = [
+  "run",
+  "watchdog",
+  "blob",
+  "outbox",
+  "outbox-ack",
+  "serve",
+  "submit",
+  "attach",
+  "cache-missing",
+  "cache-put",
+  "prepare",
+];
 
 describe("registerCommands", () => {
   const outside = useTempDir();
