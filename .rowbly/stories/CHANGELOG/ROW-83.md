@@ -1,11 +1,11 @@
 ---
 title: Record the host of each worker Thread and attempt
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 2
 createdAt: 2026-11-16T19:45:01.623Z
-updatedAt: 2026-11-16T20:10:50.375Z
+updatedAt: 2026-11-16T20:15:45.888Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-83
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/269
 ---
 
 ## Goal
