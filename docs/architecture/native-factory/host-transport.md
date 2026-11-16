@@ -80,13 +80,15 @@ gives `HOST_VERSION_MISMATCH`. The `details` of the error have `localProtocol`, 
 
 Each error extends `RowblyError`.
 
-| Code                    | Cause                                                                                                                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HOST_UNREACHABLE`      | SSH exit 255 with "Could not resolve hostname", "Connection refused", "No route to host", "Connection timed out", "Connection closed" or a different text. Also when the SSH executable cannot start. |
-| `HOST_AUTH_FAILED`      | SSH exit 255 with "Permission denied" or "Host key verification failed".                                                                                                                              |
-| `HOST_VERSION_MISMATCH` | The hello frame has a different protocol version or Rowbly version.                                                                                                                                   |
-| `HOST_TIMEOUT`          | A call or the hello frame did not complete in its time limit.                                                                                                                                         |
-| `HOST_PROTOCOL`         | A line is not JSON, a line or an output is larger than its limit, or the first frame is not a hello.                                                                                                  |
+| Code                      | Cause                                                                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HOST_UNREACHABLE`        | SSH exit 255 with "Could not resolve hostname", "Connection refused", "No route to host", "Connection timed out", "Connection closed" or a different text. Also when the SSH executable cannot start. |
+| `HOST_AUTH_FAILED`        | SSH exit 255 with "Permission denied" or "Host key verification failed".                                                                                                                              |
+| `HOST_VERSION_MISMATCH`   | The hello frame has a different protocol version or Rowbly version.                                                                                                                                   |
+| `HOST_TIMEOUT`            | A call or the hello frame did not complete in its time limit.                                                                                                                                         |
+| `HOST_PROTOCOL`           | A line is not JSON, a line or an output is larger than its limit, or the first frame is not a hello.                                                                                                  |
+| `HOST_NO_FREE_SLOT`       | The host agent has no free machine slot for a `launch`. See [host-agent.md](host-agent.md#machine-limit).                                                                                             |
+| `HOST_WORKER_UNAVAILABLE` | The host agent has no worker runner for a `launch`. See [host-agent.md](host-agent.md#worker-runner).                                                                                                 |
 
 ## Tests
 

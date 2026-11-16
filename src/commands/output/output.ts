@@ -87,6 +87,20 @@ export async function runBytes(command: Command, call: () => Promise<Uint8Array>
   }
 }
 
+/**
+ * Runs a service call that writes its own output, for example a channel of frames. It prints nothing more. Errors
+ * are printed as in `run`.
+ */
+export async function runQuiet(command: Command, call: () => Promise<void>): Promise<void> {
+  const { json } = command.optsWithGlobals<{ json?: boolean }>();
+
+  try {
+    await call();
+  } catch (error) {
+    reportError(error, json);
+  }
+}
+
 /** Collects a repeatable option into an array. */
 export function collect(value: string, previous: string[] = []): string[] {
   return [...previous, value];

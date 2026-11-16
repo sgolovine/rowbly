@@ -78,6 +78,17 @@ describe("Pi import boundary", () => {
     await expect(import("../host/host.js")).resolves.toHaveProperty("addHost");
   });
 
+  it("imports the host agent without loading Pi", async () => {
+    await expect(import("../host-agent/host-agent.js")).resolves.toHaveProperty("runHostAgent");
+    await expect(import("../host-agent/host-agent-paths.js")).resolves.toHaveProperty("hostAgentPaths");
+    await expect(import("../host-agent/host-agent-claim.js")).resolves.toHaveProperty("liveAgent");
+    await expect(import("../host-agent/host-agent-control.js")).resolves.toHaveProperty("submitHostCommand");
+    await expect(import("../host-agent/host-agent-work.js")).resolves.toHaveProperty("executeCommand");
+    await expect(import("../host-agent/host-slots.js")).resolves.toHaveProperty("acquireSlot");
+    await expect(import("../host-agent/host-attach.js")).resolves.toHaveProperty("runHostAttach");
+    await expect(import("../host-agent/host-agent-launch.js")).resolves.toHaveProperty("startHostAgent");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });
