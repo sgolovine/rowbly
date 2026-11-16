@@ -207,17 +207,26 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
-- `host serve`, `host submit` and `host attach` are hidden. The main machine runs them on a worker
-  host over SSH. The data goes on stdin. The output is JSON. See
-  [native-factory/host-agent.md](native-factory/host-agent.md).
+- `host serve`, `host submit`, `host attach`, `host prepare`, `host cache-missing` and
+  `host cache-put` are hidden. The main machine runs them on a worker host over SSH. The data goes on
+  stdin. The output is JSON. See [native-factory/host-agent.md](native-factory/host-agent.md).
   - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
     limit and starts a detached host agent, if no live agent holds the claim. It writes
     `{ "started": boolean, "owner": <Owner> }`.
   - `host serve <project-id>` is the host agent itself. The detached start runs it.
+    It writes the CLI shim of the workers to `agent/bin/rowbly`, then it runs the agent with the
+    worker runner.
   - `host submit <project-id>` reads one command. It writes the command to a file and writes the
     current receipt, or `null`.
-  - `host attach <project-id>` writes frames: first the hello frame, then `status` and `receipt`
-    frames. It stops at the end of stdin.
+  - `host attach <project-id>` writes frames: first the hello frame, then `status`, `receipt` and
+    `run` frames. It stops at the end of stdin.
+  - `host prepare <project-id>` reads the copy and the launch data of one Thread (32 MiB or less).
+    It writes the copy to the Thread folder and writes `{ threadId, copy, files, attachments }`.
+    It gives `CONFLICT` while the Thread has active work.
+  - `host cache-missing <project-id>` reads `{ "ids": [<attachment id>, …] }`. It writes
+    `{ "missing": [<id>, …] }` with the ids that are not in the attachment cache.
+  - `host cache-put <project-id> <attachment-id>` reads the bytes of an attachment file of any
+    type (10 MiB or less). It puts them in the attachment cache and writes `{ id, added }`.
   - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
   apply the outbox. Each command reads one JSON object on stdin and the outbox folder from

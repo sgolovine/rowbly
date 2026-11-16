@@ -22,17 +22,16 @@ function shimScript(command: string): string {
   return `#!/bin/sh\nif [ "$#" -eq 0 ] && [ ! -t 0 ]; then\n  echo 'Rowbly factory CLI requires a command' >&2\n  exit 1\nfi\nexec ${command} "$@"\n`;
 }
 
-/** Writes `runtime/bin/rowbly`, which runs the same CLI version as this process, and gives its path. */
-export async function createCliShim(descriptor: LaunchDescriptor, ctx: ServiceContext = {}): Promise<string> {
+function assertAbsolute(descriptor: LaunchDescriptor): void {
   if (!isAbsolute(descriptor.entry) || !isAbsolute(descriptor.executable)) {
     throw new ValidationError("CLI launch paths must be absolute");
   }
+}
 
-  const paths = await findProject(ctx);
+/** Writes the shim script to the path. The shim runs the same CLI version as this process. */
+export async function writeCliShim(descriptor: LaunchDescriptor, shim: string): Promise<string> {
+  assertAbsolute(descriptor);
 
-  await prepareRuntime(paths);
-
-  const shim = await runtimePath(paths, "bin/rowbly");
   const command = [descriptor.executable, ...descriptor.execArgv, descriptor.entry]
     .map((value) => shellQuote(value))
     .join(" ");
@@ -41,4 +40,15 @@ export async function createCliShim(descriptor: LaunchDescriptor, ctx: ServiceCo
   await chmod(shim, 0o700);
 
   return shim;
+}
+
+/** Writes `runtime/bin/rowbly`, which runs the same CLI version as this process, and gives its path. */
+export async function createCliShim(descriptor: LaunchDescriptor, ctx: ServiceContext = {}): Promise<string> {
+  assertAbsolute(descriptor);
+
+  const paths = await findProject(ctx);
+
+  await prepareRuntime(paths);
+
+  return writeCliShim(descriptor, await runtimePath(paths, "bin/rowbly"));
 }

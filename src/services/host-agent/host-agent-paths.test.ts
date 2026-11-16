@@ -2,7 +2,14 @@ import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTempDir } from "../test-project/test-project.js";
-import { hostAgentPaths, prepareAgentDirs, slotPaths, validateProjectId } from "./host-agent-paths.js";
+import {
+  hostAgentPaths,
+  hostRunPaths,
+  prepareAgentDirs,
+  slotPaths,
+  threadPaths,
+  validateProjectId,
+} from "./host-agent-paths.js";
 
 describe("host agent paths", () => {
   const home = useTempDir();
@@ -25,6 +32,18 @@ describe("host agent paths", () => {
     expect(paths.guard).toBe(join(paths.dir, "agent.guard"));
     expect(paths.state).toBe(join(paths.dir, "agent.json"));
     expect(paths.outbox).toBe(join(paths.dir, "outbox"));
+    expect(paths.threads).toBe(join(paths.dir, "threads"));
+    expect(paths.runtime).toBe(join(paths.dir, "runtime"));
+    expect(paths.attachments).toBe(join(paths.dir, "attachments"));
+    expect(paths.bin).toBe(join(paths.dir, "bin/rowbly"));
+    expect(threadPaths(paths, "t1")).toEqual({
+      dir: join(paths.dir, "threads/t1"),
+      copy: join(paths.dir, "threads/t1/copy"),
+      launch: join(paths.dir, "threads/t1/launch.json"),
+      run: join(paths.dir, "threads/t1/run.json"),
+      lock: join(paths.dir, "threads/t1/write.lock"),
+    });
+    expect(() => threadPaths(paths, "../x")).toThrow(expect.objectContaining({ code: "VALIDATION" }));
     expect(slotPaths(home.path)).toEqual({
       dir: join(home.path, ".local/share/rowbly/slots"),
       limit: join(home.path, ".local/share/rowbly/slots/limit.json"),
@@ -35,8 +54,38 @@ describe("host agent paths", () => {
   it("makes the runtime folder and its subfolders with mode 0700", async () => {
     const paths = hostAgentPaths("p1", home.path);
     await prepareAgentDirs(paths);
-    for (const dir of [paths.dir, paths.control, paths.receipts, paths.outbox, paths.logs]) {
+    for (const dir of [
+      paths.dir,
+      paths.control,
+      paths.receipts,
+      paths.outbox,
+      paths.logs,
+      paths.threads,
+      paths.runtime,
+    ]) {
       expect((await stat(dir)).mode & 0o777).toBe(0o700);
     }
+  });
+
+  it("gives the run paths of a Thread with a clone relative to the home folder", () => {
+    const run = hostRunPaths({
+      home: "/home/u",
+      projectId: "p1",
+      clone: "work/repo",
+      threadId: "t1",
+      storyId: "ROW-7",
+    });
+    const agent = "/home/u/.local/share/rowbly/projects/p1/agent";
+    expect(run).toEqual({
+      clone: "/home/u/work/repo",
+      copy: `${agent}/threads/t1/copy`,
+      worktree: "/home/u/work/repo-worktrees/ROW-7",
+      lock: `${agent}/threads/t1/write.lock`,
+      shim: `${agent}/bin/rowbly`,
+      outbox: `${agent}/outbox`,
+    });
+    expect(() => hostRunPaths({ home: "/h", projectId: "p1", clone: "r", threadId: "t1", storyId: "../x" })).toThrow(
+      expect.objectContaining({ code: "VALIDATION" }),
+    );
   });
 });

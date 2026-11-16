@@ -173,3 +173,19 @@ export async function slotUsage(home?: string): Promise<SlotUsage> {
 
   return { used: (await slotFiles(paths)).length, max: await readLimitFile(paths) };
 }
+
+/** Runs the action while it holds the slot lock. A `prepare` uses it, so that no slot starts during its write. */
+export async function withSlotLock<T>(action: () => Promise<T>, home?: string): Promise<T> {
+  const paths = slotPaths(home);
+
+  await ensurePrivateDir(paths.dir);
+
+  return withFileLock(paths.lock, action, { label: "Host slot lock" });
+}
+
+/** True when the Thread has a slot whose owner is not dead. The caller holds the slot lock. */
+export async function threadHasLiveSlot(key: SlotKey, options: SlotOptions = {}): Promise<boolean> {
+  const slot = await readSlot(slotFile(slotPaths(options.home), key));
+
+  return !!slot?.owner && (await (options.probe ?? probeOwner)(slot.owner)) !== "dead";
+}

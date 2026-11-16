@@ -202,6 +202,7 @@ describe("host agent", () => {
     expect(await settled("r1", "p1")).toMatchObject({ status: "completed" });
     expect(await settled("r2", "p2")).toMatchObject({ status: "completed" });
     expect(fake.started).toContainEqual({
+      kind: "launch",
       projectId: "p1",
       threadId: "t1",
       requestId: "r1",

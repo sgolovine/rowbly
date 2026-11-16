@@ -9,9 +9,8 @@ machine sends commands to the agent and reads the state of the agent on a channe
 continues when the SSH session stops.
 
 The host agent is not the factory daemon. It does not take the Project write lock or the state lock.
-It does not read a canonical `.rowbly/` folder. It never runs a supervisor. It does not load Pi.
-
-At this time, the agent has no worker runner. ROW-92 adds the runner that loads Pi.
+It does not read or write a canonical `.rowbly/` folder, also not `<clone>/.rowbly/`. It never runs
+a supervisor. Only the start of a run loads Pi.
 
 ## Modules
 
@@ -21,7 +20,15 @@ At this time, the agent has no worker runner. ROW-92 adds the runner that loads 
 | `host-agent-claim.ts`   | The claim of the agent, `agent.json` and `liveAgent`.                            |
 | `host-agent-control.ts` | `submitHostCommand`, the command scan and the receipts.                          |
 | `host-slots.ts`         | The machine limit and the slots of all Projects on the host.                     |
-| `host-agent-work.ts`    | The `HostWorkRunner` interface and the `launch` and `stop` commands.             |
+| `host-agent-work.ts`    | The `HostWorkRunner` interface and the run commands.                             |
+| `host-agent-prepare.ts` | `prepareHostThread`: the copy and `launch.json` of a Thread.                     |
+| `host-agent-cache.ts`   | The attachment cache commands `cache-missing` and `cache-put`.                   |
+| `host-agent-input.ts`   | The bounded read of stdin.                                                       |
+| `host-runner.ts`        | `createHostRunner`: the real `HostWorkRunner`.                                   |
+| `host-run-events.ts`    | The events of the executor that write `run.json`.                                |
+| `host-run-state.ts`     | The read and the write of `run.json`.                                            |
+| `host-run-executor.ts`  | The only module that loads Pi. The runner imports it when a run starts.          |
+| `host-clone-update.ts`  | The fetch and the fast-forward of the clone.                                     |
 | `host-agent.ts`         | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
 | `host-attach.ts`        | `runHostAttach`: the frames of `host attach`.                                    |
 | `host-agent-launch.ts`  | `startHostAgent`: the detached start of `host serve --detach`.                   |
@@ -33,11 +40,14 @@ At this time, the agent has no worker runner. ROW-92 adds the runner that loads 
 The main machine runs these commands. `<remote rowbly>` is `remoteRowblyPath(buildId)`. Each token
 obeys the safe token rule of the transport. The data goes on stdin.
 
-| Command                                             | Call    | Input on stdin                               | Output                                     |
-| --------------------------------------------------- | ------- | -------------------------------------------- | ------------------------------------------ |
-| `[<remote rowbly>, "host", "serve", "--detach"]`    | request | `{ "projectId": "<id>", "maxWorkers": <n> }` | `{ "started": boolean, "owner": <Owner> }` |
-| `[<remote rowbly>, "host", "submit", <project-id>]` | request | One command                                  | The current receipt, or `null`             |
-| `[<remote rowbly>, "host", "attach", <project-id>]` | channel | Frames (ignored at this time)                | Frames                                     |
+| Command                                                      | Call    | Input on stdin                               | Output                                     |
+| ------------------------------------------------------------ | ------- | -------------------------------------------- | ------------------------------------------ |
+| `[<remote rowbly>, "host", "serve", "--detach"]`             | request | `{ "projectId": "<id>", "maxWorkers": <n> }` | `{ "started": boolean, "owner": <Owner> }` |
+| `[<remote rowbly>, "host", "submit", <project-id>]`          | request | One command                                  | The current receipt, or `null`             |
+| `[<remote rowbly>, "host", "attach", <project-id>]`          | channel | Frames (ignored at this time)                | Frames                                     |
+| `[<remote rowbly>, "host", "prepare", <project-id>]`         | request | The prepare input (32 MiB or less)           | `{ threadId, copy, files, attachments }`   |
+| `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                 |
+| `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                            |
 
 The project id is a dash-case token of 1 to 64 characters: `^[a-z0-9]+(-[a-z0-9]+)*$`. The main
 machine makes it. A bad id gives `VALIDATION` before Rowbly writes a file.
@@ -56,6 +66,13 @@ All paths are below the home folder of the SSH user. Each folder that the agent 
 | `agent/receipts/<request-id>.json`                         | The receipts.                               |
 | `agent/outbox/`                                            | The outbox folder of the Project.           |
 | `agent/logs/`                                              | The output of each detached agent.          |
+| `agent/threads/<thread-id>/copy/`                          | The copy root, with `.rowbly/` in it.       |
+| `agent/threads/<thread-id>/launch.json`                    | The prepared launch data.                   |
+| `agent/threads/<thread-id>/run.json`                       | The run state.                              |
+| `agent/threads/<thread-id>/write.lock`                     | The `flock` file of the worker CLI prefix.  |
+| `agent/runtime/sessions/<thread-id>/`                      | The Pi session files of the Thread.         |
+| `agent/attachments/<id>.png`                               | The attachment cache of the Project.        |
+| `agent/bin/rowbly`                                         | The CLI shim of the workers.                |
 | `.local/share/rowbly/slots/limit.json`                     | The machine limit: `{ "maxWorkers": <n> }`. |
 | `.local/share/rowbly/slots/<project-id>--<thread-id>.json` | One slot, with the owner of the agent.      |
 | `.local/share/rowbly/slots/slots.lock`                     | The file lock of the slots.                 |
@@ -103,12 +120,17 @@ a valid id, and for a command larger than 65536 bytes.
 
 The request id is the id of the command: `[A-Za-z0-9_-]{1,128}`. The main machine makes it.
 
-| Command  | Fields                                | Effect                                                      |
-| -------- | ------------------------------------- | ----------------------------------------------------------- |
-| `launch` | `threadId`, optional `payload` object | Takes a machine slot and gives the work to the runner.      |
-| `stop`   | None                                  | The agent starts no new work and stops when its work ended. |
+| Command         | Fields     | Effect                                                               |
+| --------------- | ---------- | -------------------------------------------------------------------- |
+| `launch`        | `threadId` | Takes a machine slot and gives the prepared Thread to the runner.    |
+| `resume`        | `threadId` | As `launch`, with the session file and the worktree of the last run. |
+| `stop-thread`   | `threadId` | Stops the work of the Thread. The end reason is `stopped`.           |
+| `cancel-thread` | `threadId` | Stops the work of the Thread. The end reason is `cancelled`.         |
+| `stop`          | None       | The agent starts no new work and stops when its work ended.          |
 
-Each command has `version: 1`, `id` and `type`. ROW-92 defines the `payload`.
+Each command has `version: 1`, `id` and `type`. An optional `payload` must be an object. The runner
+does not read it: the data of a run comes from the prepare step. A `stop-thread` or `cancel-thread`
+for a Thread without work completes with no effect.
 
 The agent runs each command one time, in the order of the ids. It writes a durable receipt:
 `accepted`, then `completed` or `rejected`. A receipt has `version`, `id`, `ownerToken`, `status`,
@@ -141,13 +163,97 @@ The worker limit applies to the full host, for all Projects. Each `host serve --
 
 A `launch` takes a slot before it starts the work. The agent releases the slot when the work ends.
 
+## Attachment cache
+
+The attachment cache of the Project is `agent/attachments/`. An attachment can have any file type.
+The cache file is `<id>.png` for all types, for compatibility with earlier versions. The main
+machine first sends `cache-missing` with the ids of the copy. Then it sends `cache-put` for each
+missing id. A bad attachment id and bytes larger than 10 MiB give `VALIDATION`. An id that is in the
+cache keeps its first file, because the content of an attachment never changes.
+
+## Prepare step
+
+A launch has two steps. A command file has a limit of 64 KiB, and the copy is larger. Thus the
+main machine first sends `host prepare`, then the `launch` or `resume` command with only the
+`threadId`.
+
+The input of `host prepare` is
+`{ threadId, thread, storyId, clone, model, message, copy: { files, attachments } }`.
+`thread` is the Thread record. `clone` is the clone path of the host record; a relative path is
+relative to the home folder. `message` is the full worker message. The host does not change it.
+Each file is `{ path, content }`, and each attachment is `{ storyId, id, file }`. `file` is the
+name of the attachment file, from `attachmentFileName` of the record: `<id>.png` for a PNG, else
+the id with the safe extension of the name, or the id alone. The `thread-copy` service
+(`buildThreadCopy`) makes the copy on the main machine. The copy files have no attachment file,
+only the manifests. All attachment files go through the cache, not as text.
+
+`prepareHostThread` checks the full input before it writes:
+
+- Each path must be below `.rowbly/`. A path with `..`, an empty part or a `\`, an absolute path,
+  `state.json*` and `runtime/` give `VALIDATION`.
+- An attachment `file` that is not the id, or the id with one safe extension, gives `VALIDATION`.
+- An attachment that is not in the cache gives `VALIDATION`. The `details.missing` list has the ids.
+- The Thread record must be the worker Thread of the Story.
+- While the Thread has a slot with a live owner, `prepare` gives `CONFLICT`. The check and the write
+  hold the slot lock, so no work of the Thread starts during the write.
+
+Then it writes the copy to a temporary folder, puts each listed attachment
+file in `.rowbly/attachments/<story-id>/<file>`, and renames the folder over `copy/`. Each folder has mode
+0700 and each file mode 0600. Last, it writes `launch.json` durably. A failure writes no copy. A new
+`prepare` replaces the old copy. `run.json` stays.
+
+`hostRunPaths({ home, projectId, clone, threadId, storyId })` gives the copy, the worktree
+(`<clone>-worktrees/<story-id>`), the lock, the shim and the outbox of a run. The main machine uses
+it to write the Run section of the worker message.
+
 ## Worker runner
 
-The agent gives each accepted `launch` to a `HostWorkRunner`. `start(request)` gives a `HostWork`
-with `ended`, a promise of the end of the work, and `stop()`.
+The agent gives each accepted `launch` and `resume` to a `HostWorkRunner`. `start(request)` gives a
+`HostWork` with `ended`, a promise of the end of the work, `stop()` and `cancel()`.
 
 Without a runner, a `launch` takes a slot, then gets `HOST_WORKER_UNAVAILABLE`. The agent releases
-the slot. Tests use a fake runner.
+the slot. Tests use a fake runner. `host serve` writes the CLI shim and gives the real runner of
+`host-runner.ts` to the agent.
+
+For each `launch` or `resume`, the runner does these steps:
+
+1. It reads `launch.json` and the Story from the copy. A Thread without a prepare gives
+   `NOT_FOUND`. A `resume` also needs the session file and the worktree of the last `run.json` on
+   the host. If one is missing, the `resume` gives `NOT_FOUND`. The agent releases the slot.
+2. It runs `git -C <clone> fetch origin`, then `git -C <clone> merge --ff-only @{upstream}`, with
+   `GIT_TERMINAL_PROMPT=0`. A clone that cannot fast-forward fails the run. Rowbly never resets the
+   clone.
+3. It imports `host-run-executor.ts` and makes the local executor. The clone is the Git root of the
+   worktrees. The copy is `ROWBLY_ROOT`. The session files go below `agent/runtime/`.
+4. The executor makes the worktree `<clone>-worktrees/<story-id>` with `prepareWorkerWorktree`.
+   Existing work is never reset. A `resume` keeps the worktree of the last run.
+5. The executor runs the Pi session with the prepared message and the result tool. A remote worker
+   has no `run_check` tool and no check gate.
+
+The worker shell has `ROWBLY_OUTBOX` (the outbox folder) and `ROWBLY_THREAD_ID`. Thus each CLI write
+of the worker goes to the copy and to the outbox.
+
+## Run state
+
+The runner writes the events of the executor to `threads/<thread-id>/run.json`, with mode 0600.
+Each event, except the activity, writes durably.
+
+| Field                              | Value                                                        |
+| ---------------------------------- | ------------------------------------------------------------ |
+| `version`, `threadId`, `requestId` | The identity of the run.                                     |
+| `kind`                             | `launch` or `resume`.                                        |
+| `phase`                            | `starting`, `running` (after the session opened) or `ended`. |
+| `worktree`                         | `{ path, branch }`.                                          |
+| `session`                          | `{ model, file }`. `file` is relative to `agent/runtime/`.   |
+| `activity`                         | The last activity and usage.                                 |
+| `result`                           | The reported result.                                         |
+| `usage`                            | The final usage of the session.                              |
+| `failure`                          | `{ code, message, sessionOpened }`.                          |
+| `endReason`, `endedAt`             | `completed`, `failed`, `stopped` or `cancelled`.             |
+
+The end reason is `stopped` or `cancelled` after the matching command, `failed` after a failure,
+and otherwise `completed`. A stop of the agent gives `stopped`. The host reports facts, not a Thread
+status. The main machine maps them to the Thread status.
 
 ## Stop when idle
 
@@ -173,6 +279,14 @@ stop the agent.
    frame when a value changes.
 3. A `receipt` frame `{ "type": "receipt", "receipt": <receipt> }` for each receipt that exists when
    the channel opens, and for each new or changed receipt. A corrupt receipt gives no frame.
+4. A `run` frame `{ "type": "run", "run": <run.json> }` for each Thread when the channel opens, and
+   again when its `run.json` changes. A bad `run.json` gives no frame.
+
+## Disconnects
+
+The workers continue when the channel stops. The host never starts work without a `launch` or
+`resume` command. `run.json` keeps the result until the next connection, also after the agent stops
+when idle. A new channel then sends the `run` frame with the result.
 
 The channel stops at the end of stdin. At this time, the frames that the main machine sends are
 ignored. Later Stories add their frames.
