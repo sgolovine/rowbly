@@ -1,0 +1,72 @@
+---
+title: Sort stories by updated by
+stage: IN_REVIEW
+position: 81
+updatedAt: 2026-11-16T21:38:30.254Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-78
+pull_request: https://github.com/sgolovine/rowbly/pull/268
+---
+
+## Goal
+
+The Stories in each Stage (column) must show in the order of their `updatedAt` frontmatter key, with the most recent Story at the top. The user then sees the Stories that changed last first, in the TUI board and in the CLI output.
+
+The original text says `updatedBy`. No `updatedBy` key exists. The Story frontmatter has `updatedAt` (from ROW-26). This Story uses `updatedAt`.
+
+## Scope
+
+In scope:
+
+- One board order for the Stories of a Stage: `updatedAt` descending. This order replaces the order by `position`.
+- All readers of the board order use the new order: `story search`, `story get` (the `position` value of the record), the TUI Story list and the factory launch order (its last tie-break is the board order).
+- Remove the manual order of the Stories in a Stage, because the `updatedAt` order makes it ineffective:
+  - The `--position` option of `rowbly story update`, and `position` in `UpdateStoryInput`.
+  - The services do not write `position` to Story files any more (no rewrite of the peers of a moved Story).
+  - In the TUI, `shift+↑/↓` and a drag and drop only change the Stage of a Story. They do not change its place in a Stage.
+- Update the tests and the documentation.
+
+Not in scope:
+
+- The order of the Stages, and `stage create/update --position`. They do not change.
+- A setting or a key that lets the user select a different sort order.
+- A migration that removes the old `position` key from existing Story files.
+
+## Acceptance criteria
+
+- [ ] `sortStoryFiles` (`src/services/story-files/story-files.ts`) puts the Stories in `updatedAt` descending order. A Story with a missing or invalid `updatedAt` comes after the Stories that have one. A tie (same or missing `updatedAt`) is in the order of the Story numbers, ascending. A unit test examines each of these rules.
+- [ ] The `position` frontmatter key has no effect on the order. A test with two Stories, where the `position` order and the `updatedAt` order are different, shows the `updatedAt` order.
+- [ ] `rowbly story search --json` gives the Stories in Stage order, then in `updatedAt` descending order. The `position` value of each Story record is its 1-based place in that order. A service test examines this.
+- [ ] `rowbly story get <id> --json` gives the same `position` value as `story search` for that Story.
+- [ ] After `rowbly story update <id> --description <md>` or `--stage <key>`, the Story is at position 1 of its Stage. A service test examines this with `ctx.now`.
+- [ ] An update that does not change the Story (same values) does not change its place.
+- [ ] `rowbly story update <id> --position 2` fails with an unknown-option error. `rowbly story update --help` does not show `--position`.
+- [ ] A Stage move writes only the moved Story file. The files of the other Stories of the Stage do not change (a test compares their bytes).
+- [ ] `story create` puts the new Story at position 1 of its Stage.
+- [ ] `rowbly doctor` does not report a Story file that still has a `position` key.
+- [ ] In the TUI, `shift+↓` on a Story moves it to the next Stage and `shift+↑` moves it to the previous Stage. A drop of a Story in a different Stage moves it to that Stage. A drop in the same Stage does nothing. Only a person can examine this (no TUI tests, see AGENTS.md).
+- [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
+
+## Technical notes
+
+- Order function: `sortStoryFiles` and `storyPosition` in `src/services/story-files/story-files.ts`. Use `storyTimeOf` (or the same parse rules as `story-read.ts`) to read `updatedAt`. Compare the parsed time values, not the strings.
+- Readers of the order: `positionIn`, `stagePositions` and `searchStories` in `src/services/story/story-read.ts`. They can stay as they are if `sortStoryFiles` changes.
+- Writers of `position`: `placeStory` and `writePosition` in `src/services/story/story.ts`. Remove the peer rewrite. A Stage move only writes the moved Story, with a new `updatedAt` (this already happens). Do not write `position` for a new or a moved Story. Keep an existing `position` key in a file as it is, or remove it from the moved Story only; do not touch other files.
+- `snapshotStories` in `story.ts` reads the peers of the destination Stage for the restore after a failed image update. With no peer writes, it only needs the file of the Story.
+- Input checks: `positionIssues` in `src/services/story/story-input.ts` is also used by `src/services/stage/stage.ts`. Keep it for Stages.
+- CLI: `src/commands/story/story.ts` (the `--position` option at about line 107 and its use at line 129).
+- Types: `position?: number` in `UpdateStoryInput` (`src/services/story/story-types.ts`). Keep `position: number` in the `Story` record, as the computed place.
+- TUI: `src/tui/shell/shell/story-changes.ts` (`shiftStory`, `moveStoryStage`, `dropPlace`, `dropStory`, `placeStory`). `moveStoryStage` passes a `position`; remove it. The selection follows the Story by ID, so it stays on the Story after it goes to the top.
+- Factory: `launchOrder` in `src/services/factory-policy/factory-policy.ts` uses the board order as its last tie-break. Update the comment. No other change.
+- Doctor: `src/services/doctor/story-checks.ts` keeps `position` in the known keys.
+- Documentation: `docs/architecture/storage.md` (the "Position" and "Times" sections), `docs/architecture/tui.md` (the Story keys and drag), `docs/architecture/cli.md` if it names `--position` for Stories, and `skills/rowbly-reference.md` (the `story update` row, "Moves", "Positions", "Search order", the file examples and the table of old items). After the change to `skills/rowbly-reference.md`, copy it to each `skills/<name>/references/rowbly-reference.md` (AGENTS.md rule). Write all Markdown in STE.
+- Tests: `story-files.test.ts`, `story.test.ts`, `story-read.test.ts`, `story-times.test.ts`, the CLI tests of `story update`, and the tests that use `--position` or `position` input for Stories. Use `ctx.now` to set the times.
+
+## Assumptions
+
+- The author means `updatedAt`, not `updatedBy`. Reason: no `updatedBy` key exists; `updatedAt` is the only "updated" key in the frontmatter.
+- The new order applies to the service board order, not only to the TUI. Reason: the CLI, the TUI and the factory share one order function (`sortStoryFiles`), and the service layer rule says that the front ends do not hold domain logic.
+- The manual order in a Stage (`story update --position`, `shift+↑/↓` and a drag in a Stage) is removed. Reason: a place change sets `updatedAt`, so with the new order each manual move puts the Story at the top. A feature that cannot do its function must not stay.
+- Stage moves stay in the TUI (`shift+↑/↓` past a Stage, a drop in a different Stage). Reason: they still have a function, and the smallest change keeps them.
+- A Story with no valid `updatedAt` goes last, then by number. Reason: this agrees with the existing rule for a Story with no `position`.
+- The factory launch order changes only in its last tie-break, to the most recently updated Story first. Reason: the factory uses the board order; a separate order is a larger change that the author did not ask for.
+- Old `position` keys stay in existing Story files. Reason: a migration writes all Story files and changes their `updatedAt` rules; the key has no effect now and doctor accepts it.

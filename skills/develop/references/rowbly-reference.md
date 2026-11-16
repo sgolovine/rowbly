@@ -285,8 +285,8 @@ A Tag record has this shape:
 ### Host
 
 A worker host is a remote machine that runs factory workers only. The hosts belong to the user, not to
-a Project. Rowbly keeps them in the `hosts` key of `~/.rowblyrc.json`. These commands do not need a
-Project.
+a Project. Rowbly keeps them in the `hosts` key of `~/.rowblyrc.json`. Only `host use` and `host unuse`
+need a Project.
 
 | Command                                                 | JSON result              |
 | ------------------------------------------------------- | ------------------------ |
@@ -295,6 +295,8 @@ Project.
 | `rowbly host check <id>`                                | `{ host, ready, items }` |
 | `rowbly host login <id>`                                | None; terminal only      |
 | `rowbly host remove <id> [--purge]`                     | Host, `purge`            |
+| `rowbly host use <id> [--path <dir>]`                   | Clone record             |
+| `rowbly host unuse <id>`                                | Clone record             |
 
 A Host record has this shape:
 
@@ -323,6 +325,15 @@ A Host record has this shape:
   With `--json`, or without a terminal, it gives `VALIDATION`.
 - **Removal.** `host remove` gives `CONFLICT` while a known Project has a `pending` or `running` Thread
   on the host. `--purge` does no work at this time.
+- **Use.** `host use` turns the host on for the current Project. Without `--path`, it clones the local
+  `origin` URL into `~/.local/share/rowbly/projects/<project-id>/repo` on the host, or uses the clone of
+  the same repository that is there. With `--path <dir>`, it uses an existing clone. The clone must be a
+  Git work tree of the same repository, without changes. The JSON result is
+  `{ host, root, path, managed, url, cloned }`. A clone without Git access on the host gives
+  `HOST_GIT_ACCESS`. Another failure of the clone gives `HOST_CLONE_FAILED`. A Project without `origin`
+  gives `VALIDATION`. A Project that the host uses gives `CONFLICT`.
+- **Unuse.** `host unuse` removes only the record of the current Project. The clone stays on the host. It
+  gives `CONFLICT` while a `pending` or `running` Thread of the Project is on the host.
 - **Bad file.** If `~/.rowblyrc.json` is not valid, each command gives `VALIDATION` and does not change the file.
 
 ### Spec

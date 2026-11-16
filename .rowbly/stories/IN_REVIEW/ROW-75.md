@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - full-screen view.
-stage: DONE
+stage: IN_REVIEW
 position: 77
 createdAt: 2026-11-16T17:00:18.867Z
-updatedAt: 2026-11-16T19:47:57.107Z
+updatedAt: 2026-11-16T21:38:30.146Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-75
 pull_request: https://github.com/sgolovine/rowbly/pull/264
 ---

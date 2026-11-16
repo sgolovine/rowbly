@@ -18,7 +18,7 @@ const resources = {
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
   thread: ["cancel", "resume", "steer", "log", "list", "show"],
-  host: ["add", "check", "login", "list", "remove", "blob", "outbox", "outbox-ack"],
+  host: ["add", "check", "login", "list", "remove", "use", "unuse", "blob", "outbox", "outbox-ack"],
 };
 
 /** The hidden actions. They do not show in the help of their resource. */

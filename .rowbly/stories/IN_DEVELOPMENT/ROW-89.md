@@ -6,9 +6,9 @@ dependsOn:
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:05.891Z
-updatedAt: 2026-11-16T21:24:49.299Z
+updatedAt: 2026-11-16T21:40:43.240Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-89
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/280
 ---
 
 ## Goal
@@ -102,3 +102,17 @@ Not in scope:
 - `stop` is a command of the agent, not of one worker. Reason: the Spec says that `factory stop` sends a stop to each host (ROW-97 uses it). The stop of one worker comes with ROW-92.
 - The removal of old receipts and command files is not in scope. Reason: the main machine must read the receipts after a reconnect (ROW-97), so their lifetime belongs to that Story.
 - The Story stays one Story. Reason: the claim, commands, slots, attach and idle stop are one small runtime frame, and each part needs the others to be tested.
+- `HOST_NO_FREE_SLOT` and `HOST_WORKER_UNAVAILABLE` are subclasses of `RowblyError` in `host-errors.ts`, not of `ConflictError`. Reason: `ConflictError` has the fixed code `CONFLICT`, and the Story asks for the code `HOST_NO_FREE_SLOT`.
+- A rejected receipt has the code of the Rowbly error that rejected it, and `COMMAND_REJECTED` for other errors. A `launch` after a `stop`, or a second `launch` for an active Thread, gets `CONFLICT`. Reason: the main machine must see the cause of a rejection.
+- `host submit` refuses text that is not JSON, has no valid id or is larger than 65536 bytes with `VALIDATION`, because such a command cannot have a file name. The agent rejects all other bad commands with a receipt.
+- A missing machine limit is 0 free slots. Reason: no work must start before the main machine sends the limit.
+- When the new detached agent runs a queued `stop` and stops before `serve --detach` sees it, the result is `started: true` with the owner in `agent.json`.
+
+## Review findings
+
+- The changelog Stage could not merge `origin/main` into `story/ROW-89` (pull request #280). These files have merge conflicts with `origin/main` (the main branch has the changes of ROW-88, pull request #279):
+  - `docs/architecture/cli.md`
+  - `src/commands/host/host.ts`
+  - `src/commands/register-commands/register-commands.test.ts`
+  - `src/services/pi-runtime/import-boundary.test.ts`
+- Merge `origin/main` into the branch, solve the conflicts, keep the changes of both sides, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, and push the branch.

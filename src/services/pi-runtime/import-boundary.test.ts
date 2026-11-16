@@ -97,13 +97,27 @@ describe("Pi import boundary", () => {
     const build = { id: "0.18.0", version: "0.18.0", released: true };
 
     await expect(
-      runHostCheck({ hostId: "mini", transport, build }, project.ctx, { localAhead: async () => 0 }),
+      runHostCheck({ hostId: "mini", transport, build }, project.ctx, {
+        cloneFor: async () => "/srv/rowbly",
+        localAhead: async () => 0,
+      }),
     ).resolves.toHaveProperty("ready", true);
     await expect(import("../host-check/check-item.js")).resolves.toHaveProperty("CHECK_ITEM_IDS");
     await expect(import("../host-check/host-items.js")).resolves.toHaveProperty("linuxItem");
     await expect(import("../host-check/pi-items.js")).resolves.toHaveProperty("piLoginItem");
     await expect(import("../host-check/project-items.js")).resolves.toHaveProperty("localAheadItem");
     await expect(import("../host-check/host-login.js")).resolves.toHaveProperty("hostLoginArguments");
+    await expect(import("../host-check/clone-finder.js")).resolves.toHaveProperty("hostCloneFinder");
+  });
+
+  it("imports the host project service without loading Pi", async () => {
+    await expect(import("../host-project/host-project.js")).resolves.toHaveProperty("useHost");
+    await expect(import("../host-project/host-clone.js")).resolves.toHaveProperty("cloneStatus");
+    await expect(import("../host-project/host-paths.js")).resolves.toHaveProperty("managedClonePath");
+    await expect(import("../host-project/repo-url.js")).resolves.toHaveProperty("sameRepository");
+    await expect(import("../host-project/local-origin.js")).resolves.toHaveProperty("localOrigin");
+    await expect(import("../host-project/host-project-errors.js")).resolves.toHaveProperty("HostGitAccessError");
+    await expect(import("../host/host-threads.js")).resolves.toHaveProperty("activeThreadsIn");
   });
 
   it("imports the TUI without loading Pi", async () => {
