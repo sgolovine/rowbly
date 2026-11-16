@@ -2,6 +2,7 @@
 title: Restart the factory daemon automatically after a crash
 stage: DONE
 position: 64
+uid: a120bb11-162c-4cd0-acb1-1d868725951c
 createdAt: 2026-11-14T23:28:32.000Z
 updatedAt: 2026-11-15T01:39:40.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-67
