@@ -31,7 +31,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "t", description: "show the Stories or the Threads of the factory" },
   { key: "c", description: "checks in the factory queue" },
   { key: ",", description: "settings" },
-  { key: "ctrl+f", description: "edit a text field full screen" },
+  { key: "ctrl+f", description: "edit a text field full screen, or show the Thread conversation full screen" },
   { key: "esc", description: "back" },
   { key: "esc", description: "collapse the Story sidebar and focus the Story list (in the Story sidebar)" },
   { key: "esc", description: "close the Story sidebar (in the Story list)" },

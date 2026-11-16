@@ -5,7 +5,10 @@ import { Store } from "../../services/store/store.js";
 import type { ProjectPaths } from "../../services/workspace/workspace.js";
 
 /** The parts of the manager that the control commands use. */
-export type ControlTarget = Pick<FactoryManager, "shutdown" | "cancelWorker" | "resumeWorker" | "dismissAttention">;
+export type ControlTarget = Pick<
+  FactoryManager,
+  "shutdown" | "cancelWorker" | "resumeWorker" | "steerWorker" | "dismissAttention"
+>;
 
 interface PollState {
   /** The scans run one after the other on this chain. */
@@ -46,6 +49,12 @@ async function executeCommand(manager: ControlTarget, command: FactoryCommand): 
 
   if (command.type === "cancel") {
     await manager.cancelWorker(command.threadId, command.expectedRunId);
+
+    return;
+  }
+
+  if (command.type === "steer") {
+    await manager.steerWorker(command.threadId, command.expectedRunId, command.message ?? "");
 
     return;
   }

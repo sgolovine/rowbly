@@ -17,6 +17,8 @@ This file records the changes to Rowbly that users can see.
 - Added: The Story sidebar of the TUI has an expand button and the key `ctrl+o`, which make the Story sidebar cover the Story list and then collapse it again. The new "Story sidebar" option in the Display section of the Settings (`display.storySidebar` in `.rowbly/rowbly.config.json`) sets how the Story sidebar opens: `regular`, `expanded` or `remember`. (ROW-77)
 - Changed: In the Factory view, the mouse wheel scrolls the conversation of a Thread in the Story sidebar also when the Story sidebar does not have the focus, and moves the focus to the Story sidebar, as the Story list does. (ROW-74)
 - Added: Stories can have tags. The new `rowbly tag list|add|update|remove` commands manage the tags in `tags` of `.rowbly/rowbly.config.json`, `rowbly story create|update` have the `--tag`, `--add-tag` and `--remove-tag` flags, `rowbly story search --tag` shows only the Stories that have all the given tags, and `rowbly tag remove` also removes the tag from each Story. (ROW-79)
+- Added: In the Factory view and in the Threads tab of a Story, `ctrl+f` shows the conversation of the open Thread over the full terminal. `ctrl+f`, `esc` or the `✕` closes the full-screen view, and the Thread stays open. (ROW-75)
+- Added: You can send a message to a running worker Thread. In the Threads tab of a Story and in the Factory view, push `m` to type in the input under the conversation and push `enter` to send the message, or use the new `rowbly thread steer <id> --message <text>` command. (ROW-76)
 
 ### 0.18.0
 

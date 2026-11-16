@@ -3,6 +3,7 @@ import { conversationKeys, PANEL_FRAME_HEIGHT, PANEL_FRAME_WIDTH } from "../../.
 import type { Layout } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { THREAD_DETAIL_ROWS } from "../thread-detail/index.js";
+import { STEER_INPUT_ROWS } from "../thread-steer-input/index.js";
 import { threadActive, threadResumable } from "../thread-text.js";
 
 /** The width of the thread list with its frame, and the gap after it. */
@@ -13,15 +14,19 @@ const SPLIT_MIN_WIDTH = LIST_WIDTH + GAP + 44;
 /** Below this inner height, the thread shows its compact detail, so that the conversation keeps its room. */
 const FULL_DETAIL_MIN_HEIGHT = THREAD_DETAIL_ROWS + 14;
 
-/** Which region of the tab takes the keys. */
-export type Focus = "list" | "thread";
+/** Which region of the tab takes the keys. `steer` is the steering input of the thread region. */
+export type Focus = "list" | "thread" | "steer";
 
 /** What the hints of the tab depend on. */
 export interface HintsInput {
   readonly keysOwn: boolean;
   readonly viewing: boolean;
+  /** The steering input takes the keys. */
+  readonly steering: boolean;
   readonly current: ThreadRecord | undefined;
   readonly count: number;
+  /** The thread region shows the conversation, so that `ctrl+f` can open it full screen. */
+  readonly conversation: boolean;
 }
 
 /** The sizes and the visible regions of the tab. */
@@ -36,7 +41,14 @@ export interface ThreadsLayout {
 }
 
 /** The keys of the tab: none while another region has the keys, else the keys of the list or the thread. */
-export function threadsHints({ keysOwn, viewing, current, count }: HintsInput): readonly KeyHint[] {
+export function threadsHints({
+  keysOwn,
+  viewing,
+  steering,
+  current,
+  count,
+  conversation,
+}: HintsInput): readonly KeyHint[] {
   const actionHints: KeyHint[] = [
     ...(current && threadActive(current) ? [{ key: "x", description: "interrupt" }] : []),
     ...(current && threadResumable(current) ? [{ key: "r", description: "resume" }] : []),
@@ -46,11 +58,20 @@ export function threadsHints({ keysOwn, viewing, current, count }: HintsInput): 
     return [];
   }
 
+  if (steering) {
+    return [
+      { key: "enter", description: "send" },
+      { key: "esc", description: "leave the input" },
+    ];
+  }
+
   if (viewing) {
     return [
       // The actions first: a narrow hint strip drops the later scroll keys before them.
       ...actionHints,
+      ...(current?.status === "running" ? [{ key: "m", description: "message" }] : []),
       ...(current ? conversationKeys(current.status === "running") : []),
+      ...(conversation ? [{ key: "ctrl+f", description: "full screen" }] : []),
       { key: "esc", description: "back to Threads" },
     ];
   }
@@ -79,14 +100,14 @@ export function threadsLayout(layout: Layout, focus: Focus, current: ThreadRecor
   const innerHeight = layout.height === undefined ? undefined : layout.height - PANEL_FRAME_HEIGHT;
   const compact = innerHeight !== undefined && innerHeight < FULL_DETAIL_MIN_HEIGHT;
   const threadWidth = (split ? layout.width - LIST_WIDTH - GAP : layout.width) - PANEL_FRAME_WIDTH;
-  const rows = detailRows(current, compact);
+  const rows = detailRows(current, compact) + (current?.status === "running" ? STEER_INPUT_ROWS : 0);
 
   return {
     split,
     innerHeight,
     compact,
     showList: split || focus === "list",
-    showThread: split || focus === "thread",
+    showThread: split || focus !== "list",
     threadWidth,
     // One blank row separates the metadata from the conversation.
     conversationHeight: innerHeight === undefined ? undefined : Math.max(2, innerHeight - rows - 1),

@@ -13,12 +13,37 @@ The CLI and the TUI send guarded commands to the daemon. `factory-control/` writ
 immutable file in `runtime/control/`. The daemon writes a receipt in `runtime/receipts/`: accepted,
 completed or rejected.
 
-The command types are `stop`, `cancel`, `resume` and `dismiss`:
+The command types are `stop`, `cancel`, `resume`, `dismiss` and `steer`:
 
-- `cancel` and `resume` must have a `threadId` and an `expectedRunId`.
+- `cancel`, `resume` and `steer` must have a `threadId` and an `expectedRunId`.
 - `dismiss` must have an `attentionKey` of 1 to 128 characters. If the key is missing, the daemon
   rejects the command.
-- A command file is at most 4096 bytes.
+- `steer` must have a `message` of 1 to 4000 characters after trim. If the message is missing, empty
+  or too long, the daemon rejects the command.
+- A command file is at most 32768 bytes. A `steer` message of 4000 characters fits after JSON
+  escaping.
+
+## Steering messages
+
+A `steer` command gives a message of a person to a running worker. `steerThread(threadId, message)` in
+`src/services/factory/factory.ts` trims the message, makes sure that it has 1 to 4000 characters, sends
+the command and waits for the receipt. An invalid message gives `VALIDATION`. If no live daemon
+exists, the function gives `CONFLICT` with the text `Factory is not running`.
+
+`steerWorker` in `src/services/factory-manager/worker-steer.ts` does the work in the daemon:
+
+1. In `serial`, it makes sure that the run ID and the owner token agree with the last run, that the
+   Thread is in the `active` map, that the Thread status is `running` and that the worker has a Pi
+   session. If one of these checks fails, the command is rejected with `ConflictError`.
+2. If the Pi session is not streaming, the command is rejected with `Worker is not working now`. The
+   manager does not start a new prompt, because a new prompt outside the worker run can break the
+   result collection.
+3. It calls `session.steer()` with the text of `steeringMessage` in `src/services/messages/messages.ts`.
+   Pi gives the message to the agent after its current tool calls. The session history keeps the
+   message as a user message, so Peek shows it in the conversation.
+
+The supervisor Thread does not take steering messages. A Thread that does not run does not take
+steering messages. Use resume for such a Thread.
 
 ## Failures in the supervisor loop
 
