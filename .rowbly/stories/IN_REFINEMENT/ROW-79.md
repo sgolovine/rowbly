@@ -1,9 +1,9 @@
 ---
 title: Add support for story tags.
 stage: IN_REFINEMENT
-position: 1
-updatedAt: 2026-11-16T19:29:36.629Z
-worktree: null
+position: 5
+updatedAt: 2026-11-16T19:29:41.937Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-79
 pull_request: null
 ---
 

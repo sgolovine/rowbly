@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - better scrolling
-stage: BACKLOG
+stage: IN_REFINEMENT
 position: 1
 createdAt: 2026-11-16T16:59:12.508Z
-updatedAt: 2026-11-16T16:59:12.508Z
+updatedAt: 2026-11-16T19:29:44.409Z
 worktree: null
 pull_request: null
 ---
