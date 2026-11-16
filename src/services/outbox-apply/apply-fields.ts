@@ -110,7 +110,7 @@ async function writeChanges(env: ApplyEnv, story: Story, writes: readonly Decisi
  * each other change. A missing Story makes each change a conflict.
  */
 export async function applyFieldEntry(env: ApplyEnv, entry: FieldEntry): Promise<OutboxConflict[]> {
-  const found = await findStory(env, entry.storyId);
+  const found = await findStory(env, entry);
 
   if (!found.story) {
     const reason = found.problem;

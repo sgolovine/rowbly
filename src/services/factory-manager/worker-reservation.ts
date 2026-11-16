@@ -6,7 +6,7 @@ import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { workerOverride } from "../factory-settings/worker-overrides.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { withEntry } from "../store/store.js";
-import { getStory, type Story } from "../story/story.js";
+import { getStory, listStoryRefs, type Story, storyUidField } from "../story/story.js";
 import {
   appendThreadRun,
   createThread,
@@ -135,13 +135,16 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
   }
 
   await stat(previous.worktree as string);
+
+  const stories = await listStoryRefs(manager.ctx);
+
   await updateFactoryState(
     manager.paths.root,
     (state) => {
       const cancelled = Object.entries((state.nativeCancelled as object) ?? {});
       const nativeCancelled = Object.fromEntries(cancelled.filter(([storyId]) => storyId !== story.id));
 
-      return { ...releaseStory(state, story.id), nativeCancelled };
+      return { ...releaseStory(state, story, stories), nativeCancelled };
     },
     manager.ctx,
   );
@@ -196,6 +199,7 @@ function createWorkerThread(
     {
       role: "worker",
       storyId: story.id,
+      ...storyUidField(story),
       stage: story.stage,
       cwd: manager.paths.root,
       ownerToken: manager.owner.token,

@@ -19,6 +19,7 @@ interface CreateInput {
   id?: string;
   role: ThreadRecord["role"];
   storyId?: string;
+  storyUid?: string;
   stage?: string;
   attemptNumber?: number;
   parentThreadId?: string;

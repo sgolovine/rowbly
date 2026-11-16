@@ -53,6 +53,11 @@ Read this page when you start a task on the factory. Then read only the sub-page
     ready, it starts with the reason `new stage stay` if it has no attempt in its current Stage stay.
     The gate does not stop a worker that runs. `start_worker` refuses a blocked Story with the error
     `Story is not eligible: waiting for <IDs>`.
+  - **Story references.** An attempt in `state.json` has `story` (the Story ID) and `storyUid` (the
+    `uid` of the Story), when the Story has a `uid`. A decision also has `storyUid`. The policy finds
+    the Story of an attempt by the rule of `matchStoryRef`. See [Story references](#story-references).
+    An old attempt without `storyUid` stays valid. A `storyUid` that is not a string makes `state.json`
+    invalid.
   - **Launch order.** When the worker limit applies, the Stories in the Stage nearest to the last Stage
     start first. Then the Stories with more downstream Stories start first. This count includes the
     direct and the indirect downstream Stories that are not complete, each one time. Then the order of
@@ -85,6 +90,24 @@ Read this page when you start a task on the factory. Then read only the sub-page
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
+
+## Story references
+
+Some records of the factory keep a reference to a Story: the attempts in `state.json`, the worker
+Threads and the outbox entries of a remote worker host. The attachment records also keep one. A
+reference has the Story ID and, when the Story has one, the Story `uid`. The `uid` does not change
+when the number of the Story changes. See [../storage.md](../storage.md).
+
+- A new record gets `storyUid` from its Story. A Story without a `uid` gives a record without
+  `storyUid`. Rowbly does not add `storyUid` to old records.
+- `matchStoryRef(stories, { id, uid })` in `src/services/story/story-ref.ts` finds the Story of a
+  reference. It is a pure function. The Story with the `uid` of the reference comes first. If the
+  reference has no `uid`, or no Story has it, the Story with the ID comes next.
+- `resolveStoryRef({ id, uid })` in the Story service reads the Story files and applies the same rule.
+  It gives `NOT_FOUND` when no Story matches.
+- These reads use the rule: the outbox apply, the match of attempts to a Story in the policy
+  (`factory-policy/`), `releaseStory` and the Story filter of `listThreads`.
+- `dependsOn` lists, the Story links of Specs and the attachment folder names keep only the Story ID.
 
 ## Placement
 

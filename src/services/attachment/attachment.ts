@@ -18,7 +18,7 @@ import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { type ClipboardImageType, clipboardFailure, readClipboard } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { recordAttachmentAdd, recordAttachmentRemove, sha256Hex } from "../outbox/outbox.js";
-import { getStory, touchStory } from "../story/story.js";
+import { getStory, storyUidField, touchStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 export type { Attachment, PendingImage } from "../attachment-files/attachment-files.js";
@@ -159,11 +159,16 @@ export async function addAttachment(input: AddAttachmentInput, ctx: ServiceConte
     images,
     ctx.now?.() ?? new Date(),
     () => addedAttachment(dir, input.story, ctx),
-    [input.id],
+    { ids: [input.id], ...storyUidField(story) },
   );
 
   // The copy has the attachment now. The recorder writes the file, then the entry.
-  await recordAttachmentAdd(ctx, { storyId: story.id, attachment, bytes: (images[0] as PendingImage).bytes });
+  await recordAttachmentAdd(ctx, {
+    storyId: story.id,
+    ...storyUidField(story),
+    attachment,
+    bytes: (images[0] as PendingImage).bytes,
+  });
 
   return attachment;
 }
@@ -171,7 +176,8 @@ export async function addAttachment(input: AddAttachmentInput, ctx: ServiceConte
 async function selected(story: string, id: string, ctx: ServiceContext) {
   validateAttachmentId(id);
 
-  const storyId = (await getStory({ id: story }, ctx)).id;
+  const found = await getStory({ id: story }, ctx);
+  const storyId = found.id;
   const dir = await attachmentDir(await findProject(ctx), storyId);
   const records = await readAttachments(dir);
   const record = records.find((a) => a.id === id);
@@ -184,7 +190,7 @@ async function selected(story: string, id: string, ctx: ServiceContext) {
 
   await noSymlink(path);
 
-  return { storyId, dir, records, record, path };
+  return { storyId, storyUid: storyUidField(found), dir, records, record, path };
 }
 
 /** Gives the command of the platform that opens a file in its default application. */
@@ -219,7 +225,7 @@ export async function openAttachment(input: { story: string; id: string }, ctx: 
 
 /** Removes an attachment. A failure restores the file and the index. */
 export async function removeAttachment(input: { story: string; id: string }, ctx: ServiceContext = {}) {
-  const { storyId, dir, records, path } = await selected(input.story, input.id, ctx);
+  const { storyId, storyUid, dir, records, path } = await selected(input.story, input.id, ctx);
   const temporary = `${path}.removed`;
   // Only a remote worker needs the hash, so a local remove does not read the file.
   const sha256 = ctx.recorder ? sha256Hex(await readFile(path)) : "";
@@ -239,7 +245,7 @@ export async function removeAttachment(input: { story: string; id: string }, ctx
     throw err;
   }
 
-  await recordAttachmentRemove(ctx, { storyId, id: input.id, sha256 });
+  await recordAttachmentRemove(ctx, { storyId, ...storyUid, id: input.id, sha256 });
 
   return { removed: input.id };
 }

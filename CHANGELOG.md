@@ -15,6 +15,8 @@ This file records the changes to Rowbly that users can see.
 - Added: Each new Story file has a `uid` frontmatter key with a permanent UUID that does not change when the Story ID changes, and `rowbly --json story get` and `rowbly --json story search` show it. `rowbly doctor` shows a warning for a Story without a `uid` and `--fix` adds one, `rowbly doctor` shows an error for an invalid `uid`, and a custom field cannot use the key `uid`. (ROW-112)
 - Added: `rowbly host attach` now also sends the new lines of the session file of each remote worker, so that a later version can show the conversation of remote Threads on the main machine. (ROW-111)
 - Added: A worker that the host agent runs on a worker host now has the `run_check` tool, and runs each check of the `checks` config in its worktree on that host. `rowbly host attach` sends the status of the checks of each run, and a stop or cancel of the run also stops its checks. (ROW-93)
+- Fixed: When two Story files have the same Story ID and the same `uid`, for example in two Stage folders, `rowbly doctor --fix` and the TUI board load now remove the old copy and keep the copy with the newest `updatedAt`, for example `ROW-78: removed the old copy in DONE`. If the copies have different content, `rowbly doctor` shows an error and Rowbly does not change a file. (ROW-114)
+- Changed: New factory attempts in `.rowbly/state.json`, worker Threads, outbox entries of worker hosts and attachment records in `.rowbly/attachments/<ID>/manifest.json` now keep the `storyUid` of their Story. Rowbly finds the Story of these records by its `uid` first and then by the Story ID, so old records stay valid. (ROW-113)
 
 ### 0.19.0
 

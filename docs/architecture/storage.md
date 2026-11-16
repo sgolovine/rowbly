@@ -197,13 +197,43 @@ the folder of its Stage:
 
 `rowbly doctor` examines the Story folders:
 
-| Problem                                                                                         | Severity | `--fix`                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| A Story file is directly in `stories/`, or in the folder of a different Stage.                  | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
-| Two files of the Project key have the same Story number, in one folder or in different folders. | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
-| Two Stories with the same number have factory state, or a file of the group cannot be read.     | error    | None. The files stay.                                                                                                                     |
-| Two files with a different key have the same Story number.                                      | error    | None. The files stay.                                                                                                                     |
-| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.          | warning  | None.                                                                                                                                     |
+| Problem                                                                                                                 | Severity | `--fix`                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A Story file is directly in `stories/`, or in the folder of a different Stage.                                          | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
+| Two files have the same Story number and the same `uid`, and are different only in `stage`, `position` and `updatedAt`. | error    | Removes the old copy, for example `ROW-78: removed the old copy in DONE`. See [Copies of a Story](#copies-of-a-story).                    |
+| Two files have the same Story number and the same `uid`, and other content is different.                                | error    | None. The files stay. Merge them.                                                                                                         |
+| Two files of the Project key have the same Story number, in one folder or in different folders.                         | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
+| Two Stories with the same number have factory state, or a file of the group cannot be read.                             | error    | None. The files stay.                                                                                                                     |
+| Two files with a different key have the same Story number.                                                              | error    | None. The files stay.                                                                                                                     |
+| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.                                  | warning  | None.                                                                                                                                     |
+
+### Copies of a Story
+
+Two or more Story files with the same Story number and the same `uid` are copies of one Story. For example,
+a Stage move writes the new file and the old file stays in the folder of the old Stage.
+
+The repair runs at the same places as the repair of a duplicate Story ID, and before it. The TUI shows one
+info toast for each removed copy, and `rowbly doctor --fix` shows one fixed issue for each removed copy, for
+example `ROW-78: removed the old copy in DONE`. Without `--fix`, `rowbly doctor` shows the fix of the error,
+and it does not change a file.
+
+- If the copies are different only in `stage`, `position` and `updatedAt`, the repair keeps one copy and
+  removes the other copies.
+- If the copies are different in a different frontmatter key or in the body, the repair does not change a
+  file. Merge the copies yourself.
+
+These rules select the copy that stays:
+
+1. The copy with the newest valid `updatedAt` stays.
+2. If the times are equal, the file with the newest modification time stays.
+3. If the times are equal, the path that comes first in string order stays.
+
+After the repair, the files that stay go to the rules of [Duplicate Story IDs](#duplicate-story-ids), for
+example a file with no `uid` or with a different `uid`. If a group has copies with different content, the
+repair does not change a file of the group.
+
+The repair takes no lock. It reads each file again before it removes a copy. If a copy changed or
+disappeared after the plan, the repair removes no file of the group.
 
 ### Duplicate Story IDs
 
@@ -385,6 +415,9 @@ A Story can have attachments of all file types. The `attachment` service keeps t
 `attachments/<story ID>/`, with a `manifest.json` file and one file for each attachment.
 
 - Each attachment must be a file of 10 MiB or less. An empty file is valid.
+- A record can also have `storyUid`: the `uid` of the Story when the record was made. Each new
+  record of a Story with a `uid` gets it. An old record without `storyUid` stays valid. A `storyUid`
+  that is not a string makes the manifest malformed. The folder name stays the Story ID.
 - Each record of the manifest has `id`, `name`, `type`, `size` and `createdAt`. `type` is a
   lower-case MIME type. Bytes with the PNG signature get `image/png`. Else the extension of the name
   gives the type from a small table, for example `.pdf` gives `application/pdf`. An unknown extension
@@ -500,9 +533,14 @@ A field entry of `outbox.jsonl` has this shape. It has no `type` key:
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "changes": [{ "path": "stage", "before": "BACKLOG", "after": "DONE" }]
 }
 ```
+
+- Each entry has `storyUid`, the `uid` of the Story, when the Story has a `uid`. An entry of an older
+  build has no `storyUid`. The apply accepts an entry with or without `storyUid`. A `storyUid` that is
+  not a string is a conflict.
 
 - The service writes the Story file first. Then the recorder adds the entry. If the Story write fails,
   the outbox gets no entry. If the process stops between the two writes, the entry is lost.
@@ -525,8 +563,16 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "type": "attachment.add",
-  "attachment": { "id": "a<uuid>", "name": "shot.png", "type": "image/png", "size": 1234, "createdAt": "<iso>" },
+  "attachment": {
+    "id": "a<uuid>",
+    "name": "shot.png",
+    "type": "image/png",
+    "size": 1234,
+    "createdAt": "<iso>",
+    "storyUid": "<uuid>"
+  },
   "sha256": "<64 lowercase hex characters>"
 }
 ```
@@ -537,6 +583,7 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
   "opId": "<uuid>",
   "threadId": "<thread>",
   "storyId": "ROW-01",
+  "storyUid": "<uuid>",
   "type": "attachment.remove",
   "id": "a<uuid>",
   "sha256": "<64 lowercase hex characters>"
@@ -606,6 +653,10 @@ body for `description`.
 | Equal to `after`          | The change is already there. Skip it. |
 | Other                     | Conflict. Do not write.               |
 
+- The apply finds the Story of an entry with `resolveStoryRef`. The Story with the `storyUid` of the
+  entry comes first. If the entry has no `storyUid`, or no Story has it, the Story with the `storyId`
+  comes next. Thus an entry applies to its Story also after the number of the Story changes. See
+  [Story references](native-factory/README.md#story-references).
 - The apply writes the changes of one field entry that do not conflict in one `updateStory` call. It
   records each conflicting change.
 - A missing Story makes each change of the entry a conflict.
