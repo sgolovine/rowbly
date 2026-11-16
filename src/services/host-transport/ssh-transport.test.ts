@@ -5,7 +5,7 @@ import { ValidationError } from "../errors/errors.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { HostAuthFailedError, HostProtocolError, HostTimeoutError, HostUnreachableError } from "./host-errors.js";
 import type { ChannelEnd } from "./host-transport.js";
-import { createSshTransport, sshArguments, sshSettings } from "./ssh-transport.js";
+import { createSshTransport, sshArguments, sshSettings, validateCommand } from "./ssh-transport.js";
 
 const COMMAND = ["/opt/rowbly/bin/rowbly", "host", "attach"];
 
@@ -99,6 +99,8 @@ describe("ssh transport", () => {
     ["a token with a $", ["rowbly", "$HOME"]],
     ["a token with a ;", ["rowbly;id"]],
     ["a token with a quote", ["rowbly'"]],
+    ["a token with a double quote", ['rowbly"']],
+    ["a token with a backtick", ["rowbly`id`"]],
     ["an empty token", ["rowbly", ""]],
     ["no tokens", []],
   ])("refuses %s before SSH starts", async (_name, command) => {
@@ -108,6 +110,39 @@ describe("ssh transport", () => {
       transportFor(dir.path, stub).channel(command, { onFrame: () => {}, onClose: () => {} }),
     ).rejects.toBeInstanceOf(ValidationError);
     await expect(readRecord(dir.path)).rejects.toThrow();
+  });
+
+  it("accepts a token with @, for example an npm package spec", () => {
+    expect(() => validateCommand(["npm", "install", "rowbly@0.18.0"])).not.toThrow();
+    expect(sshArguments(sshSettings({ target: "worker@box" }), ["npm", "rowbly@1.0.0"]).at(-1)).toBe("rowbly@1.0.0");
+  });
+
+  it.each([
+    ["a space", "rowbly@1 x"],
+    ["a $", "rowbly@$V"],
+    ["a ;", "rowbly@1;id"],
+    ["a quote", "rowbly@'1'"],
+    ["a backtick", "rowbly@`id`"],
+  ])("refuses a token with @ and %s", (_name, token) => {
+    expect(() => validateCommand(["npm", token])).toThrow(ValidationError);
+  });
+
+  it("uploads the exact bytes on stdin and gives the exit code and stderr", async () => {
+    const data = Buffer.from([...Array.from({ length: 256 }, (_, index) => index), 0x0a, 0x00, 0xff]);
+    const out = join(dir.path, "upload.bin");
+    const stub = await writeStub(
+      dir.path,
+      [
+        "const chunks = [];",
+        'process.stdin.on("data", (chunk) => chunks.push(chunk));',
+        `process.stdin.on("end", () => { fs.writeFileSync(${JSON.stringify(out)}, Buffer.concat(chunks)); process.stderr.write("done"); process.exit(4); });`,
+      ].join("\n"),
+      false,
+    );
+    const result = await transportFor(dir.path, stub).upload(["dd", "of=file.tgz", "status=none"], data);
+    expect(result).toEqual({ exitCode: 4, stderr: "done" });
+    expect(Buffer.compare(await readFile(out), data)).toBe(0);
+    expect((await readRecord(dir.path)).args.slice(-3)).toEqual(["dd", "of=file.tgz", "status=none"]);
   });
 
   it.each(["-oProxyCommand=id", "user@host name", "host\tname", "host\u0001", "host\u007f", ""])(

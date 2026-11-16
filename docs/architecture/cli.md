@@ -132,8 +132,12 @@ that runs factory workers only. The hosts belong to the user, not to a Project. 
 not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. See
 [storage.md](storage.md#rowblyrcjson).
 
-- `host add <id> --ssh <target> --max-workers <n>` adds a host at the end of the list. A new host is
-  on (`enabled: true`). The result is the host.
+- `host add <id> --ssh <target> --max-workers <n>` checks Node 22.19.0 or later on the host, and
+  installs the exact Rowbly build of the main machine in a private folder on the host. Then it adds
+  the host at the end of the list. A new host is on (`enabled: true`). The result is the host with an
+  `install` object. See [host-install.md](native-factory/host-install.md). If the Node check or the
+  install fails, `host add` gives `HOST_NODE_MISSING`, `HOST_NODE_TOO_OLD` or `HOST_INSTALL_FAILED`,
+  and `~/.rowblyrc.json` does not change.
 - `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
   `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
 - `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or

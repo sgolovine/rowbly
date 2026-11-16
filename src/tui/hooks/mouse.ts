@@ -8,9 +8,15 @@ import { useLatest } from "./refs.js";
 /** Lines one notch of the mouse wheel scrolls. */
 export const WHEEL_LINES = 3;
 
+/** The modifier keys of a click. */
+export interface ClickEvent {
+  /** `shift` was held down at the press. */
+  readonly shift: boolean;
+}
+
 /** What a box does when clicked, and what it accepts when something is dragged onto it. */
 export interface MouseHandlers {
-  onClick?(): void;
+  onClick?(event: ClickEvent): void;
   onEnter?(): void;
   onLeave?(): void;
   /**
@@ -53,6 +59,8 @@ interface Drag {
   readonly x: number;
   readonly y: number;
   readonly moved: boolean;
+  /** `shift` was held down at the press. */
+  readonly shift: boolean;
 }
 
 interface MouseState {
@@ -238,7 +246,14 @@ function dispatchPress(store: MouseStore, event: MouseEvent): void {
 
   if (target && target.handlers.current.drag !== undefined) {
     store.update(() => ({
-      dragging: { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false },
+      dragging: {
+        value: target.handlers.current.drag,
+        from: target,
+        x: event.x,
+        y: event.y,
+        moved: false,
+        shift: event.shift ?? false,
+      },
     }));
 
     return;
@@ -246,7 +261,7 @@ function dispatchPress(store: MouseStore, event: MouseEvent): void {
 
   store.update(() => ({ dragging: null }));
   setOver(store, undefined);
-  target?.handlers.current.onClick?.();
+  target?.handlers.current.onClick?.({ shift: event.shift ?? false });
 }
 
 function dispatchRelease(store: MouseStore, event: MouseEvent): void {
@@ -265,7 +280,7 @@ function dispatchRelease(store: MouseStore, event: MouseEvent): void {
 /** A release in the cell of the press is a click. Elsewhere, it drops the value on the box under it. */
 function release(store: MouseStore, event: MouseEvent, drop: Drag): void {
   if (!drop.moved && event.x === drop.x && event.y === drop.y) {
-    drop.from.handlers.current.onClick?.();
+    drop.from.handlers.current.onClick?.({ shift: drop.shift });
 
     return;
   }

@@ -2,7 +2,7 @@
 
 The host transport connects the main machine to a worker host over SSH. The code is in
 `src/services/host-transport/`. Later Stories use it to install Rowbly, run checks, start the host
-agent and read the live channel. See the Spec `remote-worker-hosts`, section "Transport".
+agent and read the live channel. [host-install.md](host-install.md) installs Rowbly on the host. See the Spec `remote-worker-hosts`, section "Transport".
 
 The transport does not read the host registry. The caller gives the SSH target and the path of the
 remote Rowbly executable. The transport does not load Pi.
@@ -16,7 +16,7 @@ remote Rowbly executable. The transport does not load Pi.
 | `host-errors.ts`    | The error classes and the classification of an SSH exit.                               |
 | `json-lines.ts`     | The frame encoder and decoder.                                                         |
 | `ssh-transport.ts`  | The SSH arguments, the validation and `createSshTransport`.                            |
-| `ssh-process.ts`    | One SSH process for a request call or a bytes call.                                    |
+| `ssh-process.ts`    | One SSH process for a request call, a bytes call or an upload call.                    |
 | `ssh-channel.ts`    | One SSH process for a channel.                                                         |
 
 The fake transport for tests is in `src/services/test-project/fake-host-transport.ts`.
@@ -28,11 +28,13 @@ Each call runs a fixed remote command, for example `[<remote rowbly>, "host", "a
 - **Request call.** The transport sends one JSON value on stdin. It reads one JSON value from stdout.
 - **Bytes call.** The transport sends one JSON value on stdin. It gives the exact bytes of stdout, for
   example a PNG file. Stdout must not be larger than the limit (default 10 MiB).
+- **Upload call.** The transport sends the exact bytes of a buffer on stdin, for example a package
+  file. It gives the exit code and the stderr. [host-install.md](host-install.md) uses it with `dd`.
 - **Channel.** A long-lived connection. Each frame is one JSON value on one line, in the two directions.
   A line must not be longer than the limit (default 1 MiB). A channel has no total time limit. It
   closes when the SSH process stops.
 
-A request call and a bytes call have a time limit (default 30 seconds). At the limit, the transport
+A request call, a bytes call and an upload call have a time limit (default 30 seconds). At the limit, the transport
 stops the SSH process and gives `HOST_TIMEOUT`.
 
 An exit code other than 255 is the result of the remote command. The transport gives the exit code
@@ -43,8 +45,9 @@ and the stderr text to the caller. It is not a transport error.
 SSH joins its arguments into one shell string on the host. Thus:
 
 - The data of a call goes on stdin. It never goes in the SSH arguments.
-- Each token of the remote command can have only the characters `A-Z`, `a-z`, `0-9` and `. _ / = : -`.
-  A different character gives `ValidationError` before SSH starts.
+- Each token of the remote command can have only the characters `A-Z`, `a-z`, `0-9` and `. _ / = : @ -`.
+  A different character gives `ValidationError` before SSH starts. `@` has no special meaning in
+  `sh`, `bash`, `zsh` or `fish`. npm needs it in a package spec, for example `rowbly@0.18.0`.
 - The SSH target must not start with `-`, and it must not have whitespace or a control character.
 - The arguments have `--` before the target, so that the target cannot be an SSH option.
 - The transport uses `spawn` without a shell.
@@ -90,5 +93,5 @@ Each error extends `RowblyError`.
 No test uses real SSH.
 
 - The SSH tests use a stub `ssh` executable. It is a small Node script that records its arguments and stdin.
-- Other tests use `createFakeHostTransport`. `disconnect()` closes the open channels with
+- Other tests use `createFakeHostTransport`. It records each upload with its exact bytes in `uploads`. `disconnect()` closes the open channels with
   `HOST_UNREACHABLE`, and new calls fail with the same error. `reconnect()` makes the calls work again.
