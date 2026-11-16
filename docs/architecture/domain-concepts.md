@@ -12,7 +12,7 @@ relate.
 Project ── configuration: custom field definitions, tags, stages (each with an optional prompt)
   ├── Factory ── native supervisor and independent workers
   │     └── Thread ── one Pi session, with one or more runs
-  └── Story ── custom field values, tags, exactly one stage, optional PNG attachments, upstream Stories
+  └── Story ── custom field values, tags, exactly one stage, optional file attachments, upstream Stories
         ├── Thread ── the history of one worker attempt
         └── Spec ── a Markdown document, linked to one or more stories
 ```
@@ -30,7 +30,7 @@ factory. The Supervisor prompt and the Worker prompt go to one role. See [prompt
 
 A Project contains Stories. You define each custom field one time, at the Project level. The field
 then applies to all Stories in that Project, and each Story has its own value for it. Each Story is in
-a Stage. A Story can have PNG attachments. See [storage.md](storage.md#attachments).
+a Stage. A Story can have attachments of all file types. See [storage.md](storage.md#attachments).
 
 ### Tags
 

@@ -246,8 +246,8 @@ export function clipboardFailure(
     timeout: "Clipboard image read timed out",
   };
   const fallback = story
-    ? `Use \`rowbly add-attachment ${story} <file.png>\` to attach a file.`
-    : "Save the Story first, then use its Attachments tab to add a PNG file.";
+    ? `Use \`rowbly add-attachment ${story} <file>\` to attach a file.`
+    : "Save the Story first, then use its Attachments tab to add a file.";
 
   return new ValidationError(messages[reason], {
     details: { reason },

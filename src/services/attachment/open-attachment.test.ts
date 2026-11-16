@@ -1,8 +1,11 @@
 import { execFile } from "node:child_process";
+import { readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { attachmentDir } from "../attachment-files/attachment-files.js";
 import { createStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
-import { addAttachment, openAttachment } from "./attachment.js";
+import { addAttachment, openAttachment, removeAttachment } from "./attachment.js";
 
 vi.mock("node:child_process", async (original) => ({ ...(await original<object>()), execFile: vi.fn() }));
 describe("openAttachment", () => {
@@ -37,5 +40,22 @@ describe("openAttachment", () => {
       code: "VALIDATION",
       message: "Cannot open attachment",
     });
+  });
+
+  it("opens and removes a file that is not a PNG", async () => {
+    const story = await createStory({ title: "Files" }, p.ctx);
+    const dir = await attachmentDir(p.paths, story.id);
+    await writeFile(join(p.paths.root, "report.pdf"), "%PDF-1.7\n");
+    const added = await addAttachment({ story: story.id, file: "report.pdf" }, { ...p.ctx, cwd: p.paths.root });
+    const exec = vi.mocked(execFile);
+
+    exec.mockImplementation(((_file: unknown, _args: unknown, _opts: unknown, callback: (err: null) => void) => {
+      callback(null);
+    }) as typeof execFile);
+
+    expect(await openAttachment({ story: story.id, id: added.id }, p.ctx)).toEqual({ opened: added.id });
+    expect(exec.mock.calls.at(-1)?.[1]).toContain(join(dir, `${added.id}.pdf`));
+    expect(await removeAttachment({ story: story.id, id: added.id }, p.ctx)).toEqual({ removed: added.id });
+    expect(await readdir(dir)).toEqual(["manifest.json"]);
   });
 });

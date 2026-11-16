@@ -74,7 +74,7 @@ export interface HostChannel {
 export interface HostTransport {
   /** Sends one JSON value on stdin, and gives the one JSON value of stdout. */
   request(command: RemoteCommand, input: unknown, options?: CallOptions): Promise<RequestResult>;
-  /** Sends one JSON value on stdin, and gives the bytes of stdout, for example a PNG file. */
+  /** Sends one JSON value on stdin, and gives the bytes of stdout, for example an attachment file. */
   bytes(command: RemoteCommand, input: unknown, options?: CallOptions): Promise<BytesResult>;
   /** Sends the exact bytes of `data` on stdin, for example a package file. The remote command writes them to a file. */
   upload(command: RemoteCommand, data: Buffer, options?: CallOptions): Promise<UploadResult>;

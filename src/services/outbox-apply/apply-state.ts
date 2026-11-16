@@ -26,7 +26,7 @@ export interface OutboxConflict {
   /** The value on the main machine. */
   readonly current?: unknown;
   readonly reason: string;
-  /** The path of the kept PNG of an `attachment.add` conflict. */
+  /** The path of the kept file of an `attachment.add` conflict. */
   readonly png?: string;
 }
 
