@@ -2,6 +2,7 @@
 title: "Threads View: Open in sidebar instead of modal"
 stage: DONE
 position: 17
+uid: acbb62fe-ac3f-4d23-975b-1f08ef7f0d9d
 createdAt: 2026-11-14T16:41:45.000Z
 updatedAt: 2026-11-14T17:07:00.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-16
