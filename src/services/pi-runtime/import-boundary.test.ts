@@ -55,6 +55,10 @@ describe("Pi import boundary", () => {
     expect(JSON.parse(result.stdout).factory.phase).toBe("stopped");
   });
 
+  it("imports the worker executor interface without loading Pi", async () => {
+    await expect(import("../factory-manager/worker-executor.js")).resolves.toHaveProperty("workerControl");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });

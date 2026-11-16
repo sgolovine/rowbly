@@ -206,7 +206,7 @@ function startWorkerTask(manager: Manager, threadId: string): void {
 
 /** Cancels the expected run of an active worker and holds its Story in the current Stage. */
 export async function cancelWorker(manager: Manager, id: string, expectedRunId: string): Promise<void> {
-  const session = await serial(manager, async () => {
+  const control = await serial(manager, async () => {
     const thread = await getThread(id, manager.ctx);
     const lastRun = thread.runs.at(-1);
 
@@ -237,10 +237,10 @@ export async function cancelWorker(manager: Manager, id: string, expectedRunId: 
     );
     await changeThread(manager, id, "cancelled", { resumable: !!thread.session.file });
 
-    return getState(manager).active.get(id)?.session;
+    return getState(manager).active.get(id)?.control;
   });
 
-  await Promise.all([session?.session.abort(), cancelThreadChecks(manager.checks, id)]);
+  await Promise.all([control?.cancel(), cancelThreadChecks(manager.checks, id)]);
 }
 
 /** Resumes a Thread with a new run. A repeated request for the same run does nothing. */
