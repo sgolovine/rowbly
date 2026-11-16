@@ -36,9 +36,17 @@ function describe(host: Host): string {
   return `${host.id}  ${host.ssh}  ${host.maxWorkers} worker(s)  ${state}`;
 }
 
-/** The outbox folder from `ROWBLY_OUTBOX` and the JSON request on stdin. */
-async function hostRequest() {
-  return { dir: process.env.ROWBLY_OUTBOX, text: await streamText(process.stdin) };
+/**
+ * The outbox folder of a host request. With a project id, it is the outbox of the host agent of that Project, because
+ * a command over SSH has no `ROWBLY_OUTBOX`. Without it, the folder comes from `ROWBLY_OUTBOX`.
+ */
+function outboxDir(projectId: string | undefined): string | undefined {
+  return projectId === undefined ? process.env.ROWBLY_OUTBOX : hostAgentPaths(projectId).outbox;
+}
+
+/** The outbox folder and the JSON request on stdin. */
+async function hostRequest(projectId: string | undefined) {
+  return { dir: outboxDir(projectId), text: await streamText(process.stdin) };
 }
 
 function needsAction(item: CheckItem): boolean {
@@ -326,28 +334,32 @@ export function registerHostCommands(program: Command): void {
 function registerHostAgentCommands(program: Command): void {
   // The main machine runs this command over SSH to get the file of an `attachment.add` entry.
   program
-    .command("blob <sha256>", { hidden: true })
-    .action((sha256: string, _opts: unknown, command: Command) =>
-      runBytes(command, () => readOutboxBlob({ dir: process.env.ROWBLY_OUTBOX, sha256 })),
+    .command("blob <sha256> [project-id]", { hidden: true })
+    .action((sha256: string, projectId: string | undefined, _opts: unknown, command: Command) =>
+      runBytes(command, async () => readOutboxBlob({ dir: outboxDir(projectId), sha256 })),
     );
 
   // The main machine runs this command over SSH to get the entries after the `afterSeq` of the request.
-  program.command("outbox", { hidden: true }).action((_opts: unknown, command: Command) =>
-    runWithoutContext(
-      command,
-      async () => hostOutboxEntries(await hostRequest()),
-      (answer) => `${answer.entries.length} entries`,
-    ),
-  );
+  program
+    .command("outbox [project-id]", { hidden: true })
+    .action((projectId: string | undefined, _opts: unknown, command: Command) =>
+      runWithoutContext(
+        command,
+        async () => hostOutboxEntries(await hostRequest(projectId)),
+        (answer) => `${answer.entries.length} entries`,
+      ),
+    );
 
   // The main machine runs this command over SSH after it recorded the applied `seq` on its disk.
-  program.command("outbox-ack", { hidden: true }).action((_opts: unknown, command: Command) =>
-    runWithoutContext(
-      command,
-      async () => hostOutboxAck(await hostRequest()),
-      (result) => `Removed ${result.removed} entries`,
-    ),
-  );
+  program
+    .command("outbox-ack [project-id]", { hidden: true })
+    .action((projectId: string | undefined, _opts: unknown, command: Command) =>
+      runWithoutContext(
+        command,
+        async () => hostOutboxAck(await hostRequest(projectId)),
+        (result) => `Removed ${result.removed} entries`,
+      ),
+    );
 
   // A detached agent starts with the same Node, loader flags and entry file as this process.
   registerHostServeCommands(program, {

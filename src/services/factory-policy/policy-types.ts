@@ -113,6 +113,8 @@ export interface ScanInput {
   now?: Date | string;
   maxActive?: number;
   limits?: Partial<PolicyLimits>;
+  /** The Stories whose remote worker Thread is not synchronized. The policy skips them before all other rules. */
+  hostSync?: readonly string[];
 }
 
 export interface StalledWorker {

@@ -69,7 +69,8 @@ async function storyFacts(manager: Manager, request: PlacementRequest): Promise<
 
 /**
  * Selects the host of a new worker with the placement rules. A refused placement gives a `ConflictError` with the
- * reason. A worker host gives a `ConflictError` too, because the dispatch to a remote host is not available yet.
+ * reason. A worker host gives a `ConflictError` too when the manager has no `hostConnection`, because then it cannot
+ * send a worker to a worker host.
  */
 export async function placeStory(manager: Manager, request: PlacementRequest): Promise<string> {
   await refreshHosts(manager);
@@ -91,7 +92,7 @@ export async function placeStory(manager: Manager, request: PlacementRequest): P
     throw new ConflictError(`Cannot place the worker: ${placement.reason}`);
   }
 
-  if (placement.host !== LOCAL_HOST) {
+  if (placement.host !== LOCAL_HOST && !manager.remote) {
     throw new ConflictError("Remote dispatch is not available", { details: { host: placement.host } });
   }
 

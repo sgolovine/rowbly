@@ -196,9 +196,10 @@ and `host unuse` need a Project. The `host-project` service does their work. See
 - `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
   [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
-- `host blob <sha256>` is hidden. It does not show in `rowbly host --help`. The main machine runs it
-  on a worker host to get the file of an `attachment.add` entry. The command reads the outbox folder
-  from `ROWBLY_OUTBOX`. It does not need `ROWBLY_THREAD_ID`. It writes the exact bytes of
+- `host blob <sha256> [project-id]` is hidden. It does not show in `rowbly host --help`. The main
+  machine runs it on a worker host to get the file of an `attachment.add` entry. With a project id,
+  the command reads the outbox folder of the host agent of that Project. Without it, the command
+  reads the outbox folder from `ROWBLY_OUTBOX`. It does not need `ROWBLY_THREAD_ID`. It writes the exact bytes of
   `$ROWBLY_OUTBOX/blobs/<sha256>.png` to stdout and exits with 0.
   - A value that is not 64 lowercase hex characters gives a `VALIDATION` error. A missing
     `ROWBLY_OUTBOX` also gives `VALIDATION`.
@@ -207,8 +208,8 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
-- `host serve`, `host submit`, `host attach`, `host prepare`, `host cache-missing` and
-  `host cache-put` are hidden. The main machine runs them on a worker host over SSH. The data goes on
+- `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host cache-missing`
+  and `host cache-put` are hidden. The main machine runs them on a worker host over SSH. The data goes on
   stdin. The output is JSON. See [native-factory/host-agent.md](native-factory/host-agent.md).
   - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
     limit and starts a detached host agent, if no live agent holds the claim. It writes
@@ -220,6 +221,8 @@ and `host unuse` need a Project. The `host-project` service does their work. See
     current receipt, or `null`.
   - `host attach <project-id>` writes frames: first the hello frame, then `status`, `receipt` and
     `run` frames. It stops at the end of stdin.
+  - `host run-paths <project-id>` reads `{ "threadId": "<id>", "storyId": "<id>", "clone": "<path>" }`.
+    It writes the absolute run paths of the host: `{ clone, copy, worktree, lock, shim, outbox }`.
   - `host prepare <project-id>` reads the copy and the launch data of one Thread (32 MiB or less).
     It writes the copy to the Thread folder and writes `{ threadId, copy, files, attachments }`.
     It gives `CONFLICT` while the Thread has active work.
@@ -228,9 +231,10 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - `host cache-put <project-id> <attachment-id>` reads the bytes of an attachment file of any
     type (10 MiB or less). It puts them in the attachment cache and writes `{ id, added }`.
   - A bad project id, a bad input or bad JSON gives `VALIDATION`.
-- `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
-  apply the outbox. Each command reads one JSON object on stdin and the outbox folder from
-  `ROWBLY_OUTBOX`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.
+- `host outbox [project-id]` and `host outbox-ack [project-id]` are hidden. The main machine runs them
+  on a worker host to apply the outbox. Each command reads one JSON object on stdin. With a project
+  id, the command uses the outbox folder of the host agent of that Project. Without it, the command
+  reads the outbox folder from `ROWBLY_OUTBOX`. A bad project id gives `VALIDATION`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.
   - `host outbox` reads `{ "afterSeq": <n> }`. It gives `{ "entries": [...] }`: the complete entries
     with a `seq` greater than `afterSeq`, in `seq` order.
   - `host outbox-ack` reads `{ "seq": <n> }`. It removes the entries with a `seq` equal to or less

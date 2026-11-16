@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
 import { appendOutboxEntry, writeOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { initProject } from "../../services/project/project.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
@@ -430,6 +431,18 @@ describe("host blob", () => {
     expect(result.bytes.length).toBe(0);
   });
 
+  it("reads the blob from the outbox of the host agent of the project id, without ROWBLY_OUTBOX", async () => {
+    vi.stubEnv("HOME", outside.path);
+    vi.stubEnv("ROWBLY_OUTBOX", "");
+    await writeOutboxBlob(hostAgentPaths("p1", outside.path).outbox, PNG);
+
+    const result = await blob(sha, "p1");
+
+    expect(result.exitCode).toBe(0);
+    expect(result.bytes.equals(PNG)).toBe(true);
+    expect((await blob(sha, "Bad_Id")).exitCode).toBe(1);
+  });
+
   it("gives VALIDATION without ROWBLY_OUTBOX", async () => {
     vi.stubEnv("ROWBLY_OUTBOX", "");
 
@@ -480,6 +493,24 @@ describe("host outbox and host outbox-ack", () => {
 
     const after = await withStdin('{"afterSeq":0}\n', "outbox");
     expect(JSON.parse(after.stdout).entries.map((entry: { seq: number }) => entry.seq)).toEqual([2]);
+  });
+
+  it("uses the outbox of the host agent of the project id, without ROWBLY_OUTBOX", async () => {
+    vi.stubEnv("HOME", outside.path);
+    vi.stubEnv("ROWBLY_OUTBOX", "");
+    const dir = hostAgentPaths("p1", outside.path).outbox;
+    await appendOutboxEntry({ dir, threadId: "t" }, write("B"));
+    await appendOutboxEntry({ dir, threadId: "t" }, write("C"));
+
+    const read = await withStdin('{"afterSeq":0}\n', "outbox", "p1");
+    expect(read.exitCode).toBe(0);
+    expect(JSON.parse(read.stdout).entries.map((entry: { seq: number }) => entry.seq)).toEqual([1, 2]);
+
+    const ack = await withStdin('{"seq":1}\n', "outbox-ack", "p1");
+    expect(JSON.parse(ack.stdout)).toEqual({ removed: 1, blobs: [] });
+
+    const bad = await withStdin('{"afterSeq":0}\n', "outbox", "Bad_Id");
+    expect(JSON.parse(bad.stderr).error.code).toBe("VALIDATION");
   });
 
   it("gives VALIDATION for bad JSON and for a missing ROWBLY_OUTBOX", async () => {

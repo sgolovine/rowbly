@@ -5,6 +5,7 @@ import { useTempDir } from "../test-project/test-project.js";
 import {
   hostAgentPaths,
   hostRunPaths,
+  hostRunPathsAnswer,
   prepareAgentDirs,
   slotPaths,
   threadPaths,
@@ -87,5 +88,19 @@ describe("host agent paths", () => {
     expect(() => hostRunPaths({ home: "/h", projectId: "p1", clone: "r", threadId: "t1", storyId: "../x" })).toThrow(
       expect.objectContaining({ code: "VALIDATION" }),
     );
+  });
+
+  it("answers `host run-paths` with the paths below the home folder, and refuses a bad input", () => {
+    const answer = hostRunPathsAnswer("p1", { threadId: "t1", storyId: "ROW-7", clone: "work/repo" }, "/home/u");
+    expect(answer).toEqual(
+      hostRunPaths({ home: "/home/u", projectId: "p1", clone: "work/repo", threadId: "t1", storyId: "ROW-7" }),
+    );
+    for (const bad of [
+      null,
+      { threadId: "t1", storyId: "ROW-7" },
+      { threadId: "../t", storyId: "ROW-7", clone: "r" },
+    ]) {
+      expect(() => hostRunPathsAnswer("p1", bad, "/home/u")).toThrow(expect.objectContaining({ code: "VALIDATION" }));
+    }
   });
 });

@@ -5,8 +5,8 @@ position: 16
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T20:06:56.684Z
-worktree: null
+updatedAt: 2026-11-16T23:26:40.846Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
 pull_request: null
 ---
 

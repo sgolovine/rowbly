@@ -167,6 +167,26 @@ export function hostRunPaths(input: HostRunInput): HostRunPaths {
   };
 }
 
+/**
+ * Gives the run paths for the input `{ threadId, storyId, clone }` of `host run-paths`. The main machine does not
+ * know the home folder of the host, so the host gives the absolute paths of the worker message.
+ */
+export function hostRunPathsAnswer(projectId: string, value: unknown, home: string = homedir()): HostRunPaths {
+  const input = (value ?? {}) as Partial<HostRunInput>;
+
+  if (typeof input.clone !== "string" || input.clone.trim() === "") {
+    throw new ValidationError('The input must be { "threadId": "<id>", "storyId": "<id>", "clone": "<path>" }');
+  }
+
+  return hostRunPaths({
+    home,
+    projectId,
+    clone: input.clone,
+    threadId: validateThreadId(input.threadId),
+    storyId: validateStoryId(input.storyId),
+  });
+}
+
 /** Gives the paths of the machine slots below the home folder. */
 export function slotPaths(home: string = homedir()): SlotPaths {
   const dir = join(hostRoot(home), "slots");
