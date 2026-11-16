@@ -2,6 +2,8 @@
 title: Capture real TUI screenshots for the website
 stage: DONE
 position: 63
+createdAt: 2026-11-14T23:14:07.000Z
+updatedAt: 2026-11-15T01:24:26.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-55
 pull_request: https://github.com/sgolovine/rowbly/pull/251
 ---

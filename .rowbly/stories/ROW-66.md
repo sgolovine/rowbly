@@ -2,6 +2,8 @@
 title: "Optional: move a stuck upstream Story out of Backlog automatically"
 stage: DONE
 position: 51
+createdAt: 2026-11-14T23:26:48.000Z
+updatedAt: 2026-11-15T00:17:30.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-66
 pull_request: https://github.com/sgolovine/rowbly/pull/239
 ---

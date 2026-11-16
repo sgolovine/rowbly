@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled}], features? {specs}, display? {compactThreads,timeZone}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -249,6 +249,20 @@ the keys, run `rowbly doctor --fix`. The command keeps all other frontmatter and
 
 Each Stage has a file `stages/<stage key>.md`. The whole file is the prompt of the Stage. A Stage in
 the config can be disabled with `enabled: false`.
+
+A Stage in the config can have the optional key `expandedByDefault`. The value must be `true` or
+`false`. When a Project opens in the TUI, All Stages shows the section of the Stage collapsed if the
+value is `false`. If the value is `true` or is not set, the section is expanded.
+
+```json
+{ "key": "DONE", "label": "Done", "enabled": true, "expandedByDefault": false }
+```
+
+- The TUI applies the values when it starts and after a Project switch. A reload of the board does
+  not change the sections that the user expanded or collapsed.
+- The TUI does not write the key. Set it by hand in `rowbly.config.json`.
+- Rowbly writes the key only when it is set. `stage update` keeps the value.
+- `stage get --json` and `stage list --json` show the key when it is set.
 
 ## Specs
 

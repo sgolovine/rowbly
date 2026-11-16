@@ -2,6 +2,8 @@
 title: Add FOO.txt to repo root
 stage: DONE
 position: 10
+createdAt: 2026-11-14T00:08:36.000Z
+updatedAt: 2026-11-14T00:13:34.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-10
 pull_request: https://github.com/sgolovine/rowbly/pull/192
 ---

@@ -2,6 +2,8 @@
 title: "Chore: Revert test changes"
 stage: DONE
 position: 11
+createdAt: 2026-11-14T00:19:32.000Z
+updatedAt: 2026-11-14T00:25:02.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-12
 pull_request: https://github.com/sgolovine/rowbly/pull/194
 ---

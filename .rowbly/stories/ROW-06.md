@@ -2,6 +2,8 @@
 title: Supervisor should auto-commit changes to Rowbly board.
 stage: DONE
 position: 6
+createdAt: 2026-11-10T21:19:28.000Z
+updatedAt: 2026-11-10T22:13:05.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-06-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/186
 ---

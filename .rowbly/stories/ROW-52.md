@@ -2,6 +2,8 @@
 title: Build the How it works page
 stage: DONE
 position: 60
+createdAt: 2026-11-14T23:14:04.000Z
+updatedAt: 2026-11-15T01:04:25.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-52
 pull_request: https://github.com/sgolovine/rowbly/pull/248
 ---

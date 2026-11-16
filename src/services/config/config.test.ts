@@ -156,6 +156,18 @@ describe("configIssues", () => {
       "stages.2.enabled",
     ]);
   });
+
+  it("accepts a stage with or without expandedByDefault, and reports a value that is not a boolean", () => {
+    const stage = { key: "A", label: "A", enabled: true };
+    expect(configIssues({ ...VALID, stages: [stage] })).toEqual([]);
+    expect(configIssues({ ...VALID, stages: [{ ...stage, expandedByDefault: false }] })).toEqual([]);
+    expect(configIssues({ ...VALID, stages: [{ ...stage, expandedByDefault: true }] })).toEqual([]);
+    for (const bad of ["no", 0, null, {}]) {
+      expect(configIssues({ ...VALID, stages: [stage, { ...stage, key: "B", expandedByDefault: bad }] })).toEqual([
+        { path: ["stages", 1, "expandedByDefault"], message: "expandedByDefault must be true or false" },
+      ]);
+    }
+  });
 });
 
 describe("skills in the config", () => {
@@ -324,6 +336,24 @@ describe("readConfig and writeConfig", () => {
     await writeConfig(project.paths, config);
     expect(await readConfig(project.paths)).toEqual(config);
     expect(JSON.parse(await project.read("rowbly.config.json")).display).toEqual({ compactThreads: false });
+  });
+
+  it("keeps expandedByDefault when it is set, and does not add it when it is not set", async () => {
+    const config: ProjectConfig = {
+      ...VALID,
+      stages: [
+        { key: "BACKLOG", label: "Backlog", enabled: true, expandedByDefault: false },
+        { key: "DONE", label: "Done", enabled: true, expandedByDefault: true },
+        { key: "LATER", label: "Later", enabled: false },
+      ],
+    };
+    await writeConfig(project.paths, config);
+    expect(await readConfig(project.paths)).toEqual(config);
+    const raw = JSON.parse(await project.read("rowbly.config.json"));
+    expect(raw.stages[0].expandedByDefault).toBe(false);
+    expect(raw.stages[1].expandedByDefault).toBe(true);
+    expect("expandedByDefault" in raw.stages[2]).toBe(false);
+    expect(parseConfig(JSON.stringify(config)).config).toEqual(config);
   });
 
   it("throws a ValidationError for an invalid file", async () => {

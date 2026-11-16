@@ -190,7 +190,19 @@ function stageIssues(stage: unknown, index: number, stages: readonly unknown[]):
       ? []
       : [{ path: [...path, "enabled"], message: "enabled must be true or false" }];
 
-  return [...stageKeyIssues(stage.key, index, stages, path), ...labelIssues(stage.label, path), ...enabled];
+  return [
+    ...stageKeyIssues(stage.key, index, stages, path),
+    ...labelIssues(stage.label, path),
+    ...enabled,
+    ...expandedByDefaultIssues(stage.expandedByDefault, path),
+  ];
+}
+
+/** The key is optional, so only a value that is set and is not a boolean is a problem. */
+function expandedByDefaultIssues(value: unknown, path: Issue["path"]): Issue[] {
+  return value === undefined || typeof value === "boolean"
+    ? []
+    : [{ path: [...path, "expandedByDefault"], message: "expandedByDefault must be true or false" }];
 }
 
 function stageKeyIssues(key: unknown, index: number, stages: readonly unknown[], path: Issue["path"]): Issue[] {

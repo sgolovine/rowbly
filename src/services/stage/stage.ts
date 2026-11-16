@@ -48,6 +48,11 @@ export interface DeleteStageInput {
   moveStoriesTo?: string;
 }
 
+/** The keys of the Stages that the TUI collapses when a Project opens. A Stage without `expandedByDefault` is expanded. */
+export function collapsedStageKeys(stages: readonly StageConfig[]): string[] {
+  return stages.filter((stage) => stage.expandedByDefault === false).map((stage) => stage.key);
+}
+
 /** Finds a stage by key, ignoring case. */
 export function lookupStage(config: ProjectConfig, key: string): StageConfig | undefined {
   return config.stages.find((s) => s.key === key.trim().toUpperCase());
@@ -196,6 +201,7 @@ export async function updateStage(input: UpdateStageInput, ctx: ServiceContext =
   }
 
   const updated: StageConfig = {
+    ...stage,
     key: newKey,
     label: input.label?.trim() ?? stage.label,
     enabled: input.enabled ?? stage.enabled,

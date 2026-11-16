@@ -2,6 +2,8 @@
 title: Turn on the Node compile cache at startup
 stage: DONE
 position: 41
+createdAt: 2026-11-14T21:25:50.000Z
+updatedAt: 2026-11-14T22:43:19.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-42
 pull_request: https://github.com/sgolovine/rowbly/pull/226
 ---

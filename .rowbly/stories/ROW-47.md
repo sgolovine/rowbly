@@ -2,6 +2,8 @@
 title: Build the website layout, header, footer and shared components
 stage: DONE
 position: 55
+createdAt: 2026-11-14T23:13:59.000Z
+updatedAt: 2026-11-15T00:37:20.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-47
 pull_request: https://github.com/sgolovine/rowbly/pull/243
 ---

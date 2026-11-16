@@ -2,6 +2,8 @@
 title: Build the closing landing sections and the install call to action
 stage: DONE
 position: 59
+createdAt: 2026-11-14T23:14:03.000Z
+updatedAt: 2026-11-15T01:00:19.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-51
 pull_request: https://github.com/sgolovine/rowbly/pull/247
 ---
