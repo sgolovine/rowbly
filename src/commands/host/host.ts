@@ -1,9 +1,14 @@
+import { spawn } from "node:child_process";
 import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
+import { ValidationError } from "../../services/errors/errors.js";
 import { type AddedHost, addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
+import { type CheckItem, checkHost, type HostCheck } from "../../services/host-check/host-check.js";
+import { type HostLogin, hostLogin } from "../../services/host-check/host-login.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
-import { run, runBytes, runWithoutContext } from "../output/output.js";
+import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { run, runBytes, runWithoutContext, setExitCode } from "../output/output.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
@@ -16,14 +21,95 @@ async function hostRequest() {
   return { dir: process.env.ROWBLY_OUTBOX, text: await streamText(process.stdin) };
 }
 
+function needsAction(item: CheckItem): boolean {
+  return item.state === "fail" || item.state === "warning";
+}
+
+/** One line for the item, and a second line with the action for a `fail` or a `warning`. */
+function itemText(item: CheckItem): string {
+  const line = `${item.state.padEnd(7)}  ${item.id}: ${item.detail}`;
+
+  return needsAction(item) && item.action ? `${line}\n         Action: ${item.action}` : line;
+}
+
+function checkText(check: HostCheck): string {
+  const state = check.ready ? "ready" : "not ready";
+
+  return [`Host ${check.host} is ${state}.`, ...check.items.map(itemText)].join("\n");
+}
+
+/** The items that the user must do after `host add`. */
+function todoText(check: HostCheck): string {
+  const todo = check.items.filter(needsAction);
+
+  return todo.length === 0 ? "All checks pass." : ["Do these items on the host:", ...todo.map(itemText)].join("\n");
+}
+
 function addedText(host: AddedHost): string {
   const action = host.install.installed ? "installed" : "found";
 
-  return `Added worker host ${describe(host)}\nRowbly ${host.install.buildId} ${action} at ${host.install.remoteExecutable}`;
+  return [
+    `Added worker host ${describe(host)}`,
+    `Rowbly ${host.install.buildId} ${action} at ${host.install.remoteExecutable}`,
+    todoText(host.check),
+  ].join("\n");
+}
+
+/** The login asks for secrets on the host, so it runs only in a terminal, and not when the output is JSON. */
+function requireTerminal(command: Command, id: string): void {
+  if (!process.stdin.isTTY || !process.stdout.isTTY || command.optsWithGlobals().json) {
+    throw new ValidationError("Login needs an interactive terminal", {
+      hint: `Run rowbly host login ${id} in a terminal without --json.`,
+    });
+  }
+}
+
+/** Starts SSH in the terminal of the user and gives its exit code. */
+function runInTerminal(login: HostLogin): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(login.executable, [...login.args], { stdio: "inherit" });
+
+    child.once("error", reject);
+    child.once("exit", (code, signal) => resolve(code ?? (signal ? 1 : 0)));
+  });
+}
+
+async function loginOnHost(
+  command: Command,
+  id: string,
+  ctx: ServiceContext,
+): Promise<{ host: string; exitCode: number }> {
+  requireTerminal(command, id);
+
+  const login = await hostLogin({ id }, ctx);
+  const exitCode = await runInTerminal(login);
+
+  setExitCode(exitCode === 0 ? undefined : exitCode);
+
+  return { host: login.host, exitCode };
 }
 
 function listText(hosts: readonly Host[]): string {
   return hosts.length === 0 ? "No worker hosts." : hosts.map(describe).join("\n");
+}
+
+/** Registers `host check` and `host login`. */
+function registerSetupCommands(program: Command): void {
+  program
+    .command("check <id>")
+    .description("Show if a worker host is ready, with an action for each item that fails")
+    .action((id: string, _opts: unknown, command: Command) => run(command, (ctx) => checkHost({ id }, ctx), checkText));
+
+  program
+    .command("login <id>")
+    .description("Log in to Pi on a worker host; runs ssh -t <target> <remote rowbly> auth login")
+    .action((id: string, _opts: unknown, command: Command) =>
+      run(
+        command,
+        (ctx) => loginOnHost(command, id, ctx),
+        (result) => `Login on ${result.host} ended with exit code ${result.exitCode}`,
+      ),
+    );
 }
 
 /** Registers the `rowbly host` subcommands on the `host` command. The commands do not need a Project. */
@@ -41,6 +127,8 @@ export function registerHostCommands(program: Command): void {
         addedText,
       ),
     );
+
+  registerSetupCommands(program);
 
   program
     .command("list")

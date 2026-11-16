@@ -1,4 +1,5 @@
 import { ConflictError, NotFoundError } from "../errors/errors.js";
+import { type HostCheck, type HostCheckDeps, runHostCheck } from "../host-check/host-check.js";
 import { ensureHostVersion, type HostVersionResult } from "../host-install/host-install.js";
 import { HostInstallFailedError } from "../host-install/host-install-errors.js";
 import { type LocalBuild, localBuild } from "../host-install/local-build.js";
@@ -14,15 +15,20 @@ import { type Host, type HostInput, hostView, rcHosts, validateHostInput } from 
 
 export type { Host, HostInput } from "./host-rules.js";
 
-/** The connection and the build that `addHost` uses. Tests give a fake transport and a fake build. */
-export interface AddHostDeps {
-  readonly transportFor?: (target: string) => HostTransport;
-  readonly build?: () => Promise<LocalBuild>;
-}
+/** The connection, the build and the check facts that `addHost` uses. Tests give a fake transport and a fake build. */
+export type AddHostDeps = HostCheckDeps;
 
-/** A recorded host with the result of the install of the Rowbly version. */
+/** A recorded host with the result of the install of the Rowbly version and the result of the check. */
 export interface AddedHost extends Host {
   readonly install: HostVersionResult;
+  readonly check: HostCheck;
+}
+
+/** The result of the install, with the connection and the build for the check. */
+interface HostInstall {
+  readonly install: HostVersionResult;
+  readonly transport: HostTransport;
+  readonly build: LocalBuild;
 }
 
 export interface RemoveHostInput {
@@ -57,7 +63,7 @@ function assertNewHost(hosts: readonly { readonly id: string }[], id: string): v
 }
 
 /** Checks Node on the host and installs the Rowbly build there. It throws when the host cannot run the build. */
-async function installOnHost(input: HostInput, deps: AddHostDeps): Promise<HostVersionResult> {
+async function installOnHost(input: HostInput, deps: AddHostDeps): Promise<HostInstall> {
   const transport = (deps.transportFor ?? ((target) => createSshTransport({ target })))(input.ssh);
   const build = await (deps.build ?? localBuild)();
   const install = await ensureHostVersion(transport, { build });
@@ -69,12 +75,13 @@ async function installOnHost(input: HostInput, deps: AddHostDeps): Promise<HostV
     });
   }
 
-  return install;
+  return { install, transport, build };
 }
 
 /**
  * Adds a worker host at the end of the list. A new host is on. It checks Node and installs the exact Rowbly build
- * on the host first. When that fails, the file does not change.
+ * on the host first. When that fails, the file does not change. After the write, it checks the host. A failed item
+ * of the check does not make the add fail.
  */
 export async function addHost(input: HostInput, ctx: ServiceContext = {}, deps: AddHostDeps = {}): Promise<AddedHost> {
   const file = rcPath(ctx);
@@ -82,7 +89,7 @@ export async function addHost(input: HostInput, ctx: ServiceContext = {}, deps: 
   validateHostInput(input);
   assertNewHost(rcHosts(await readRc(file), file), input.id);
 
-  const install = await installOnHost(input, deps);
+  const { install, transport, build } = await installOnHost(input, deps);
   // The install can take minutes, so read the file again to keep a change of a different process.
   const rc = await readRc(file);
   const hosts = rcHosts(rc, file);
@@ -93,7 +100,9 @@ export async function addHost(input: HostInput, ctx: ServiceContext = {}, deps: 
 
   await writeRc(file, { ...rc, hosts: [...hosts, host] });
 
-  return { ...host, install };
+  const check = await runHostCheck({ hostId: host.id, transport, build }, ctx, deps);
+
+  return { ...host, install, check };
 }
 
 /** Removes a worker host. It refuses while a Thread of a known Project is active on the host. */

@@ -87,6 +87,25 @@ describe("Pi import boundary", () => {
     await expect(import("../host/host.js")).resolves.toHaveProperty("addHost");
   });
 
+  it("imports and runs the host check and the host login without loading Pi", async () => {
+    const { runHostCheck } = await import("../host-check/host-check.js");
+    const answers = await import("../test-project/fake-host-answers.js");
+    const { createFakeHostTransport } = await import("../test-project/fake-host-transport.js");
+    const transport = createFakeHostTransport({
+      bytes: (command) => answers.answerFor(answers.healthyAnswers(), command),
+    });
+    const build = { id: "0.18.0", version: "0.18.0", released: true };
+
+    await expect(
+      runHostCheck({ hostId: "mini", transport, build }, project.ctx, { localAhead: async () => 0 }),
+    ).resolves.toHaveProperty("ready", true);
+    await expect(import("../host-check/check-item.js")).resolves.toHaveProperty("CHECK_ITEM_IDS");
+    await expect(import("../host-check/host-items.js")).resolves.toHaveProperty("linuxItem");
+    await expect(import("../host-check/pi-items.js")).resolves.toHaveProperty("piLoginItem");
+    await expect(import("../host-check/project-items.js")).resolves.toHaveProperty("localAheadItem");
+    await expect(import("../host-check/host-login.js")).resolves.toHaveProperty("hostLoginArguments");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });

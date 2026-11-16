@@ -43,7 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `list`, `remove`, hidden `blob`: the worker hosts of the user.       |
+| `host/`                                                | `host add`, `check`, `login`, `list`, `remove`, hidden `blob`: the worker hosts. |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -137,7 +137,16 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
   the host at the end of the list. A new host is on (`enabled: true`). The result is the host with an
   `install` object. See [host-install.md](native-factory/host-install.md). If the Node check or the
   install fails, `host add` gives `HOST_NODE_MISSING`, `HOST_NODE_TOO_OLD` or `HOST_INSTALL_FAILED`,
-  and `~/.rowblyrc.json` does not change.
+  and `~/.rowblyrc.json` does not change. After the install, `host add` runs the host check and gives
+  it in the `check` key. The text output lists the `fail` and `warning` items with their actions. A
+  failed item does not make `host add` fail.
+- `host check <id>` shows if the host is ready. With `--json`, the result is `{ host, ready, items }`.
+  The text output has one line for each item with its state, and the action of each `fail` or
+  `warning` item. The exit code is 0 also when items fail. An unknown id gives `NOT_FOUND`. See
+  [host-check.md](native-factory/host-check.md).
+- `host login <id>` runs `ssh -t <target> <remote rowbly> auth login`, so that the user logs in to Pi
+  on the host. It must run in a terminal. With `--json`, or without a terminal, it gives
+  `VALIDATION` and starts no process. The exit code is the exit code of SSH.
 - `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
   `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
 - `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or
