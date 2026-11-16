@@ -2,6 +2,7 @@
 title: Edit worker model overrides in the TUI
 stage: DONE
 position: 20
+uid: 91b4e1dc-daca-43f5-96a0-a0fa11bcc62b
 createdAt: 2026-11-14T17:05:20.000Z
 updatedAt: 2026-11-14T19:32:52.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-21
