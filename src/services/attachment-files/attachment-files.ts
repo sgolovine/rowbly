@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readdir, readFile, rename, rm } from "node:fs/promises";
 import { basename, join } from "node:path";
-import { ValidationError } from "../errors/errors.js";
+import { ConflictError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
@@ -41,7 +41,8 @@ interface MoveProgress {
 const ID = /^a[0-9a-f-]{36}$/;
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
-function validatePng(bytes: Uint8Array): void {
+/** Throws a ValidationError when the bytes are larger than 10 MiB or are not a PNG image. */
+export function validatePng(bytes: Uint8Array): void {
   if (bytes.length > MAX_ATTACHMENT_BYTES) {
     throw new ValidationError("Attachment exceeds 10 MiB");
   }
@@ -261,22 +262,43 @@ async function rollBackSave(
   await mapInOrder(progress.written, (path) => rm(path, { force: true }));
 }
 
-/** Publish the manifest last. Roll back bytes and metadata if the Story save fails. */
+/** Throws when a given id is not an attachment ID, is in the manifest already, or is given two times. */
+function checkGivenIds(ids: readonly (string | undefined)[], previous: readonly Attachment[]): void {
+  const given = ids.filter((id): id is string => id !== undefined);
+
+  given.forEach(validateAttachmentId);
+
+  const taken = new Set(previous.map((record) => record.id));
+  const duplicate = given.find((id, index) => taken.has(id) || given.indexOf(id) !== index);
+
+  if (duplicate !== undefined) {
+    throw new ConflictError(`Attachment ${duplicate} already exists`);
+  }
+}
+
+/**
+ * Publish the manifest last. Roll back bytes and metadata if the Story save fails. `ids` gives the id of each image
+ * in the same order. An image without an id gets a new id.
+ */
 export async function withAttachments<T>(
   dir: string,
   images: readonly PendingImage[],
   now: Date,
   save: () => Promise<T>,
+  ids: readonly (string | undefined)[] = [],
 ): Promise<T> {
   if (!images.length) {
     return save();
   }
 
   const previous = await readAttachments(dir);
+
+  checkGivenIds(ids.slice(0, images.length), previous);
+
   const hadManifest = await pathExists(join(dir, "manifest.json"));
   const records = images.map(
-    (image): Attachment => ({
-      id: `a${randomUUID()}`,
+    (image, index): Attachment => ({
+      id: ids[index] ?? `a${randomUUID()}`,
       name: image.name,
       type: "image/png",
       size: image.bytes.length,

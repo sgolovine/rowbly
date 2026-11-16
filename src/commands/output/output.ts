@@ -73,6 +73,20 @@ export async function run<T>(
   }
 }
 
+/**
+ * Runs a service call that gives raw bytes, and writes the bytes to stdout without a change. It does not make an
+ * outbox context, so it does not need `ROWBLY_THREAD_ID`. Errors are printed as in `run`.
+ */
+export async function runBytes(command: Command, call: () => Promise<Uint8Array>): Promise<void> {
+  const { json } = command.optsWithGlobals<{ json?: boolean }>();
+
+  try {
+    process.stdout.write(await call());
+  } catch (error) {
+    reportError(error, json);
+  }
+}
+
 /** Collects a repeatable option into an array. */
 export function collect(value: string, previous: string[] = []): string[] {
   return [...previous, value];

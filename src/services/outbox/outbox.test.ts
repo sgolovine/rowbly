@@ -1,7 +1,7 @@
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import { addAttachment, removeAttachment } from "../attachment/attachment.js";
+import { addAttachment } from "../attachment/attachment.js";
 import { addCustomField, removeCustomField, updateCustomField } from "../custom-field/custom-field.js";
 import { doctor } from "../doctor/doctor.js";
 import { addCheck } from "../factory-settings/check-items.js";
@@ -23,7 +23,12 @@ const PNG = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
 /** A recorder that keeps the writes in memory. */
 function memoryRecorder(): WriteRecorder & { writes: StoryWrite[] } {
   const writes: StoryWrite[] = [];
-  return { writes, record: async (write) => void writes.push(write) };
+  return {
+    writes,
+    record: async (write) => void writes.push(write),
+    recordAttachmentAdd: async () => undefined,
+    recordAttachmentRemove: async () => undefined,
+  };
 }
 
 /** Each file in the folder with its bytes and its modification time. */
@@ -184,8 +189,6 @@ describe("refused writes with a recorder", () => {
     ["addCheck", (ctx) => addCheck({ key: "lint", command: "pnpm lint" } as never, ctx)],
     ["repairDuplicateStoryIds", (ctx) => repairDuplicateStoryIds(ctx)],
     ["doctor --fix", (ctx) => doctor({ fix: true }, ctx)],
-    ["addAttachment", (ctx) => addAttachment({ story: "ROW-01", image: { name: "b.png", bytes: PNG } }, ctx)],
-    ["removeAttachment", (ctx) => removeAttachment({ story: "ROW-01", id: "shot.png" }, ctx)],
     [
       "updateStory with attachments",
       (ctx) => updateStory({ id: "ROW-01", title: "Changed", attachments: [{ name: "c.png", bytes: PNG }] }, ctx),
