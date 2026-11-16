@@ -31,6 +31,7 @@ This file records the changes to Rowbly that users can see.
 - Added: The new `placement` key in the `factory` section of `.rowbly/rowbly.config.json` and the new `rowbly factory configure --placement <policy>` flag set how the factory selects the host of a worker: `prefer-local` (the default), `most-free` or `prefer-remote`. `rowbly factory status --json` has the new `hosts` list with the worker slots of each host, and the supervisor can request a host for a worker. (ROW-95)
 - Added: In the Story list of the TUI, you can select more than one Story. Push `space` on a Story, move the cursor with `↑/↓` and push `space` again, or use `shift+click`, then push `shift+↑/↓` to move all selected Stories to the previous or next Stage, and push `esc` to clear the selection. (ROW-106)
 - Added: `rowbly host add` now checks that the host has Node 22.19.0 or later, and installs the exact Rowbly version of the main machine in `~/.local/share/rowbly/versions/<build-id>/` on the host when that version is missing. If the check or the install fails, `host add` fails and does not change `~/.rowblyrc.json`, and the JSON result has the new `install` object. (ROW-86)
+- Added: The main machine can apply the outbox entries of a remote worker host to the Story files, and keeps a conflicting PNG in `.rowbly/runtime/hosts/<host>/conflicts/`. The new hidden `rowbly host outbox` and `rowbly host outbox-ack` commands read and remove the outbox entries on the worker host. No command of the main machine uses this yet. (ROW-94)
 
 ### 0.18.0
 
