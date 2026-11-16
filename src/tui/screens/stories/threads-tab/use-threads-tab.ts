@@ -57,6 +57,8 @@ export interface ThreadsTabState {
   readonly confirm: ThreadRecord | null;
   readonly listing: boolean;
   readonly viewing: boolean;
+  /** The steering input of the thread region takes the keys. */
+  readonly steering: boolean;
   readonly waiting: FactoryQueueEntry | undefined;
   /** The provider pauses of the factory status, for the network reason of the queue note. */
   readonly providers: FactoryStatus["providers"];
@@ -161,11 +163,22 @@ function useParentReports(props: ThreadsTabProps, data: ThreadsData | undefined,
   }, [viewing, onEditing]);
 }
 
-/** Goes back to the list when the selected thread goes away. */
+/** The focus after a change of the selected thread: the list without a thread, the thread when it stops running. */
+function resetFocus(current: ThreadRecord | undefined, focus: Focus): Focus {
+  if (!current) {
+    return "list";
+  }
+
+  return focus === "steer" && current.status !== "running" ? "thread" : focus;
+}
+
+/** Goes back to the list when the selected thread goes away, and leaves the input when the thread stops running. */
 function useFocusReset(current: ThreadRecord | undefined, focus: Focus, setFocus: (focus: Focus) => void): void {
   useEffect(() => {
-    if (!current && focus === "thread") {
-      setFocus("list");
+    const next = resetFocus(current, focus);
+
+    if (next !== focus) {
+      setFocus(next);
     }
   }, [current, focus, setFocus]);
 }
@@ -186,13 +199,14 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const threads = data.data?.threads ?? [];
   const keysOwn = active && selected && !covered && confirm === null;
   const listing = keysOwn && focus === "list" && data.data !== undefined;
-  const viewing = keysOwn && focus === "thread";
+  const viewing = keysOwn && focus !== "list";
+  const steering = viewing && focus === "steer";
   const [cursor, setCursor] = useCursor(threads.length, listing);
   const current = threads[cursor];
   const running = threads.some((thread) => thread.status === "running");
   const shownId = useShownId(current?.id);
   const now = useNow(selected, running);
-  const hints = threadsHints({ keysOwn, viewing, current, count: threads.length });
+  const hints = threadsHints({ keysOwn, viewing, steering, current, count: threads.length });
 
   const env: ThreadsTabEnv = {
     ctx,
@@ -210,8 +224,8 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
 
   useParentReports(props, data.data, viewing);
   useFocusReset(current, focus, setFocus);
-  useEscape(viewing, () => setFocus("list"));
-  useInput((input, key) => handleThreadKey(env, input, key), { isActive: viewing });
+  useEscape(viewing && !steering, () => setFocus("list"));
+  useInput((input, key) => handleThreadKey(env, input, key), { isActive: viewing && !steering });
   useInput((input, key) => handleListKey(env, input, key), { isActive: listing });
   useReportHints(onHints, hints);
 
@@ -225,6 +239,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     confirm,
     listing,
     viewing,
+    steering,
     waiting: queueEntry(status, storyId),
     providers: status?.providers,
     now,

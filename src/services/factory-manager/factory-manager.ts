@@ -33,6 +33,7 @@ import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } fro
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { openCheckQueue } from "./worker-checks.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
+import { steerWorker } from "./worker-steer.js";
 
 export type { FactoryDependencies } from "./manager-state.js";
 export type FactoryManager = Awaited<ReturnType<typeof createFactoryManager>>;
@@ -76,6 +77,8 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     cancelWorker: (id: string, expectedRunId: string) => cancelWorker(manager, id, expectedRunId),
     resumeWorker: (id: string, expectedRunId: string, requestId: string) =>
       resumeWorker(manager, id, expectedRunId, requestId),
+    steerWorker: (id: string, expectedRunId: string, message: string) =>
+      steerWorker(manager, id, expectedRunId, message),
     retryProvider: (provider: string) => retryProvider(manager, provider),
     dismissAttention: (key: string) => dismissAttention(manager, key),
     snapshot: () => serial(manager, () => buildSnapshot(manager)),

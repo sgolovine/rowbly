@@ -4,6 +4,7 @@ import type { ServiceContext } from "../../../../services/workspace/workspace.js
 import { ConversationView, Panel } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { ThreadDetail } from "../thread-detail/index.js";
+import { ThreadSteerInput } from "../thread-steer-input/index.js";
 import { type StageNames, threadName } from "../thread-text.js";
 
 export interface ThreadPanelProps {
@@ -24,6 +25,8 @@ export interface ThreadPanelProps {
   readonly listing: boolean;
   /** The thread region takes the keys. */
   readonly viewing: boolean;
+  /** The steering input of the thread region takes the keys. */
+  readonly steering: boolean;
   readonly width: number | undefined;
   readonly height: number | undefined;
   /** The width of the conversation, inside the frame. */
@@ -31,6 +34,10 @@ export interface ThreadPanelProps {
   readonly conversationHeight: number | undefined;
   /** A click on the Panel while the list has the keys. */
   readonly onFocusThread: () => void;
+  /** `m` or a click on the steering input. */
+  readonly onFocusSteer: () => void;
+  /** `esc` in the steering input. */
+  readonly onLeaveSteer: () => void;
 }
 
 /** The title of the Panel: the Story and the thread, or "Thread" without a thread. */
@@ -50,11 +57,14 @@ export function ThreadPanel({
   shownId,
   listing,
   viewing,
+  steering,
   width,
   height,
   threadWidth,
   conversationHeight,
   onFocusThread,
+  onFocusSteer,
+  onLeaveSteer,
 }: ThreadPanelProps) {
   return (
     <Panel
@@ -77,11 +87,24 @@ export function ThreadPanel({
                 ctx={ctx}
                 threadId={current.id}
                 live={current.status === "running"}
-                active={viewing}
+                active={viewing && !steering}
                 width={threadWidth}
                 height={conversationHeight}
               />
             </Box>
+          )}
+          {current.status === "running" && (
+            <ThreadSteerInput
+              key={current.id}
+              ctx={ctx}
+              threadId={current.id}
+              name={`${storyId} ${threadName(current, stages)}`}
+              focused={steering}
+              clickable={listing || viewing}
+              width={threadWidth}
+              onFocus={onFocusSteer}
+              onLeave={onLeaveSteer}
+            />
           )}
         </>
       ) : (

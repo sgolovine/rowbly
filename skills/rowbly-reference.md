@@ -121,6 +121,7 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly project update --compact-threads <on\|off>`   | Project     | Shows each Thread on one line in the TUI. The default is on. |
 | `rowbly project update --time-zone <zone>`            | Project     | Sets the time zone of the Story times in the TUI. `""` uses the system time zone. |
 | `rowbly status`                                       | Status      | Shows the factory phase, the Thread counts and the Story count of each Stage. |
+| `rowbly thread steer <id> --message <text>`           | Receipt     | Sends a message of 1 to 4000 characters to a running worker through the running factory. Gives `VALIDATION` for an empty or long message, and `CONFLICT` when the factory or the worker does not run. |
 
 `rowbly status --json` gives this object. `stages` is in config order and includes the disabled Stages.
 A Story with a Stage that is not in the config is in `stories` only.

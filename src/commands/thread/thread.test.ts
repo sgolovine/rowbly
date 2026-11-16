@@ -1,6 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { processCommands } from "../../services/factory-control/factory-control.js";
+import { acquireFactoryOwnership, newOwner } from "../../services/factory-ownership/factory-ownership.js";
+import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../services/thread/thread.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -39,5 +42,34 @@ describe("thread", () => {
     const excessive = await runCli(["thread", "log", t.id, "--tail", "101"], p.paths.root);
     expect(excessive.exitCode).toBe(1);
     expect(excessive.stderr).toContain("bounds");
+  });
+  it("steers through the CLI: a missing --message is a Commander error, an empty message is VALIDATION", async () => {
+    const missing = await runCli(["thread", "steer", "thread-1", "--json"], p.paths.root);
+    expect(missing.exitCode).not.toBe(0);
+    expect(missing.stderr).toContain("--message");
+    const empty = await runCli(["thread", "steer", "thread-1", "--message", "  ", "--json"], p.paths.root);
+    expect(empty.exitCode).toBe(1);
+    expect(JSON.parse(empty.stderr || empty.stdout).error.code).toBe("VALIDATION");
+    const stopped = await runCli(["thread", "steer", "thread-1", "--message", "Stop", "--json"], p.paths.root);
+    expect(stopped.exitCode).not.toBe(0);
+    expect(stopped.stderr + stopped.stdout).toContain("Factory is not running");
+  });
+  it("steers a Thread through the live daemon and prints the receipt", async () => {
+    await prepareRuntime(p.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(p.paths, owner);
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: owner.token },
+      p.ctx,
+    );
+    const execute = vi.fn(async () => {});
+    const result = runCli(["thread", "steer", t.id, "--message", "Use the new API", "--json"], p.paths.root);
+    await vi.waitFor(async () => {
+      await processCommands(p.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "steer", message: "Use the new API" }));
+    });
+    const done = await result;
+    expect(done.exitCode).toBe(0);
+    expect(JSON.parse(done.stdout)).toMatchObject({ status: "completed", threadId: t.id });
   });
 });

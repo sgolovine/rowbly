@@ -27,6 +27,7 @@ viewer or the AI section of Settings.
 | `thread list [--story <id>]`, `thread show <id>`                           | Read active and historical metadata.                                  |
 | `thread log <id> [--tail <n>]`                                             | Read a bounded conversation tail: default 20, maximum 100 entries.    |
 | `thread cancel <id>`, `thread resume <id>`                                 | Send guarded commands to the native daemon.                           |
+| `thread steer <id> --message <text>`                                       | Send a message of 1 to 4000 characters to a running worker.           |
 
 These inputs of `factory configure` give the error code `VALIDATION`, and the command does not write
 `rowbly.config.json`:
@@ -147,7 +148,9 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 - The Stage sidebar filters the Threads by their Stage.
 - `enter` or a click on a Thread opens the Thread in the Story sidebar, on the right of the Thread
   list: the Thread metadata and its conversation.
-- The view and the Thread in the Story sidebar are read-only. Use the Threads tab of a Story to interrupt or resume a Thread.
+- The view and the Thread in the Story sidebar are read-only, except for the steering input. Use the Threads tab of a Story to interrupt or resume a Thread.
+- A running worker Thread shows a steering input under its conversation. See
+  [Steering input](#steering-input).
 
 See [../tui.md](../tui.md#the-factory-view) for the structure.
 
@@ -157,6 +160,23 @@ See [../tui.md](../tui.md#the-factory-view) for the structure.
 - Select a Thread to Peek at its conversation.
 - `x` interrupts an active Thread, with confirmation.
 - `r` resumes an eligible Thread through the active factory.
+- A running Thread shows a steering input under its conversation. See [Steering input](#steering-input).
+
+## Steering input
+
+A running worker Thread shows a one-line text input under its conversation, with the placeholder
+`Send a message to the agent`. The input shows in the Threads tab of a Story and in the Thread of the
+Factory view. A Thread that does not run does not show the input.
+
+- `m` in the Thread region, or a click on the input, gives the focus to the input.
+- `enter` sends the message through the running factory. If the factory accepts the message, the
+  input becomes empty and an `info` toast shows `Sent message to <story> <thread>`.
+- If the factory rejects the message, an error toast shows the reason, and the text stays.
+- `esc` gives the focus back to the Thread region. The text stays.
+- While the input has the focus, the other keys of the Thread region (`x`, `r`, `tab`, `o` and the
+  conversation keys) do not act.
+- The agent gets the message after its current tool calls. When the session history has the
+  message, the conversation shows it as a user message.
 
 ## The Models tab of a Story
 
