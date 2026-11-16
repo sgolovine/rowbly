@@ -22,6 +22,8 @@ export interface HintsInput {
   readonly viewing: boolean;
   readonly current: ThreadRecord | undefined;
   readonly count: number;
+  /** The thread region shows the conversation, so that `ctrl+f` can open it full screen. */
+  readonly conversation: boolean;
 }
 
 /** The sizes and the visible regions of the tab. */
@@ -36,7 +38,7 @@ export interface ThreadsLayout {
 }
 
 /** The keys of the tab: none while another region has the keys, else the keys of the list or the thread. */
-export function threadsHints({ keysOwn, viewing, current, count }: HintsInput): readonly KeyHint[] {
+export function threadsHints({ keysOwn, viewing, current, count, conversation }: HintsInput): readonly KeyHint[] {
   const actionHints: KeyHint[] = [
     ...(current && threadActive(current) ? [{ key: "x", description: "interrupt" }] : []),
     ...(current && threadResumable(current) ? [{ key: "r", description: "resume" }] : []),
@@ -51,6 +53,7 @@ export function threadsHints({ keysOwn, viewing, current, count }: HintsInput): 
       // The actions first: a narrow hint strip drops the later scroll keys before them.
       ...actionHints,
       ...(current ? conversationKeys(current.status === "running") : []),
+      ...(conversation ? [{ key: "ctrl+f", description: "full screen" }] : []),
       { key: "esc", description: "back to Threads" },
     ];
   }

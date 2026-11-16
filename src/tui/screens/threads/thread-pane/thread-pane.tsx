@@ -9,10 +9,11 @@ import { type ThreadPaneProps, useThreadPane } from "./use-thread-pane.js";
 /** Below this body height, the pane shows the compact detail, so that the conversation keeps its room. */
 const FULL_DETAIL_MIN_HEIGHT = THREAD_DETAIL_ROWS + 10;
 
-/** The keys of the pane: the keys of the conversation, `o` when the Story can open, then `tab` and `esc`. */
+/** The keys of the pane: the keys of the conversation, `ctrl+f`, `o` when the Story can open, then `tab` and `esc`. */
 function threadPaneHints(live: boolean, story: boolean): readonly KeyHint[] {
   return [
     ...conversationKeys(live),
+    { key: "ctrl+f", description: "full screen" },
     ...(story ? [{ key: "o", description: "open Story" }] : []),
     { key: "tab", description: "next pane", secondary: true },
     { key: "esc", description: "Thread list" },
@@ -32,13 +33,13 @@ function conversationHeight(body: number | undefined, head: number): number | un
 /**
  * The content of a Thread in the Story sidebar of the Factory view. It shows the metadata of the Thread, its last
  * checks, then its conversation, which follows the new entries while the Thread runs. It is read-only. Its size comes from the
- * layout of the sidebar body. When the board has the Story of the Thread, an `Open Story` Button (`o`) opens it. `esc`
- * gives the focus back to the Thread list. A wheel notch over the conversation scrolls it and gives the focus to the
- * sidebar, also when a different pane has the focus.
+ * layout of the sidebar body. When the board has the Story of the Thread, an `Open Story` Button (`o`) opens it. `ctrl+f`
+ * shows the conversation over the whole terminal. `esc` gives the focus back to the Thread list. A wheel notch over the
+ * conversation scrolls it and gives the focus to the sidebar, also when a different pane has the focus.
  */
 export function ThreadPane(props: ThreadPaneProps) {
   const { ctx, onHints, onOpenStory } = props;
-  const { active, current, now, layout } = useThreadPane(props);
+  const { active, full, current, now, layout } = useThreadPane(props);
   const live = current.status === "running";
   const compact = layout.height !== undefined && layout.height < FULL_DETAIL_MIN_HEIGHT;
 
@@ -50,7 +51,13 @@ export function ThreadPane(props: ThreadPaneProps) {
     <Box flexDirection="column" width={layout.width}>
       {onOpenStory && (
         <Box>
-          <Button label="Open Story" keyName="o" onClick={onOpenStory} clickable={props.clickable} compact />
+          <Button
+            label="Open Story"
+            keyName="o"
+            onClick={onOpenStory}
+            clickable={props.clickable && !full.isOpen}
+            compact
+          />
         </Box>
       )}
       <ThreadDetail thread={current} now={now} compact={compact} />
@@ -61,12 +68,14 @@ export function ThreadPane(props: ThreadPaneProps) {
           threadId={current.id}
           live={live}
           active={active}
-          wheel={props.clickable}
+          wheel={props.clickable && !full.isOpen}
           onWheelFocus={props.onFocus}
           width={layout.width}
           height={conversationHeight(layout.height, head)}
         />
       </Box>
+      {/* Outside the shell there is nothing to cover, so the full-screen view shows here. */}
+      {full.inline}
     </Box>
   );
 }
