@@ -81,7 +81,7 @@ describe("host agent", () => {
   it("holds one claim for each Project; a second agent of the Project exits with no effect", async () => {
     const first = start();
     const owner = await waitFor(() => liveAgent(paths()));
-    const stateBefore = await readFile(paths().state, "utf8");
+    const stateBefore = await waitFor(() => readFile(paths().state, "utf8").catch(() => undefined));
 
     const second = await runHostAgent({ projectId: "p1", home: home.path, pollMs: 10 });
 

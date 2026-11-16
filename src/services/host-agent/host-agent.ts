@@ -172,7 +172,45 @@ async function takeClaim(
   return takeClaim(paths, self, probe, deadline);
 }
 
-function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner, checks: HostChecks): AgentLoop {
+/**
+ * Writes `agent.json` without active work, before the loop has a state, for example before the check queue opens.
+ * Gives the key of the content, so that the loop does not write the same content again.
+ */
+async function recordPhase(
+  paths: HostAgentPaths,
+  self: Owner,
+  startedAt: string,
+  phase: HostAgentPhase,
+): Promise<string> {
+  const state: Omit<HostAgentState, "updatedAt"> = { version: 1, owner: self, phase, startedAt, active: [] };
+
+  await writeAgentState(paths, { ...state, updatedAt: new Date().toISOString() });
+
+  return JSON.stringify(state);
+}
+
+/** Opens the check queue. When the queue does not open, the agent writes `stopped` and gives the error. */
+async function openChecks(
+  options: HostAgentOptions,
+  paths: HostAgentPaths,
+  self: Owner,
+  startedAt: string,
+): Promise<HostChecks> {
+  try {
+    return await openHostChecks(paths, self.token, options.checkDeps);
+  } catch (error) {
+    await recordPhase(paths, self, startedAt, "stopped").catch(() => undefined);
+    throw error;
+  }
+}
+
+function newLoop(
+  options: HostAgentOptions,
+  paths: HostAgentPaths,
+  self: Owner,
+  checks: HostChecks,
+  start: { readonly startedAt: string; readonly key: string },
+): AgentLoop {
   const store = new Store<AgentState>({ active: new Map(), stopping: false, stopRequested: false, busyAt: Date.now() });
   const agent: HostAgent = {
     paths,
@@ -189,8 +227,8 @@ function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner, 
     idleMs: options.idleMs ?? DEFAULT_IDLE_MS,
     pollMs: options.pollMs ?? DEFAULT_POLL_MS,
     signal: options.signal ?? new AbortController().signal,
-    startedAt: new Date().toISOString(),
-    written: new Store({ key: "" }),
+    startedAt: start.startedAt,
+    written: new Store({ key: start.key }),
   };
 }
 
@@ -219,10 +257,14 @@ export async function runHostAgent(options: HostAgentOptions): Promise<HostAgent
     return { outcome: "already-running", owner: claim.owner };
   }
 
-  try {
-    const checks = await openHostChecks(paths, self.token, options.checkDeps);
+  const startedAt = new Date().toISOString();
 
-    await serveAgent(newLoop(options, paths, self, checks), checks);
+  try {
+    // Write `running` immediately after the claim, so that a reader of the claim also finds `agent.json`.
+    const key = await recordPhase(paths, self, startedAt, "running");
+    const checks = await openChecks(options, paths, self, startedAt);
+
+    await serveAgent(newLoop(options, paths, self, checks, { startedAt, key }), checks);
   } finally {
     await releaseAgentClaim(paths, self.token).catch(() => false);
   }
