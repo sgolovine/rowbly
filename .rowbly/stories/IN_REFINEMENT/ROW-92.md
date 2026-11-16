@@ -9,8 +9,8 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:07.547Z
-updatedAt: 2026-11-16T20:06:54.058Z
-worktree: null
+updatedAt: 2026-11-16T21:49:11.666Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-92
 pull_request: null
 ---
 
