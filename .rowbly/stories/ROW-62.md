@@ -2,6 +2,8 @@
 title: Hold blocked Stories in the factory policy and start upstream Stories first
 stage: DONE
 position: 47
+createdAt: 2026-11-14T23:26:44.000Z
+updatedAt: 2026-11-14T23:54:11.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-62
 pull_request: https://github.com/sgolovine/rowbly/pull/235
 ---
