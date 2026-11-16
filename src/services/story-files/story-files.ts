@@ -172,19 +172,27 @@ export async function readStoryFiles(paths: ProjectPaths): Promise<StoryFile[]> 
   return files.toSorted((a, b) => a.number - b.number);
 }
 
-/** The `position` of a story in its stage. A story with no valid `position` comes last. */
-function storyPosition(file: StoryFile): number {
-  const value = file.doc.data.position;
+/** The time of the last change of a story in milliseconds. A story with no valid `updatedAt` gives negative infinity. */
+function storyUpdatedTime(file: StoryFile): number {
+  const value = storyTimeOf(file.doc.data, "updatedAt");
 
-  return typeof value === "number" && Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+  return value === null ? Number.NEGATIVE_INFINITY : Date.parse(value);
+}
+
+/** Compares the `updatedAt` times of two stories: the most recent first. Two missing times are equal. */
+function compareUpdated(a: StoryFile, b: StoryFile): number {
+  const first = storyUpdatedTime(a);
+  const second = storyUpdatedTime(b);
+
+  return first === second ? 0 : Math.sign(second - first);
 }
 
 /**
- * `files` in their order in a stage: by the `position` in the frontmatter, then by number. A story with no
- * valid `position` (for example, a new one) comes after the stories with one. The sort is stable.
+ * `files` in their order in a stage: by `updatedAt`, the most recent first, then by number. A story with no valid
+ * `updatedAt` comes after the stories with one. The `position` key of the frontmatter has no effect.
  */
 export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
-  return files.toSorted((a, b) => storyPosition(a) - storyPosition(b) || a.number - b.number);
+  return files.toSorted((a, b) => compareUpdated(a, b) || a.number - b.number);
 }
 
 /**

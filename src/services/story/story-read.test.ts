@@ -280,7 +280,8 @@ describe("story-read", () => {
       const updated = await updateStory({ id: "ROW-02", title: "Two again" }, project.ctx);
 
       expect(updated.title).toBe("Two again");
-      expect(updated.position).toBe(2);
+      // The changed story has the only updatedAt of its stage, so it goes to the top.
+      expect(updated.position).toBe(1);
       const renames = vi.mocked(fs.rename).mock;
       const write = renames.calls.findIndex(([, to]) => String(to).startsWith(project.paths.storiesDir));
       expect(write).toBeGreaterThanOrEqual(0);
@@ -319,10 +320,11 @@ describe("story-read", () => {
 
   describe("dependency state", () => {
     async function seed(): Promise<void> {
-      await createStory({ title: "Done upstream", stage: "DONE" }, project.ctx);
-      await createStory({ title: "Open upstream" }, project.ctx);
-      await createStory({ title: "Blocked", dependsOn: ["ROW-01", "ROW-02"] }, project.ctx);
-      await createStory({ title: "Ready", dependsOn: ["ROW-01"] }, project.ctx);
+      const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+      await createStory({ title: "Done upstream", stage: "DONE" }, at("2025-01-01T00:00:00Z"));
+      await createStory({ title: "Open upstream" }, at("2025-01-02T00:00:00Z"));
+      await createStory({ title: "Blocked", dependsOn: ["ROW-01", "ROW-02"] }, at("2025-01-03T00:00:00Z"));
+      await createStory({ title: "Ready", dependsOn: ["ROW-01"] }, at("2025-01-04T00:00:00Z"));
     }
 
     it("gives blocks and waitingFor with the story", async () => {
@@ -344,10 +346,10 @@ describe("story-read", () => {
       await seed();
       const ids = (stories: { id: string }[]) => stories.map((s) => s.id);
       expect(ids(await searchStories({ dependency: "blocked" }, project.ctx))).toEqual(["ROW-03"]);
-      expect(ids(await searchStories({ dependency: "ready" }, project.ctx))).toEqual(["ROW-02", "ROW-04", "ROW-01"]);
+      expect(ids(await searchStories({ dependency: "ready" }, project.ctx))).toEqual(["ROW-04", "ROW-02", "ROW-01"]);
       expect(ids(await searchStories({ dependency: "ready", stage: "BACKLOG" }, project.ctx))).toEqual([
-        "ROW-02",
         "ROW-04",
+        "ROW-02",
       ]);
       expect(ids(await searchStories({ dependency: "ready", query: "upstream" }, project.ctx))).toEqual([
         "ROW-02",

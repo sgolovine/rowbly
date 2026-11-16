@@ -12,7 +12,7 @@ import {
   toggleSidebar,
 } from "./shell-selection.js";
 import type { Pane, ShellEnv, ShellView, StoryListRow } from "./shell-state.js";
-import { moveStage, moveStoryStage, shiftStory } from "./story-changes.js";
+import { moveStage, moveStoryStage } from "./story-changes.js";
 import { editStory, listPane, newStory, requestStoryPane, toggleStoryExpanded } from "./story-pane.js";
 
 /** The keys that open an overlay, also without a Project. */
@@ -91,7 +91,7 @@ function listKey(env: ShellEnv, input: string, key: Key, delta: number, shift: -
 
   if (shift) {
     if (row?.kind === "story") {
-      shiftStory(env, row.story, shift);
+      moveStoryStage(env, row.story, shift);
     }
   } else if (delta) {
     selectStory(env, Math.max(0, Math.min(rows.length - 1, cursor + delta)));

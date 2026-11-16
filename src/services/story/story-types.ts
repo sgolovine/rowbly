@@ -8,7 +8,7 @@ export interface Story {
   title: string;
   /** A stage key. */
   stage: string;
-  /** The 1-based place of the story in its stage. */
+  /** The 1-based place of the story in its stage, by `updatedAt`: the most recent first. */
   position: number;
   /** The IDs of the upstream Stories, in the saved order. `[]` when the story has no dependencies. */
   dependsOn: string[];
@@ -51,8 +51,6 @@ export interface UpdateStoryInput {
   id: string;
   title?: string;
   stage?: string;
-  /** The 1-based place in the stage, clamped to it. A story that changes stage without one goes last. */
-  position?: number;
   description?: string;
   /** Only the fields to change; `null` or `""` clears one. */
   fields?: FieldInput;
