@@ -2,6 +2,8 @@
 title: Share one factory status read across TUI views
 stage: DONE
 position: 31
+createdAt: 2026-11-14T21:06:44.000Z
+updatedAt: 2026-11-14T21:39:59.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-31
 pull_request: https://github.com/sgolovine/rowbly/pull/218
 ---

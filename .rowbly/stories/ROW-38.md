@@ -2,6 +2,8 @@
 title: Add syntax highlighting to agent output.
 stage: DONE
 position: 43
+createdAt: 2026-11-14T21:17:17.000Z
+updatedAt: 2026-11-14T23:07:57.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-38
 pull_request: https://github.com/sgolovine/rowbly/pull/229
 ---
