@@ -57,6 +57,11 @@ function storyFileIssues(config: ProjectConfig, data: Record<string, unknown>): 
   return [...title, ...stage, ...fields];
 }
 
+/** The `branch` key of the frontmatter, when it is a string that is not empty. */
+function branchOf(data: Record<string, unknown>): { branch?: string } {
+  return typeof data.branch === "string" && data.branch.trim() !== "" ? { branch: data.branch.trim() } : {};
+}
+
 /** Checks a story file against the config and returns it as a `Story` at `position` in its stage. */
 export function toStory(config: ProjectConfig, file: StoryFile, position = 1): Story {
   const { data, body } = file.doc;
@@ -81,6 +86,7 @@ export function toStory(config: ProjectConfig, file: StoryFile, position = 1): S
     createdAt: storyTimeOf(data, "createdAt"),
     updatedAt: storyTimeOf(data, "updatedAt"),
     description: body,
+    ...branchOf(data),
     fields: fields as Record<string, FieldValue>,
     path: file.path,
   };

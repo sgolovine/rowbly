@@ -35,7 +35,9 @@ export async function findDuplicateStoryIds(ctx: ServiceContext = {}): Promise<D
 /**
  * Removes the old copies of each Story, then gives the newer Story of each duplicate Story ID the next free number.
  * The service takes no lock: an exclusive create and a check of the old file make two repairs at the same time safe.
- * References to the ID do not change.
+ * When each Story of a group has a `uid`, the Story with the new number gets the `worktree` and `branch` of its old
+ * ID, and its attachment entries move to the folder of the new ID. Records with its `storyUid` find it by the
+ * `uid`. The other references to the ID do not change. Each change lists them in `stayed`.
  */
 export async function repairDuplicateStoryIds(ctx: ServiceContext = {}, plan?: DuplicatePlan): Promise<RenumberResult> {
   refuseRemoteWrite(ctx, "renumber Stories");

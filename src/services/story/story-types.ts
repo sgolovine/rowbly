@@ -22,6 +22,11 @@ export interface Story {
   updatedAt: string | null;
   /** The Markdown body. */
   description: string;
+  /**
+   * The Git branch of the Story from the `branch` frontmatter key. The repair of a duplicate Story ID writes it. A
+   * Story without it uses `story/<ID>`.
+   */
+  branch?: string;
   /** A value for every custom field in the project, `null` when unset. */
   fields: Record<string, FieldValue>;
   path: string;
