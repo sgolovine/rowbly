@@ -1,8 +1,9 @@
 ---
 title: Record the host of each worker Thread and attempt
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 2
 createdAt: 2026-11-16T19:45:01.623Z
-updatedAt: 2026-11-16T19:45:01.623Z
+updatedAt: 2026-11-16T20:06:49.327Z
 worktree: null
 pull_request: null
 ---

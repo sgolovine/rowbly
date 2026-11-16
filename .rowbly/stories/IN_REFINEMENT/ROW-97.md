@@ -1,10 +1,11 @@
 ---
 title: Survive worker host disconnects and reconnects
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 16
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T19:45:10.683Z
+updatedAt: 2026-11-16T20:06:56.684Z
 worktree: null
 pull_request: null
 ---

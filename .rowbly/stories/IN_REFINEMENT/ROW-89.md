@@ -1,11 +1,12 @@
 ---
 title: Add the host agent (rowbly host serve)
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 8
 dependsOn:
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:05.891Z
-updatedAt: 2026-11-16T19:45:05.891Z
+updatedAt: 2026-11-16T20:06:52.477Z
 worktree: null
 pull_request: null
 ---

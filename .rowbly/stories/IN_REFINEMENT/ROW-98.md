@@ -1,11 +1,12 @@
 ---
 title: Send board changes to running remote Threads
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 17
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:11.252Z
-updatedAt: 2026-11-16T19:45:11.252Z
+updatedAt: 2026-11-16T20:06:57.191Z
 worktree: null
 pull_request: null
 ---

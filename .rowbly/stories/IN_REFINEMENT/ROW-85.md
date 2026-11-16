@@ -1,8 +1,9 @@
 ---
 title: Add the SSH transport for worker hosts
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 4
 createdAt: 2026-11-16T19:45:02.850Z
-updatedAt: 2026-11-16T19:45:02.850Z
+updatedAt: 2026-11-16T20:06:50.395Z
 worktree: null
 pull_request: null
 ---

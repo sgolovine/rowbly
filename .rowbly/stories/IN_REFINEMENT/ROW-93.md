@@ -1,10 +1,11 @@
 ---
 title: Run checks of remote workers on their host
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 12
 dependsOn:
   - ROW-92
 createdAt: 2026-11-16T19:45:08.084Z
-updatedAt: 2026-11-16T19:45:08.084Z
+updatedAt: 2026-11-16T20:06:54.575Z
 worktree: null
 pull_request: null
 ---

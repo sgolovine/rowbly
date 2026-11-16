@@ -1,11 +1,12 @@
 ---
 title: Add the placement setting and host worker slots
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 14
 dependsOn:
   - ROW-83
   - ROW-84
 createdAt: 2026-11-16T19:45:09.575Z
-updatedAt: 2026-11-16T19:45:09.575Z
+updatedAt: 2026-11-16T20:06:55.620Z
 worktree: null
 pull_request: null
 ---

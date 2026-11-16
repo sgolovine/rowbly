@@ -1,12 +1,13 @@
 ---
 title: Add host check and host login
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 6
 dependsOn:
   - ROW-84
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:03.991Z
-updatedAt: 2026-11-16T19:45:03.991Z
+updatedAt: 2026-11-16T20:06:51.411Z
 worktree: null
 pull_request: null
 ---

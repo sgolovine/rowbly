@@ -1,11 +1,12 @@
 ---
 title: Install the exact Rowbly version on a worker host
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 5
 dependsOn:
   - ROW-84
   - ROW-85
 createdAt: 2026-11-16T19:45:03.438Z
-updatedAt: 2026-11-16T19:45:03.438Z
+updatedAt: 2026-11-16T20:06:50.895Z
 worktree: null
 pull_request: null
 ---

@@ -3,8 +3,8 @@ title: Put worker execution behind an executor interface
 stage: IN_REFINEMENT
 position: 1
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T20:06:48.816Z
-worktree: null
+updatedAt: 2026-11-16T20:06:52.519Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82
 pull_request: null
 ---
 

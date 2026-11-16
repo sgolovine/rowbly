@@ -1,12 +1,13 @@
 ---
 title: Apply outbox entries on the main machine
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 13
 dependsOn:
   - ROW-85
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:08.648Z
-updatedAt: 2026-11-16T19:45:08.648Z
+updatedAt: 2026-11-16T20:06:55.113Z
 worktree: null
 pull_request: null
 ---

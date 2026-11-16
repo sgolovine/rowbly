@@ -1,10 +1,11 @@
 ---
 title: Record attachment writes in the outbox
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 10
 dependsOn:
   - ROW-90
 createdAt: 2026-11-16T19:45:07.000Z
-updatedAt: 2026-11-16T19:45:07.000Z
+updatedAt: 2026-11-16T20:06:53.538Z
 worktree: null
 pull_request: null
 ---

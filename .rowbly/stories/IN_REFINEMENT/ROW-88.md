@@ -1,12 +1,13 @@
 ---
 title: Add host use to clone the Project on a worker host
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 7
 dependsOn:
   - ROW-84
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:04.969Z
-updatedAt: 2026-11-16T19:45:04.969Z
+updatedAt: 2026-11-16T20:06:51.950Z
 worktree: null
 pull_request: null
 ---

@@ -1,6 +1,7 @@
 ---
 title: Run remote workers in the host agent
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 11
 dependsOn:
   - ROW-82
   - ROW-88
@@ -8,7 +9,7 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:07.547Z
-updatedAt: 2026-11-16T19:45:07.547Z
+updatedAt: 2026-11-16T20:06:54.058Z
 worktree: null
 pull_request: null
 ---

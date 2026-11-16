@@ -1,8 +1,9 @@
 ---
 title: Add the worker host registry and host add, list and remove
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 3
 createdAt: 2026-11-16T19:45:02.241Z
-updatedAt: 2026-11-16T19:45:02.241Z
+updatedAt: 2026-11-16T20:06:49.849Z
 worktree: null
 pull_request: null
 ---

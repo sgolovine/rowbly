@@ -1,11 +1,12 @@
 ---
 title: Hold the changes of abandoned remote Threads
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 18
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:12.293Z
-updatedAt: 2026-11-16T19:45:12.293Z
+updatedAt: 2026-11-16T20:06:57.706Z
 worktree: null
 pull_request: null
 ---

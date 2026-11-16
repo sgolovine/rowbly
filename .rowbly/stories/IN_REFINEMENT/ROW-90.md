@@ -1,8 +1,9 @@
 ---
 title: Record canonical writes in an outbox
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 9
 createdAt: 2026-11-16T19:45:06.450Z
-updatedAt: 2026-11-16T19:45:06.450Z
+updatedAt: 2026-11-16T20:06:52.999Z
 worktree: null
 pull_request: null
 ---

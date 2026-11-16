@@ -1,6 +1,7 @@
 ---
 title: Send workers to worker hosts from the manager
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 15
 dependsOn:
   - ROW-82
   - ROW-83
@@ -8,7 +9,7 @@ dependsOn:
   - ROW-94
   - ROW-95
 createdAt: 2026-11-16T19:45:10.132Z
-updatedAt: 2026-11-16T19:45:10.132Z
+updatedAt: 2026-11-16T20:06:56.140Z
 worktree: null
 pull_request: null
 ---
