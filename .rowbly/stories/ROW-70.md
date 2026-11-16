@@ -1,9 +1,9 @@
 ---
 title: "Threads View: Add deep-link to story thread tab."
-stage: IN_DEVELOPMENT
-position: 2
+stage: CHANGELOG
+position: 1
 createdAt: 2026-11-16T16:30:22.455Z
-updatedAt: 2026-11-16T16:37:21.905Z
+updatedAt: 2026-11-16T16:37:27.208Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-70
 pull_request: https://github.com/sgolovine/rowbly/pull/256
 ---
