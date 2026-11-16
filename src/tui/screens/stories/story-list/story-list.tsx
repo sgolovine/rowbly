@@ -9,6 +9,9 @@ import type { StoryListRow } from "../story-list-rows.js";
 import { clickRow, dropStory, rowDragProps, type StoryListEnv, wheelCursor } from "./story-list-drag.js";
 import { listWindow, visibleItems } from "./story-list-window.js";
 
+/** No Story is in the multi-selection. */
+const NO_MARKS: ReadonlySet<string> = new Set();
+
 export interface StoryListProps {
   readonly rows: readonly StoryListRow[];
   /** The factory activity by Story ID. */
@@ -18,9 +21,15 @@ export interface StoryListProps {
   /** Rows available; `undefined` shows every row. */
   readonly height?: number;
   readonly emptyText: string;
+  /** The IDs of the Stories of the multi-selection. Each one shows a mark. */
+  readonly marked?: ReadonlySet<string>;
   onCursor(index: number): void;
   /** A click on the row at `cursor`: a Story opens, and a heading expands or collapses its section. */
   onActivate?(index: number): void;
+  /** A `shift+click` on the Story row at `index`: select the Stories from `cursor` to it. */
+  onRange?(index: number): void;
+  /** A click without `shift`: clear the multi-selection. */
+  onClear?(): void;
   /** The Story `id` was dropped in the gap before the row at `gap` (`rows.length` is the end of the list). */
   onMove?(id: string, gap: number): void;
 }
@@ -31,7 +40,8 @@ export interface StoryListProps {
  * the list shows the rows around the cursor. A `↑ n more` line shows only when rows are above them, and a
  * `↓ n more` line shows only when rows are below them, so that no blank line shows. The mouse wheel
  * calls `onCursor`. A click on the selected row calls `onActivate`. A click on another row selects it
- * through `onCursor`. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
+ * through `onCursor`. A `shift+click` on a Story row calls `onRange`, and each other click calls `onClear` first.
+ * Each Story in `marked` shows a `●` mark. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
  * shows the gap where it lands, and the release calls `onMove`. Over a Story above the dragged Story, the gap
  * is above that Story; over a Story below it, the gap is below that Story. Over a heading, the gap is below
  * the heading, at the top of its section.
@@ -43,8 +53,11 @@ export function StoryList({
   clickable,
   height,
   emptyText,
+  marked = NO_MARKS,
   onCursor,
   onActivate,
+  onRange,
+  onClear,
   onMove,
 }: StoryListProps) {
   const ref = useRef<DOMElement>(null);
@@ -54,7 +67,7 @@ export function StoryList({
 
   const view = listWindow(rows.length, height, cursor, slot);
   const sections = rows.some((row) => row.kind === "stage");
-  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onMove };
+  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onRange, onClear, onMove };
 
   useMouse(ref, { onWheel: (direction) => wheelCursor(env, direction, WHEEL_LINES) }, clickable && view.overflow);
 
@@ -82,7 +95,8 @@ export function StoryList({
             selected={item.index === cursor}
             clickable={clickable}
             indented={sections}
-            onClick={() => clickRow(env, item.index)}
+            marked={marked.has(item.row.id)}
+            onClick={(event) => clickRow(env, item.index, event)}
             dragProps={rowDragProps(env, item.row, item.index)}
           />
         ),

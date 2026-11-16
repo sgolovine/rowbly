@@ -16,6 +16,8 @@ export interface MouseEvent {
   kind: "press" | "release" | "move" | "menu" | "wheelUp" | "wheelDown";
   x: number;
   y: number;
+  /** `shift` was held down at a press or a release of the left button. */
+  shift?: boolean;
 }
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: SGR mouse reports start with ESC.
@@ -32,7 +34,7 @@ function mouseEvent(button: number, x: number, y: number, final: string): MouseE
   }
 
   if ((button & 0b1100_0011) === 0) {
-    return { kind: final === "M" ? "press" : "release", ...at };
+    return { kind: final === "M" ? "press" : "release", ...at, shift: (button & 4) !== 0 };
   }
 
   if ((button & 0b1100_0011) === 2 && final === "M") {

@@ -1,4 +1,5 @@
-import { updateStage } from "../../../services/stage/stage.js";
+import { mapInOrder } from "../../../services/in-order/in-order.js";
+import { type Stage, updateStage } from "../../../services/stage/stage.js";
 import { deleteStory, type Story, updateStory } from "../../../services/story/story.js";
 import { showToast } from "../../hooks/index.js";
 import { closeOverlay, fold } from "./shell-selection.js";
@@ -9,6 +10,13 @@ import { closeDeletedStory } from "./story-pane.js";
 interface Place {
   readonly key: string;
   readonly position: number;
+}
+
+/** A Story of the multi-selection and its new Stage. `position` is `undefined` for the end of the Stage. */
+interface MarkedMove {
+  readonly story: Story;
+  readonly to: string;
+  readonly position: number | undefined;
 }
 
 /** Moves the Stage `key` to the 1-based `position` in board order. The selection stays on the Stage. */
@@ -60,6 +68,86 @@ export function moveStoryStage(env: ShellEnv, story: Story, delta: -1 | 1): void
   }
 
   placeStory(env, story, to.key, delta > 0 ? 1 : stories.filter((s) => s.stage === to.key).length + 1);
+}
+
+/** The selected Stories in list order: by the order of their Stages, then by their positions. */
+function markedInOrder(view: ShellView): readonly Story[] {
+  const order = new Map(view.stages.map((stage, index) => [stage.key, index]));
+
+  return view.stories
+    .filter((story) => view.marked.has(story.id))
+    .toSorted((a, b) => (order.get(a.stage) ?? 0) - (order.get(b.stage) ?? 0) || a.position - b.position);
+}
+
+/** The Stage `delta` Stages from the Stage of the Story `story`, or `undefined` past the first or the last Stage. */
+function nextStage(stages: readonly Stage[], story: Story, delta: -1 | 1): Stage | undefined {
+  const at = stages.findIndex((s) => s.key === story.stage);
+
+  return at < 0 ? undefined : stages[at + delta];
+}
+
+/**
+ * The moves of the selected Stories, in list order. Each Story moves one Stage from its own Stage. A Story in the
+ * first or the last Stage that cannot move is not in the list. Down, the Stories go to positions 1, 2, 3, … of their
+ * target Stage. Up, each Story goes to the end of its target Stage. Thus they keep their relative order.
+ */
+function markedMoves(view: ShellView, delta: -1 | 1): readonly MarkedMove[] {
+  const targets = markedInOrder(view).flatMap((story) => {
+    const to = nextStage(view.stages, story, delta);
+
+    return to ? [{ story, to: to.key }] : [];
+  });
+
+  return targets.map((target, index) => ({
+    ...target,
+    position: delta > 0 ? targets.slice(0, index).filter((t) => t.to === target.to).length + 1 : undefined,
+  }));
+}
+
+/** Writes one move. The calls run one at a time, because each call rewrites the positions of its Stage. */
+function writeMove(env: ShellEnv, move: MarkedMove): Promise<Story> {
+  return updateStory(
+    { id: move.story.id, stage: move.to, ...(move.position === undefined ? {} : { position: move.position }) },
+    env.ctx,
+  );
+}
+
+/** The selected Stories moved. A Stage filter follows the first Story, and each target Stage section expands. */
+function markedPlaced(env: ShellEnv, moved: readonly Story[]): void {
+  const first = moved[0];
+
+  if (first && env.stageKey !== null) {
+    env.setStageKey(first.stage);
+  }
+
+  for (const story of moved) {
+    fold(env, story.stage, false);
+  }
+
+  env.reload();
+}
+
+/** A move failed. The Stories that moved before the failure stay moved. */
+function markedFailed(env: ShellEnv, err: unknown): void {
+  env.toast.error(err);
+  env.reload();
+}
+
+/**
+ * Moves each selected Story one Stage along the board order: to the top of the next Stage, or to the bottom of the
+ * previous Stage. The Stories stay selected.
+ */
+export function moveMarkedStories(env: ShellEnv, delta: -1 | 1): void {
+  const moves = markedMoves(env.view, delta);
+
+  if (moves.length === 0) {
+    return;
+  }
+
+  mapInOrder(moves, (move) => writeMove(env, move)).then(
+    (moved) => markedPlaced(env, moved),
+    (err: unknown) => markedFailed(env, err),
+  );
 }
 
 /** Moves the Story `story` one place up or down in its Stage, and past the end into the next Stage. */

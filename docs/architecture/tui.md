@@ -108,6 +108,38 @@ after a Project switch, `useStageDefaults` in `src/tui/shell/shell/` collapses e
 keys. All other sections are expanded. A reload of the board does not change the sections. See
 [storage.md](storage.md#stages).
 
+## The multi-selection of Stories
+
+In the `stories` view mode, the user can select more than one Story and move all of them in one
+step. The shell keeps the selection as a set of Story IDs, and the range anchor (a Story ID or
+`null`). `src/tui/shell/shell/story-marks.ts` changes the selection.
+
+- **The range mode.** `space` on a Story row starts the range mode. The Story of the cursor is the
+  anchor. `↑/↓` and `j/k` move the cursor. Each Story row from the anchor to the cursor shows the
+  mark. Stage heading rows are not selected. `space` again ends the mode, and the Story rows of the
+  range stay selected. `esc` ends the mode and selects nothing. The range replaces the earlier
+  selection.
+- **The mouse.** `shift+click` on a Story row selects the Story rows from the cursor row to the
+  clicked row, and moves the cursor to the clicked row. It does not open the Story sidebar. A click
+  without `shift` clears the selection, then does its usual action. Many terminals keep
+  `shift+click` for their own text selection. In these terminals, use the range mode.
+- **The mark.** Each selected Story row shows `●` in `accent` at the left of its ID. The cursor row
+  keeps its `▌` bar and its `selection` fill.
+- **The move.** With a selection, `shift+↓` (or `J`) moves each selected Story to the top of the
+  Stage after its own Stage. `shift+↑` (or `K`) moves each selected Story to the bottom of the Stage
+  before its own Stage. The Stories keep their relative order. A Story in the last Stage (for
+  `shift+↓`) or in the first Stage (for `shift+↑`) does not move. The shell calls `updateStory` for
+  one Story at a time, because each call writes the positions of its Stage again. Then it reloads
+  the board one time. The target sections expand, and a Stage filter follows the first moved Story.
+  The Stories stay selected, so the next `shift+↓` moves them one more Stage. If a move fails, the
+  TUI shows the error as a toast and reloads the board. The Stories that moved stay moved.
+- **No selection.** `shift+↑/↓` and `K/J` move the Story of the cursor in its Stage, as before.
+  `space` on a Stage heading expands or collapses the section.
+- **Clear.** `esc` in the Story list clears the selection first. A second `esc` closes the Story
+  sidebar. A Project switch clears the selection. After a reload, the IDs of Stories that do not
+  exist go out of the selection.
+- **The keys of a row.** `enter`, `d` and `n` act on the cursor row only.
+
 ## The Factory view
 
 The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the

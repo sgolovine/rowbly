@@ -1,5 +1,6 @@
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import type { RowDragProps } from "../../../components/index.js";
+import type { ClickEvent } from "../../../hooks/index.js";
 import { StageHeadingRow } from "../stage-heading-row/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
 import { StoryRow } from "../story-row/index.js";
@@ -12,7 +13,9 @@ export interface StoryListItemProps {
   readonly clickable: boolean;
   /** The list has Stage sections, so a Story row moves to the right of its heading. */
   readonly indented: boolean;
-  readonly onClick: () => void;
+  /** The Story of the row is in the multi-selection. */
+  readonly marked: boolean;
+  readonly onClick: (event: ClickEvent) => void;
   /** The props that let the mouse drag the row and drop a Story on it. */
   readonly dragProps: RowDragProps;
 }
@@ -24,6 +27,7 @@ export function StoryListItem({
   selected,
   clickable,
   indented,
+  marked,
   onClick,
   dragProps,
 }: StoryListItemProps) {
@@ -34,7 +38,7 @@ export function StoryListItem({
       collapsed={row.collapsed}
       selected={selected}
       clickable={clickable}
-      onClick={onClick}
+      onClick={() => onClick({ shift: false })}
       {...dragProps}
     />
   ) : (
@@ -46,6 +50,7 @@ export function StoryListItem({
       selected={selected}
       clickable={clickable}
       indented={indented}
+      marked={marked}
       onClick={onClick}
       {...dragProps}
     />
