@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
 import { appendThreadRun, createThread, transitionThread } from "./thread-change.js";
@@ -14,6 +16,21 @@ describe("thread change", () => {
     await expect(
       createThread({ id: "one", role: "supervisor", cwd: p.paths.root, ownerToken: "owner" }, p.ctx),
     ).rejects.toThrow("already exists");
+  });
+
+  it("writes the local host for a new worker Thread, and no host for a supervisor Thread", async () => {
+    const worker = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "owner" },
+      p.ctx,
+    );
+    const supervisor = await createThread({ role: "supervisor", cwd: p.paths.root, ownerToken: "owner" }, p.ctx);
+    const file = async (id: string) =>
+      JSON.parse(await readFile(join(p.paths.runtimeDir, "threads", `${id}.json`), "utf8"));
+
+    expect((await file(worker.id)).host).toBe("local");
+    expect((await file(supervisor.id)).host).toBeUndefined();
+    expect(worker.host).toBe("local");
+    expect(supervisor.host).toBe("local");
   });
 
   it("records start and end times once, and clears the error on completion", async () => {

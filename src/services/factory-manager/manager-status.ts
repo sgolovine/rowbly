@@ -217,7 +217,7 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     ...(state.settings.checks ? { checks: checkQueueStatus(manager.checks) } : {}),
     threads: threads
       .slice(-12)
-      .map((t) => ({ id: t.id, storyId: t.storyId, stage: t.stage, status: t.status, result: t.result })),
+      .map((t) => ({ id: t.id, storyId: t.storyId, stage: t.stage, status: t.status, host: t.host, result: t.result })),
   };
 }
 

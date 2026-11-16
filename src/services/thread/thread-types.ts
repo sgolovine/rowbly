@@ -1,5 +1,8 @@
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 
+/** The host ID of the main machine of the Project. All current work runs on it. */
+export const LOCAL_HOST = "local";
+
 export type ThreadStatus = "pending" | "running" | "completed" | "failed" | "cancelled" | "interrupted";
 
 /** One run of a Thread. A resume adds a run; the last run has the status of the Thread. */
@@ -44,6 +47,8 @@ export interface ThreadRecord {
   readonly attemptNumber?: number;
   readonly parentThreadId?: string;
   readonly model?: ModelChoice;
+  /** The host ID of the machine that runs the Thread. A read gives `LOCAL_HOST` for a file without it. */
+  readonly host?: string;
 
   // Lifecycle
   readonly status: ThreadStatus;

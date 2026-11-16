@@ -2,7 +2,7 @@ import type { AttemptStatus, PolicyAttempt, PolicyState } from "../factory-polic
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { getThread } from "./thread-files.js";
-import type { ThreadRecord, ThreadStatus } from "./thread-types.js";
+import { LOCAL_HOST, type ThreadRecord, type ThreadStatus } from "./thread-types.js";
 
 function attemptStatus(status: ThreadStatus): AttemptStatus {
   if (status === "pending") {
@@ -35,6 +35,7 @@ function projectedAttempt(
   return {
     ...base,
     status: attemptStatus(t.status),
+    host: t.host ?? LOCAL_HOST,
     model: t.model ? `${t.model.provider}/${t.model.modelId}` : undefined,
     startedAt: t.startedAt ?? t.createdAt,
     stoppedAt: t.completedAt ?? null,
