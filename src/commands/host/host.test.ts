@@ -1,6 +1,8 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { writeOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -149,5 +151,105 @@ describe("host commands", () => {
     }
 
     expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
+});
+
+describe("host blob", () => {
+  const outbox = useTempDir();
+  const outside = useTempDir();
+  const PNG = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
+  const sha = createHash("sha256").update(PNG).digest("hex");
+
+  /** Runs the command and gives the bytes that it wrote to stdout with `process.stdout.write`. */
+  async function blob(...args: string[]) {
+    const chunks: Buffer[] = [];
+    const write = vi.spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array) => {
+      chunks.push(Buffer.from(chunk));
+      return true;
+    });
+    try {
+      const result = await runCli(["--json", "host", "blob", ...args], outside.path);
+      return { ...result, bytes: Buffer.concat(chunks) };
+    } finally {
+      write.mockRestore();
+    }
+  }
+
+  beforeEach(() => {
+    vi.stubEnv("ROWBLY_OUTBOX", outbox.path);
+    vi.stubEnv("ROWBLY_THREAD_ID", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("writes the exact bytes of the blob to stdout", async () => {
+    await writeOutboxBlob(outbox.path, PNG);
+
+    const result = await blob(sha);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.bytes.equals(PNG)).toBe(true);
+    expect(result.stderr).toBe("");
+  });
+
+  it.each([
+    ["../x"],
+    ["A".repeat(64)],
+    ["a".repeat(63)],
+    ["a".repeat(65)],
+    [`${"a".repeat(31)}/${"a".repeat(32)}`],
+    [`${"a".repeat(64)}.png`],
+  ])("gives VALIDATION and writes nothing for %s", async (value) => {
+    await writeOutboxBlob(outbox.path, PNG);
+
+    const result = await blob(value);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(result.bytes.length).toBe(0);
+  });
+
+  it("refuses a blob that is a symlink", async () => {
+    const target = join(outside.path, "secret.png");
+    await writeFile(target, PNG);
+    await mkdir(join(outbox.path, "blobs"), { recursive: true });
+    await symlink(target, join(outbox.path, "blobs", `${sha}.png`));
+
+    const result = await blob(sha);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(result.bytes.length).toBe(0);
+  });
+
+  it("refuses a blobs folder that is a symlink to a different folder", async () => {
+    await writeFile(join(outside.path, `${sha}.png`), PNG);
+    await symlink(outside.path, join(outbox.path, "blobs"));
+
+    const result = await blob(sha);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(result.bytes.length).toBe(0);
+  });
+
+  it("gives NOT_FOUND for a hash without a file", async () => {
+    const result = await blob(sha);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("NOT_FOUND");
+    expect(result.bytes.length).toBe(0);
+  });
+
+  it("gives VALIDATION without ROWBLY_OUTBOX", async () => {
+    vi.stubEnv("ROWBLY_OUTBOX", "");
+
+    const result = await blob(sha);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(result.bytes.length).toBe(0);
   });
 });

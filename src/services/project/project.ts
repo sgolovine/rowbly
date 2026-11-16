@@ -18,6 +18,7 @@ import {
 import { ConflictError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { createUserPrompts } from "../prompts/prompts.js";
 import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
@@ -90,6 +91,8 @@ async function writeStagePrompts(paths: ProjectPaths, stages: readonly InitialSt
 
 /** Creates `.rowbly/` in `ctx.cwd` with a config, its stages and an empty stories folder. */
 export async function initProject(input: InitProjectInput = {}, ctx: ServiceContext = {}): Promise<Project> {
+  refuseRemoteWrite(ctx, "create a Project");
+
   const root = resolve(ctx.cwd ?? process.cwd());
   const paths = projectPaths(root);
   const name = input.name ?? defaultProjectName(ctx);
@@ -201,6 +204,8 @@ function updatedDisplay(current: DisplayConfig | undefined, input: DisplayConfig
 
 /** Changes the name, the key, the features or the display options of the project. A new key renames every story. */
 export async function updateProject(input: UpdateProjectInput, ctx: ServiceContext = {}): Promise<Project> {
+  refuseRemoteWrite(ctx, "change the Project");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const projectName = input.name === undefined ? config.projectName : input.name.trim();

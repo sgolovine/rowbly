@@ -28,6 +28,7 @@ import {
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { canResume } from "./network-wait.js";
 import { launchWorker } from "./worker-launch.js";
+import { placeStory } from "./worker-placement.js";
 
 export interface ReserveWorkerInput {
   storyId: string;
@@ -35,6 +36,14 @@ export interface ReserveWorkerInput {
   requestId: string;
   resumeThreadId?: string;
   model?: ModelChoice;
+  /** The host that the supervisor requests. Without a host, the placement rules select one. */
+  host?: string;
+}
+
+/** The checked Story of a reservation, and the host that the placement selected. */
+interface Slot {
+  readonly story: Story;
+  readonly host: string;
 }
 
 /** Reserves a worker slot for an eligible Story, then launches the worker in the background. */
@@ -49,7 +58,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     return { threadId: prior };
   }
 
-  const story = await assertSlotAvailable(manager, input);
+  const { story, host } = await assertSlotAvailable(manager, input);
 
   if (input.resumeThreadId) {
     const previous = await getThread(input.resumeThreadId, manager.ctx);
@@ -76,7 +85,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
 
   const created = input.resumeThreadId
     ? await appendResumeRun(manager, input.resumeThreadId, story, input.requestId)
-    : await createWorkerThread(manager, story, decision.attempt ?? 1);
+    : await createWorkerThread(manager, story, decision.attempt ?? 1, host);
   const thread = choice ? await changeThread(manager, created.id, "pending", { model: choice }) : created;
 
   await projectNativeAttempt(thread.id, manager.ctx);
@@ -94,8 +103,8 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
   return { threadId: thread.id };
 }
 
-/** Checks that the factory runs, the Story has no worker and is in the Stage, and a slot is free. */
-async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput): Promise<Story> {
+/** Checks that the factory runs, the Story has no worker and is in the Stage, and a host has a free slot. */
+async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput): Promise<Slot> {
   if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
   }
@@ -113,13 +122,10 @@ async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput):
     throw new ConflictError("Story Stage changed");
   }
 
-  const { active, limit } = getState(manager);
+  const choice = workerModelFor(manager, story, input.model);
+  const host = await placeStory(manager, { story, choice, requested: input.host, threads });
 
-  if (Math.max(active.size, activeThreads.length) >= limit) {
-    throw new ConflictError("Worker capacity is full");
-  }
-
-  return story;
+  return { story, host };
 }
 
 /** Checks a resume, then releases the policy parking and the user cancellation of the Story. */
@@ -180,7 +186,12 @@ async function appendResumeRun(manager: Manager, threadId: string, story: Story,
   );
 }
 
-function createWorkerThread(manager: Manager, story: Story, attemptNumber: number): Promise<ThreadRecord> {
+function createWorkerThread(
+  manager: Manager,
+  story: Story,
+  attemptNumber: number,
+  host: string,
+): Promise<ThreadRecord> {
   return createThread(
     {
       role: "worker",
@@ -190,7 +201,7 @@ function createWorkerThread(manager: Manager, story: Story, attemptNumber: numbe
       ownerToken: manager.owner.token,
       parentThreadId: getState(manager).supervisorId,
       attemptNumber,
-      host: LOCAL_HOST,
+      host,
     },
     manager.ctx,
   );

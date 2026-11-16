@@ -20,6 +20,7 @@ Supply a unique `requestId` for each start intent. Reuse it only for the same in
 An optional `model` has `provider`, `modelId` and an optional supported `thinkingLevel`.
 Use another available provider when a provider pause prevents a start.
 An optional `resumeThreadId` resumes the exact session in its original Stage.
+An optional `host` requests a machine. Without a `host`, the manager selects one from the `hosts` slots.
 The manager checks eligibility, duplicate claims, capacity, provider pauses and resume limits.
 
 Use `inspect_worker({threadId})` for metadata.

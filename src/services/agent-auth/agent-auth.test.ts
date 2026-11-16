@@ -180,6 +180,7 @@ describe("agent auth", () => {
     expect(await getFactorySettings(project.ctx)).toEqual({
       maxWorkers: 4,
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
+      placement: "prefer-local",
     });
     expect(await configureFactory({ worker: choice, workerThinking: "off" }, project.ctx, runtime)).toMatchObject({
       workerModel: { thinkingLevel: "off" },
@@ -199,6 +200,7 @@ describe("agent auth", () => {
     expect(await getFactorySettings(project.ctx)).toEqual({
       maxWorkers: 4,
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
+      placement: "prefer-local",
     });
     await configureFactory({ worker: choice }, project.ctx, runtime);
     await configureFactory({ stage: "backlog", worker: choice, workerThinking: "off" }, project.ctx, runtime);
@@ -209,6 +211,7 @@ describe("agent auth", () => {
       stageWorkerModels: { BACKLOG: { ...model, thinkingLevel: "off" } },
       storyWorkerModels: { [story.id]: { DONE: model } },
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
+      placement: "prefer-local",
     });
   });
 });

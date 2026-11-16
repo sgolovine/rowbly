@@ -59,3 +59,8 @@ export function withWorkerOverride(
     storyWorkerModels: withKey(settings.storyWorkerModels, target.storyId, story),
   };
 }
+
+/** Whether the configure flags select a worker model override in place of the default models. */
+export function isOverrideInput(input: { stage?: string; story?: string; clearWorker?: boolean }): boolean {
+  return input.stage !== undefined || input.story !== undefined || !!input.clearWorker;
+}

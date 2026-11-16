@@ -23,6 +23,7 @@ import {
   setState,
 } from "./manager-state.js";
 import { networkWaitingThreads } from "./network-wait.js";
+import { managerCapacity, managerSlots } from "./worker-placement.js";
 
 /** The skip reason of a Story whose worker Thread waits for its provider, to resume after a network pause. */
 export const NETWORK_WAIT_REASON = "waiting for network resume";
@@ -148,7 +149,7 @@ async function networkWaitStories(manager: Manager, stories: readonly Story[], r
  */
 export async function scan(
   manager: Manager,
-  maxActive = getState(manager).limit,
+  maxActive = managerCapacity(getState(manager)),
   resumeThreadId?: string,
 ): Promise<ScanResult> {
   const stories = await searchStories({}, manager.ctx);
@@ -206,6 +207,7 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     decisions,
     nextCursor: policy.decisions.length > pageEnd ? pageEnd : null,
     attention: [...issues, ...state.attention.entries()].slice(0, 12),
+    hosts: managerSlots(state),
     providers: Object.fromEntries(state.providers),
     networkFailures: Object.fromEntries(state.networkFailures),
     connectivity: connectivityOf(state.settings, state.providers),

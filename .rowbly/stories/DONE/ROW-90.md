@@ -1,9 +1,9 @@
 ---
 title: Record canonical writes in an outbox
-stage: CHANGELOG
+stage: DONE
 position: 9
 createdAt: 2026-11-16T19:45:06.450Z
-updatedAt: 2026-11-16T20:31:11.901Z
+updatedAt: 2026-11-16T20:56:15.631Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-90
 pull_request: https://github.com/sgolovine/rowbly/pull/273
 ---

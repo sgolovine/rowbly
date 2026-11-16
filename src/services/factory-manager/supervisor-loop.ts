@@ -28,6 +28,7 @@ import { createSupervisorTools } from "./supervisor-tools.js";
 import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
 import { pullUpstreamStories } from "./upstream-pull-step.js";
 import { checkHistory } from "./worker-checks.js";
+import { managerSlots } from "./worker-placement.js";
 
 type Delivery = Awaited<ReturnType<typeof buildDigest>>;
 
@@ -219,6 +220,7 @@ async function buildDigest(manager: Manager) {
     blocked: blockedItems(stories, stages),
     notes: state.notes ?? [],
     holds: [...holds.entries()],
+    hosts: managerSlots(getState(manager)),
     providers: [...providers.entries()],
     attention: [...attention.entries()],
   });

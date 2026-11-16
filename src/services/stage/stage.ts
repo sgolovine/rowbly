@@ -12,6 +12,7 @@ import {
 } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists, writeFileAtomic } from "../files/files.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { readStoryFiles, rewriteStories } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
@@ -125,6 +126,8 @@ export async function getStage(input: { key: string }, ctx: ServiceContext = {})
 
 /** Adds a stage at `position`, or at the end, and writes its prompt file. */
 export async function createStage(input: CreateStageInput, ctx: ServiceContext = {}): Promise<Stage> {
+  refuseRemoteWrite(ctx, "create a Stage");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const label = input.label.trim();
@@ -184,6 +187,8 @@ async function renameStage(
 
 /** Changes a stage. A new key renames the prompt file and moves the stories of the stage. */
 export async function updateStage(input: UpdateStageInput, ctx: ServiceContext = {}): Promise<Stage> {
+  refuseRemoteWrite(ctx, "change a Stage");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const stage = requireStage(config, input.key);
@@ -237,6 +242,8 @@ export async function deleteStage(
   input: DeleteStageInput,
   ctx: ServiceContext = {},
 ): Promise<{ key: string; movedStories: number }> {
+  refuseRemoteWrite(ctx, "delete a Stage");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const stage = requireStage(config, input.key);

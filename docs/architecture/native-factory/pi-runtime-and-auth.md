@@ -85,7 +85,7 @@ keys and the screen stay responsive.
 
 The `factory-settings/` service reads and writes the optional `factory` key of
 `.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels`, `git`, `checks` and `dependencies`. See [../storage.md](../storage.md#factory-settings).
+`storyWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
 
 - Without the `factory` key, the worker limit is four and Pi selects default models.
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
@@ -143,6 +143,27 @@ An absent key is `false`.
 - In the TUI, Settings › AI › Limits shows the card "Pull upstream Stories" with the value `On` or
   `Off`. The `u` key or the Button of the card switches the value.
 - The key is off by default, because a move changes the board of the user.
+
+### Placement
+
+The `placement` key of the `factory` section sets how the manager selects the machine of a new
+worker. The machine is the main machine (`local`) or a worker host. See
+[README.md](README.md#placement) for the rules.
+
+| Value           | Effect                                                                   |
+| --------------- | ------------------------------------------------------------------------ |
+| `prefer-local`  | Use `local` first. Use a worker host only when `local` has no free slot. |
+| `most-free`     | Use the machine with the most free slots. A tie goes to `local`.         |
+| `prefer-remote` | Use the worker host with the most free slots first. Then use `local`.    |
+
+- The default is `prefer-local`. `getFactorySettings` gives `prefer-local` when the key is absent.
+  A write does not add the default to the file, and it keeps the other keys.
+- A different value is not valid. `getFactorySettings` gives a `ValidationError`, and
+  `validFactorySettings` gives `false`. Thus `rowbly doctor` shows the problem.
+- `rowbly factory configure --placement <policy>` sets the key. An unknown policy gives a
+  `VALIDATION` error, and the config does not change. The flag does not start the Pi runtime.
+- The supervisor loop reads the factory settings again on each turn. Thus a changed policy applies to
+  the next reservation.
 
 ### Worker model overrides
 

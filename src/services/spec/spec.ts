@@ -2,6 +2,7 @@ import { rm } from "node:fs/promises";
 import { featureEnabled, type Issue, type ProjectConfig, readConfig, throwIfIssues } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import {
   canonicalStoryId,
   readSpecFile,
@@ -227,6 +228,8 @@ async function newSlug(
 
 /** Creates a spec linked to existing Stories. Without a slug, the title gives one that no spec uses. */
 export async function createSpec(input: CreateSpecInput, ctx: ServiceContext = {}): Promise<Spec> {
+  refuseRemoteWrite(ctx, "create a Spec");
+
   const { paths, config } = await open(ctx);
   const title = input.title.trim();
   const slug = await newSlug(paths, input, title);
@@ -258,6 +261,8 @@ export async function listSpecs(input: ListSpecsInput = {}, ctx: ServiceContext 
 
 /** Changes the title, the body or the links of a spec. */
 export async function updateSpec(input: UpdateSpecInput, ctx: ServiceContext = {}): Promise<Spec> {
+  refuseRemoteWrite(ctx, "change a Spec");
+
   const { paths, config } = await open(ctx);
   const file = await findSpecFile(paths, input.slug);
 
@@ -282,6 +287,8 @@ export async function updateSpec(input: UpdateSpecInput, ctx: ServiceContext = {
 
 /** Deletes the spec file. */
 export async function deleteSpec(input: { slug: string }, ctx: ServiceContext = {}): Promise<{ slug: string }> {
+  refuseRemoteWrite(ctx, "delete a Spec");
+
   const { paths } = await open(ctx);
   const file = await findSpecFile(paths, input.slug);
 
@@ -292,6 +299,8 @@ export async function deleteSpec(input: { slug: string }, ctx: ServiceContext = 
 
 /** Links the spec to one more Story. A link that exists already is not an error. */
 export async function linkSpec(input: SpecLinkInput, ctx: ServiceContext = {}): Promise<Spec> {
+  refuseRemoteWrite(ctx, "link a Spec");
+
   const spec = await getSpec({ slug: input.slug }, ctx);
 
   return updateSpec({ slug: spec.slug, stories: [...spec.stories, input.story] }, ctx);
@@ -299,6 +308,8 @@ export async function linkSpec(input: SpecLinkInput, ctx: ServiceContext = {}): 
 
 /** Removes the link from the spec to a Story. The last link cannot be removed: delete the spec. */
 export async function unlinkSpec(input: SpecLinkInput, ctx: ServiceContext = {}): Promise<Spec> {
+  refuseRemoteWrite(ctx, "unlink a Spec");
+
   const spec = await getSpec({ slug: input.slug }, ctx);
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
