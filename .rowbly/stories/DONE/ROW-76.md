@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - Allow user to steer thread.
-stage: IN_REVIEW
-position: 1
+stage: DONE
+position: 78
 createdAt: 2026-11-16T17:01:49.320Z
-updatedAt: 2026-11-16T19:52:46.278Z
+updatedAt: 2026-11-16T19:54:39.495Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-76
 pull_request: https://github.com/sgolovine/rowbly/pull/265
 ---
@@ -69,17 +69,3 @@ Not in scope:
 - The input shows in both the Threads tab and the Factory view Thread pane. Reason: the author writes "when showing the thread", and both views show a Thread with `ConversationView`.
 - The key that focuses the input is `m`. Reason: `x`, `r`, `f`, `j`, `k` and `tab` already have a function in the thread region.
 - A CLI command is in scope. Reason: AGENTS.md says that the CLI and the TUI call the same services, and `cancel` and `resume` have CLI commands.
-
-## Review findings
-
-The Changelog Stage could not merge `origin/main` into `story/ROW-76` (PR #265). These files have merge conflicts with `main`:
-
-- `docs/architecture/tui.md`
-- `src/tui/screens/stories/threads-tab/threads-tab-actions.ts`
-- `src/tui/screens/stories/threads-tab/threads-tab-view.ts`
-- `src/tui/screens/stories/threads-tab/threads-tab.tsx`
-- `src/tui/screens/stories/threads-tab/use-threads-tab.ts`
-- `src/tui/screens/threads/thread-pane/thread-pane.tsx`
-- `src/tui/screens/threads/thread-pane/use-thread-pane.ts`
-
-Merge `origin/main` into the branch, repair these conflicts (`main` added the full-screen conversation in `src/tui/components/`), run the checks and push. The merge was aborted. No changelog entry was written.
