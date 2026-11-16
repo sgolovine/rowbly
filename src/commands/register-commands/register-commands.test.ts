@@ -18,6 +18,7 @@ const resources = {
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
   thread: ["cancel", "resume", "steer", "log", "list", "show"],
+  host: ["add", "list", "remove"],
 };
 
 describe("registerCommands", () => {
@@ -80,6 +81,7 @@ describe("registerCommands", () => {
       "auth",
       "model",
       "thread",
+      "host",
     ]);
     for (const [resource, actions] of Object.entries(resources)) {
       expect(

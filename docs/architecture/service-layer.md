@@ -99,6 +99,8 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `skill/`            | Install, list and remove the bundled skills for each harness.                                        |
 | `prompts/`          | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`.               |
 | `known-project/`    | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.                     |
+| `host/`             | `addHost()`, `listHosts()`, `removeHost()`: the worker hosts in `~/.rowblyrc.json`.                  |
+| `user-rc/`          | `readRc()`, `writeRc()`: the shared safe read and write of `~/.rowblyrc.json`.                       |
 | `story-watch/`      | `watchStories()`: calls a function when the files of `stories/` change.                              |
 | `pi-catalog-cache/` | `readPiCatalog()`, `refreshPiCatalog()`, `piProviderReady()`: the model cache in `~/.cache/rowbly/`. |
 

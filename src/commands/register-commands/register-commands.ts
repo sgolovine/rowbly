@@ -4,6 +4,7 @@ import { registerAuthCommands } from "../auth/auth.js";
 import { registerCustomFieldCommands } from "../custom-field/custom-field.js";
 import { registerDoctor } from "../doctor/doctor.js";
 import { registerFactoryCommands } from "../factory/factory.js";
+import { registerHostCommands } from "../host/host.js";
 import { registerInit } from "../init/init.js";
 import { registerModelCommands } from "../model/model.js";
 import { registerProjectCommands } from "../project/project.js";
@@ -41,6 +42,7 @@ export function registerCommands(program: Command): void {
   registerAuthCommands(resource(program, "auth", "Manage provider authentication"));
   registerModelCommands(resource(program, "model", "List available models"));
   registerThreadCommands(resource(program, "thread", "Inspect agent threads"));
+  registerHostCommands(resource(program, "host", "Manage worker hosts"));
 }
 
 /** Prints the help when no action is given, and rejects an unknown action. `help` stops the command. */
