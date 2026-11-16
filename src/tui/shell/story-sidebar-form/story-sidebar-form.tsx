@@ -23,7 +23,10 @@ export interface StorySidebarFormProps {
   onFocus(): void;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
-  /** `o` or the `Open Story` Button of a Thread: opens the Story of the Thread. */
+  /**
+   * `o` or the `Open Story` Button of a Thread opens the Story of the Thread. A click on an item of the `Depends on`
+   * or `Blocks` list of the edit form opens that Story.
+   */
   onOpenStory(story: Story): void;
   /** The keys of the tab of the edit form, or the keys of the Thread. */
   onHints(hints: readonly KeyHint[]): void;
@@ -92,6 +95,8 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, clickable, ...
       onDeleted={on.onDeleted}
       onBack={on.onBack}
       onHints={on.onHints}
+      onOpenStory={on.onOpenStory}
+      clickable={clickable}
     />
   );
 }

@@ -109,7 +109,10 @@ export function openFoundStory(env: ShellEnv, story: Story): void {
   editStory(env, story);
 }
 
-/** Opens the Story `story` of the Thread in the Story sidebar: the right Panel shows the Story list with the Story. */
+/**
+ * Opens the Story `story` of a Thread, or of a click on the dependency lists of the edit form, in the Story sidebar:
+ * the right Panel shows the Story list with the Story. Unsaved changes of the form get the discard confirmation.
+ */
 export function openThreadStory(env: ShellEnv, story: Story): void {
   env.setMode("stories");
   reveal(env, story);
