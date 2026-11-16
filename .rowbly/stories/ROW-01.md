@@ -2,6 +2,7 @@
 title: Nested command structure
 stage: DONE
 position: 5
+uid: e787112c-249c-459a-a8fc-4d5bba1d33b3
 createdAt: 2026-11-09T21:30:19.000Z
 updatedAt: 2026-11-10T22:13:05.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-01-in_development
