@@ -2,6 +2,8 @@ export type AttemptStatus = "preparing" | "running" | "completed" | "failed" | "
 
 export interface PolicyStory {
   id: string;
+  /** The permanent `uid` of the Story, when it has one. */
+  uid?: string;
   stage: string;
   title?: string;
   description?: string;
@@ -31,6 +33,8 @@ export interface PolicyWorker {
 
 export interface PolicyAttempt extends PolicyWorker {
   story: string;
+  /** The `uid` of the Story. An old attempt, or an attempt of a Story without a `uid`, has none. */
+  storyUid?: string;
   stage: string;
   workerId: string;
   status: AttemptStatus;
@@ -69,6 +73,8 @@ export interface PolicyState {
 
 export interface PolicyDecision {
   story: string;
+  /** The `uid` of the Story, when it has one. */
+  storyUid?: string;
   stage: string;
   action: "start" | "retry" | "skip";
   reason: string;
