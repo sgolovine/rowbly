@@ -33,6 +33,7 @@ This file records the changes to Rowbly that users can see.
 - Added: `rowbly host add` now checks that the host has Node 22.19.0 or later, and installs the exact Rowbly version of the main machine in `~/.local/share/rowbly/versions/<build-id>/` on the host when that version is missing. If the check or the install fails, `host add` fails and does not change `~/.rowblyrc.json`, and the JSON result has the new `install` object. (ROW-86)
 - Added: The main machine can apply the outbox entries of a remote worker host to the Story files, and keeps a conflicting PNG in `.rowbly/runtime/hosts/<host>/conflicts/`. The new hidden `rowbly host outbox` and `rowbly host outbox-ack` commands read and remove the outbox entries on the worker host. No command of the main machine uses this yet. (ROW-94)
 - Added: The new `rowbly host use <id> [--path <dir>]` command turns a worker host on for the current Project and clones the `origin` repository into `~/.local/share/rowbly/projects/<project-id>/repo` on the host, or uses the existing clean clone at `--path`. The new `rowbly host unuse <id>` command turns the host off for the Project and keeps the clone on the host. (ROW-88)
+- Added: The new hidden `rowbly host serve`, `rowbly host submit` and `rowbly host attach` commands run the host agent on a worker host. The host agent keeps the commands of the main machine with receipts, limits the workers of all Projects on the host with `~/.local/share/rowbly/slots/limit.json`, and stops when it has no work. No command of the main machine uses it yet. (ROW-89)
 
 ### 0.18.0
 
