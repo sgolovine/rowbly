@@ -2,6 +2,7 @@
 title: Record attachment writes in the outbox
 stage: DONE
 position: 10
+uid: b4e31257-5ff9-489d-8a98-635e5a691ffe
 dependsOn:
   - ROW-90
 createdAt: 2026-11-16T19:45:07.000Z
