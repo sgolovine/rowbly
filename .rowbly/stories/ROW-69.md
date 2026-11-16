@@ -2,6 +2,7 @@
 title: Organize story by stage within `stories` folder.
 stage: DONE
 position: 71
+uid: 36ed06ba-abc1-4ea6-8543-f980353b5b3d
 createdAt: 2026-11-16T16:07:13.306Z
 updatedAt: 2026-11-16T17:09:02.086Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-69
