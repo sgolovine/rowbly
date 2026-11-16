@@ -15,6 +15,8 @@ export interface StageConfig {
   key: string;
   label: string;
   enabled: boolean;
+  /** Tells if the TUI shows the section of the Stage expanded when a Project opens. A value that is not set is `true`. */
+  expandedByDefault?: boolean;
 }
 
 /** The shape of `.rowbly/rowbly.config.json`. */
