@@ -1,13 +1,13 @@
 ---
 title: Apply outbox entries on the main machine
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 13
 dependsOn:
   - ROW-85
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:08.648Z
-updatedAt: 2026-11-16T21:22:03.537Z
+updatedAt: 2026-11-16T21:23:07.552Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-94
 pull_request: https://github.com/sgolovine/rowbly/pull/278
 ---
@@ -107,3 +107,10 @@ Not in scope:
 - (Development) An entry without a valid `seq` or Story ID is a conflict and does not advance the applied `seq`. Its attention key is `outbox:<host>`.
 - (Development) A failed acknowledgement with a `RowblyError` is given as `acknowledgeProblem` in the result, so that the conflicts of the apply still get attention entries. Each other error is thrown.
 - (Development) An unknown path, a `fields.<key>` that the config does not have, or a new value with a bad form (for example a `title` that is not text) is a conflict. A write that `updateStory` refuses makes each change of that write a conflict.
+
+## Review findings
+
+- The Changelog Stage cannot merge `origin/main` into `story/ROW-94`. The merge has conflicts in files other than `CHANGELOG.md`:
+  - `src/commands/host/host.ts`. `origin/main` changed it in ROW-86 (`be3b4804`, install the exact Rowbly build on a worker host).
+  - `src/services/pi-runtime/import-boundary.test.ts`. `origin/main` added new modules to the list in ROW-86.
+- Merge `origin/main` into the branch, repair the two files (keep the changes of both sides), and run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`. No changelog entry was written.
