@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { writeOutboxBlob } from "../../services/outbox/outbox-file.js";
+import { appendOutboxEntry, writeOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -251,5 +252,58 @@ describe("host blob", () => {
     expect(result.exitCode).toBe(1);
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     expect(result.bytes.length).toBe(0);
+  });
+});
+
+describe("host outbox and host outbox-ack", () => {
+  const outbox = useTempDir();
+  const outside = useTempDir();
+  const write = (after: string) => ({ storyId: "ROW-01", changes: [{ path: "title", before: "A", after }] });
+
+  /** Runs the command with the text on stdin. */
+  async function withStdin(text: string, ...args: string[]) {
+    const stdin = Object.getOwnPropertyDescriptor(process, "stdin");
+    Object.defineProperty(process, "stdin", { value: Readable.from([text]), configurable: true });
+    try {
+      return await runCli(["--json", "host", ...args], outside.path);
+    } finally {
+      if (stdin) Object.defineProperty(process, "stdin", stdin);
+    }
+  }
+
+  beforeEach(() => {
+    vi.stubEnv("ROWBLY_OUTBOX", outbox.path);
+    vi.stubEnv("ROWBLY_THREAD_ID", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("gives the entries after afterSeq, then removes the acknowledged entries", async () => {
+    await appendOutboxEntry({ dir: outbox.path, threadId: "t" }, write("B"));
+    await appendOutboxEntry({ dir: outbox.path, threadId: "t" }, write("C"));
+
+    const read = await withStdin('{"afterSeq":1}\n', "outbox");
+    expect(read.exitCode).toBe(0);
+    expect(JSON.parse(read.stdout).entries).toEqual([expect.objectContaining({ seq: 2, ...write("C") })]);
+
+    const ack = await withStdin('{"seq":1}\n', "outbox-ack");
+    expect(ack.exitCode).toBe(0);
+    expect(JSON.parse(ack.stdout)).toEqual({ removed: 1, blobs: [] });
+
+    const after = await withStdin('{"afterSeq":0}\n', "outbox");
+    expect(JSON.parse(after.stdout).entries.map((entry: { seq: number }) => entry.seq)).toEqual([2]);
+  });
+
+  it("gives VALIDATION for bad JSON and for a missing ROWBLY_OUTBOX", async () => {
+    const bad = await withStdin("nope", "outbox");
+    expect(bad.exitCode).toBe(1);
+    expect(JSON.parse(bad.stderr).error.code).toBe("VALIDATION");
+
+    vi.stubEnv("ROWBLY_OUTBOX", "");
+    const missing = await withStdin('{"seq":1}', "outbox-ack");
+    expect(missing.exitCode).toBe(1);
+    expect(JSON.parse(missing.stderr).error.message).toBe("ROWBLY_OUTBOX is not set");
   });
 });

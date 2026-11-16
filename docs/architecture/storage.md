@@ -494,6 +494,8 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
 - For an add, the service writes the PNG and the manifest of the copy first. Then the recorder writes
   the PNG to `blobs/<sha256>.png`. Then it adds the entry. Thus an entry never points to a missing
   PNG. A crash after the PNG write leaves only a PNG without an entry. This is harmless.
+- The recorder holds the outbox lock while it writes the PNG and adds the entry. Thus an
+  acknowledgement cannot remove the PNG before the entry is there.
 - The recorder writes a PNG through a temporary file in `blobs/`. It syncs the file, renames it and
   syncs the folder. If `<sha256>.png` exists, the recorder keeps it, because it has the same bytes.
   Thus two adds of the same bytes give one PNG and two entries.
@@ -505,6 +507,80 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
 - `updateStory` with `attachments` stays refused for a remote worker.
 - The main machine gets a PNG with `rowbly host blob <sha256>`. See
   [cli.md](cli.md#worker-hosts).
+
+### Read and acknowledgement on the host
+
+- `readOutboxEntries(dir, afterSeq)` gives the complete entries with a `seq` greater than `afterSeq`,
+  in `seq` order. It ignores a line that is not complete JSON, for example after a crash during an
+  append.
+- `acknowledgeOutbox(dir, seq)` holds the outbox lock. It removes the lines with a `seq` equal to or
+  less than `seq`, and each line that is not a complete entry. It keeps the `seq` file, so that a new
+  entry does not get the `seq` of a removed line. Then it removes each PNG of `blobs/` that no
+  remaining `attachment.add` entry points to.
+- The main machine uses these functions through the hidden commands `rowbly host outbox` and
+  `rowbly host outbox-ack`. See [cli.md](cli.md#worker-hosts).
+
+### Apply on the main machine
+
+The `outbox-apply` service applies the entries of one worker host to the canonical Story files.
+
+- `syncOutbox` reads the last applied `seq` of the host. It gets the entries after that `seq` from an
+  `OutboxSource`, applies them, and then sends the acknowledgement of the applied `seq`.
+- `transportOutboxSource` is the `OutboxSource` over the host transport. It runs the fixed remote
+  commands `<rowbly> host outbox`, `<rowbly> host blob <sha256>` and `<rowbly> host outbox-ack`. The
+  caller gives the path of `<rowbly>` on the host. A remote exit code other than 0 gives a
+  `HOST_PROTOCOL` error with the `stderr` text.
+- `applyOutbox` holds the Project write lock while it applies the entries. It does not take the state
+  lock. The services run without a recorder.
+- The apply examines the entries in `seq` order. It skips an entry with a `seq` equal to or less than
+  the last applied `seq`. Thus an entry that arrives two times has one effect.
+- After each entry, the apply writes the `seq` to `outbox-applied.json` and syncs it to the disk.
+  Then it continues with the next entry. The acknowledgement goes to the host only after this write.
+  If the process stops before the acknowledgement, the next sync skips the applied entries and sends
+  the acknowledgement again.
+- The applied `seq` also advances past an entry with a conflict.
+
+For each field change, the apply compares the value on the main machine with `before` and `after`.
+`compareChange` in `src/services/outbox/outbox-compare.ts` does this comparison. It uses the same
+value forms as the record: `null` for a missing value, full lists for `tags` and `dependsOn`, and the
+body for `description`.
+
+| Value on the main machine | Action                                |
+| ------------------------- | ------------------------------------- |
+| Equal to `before`         | Write `after`.                        |
+| Equal to `after`          | The change is already there. Skip it. |
+| Other                     | Conflict. Do not write.               |
+
+- The apply writes the changes of one field entry that do not conflict in one `updateStory` call. It
+  records each conflicting change.
+- A missing Story makes each change of the entry a conflict.
+- An unknown path, a new value with a bad form, or a write that the service refuses is a conflict.
+- An `attachment.add` entry is skipped when the Story has an attachment with the same id and the same
+  `sha256`. A missing Story, or the same id with a different `sha256`, is a conflict. Else the apply
+  gets the PNG with `rowbly host blob <sha256>`, and adds it with the id and the name of the entry.
+- A PNG with a different hash, more than 10 MiB, or bytes that are not a PNG is a conflict. The apply
+  does not add the attachment.
+- An `attachment.remove` entry removes the attachment when it is on the Story. It is skipped when the
+  attachment or the Story is not there.
+- An entry with an unknown `type` or a bad shape is a conflict. The apply continues with the next
+  entry.
+- A failure of the connection, for example an unreachable host, stops the apply. The entry does not
+  get a record, so the next sync tries it again.
+- `syncHostOutbox` in `src/services/factory-manager/outbox-attention.ts` runs the sync for one host in
+  the lifecycle order of the manager. After the Project write lock is free, it sets one attention
+  entry for each Story with a conflict, with the key `outbox:<storyId>`. The text has the host, the
+  `seq`, the path or the attachment id, and the `before`, `after` and current values. A value longer
+  than 200 characters is cut. An entry without a Story ID uses the key `outbox:<host>`.
+- The next scan commits the changes with the usual canonical commit.
+
+The main machine keeps the files of each host in `runtime/hosts/<host>/`. The folders have mode
+`0700`. Git never commits them.
+
+```
+.rowbly/runtime/hosts/<host>/
+  outbox-applied.json   # { "seq": <n> }: the last applied seq. A missing file is 0.
+  conflicts/            # <sha256>.png: the PNG of each attachment.add conflict, for recovery
+```
 
 ### Attachment cache of a host
 
