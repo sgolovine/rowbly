@@ -372,8 +372,22 @@ A Story can have attachments of all file types. The `attachment` service keeps t
   `open-attachment` and `remove-attachment`. `open-attachment` opens the file with the application of
   the platform for its type.
 - In the TUI, the Attachments tab of a Story shows the attachments. `n` attaches a file from a path.
-  A paste key adds an image from the clipboard (`ctrl+v`, or `alt+v` on Windows).
-- The clipboard paths (`--from-clipboard` and the paste key) accept only a PNG image.
+  A paste key adds a copied file or an image from the clipboard (`ctrl+v`, or `alt+v` on Windows).
+- The clipboard paths (`--from-clipboard` and the paste key) use `readClipboardAttachment` in
+  `src/services/attachment/attachment.ts`. A read has a limit of three seconds. It does these steps
+  in this sequence:
+  1. It reads the copied file list of the platform: `wl-paste` on Wayland, `xclip` on X11,
+     `osascript` on macOS and `powershell` (`Get-Clipboard -Format FileDropList`) on Windows.
+     If the list has one local file, Rowbly attaches that file with its name. A file wins over an image.
+  2. It reads a PNG image with the native binding.
+  3. On Wayland, it reads `image/png`, `image/jpeg`, `image/gif` or `image/webp` with `wl-paste`.
+- A missing file-list command does not stop the read. Rowbly continues with the image steps.
+- Two or more copied files, a copied folder and a file larger than 10 MiB cause an error.
+  The reason of two or more files is `multiple-files`.
+- The name of a clipboard image is `image-YYYYMMDD-HHMM` and the extension of its type
+  (`.png`, `.jpg`, `.gif` or `.webp`).
+- If the clipboard has no file and no image, the error is "No file or image on the clipboard",
+  with the reason `no-image`.
 - `rowbly doctor` reports a manifest entry without its file, a file without an entry, and a
   malformed manifest. It keeps an orphan file for recovery. An orphan is a file with the name
   `a<uuid>` or `a<uuid>.<ext>` that no record owns. A temporary file (`.*.tmp`, `*.removed`) and

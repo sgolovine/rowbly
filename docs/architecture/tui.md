@@ -344,7 +344,7 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
 | `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
 | `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                          |
-| `use-story-paste.ts`        | `useStoryPaste`, `IMAGE_PASTE_HINT`: pastes clipboard images into the draft of a Story.            |
+| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.         |
 | `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 | `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
 

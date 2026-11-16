@@ -7,7 +7,7 @@ import { runCli } from "../test-cli/test-cli.js";
 
 vi.mock("../../services/clipboard/clipboard.js", async (original) => ({
   ...(await original<object>()),
-  readClipboardImage: vi.fn(async () => ({ reason: "no-image" })),
+  readClipboard: vi.fn(async () => ({ reason: "no-image" })),
 }));
 describe("attachment commands", () => {
   const p = useTestProject();

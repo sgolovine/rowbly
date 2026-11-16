@@ -143,7 +143,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `markdown/`                                        | YAML frontmatter and body: parse and write.                                 |
 | `files/`                                           | Small file helpers, for example `pathExists()` and `pathOccupied()`.        |
 | `story-files/`, `spec-files/`, `attachment-files/` | Raw file I/O that the domain services share.                                |
-| `clipboard/`                                       | Read a PNG image from the system clipboard.                                 |
+| `clipboard/`                                       | Read a copied file path or an image from the system clipboard.              |
 | `store/`                                           | `Store`, `withEntry()`, `withMember()` and more: immutable shared state.    |
 | `in-order/`                                        | `mapInOrder()`: run async work one item at a time, in order.                |
 | `test-project/`                                    | `useTempDir()`, `useTestProject()`: temporary Projects for tests.           |
