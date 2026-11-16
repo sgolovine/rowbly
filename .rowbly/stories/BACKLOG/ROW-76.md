@@ -1,6 +1,7 @@
 ---
 title: Threads Improvements - Allow user to steer thread.
 stage: BACKLOG
+position: 3
 createdAt: 2026-11-16T17:01:49.320Z
 updatedAt: 2026-11-16T17:01:49.320Z
 worktree: null
