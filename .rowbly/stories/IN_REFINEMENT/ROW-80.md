@@ -1,6 +1,7 @@
 ---
 title: Story tags in the TUI
 stage: IN_REFINEMENT
+position: 3
 dependsOn:
   - ROW-79
 createdAt: 2026-11-16T19:30:18.067Z
