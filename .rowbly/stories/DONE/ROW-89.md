@@ -2,6 +2,7 @@
 title: Add the host agent (rowbly host serve)
 stage: DONE
 position: 8
+uid: 6a5f44a8-4d8c-4b06-860d-1ac3be6d15b9
 dependsOn:
   - ROW-85
   - ROW-86
