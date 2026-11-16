@@ -89,7 +89,7 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 | `workspace/`        | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`.               |
 | `config/`           | `ProjectConfig` types, checks, key rules, and read and write of the config.                          |
 | `project/`          | `initProject()`, `getProject()`, `updateProject()`.                                                  |
-| `story/`            | Create, update, delete, get and search Stories, and positions.                                       |
+| `story/`            | Create, update, delete, get and search Stories, and their places in the Stages.                      |
 | `stage/`            | List, create, update, delete and get Stages and their prompts.                                       |
 | `custom-field/`     | Add, update and remove custom fields.                                                                |
 | `spec/`             | Specs and their links to Stories.                                                                    |

@@ -264,7 +264,7 @@ function stageIndex(facts: ScanFacts, decision: PolicyDecision): number {
 
 /**
  * Compares two launches. The Story nearest to the last Stage starts first. Then the Story with more downstream
- * Stories that are not complete starts first. `toSorted` is stable, so the order of the board comes last.
+ * Stories that are not complete starts first. `toSorted` is stable, so the order of the board comes last: the most recently updated Story first.
  */
 function launchOrder(
   facts: ScanFacts,

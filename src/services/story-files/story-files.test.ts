@@ -11,7 +11,9 @@ import {
   readStoryFile,
   readStoryFiles,
   rewriteStories,
+  type StoryFile,
   saveStoryFile,
+  sortStoryFiles,
   storyPath,
   storyTimeOf,
   tagsOf,
@@ -108,6 +110,52 @@ describe("story times", () => {
       title: "T",
       updatedAt: "2025-01-02T03:04:05.678Z",
     });
+  });
+});
+
+describe("sortStoryFiles", () => {
+  const file = (number: number, data: Record<string, unknown>): StoryFile => ({
+    id: formatStoryId("ROW", number),
+    projectKey: "ROW",
+    number,
+    path: `/stories/ROW-0${number}.md`,
+    doc: { data, body: "" },
+  });
+  const numbers = (files: StoryFile[]) => sortStoryFiles(files).map((f) => f.number);
+
+  it("puts the most recently updated story first, and compares the times, not the strings", () => {
+    const files = [
+      file(1, { updatedAt: "2025-01-01T00:00:00.000Z" }),
+      file(2, { updatedAt: "2025-03-01T00:00:00.000Z" }),
+      file(3, { updatedAt: "2025-02-01T00:00:00+05:00" }),
+      file(4, { updatedAt: "2025-02-01T00:00:00.000Z" }),
+    ];
+    expect(numbers(files)).toEqual([2, 4, 3, 1]);
+  });
+
+  it("puts a story with a missing or invalid updatedAt after the stories with one", () => {
+    const files = [
+      file(1, {}),
+      file(2, { updatedAt: "nope" }),
+      file(3, { updatedAt: "2025-01-01T00:00:00.000Z" }),
+      file(4, { updatedAt: 5 }),
+    ];
+    expect(numbers(files)).toEqual([3, 1, 2, 4]);
+  });
+
+  it("puts the stories with the same updatedAt in the order of their numbers", () => {
+    const time = "2025-01-01T00:00:00.000Z";
+    expect(numbers([file(3, { updatedAt: time }), file(1, { updatedAt: time }), file(2, { updatedAt: time })])).toEqual(
+      [1, 2, 3],
+    );
+  });
+
+  it("ignores the position key", () => {
+    const files = [
+      file(1, { position: 1, updatedAt: "2025-01-01T00:00:00.000Z" }),
+      file(2, { position: 2, updatedAt: "2025-01-02T00:00:00.000Z" }),
+    ];
+    expect(numbers(files)).toEqual([2, 1]);
   });
 });
 

@@ -51,7 +51,7 @@ export function workerId(worker: PolicyWorker): string | undefined {
   return worker.workerId ?? worker.threadId ?? worker.taskId;
 }
 
-/** Changes when a person or a worker edits the Story. A Stage move or a new position does not change it. */
+/** Changes when a person or a worker edits the Story. A Stage move does not change it. */
 export function storyHash(story: PolicyStory): string {
   const content = JSON.stringify([story.title ?? "", story.description ?? "", story.fields ?? {}]);
 

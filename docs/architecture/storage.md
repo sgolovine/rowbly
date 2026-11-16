@@ -27,7 +27,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
+  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -162,7 +162,7 @@ read the settings continue to work.
 ## Stories
 
 A Story file is `stories/<stage key>/<projectKey>-<n>.md`, for example `stories/BACKLOG/ROW-01.md`.
-The number has at least two digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list, an optional `tags` list,
+The number has at least two digits. The frontmatter has `title`, `stage`, an optional `dependsOn` list, an optional `tags` list,
 the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
 
@@ -176,7 +176,6 @@ who reads the files or a Git diff can see the Stage of each Story from its path.
 - A write that changes the Stage moves the file: `story update --stage`, a Stage rename and a Stage
   delete with `moveStoriesTo`. The service writes the new file first, then it removes the old file.
   Thus a failure does not delete the Story.
-- A change of `position` in the same Stage does not move the file.
 - A Project key change renames the files in their Stage folders.
 - The service removes a Stage folder when its last Story moves out. Rowbly does not make an empty
   Stage folder.
@@ -238,10 +237,19 @@ a Story.
 
 ### Position
 
-The `position` of a Story sets its order in its Stage.
+The Stories of a Stage are in the order of their `updatedAt` times. The most recent Story is at the top.
+`sortStoryFiles` in `src/services/story-files/story-files.ts` sets this order.
 
-- A Story without a `position` comes after the Stories that have one, in the order of their numbers.
-- When a Story moves, the service writes a new `position` to each Story of the Stage that changes place.
+- The service compares the times, not the strings.
+- A Story without a valid `updatedAt` comes after the Stories that have one.
+- Stories with the same time, or with no valid time, are in the order of their numbers.
+- The `position` value of a `Story` record is the 1-based place of the Story in this order. The service
+  calculates it. It does not write it to the file.
+- A Story that changes goes to the top of its Stage, because the change sets its `updatedAt`. A new
+  Story is also at the top.
+- You cannot set the place of a Story in its Stage. `story update` has no `--position` option.
+- Older versions of Rowbly wrote a `position` key to the Story files. This key has no effect now. The
+  services keep it in the file, and `rowbly doctor` does not report it.
 
 ### Times
 
@@ -257,8 +265,8 @@ set it.
   changes `dependsOn`, the removal of a deleted Story from a `dependsOn` list, and a repair of
   `rowbly doctor --fix`. An add or a remove of an attachment also sets `updatedAt`.
 - An update that does not change the Story file does not change `updatedAt`.
-- When a Story moves, the other Stories of the Stage that get a new `position` keep their
-  `updatedAt`. Only the moved Story gets a new time.
+- When a Story moves to a different Stage, the service writes only the file of that Story. The other
+  Stories keep their files and their `updatedAt`.
 - `createdAt` does not change after the create. Rowbly does not add `createdAt` to an older Story.
 - The two keys come after `dependsOn` and `tags`, and before the custom fields. The YAML parser keeps them as
   strings, not as dates.
@@ -273,7 +281,7 @@ The `dependsOn` key is a list of the IDs of the upstream Stories of the Story, f
 - Only the downstream Story keeps the relation. The services calculate the reverse list (`blocks`).
 - A Story without dependencies has no `dependsOn` key. When the list becomes empty, the service
   removes the key. A change of a different key does not add `dependsOn`.
-- `dependsOn` comes after `position` and before the custom fields. A custom field cannot have this
+- `dependsOn` comes after `stage` (and an old `position` key) and before the custom fields. A custom field cannot have this
   key, because a custom field key has only lower-case letters, digits and `_`.
 - The service saves each ID in the canonical form (`row-1` and `1` become `ROW-01`). It removes
   duplicates and keeps the order of the input.
