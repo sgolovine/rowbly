@@ -107,7 +107,7 @@ describe("story tags", () => {
   });
 
   describe("searchStories", () => {
-    const ids = (stories: { id: string }[]) => stories.map((story) => story.id);
+    const ids = (stories: { id: string }[]) => stories.map((story) => story.id).sort();
 
     it("gives only the stories that have all of the tags", async () => {
       await addTags();
