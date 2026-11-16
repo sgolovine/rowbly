@@ -275,6 +275,10 @@ describe("foreground factory", () => {
       const threadFile = join(root, ".rowbly/runtime/threads", `${reservation.threadId}.json`);
       expect(JSON.parse(await readFile(threadFile, "utf8")).host).toBe("local");
       expect((await readFactoryState(root)).attempts[0]?.host).toBe("local");
+      // The worker Thread and its attempt keep the uid of the Story.
+      expect(story.uid).toEqual(expect.any(String));
+      expect(JSON.parse(await readFile(threadFile, "utf8")).storyUid).toBe(story.uid);
+      expect((await readFactoryState(root)).attempts[0]?.storyUid).toBe(story.uid);
       const managerArg = vi.mocked(setState).mock.calls.at(-1)?.[0];
       if (!managerArg) throw new Error("Missing manager");
       expect(getState(managerArg).active.get(reservation.threadId)?.host).toBe("local");

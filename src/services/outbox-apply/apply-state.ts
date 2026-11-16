@@ -7,7 +7,7 @@ import {
   HostUnreachableError,
   HostVersionMismatchError,
 } from "../host-transport/host-errors.js";
-import { getStory, type Story } from "../story/story.js";
+import { recordRef, resolveStoryRef, type Story } from "../story/story.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import type { OutboxSource } from "./outbox-source.js";
 
@@ -61,10 +61,16 @@ export function rowblyProblem(error: unknown): string {
   return error.message;
 }
 
-/** Gives the Story with the ID. A missing or invalid Story gives the reason. */
-export async function findStory(env: ApplyEnv, id: string): Promise<FoundStory> {
+/**
+ * Gives the Story of the entry: the Story with the `storyUid` of the entry first, then the Story with its ID. An
+ * entry of an older build has no `storyUid`. A missing or invalid Story gives the reason.
+ */
+export async function findStory(
+  env: ApplyEnv,
+  entry: { readonly storyId: string; readonly storyUid?: string },
+): Promise<FoundStory> {
   try {
-    return { story: await getStory({ id }, env.ctx) };
+    return { story: await resolveStoryRef(recordRef(entry.storyId, entry.storyUid), env.ctx) };
   } catch (error) {
     return { problem: error instanceof NotFoundError ? "The Story does not exist" : rowblyProblem(error) };
   }

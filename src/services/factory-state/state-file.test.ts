@@ -78,6 +78,16 @@ describe("factory state file", () => {
     expect(Date.parse(restored.updatedAt ?? "")).toBeGreaterThanOrEqual(before);
   });
 
+  it("loads attempts without a storyUid and keeps the storyUid of a new attempt", async () => {
+    const withUid = { ...attempt("running"), storyUid: "11111111-1111-4111-8111-111111111111" };
+    await writeFile(path(), JSON.stringify({ ...empty(), attempts: [attempt("completed"), withUid] }));
+
+    const restored = await readState(root());
+
+    expect(restored.attempts).toEqual([attempt("completed"), withUid]);
+    expect("storyUid" in (restored.attempts[0] ?? {})).toBe(false);
+  });
+
   const invalid: unknown[] = [
     null,
     [],
@@ -92,6 +102,8 @@ describe("factory state file", () => {
       { ...attempt("running"), story: 8 },
       { ...attempt("running"), stage: null },
       { ...attempt("running"), workerId: false },
+      { ...attempt("running"), storyUid: 8 },
+      { ...attempt("running"), storyUid: null },
       attempt("unknown"),
     ].map((value) => ({ ...empty(), attempts: [value] })),
   ];

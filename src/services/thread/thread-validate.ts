@@ -51,6 +51,7 @@ function hasStoryFields(t: ThreadRecord): boolean {
   return (
     !(t.role === "worker" && (!t.storyId || !t.stage)) &&
     (t.storyId === undefined || (typeof t.storyId === "string" && STORY_ID.test(t.storyId))) &&
+    (t.storyUid === undefined || typeof t.storyUid === "string") &&
     (t.stage === undefined || (typeof t.stage === "string" && STAGE_KEY.test(t.stage))) &&
     (t.parentThreadId === undefined || validId(t.parentThreadId)) &&
     (t.attemptNumber === undefined || (Number.isSafeInteger(t.attemptNumber) && t.attemptNumber >= 1))

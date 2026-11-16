@@ -129,11 +129,21 @@ export async function writeOutboxBlob(dir: string, bytes: Uint8Array): Promise<s
   return sha256;
 }
 
+/** The Story keys of an entry: the Story ID, and the Story `uid` when the write has one. */
+function storyKeys(write: { readonly storyId: string; readonly storyUid?: string }) {
+  return { storyId: write.storyId, ...(write.storyUid === undefined ? {} : { storyUid: write.storyUid }) };
+}
+
 /** Writes the file, then appends the entry. The caller holds the outbox lock. */
 async function appendAttachmentLocked(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
   const sha256 = await writeOutboxBlob(target.dir, write.bytes);
 
-  return appendLocked(target, { storyId: write.storyId, type: "attachment.add", attachment: write.attachment, sha256 });
+  return appendLocked(target, {
+    ...storyKeys(write),
+    type: "attachment.add",
+    attachment: write.attachment,
+    sha256,
+  });
 }
 
 /**
@@ -150,7 +160,7 @@ async function appendAttachmentAdd(target: OutboxTarget, write: AttachmentAddWri
 
 async function appendAttachmentRemove(target: OutboxTarget, write: AttachmentRemoveWrite): Promise<OutboxEntry> {
   return appendOutboxEntry(target, {
-    storyId: write.storyId,
+    ...storyKeys(write),
     type: "attachment.remove",
     id: write.id,
     sha256: write.sha256,

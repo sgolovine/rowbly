@@ -43,6 +43,8 @@ export interface ThreadRecord {
   readonly revision: number;
   readonly role: "supervisor" | "worker";
   readonly storyId?: string;
+  /** The `uid` of the Story of a worker Thread. An old Thread, or a Thread of a Story without a `uid`, has none. */
+  readonly storyUid?: string;
   readonly stage?: string;
   readonly attemptNumber?: number;
   readonly parentThreadId?: string;

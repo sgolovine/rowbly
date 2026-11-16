@@ -4,7 +4,7 @@ import { ConflictError } from "../errors/errors.js";
 import { releaseStory } from "../factory-policy/factory-policy.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { withEntry, withoutEntry } from "../store/store.js";
-import { getStory, getStoryDetails } from "../story/story.js";
+import { getStory, getStoryDetails, listStoryRefs, type StoryRef, storyUidField } from "../story/story.js";
 import { getThread } from "../thread/thread.js";
 import { toolParameters } from "../tool-schema/tool-schema.js";
 import { changeThread, getState, type Manager, notify, serial, setState } from "./manager-state.js";
@@ -257,10 +257,22 @@ async function classifyStage(manager: Manager, args: { stage: string; promptHash
   return { classified: args.stage };
 }
 
+/** The ID and the `uid` of the Story. A Story that cannot be read gives only the ID. */
+async function heldStoryRef(manager: Manager, storyId: string): Promise<StoryRef> {
+  return getStory({ id: storyId }, manager.ctx).then(
+    (story) => ({ id: storyId, ...storyUidField(story) }),
+    () => ({ id: storyId }),
+  );
+}
+
 async function releaseHeldStory(manager: Manager, storyId: string) {
   setState(manager, (state) => ({ holds: withoutEntry(state.holds, storyId) }));
 
-  await updateFactoryState(manager.paths.root, (state) => releaseStory(state, storyId), manager.ctx);
+  const story = await heldStoryRef(manager, storyId);
+  // A Story file that cannot be read does not stop the release. The match then uses only the held Story.
+  const stories = await listStoryRefs(manager.ctx).catch(() => []);
+
+  await updateFactoryState(manager.paths.root, (state) => releaseStory(state, story, stories), manager.ctx);
   notify(manager);
 
   return { released: storyId };

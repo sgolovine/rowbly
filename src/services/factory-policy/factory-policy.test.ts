@@ -224,7 +224,7 @@ describe("a parked Story", () => {
   });
 
   it("gets a worker again after a release", () => {
-    const plan = evaluateScan(releaseStory(park().state, story.id), facts());
+    const plan = evaluateScan(releaseStory(park().state, story), facts());
     expect(action(plan)).toBe("start");
     expect(first(plan).attempt).toBe(1);
     expect(plan.state.attempts).toHaveLength(DEFAULT_LIMITS.attempts);

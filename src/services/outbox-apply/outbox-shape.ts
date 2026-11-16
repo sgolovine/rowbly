@@ -87,6 +87,11 @@ export function checkEntry(value: unknown): CheckedEntry {
     return { problem: "The entry has no Story ID" };
   }
 
+  // An entry of an older build has no `storyUid`.
+  if (value.storyUid !== undefined && typeof value.storyUid !== "string") {
+    return { problem: "The entry has an invalid Story uid" };
+  }
+
   const problem = bodyProblem(value);
 
   return problem ? { problem } : { entry: value as unknown as OutboxEntry };
