@@ -2,6 +2,8 @@
 title: Check the website for accessibility, motion and performance
 stage: DONE
 position: 66
+createdAt: 2026-11-14T23:14:08.000Z
+updatedAt: 2026-11-15T01:46:15.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-56
 pull_request: https://github.com/sgolovine/rowbly/pull/253
 ---

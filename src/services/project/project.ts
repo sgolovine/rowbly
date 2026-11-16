@@ -20,7 +20,13 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { createUserPrompts } from "../prompts/prompts.js";
 import { ensureRuntimeIgnores } from "../runtime-files/runtime-files.js";
 import { canonicalStoryId, rewriteSpecLinks } from "../spec-files/spec-files.js";
-import { dependsOnOf, formatStoryId, readStoryFiles, rewriteStories, storyPath } from "../story-files/story-files.js";
+import {
+  dependsOnOf,
+  formatStoryId,
+  readStoryFiles,
+  renamedStoryPath,
+  rewriteStories,
+} from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, projectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 export interface Project extends ProjectConfig {
@@ -158,7 +164,7 @@ async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey
     paths,
     owned.map((file) => ({ from: file.id, to: formatStoryId(newKey, file.number) })),
   );
-  await mapInOrder(owned, (file) => rename(file.path, storyPath(paths, newKey, file.number)));
+  await mapInOrder(owned, (file) => rename(file.path, renamedStoryPath(file.path, formatStoryId(newKey, file.number))));
   await rewriteSpecLinks(paths, (stories) => stories.map((id) => renamedLink(id, oldKey, newKey)));
   await rewriteStories(paths, config, (data) => renamedDependsOn(data, oldKey, newKey), now);
 }

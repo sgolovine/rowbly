@@ -9,6 +9,10 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: In the Factory view, a Thread that is open in the Story sidebar has an `Open Story` button with the key `o`. The button shows the Story list and opens the Story of the Thread in the Story sidebar. (ROW-70)
+- Added: Each Stage in `.rowbly/rowbly.config.json` can have the optional `expandedByDefault` key. When it is `false`, the section of that Stage in the All Stages view of the TUI is collapsed when a Project opens. (ROW-72)
+- Changed: Each Story file is now in the folder of its Stage, for example `.rowbly/stories/BACKLOG/ROW-1.md`, and Rowbly moves the file when the Stage of the Story changes. Rowbly still reads Story files directly in `.rowbly/stories/`, `rowbly doctor` shows a warning for a Story file that is not in the folder of its Stage, and `rowbly doctor --fix` moves it. (ROW-69)
+
 ### 0.18.0
 
 - Added: Story files can have a `dependsOn` list of upstream Stories. `rowbly story delete` removes the deleted Story from each `dependsOn` list and shows a warning for each changed Story. (ROW-59)

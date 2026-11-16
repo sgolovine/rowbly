@@ -1,10 +1,12 @@
 import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { readConfig } from "../config/config.js";
+import { readConfig, writeConfig } from "../config/config.js";
 import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { createStory, getStory } from "../story/story.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
+  collapsedStageKeys,
   createStage,
   deleteStage,
   getStage,
@@ -29,6 +31,20 @@ describe("lookupStage and unknownStageIssues", () => {
     expect(unknownStageIssues(config, "NOPE", ["stage"])).toEqual([
       { path: ["stage"], message: 'Unknown stage "NOPE". Stages: BACKLOG' },
     ]);
+  });
+});
+
+describe("collapsedStageKeys", () => {
+  it("gives the keys of the stages with expandedByDefault false; a stage without the key is expanded", () => {
+    expect(
+      collapsedStageKeys([
+        { key: "A", label: "A", enabled: true },
+        { key: "B", label: "B", enabled: true, expandedByDefault: false },
+        { key: "C", label: "C", enabled: false, expandedByDefault: true },
+        { key: "D", label: "D", enabled: false, expandedByDefault: false },
+      ]),
+    ).toEqual(["B", "D"]);
+    expect(collapsedStageKeys([])).toEqual([]);
   });
 });
 
@@ -101,6 +117,32 @@ describe("stage", () => {
       expect((await getStage({ key: "TODO" }, project.ctx)).prompt).toMatch(/not been started/);
     });
 
+    it("moves the story files of the stage to the folder of the new key", async () => {
+      await createStory({ title: "One" }, project.ctx);
+      await createStory({ title: "Two" }, project.ctx);
+      await createStory({ title: "Three", stage: "DONE" }, project.ctx);
+      await updateStage({ key: "BACKLOG", newKey: "TODO" }, project.ctx);
+      expect(await readdir(project.paths.storiesDir)).toEqual(["DONE", "TODO"]);
+      expect(await readdir(join(project.paths.storiesDir, "TODO"))).toEqual(["ROW-01.md", "ROW-02.md"]);
+      expect(await readdir(join(project.paths.storiesDir, "DONE"))).toEqual(["ROW-03.md"]);
+      expect((await getStory({ id: "2" }, project.ctx)).path).toBe(join(project.paths.storiesDir, "TODO", "ROW-02.md"));
+    });
+
+    it("keeps expandedByDefault on a label change, a rename, an enable change and a move", async () => {
+      const config = await readConfig(project.paths);
+      await writeConfig(project.paths, {
+        ...config,
+        stages: config.stages.map((s) => (s.key === "BACKLOG" ? { ...s, expandedByDefault: false } : s)),
+      });
+      await updateStage({ key: "BACKLOG", label: "Ideas" }, project.ctx);
+      await updateStage({ key: "BACKLOG", newKey: "IDEAS" }, project.ctx);
+      await updateStage({ key: "IDEAS", enabled: false, position: 2 }, project.ctx);
+      const stage = await getStage({ key: "IDEAS" }, project.ctx);
+      expect(stage).toMatchObject({ key: "IDEAS", label: "Ideas", enabled: false, expandedByDefault: false });
+      expect(lookupStage(await readConfig(project.paths), "IDEAS")?.expandedByDefault).toBe(false);
+      expect((await getStage({ key: "DONE" }, project.ctx)).expandedByDefault).toBeUndefined();
+    });
+
     it("rejects invalid input and a key that exists", async () => {
       await expect(updateStage({ key: "DONE", label: "" }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
       await expect(updateStage({ key: "DONE", position: 3 }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
@@ -127,6 +169,14 @@ describe("stage", () => {
         movedStories: 1,
       });
       expect((await getStory({ id: "1" }, project.ctx)).stage).toBe("DONE");
+    });
+
+    it("moves the story files to the folder of the target stage", async () => {
+      await createStory({ title: "One" }, project.ctx);
+      await createStory({ title: "Two", stage: "DONE" }, project.ctx);
+      await deleteStage({ key: "BACKLOG", moveStoriesTo: "DONE" }, project.ctx);
+      expect(await readdir(project.paths.storiesDir)).toEqual(["DONE"]);
+      expect(await readdir(join(project.paths.storiesDir, "DONE"))).toEqual(["ROW-01.md", "ROW-02.md"]);
     });
 
     it("rejects moving stories to the same or an unknown stage", async () => {

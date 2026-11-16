@@ -2,6 +2,8 @@
 title: Add `createdAt` and `updatedAt` frontmatter.
 stage: DONE
 position: 67
+createdAt: 2026-11-14T20:43:32.000Z
+updatedAt: 2026-11-15T03:01:18.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-26
 pull_request: https://github.com/sgolovine/rowbly/pull/254
 ---

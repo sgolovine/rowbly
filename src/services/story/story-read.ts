@@ -1,4 +1,3 @@
-import { basename } from "node:path";
 import { attachmentDir, attachmentOwners, readAttachments } from "../attachment-files/attachment-files.js";
 import {
   type CustomField,
@@ -15,11 +14,12 @@ import { blocksOf, isBlocked, waitingFor } from "../story-dependency/story-depen
 import {
   dependsOnOf,
   formatStoryId,
+  listStoryFileNames,
   readStoryFile,
   readStoryFiles,
   type StoryFile,
+  type StoryFileName,
   sortStoryFiles,
-  storyPath,
   storyTimeOf,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -95,36 +95,29 @@ function matchStoryFile(config: ProjectConfig, files: readonly StoryFile[], numb
 }
 
 /**
- * Reads the story file at its canonical path. A missing file gives `undefined`, because a story file can have a
- * name that is not canonical, for example `ROW-1.md`.
+ * The name of the story file with this number. The canonical name (`ROW-01.md`) comes first, because a story file
+ * can also have a name that is not canonical, for example `ROW-1.md`.
  */
-async function readCanonicalStoryFile(
-  paths: ProjectPaths,
+function matchStoryFileName(
   config: ProjectConfig,
+  names: readonly StoryFileName[],
   number: number,
-): Promise<StoryFile | undefined> {
-  const fileName = basename(storyPath(paths, config.projectKey, number));
+): StoryFileName | undefined {
+  const id = formatStoryId(config.projectKey, number);
+  const matches = names.filter((name) => name.projectKey === config.projectKey && name.number === number);
 
-  try {
-    return await readStoryFile(paths, fileName);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return undefined;
-    }
-
-    throw error;
-  }
+  return matches.find((name) => name.id === id) ?? matches[0];
 }
 
-/** The story file with this number. Reads the canonical path first, and the folder only when that file is missing. */
+/** The story file with this number. It lists the Stage folders and reads only the file of the story. */
 async function locateStoryFile(
   paths: ProjectPaths,
   config: ProjectConfig,
   number: number,
 ): Promise<StoryFile | undefined> {
-  const canonical = await readCanonicalStoryFile(paths, config, number);
+  const name = matchStoryFileName(config, await listStoryFileNames(paths), number);
 
-  return canonical ?? matchStoryFile(config, await readStoryFiles(paths), number);
+  return name ? readStoryFile(name.path) : undefined;
 }
 
 /**

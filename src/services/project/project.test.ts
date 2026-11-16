@@ -76,9 +76,13 @@ describe("getProject and updateProject", () => {
   it("renames every story file to the new key", async () => {
     await createStory({ title: "One" }, project.ctx);
     await createStory({ title: "Two" }, project.ctx);
+    await createStory({ title: "Three", stage: "DONE" }, project.ctx);
+    await project.write("stories/ROW-04.md", "---\ntitle: Four\nstage: BACKLOG\n---\n");
     const updated = await updateProject({ key: "web" }, project.ctx);
     expect(updated.projectKey).toBe("WEB");
-    expect(await readdir(project.paths.storiesDir)).toEqual(["WEB-01.md", "WEB-02.md"]);
+    expect(await readdir(project.paths.storiesDir)).toEqual(["BACKLOG", "DONE", "WEB-04.md"]);
+    expect(await readdir(join(project.paths.storiesDir, "BACKLOG"))).toEqual(["WEB-01.md", "WEB-02.md"]);
+    expect(await readdir(join(project.paths.storiesDir, "DONE"))).toEqual(["WEB-03.md"]);
   });
 
   it("changes the IDs in each dependsOn list to the new key", async () => {
@@ -86,7 +90,7 @@ describe("getProject and updateProject", () => {
     await createStory({ title: "One" }, at("2025-01-01T00:00:00.000Z"));
     await createStory({ title: "Two", dependsOn: ["ROW-01"] }, at("2025-01-01T00:00:00.000Z"));
     await updateProject({ key: "web" }, at("2025-02-02T00:00:00.000Z"));
-    expect(await project.read("stories/WEB-02.md")).toBe(
+    expect(await project.read("stories/BACKLOG/WEB-02.md")).toBe(
       "---\ntitle: Two\nstage: BACKLOG\ndependsOn:\n  - WEB-01\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-02-02T00:00:00.000Z\n---\n\n",
     );
     expect((await getStory({ id: "WEB-01" }, project.ctx)).updatedAt).toBe("2025-01-01T00:00:00.000Z");

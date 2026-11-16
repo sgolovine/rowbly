@@ -12,6 +12,7 @@ import type { ShellEnv } from "./shell-state.js";
 import { shellView } from "./shell-view.js";
 import { useShellData } from "./use-shell-data.js";
 import { useShellState } from "./use-shell-state.js";
+import { useStageDefaults } from "./use-stage-defaults.js";
 
 /** What the shell renders. */
 export interface ShellModel {
@@ -37,6 +38,8 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   const { values, setters } = useShellState();
   const { overlay, sidebarShown, stageKey } = values;
   const toast = useToast();
+
+  useStageDefaults(data.data, setters.setCollapsed);
 
   const view = shellView({ data, active, ...values });
   const env: ShellEnv = {

@@ -2,6 +2,8 @@
 title: Create a "status" command for humans
 stage: DONE
 position: 30
+createdAt: 2026-11-14T21:12:56.000Z
+updatedAt: 2026-11-14T21:37:29.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-36
 pull_request: https://github.com/sgolovine/rowbly/pull/217
 ---

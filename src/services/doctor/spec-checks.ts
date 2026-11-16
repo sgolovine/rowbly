@@ -7,7 +7,7 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { type MarkdownDocument, parseMarkdown } from "../markdown/markdown.js";
 import { SPEC_KEYS, SPEC_SLUG_PATTERN, type SpecFile, writeSpecFile } from "../spec-files/spec-files.js";
 import { Store } from "../store/store.js";
-import { formatStoryId, parseStoryFileName } from "../story-files/story-files.js";
+import { formatStoryId, listStoryFileNames, type StoryFileName } from "../story-files/story-files.js";
 import {
   type DoctorIssue,
   type DoctorRun,
@@ -28,10 +28,8 @@ function labelFromSlug(slug: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function storyIdOf(projectKey: string, name: string): string[] {
-  const parsed = parseStoryFileName(name);
-
-  return parsed?.projectKey === projectKey ? [formatStoryId(parsed.projectKey, parsed.number)] : [];
+function storyIdOf(projectKey: string, name: StoryFileName): string[] {
+  return name.projectKey === projectKey ? [formatStoryId(name.projectKey, name.number)] : [];
 }
 
 /** The list that the link check walks. A single ID becomes a list of one. */
@@ -174,7 +172,7 @@ async function checkSpecFile(
 
 /** Each spec must have a title and link only to Stories that exist. A spec with no Story is an orphan. */
 export async function checkSpecs(run: DoctorRun, config: ProjectConfig): Promise<DoctorIssue[]> {
-  const storyNames = await listMarkdownFiles(run.paths.storiesDir);
+  const storyNames = await listStoryFileNames(run.paths);
   const storyIds = new Set(storyNames.flatMap((name) => storyIdOf(config.projectKey, name)));
   const names = await listMarkdownFiles(run.paths.specsDir);
 

@@ -2,6 +2,8 @@
 title: Build the landing page Hero and proof strip
 stage: DONE
 position: 56
+createdAt: 2026-11-14T23:14:00.000Z
+updatedAt: 2026-11-15T00:41:42.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-48
 pull_request: https://github.com/sgolovine/rowbly/pull/244
 ---

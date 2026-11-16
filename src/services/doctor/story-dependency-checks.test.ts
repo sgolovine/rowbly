@@ -11,12 +11,12 @@ describe("doctor Story dependency checks", () => {
 
   const story = (id: string, dependsOn?: string) =>
     project.write(
-      `stories/${id}.md`,
+      `stories/BACKLOG/${id}.md`,
       `---\ntitle: Story ${id}\nstage: BACKLOG\n${dependsOn === undefined ? "" : `dependsOn: ${dependsOn}\n`}---\n\nBody of ${id}.\n`,
     );
-  const storyFile = (id: string) => join(".rowbly", "stories", `${id}.md`);
+  const storyFile = (id: string) => join(".rowbly", "stories", "BACKLOG", `${id}.md`);
   const readStory = async (id: string) =>
-    parseMarkdown(await readFile(join(project.paths.storiesDir, `${id}.md`), "utf8"), id);
+    parseMarkdown(await readFile(join(join(project.paths.storiesDir, "BACKLOG"), `${id}.md`), "utf8"), id);
   const summary = async (fix = false) =>
     (await doctor({ fix }, project.ctx)).issues.map(({ severity, message, file, fix: canFix, fixed }) => ({
       severity,
@@ -26,19 +26,19 @@ describe("doctor Story dependency checks", () => {
       fixed,
     }));
   const snapshot = async () => {
-    const names = (await readdir(project.paths.storiesDir)).toSorted();
-    return Promise.all(names.map((name) => readFile(join(project.paths.storiesDir, name))));
+    const names = (await readdir(join(project.paths.storiesDir, "BACKLOG"))).toSorted();
+    return Promise.all(names.map((name) => readFile(join(join(project.paths.storiesDir, "BACKLOG"), name))));
   };
 
   it("accepts a valid list, and --fix keeps it", async () => {
     await story("ROW-01");
     await story("ROW-02");
     await story("ROW-03", "[ROW-02, ROW-01]");
-    const before = await readFile(join(project.paths.storiesDir, "ROW-03.md"), "utf8");
+    const before = await readFile(join(join(project.paths.storiesDir, "BACKLOG"), "ROW-03.md"), "utf8");
 
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
     expect(await doctor({ fix: true }, project.ctx)).toMatchObject({ issues: [], ok: true });
-    expect(await readFile(join(project.paths.storiesDir, "ROW-03.md"), "utf8")).toBe(before);
+    expect(await readFile(join(join(project.paths.storiesDir, "BACKLOG"), "ROW-03.md"), "utf8")).toBe(before);
     expect((await readStory("ROW-03")).data.dependsOn).toEqual(["ROW-02", "ROW-01"]);
   });
 
@@ -157,7 +157,7 @@ describe("doctor Story dependency checks", () => {
   ])("reports %s as not a list of strings, with no fix", async (_name, value) => {
     await story("ROW-01");
     await story("ROW-02", value);
-    const before = await readFile(join(project.paths.storiesDir, "ROW-02.md"), "utf8");
+    const before = await readFile(join(join(project.paths.storiesDir, "BACKLOG"), "ROW-02.md"), "utf8");
 
     expect(await summary()).toEqual([
       {
@@ -171,7 +171,7 @@ describe("doctor Story dependency checks", () => {
     const report = await doctor({ fix: true }, project.ctx);
     expect(report.ok).toBe(false);
     expect(report.issues).toHaveLength(1);
-    expect(await readFile(join(project.paths.storiesDir, "ROW-02.md"), "utf8")).toBe(before);
+    expect(await readFile(join(join(project.paths.storiesDir, "BACKLOG"), "ROW-02.md"), "utf8")).toBe(before);
   });
 
   it("reports a cycle of three Stories one time", async () => {
@@ -215,7 +215,7 @@ describe("doctor Story dependency checks", () => {
   });
 
   it("skips a Story with invalid frontmatter and checks the other Stories", async () => {
-    await project.write("stories/ROW-01.md", "---\ntitle: [oops\n---\n");
+    await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: [oops\n---\n");
     await story("ROW-02", "[ROW-01, ROW-09]");
 
     const messages = (await doctor({}, project.ctx)).issues.map((issue) => issue.message);
@@ -229,7 +229,7 @@ describe("doctor Story dependency checks", () => {
     await story("ROW-02");
     await story("ROW-03");
     await project.write(
-      "stories/ROW-04.md",
+      "stories/BACKLOG/ROW-04.md",
       "---\ntitle: Four\nstage: BACKLOG\nposition: 2\ndependsOn: [ROW-03, row-1, ROW-09, ROW-03, ROW-02]\nowner: Ann\n---\n\n## Goal\n\nKeep this text.\n",
     );
     const before = await readStory("ROW-04");

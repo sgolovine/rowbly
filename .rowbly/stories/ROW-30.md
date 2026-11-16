@@ -2,6 +2,8 @@
 title: Reduce the cost of runtimePath checks on hot runtime reads
 stage: DONE
 position: 29
+createdAt: 2026-11-14T21:06:43.000Z
+updatedAt: 2026-11-14T21:34:15.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-30
 pull_request: https://github.com/sgolovine/rowbly/pull/216
 ---

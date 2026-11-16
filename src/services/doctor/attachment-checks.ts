@@ -11,6 +11,7 @@ import {
 import { pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { Store } from "../store/store.js";
+import { hasStoryFile } from "../story-files/story-files.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
 
 /**
@@ -103,7 +104,7 @@ async function checkOrphans(run: DoctorRun, folder: OwnerFolder, owned: boolean)
 async function scanOwner(run: DoctorRun, owner: string, file: string, scan: Store<OwnerScan>): Promise<void> {
   const dir = await attachmentDir(run.paths, owner);
   const records = await readAttachments(dir);
-  const owned = await pathExists(join(run.paths.storiesDir, `${owner}.md`));
+  const owned = await hasStoryFile(run.paths, owner);
 
   const folder: OwnerFolder = { dir, records, scan };
 

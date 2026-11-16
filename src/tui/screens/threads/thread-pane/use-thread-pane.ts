@@ -18,6 +18,10 @@ export interface ThreadPaneProps {
   onBack(): void;
   /** `tab` (`1`) or `shift+tab` (`-1`): the focus goes to the next or the previous pane. */
   onTab(step: 1 | -1): void;
+  /** The Button of the pane takes the mouse. */
+  readonly clickable: boolean;
+  /** `o` or the `Open Story` Button: opens the Story of the Thread. `undefined` when the board has no such Story. */
+  readonly onOpenStory: (() => void) | undefined;
   /** The keys of the pane, for the footer. */
   onHints(hints: readonly KeyHint[]): void;
 }
@@ -47,15 +51,25 @@ function useNow(running: boolean): number {
   return now;
 }
 
-/** `tab` and `shift+tab` move the focus to another pane of the shell. */
-function tabKey(key: Key, onTab: (step: 1 | -1) => void): void {
+/** `tab` and `shift+tab` move the focus to another pane of the shell. `o` opens the Story of the Thread. */
+function paneKey(
+  input: string,
+  key: Key,
+  { onTab, onOpenStory }: Pick<ThreadPaneProps, "onTab" | "onOpenStory">,
+): void {
   if (key.tab) {
     onTab(key.shift ? -1 : 1);
+
+    return;
+  }
+
+  if (input === "o" && !key.ctrl && !key.meta) {
+    onOpenStory?.();
   }
 }
 
-/** The live Thread, the run time and the keys of the Thread pane. `esc` gives the focus back to the list. */
-export function useThreadPane({ ctx, root, thread, onBack, onTab }: ThreadPaneProps): ThreadPaneModel {
+/** The live Thread, the run time and the keys of the Thread pane. `esc` gives the focus back to the list, and `o` opens the Story. */
+export function useThreadPane({ ctx, root, thread, onBack, onTab, onOpenStory }: ThreadPaneProps): ThreadPaneModel {
   const active = useIsActive();
   const layout = useLayout();
   const fresh = useAsync(() => getThread(thread.id, ctx), [ctx, thread.id]);
@@ -64,7 +78,7 @@ export function useThreadPane({ ctx, root, thread, onBack, onTab }: ThreadPanePr
   // The worker writes its Thread file from another process.
   useThreadChanges(root, fresh.refresh);
   useEscape(active, onBack);
-  useInput((_input, key) => tabKey(key, onTab), { isActive: active });
+  useInput((input, key) => paneKey(input, key, { onTab, onOpenStory }), { isActive: active });
 
   return { active, current, now: useNow(current.status === "running"), layout };
 }

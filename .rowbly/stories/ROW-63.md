@@ -2,6 +2,8 @@
 title: Show dependencies to the supervisor and raise attention for a stuck upstream Story
 stage: DONE
 position: 49
+createdAt: 2026-11-14T23:26:45.000Z
+updatedAt: 2026-11-15T00:04:34.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-63
 pull_request: https://github.com/sgolovine/rowbly/pull/237
 ---

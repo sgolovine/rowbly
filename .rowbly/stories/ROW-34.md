@@ -2,6 +2,8 @@
 title: Read attachment manifests in search only when the query needs them
 stage: DONE
 position: 32
+createdAt: 2026-11-14T21:06:47.000Z
+updatedAt: 2026-11-14T21:49:44.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-34
 pull_request: https://github.com/sgolovine/rowbly/pull/220
 ---

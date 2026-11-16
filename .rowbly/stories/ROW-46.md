@@ -2,6 +2,8 @@
 title: Deploy the website to GitHub Pages
 stage: DONE
 position: 54
+createdAt: 2026-11-14T23:13:58.000Z
+updatedAt: 2026-11-15T00:32:33.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-46
 pull_request: https://github.com/sgolovine/rowbly/pull/242
 ---

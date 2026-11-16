@@ -2,6 +2,8 @@
 title: Build the Install page
 stage: DONE
 position: 61
+createdAt: 2026-11-14T23:14:05.000Z
+updatedAt: 2026-11-15T01:08:44.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-53
 pull_request: https://github.com/sgolovine/rowbly/pull/249
 ---

@@ -1,10 +1,10 @@
 import { execFile } from "node:child_process";
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { promisify } from "node:util";
 import { pathExists } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { ensureRuntimeIgnores, missingRuntimeIgnores } from "../runtime-files/runtime-files.js";
+import { hasStoryFile } from "../story-files/story-files.js";
 import { listThreads, type ThreadRecord } from "../thread/thread.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
 
@@ -64,7 +64,7 @@ export async function trackedRuntimeIssues(run: DoctorRun): Promise<DoctorIssue[
 }
 
 async function threadStoryIssue(run: DoctorRun, thread: ThreadRecord): Promise<DoctorIssue[]> {
-  if (!thread.storyId || (await pathExists(join(run.paths.storiesDir, `${thread.storyId}.md`)))) {
+  if (!thread.storyId || (await hasStoryFile(run.paths, thread.storyId))) {
     return [];
   }
 

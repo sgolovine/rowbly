@@ -7,6 +7,7 @@ import { pathExists } from "../files/files.js";
 import { installSkill } from "../skill/skill.js";
 import { createStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
+import { createThread } from "../thread/thread.js";
 import type { ServiceContext } from "../workspace/workspace.js";
 import { doctor } from "./doctor.js";
 
@@ -63,13 +64,100 @@ describe("doctor", () => {
 
   it("reports bad story file names, foreign keys and duplicate numbers", async () => {
     await project.write("stories/notes.md", "");
-    await project.write("stories/ROW-1.md", "---\ntitle: A\nstage: BACKLOG\n---\n");
-    await project.write("stories/WEB-01.md", "---\ntitle: B\nstage: BACKLOG\n---\n");
+    await project.write("stories/BACKLOG/ROW-1.md", "---\ntitle: A\nstage: BACKLOG\n---\n");
+    await project.write("stories/BACKLOG/WEB-01.md", "---\ntitle: B\nstage: BACKLOG\n---\n");
     expect(await messages()).toEqual([
-      "Story key WEB does not match the project key ROW",
-      "Story number 1 is also used by ROW-1.md",
       "File name should be ROW-<number>.md",
+      "Story key WEB does not match the project key ROW",
+      `Story number 1 is also used by ${join(".rowbly", "stories", "BACKLOG", "ROW-1.md")}`,
     ]);
+  });
+
+  it("warns about a Story file outside the folder of its Stage, and --fix moves it", async () => {
+    await project.write("stories/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\n---\n\nFlat.\n");
+    await project.write("stories/DONE/ROW-02.md", "---\ntitle: B\nstage: BACKLOG\n---\n\nWrong folder.\n");
+    const before = await doctor({}, project.ctx);
+    expect(before.ok).toBe(true);
+    expect(before.issues).toEqual([
+      {
+        severity: "warning",
+        message: "Story file is not in the folder of its Stage BACKLOG",
+        file: join(".rowbly", "stories", "ROW-01.md"),
+        fix: `Move it to ${join(".rowbly", "stories", "BACKLOG", "ROW-01.md")}`,
+        fixed: false,
+      },
+      {
+        severity: "warning",
+        message: "Story file is in the folder DONE, not in the folder of its Stage BACKLOG",
+        file: join(".rowbly", "stories", "DONE", "ROW-02.md"),
+        fix: `Move it to ${join(".rowbly", "stories", "BACKLOG", "ROW-02.md")}`,
+        fixed: false,
+      },
+    ]);
+
+    expect((await doctor({ fix: true }, project.ctx)).issues.map((issue) => issue.fixed)).toEqual([true, true]);
+    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe("---\ntitle: A\nstage: BACKLOG\n---\n\nFlat.\n");
+    expect(await project.read("stories/BACKLOG/ROW-02.md")).toBe(
+      "---\ntitle: B\nstage: BACKLOG\n---\n\nWrong folder.\n",
+    );
+    expect(await readdir(project.paths.storiesDir)).toEqual(["BACKLOG"]);
+    expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
+  it("reports two files with the same Story ID as an error, and --fix does not change them", async () => {
+    await project.write("stories/ROW-01.md", "---\ntitle: Flat\nstage: BACKLOG\n---\n");
+    await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: Folder\nstage: BACKLOG\n---\n");
+    await project.write("stories/DONE/ROW-02.md", "---\ntitle: Two\nstage: DONE\n---\n");
+    await project.write("stories/BACKLOG/ROW-02.md", "---\ntitle: Two again\nstage: BACKLOG\n---\n");
+    const report = await doctor({ fix: true }, project.ctx);
+    expect(report.ok).toBe(false);
+    expect(report.issues.map(({ severity, message, file, fixed }) => [severity, message, file, fixed])).toEqual([
+      [
+        "warning",
+        "Story file is not in the folder of its Stage BACKLOG",
+        join(".rowbly", "stories", "ROW-01.md"),
+        false,
+      ],
+      [
+        "error",
+        `Story ID ROW-01 is also used by ${join(".rowbly", "stories", "ROW-01.md")}`,
+        join(".rowbly", "stories", "BACKLOG", "ROW-01.md"),
+        false,
+      ],
+      [
+        "error",
+        `Story ID ROW-02 is also used by ${join(".rowbly", "stories", "BACKLOG", "ROW-02.md")}`,
+        join(".rowbly", "stories", "DONE", "ROW-02.md"),
+        false,
+      ],
+    ]);
+    expect(await project.read("stories/ROW-01.md")).toBe("---\ntitle: Flat\nstage: BACKLOG\n---\n");
+    expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe("---\ntitle: Folder\nstage: BACKLOG\n---\n");
+    expect(await project.read("stories/DONE/ROW-02.md")).toBe("---\ntitle: Two\nstage: DONE\n---\n");
+  });
+
+  it("warns about a subfolder of stories/ with a name that is not a Stage key", async () => {
+    await project.write("stories/old-files/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\n---\n");
+    expect((await doctor({}, project.ctx)).issues).toEqual([
+      {
+        severity: "warning",
+        message: "Folder name is not a Stage key, so Rowbly does not read its Story files",
+        file: join(".rowbly", "stories", "old-files"),
+        fixed: false,
+      },
+    ]);
+  });
+
+  it("finds the Stories of Stage folders for the checks of Threads, specs and dependencies", async () => {
+    await createStory({ title: "One" }, project.ctx);
+    await createStory({ title: "Two", stage: "DONE", dependsOn: ["ROW-01"] }, project.ctx);
+    await createThread(
+      { role: "worker", storyId: "ROW-02", stage: "DONE", cwd: project.paths.root, ownerToken: "t" },
+      project.ctx,
+    );
+    await project.write("specs/design.md", "---\ntitle: Design\nstories: [ROW-01, ROW-02]\n---\n\nBody\n");
+    expect(await pathExists(project.path("stories/DONE/ROW-02.md"))).toBe(true);
+    expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
   it("reports invalid frontmatter", async () => {
@@ -107,14 +195,15 @@ describe("doctor", () => {
       'Unknown stage "NOPE". Stages: BACKLOG, DONE',
     ]);
     expect(after.ok).toBe(false);
-    expect(await project.read("stories/ROW-01.md")).toBe(
+    expect(await project.read("stories/DONE/ROW-01.md")).toBe(
       "---\ntitle: A\nstage: DONE\nupdatedAt: 2025-01-02T03:04:05.678Z\npoints: 3\nowner: null\ndone: maybe\n---\n\n",
     );
-    expect(await project.read("stories/ROW-03.md")).toContain("stage: BACKLOG");
+    expect(await project.read("stories/BACKLOG/ROW-03.md")).toContain("stage: BACKLOG");
+    expect(await project.read("stories/ROW-02.md")).toContain("stage: NOPE");
   });
 
   it("accepts the position of a story", async () => {
-    await project.write("stories/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\nposition: 0\n---\n");
+    await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: A\nstage: BACKLOG\nposition: 0\n---\n");
     expect(await messages()).toEqual([]);
   });
 
@@ -184,7 +273,7 @@ describe("doctor", () => {
 
   it("accepts createdAt and updatedAt in a story file", async () => {
     await project.write(
-      "stories/ROW-01.md",
+      "stories/BACKLOG/ROW-01.md",
       "---\ntitle: T\nstage: BACKLOG\ncreatedAt: 2025-01-01T00:00:00.000Z\nupdatedAt: 2025-01-01T00:00:00.000Z\n---\n",
     );
     expect((await doctor({}, project.ctx)).issues).toEqual([]);
@@ -193,7 +282,7 @@ describe("doctor", () => {
   describe("old agent locks", () => {
     const BODY = "\nThe description.\n";
     const write = (lock: string) =>
-      project.write("stories/ROW-01.md", `---\ntitle: T\nstage: BACKLOG\nposition: 1\n${lock}\n---\n${BODY}`);
+      project.write("stories/BACKLOG/ROW-01.md", `---\ntitle: T\nstage: BACKLOG\nposition: 1\n${lock}\n---\n${BODY}`);
 
     it.each([
       ["a well-formed lock", "agentLock:\n  agent: claude\n  stage: BACKLOG\n  lockedAt: 2026-11-09T10:00:00.000Z"],
@@ -206,14 +295,14 @@ describe("doctor", () => {
         {
           severity: "warning",
           message: "agentLock is no longer used",
-          file: join(".rowbly", "stories", "ROW-01.md"),
+          file: join(".rowbly", "stories", "BACKLOG", "ROW-01.md"),
           fix: "Remove it",
           fixed: false,
         },
       ]);
       const ctx = { ...project.ctx, now: () => new Date("2025-01-02T03:04:05.678Z") };
       expect((await doctor({ fix: true }, ctx)).issues).toMatchObject([{ fixed: true }]);
-      expect(await project.read("stories/ROW-01.md")).toBe(
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(
         `---\ntitle: T\nstage: BACKLOG\nposition: 1\nupdatedAt: 2025-01-02T03:04:05.678Z\n---\n${BODY}`,
       );
       expect((await doctor({}, project.ctx)).issues).toEqual([]);

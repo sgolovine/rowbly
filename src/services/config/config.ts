@@ -3,7 +3,14 @@ import { writeFileAtomic } from "../files/files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 import { configIssues } from "./config-issues.js";
 import { throwIfIssues } from "./config-keys.js";
-import { DISPLAY_OPTIONS, FEATURES, type Feature, type Issue, type ProjectConfig } from "./config-types.js";
+import {
+  DISPLAY_OPTIONS,
+  FEATURES,
+  type Feature,
+  type Issue,
+  type ProjectConfig,
+  type StageConfig,
+} from "./config-types.js";
 
 export { configIssues } from "./config-issues.js";
 export * from "./config-keys.js";
@@ -46,6 +53,11 @@ export function parseConfig(text: string): { config?: ProjectConfig; issues: Iss
   return issues.length > 0 ? { issues } : { config: normalizeConfig(parsed.value as ProjectConfig), issues };
 }
 
+/** Keeps only the keys of a Stage that Rowbly knows. An `expandedByDefault` that is not set stays out of the file. */
+function normalizeStage({ key, label, enabled, expandedByDefault }: StageConfig): StageConfig {
+  return expandedByDefault === undefined ? { key, label, enabled } : { key, label, enabled, expandedByDefault };
+}
+
 /** Keeps only the keys Rowbly knows, in a stable order. */
 function normalizeConfig(config: ProjectConfig): ProjectConfig {
   return {
@@ -54,7 +66,7 @@ function normalizeConfig(config: ProjectConfig): ProjectConfig {
     customFields: config.customFields.map(({ key, label, type, options }) =>
       options === undefined ? { key, label, type } : { key, label, type, options },
     ),
-    stages: config.stages.map(({ key, label, enabled }) => ({ key, label, enabled })),
+    stages: config.stages.map(normalizeStage),
     ...(config.features === undefined
       ? {}
       : {

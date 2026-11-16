@@ -54,6 +54,8 @@ export interface StorySidebarProps {
   onTab(step: 1 | -1): void;
   onSaved(story: Story): void;
   onDeleted(id: string): void;
+  /** `o` or the `Open Story` Button of a Thread: the Story list shows the Story, and the Story sidebar edits it. */
+  onOpenStory(story: Story): void;
   /** The keys of the Story sidebar, for the footer. */
   onHints(hints: readonly KeyHint[]): void;
 }
@@ -106,10 +108,12 @@ export function StorySidebar(props: StorySidebarProps) {
                 board={props.board}
                 ctx={props.ctx}
                 cursorStage={props.cursorStage}
+                clickable={mouse}
                 onBack={props.onBack}
                 onTab={props.onTab}
                 onSaved={props.onSaved}
                 onDeleted={props.onDeleted}
+                onOpenStory={props.onOpenStory}
                 onHints={setOwnHints}
               />
             </PaneBody>

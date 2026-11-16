@@ -2,11 +2,22 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
-import { listMarkdownFiles } from "../files/files.js";
+import { pathOccupied } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { parseMarkdown } from "../markdown/markdown.js";
 import { Store } from "../store/store.js";
-import { parseStoryFileName, STORY_TIME_KEYS, type StoryFile, writeStoryFile } from "../story-files/story-files.js";
+import {
+  isStageFolderName,
+  listStoryEntries,
+  listStoryFolders,
+  moveStoryFile,
+  parseStoryFileName,
+  STORY_TIME_KEYS,
+  type StoryEntry,
+  type StoryFile,
+  storyHomePath,
+  writeStoryFile,
+} from "../story-files/story-files.js";
 import {
   type DocRepair,
   type DoctorIssue,
@@ -14,6 +25,7 @@ import {
   frontmatterIssue,
   noted,
   rel,
+  report,
   reportChange,
   runNow,
   withoutKey,
@@ -21,32 +33,46 @@ import {
 import { fieldIssues } from "./story-field-checks.js";
 
 interface NumberedFile {
-  readonly name: string;
+  readonly entry: StoryEntry;
+  readonly id: string;
   readonly number: number;
+}
+
+/** An earlier Story file with the same number as a later one. */
+interface RepeatedFile {
+  readonly id: string;
+  readonly path: string;
+}
+
+/** The Story files with a repeated number: each later file → the last earlier file, and each file of a pair. */
+interface Repeats {
+  readonly previous: ReadonlyMap<string, RepeatedFile>;
+  readonly paths: ReadonlySet<string>;
 }
 
 type StoryRead = { readonly story: StoryFile } | { readonly issue: DoctorIssue };
 
-function numberedFile(name: string): NumberedFile[] {
-  const parsed = parseStoryFileName(name);
+function numberedFile(entry: StoryEntry): NumberedFile[] {
+  const parsed = parseStoryFileName(entry.fileName);
 
-  return parsed ? [{ name, number: parsed.number }] : [];
+  return parsed ? [{ entry, id: entry.fileName.slice(0, -3), number: parsed.number }] : [];
 }
 
-function previousEntry(order: readonly NumberedFile[], entry: NumberedFile, index: number): [string, string][] {
+function previousEntry(order: readonly NumberedFile[], entry: NumberedFile, index: number): [string, RepeatedFile][] {
   const before = order[index - 1];
 
-  return before?.number === entry.number ? [[entry.name, before.name]] : [];
+  return before?.number === entry.number ? [[entry.entry.path, { id: before.id, path: before.entry.path }]] : [];
 }
 
 /**
- * Maps each Story file name to the last earlier file with the same number. A stable sort keeps the file
+ * Maps each Story file path to the last earlier file with the same number. A stable sort keeps the file
  * order inside each number, so one pass finds each pair.
  */
-function previousByNumber(names: readonly string[]): ReadonlyMap<string, string> {
-  const order = names.flatMap(numberedFile).toSorted((a, b) => a.number - b.number);
+function repeatedNumbers(entries: readonly StoryEntry[]): Repeats {
+  const order = entries.flatMap(numberedFile).toSorted((a, b) => a.number - b.number);
+  const previous = new Map(order.flatMap((entry, index) => previousEntry(order, entry, index)));
 
-  return new Map(order.flatMap((entry, index) => previousEntry(order, entry, index)));
+  return { previous, paths: new Set([...previous.keys(), ...[...previous.values()].map((file) => file.path)]) };
 }
 
 async function readStory(
@@ -169,13 +195,13 @@ async function unknownKeyIssues(
   return mapInOrder(unknown, (key) => unknownKeyIssue(run, repair, key, file));
 }
 
-/** Checks one Story in order. Each check reads the frontmatter after the fixes of the checks before it. */
+/** Checks one Story in order, and gives the frontmatter after the fixes. */
 async function checkStory(
   run: DoctorRun,
   config: ProjectConfig,
   story: StoryFile,
   file: string,
-): Promise<DoctorIssue[]> {
+): Promise<{ readonly issues: DoctorIssue[]; readonly data: DocRepair["data"] }> {
   const repair = new Store<DocRepair>({ data: story.doc.data, changed: false });
 
   const issues = [
@@ -190,57 +216,113 @@ async function checkStory(
     await writeStoryFile(config, story.path, { ...story.doc, data: { ...repair.current.data } }, runNow(run));
   }
 
-  return issues;
+  return { issues, data: repair.current.data };
 }
 
 /** The file name must use the project key, and its number must be unique. */
 function storyNameIssues(
+  run: DoctorRun,
   config: ProjectConfig,
-  parsedName: { projectKey: string; number: number },
-  other: string | undefined,
+  read: { readonly id: string; readonly projectKey: string; readonly number: number },
+  other: RepeatedFile | undefined,
   file: string,
 ): DoctorIssue[] {
-  const { projectKey, number } = parsedName;
+  const { projectKey, number } = read;
   const message = `Story key ${projectKey} does not match the project key ${config.projectKey}`;
+  const repeat = other?.id === read.id ? `Story ID ${read.id}` : `Story number ${number}`;
 
   const foreign = projectKey !== config.projectKey ? [noted({ severity: "error", message, file })] : [];
   const repeated = other
-    ? [noted({ severity: "error", message: `Story number ${number} is also used by ${other}`, file })]
+    ? [noted({ severity: "error", message: `${repeat} is also used by ${rel(run, other.path)}`, file })]
     : [];
 
   return [...foreign, ...repeated];
 }
 
+/**
+ * The Story file must be in the folder of its Stage. A Story with two files, or a different file at the new path,
+ * has no fix, so that `--fix` does not replace a Story.
+ */
+async function locationIssues(
+  run: DoctorRun,
+  config: ProjectConfig,
+  entry: StoryEntry,
+  data: DocRepair["data"],
+  repeated: boolean,
+): Promise<DoctorIssue[]> {
+  const home = storyHomePath(run.paths, config, entry.path, data);
+
+  if (home === entry.path) {
+    return [];
+  }
+
+  const file = rel(run, entry.path);
+  const message =
+    entry.folder === null
+      ? `Story file is not in the folder of its Stage ${String(data.stage)}`
+      : `Story file is in the folder ${entry.folder}, not in the folder of its Stage ${String(data.stage)}`;
+
+  if (repeated || (await pathOccupied(home))) {
+    return [noted({ severity: "warning", message, file })];
+  }
+
+  return [
+    await report(run, { severity: "warning", message, file, fix: `Move it to ${rel(run, home)}` }, () =>
+      moveStoryFile(run.paths, entry.path, home),
+    ),
+  ];
+}
+
 async function checkStoryFile(
   run: DoctorRun,
   config: ProjectConfig,
-  previous: ReadonlyMap<string, string>,
-  name: string,
+  repeats: Repeats,
+  entry: StoryEntry,
 ): Promise<DoctorIssue[]> {
-  const path = join(run.paths.storiesDir, name);
+  const { path } = entry;
   const file = rel(run, path);
-  const parsedName = parseStoryFileName(name);
+  const parsedName = parseStoryFileName(entry.fileName);
 
   if (!parsedName) {
     return [noted({ severity: "error", message: `File name should be ${config.projectKey}-<number>.md`, file })];
   }
 
-  const nameIssues = storyNameIssues(config, parsedName, previous.get(name), file);
-  const read = await readStory(name, path, file, parsedName);
+  const id = entry.fileName.slice(0, -3);
+  const nameIssues = storyNameIssues(run, config, { id, ...parsedName }, repeats.previous.get(path), file);
+  const read = await readStory(entry.fileName, path, file, parsedName);
 
   if ("issue" in read) {
     return [...nameIssues, read.issue];
   }
 
-  return [...nameIssues, ...(await checkStory(run, config, read.story, file))];
+  const checked = await checkStory(run, config, read.story, file);
+  const location = await locationIssues(run, config, entry, checked.data, repeats.paths.has(path));
+
+  return [...nameIssues, ...checked.issues, ...location];
 }
 
-/** Checks the name, the frontmatter, the stage and the custom fields of each Story file. */
+/** Rowbly reads only the subfolders of `stories/` that have the name of a Stage key. */
+async function folderNameIssues(run: DoctorRun): Promise<DoctorIssue[]> {
+  const folders = (await listStoryFolders(run.paths)).filter((name) => !isStageFolderName(name));
+
+  return folders.map((name) =>
+    noted({
+      severity: "warning",
+      message: "Folder name is not a Stage key, so Rowbly does not read its Story files",
+      file: rel(run, join(run.paths.storiesDir, name)),
+    }),
+  );
+}
+
+/**
+ * Checks the name, the frontmatter, the stage, the custom fields and the folder of each Story file, directly in
+ * `stories/` and in each Stage folder.
+ */
 export async function checkStories(run: DoctorRun, config: ProjectConfig): Promise<DoctorIssue[]> {
-  const names = await listMarkdownFiles(run.paths.storiesDir);
-  const previous = previousByNumber(names);
+  const entries = await listStoryEntries(run.paths);
+  const repeats = repeatedNumbers(entries);
 
-  const issues = await mapInOrder(names, (name) => checkStoryFile(run, config, previous, name));
+  const issues = await mapInOrder(entries, (entry) => checkStoryFile(run, config, repeats, entry));
 
-  return issues.flat();
+  return [...(await folderNameIssues(run)), ...issues.flat()];
 }

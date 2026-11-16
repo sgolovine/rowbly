@@ -2,6 +2,8 @@
 title: Preload the Pi SDK after the board paints
 stage: DONE
 position: 37
+createdAt: 2026-11-14T21:25:49.000Z
+updatedAt: 2026-11-14T22:13:27.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-41
 pull_request: https://github.com/sgolovine/rowbly/pull/224
 ---

@@ -2,6 +2,8 @@
 title: Build the animated board section of the landing page
 stage: DONE
 position: 57
+createdAt: 2026-11-14T23:14:01.000Z
+updatedAt: 2026-11-15T00:49:36.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-49
 pull_request: https://github.com/sgolovine/rowbly/pull/245
 ---

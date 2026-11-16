@@ -2,6 +2,8 @@
 title: Do not reload the board when only state.json changes
 stage: DONE
 position: 34
+createdAt: 2026-11-14T21:06:46.000Z
+updatedAt: 2026-11-14T21:56:49.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-33
 pull_request: https://github.com/sgolovine/rowbly/pull/221
 ---

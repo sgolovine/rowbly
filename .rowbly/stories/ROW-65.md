@@ -2,6 +2,8 @@
 title: Show and edit Story dependencies in the TUI
 stage: DONE
 position: 50
+createdAt: 2026-11-14T23:26:47.000Z
+updatedAt: 2026-11-15T00:13:32.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-65
 pull_request: https://github.com/sgolovine/rowbly/pull/238
 ---

@@ -2,6 +2,8 @@
 title: Init should add ROWBLY.md to .rowbly folder.
 stage: DONE
 position: 1
+createdAt: 2026-11-10T20:23:26.000Z
+updatedAt: 2026-11-10T22:13:05.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-04-in_development
 pull_request: https://github.com/sgolovine/rowbly/pull/180
 ---
