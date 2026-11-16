@@ -2,6 +2,7 @@
 title: Link the website from the README and package metadata
 stage: DONE
 position: 65
+uid: 80e655cc-1664-4f97-9bc9-7730f5b14c68
 createdAt: 2026-11-14T23:14:09.000Z
 updatedAt: 2026-11-15T01:43:30.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-57
