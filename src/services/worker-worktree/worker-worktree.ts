@@ -10,6 +10,14 @@ interface WorkerWorktree {
   readonly branch: string | undefined;
 }
 
+/** The Git facts of an existing local worktree. */
+export interface LocalWorktreeFacts {
+  /** True when all commits of the worktree are on an `origin` branch. */
+  readonly pushed: boolean;
+  /** True when the worktree has no uncommitted changes. */
+  readonly clean: boolean;
+}
+
 const exec = promisify(execFile);
 
 async function git(cwd: string, ...args: string[]) {
@@ -140,6 +148,27 @@ async function addWorktree(root: string, path: string, story: Story, branch: str
   await git(root, "worktree", "add", ...(known ? [] : ["-b", branch]), path, startPoint(known, branch, story));
 
   return { path, branch };
+}
+
+/**
+ * Reads the Git facts of the local worktree of the Story. A worktree that does not exist has no facts. A Git failure
+ * gives no facts, so that the placement treats the worktree as unknown.
+ */
+export async function readWorktreeFacts(root: string, story: Story): Promise<LocalWorktreeFacts | undefined> {
+  const path = worktreePath(root, story);
+
+  if (!(await pathExists(path))) {
+    return undefined;
+  }
+
+  try {
+    const status = await git(path, "status", "--porcelain");
+    const unpushed = await git(path, "rev-list", "--count", "HEAD", "--not", "--remotes=origin");
+
+    return { pushed: Number(unpushed) === 0, clean: status === "" };
+  } catch {
+    return undefined;
+  }
 }
 
 /** Prepares one isolated worktree per Story. Existing work is never reset or removed. */

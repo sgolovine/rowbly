@@ -26,6 +26,14 @@ import {
   parseAuthor,
   validGit,
 } from "./git-settings.js";
+import { isRecord, type ModelChoice, validModel, validOverrides } from "./model-settings.js";
+import {
+  DEFAULT_PLACEMENT,
+  type PlacementInput,
+  type PlacementPolicy,
+  placementChange,
+  validPlacement,
+} from "./placement-settings.js";
 import {
   hasWorkerOverride,
   type OverrideTarget,
@@ -37,16 +45,11 @@ import {
 export type { CheckItem, CheckSpec } from "./check-settings.js";
 export { pullUpstream } from "./dependency-settings.js";
 export type { GitInput, GitSync } from "./git-settings.js";
+export { type ModelChoice, validModel } from "./model-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
 type Role = "supervisor" | "worker";
-
-export interface ModelChoice {
-  provider: string;
-  modelId: string;
-  thinkingLevel?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
-}
 
 /** The `factory` section of `rowbly.config.json`. */
 export interface FactorySettings {
@@ -60,12 +63,14 @@ export interface FactorySettings {
   git?: GitSettings;
   checks?: CheckSettings;
   dependencies?: Dependencies;
+  /** How the manager selects the machine of a new worker. The default is `prefer-local`. */
+  placement?: PlacementPolicy;
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
 export type FactorySettingsInput = Partial<FactorySettings>;
 
-interface ConfigureInput extends GitInput, CheckInput, DependencyInput {
+interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -83,42 +88,7 @@ interface RoleChoice {
   readonly choice?: ModelChoice;
 }
 
-const THINKING_LEVELS: readonly unknown[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
 const DEFAULT_SETTINGS: FactorySettings = { maxWorkers: 4 };
-
-/** Tells if a value is a model choice with a provider, a model and an optional known thinking level. */
-export function validModel(value: unknown): value is ModelChoice {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const model = value as ModelChoice;
-
-  return (
-    typeof model.provider === "string" &&
-    !!model.provider.trim() &&
-    typeof model.modelId === "string" &&
-    !!model.modelId.trim() &&
-    (model.thinkingLevel === undefined || THINKING_LEVELS.includes(model.thinkingLevel))
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
-function validModelMap(value: unknown): boolean {
-  return isRecord(value) && Object.values(value).every(validModel);
-}
-
-function validOverrides(settings: FactorySettings): boolean {
-  const stories = settings.storyWorkerModels;
-
-  return (
-    (settings.stageWorkerModels === undefined || validModelMap(settings.stageWorkerModels)) &&
-    (stories === undefined || (isRecord(stories) && Object.values(stories).every(validModelMap)))
-  );
-}
 
 /** Gives the stored section with the default limit of four workers when `maxWorkers` is absent. */
 function withLimit(section: Record<string, unknown>): FactorySettings {
@@ -134,7 +104,8 @@ function validSettings(settings: FactorySettings): boolean {
     validOverrides(settings) &&
     (settings.git === undefined || validGit(settings.git)) &&
     (settings.checks === undefined || validChecks(settings.checks)) &&
-    validDependencies(settings.dependencies)
+    validDependencies(settings.dependencies) &&
+    validPlacement(settings.placement)
   );
 }
 
@@ -155,11 +126,12 @@ function validate(value: unknown): FactorySettings {
   return withLimit(value as Record<string, unknown>);
 }
 
-/** Fills the absent Git sync keys with their defaults. The other `git` keys stay. */
+/** Fills the absent Git sync keys and the absent placement policy with their defaults. The other `git` keys stay. */
 function withDefaults(settings: FactorySettings): FactorySettings {
   const checks = checkLimits(settings.checks);
+  const placement = settings.placement ?? DEFAULT_PLACEMENT;
 
-  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) }, ...(checks ? { checks } : {}) };
+  return { ...settings, git: { ...settings.git, ...gitSync(settings.git) }, ...(checks ? { checks } : {}), placement };
 }
 
 /** Gives the Git sync settings. Settings without a `git` section use the defaults. */
@@ -286,7 +258,8 @@ function overrideProblem(input: ConfigureInput): string | undefined {
     input.maxWorkers !== undefined ||
     hasGitInput(input) ||
     hasCheckInput(input) ||
-    input.pullUpstream !== undefined
+    input.pullUpstream !== undefined ||
+    input.placement !== undefined
   ) {
     return "A Stage override sets only the worker model";
   }
@@ -365,9 +338,10 @@ async function configureWorkerOverride(
   return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, choice) }), ctx);
 }
 
-/** Rejects an invalid commit author or dependency value before the runtime starts. */
+/** Rejects an invalid commit author, dependency value or placement policy before the runtime starts. */
 function checkGitInput(input: ConfigureInput): void {
   dependencyChange(undefined, input);
+  placementChange(input);
 
   if (input.commitAuthor?.trim()) {
     parseAuthor(input.commitAuthor);
@@ -409,6 +383,7 @@ export async function configureFactory(
       ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
       ...(hasCheckInput(input) ? { checks: mergeChecks(current.checks, input) } : {}),
       ...dependencyChange(current.dependencies, input),
+      ...placementChange(input),
     }),
     ctx,
   );

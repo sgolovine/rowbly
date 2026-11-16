@@ -19,6 +19,7 @@ import { runtimePath } from "../runtime-files/runtime-files.js";
 import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { shutdownFactory } from "./factory-shutdown.js";
+import type { WorkerHostView } from "./host-slots.js";
 import { createLocalExecutor } from "./local-executor.js";
 import {
   type Attention,
@@ -44,6 +45,7 @@ interface RecoveredFactory {
   externalActive: number;
   settings: FactorySettings;
   limit: number;
+  hosts: readonly WorkerHostView[];
 }
 
 /** Serializes lifecycle changes and reserves worker slots before asynchronous preparation. */
@@ -127,6 +129,7 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     settings: recovered.settings,
     limit: recovered.limit,
     authStamp,
+    hosts: recovered.hosts,
 
     active: new Map(),
     promptClaims: new Map(),
@@ -205,7 +208,9 @@ async function recoverAndConfigure(
     throw new ConflictError("Invalid worker limit");
   }
 
-  return { externalActive, settings, limit };
+  const hosts = deps.workerHosts ? await deps.workerHosts() : [];
+
+  return { externalActive, settings, limit, hosts };
 }
 
 function retryProvider(manager: Manager, provider: string): Promise<void> {

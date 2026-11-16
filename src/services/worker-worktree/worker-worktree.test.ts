@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConflictError } from "../errors/errors.js";
 import type { Story } from "../story/story.js";
 import { useTempDir } from "../test-project/test-project.js";
-import { prepareWorkerWorktree } from "./worker-worktree.js";
+import { prepareWorkerWorktree, readWorktreeFacts } from "./worker-worktree.js";
 
 const exec = promisify(execFile);
 
@@ -172,5 +172,20 @@ describe("Story worktree", () => {
     });
     expect(worktree.branch).toBe("pr-head");
     expect((await exec("git", ["-C", worktree.path, "branch", "--show-current"])).stdout.trim()).toBe("pr-head");
+  });
+  it("reads the pushed and clean facts of the local worktree, and no facts without a worktree", async () => {
+    const { root, story } = await fixture();
+    expect(await readWorktreeFacts(root, story)).toBeUndefined();
+    const remote = join(dir.path, "remote.git");
+    await exec("git", ["init", "--bare", remote]);
+    await exec("git", ["-C", root, "remote", "add", "origin", remote]);
+    const worktree = await prepareWorkerWorktree(root, story);
+    expect(await readWorktreeFacts(root, story)).toEqual({ pushed: false, clean: true });
+    await exec("git", ["-C", worktree.path, "push", "origin", "HEAD:story/TST-01"]);
+    expect(await readWorktreeFacts(root, story)).toEqual({ pushed: true, clean: true });
+    await writeFile(join(worktree.path, "notes"), "dirty");
+    expect(await readWorktreeFacts(root, story)).toEqual({ pushed: true, clean: false });
+    await commit(worktree.path, "local");
+    expect(await readWorktreeFacts(root, story)).toEqual({ pushed: false, clean: true });
   });
 });
