@@ -15,6 +15,7 @@ import { preflightFactory, recoverFactory } from "../../services/factory-recover
 import { writeFileAtomic } from "../../services/files/files.js";
 import { createFactoryRuntime } from "../../services/pi-runtime/factory-runtime.js";
 import { runtimePath } from "../../services/runtime-files/runtime-files.js";
+import { createWorkerHostSource } from "../../services/worker-hosts/worker-hosts.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../../services/workspace/workspace.js";
 import { createCliShim } from "./cli-shim.js";
 import { type ControlPoller, createControlPoller, pollControl, settledControl } from "./control-poller.js";
@@ -100,6 +101,7 @@ async function createManager(run: ForegroundRun, factory: FactoryRuntime): Promi
     { executable: process.execPath, execArgv: process.execArgv, entry: resolve(process.argv[1] as string) },
     run.ctx,
   );
+  const hosts = createWorkerHostSource(run.ctx);
 
   return createFactoryManager(
     {
@@ -109,6 +111,8 @@ async function createManager(run: ForegroundRun, factory: FactoryRuntime): Promi
       agentDir: factory.agentDir,
       shim,
       maxWorkers: run.input.maxWorkers,
+      workerHosts: hosts.workerHosts,
+      hostConnection: hosts.hostConnection,
       onModel: (role, model) => console.error(`${role}: ${model.provider}/${model.modelId}`),
     },
     run.ctx,
