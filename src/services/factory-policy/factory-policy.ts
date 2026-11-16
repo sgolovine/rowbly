@@ -1,9 +1,12 @@
 // The pure assignment policy of the factory supervisor. This module does no I/O.
+import { matchStoryRef } from "../story/story-ref.js";
 import { type DependencyStory, waitingFor } from "../story-dependency/story-dependency.js";
 import { dependencyStories, downstreamCount } from "./policy-dependencies.js";
 import {
+  attemptRef,
   DEFAULT_LIMITS,
   FAILURE_STATUSES,
+  isAttemptOf,
   MINUTE,
   normalizeStatus,
   resetBudget,
@@ -68,7 +71,9 @@ function makeDecision(
   reason: string,
   extra: Partial<PolicyDecision> = {},
 ): PolicyDecision {
-  return { story: story.id, stage: story.stage, action, reason, ...extra };
+  const storyUid = story.uid === undefined ? {} : { storyUid: story.uid };
+
+  return { story: story.id, ...storyUid, stage: story.stage, action, reason, ...extra };
 }
 
 /** Gives the attempt with the status and the result of the harness worker. A resumed worker loses its stop. */
@@ -103,7 +108,7 @@ function reconcileWorker(attempt: PolicyAttempt, worker: ScanWorker, facts: Scan
 /** Reconciles one record, also for a Story that is absent or on hold. */
 function reconcileAttempt(attempt: PolicyAttempt, priorStages: Record<string, string>, facts: ScanFacts) {
   const id = attempt.story;
-  const story = facts.stories.find((candidate) => candidate.id === id);
+  const story = matchStoryRef(facts.stories, attemptRef(attempt));
   const departed =
     !story || story.stage !== attempt.stage || (priorStages[id] !== undefined && priorStages[id] !== story.stage);
   const marked = departed ? { ...attempt, observedStageDeparture: true } : attempt;
@@ -146,7 +151,7 @@ function retryDecision(story: PolicyStory, attempts: PolicyAttempt[], attempt: n
 
 /** Plans a Story in a work Stage from its earlier attempts. It can park the Story. */
 function planAttempts(state: PolicyState, story: PolicyStory, facts: ScanFacts): StoryPlan {
-  const attempts = state.attempts.filter((attempt) => attempt.story === story.id);
+  const attempts = state.attempts.filter((attempt) => isAttemptOf(facts.stories, story, attempt));
   const last = attempts.at(-1);
   const skipReason = attempts.some((attempt) => !STOPPED_STATUSES.has(attempt.status))
     ? "worker stop unconfirmed"
@@ -219,13 +224,13 @@ function planStory(previous: PolicyState, story: PolicyStory, facts: ScanFacts):
   // A person released the Story: a Stage move or an edit of the Story gives it a new budget.
   const released = !!parked && (parked.stage !== story.stage || parked.hash !== storyHash(story));
   const state = released
-    ? resetBudget({ ...previous, parked: withoutKey(previous.parked ?? {}, story.id) }, story.id)
+    ? resetBudget({ ...previous, parked: withoutKey(previous.parked ?? {}, story.id) }, story, facts.stories)
     : previous;
   const reason = stageSkipReason(facts.stages.find((stage) => stage.key === story.stage));
 
   if (reason) {
     // A Story that reaches a hold Stage, for example Done, starts from zero if it comes back.
-    const next = reason === "hold stage" ? resetBudget(state, story.id) : state;
+    const next = reason === "hold stage" ? resetBudget(state, story, facts.stories) : state;
 
     return { state: next, decision: makeDecision(story, "skip", reason) };
   }

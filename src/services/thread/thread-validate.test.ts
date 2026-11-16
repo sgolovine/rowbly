@@ -21,6 +21,10 @@ describe("thread validation", () => {
   it("accepts valid metadata and safe IDs", () => {
     expect(validateThread(record())).toMatchObject({ id: "t1" });
     expect(validateThread(record({ host: "local" })).host).toBe("local");
+    expect(validateThread(record({ storyUid: "11111111-1111-4111-8111-111111111111" })).storyUid).toBe(
+      "11111111-1111-4111-8111-111111111111",
+    );
+    expect("storyUid" in validateThread(record())).toBe(false);
     expect(validId("a_b-1")).toBe(true);
     expect(validId("../x")).toBe(false);
     expect(
@@ -40,6 +44,8 @@ describe("thread validation", () => {
       record({ worktree: "relative" }),
       record({ host: "" }),
       record({ host: 7 }),
+      record({ storyUid: 7 }),
+      record({ storyUid: null }),
       record({ usage: { input: -1, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0 } }),
       record({ error: { class: "other", code: "x", message: "y" } }),
       record({ session: { id: "other", file: null } }),

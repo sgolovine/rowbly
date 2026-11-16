@@ -31,6 +31,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-clone-update.ts`  | The fetch and the fast-forward of the clone.                                     |
 | `host-agent.ts`         | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
 | `host-attach.ts`        | `runHostAttach`: the frames of `host attach`.                                    |
+| `host-session-lines.ts` | The read of the session files and the `session` frames of `host attach`.         |
 | `host-agent-launch.ts`  | `startHostAgent`: the detached start of `host serve --detach`.                   |
 
 `src/commands/host/host.ts` only registers the hidden commands and calls these services.
@@ -293,6 +294,56 @@ stop the agent.
    the channel opens, and for each new or changed receipt. A corrupt receipt gives no frame.
 4. A `run` frame `{ "type": "run", "run": <run.json> }` for each Thread when the channel opens, and
    again when its `run.json` changes. A bad `run.json` gives no frame.
+5. A `session` frame for the new lines of the session file of each Thread (see "Session frames").
+
+In each poll, the frames have this order: status, receipts, runs, then session lines. Thus the `run`
+frame that names a session file comes before the first `session` frame of that file.
+
+### Session frames
+
+A `session` frame has the new complete lines of the session file of one Thread:
+
+```json
+{
+  "type": "session",
+  "threadId": "t1",
+  "file": "sessions/t1/….jsonl",
+  "offset": 0,
+  "end": 1234,
+  "lines": ["{…}", "{…}"]
+}
+```
+
+- `file` is the `session.file` value of `run.json`. It is relative to the runtime folder of the
+  agent (`agent/runtime/`).
+- `offset` is the byte offset in the file of the first line.
+- `end` is the byte offset after the newline of the last line.
+- `lines` are the complete lines, without the newline, as UTF-8 text.
+
+The channel obeys these rules:
+
+- It reads the session file of each Thread whose `run.json` has `session.file`.
+- It sends only complete lines. A line that has no newline yet waits for the next poll.
+- It reads bytes, not characters. Thus the offsets are byte offsets, and a multi-byte character is
+  never cut.
+- When the channel opens, each session file that exists starts at its current size. The channel does
+  not send the lines that were in the file before this time. A session file that the channel first
+  sees after it opened starts at offset 0. The main machine reads the missing lines (ROW-101).
+- If the file becomes shorter than the sent offset, or if its inode changes, the channel starts again
+  at offset 0 of the file.
+- The frames of one Thread are in offset order. The `offset` of a frame is the `end` of the frame
+  before it.
+- An encoded frame, with its newline, is not longer than `DEFAULT_LINE_LIMIT` (1 MiB). The channel
+  puts lines in one frame while the frame stays in the limit, and sends more frames for the other
+  lines.
+- A line that is too long for one frame is not sent. The channel sends a frame with `lines: []`, the
+  `offset` of that line and the `end` after its newline. The main machine reads the bytes of this gap.
+- A poll reads a maximum of 4 MiB of each session file. The next polls read the remaining lines.
+- A `session.file` that is absolute, that has a `..` part or that is not below the runtime folder
+  gives no read and no frame.
+- A missing or unreadable session file gives no frame. It does not stop the channel.
+
+The channel keeps the read position of each file in memory. It does not write it to disk.
 
 ## Disconnects
 

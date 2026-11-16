@@ -27,6 +27,14 @@ Read this when you change Thread metadata, runs, the Threads tab, Peek or the co
 - The projection copies the `host` of a worker Thread to its attempt in `state.json`. An attempt
   without `host` ran on the local host. The `threads` entries of `status.json` and the active worker
   entries of the manager also have the host.
+- A worker Thread has `storyUid`: the `uid` of its Story. The manager writes it to each new worker
+  Thread. A Story without a `uid` gives a Thread without `storyUid`. An old Thread file without
+  `storyUid` stays valid. A `storyUid` must be a string. The projection copies `storyUid` to the
+  attempt.
+- `listThreads({ story })` finds the Threads of a Story by the rule of `matchStoryRef` (see
+  [Story references](README.md#story-references)). Thus the Threads of a Story stay with the Story
+  when its number changes. A Thread that matches no Story, for example of a deleted Story, matches by
+  its `storyId`.
 
 The `thread/` service reads and writes `runtime/threads/<id>.json` under the state lock. It also
 projects Thread changes into the v1 policy state and watches the Thread files for changes.

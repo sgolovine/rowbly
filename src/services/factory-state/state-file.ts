@@ -22,6 +22,8 @@ function validAttempt(attempt: unknown): attempt is PolicyAttempt {
   return (
     isObject(attempt) &&
     ["story", "stage", "workerId"].every((key) => typeof attempt[key] === "string") &&
+    // An old attempt has no `storyUid`.
+    (attempt.storyUid === undefined || typeof attempt.storyUid === "string") &&
     STATUSES.has(attempt.status as string)
   );
 }

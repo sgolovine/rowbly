@@ -26,8 +26,14 @@ import {
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { dependencyStories } from "./story-dependencies.js";
 import { fieldUpdates } from "./story-input.js";
+import { matchStoryRef, recordRef, type StoryRef } from "./story-ref.js";
 import { checkedTags } from "./story-tags.js";
 import type { SearchStoriesInput, Story, StoryDetails } from "./story-types.js";
+
+/** The reference of a story file, with the file. */
+interface StoryFileRef extends StoryRef {
+  readonly file: StoryFile;
+}
 
 const INVALID_STORY_HINT = "Run `rowbly doctor` to find and fix problems in story files.";
 
@@ -156,15 +162,57 @@ export async function countAttachments(paths: ProjectPaths, id: string): Promise
   return (await readAttachments(await attachmentDir(paths, id))).length;
 }
 
+/** Gives the story of the file, with its place in its stage and its count of saved images. */
+async function storyOf(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  files: readonly StoryFile[],
+  file: StoryFile,
+): Promise<Story> {
+  const story = toStory(config, file, positionIn(files, file));
+
+  return { ...story, attachmentCount: await countAttachments(paths, story.id) };
+}
+
 /** Gives the story with the ID, with its place in its stage and its count of saved images. */
 export async function getStory(input: { id: string }, ctx: ServiceContext = {}): Promise<Story> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const files = await readStoryFiles(paths);
   const file = await findStoryFile(paths, config, input.id, files);
-  const story = toStory(config, file, positionIn(files, file));
 
-  return { ...story, attachmentCount: await countAttachments(paths, story.id) };
+  return storyOf(paths, config, files, file);
+}
+
+/** The `uid` of the story file, or `undefined` when the file has none. */
+function fileUid(file: StoryFile): string | undefined {
+  return typeof file.doc.data.uid === "string" ? file.doc.data.uid : undefined;
+}
+
+/** The reference of each story file: its ID and its `uid`. */
+function fileRefs(files: readonly StoryFile[]): StoryFileRef[] {
+  return files.map((file) => ({ ...recordRef(file.id, fileUid(file)), file }));
+}
+
+/**
+ * Gives the story of a record: the story with the `uid` of the reference first, then the story with its ID. See
+ * `matchStoryRef`. Throws a `NotFoundError` when no story matches.
+ */
+export async function resolveStoryRef(ref: StoryRef, ctx: ServiceContext = {}): Promise<Story> {
+  const paths = await findProject(ctx);
+  const config = await readConfig(paths);
+  const files = await readStoryFiles(paths);
+  // `findStoryFile` also accepts a short ID, for example `1`, and gives the `NotFoundError`.
+  const file = matchStoryRef(fileRefs(files), ref)?.file ?? (await findStoryFile(paths, config, ref.id, files));
+
+  return storyOf(paths, config, files, file);
+}
+
+/** Gives the ID and the `uid` of each story, for a match with `matchStoryRef`. It does not check the stories. */
+export async function listStoryRefs(ctx: ServiceContext = {}): Promise<StoryRef[]> {
+  const files = await readStoryFiles(await findProject(ctx));
+
+  return fileRefs(files).map(({ id, uid }) => recordRef(id, uid));
 }
 
 /** Gives the story with the ID, with its downstream Stories and the upstream Stories that are not complete. */

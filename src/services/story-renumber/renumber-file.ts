@@ -44,7 +44,7 @@ interface CreatedFile {
 }
 
 /** The text of a file, or `undefined` when the file is gone. */
-async function readText(path: string): Promise<string | undefined> {
+export async function readText(path: string): Promise<string | undefined> {
   try {
     return await readFile(path, "utf8");
   } catch (error) {

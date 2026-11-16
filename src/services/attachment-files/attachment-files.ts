@@ -17,6 +17,16 @@ export interface Attachment {
   type: string;
   size: number;
   createdAt: string;
+  /** The `uid` of the Story when the record was made. An old record, or a record of a Story without a `uid`, has none. */
+  storyUid?: string;
+}
+
+/** The options of `withAttachments`. */
+interface SaveOptions {
+  /** The id of each image, in the same order. An image without an id gets a new id. */
+  readonly ids?: readonly (string | undefined)[];
+  /** The `uid` of the Story. Each new record gets it. */
+  readonly storyUid?: string;
 }
 
 export interface PendingImage {
@@ -92,7 +102,8 @@ function isAttachment(a: unknown): a is Attachment {
     Number.isInteger(record.size) &&
     (record.size as number) >= 0 &&
     (record.size as number) <= MAX_ATTACHMENT_BYTES &&
-    isCreatedAt(record.createdAt)
+    isCreatedAt(record.createdAt) &&
+    (record.storyUid === undefined || typeof record.storyUid === "string")
   );
 }
 
@@ -273,16 +284,32 @@ function checkGivenIds(ids: readonly (string | undefined)[], previous: readonly 
   }
 }
 
+/** The new records of the images, made at `now`. */
+function newRecords(images: readonly PendingImage[], now: Date, options: SaveOptions): Attachment[] {
+  const { ids = [], storyUid } = options;
+
+  return images.map(
+    (image, index): Attachment => ({
+      id: ids[index] ?? `a${randomUUID()}`,
+      name: image.name,
+      type: attachmentType(image.name, image.bytes),
+      size: image.bytes.length,
+      createdAt: now.toISOString(),
+      ...(storyUid === undefined ? {} : { storyUid }),
+    }),
+  );
+}
+
 /**
- * Publish the manifest last. Roll back bytes and metadata if the Story save fails. `ids` gives the id of each image
- * in the same order. An image without an id gets a new id.
+ * Publish the manifest last. Roll back bytes and metadata if the Story save fails. See `SaveOptions` for the ids
+ * and the Story `uid` of the new records.
  */
 export async function withAttachments<T>(
   dir: string,
   images: readonly PendingImage[],
   now: Date,
   save: () => Promise<T>,
-  ids: readonly (string | undefined)[] = [],
+  options: SaveOptions = {},
 ): Promise<T> {
   if (!images.length) {
     return save();
@@ -290,18 +317,10 @@ export async function withAttachments<T>(
 
   const previous = await readAttachments(dir);
 
-  checkGivenIds(ids.slice(0, images.length), previous);
+  checkGivenIds((options.ids ?? []).slice(0, images.length), previous);
 
   const hadManifest = await pathExists(join(dir, "manifest.json"));
-  const records = images.map(
-    (image, index): Attachment => ({
-      id: ids[index] ?? `a${randomUUID()}`,
-      name: image.name,
-      type: attachmentType(image.name, image.bytes),
-      size: image.bytes.length,
-      createdAt: now.toISOString(),
-    }),
-  );
+  const records = newRecords(images, now, options);
   const progress = new Store<SaveProgress>({ written: [], published: false });
 
   try {

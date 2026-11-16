@@ -111,15 +111,30 @@ describe("Story writes with a recorder", () => {
     await updateStory({ id: "ROW-02", tags: ["bug"] }, ctx);
     await updateStory({ id: "ROW-02", addDependsOn: ["ROW-01"] }, ctx);
 
+    const storyUid = (await getStory({ id: "ROW-02" }, project.ctx)).uid;
+    expect(storyUid).toEqual(expect.any(String));
     expect(recorder.writes).toEqual([
-      { storyId: "ROW-02", changes: [{ path: "title", before: "First", after: "Renamed" }] },
-      { storyId: "ROW-02", changes: [{ path: "description", before: "old", after: "new" }] },
-      { storyId: "ROW-02", changes: [{ path: "stage", before: "BACKLOG", after: "DONE" }] },
-      { storyId: "ROW-02", changes: [{ path: "fields.owner", before: null, after: "sam" }] },
-      { storyId: "ROW-02", changes: [{ path: "tags", before: [], after: ["bug"] }] },
-      { storyId: "ROW-02", changes: [{ path: "dependsOn", before: [], after: ["ROW-01"] }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "title", before: "First", after: "Renamed" }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "description", before: "old", after: "new" }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "stage", before: "BACKLOG", after: "DONE" }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "fields.owner", before: null, after: "sam" }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "tags", before: [], after: ["bug"] }] },
+      { storyId: "ROW-02", storyUid, changes: [{ path: "dependsOn", before: [], after: ["ROW-01"] }] },
     ]);
     expect(await getStory({ id: "ROW-02" }, project.ctx)).toMatchObject({ title: "Renamed", stage: "DONE" });
+  });
+
+  it("records a write without a storyUid for a Story without a uid, with no error", async () => {
+    const { recorder, ctx } = await setUp();
+    const path = "stories/BACKLOG/ROW-02.md";
+    await project.write(path, (await project.read(path)).replace(/\nuid: [^\n]*\n/, "\n"));
+
+    await updateStory({ id: "ROW-02", title: "Renamed" }, ctx);
+
+    expect(recorder.writes).toEqual([
+      { storyId: "ROW-02", changes: [{ path: "title", before: "First", after: "Renamed" }] },
+    ]);
+    expect("storyUid" in (recorder.writes[0] ?? {})).toBe(false);
   });
 
   it("records several paths of one update in one entry, without derived values", async () => {

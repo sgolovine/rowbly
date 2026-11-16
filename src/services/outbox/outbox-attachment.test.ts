@@ -26,17 +26,17 @@ describe("attachment writes with the file recorder", () => {
   const outbox = useTempDir();
 
   async function setUp() {
-    await createStory({ title: "First" }, project.ctx);
+    const { uid } = await createStory({ title: "First" }, project.ctx);
     const ctx: ServiceContext = {
       ...project.ctx,
       now: () => new Date("2026-11-16T10:00:00.000Z"),
       recorder: fileRecorder({ dir: outbox.path, threadId: "thread-1" }),
     };
-    return { ctx, dir: await attachmentDir(project.paths, "ROW-01") };
+    return { ctx, uid, dir: await attachmentDir(project.paths, "ROW-01") };
   }
 
   it("adds the attachment to the copy and records the entry and the PNG", async () => {
-    const { ctx, dir } = await setUp();
+    const { ctx, dir, uid } = await setUp();
 
     const added = await addAttachment({ story: "ROW-01", image: { name: "shot.png", bytes: PNG } }, ctx);
 
@@ -47,6 +47,7 @@ describe("attachment writes with the file recorder", () => {
         opId: expect.any(String),
         threadId: "thread-1",
         storyId: "ROW-01",
+        storyUid: uid,
         type: "attachment.add",
         attachment: {
           id: added.id,
@@ -54,6 +55,7 @@ describe("attachment writes with the file recorder", () => {
           type: "image/png",
           size: PNG.length,
           createdAt: "2026-11-16T10:00:00.000Z",
+          storyUid: uid,
         },
         sha256: sha(PNG),
       },
@@ -144,7 +146,7 @@ describe("attachment writes with the file recorder", () => {
   });
 
   it("removes the attachment from the copy and records the id and the sha256", async () => {
-    const { ctx, dir } = await setUp();
+    const { ctx, dir, uid } = await setUp();
     const added = await addAttachment({ story: "ROW-01", image: { name: "a.png", bytes: PNG } }, project.ctx);
 
     await removeAttachment({ story: "ROW-01", id: added.id }, ctx);
@@ -157,6 +159,7 @@ describe("attachment writes with the file recorder", () => {
         opId: expect.any(String),
         threadId: "thread-1",
         storyId: "ROW-01",
+        storyUid: uid,
         type: "attachment.remove",
         id: added.id,
         sha256: sha(PNG),
@@ -165,7 +168,7 @@ describe("attachment writes with the file recorder", () => {
   });
 
   it("keeps field entries without a type", async () => {
-    const { ctx } = await setUp();
+    const { ctx, uid } = await setUp();
 
     await updateStory({ id: "ROW-01", title: "Renamed" }, ctx);
 
@@ -175,6 +178,7 @@ describe("attachment writes with the file recorder", () => {
         opId: expect.any(String),
         threadId: "thread-1",
         storyId: "ROW-01",
+        storyUid: uid,
         changes: [{ path: "title", before: "First", after: "Renamed" }],
       },
     ]);

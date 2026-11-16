@@ -87,7 +87,7 @@ short, because the path of a Unix socket has a limit of about 108 bytes.
 The host sends a hello frame as the first line of a channel:
 
 ```json
-{ "type": "hello", "protocol": 1, "rowbly": "0.4.0" }
+{ "type": "hello", "protocol": 2, "rowbly": "0.4.0" }
 ```
 
 `openHostChannel` compares the frame with `HOST_PROTOCOL_VERSION` and the version in `package.json`.

@@ -94,7 +94,7 @@ async function addPng(env: ApplyEnv, entry: AddEntry, storyId: string, png: Fetc
  * different file, or a bad file is a conflict, and the file stays in `runtime/hosts/<host>/conflicts/`.
  */
 export async function applyAttachmentAdd(env: ApplyEnv, entry: AddEntry): Promise<OutboxConflict[]> {
-  const found = await findStory(env, entry.storyId);
+  const found = await findStory(env, entry);
 
   if (!found.story) {
     return addConflict(env, entry, found.problem);
@@ -121,7 +121,7 @@ export async function applyAttachmentAdd(env: ApplyEnv, entry: AddEntry): Promis
 
 /** Applies one `attachment.remove` entry. An attachment or a Story that is not there is skipped. */
 export async function applyAttachmentRemove(env: ApplyEnv, entry: RemoveEntry): Promise<OutboxConflict[]> {
-  const found = await findStory(env, entry.storyId);
+  const found = await findStory(env, entry);
 
   if (!found.story) {
     return [];

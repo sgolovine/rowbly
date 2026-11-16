@@ -1,5 +1,6 @@
 // The supervisor supplies fresh Project and harness facts. This module does no I/O.
 import { createHash } from "node:crypto";
+import { recordRef, refersToStory, type StoryRef } from "../story/story-ref.js";
 import type {
   AttemptStatus,
   PolicyAttempt,
@@ -63,10 +64,30 @@ export function withoutKey<T>(record: Record<string, T>, key: string): Record<st
   return Object.fromEntries(Object.entries(record).filter(([entryKey]) => entryKey !== key));
 }
 
-/** A new budget: the earlier attempts stay in the records, but they no longer count against the limit. */
-export function resetBudget(state: PolicyState, id: string): PolicyState {
+/** The reference of an attempt to its Story: the Story ID and, when the attempt has one, the Story `uid`. */
+export function attemptRef(attempt: PolicyAttempt): StoryRef {
+  return recordRef(attempt.story, attempt.storyUid);
+}
+
+/**
+ * Tells if the attempt belongs to `story`, by the rule of `matchStoryRef`. `stories` are the known Stories, and
+ * `story` is one of them.
+ */
+export function isAttemptOf<T extends StoryRef>(stories: readonly T[], story: T, attempt: PolicyAttempt): boolean {
+  return refersToStory(stories, attemptRef(attempt), story);
+}
+
+/**
+ * A new budget: the earlier attempts stay in the records, but they no longer count against the limit. Without
+ * `stories`, the Story is the only known Story.
+ */
+export function resetBudget<T extends StoryRef>(
+  state: PolicyState,
+  story: T,
+  stories: readonly T[] = [story],
+): PolicyState {
   const attempts = state.attempts.map((attempt) =>
-    attempt.story === id ? { ...attempt, budgetReset: true } : attempt,
+    isAttemptOf(stories, story, attempt) ? { ...attempt, budgetReset: true } : attempt,
   );
 
   return { ...state, attempts };
@@ -122,8 +143,8 @@ export function recordLaunchFailure(
 }
 
 /** Marks the last attempt of the Story as a Stage departure when its worker stopped. */
-function markLastDeparture(attempts: PolicyAttempt[], story: string): PolicyAttempt[] {
-  const index = attempts.findLastIndex((attempt) => attempt.story === story);
+function markLastDeparture(attempts: PolicyAttempt[], story: StoryRef, stories: readonly StoryRef[]): PolicyAttempt[] {
+  const index = attempts.findLastIndex((attempt) => isAttemptOf(stories, story, attempt));
   const last = attempts[index];
 
   if (!last || !STOPPED_STATUSES.has(last.status)) {
@@ -133,19 +154,28 @@ function markLastDeparture(attempts: PolicyAttempt[], story: string): PolicyAtte
   return attempts.with(index, { ...last, observedStageDeparture: true });
 }
 
-/** Makes a Story eligible again after a request from the user. All other assignment checks still apply. */
-export function releaseStory(previous: PolicyState, story: string): PolicyState {
+/** The known Stories with `story` first, in place of an equal reference in `stories`. */
+function withStory(stories: readonly StoryRef[], story: StoryRef): StoryRef[] {
+  return [story, ...stories.filter((other) => other.id !== story.id || other.uid !== story.uid)];
+}
+
+/**
+ * Makes a Story eligible again after a request from the user. All other assignment checks still apply. The attempts
+ * of the Story are found by the rule of `matchStoryRef` among `stories`, the known Stories of the Project.
+ */
+export function releaseStory(previous: PolicyState, story: StoryRef, stories: readonly StoryRef[] = []): PolicyState {
   const cloned = structuredClone(previous);
   const nativeCancelled = cloned.nativeCancelled as Record<string, unknown> | undefined;
   const state: PolicyState = {
     ...cloned,
     attempts: cloned.attempts ?? [],
-    ...(cloned.parked ? { parked: withoutKey(cloned.parked, story) } : {}),
-    ...(nativeCancelled ? { nativeCancelled: withoutKey(nativeCancelled, story) } : {}),
+    ...(cloned.parked ? { parked: withoutKey(cloned.parked, story.id) } : {}),
+    ...(nativeCancelled ? { nativeCancelled: withoutKey(nativeCancelled, story.id) } : {}),
   };
-  const reset = resetBudget(state, story);
+  const known = withStory(stories, story);
+  const reset = resetBudget(state, story, known);
 
-  return { ...reset, attempts: markLastDeparture(reset.attempts, story) };
+  return { ...reset, attempts: markLastDeparture(reset.attempts, story, known) };
 }
 
 /** Gives the unsent reports of one attempt. No start flag in an old record means that its launch was reported. */
