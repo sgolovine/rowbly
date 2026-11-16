@@ -51,6 +51,8 @@ export interface StoryModalBodyProps {
   onConfirming(confirm: StoryConfirm): void;
   /** The keys of the tab on the screen, for the footer. */
   onHints(hints: readonly KeyHint[]): void;
+  /** A click on an item of the dependency lists of the General tab: opens the Story `id`. */
+  readonly onOpenStory?: (id: string) => void;
 }
 
 /** The state of the Story Modal that its render reads. */
