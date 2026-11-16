@@ -2,6 +2,7 @@
 title: Do not reload the board when only state.json changes
 stage: DONE
 position: 34
+uid: 2c71036f-ccec-418a-bc6d-7618e1e2128c
 createdAt: 2026-11-14T21:06:46.000Z
 updatedAt: 2026-11-14T21:56:49.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-33
