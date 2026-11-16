@@ -2,6 +2,7 @@
 title: Hold the changes of abandoned remote Threads
 stage: IN_REFINEMENT
 position: 18
+uid: 44146b02-a32e-4d9a-b59a-97620af46408
 dependsOn:
   - ROW-94
   - ROW-97
