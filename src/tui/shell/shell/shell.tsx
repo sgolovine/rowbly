@@ -33,7 +33,8 @@ interface ShellProps {
  * the edit form in the Story sidebar on the right of the list. `tab` moves the focus from the Stage sidebar to
  * the list and then to the Story sidebar. In the Story sidebar, `esc` gives the focus back to the list and keeps
  * the draft. In the list, `esc` and the `✕` close the Story sidebar, and ask first about unsaved changes. Drag
- * the left edge of the Story sidebar to change its width. In a narrow terminal, the Story sidebar takes the full
+ * the left edge of the Story sidebar to change its width. `ctrl+o` and the button at the left of the `✕` expand the
+ * Story sidebar over the Story list, and collapse it again. In a narrow terminal, the Story sidebar takes the full
  * main area. The Modals that create and edit Stages and the other Modals open over the Story list. The Project
  * Button and `p` open the Project switcher, and each Project that opens is recorded in `~/.rowblyrc.json`.
  * Without a Project in the directory where Rowbly runs, the Story panel shows the onboarding steps, which create one
@@ -56,7 +57,7 @@ export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) 
         <Box flexGrow={1} flexDirection="column">
           <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
             {view.sidebar && !cover && <Sidebar {...stageSidebarProps(env, frame)} />}
-            {!cover && <StoryPanel {...storyPanelProps(env, frame)} />}
+            {!cover && frame.listShown && <StoryPanel {...storyPanelProps(env, frame)} />}
             {story && <StorySidebar {...story} />}
           </Box>
           <Box flexDirection="column" {...frame.overlayBox}>

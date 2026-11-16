@@ -10,6 +10,7 @@ import {
   type Issue,
   type ProjectConfig,
   readConfig,
+  STORY_SIDEBAR_BEHAVIORS,
   throwIfIssues,
   toProjectKey,
   writeConfig,
@@ -169,11 +170,26 @@ async function renameStoryKey(config: ProjectConfig, paths: ProjectPaths, newKey
   await rewriteStories(paths, config, (data) => renamedDependsOn(data, oldKey, newKey), now);
 }
 
+/** The issues of the Story sidebar option of an update. */
+function storySidebarIssues(display: DisplayConfig | undefined): Issue[] {
+  const value = display?.storySidebar;
+
+  return value === undefined || STORY_SIDEBAR_BEHAVIORS.includes(value)
+    ? []
+    : [
+        {
+          path: ["display", "storySidebar"],
+          message: `storySidebar must be one of: ${STORY_SIDEBAR_BEHAVIORS.join(", ")}`,
+        },
+      ];
+}
+
 /** The issues of the display options of an update. An empty time zone is valid, because it removes the option. */
 function displayInputIssues(display: DisplayConfig | undefined): Issue[] {
   const timeZone = display?.timeZone;
+  const zoneIssues = timeZone === undefined || timeZone === "" ? [] : checkTimeZone(timeZone);
 
-  return timeZone === undefined || timeZone === "" ? [] : checkTimeZone(timeZone);
+  return [...zoneIssues, ...storySidebarIssues(display)];
 }
 
 /** The display options after an update. A `timeZone` of `""` removes the key, so that the system zone applies. */

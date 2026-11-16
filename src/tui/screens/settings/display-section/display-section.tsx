@@ -1,6 +1,12 @@
 import { Box, type Key, Text, useInput } from "ink";
 import { type Dispatch, type SetStateAction, useState } from "react";
-import { compactThreads, storyTimeZone } from "../../../../services/config/config.js";
+import {
+  compactThreads,
+  STORY_SIDEBAR_BEHAVIORS,
+  type StorySidebarBehavior,
+  storySidebarBehavior,
+  storyTimeZone,
+} from "../../../../services/config/config.js";
 import { getProject, type Project, updateProject } from "../../../../services/project/project.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { Button, DetailView, FormModal, type FormValues, Loading, Switch } from "../../../components/index.js";
@@ -22,6 +28,7 @@ interface DisplayEnv {
   readonly toast: ToastStore;
   readonly project: AsyncState<Project>;
   readonly on: boolean;
+  readonly storySidebar: StorySidebarBehavior;
   readonly setEditing: Dispatch<SetStateAction<boolean>>;
   readonly onChange: () => void;
 }
@@ -33,9 +40,42 @@ function toggleCompact(env: DisplayEnv): void {
   );
 }
 
+/** The names of the Story sidebar options, as the section shows them. */
+const STORY_SIDEBAR_LABELS: Readonly<Record<StorySidebarBehavior, string>> = {
+  regular: "Regular",
+  expanded: "Expanded",
+  remember: "Remember last",
+};
+
+/** The Story sidebar option after `current`. The last option goes back to the first. */
+function nextStorySidebar(current: StorySidebarBehavior): StorySidebarBehavior {
+  const at = STORY_SIDEBAR_BEHAVIORS.indexOf(current);
+
+  return STORY_SIDEBAR_BEHAVIORS[(at + 1) % STORY_SIDEBAR_BEHAVIORS.length] ?? "regular";
+}
+
+/** `w` or a click on the value: saves the next Story sidebar option, then the shell reads it. */
+function cycleStorySidebar(env: DisplayEnv): void {
+  const next = nextStorySidebar(env.storySidebar);
+
+  updateProject({ display: { storySidebar: next } }, env.ctx).then(
+    () => {
+      showToast(env.toast, "info", `Story sidebar: ${STORY_SIDEBAR_LABELS[next]}`);
+      reloaded(env);
+    },
+    (err: unknown) => env.toast.error(err),
+  );
+}
+
 function sectionKey(env: DisplayEnv, input: string, key: Key): void {
   if (input === " " || key.return) {
     toggleCompact(env);
+
+    return;
+  }
+
+  if (input === "w") {
+    cycleStorySidebar(env);
 
     return;
   }
@@ -76,7 +116,8 @@ function timeZoneLabel(project: Project): string {
 /**
  * The display options of the project. `space`, `enter` or a click on the Switch toggles the compact Threads. While
  * the compact Threads are on, each Thread in the Factory view and in the Threads tab of a Story uses one line. `e`
- * edits the time zone of the Story times in a Form.
+ * edits the time zone of the Story times in a Form. `w` or a click on the value selects the next Story sidebar
+ * option: how the Story sidebar opens.
  */
 export function DisplaySection({ ctx, onChange }: SettingsSectionProps) {
   const active = useIsActive();
@@ -86,14 +127,16 @@ export function DisplaySection({ ctx, onChange }: SettingsSectionProps) {
 
   const idle = active && !editing && project.data !== undefined;
   const on = project.data ? compactThreads(project.data) : true;
+  const storySidebar = project.data ? storySidebarBehavior(project.data) : "regular";
 
-  const env: DisplayEnv = { ctx, toast, project, on, setEditing, onChange };
+  const env: DisplayEnv = { ctx, toast, project, on, storySidebar, setEditing, onChange };
 
   useKeyHints(
     idle
       ? [
           { key: "space", description: on ? "compact off" : "compact on" },
           { key: "e", description: "edit time zone" },
+          { key: "w", description: "Story sidebar width" },
         ]
       : [],
   );
@@ -120,6 +163,20 @@ export function DisplaySection({ ctx, onChange }: SettingsSectionProps) {
       <Box>
         <Button label="Edit time zone" keyName="e" onClick={() => setEditing(true)} clickable={idle} compact />
       </Box>
+      <Box gap={2}>
+        <Text color={theme.inkMuted}>Story sidebar</Text>
+        <Button
+          label={STORY_SIDEBAR_LABELS[storySidebar]}
+          keyName="w"
+          onClick={() => cycleStorySidebar(env)}
+          clickable={idle}
+          compact
+        />
+      </Box>
+      <Text color={theme.inkFaint}>
+        How the Story sidebar opens: at the regular width, expanded over the Story list, or in the last state that you
+        selected while Rowbly runs. ctrl+o expands and collapses the open Story sidebar.
+      </Text>
       {editing && (
         <FormModal
           title="Edit Time Zone"

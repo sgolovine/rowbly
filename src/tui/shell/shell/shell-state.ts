@@ -78,6 +78,10 @@ export interface ShellEnv {
   readonly view: ShellView;
   readonly stageKey: string | null;
   readonly sidebarShown: boolean;
+  /** The Story sidebar is beside the Story list, so `ctrl+o` and its button can expand or collapse it. */
+  readonly storyExpandable: boolean;
+  /** The Story sidebar beside the list is expanded, and the Story list does not show. */
+  readonly storyExpanded: boolean;
   /** The factory status that the shell polls; `undefined` until the first read completes. */
   readonly factory?: FactoryStatus;
 
@@ -101,6 +105,8 @@ export interface ShellEnv {
   readonly setStoryPane: Dispatch<SetStateAction<SidePane | null>>;
   /** The width of the Story sidebar after a drag, or `null` for the default width. */
   readonly setStoryWidth: Dispatch<SetStateAction<number | null>>;
+  /** Expands or collapses the Story sidebar. The value also applies to a new open with the `remember` option. */
+  readonly setStoryExpanded: Dispatch<SetStateAction<boolean>>;
   readonly setStoryHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
   readonly setStageKey: Dispatch<SetStateAction<string | null>>;
   readonly setSelectedId: Dispatch<SetStateAction<string | null>>;

@@ -43,10 +43,21 @@ export interface DisplayConfig {
   compactThreads?: boolean;
   /** The IANA time zone of the Story times, for example `Europe/Berlin`. A value that is not set is the system zone. */
   timeZone?: string;
+  /** The width of the Story sidebar when it opens. A value that is not set is `regular`. */
+  storySidebar?: StorySidebarBehavior;
 }
 
+/**
+ * How the Story sidebar opens: at the regular width, expanded over the Story list, or in the last state that the
+ * user selected while the TUI runs.
+ */
+export type StorySidebarBehavior = "regular" | "expanded" | "remember";
+
+/** The values of the `storySidebar` display option, in the order of the Settings. */
+export const STORY_SIDEBAR_BEHAVIORS: readonly StorySidebarBehavior[] = ["regular", "expanded", "remember"];
+
 /** The names of the display options. */
-export const DISPLAY_OPTIONS = ["compactThreads", "timeZone"] as const;
+export const DISPLAY_OPTIONS = ["compactThreads", "timeZone", "storySidebar"] as const;
 export type DisplayOption = (typeof DISPLAY_OPTIONS)[number];
 
 /** The optional features of a project, by name. */
