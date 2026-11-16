@@ -86,7 +86,7 @@
     "git": {
       "authorName": "Rowbly",
       "authorEmail": "rowbly@sunny.gg",
-      "push": false,
+      "push": true,
       "pull": true
     }
   }
