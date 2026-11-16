@@ -52,6 +52,25 @@ SSH joins its arguments into one shell string on the host. Thus:
 - The arguments have `--` before the target, so that the target cannot be an SSH option.
 - The transport uses `spawn` without a shell.
 
+## Clone of a Project
+
+`rowbly host use` makes a clone of the repository of a Project on the host. The code is in
+`src/services/host-project/`. It uses the transport and does not open SSH itself. See the Spec
+`remote-worker-hosts`, section "Setup of a worker host", step 3.
+
+- **Managed folder.** Rowbly clones into `.local/share/rowbly/projects/<project-id>/repo`, relative
+  to the home folder of the SSH user. `<project-id>` is `<name>-<hash>`. `<name>` is the base name of
+  the local Project root in dash-case. `<hash>` is the first 12 hex characters of the SHA-256 of the
+  local root path. Thus two Projects with the same name do not share a folder.
+- **Existing clone.** With `--path`, Rowbly uses a clean clone of the same repository at that path.
+- **Worktrees.** The worktrees of the remote workers go next to the clone, in the layout of the main
+  machine: `<clone>-worktrees/<story-id>`. `remoteWorktreesDir` gives this folder.
+- **Commands.** Each step is a bytes call with fixed tokens: `test -e`, `git -C <path> rev-parse`,
+  `git -C <path> remote get-url origin`, `git -C <path> status --porcelain` and
+  `env GIT_TERMINAL_PROMPT=0 git clone -- <url> <path>`. The clone has a time limit of 30 minutes.
+- **Clone status.** `cloneStatus` gives `ok`, `missing`, `not-a-repository` or `different-repository`
+  for the clone of a Project. `host check` can use it for its clone item.
+
 ## SSH options
 
 The transport gives these options to SSH:

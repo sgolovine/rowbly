@@ -1,6 +1,7 @@
 import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
 import { type AddedHost, addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
+import { type UnusedHost, type UsedHost, unuseHost, useHost } from "../../services/host-project/host-project.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
 import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
 import { run, runBytes, runWithoutContext } from "../output/output.js";
@@ -26,7 +27,17 @@ function listText(hosts: readonly Host[]): string {
   return hosts.length === 0 ? "No worker hosts." : hosts.map(describe).join("\n");
 }
 
-/** Registers the `rowbly host` subcommands on the `host` command. The commands do not need a Project. */
+function usedText(used: UsedHost): string {
+  const action = used.cloned ? "cloned to" : "uses the clone at";
+
+  return `Worker host ${used.host} ${action} ${used.path}`;
+}
+
+function unusedText(unused: UnusedHost): string {
+  return `Worker host ${unused.host} no longer uses this Project. The clone at ${unused.path} stays on the host.`;
+}
+
+/** Registers the `rowbly host` subcommands. Only `use` and `unuse` need a Project. */
 export function registerHostCommands(program: Command): void {
   program
     .command("add <id>")
@@ -59,6 +70,26 @@ export function registerHostCommands(program: Command): void {
       ),
     );
 
+  program
+    .command("use <id>")
+    .description("Turn a worker host on for this Project, and clone the repository on the host")
+    .option("--path <dir>", "use an existing clean clone on the host, not the managed folder")
+    .action((id: string, opts: { path?: string }, command: Command) =>
+      run(command, (ctx) => useHost(opts.path === undefined ? { id } : { id, path: opts.path }, ctx), usedText),
+    );
+
+  program
+    .command("unuse <id>")
+    .description("Turn a worker host off for this Project; the clone stays on the host")
+    .action((id: string, _opts: unknown, command: Command) =>
+      run(command, (ctx) => unuseHost({ id }, ctx), unusedText),
+    );
+
+  registerHostAgentCommands(program);
+}
+
+/** Registers the hidden subcommands that the main machine runs on a worker host over SSH. */
+function registerHostAgentCommands(program: Command): void {
   // The main machine runs this command over SSH to get the PNG of an `attachment.add` entry.
   program
     .command("blob <sha256>", { hidden: true })

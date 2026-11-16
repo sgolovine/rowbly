@@ -1,9 +1,12 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
+import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appendOutboxEntry, writeOutboxBlob } from "../../services/outbox/outbox-file.js";
+import { initProject } from "../../services/project/project.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -13,7 +16,8 @@ import { runCli } from "../test-cli/test-cli.js";
 vi.mock("../../services/host-transport/ssh-transport.js", async (original) => {
   const actual = await original<typeof import("../../services/host-transport/ssh-transport.js")>();
   const bytes = async (command: readonly string[]) => ({
-    exitCode: 0,
+    // Nothing is at a path on the fake host, so `host use` clones.
+    exitCode: command[0] === "test" ? 1 : 0,
     bytes: Buffer.from(command[0] === "node" ? "v22.19.0\n" : "0.18.0\n"),
     stderr: "",
   });
@@ -152,6 +156,53 @@ describe("host commands", () => {
     }
 
     expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
+});
+
+describe("host use and unuse", () => {
+  const home = useTempDir();
+  const project = useTempDir();
+  const outside = useTempDir();
+  const rcFile = () => join(home.path, RC_FILE);
+  const cli = (cwd: string, ...args: string[]) => runCli(args, cwd);
+  const git = promisify(execFile);
+
+  beforeEach(async () => {
+    vi.stubEnv("HOME", home.path);
+    vi.stubEnv("USERPROFILE", home.path);
+    await initProject({ name: "Rowbly", key: "ROW" }, { cwd: project.path, home: home.path });
+    await git("git", ["init", "-q", project.path]);
+    await git("git", ["-C", project.path, "remote", "add", "origin", "git@github.com:o/r.git"]);
+    await writeFile(rcFile(), JSON.stringify({ hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true }] }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("host use clones in the managed folder, and host unuse removes the record", async () => {
+    const used = await cli(project.path, "--json", "host", "use", "mini");
+
+    expect(used.exitCode).toBe(0);
+    expect(JSON.parse(used.stdout)).toMatchObject({ host: "mini", managed: true, cloned: true });
+    expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts[0].projects).toHaveLength(1);
+    expect((await cli(project.path, "host", "unuse", "mini")).stdout).toContain("stays on the host");
+    expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts[0].projects).toEqual([]);
+    expect(JSON.parse((await cli(outside.path, "--json", "host", "list")).stdout)).toEqual([
+      { id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true },
+    ]);
+  });
+
+  it("host use and host unuse give NOT_FOUND outside a Project", async () => {
+    for (const args of [
+      ["host", "use", "mini"],
+      ["host", "unuse", "mini"],
+    ]) {
+      const result = await cli(outside.path, "--json", ...args);
+
+      expect(result.exitCode).toBe(1);
+      expect(JSON.parse(result.stderr).error.code).toBe("NOT_FOUND");
+    }
   });
 });
 

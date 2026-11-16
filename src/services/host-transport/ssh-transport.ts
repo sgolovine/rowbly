@@ -71,9 +71,14 @@ export function validateTarget(target: string): void {
   }
 }
 
+/** `true` when the remote shell cannot change the token. */
+export function isSafeToken(token: string): boolean {
+  return SAFE_TOKEN.test(token);
+}
+
 /** Refuses a remote command with a token that the remote shell can change. SSH joins the tokens into a shell string. */
 export function validateCommand(command: RemoteCommand): void {
-  const bad = command.find((token) => !SAFE_TOKEN.test(token));
+  const bad = command.find((token) => !isSafeToken(token));
 
   if (command.length === 0 || bad !== undefined) {
     throw new ValidationError("The remote command has a token that is not safe.", {
