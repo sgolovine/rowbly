@@ -717,6 +717,64 @@ describe("foreground factory", () => {
     await f.manager.retryProvider("worker");
     expect((await f.manager.snapshot()).providers.worker).toBeUndefined();
   });
+  it("pauses the provider for a connectivity error, then resumes the same Thread when the pause ends", async () => {
+    const story = await createStory({ title: "Offline", stage: "WORK" }, { cwd: root });
+    const other = await createStory({ title: "Other", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "fetch failed" })]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "offline" });
+    const previous = await settled();
+    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    expect(previous?.status).toBe("failed");
+    expect(previous?.resumable).toBe(true);
+    expect(previous?.error).toMatchObject({ class: "transient", code: "NETWORK", message: "fetch failed" });
+    const snapshot = await f.manager.snapshot();
+    expect(snapshot.providers.worker).toMatchObject({ reason: "network", failures: 1 });
+    expect(Date.parse(snapshot.providers.worker?.retryAt ?? "") - Date.now()).toBeGreaterThan(50_000);
+    expect(Date.parse(snapshot.providers.worker?.retryAt ?? "") - Date.now()).toBeLessThanOrEqual(60_000);
+    expect(previous?.error?.retryAt).toBe(snapshot.providers.worker?.retryAt);
+    expect(snapshot.connectivity).toBe("degraded");
+
+    // The pause stops each new worker on the provider, and the policy waits for the resume of the Thread.
+    await f.manager.reconcile();
+    await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
+      "paused",
+    );
+    const decisions = (await f.manager.snapshot()).decisions;
+    expect(decisions.find((d) => d.story === story.id)?.reason).toBe("waiting for network resume");
+    const state = await readFactoryState(root);
+    expect(state.parked?.[story.id]).toBeUndefined();
+    expect(state.attempts.find((a) => a.story === story.id)?.status).toBe("failed");
+
+    // A deadline after the pause: the next pass clears the pause and resumes the same Thread without a person.
+    f.worker.setResponses([
+      tool("report_result", { outcome: "complete", summary: "Resumed", blockers: [], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+    f.supervisor.setResponses(Array.from({ length: 5 }, () => fauxAssistantMessage("Noted")));
+    vi.useFakeTimers({ toFake: ["Date"], now: Date.now() + 2 * 60_000 });
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const thread = (await listThreads({ story: story.id }, { cwd: root })).threads[0];
+          expect(thread?.status).toBe("completed");
+        },
+        { timeout: 10000, interval: 20 },
+      );
+      const threads = (await listThreads({ story: story.id }, { cwd: root })).threads;
+      expect(threads).toHaveLength(1);
+      expect(threads[0]?.session).toEqual(previous?.session);
+      expect(threads[0]?.runs).toHaveLength(2);
+      await vi.waitFor(async () => expect((await f.manager.snapshot()).providers.worker).toBeUndefined());
+      expect((await f.manager.snapshot()).connectivity).toBe("online");
+      expect((await f.manager.snapshot()).networkFailures).toEqual({});
+    } finally {
+      await f.manager.shutdown();
+      await run;
+      vi.useRealTimers();
+    }
+  });
   it("dismisses an attention entry, and the entry does not come back after a restart", async () => {
     const paths = projectPaths(root);
     await prepareRuntime(paths);

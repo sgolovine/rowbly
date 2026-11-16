@@ -9,6 +9,7 @@ import { type Story, searchStories } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { listThreads } from "../thread/thread.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
+import { connectivityOf } from "./connectivity.js";
 import { dependencyLists } from "./dependency-facts.js";
 import {
   type Attention,
@@ -20,6 +21,10 @@ import {
   type ProviderPause,
   setState,
 } from "./manager-state.js";
+import { networkWaitingThreads } from "./network-wait.js";
+
+/** The skip reason of a Story whose worker Thread waits for its provider, to resume after a network pause. */
+export const NETWORK_WAIT_REASON = "waiting for network resume";
 
 /** Policy reasons for Stories that wait for no worker. The status file leaves them out of its queue. */
 const QUIET_REASONS = new Set(["hold stage", "stage unavailable"]);
@@ -33,7 +38,14 @@ type Decision = ScanResult["decisions"][number];
 export type StoredStatus = Partial<
   Pick<
     ManagerState,
-    "attention" | "deliveredReportIds" | "attemptedHash" | "unanswered" | "nextWakeAt" | "holds" | "providers"
+    | "attention"
+    | "deliveredReportIds"
+    | "attemptedHash"
+    | "unanswered"
+    | "nextWakeAt"
+    | "holds"
+    | "providers"
+    | "networkFailures"
   >
 >;
 
@@ -60,10 +72,18 @@ export async function loadStoredStatus(paths: ProjectPaths): Promise<StoredStatu
       nextWakeAt: typeof stored.nextWakeAt === "number" ? stored.nextWakeAt : 0,
       holds: new Map(Object.entries(stored.holds ?? {}) as [string, Hold][]),
       providers: new Map(Object.entries(stored.providers ?? {}) as [string, ProviderPause][]),
+      networkFailures: new Map(storedCounts(stored.networkFailures)),
     };
   } catch {
     return {};
   }
+}
+
+/** Gives the entries of a stored record of counts. An entry that is not a positive integer is not kept. */
+function storedCounts(value: unknown): [string, number][] {
+  const entries = typeof value === "object" && value !== null ? Object.entries(value) : [];
+
+  return entries.filter((entry): entry is [string, number] => Number.isSafeInteger(entry[1]) && entry[1] > 0);
 }
 
 function classifyPrompt(stage: Stage, prompts: StoredPrompts): string {
@@ -113,8 +133,23 @@ function skipReason(
   return undefined;
 }
 
-/** Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds. */
-export async function scan(manager: Manager, maxActive = getState(manager).limit): Promise<ScanResult> {
+/** Gives the IDs of the Stories whose network Thread the manager can resume, except the Thread of a resume. */
+async function networkWaitStories(manager: Manager, stories: readonly Story[], resumeThreadId?: string) {
+  const { threads } = await listThreads({ role: "worker" }, manager.ctx);
+  const waiting = await networkWaitingThreads(threads, stories);
+
+  return new Set(waiting.filter((t) => t.id !== resumeThreadId).map((t) => t.storyId as string));
+}
+
+/**
+ * Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds, and Stories whose
+ * network Thread can resume. `resumeThreadId` is the Thread of a resume: its Story is not skipped for it.
+ */
+export async function scan(
+  manager: Manager,
+  maxActive = getState(manager).limit,
+  resumeThreadId?: string,
+): Promise<ScanResult> {
   const stories = await searchStories({}, manager.ctx);
   const stages = await classifiedStages(manager);
   const state = await readFactoryState(manager.paths.root, manager.ctx);
@@ -122,10 +157,13 @@ export async function scan(manager: Manager, maxActive = getState(manager).limit
   const policy = evaluateScan(state, { stories, stages, maxActive });
   const cancelled = (state.nativeCancelled ?? {}) as CancelledStories;
   const { holds } = getState(manager);
+  const networkWaits = await networkWaitStories(manager, stories, resumeThreadId);
 
   const decisions = policy.decisions.map((decision) => {
     const story = stories.find((s) => s.id === decision.story);
-    const reason = skipReason(decision, story, cancelled, holds.get(decision.story));
+    const reason =
+      skipReason(decision, story, cancelled, holds.get(decision.story)) ??
+      (networkWaits.has(decision.story) ? NETWORK_WAIT_REASON : undefined);
 
     return reason ? { ...decision, action: "skip" as const, reason } : decision;
   });
@@ -168,6 +206,8 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     nextCursor: policy.decisions.length > pageEnd ? pageEnd : null,
     attention: [...issues, ...state.attention.entries()].slice(0, 12),
     providers: Object.fromEntries(state.providers),
+    networkFailures: Object.fromEntries(state.networkFailures),
+    connectivity: connectivityOf(state.settings, state.providers),
     holds: Object.fromEntries(state.holds),
     deliveredReportIds: state.deliveredReportIds.slice(-100),
     nextWakeAt: state.nextWakeAt,
