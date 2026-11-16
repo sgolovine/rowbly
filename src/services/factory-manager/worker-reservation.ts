@@ -25,6 +25,7 @@ import {
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
+import { canResume } from "./network-wait.js";
 import { launchWorker } from "./worker-launch.js";
 
 export interface ReserveWorkerInput {
@@ -63,7 +64,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
 
   await assertWorkerModel(manager, choice);
 
-  const policy = await scan(manager, Number.MAX_SAFE_INTEGER);
+  const policy = await scan(manager, Number.MAX_SAFE_INTEGER, input.resumeThreadId);
   const decision = policy.decisions.find((d) => d.story === story.id);
 
   if (!decision || !["start", "retry"].includes(decision.action)) {
@@ -118,17 +119,6 @@ async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput):
   }
 
   return story;
-}
-
-function canResume(thread: ThreadRecord, story: Story): boolean {
-  return (
-    !!thread.resumable &&
-    thread.status !== "completed" &&
-    thread.runs.length < 3 &&
-    thread.storyId === story.id &&
-    thread.stage === story.stage &&
-    !!thread.worktree
-  );
 }
 
 /** Checks a resume, then releases the policy parking and the user cancellation of the Story. */

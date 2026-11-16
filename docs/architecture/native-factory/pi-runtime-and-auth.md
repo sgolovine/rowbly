@@ -27,6 +27,9 @@ The `agent-auth/` service gives the provider status and does login, logout and m
   argument.
 - `rowbly auth status` shows the configured status, without a health check.
 - Configured models do not prove provider access, quota or credential health.
+- A quota error pauses the provider for 15 minutes. An authentication error pauses it until the
+  credentials change. A connectivity error gives a `network` pause of 1 to 15 minutes. See
+  [recovery.md](recovery.md#network-failures).
 - Rowbly does not write global Pi settings. Credentials stay in Pi storage, outside the Project.
 - A login gives Pi the nonsecret `deviceId` from `~/.rowblyrc.json`. See
   [../storage.md](../storage.md#rowblyrcjson).

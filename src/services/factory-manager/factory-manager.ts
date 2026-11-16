@@ -126,6 +126,7 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     holds: stored.holds ?? new Map(),
     attention: new Map([...external, ...(stored.attention ?? [])]),
     providers: stored.providers ?? new Map(),
+    networkFailures: stored.networkFailures ?? new Map(),
 
     lastSyncAt: 0,
   };
