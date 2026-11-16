@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { checkQueueStatus } from "../check-queue/check-queue.js";
 import { evaluateScan, storyHash } from "../factory-policy/factory-policy.js";
+import { resolveWorkerModel } from "../factory-settings/worker-overrides.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
@@ -232,6 +233,20 @@ function nextDeadline(state: Readonly<ManagerState>, decisions: readonly Decisio
   return deadlines.length ? Math.min(...deadlines) : undefined;
 }
 
+/** One queue entry of the status file, with the provider of the worker model of its Story when one resolves. */
+function queueEntry(state: Readonly<ManagerState>, d: Decision) {
+  const provider = resolveWorkerModel(state.settings, d.story, d.stage)?.provider;
+
+  return {
+    story: d.story,
+    stage: d.stage,
+    action: d.action,
+    reason: d.reason,
+    retryAt: d.retryAt,
+    ...(provider ? { provider } : {}),
+  };
+}
+
 /** Writes status.json and sets a timer for the next hold, pause or retry deadline. */
 export async function persistStatus(manager: Manager): Promise<void> {
   clearTimeout(getState(manager).deadlineTimer);
@@ -250,7 +265,7 @@ export async function persistStatus(manager: Manager): Promise<void> {
   const queue = policy.decisions
     .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
     .slice(0, 50)
-    .map((d) => ({ story: d.story, stage: d.stage, action: d.action, reason: d.reason, retryAt: d.retryAt }));
+    .map((d) => queueEntry(getState(manager), d));
   const status = { ...(await buildSnapshot(manager)), queue };
 
   await writeFileAtomic(await runtimePath(manager.paths, "status.json"), `${JSON.stringify(status)}\n`, {

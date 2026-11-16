@@ -32,8 +32,16 @@ export function factoryLive(status: FactoryStatus | undefined): boolean {
   return status !== undefined && ["starting", "ready", "stopping"].includes(status.phase) && status.liveness !== "dead";
 }
 
+/** The connectivity of a live factory when it is `offline` or `degraded`, else undefined. */
+export function connectivityWord(status: FactoryStatus | undefined): "offline" | "degraded" | undefined {
+  const connectivity = factoryLive(status) ? status?.connectivity : undefined;
+
+  return connectivity === "offline" || connectivity === "degraded" ? connectivity : undefined;
+}
+
 /**
  * The short state of the factory for the header: `off`, `starting`, `2/4 · 1 pending` and the other phases.
+ * A live, ready factory with the connectivity `offline` or `degraded` shows that word in place of the worker counts.
  * It is `…` until the first read completes. `short` leaves out the pending count.
  */
 export function factoryState(status: FactoryStatus | undefined, short = false): string {
@@ -47,6 +55,12 @@ export function factoryState(status: FactoryStatus | undefined, short = false): 
 
   if (status.phase !== "ready" || !status.workers) {
     return status.phase;
+  }
+
+  const connectivity = connectivityWord(status);
+
+  if (connectivity) {
+    return connectivity;
   }
 
   const { running, pending, limit } = status.workers;
@@ -187,9 +201,24 @@ function providerProblems(providers: ProviderPauses): FactoryProblem[] {
   });
 }
 
-/** The reason why the factory has not started a worker for a queued Story, in words for people. */
-export function queueReason(entry: FactoryQueueEntry): string {
+/** The network pause of the provider of the worker model of the queued Story, or undefined. */
+function networkPause(entry: FactoryQueueEntry, providers: ProviderPauses | undefined) {
+  const pause = entry.provider ? providers?.[entry.provider] : undefined;
+
+  return pause?.reason === "network" ? pause : undefined;
+}
+
+/**
+ * The reason why the factory has not started a worker for a queued Story, in words for people. When the provider of
+ * its worker model has a network pause in `providers`, the Story waits for the network.
+ */
+export function queueReason(entry: FactoryQueueEntry, providers?: ProviderPauses): string {
   const at = entry.retryAt ? ` until ${formatDateTime(entry.retryAt)}` : "";
+  const network = networkPause(entry, providers);
+
+  if (network) {
+    return `waiting for the network${network.retryAt ? ` until ${formatDateTime(network.retryAt)}` : ""}`;
+  }
 
   if (entry.action !== "skip") {
     return "waiting for the supervisor";

@@ -1,5 +1,5 @@
 import { Text } from "ink";
-import type { FactoryQueueEntry } from "../../../../services/factory/factory.js";
+import type { FactoryQueueEntry, FactoryStatus } from "../../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { Panel, ScrollBody } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
@@ -16,6 +16,8 @@ export interface ThreadListPanelProps {
   readonly cursor: number;
   /** The queue entry of the Story, while it waits for a worker slot. */
   readonly waiting: FactoryQueueEntry | undefined;
+  /** The provider pauses of the factory status, for the network reason of the queue note. */
+  readonly providers?: FactoryStatus["providers"];
   /** The list takes the keys. */
   readonly listing: boolean;
   /** The thread region takes the keys. */
@@ -32,8 +34,8 @@ export interface ThreadListPanelProps {
 }
 
 /** The queue note with a capital first letter. */
-function waitingNote(waiting: FactoryQueueEntry): string {
-  return queueReason(waiting).replace(/^./, (c) => c.toUpperCase());
+function waitingNote(waiting: FactoryQueueEntry, providers: FactoryStatus["providers"]): string {
+  return queueReason(waiting, providers).replace(/^./, (c) => c.toUpperCase());
 }
 
 /** The rows that the thread rows can use: the inner height less the queue note. */
@@ -48,6 +50,7 @@ export function ThreadListPanel({
   now,
   cursor,
   waiting,
+  providers,
   listing,
   viewing,
   width,
@@ -69,7 +72,7 @@ export function ThreadListPanel({
     >
       {waiting && (
         <Text wrap="truncate-end" color={theme.inkMuted}>
-          {waitingNote(waiting)}
+          {waitingNote(waiting, providers)}
         </Text>
       )}
       {threads.length === 0 && <Text color={theme.inkFaint}>No Threads</Text>}

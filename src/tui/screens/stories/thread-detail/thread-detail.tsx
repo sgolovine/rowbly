@@ -2,7 +2,14 @@ import { Box, Text } from "ink";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
-import { THREAD_GLYPHS, threadDuration, threadModel, threadOutcome, threadResumable } from "../thread-text.js";
+import {
+  THREAD_GLYPHS,
+  threadDuration,
+  threadModel,
+  threadOutcome,
+  threadResumable,
+  threadWaitsForNetwork,
+} from "../thread-text.js";
 
 /** The rows of the full detail, for the height check of the caller. */
 export const THREAD_DETAIL_ROWS = 6;
@@ -39,7 +46,8 @@ function worktreeText(thread: ThreadRecord): string {
 }
 
 /**
- * The metadata of one thread: status, model, times, last tool, worktree and result. It reads no
+ * The metadata of one thread: status, model, times, last tool, worktree and result. The status line shows
+ * `waiting for network` for a thread that waits for the network. It reads no
  * conversation. `compact` shows only the status line and the result, for a short layout.
  */
 export function ThreadDetail({
@@ -60,6 +68,7 @@ export function ThreadDetail({
       <Text color={color}>{glyph} </Text>
       <Text color={thread.status === "failed" ? theme.danger : theme.ink}>{thread.status}</Text>
       <Text color={theme.inkMuted}>{runsNote(thread)}</Text>
+      {threadWaitsForNetwork(thread) && <Text color={theme.stageBoard}> · waiting for network</Text>}
     </Text>
   );
   const result = outcome ? (

@@ -58,6 +58,8 @@ export interface ThreadsTabState {
   readonly listing: boolean;
   readonly viewing: boolean;
   readonly waiting: FactoryQueueEntry | undefined;
+  /** The provider pauses of the factory status, for the network reason of the queue note. */
+  readonly providers: FactoryStatus["providers"];
   readonly now: number;
   readonly shownId: string | undefined;
 }
@@ -224,6 +226,7 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     listing,
     viewing,
     waiting: queueEntry(status, storyId),
+    providers: status?.providers,
     now,
     shownId,
   };

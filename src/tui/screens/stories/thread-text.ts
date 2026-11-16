@@ -16,6 +16,11 @@ export function threadActive(thread: ThreadRecord): boolean {
   return thread.status === "pending" || thread.status === "running";
 }
 
+/** True when a thread stopped because of a network failure and waits for the network: the factory resumes it. */
+export function threadWaitsForNetwork(thread: ThreadRecord): boolean {
+  return thread.status === "failed" && thread.error?.class === "transient" && thread.error?.code === "NETWORK";
+}
+
 /** True when the factory can resume the thread: a resumable thread that stopped. */
 export function threadResumable(thread: ThreadRecord): boolean {
   return thread.resumable && !threadActive(thread) && thread.session.file !== null;

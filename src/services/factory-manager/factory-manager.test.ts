@@ -269,7 +269,9 @@ describe("foreground factory", () => {
       expect((await readFactoryState(root)).attempts[0]?.status).toBe("preparing");
       // The status file lists queued work for the TUI, without the Stories that wait for no worker.
       const status = JSON.parse(await readFile(join(root, ".rowbly/runtime/status.json"), "utf8"));
-      expect(status.queue).toContainEqual(expect.objectContaining({ story: other.id, reason: "worker limit" }));
+      expect(status.queue).toContainEqual(
+        expect.objectContaining({ story: other.id, reason: "worker limit", provider: "worker" }),
+      );
       expect(status.queue.some((d: { reason: string }) => d.reason === "hold stage")).toBe(false);
       await expect(f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "b" })).rejects.toThrow(
         "active worker",
