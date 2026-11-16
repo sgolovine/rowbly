@@ -1,12 +1,12 @@
 ---
 title: Add the placement setting and host worker slots
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 14
 dependsOn:
   - ROW-83
   - ROW-84
 createdAt: 2026-11-16T19:45:09.575Z
-updatedAt: 2026-11-16T21:09:51.813Z
+updatedAt: 2026-11-16T21:10:33.350Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-95
 pull_request: https://github.com/sgolovine/rowbly/pull/276
 ---
