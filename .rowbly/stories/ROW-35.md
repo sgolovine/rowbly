@@ -2,6 +2,7 @@
 title: Load the TUI lazily so CLI commands do not pay for Ink
 stage: DONE
 position: 35
+uid: b3faad49-a24b-46b4-a8f6-2a2932a52662
 createdAt: 2026-11-14T21:07:09.000Z
 updatedAt: 2026-11-14T22:00:35.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-35
