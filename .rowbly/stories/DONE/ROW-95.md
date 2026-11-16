@@ -2,6 +2,7 @@
 title: Add the placement setting and host worker slots
 stage: DONE
 position: 14
+uid: 869fe931-83fe-422c-8bdc-f6649b6e45d7
 dependsOn:
   - ROW-83
   - ROW-84

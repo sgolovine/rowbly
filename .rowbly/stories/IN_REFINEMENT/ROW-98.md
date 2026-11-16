@@ -2,6 +2,7 @@
 title: Send board changes to running remote Threads
 stage: IN_REFINEMENT
 position: 17
+uid: 5e3e621e-900b-402f-bc40-4ac20d145759
 dependsOn:
   - ROW-94
   - ROW-97

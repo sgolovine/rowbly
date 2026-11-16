@@ -55,7 +55,8 @@ export async function readStory(name: StoryFileName): Promise<ReadStory | undefi
   }
 }
 
-function uidOf(story: ReadStory): string | undefined {
+/** The `uid` of the Story, or `undefined` when the file has none. */
+export function uidOf(story: ReadStory): string | undefined {
   const uid = story.data.uid;
 
   return typeof uid === "string" && uid.trim() !== "" ? uid : undefined;

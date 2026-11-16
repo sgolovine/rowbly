@@ -2,6 +2,7 @@
 title: Expand and collapse the Story sidebar
 stage: DONE
 position: 74
+uid: 712bb8e0-bfaf-487f-914f-f88e10e25a32
 createdAt: 2026-11-16T18:36:13.319Z
 updatedAt: 2026-11-16T19:34:45.797Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-77

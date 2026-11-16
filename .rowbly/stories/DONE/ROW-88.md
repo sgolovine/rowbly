@@ -2,6 +2,7 @@
 title: Add host use to clone the Project on a worker host
 stage: DONE
 position: 7
+uid: 92fbba0f-b56c-472c-96e3-45e2653efc6e
 dependsOn:
   - ROW-84
   - ROW-85

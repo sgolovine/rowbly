@@ -2,6 +2,7 @@
 title: Add support for story tags.
 stage: DONE
 position: 76
+uid: 20bf0457-dc51-4041-a5d9-e31d5b25fa1c
 updatedAt: 2026-11-16T21:49:11.165Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-79
 pull_request: https://github.com/sgolovine/rowbly/pull/263

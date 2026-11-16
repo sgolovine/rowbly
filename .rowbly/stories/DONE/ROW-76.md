@@ -2,6 +2,7 @@
 title: Threads Improvements - Allow user to steer thread.
 stage: DONE
 position: 78
+uid: 25160f29-2ec2-4973-b7ab-f51647b1872f
 createdAt: 2026-11-16T17:01:49.320Z
 updatedAt: 2026-11-16T22:34:21.384Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-76

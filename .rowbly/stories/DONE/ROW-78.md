@@ -2,6 +2,7 @@
 title: Sort stories by updated by
 stage: DONE
 position: 81
+uid: 9f3f8f4b-cd2b-45e4-b006-3bfeaf83c788
 updatedAt: 2026-11-16T20:06:38.575Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-78
 pull_request: https://github.com/sgolovine/rowbly/pull/268

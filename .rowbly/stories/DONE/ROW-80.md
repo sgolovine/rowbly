@@ -2,6 +2,7 @@
 title: Story tags in the TUI
 stage: DONE
 position: 79
+uid: 0a894ee0-09d2-47a2-84eb-03320bae8223
 dependsOn:
   - ROW-79
 createdAt: 2026-11-16T19:30:18.067Z

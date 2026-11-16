@@ -2,6 +2,7 @@
 title: Run checks of remote workers on their host
 stage: DONE
 position: 12
+uid: 42a0e867-626d-42ce-8db3-785c8ab2b0e5
 dependsOn:
   - ROW-92
 createdAt: 2026-11-16T19:45:08.084Z

@@ -13,6 +13,9 @@ import {
 } from "../story-files/story-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 import type { DuplicateGroup, PlannedRenumber, UnrepairedDuplicate } from "./duplicate-plan.js";
+import { followValues } from "./follow-values.js";
+import { moveStoryAttachments } from "./move-attachments.js";
+import { findStayedRefs, type StayedRefs } from "./stayed-refs.js";
 
 /** One Story that got a new number. */
 export interface StoryRenumber {
@@ -26,6 +29,10 @@ export interface StoryRenumber {
   readonly previousPath: string;
   /** The path of the Story that kept the old ID. */
   readonly keptPath: string;
+  /** The names of the attachments that moved with the Story to the folder of the new ID. */
+  readonly movedAttachments: readonly string[];
+  /** The references to the old ID that stayed with the Story that kept the ID. */
+  readonly stayed: StayedRefs;
 }
 
 /** The fixed environment of one repair. */
@@ -111,11 +118,37 @@ function notRepaired(group: DuplicateGroup, file: PlannedRenumber, reason: strin
   return { unrepaired: { id: group.id, paths: [group.keep.path, file.path], reason } };
 }
 
-/** The text of the new file: the same Story with `updatedAt` set to the time of the repair. */
-function renumberedText(env: RenumberEnv, file: PlannedRenumber): string {
+/**
+ * The text of the new file: the same Story with `updatedAt` set to the time of the repair. A Story of a `uid` group
+ * also gets the worktree and the branch of its old ID. See `followValues`.
+ */
+async function renumberedText(env: RenumberEnv, file: PlannedRenumber): Promise<string> {
   const doc = parseMarkdown(file.text, file.path);
+  const data = { ...doc.data, ...(await followValues(env, file, doc.data)) };
 
-  return serializeMarkdown({ data: orderStoryData(env.config, withUpdatedAt(doc.data, env.now)), body: doc.body });
+  return serializeMarkdown({ data: orderStoryData(env.config, withUpdatedAt(data, env.now)), body: doc.body });
+}
+
+/** Moves the attachments of a Story of a `uid` group. A Story of a group of the ROW-81 rules moves none. */
+function moveAttachments(env: RenumberEnv, file: PlannedRenumber, to: string): Promise<string[]> {
+  return file.storyUid === undefined
+    ? Promise.resolve([])
+    : moveStoryAttachments(env.paths, { from: file.id, to, storyUid: file.storyUid });
+}
+
+/** Moves the attachments. A failure removes the new file, so that the old file stays the only copy of the Story. */
+async function moveOrUndo(
+  env: RenumberEnv,
+  file: PlannedRenumber,
+  created: CreatedFile,
+): Promise<{ readonly moved: string[] } | { readonly error: string }> {
+  try {
+    return { moved: await moveAttachments(env, file, created.id) };
+  } catch (error) {
+    await removeStoryFile(env.paths, created.path);
+
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 /**
@@ -131,7 +164,7 @@ export async function renumberStory(
     return notRepaired(group, file, "The Story file changed after the plan");
   }
 
-  const created = await createTarget(env, file, renumberedText(env, file));
+  const created = await createTarget(env, file, await renumberedText(env, file));
 
   if (!created) {
     return notRepaired(group, file, "A file exists at the path of the next free number");
@@ -143,9 +176,16 @@ export async function renumberStory(
     return notRepaired(group, file, "The Story file changed during the repair");
   }
 
+  const moved = await moveOrUndo(env, file, created);
+
+  if ("error" in moved) {
+    return notRepaired(group, file, `The attachments of the Story cannot move: ${moved.error}`);
+  }
+
   await removeStoryFile(env.paths, file.path);
 
-  return {
-    change: { from: file.id, to: created.id, path: created.path, previousPath: file.path, keptPath: group.keep.path },
-  };
+  const stayed = await findStayedRefs(env.paths, env.config.projectKey, file.id);
+  const change = { from: file.id, to: created.id, path: created.path, previousPath: file.path };
+
+  return { change: { ...change, keptPath: group.keep.path, movedAttachments: moved.moved, stayed } };
 }
