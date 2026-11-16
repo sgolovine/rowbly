@@ -2,6 +2,7 @@
 title: Survive worker host disconnects and reconnects
 stage: IN_DEVELOPMENT
 position: 16
+uid: 46c3414b-e2fd-43af-95d5-cbfee713f080
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
