@@ -424,7 +424,7 @@ its rules, in the order of the check:
 ## Outbox of a remote worker
 
 A remote worker writes to a copy of the Project on its host. With `ROWBLY_OUTBOX`, the CLI records
-each Story write in the outbox folder of the host. The main machine applies the entries to the board
+each Story write and each attachment write in the outbox folder of the host. The main machine applies the entries to the board
 later. The folder is not in `.rowbly/`.
 
 ```
@@ -432,9 +432,10 @@ $ROWBLY_OUTBOX/
   outbox.jsonl    # one JSON entry for each line
   seq             # the last seq that the folder gave
   outbox.lock     # the flock of the writers
+  blobs/          # <sha256>.png: the PNG of each attachment.add entry
 ```
 
-Each line of `outbox.jsonl` has this shape:
+A field entry of `outbox.jsonl` has this shape. It has no `type` key:
 
 ```json
 {
@@ -457,6 +458,62 @@ Each line of `outbox.jsonl` has this shape:
   returns.
 - `opId` is a new unique ID for each entry.
 - The paths of a change are `title`, `description`, `stage`, `fields.<key>`, `tags` and `dependsOn`.
+
+An attachment entry has a `type` key. `addAttachment` writes an `attachment.add` entry, and
+`removeAttachment` writes an `attachment.remove` entry:
+
+```json
+{
+  "seq": 2,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "type": "attachment.add",
+  "attachment": { "id": "a<uuid>", "name": "shot.png", "type": "image/png", "size": 1234, "createdAt": "<iso>" },
+  "sha256": "<64 lowercase hex characters>"
+}
+```
+
+```json
+{
+  "seq": 3,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "type": "attachment.remove",
+  "id": "a<uuid>",
+  "sha256": "<64 lowercase hex characters>"
+}
+```
+
+- `sha256` is the lowercase hex SHA-256 of the PNG bytes.
+- For an add, the service writes the PNG and the manifest of the copy first. Then the recorder writes
+  the PNG to `blobs/<sha256>.png`. Then it adds the entry. Thus an entry never points to a missing
+  PNG. A crash after the PNG write leaves only a PNG without an entry. This is harmless.
+- The recorder writes a PNG through a temporary file in `blobs/`. It syncs the file, renames it and
+  syncs the folder. If `<sha256>.png` exists, the recorder keeps it, because it has the same bytes.
+  Thus two adds of the same bytes give one PNG and two entries.
+- For a remove, the service calculates `sha256` from the PNG of the copy. It adds the entry after the
+  remove succeeds.
+- `addAttachment` accepts an optional `id`. The main machine uses it when it applies an
+  `attachment.add` entry. An id that is not valid gives `VALIDATION`. An id that is in the manifest
+  gives `CONFLICT`. Both errors occur before the first write.
+- `updateStory` with `attachments` stays refused for a remote worker.
+- The main machine gets a PNG with `rowbly host blob <sha256>`. See
+  [cli.md](cli.md#worker-hosts).
+
+### Attachment cache of a host
+
+The `attachment-cache` service keeps PNG files by attachment id, in a folder that the caller gives.
+Each file is `<dir>/<attachment-id>.png`. The content of an attachment never changes, so a file never
+becomes old.
+
+- `putCachedAttachment` checks the id and the PNG bytes (10 MiB or less) first. It writes the file
+  atomically. If the id is in the cache, the first file stays.
+- `readCachedAttachment` gives the bytes. A missing file gives `NOT_FOUND`.
+- `hasCachedAttachment` tells if the id is in the cache. `missingCachedAttachments` gives the ids of
+  a list that are not in the cache.
+- An invalid id gives `VALIDATION`. The service refuses a symlink in place of the folder or a file.
 
 ## `~/.rowblyrc.json`
 

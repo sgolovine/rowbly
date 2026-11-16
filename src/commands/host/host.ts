@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
-import { run } from "../output/output.js";
+import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
+import { run, runBytes } from "../output/output.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
@@ -43,5 +44,12 @@ export function registerHostCommands(program: Command): void {
         (ctx) => removeHost({ id, purge: opts.purge === true }, ctx),
         (host) => `Removed worker host ${host.id}`,
       ),
+    );
+
+  // The main machine runs this command over SSH to get the PNG of an `attachment.add` entry.
+  program
+    .command("blob <sha256>", { hidden: true })
+    .action((sha256: string, _opts: unknown, command: Command) =>
+      runBytes(command, () => readOutboxBlob({ dir: process.env.ROWBLY_OUTBOX, sha256 })),
     );
 }
