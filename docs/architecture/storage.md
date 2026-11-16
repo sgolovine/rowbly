@@ -421,6 +421,43 @@ its rules, in the order of the check:
 - Only a person can select the dependency to remove. Use
   `rowbly story update <id> --remove-dependency <id>`.
 
+## Outbox of a remote worker
+
+A remote worker writes to a copy of the Project on its host. With `ROWBLY_OUTBOX`, the CLI records
+each Story write in the outbox folder of the host. The main machine applies the entries to the board
+later. The folder is not in `.rowbly/`.
+
+```
+$ROWBLY_OUTBOX/
+  outbox.jsonl    # one JSON entry for each line
+  seq             # the last seq that the folder gave
+  outbox.lock     # the flock of the writers
+```
+
+Each line of `outbox.jsonl` has this shape:
+
+```json
+{
+  "seq": 1,
+  "opId": "<uuid>",
+  "threadId": "<thread>",
+  "storyId": "ROW-01",
+  "changes": [{ "path": "stage", "before": "BACKLOG", "after": "DONE" }]
+}
+```
+
+- The service writes the Story file first. Then the recorder adds the entry. If the Story write fails,
+  the outbox gets no entry. If the process stops between the two writes, the entry is lost.
+- A writer holds an exclusive `flock` on `outbox.lock` while it adds an entry. Thus two writers do
+  not get the same `seq`.
+- `seq` starts at 1 and increases by 1 for each entry. The next `seq` is one more than the largest of
+  the `seq` file and the lines of `outbox.jsonl`. The `seq` file keeps the order after the host removes
+  the first lines.
+- The writer syncs `outbox.jsonl`, the `seq` file and the folder to the disk before the command
+  returns.
+- `opId` is a new unique ID for each entry.
+- The paths of a change are `title`, `description`, `stage`, `fields.<key>`, `tags` and `dependsOn`.
+
 ## `~/.rowblyrc.json`
 
 Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` and `host` services read

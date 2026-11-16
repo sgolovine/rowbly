@@ -26,6 +26,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: Rowbly has a new internal SSH transport for the connection from the main machine to remote worker hosts. No command uses it yet. (ROW-85)
 - Changed: The factory now starts, stops, cancels and steers each worker through one executor interface, so that a later version can run workers on a different host. The behavior of the factory does not change. (ROW-82)
 - Added: The new `rowbly host add <id> --ssh <target> --max-workers <n>`, `rowbly host list` and `rowbly host remove <id> [--purge]` commands record the remote worker hosts in the `hosts` key of `~/.rowblyrc.json`. `rowbly host remove` refuses to remove a host while a Thread of a known Project is active on it. (ROW-84)
+- Added: When the `ROWBLY_OUTBOX` and `ROWBLY_THREAD_ID` environment variables are set, each Story change that a `rowbly` command makes adds one line to `$ROWBLY_OUTBOX/outbox.jsonl`, and Rowbly refuses all other changes to the Project with a `CONFLICT` error. A later version uses this outbox to send the changes of remote workers to the main machine. (ROW-90)
 
 ### 0.18.0
 

@@ -15,6 +15,7 @@ import {
 } from "../attachment-files/attachment-files.js";
 import { clipboardFailure, readClipboardImage } from "../clipboard/clipboard.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { getStory, touchStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
@@ -109,6 +110,8 @@ async function sourceImage(input: AddAttachmentInput, ctx: ServiceContext): Prom
 
 /** Adds one PNG to a Story from a file, the clipboard or an image in memory. */
 export async function addAttachment(input: AddAttachmentInput, ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "add an attachment");
+
   const sources =
     Number(input.file !== undefined) + Number(input.fromClipboard === true) + Number(input.image !== undefined);
 
@@ -174,6 +177,8 @@ export async function openAttachment(input: { story: string; id: string }, ctx: 
 
 /** Removes an attachment. A failure restores the PNG and the index. */
 export async function removeAttachment(input: { story: string; id: string }, ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "remove an attachment");
+
   const { dir, records, path } = await selected(input.story, input.id, ctx);
   const temporary = `${path}.removed`;
 
