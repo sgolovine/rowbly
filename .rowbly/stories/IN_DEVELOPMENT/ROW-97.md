@@ -1,11 +1,11 @@
 ---
 title: Survive worker host disconnects and reconnects
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 16
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:29:38.904Z
+updatedAt: 2026-11-16T23:29:41.981Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
 pull_request: null
 ---
