@@ -1,8 +1,9 @@
 ---
 title: "Threads View: Add deep-link to story thread tab."
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 createdAt: 2026-11-16T16:30:22.455Z
-updatedAt: 2026-11-16T16:30:22.455Z
+updatedAt: 2026-11-16T16:30:24.052Z
 worktree: null
 pull_request: null
 ---
