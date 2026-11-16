@@ -1,8 +1,8 @@
 ---
 title: Sort stories by updated by
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 1
-updatedAt: 2026-11-16T20:04:24.857Z
+updatedAt: 2026-11-16T20:05:07.768Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-78
 pull_request: https://github.com/sgolovine/rowbly/pull/268
 ---
