@@ -11,12 +11,13 @@ const resources = {
   story: ["create", "update", "delete", "get", "search"],
   stage: ["create", "update", "delete", "get"],
   "custom-field": ["add", "update", "remove"],
+  tag: ["list", "add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
   factory: ["status", "run", "watchdog", "stop", "restart", "logs", "start", "configure", "check"],
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
-  thread: ["cancel", "resume", "log", "list", "show"],
+  thread: ["cancel", "resume", "steer", "log", "list", "show"],
 };
 
 describe("registerCommands", () => {
@@ -72,6 +73,7 @@ describe("registerCommands", () => {
       "story",
       "stage",
       "custom-field",
+      "tag",
       "spec",
       "skill",
       "factory",

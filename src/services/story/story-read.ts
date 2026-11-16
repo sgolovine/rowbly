@@ -21,10 +21,12 @@ import {
   type StoryFileName,
   sortStoryFiles,
   storyTimeOf,
+  tagsOf,
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { dependencyStories } from "./story-dependencies.js";
 import { fieldUpdates } from "./story-input.js";
+import { checkedTags } from "./story-tags.js";
 import type { SearchStoriesInput, Story, StoryDetails } from "./story-types.js";
 
 const INVALID_STORY_HINT = "Run `rowbly doctor` to find and fix problems in story files.";
@@ -68,6 +70,7 @@ export function toStory(config: ProjectConfig, file: StoryFile, position = 1): S
     stage: data.stage as string,
     position,
     dependsOn: dependsOnOf(data),
+    tags: tagsOf(data),
     createdAt: storyTimeOf(data, "createdAt"),
     updatedAt: storyTimeOf(data, "updatedAt"),
     description: body,
@@ -233,14 +236,21 @@ async function withAttachmentNames(
   return { story: { ...story, attachmentCount: attachments.length }, names: attachments.map((a) => a.name) };
 }
 
-/** Whether the story is in the stage of the filter and has each field value of the filter. */
-function matchesFilter(
-  story: Story,
-  stage: StageConfig | undefined,
-  fields: Readonly<Record<string, FieldValue>>,
-): boolean {
+/** The filter of a search, with the field values in the types of the fields. */
+interface SearchFilter {
+  readonly stage: StageConfig | undefined;
+  readonly fields: Readonly<Record<string, FieldValue>>;
+  readonly tags: readonly string[];
+}
+
+/** Whether the story is in the stage of the filter and has each field value and each tag of the filter. */
+function matchesFilter(story: Story, filter: SearchFilter): boolean {
+  const { stage, fields, tags } = filter;
+
   return (
-    (!stage || story.stage === stage.key) && Object.entries(fields).every(([key, value]) => story.fields[key] === value)
+    (!stage || story.stage === stage.key) &&
+    Object.entries(fields).every(([key, value]) => story.fields[key] === value) &&
+    tags.every((tag) => story.tags.includes(tag))
   );
 }
 
@@ -254,25 +264,22 @@ function matchesDependency(
   return dependency === undefined || isBlocked(stories, stages, story.id) === (dependency === "blocked");
 }
 
-/** Gives the field filter of a search as values of the field types. Throws when a field or a value is invalid. */
-function searchFilter(
-  config: ProjectConfig,
-  input: SearchStoriesInput,
-): { stage: StageConfig | undefined; fields: Record<string, FieldValue> } {
+/** Gives the filter of a search, with values of the field types. Throws when a field, a value or a tag is invalid. */
+function searchFilter(config: ProjectConfig, input: SearchStoriesInput): SearchFilter {
   const stage = input.stage === undefined ? undefined : lookupStage(config, input.stage);
   const stageIssues = input.stage === undefined ? [] : unknownStageIssues(config, input.stage, ["stage"]);
   const fields = fieldUpdates(config, input.fields ?? {});
 
   throwIfIssues("The search is invalid", [...stageIssues, ...fields.issues]);
 
-  return { stage, fields: fields.values };
+  return { stage, fields: fields.values, tags: checkedTags(config, input.tags ?? [], ["tags"]) };
 }
 
 /** Stories matching every filter given, in board order: by stage, then by position in the stage. With no filters, every story. */
 export async function searchStories(input: SearchStoriesInput = {}, ctx: ServiceContext = {}): Promise<Story[]> {
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
-  const { stage, fields } = searchFilter(config, input);
+  const filter = searchFilter(config, input);
 
   const words = (input.query ?? "").toLowerCase().split(/\s+/).filter(Boolean);
   const files = await readStoryFiles(paths);
@@ -280,8 +287,7 @@ export async function searchStories(input: SearchStoriesInput = {}, ctx: Service
   const positions = stagePositions(sorted);
   const stories = sorted.map((file) => toStory(config, file, positions.get(file.id)));
   const filtered = stories.filter(
-    (story) =>
-      matchesFilter(story, stage, fields) && matchesDependency(stories, config.stages, story, input.dependency),
+    (story) => matchesFilter(story, filter) && matchesDependency(stories, config.stages, story, input.dependency),
   );
   const owners = new Set(await attachmentOwners(paths));
   const found = await Promise.all(filtered.map((story) => withAttachmentNames(paths, owners, story)));

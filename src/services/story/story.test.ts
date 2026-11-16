@@ -35,6 +35,7 @@ describe("story", () => {
         stage: "DONE",
         position: 1,
         dependsOn: [],
+        tags: [],
         createdAt: story.createdAt,
         updatedAt: story.createdAt,
         description: "Body",

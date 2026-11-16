@@ -1,11 +1,12 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
-import { processCommands } from "../factory-control/factory-control.js";
+import { type FactoryCommand, processCommands } from "../factory-control/factory-control.js";
 import { acquireFactoryOwnership, newOwner } from "../factory-ownership/factory-ownership.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { useTestProject } from "../test-project/test-project.js";
+import { createThread } from "../thread/thread.js";
 import { runtimePaths } from "../workspace/workspace.js";
-import { dismissFactoryAttention, getFactoryStatus } from "./factory.js";
+import { dismissFactoryAttention, getFactoryStatus, sendFactoryCommand, steerThread } from "./factory.js";
 
 describe("factory status probes", () => {
   const project = useTestProject();
@@ -47,5 +48,59 @@ describe("factory attention dismiss", () => {
     await expect(dismissFactoryAttention("commit", {}, project.ctx)).rejects.toThrow("Factory is not running");
     await expect(dismissFactoryAttention("", {}, project.ctx)).rejects.toThrow("attention key");
     await expect(dismissFactoryAttention("k".repeat(129), {}, project.ctx)).rejects.toThrow("attention key");
+  });
+});
+
+describe("factory thread steer", () => {
+  const project = useTestProject();
+  async function liveOwner() {
+    await prepareRuntime(project.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const thread = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: project.paths.root, ownerToken: owner.token },
+      project.ctx,
+    );
+    return { owner, thread };
+  }
+  it("sends the trimmed message with the Thread and run IDs and resolves on the completed receipt", async () => {
+    const { owner, thread } = await liveOwner();
+    const execute = vi.fn(async (_command: FactoryCommand) => {});
+    const sent = steerThread(thread.id, "  Use the new API \n", { timeoutMs: 5000 }, project.ctx);
+    await vi.waitFor(async () => {
+      await processCommands(project.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "steer",
+          threadId: thread.id,
+          expectedRunId: thread.runs.at(-1)?.id,
+          message: "Use the new API",
+        }),
+      );
+    });
+    await expect(sent).resolves.toMatchObject({ status: "completed" });
+  });
+  it("gives the rejection message of the daemon as a ConflictError", async () => {
+    const { owner, thread } = await liveOwner();
+    const execute = vi.fn(async () => {
+      throw new Error("Worker is not working now");
+    });
+    const sent = sendFactoryCommand("steer", { threadId: thread.id, message: "Stop", timeoutMs: 5000 }, project.ctx);
+    const settled = sent.catch((error) => error);
+    await vi.waitFor(async () => {
+      await processCommands(project.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalled();
+    });
+    expect(await settled).toMatchObject({ code: "CONFLICT", message: "Worker is not working now" });
+  });
+  it("fails without a live daemon, and fails validation for an empty or long message", async () => {
+    await expect(steerThread("thread", "Stop", {}, project.ctx)).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Factory is not running",
+    });
+    await expect(steerThread("thread", "   ", {}, project.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(steerThread("thread", "a".repeat(4001), {}, project.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
   });
 });

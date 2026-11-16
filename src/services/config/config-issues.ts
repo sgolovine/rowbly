@@ -3,6 +3,7 @@ import {
   checkFieldOptions,
   checkProjectKey,
   checkStageKey,
+  checkTagValue,
   checkTimeZone,
   isSkillName,
 } from "./config-keys.js";
@@ -16,6 +17,8 @@ import {
   type Issue,
   SKILL_HARNESSES,
   type SkillHarness,
+  STORY_SIDEBAR_BEHAVIORS,
+  type StorySidebarBehavior,
 } from "./config-types.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -168,6 +171,42 @@ function fieldTypeIssues(field: Record<string, unknown>, path: Issue["path"]): I
   return checkFieldOptions(field.type as CustomFieldType, field.options as string[] | undefined, [...path, "options"]);
 }
 
+function tagsIssues(tags: unknown): Issue[] {
+  if (tags === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(tags)) {
+    return [{ path: ["tags"], message: "tags must be an array" }];
+  }
+
+  return (tags as unknown[]).flatMap((tag, index, all) => tagIssues(tag, index, all));
+}
+
+function tagIssues(tag: unknown, index: number, tags: readonly unknown[]): Issue[] {
+  const path = ["tags", index];
+
+  if (!isRecord(tag)) {
+    return [{ path, message: "A tag must be an object" }];
+  }
+
+  return [...tagValueIssues(tag.value, index, tags, path), ...labelIssues(tag.label, path)];
+}
+
+function tagValueIssues(value: unknown, index: number, tags: readonly unknown[], path: Issue["path"]): Issue[] {
+  const valuePath = [...path, "value"];
+
+  if (typeof value !== "string") {
+    return [{ path: valuePath, message: "value is required" }];
+  }
+
+  const duplicate = repeatsEarlier(tags, index, "value")
+    ? [{ path: valuePath, message: `Duplicate tag value "${value}"` }]
+    : [];
+
+  return [...checkTagValue(value, valuePath), ...duplicate];
+}
+
 function stagesIssues(stages: unknown): Issue[] {
   if (!Array.isArray(stages)) {
     return [{ path: ["stages"], message: "stages must be an array" }];
@@ -266,6 +305,12 @@ function displayOptionIssues(name: string, value: unknown): Issue[] {
       : [{ path: ["display", name], message: `${name} must be a time zone name` }];
   }
 
+  if (name === "storySidebar") {
+    return STORY_SIDEBAR_BEHAVIORS.includes(value as StorySidebarBehavior)
+      ? []
+      : [{ path: ["display", name], message: `${name} must be one of: ${STORY_SIDEBAR_BEHAVIORS.join(", ")}` }];
+  }
+
   if (typeof value !== "boolean") {
     return [{ path: ["display", name], message: `${name} must be true or false` }];
   }
@@ -290,6 +335,7 @@ export function configIssues(raw: unknown): Issue[] {
     ...projectNameIssues(raw.projectName),
     ...projectKeyIssues(raw.projectKey),
     ...customFieldsIssues(raw.customFields),
+    ...tagsIssues(raw.tags),
     ...stagesIssues(raw.stages),
     ...featuresIssues(raw.features),
     ...(raw.skills === undefined ? [] : skillIssues(raw.skills)),

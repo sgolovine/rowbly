@@ -187,15 +187,38 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   Thread in the Story sidebar and gets the focus. The form opens on its General tab.
   `openThreadStory` in `src/tui/shell/shell/shell-selection.ts` does this. When the Thread has no
   `storyId`, or the board does not have the Story, the Button does not show and `o` does nothing.
-- The Thread is read-only, and it is never dirty. A Story form with unsaved changes asks before a
+- A running worker Thread shows `ThreadSteerInput` (`screens/stories/thread-steer-input/`) under
+  the conversation. `m` or a click on the input gives it the focus. `enter` sends the text with
+  `steerThread`, and `esc` gives the focus back to the Thread. While the input has the focus, `tab`,
+  `o`, `esc` to the list and the conversation keys do not act. The Threads tab of a Story uses the
+  same component, with the focus value `steer` of the tab. See
+  [Steering input](native-factory/controls.md#steering-input).
+- The Thread is read-only, except for the steering input, and it is never dirty. A Story form with unsaved changes asks before a
   Thread replaces it (`discardStory` overlay).
 - In the Thread, `esc` gives the focus to the Thread list, and the Thread stays open. `tab` and
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
-  keys, `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
+  keys, `m` (`message`) for a running worker Thread, `ctrl+f` (`full screen`), `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
+- `ctrl+f` in the Thread shows the conversation over the whole terminal, in the same area as a
+  `FullScreenEditor`. `useFullScreenConversation` (`components/use-full-screen-conversation.tsx`)
+  opens a `FullScreenConversation` with `useMainOverlay()`. The border title is the title of the
+  Story sidebar, `<story-id> › <thread name>`. The footer shows the conversation keys and
+  `ctrl+f/esc` (`close`). The view is read-only. It starts at the newest entries, and it follows the
+  new entries while the Thread is `running`. The scroll keys, `f` and the mouse wheel operate as in
+  the small view.
+- `ctrl+f`, `esc` or a click on the `✕` closes the full-screen view. The Thread keeps the focus and
+  stays open. While the view is open, the panes below it take no keys and no wheel events.
+- In the Threads tab of a Story, `ctrl+f` opens the same view when the Thread region has the focus
+  and shows the conversation. Then `esc` closes only the view. The tab and the Modal stay open.
 - The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
   does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
   wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
+- The mouse wheel over the conversation of the Thread scrolls the conversation also when a different
+  pane has the focus. The wheel gives the focus to the Story sidebar, as the wheel over the Story list
+  gives the focus to the Story list. While an overlay or a confirmation covers the Story sidebar, the
+  wheel does not scroll the conversation and the focus does not move. `ThreadPane` gives
+  `wheel={clickable}` and `onWheelFocus` to its `ConversationView`. The keys of the conversation
+  operate only while the Thread has the focus.
 - `t` on a factory warning closes the Factory controls and opens the Thread in the Story sidebar
   (`openThread` of `OverlayHandlers`).
 
@@ -250,6 +273,14 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 | `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
 
+## Board load
+
+`useShellData` loads the board. Before it reads the Stories, it calls `repairDuplicateStoryIds`. This
+service gives the newer Story of each duplicate Story ID the next free number. The shell shows one info
+toast for each change, for example `ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast
+shows and the board loads. The repair runs again each time that `useStoryChanges` reloads the board.
+See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+
 ## Factory status
 
 The shell reads the factory status one time for all views (`useShellData`). `Shell` gives this
@@ -293,11 +324,27 @@ visible.
   sidebar also shows a Thread of the Factory view. See [The Factory view](#the-factory-view).
 - The top border shows `New Story` or `Edit <story-id>`, and a `✕` at its right end. The border is
   `accent` when the Story sidebar has the focus.
+- The top border also shows an expand button (`ExpandButton`) at the left of the `✕`: `⤢` when the
+  Story sidebar has the regular width, and `⤡` when it is expanded. A click on the button and
+  `ctrl+o` expand or collapse the Story sidebar. `ctrl+o` works in the Story list and in the Story
+  sidebar while the Story sidebar is open.
+- An expanded Story sidebar takes all the columns of the main area at the right of the Stage sidebar.
+  The Story list does not show. When the Stage sidebar is hidden (`ctrl+b`), the Story sidebar takes
+  the full width of the main area. The left edge does not drag while the Story sidebar is expanded.
+  The shell keeps the state in `storyExpanded` (`use-shell-state.ts`), and `shellFrame` gives the
+  sizes.
+- The `display.storySidebar` option of the config sets the state when the Story sidebar opens from
+  closed: `regular` (the default) opens it at the regular width, `expanded` opens it expanded, and
+  `remember` opens it in the last state that the user selected while Rowbly runs. A different Story
+  or Thread in an open Story sidebar keeps the current state. Settings › Display shows the option,
+  and `w` or a click on the value selects the next value.
 - `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the
   Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
-  it the focus.
+  it the focus. While the Story sidebar is expanded, `tab` and `shift+tab` do not go to the Story
+  list, and `esc` in the Stage sidebar gives the focus to the Story sidebar.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
-  form keeps its draft. In the Story list, `esc` closes the Story sidebar.
+  form keeps its draft. An expanded Story sidebar collapses before the Story list gets the focus. In
+  the Story list, `esc` closes the Story sidebar.
 - The mouse wheel over the Story list moves the cursor also when the Story sidebar has the focus. The
   wheel gives the focus to the Story list, and the Story sidebar stays open.
 - When the form has unsaved text or images, Rowbly asks before it closes the form or shows a
@@ -306,6 +353,8 @@ visible.
   `STORY_SIDEBAR_WIDTH` of the terminal width. The minimum is `STORY_SIDEBAR_MIN_WIDTH`, and the Story
   list keeps `MAIN_MIN_WIDTH`. The width stays until Rowbly quits.
 - Below `STACKED_BELOW_WIDTH`, the Story sidebar takes the full main area while it has the focus.
+  The Story sidebar also takes the full main area when the narrowest Stage sidebar, Story list and
+  Story sidebar do not fit. In this mode, the expand button does not show and `ctrl+o` does nothing.
 - `PaneBody` gives the form the contexts of a Modal body, so a `ConfirmDialog` of the form shows over
   the Story sidebar. The keys of the form go to the footer.
 
@@ -348,6 +397,38 @@ functions into the data that the components show.
   factory activity shows `waiting for ROW-01, ROW-02` in the activity slot, in `ink-muted`. The text
   shows a maximum of three IDs, then `+<count>`. If the row is narrow, the text is cut. When a worker
   is active, the slot shows `▶ <agent>`.
+
+## Story tags
+
+The TUI shows and changes the tags of the Project and the tags of each Story. The tag service
+(`src/services/tag/tag.ts`), `createStory` and `updateStory` give the rules. A component does not
+contain a tag rule. `src/tui/screens/stories/story-tag-view.ts` changes the tags into the data that
+the components show.
+
+- **The Tags section.** Settings has a Tags section in the Project group, after Custom Fields
+  (`TagsSection`). It shows each tag of `listTags` in config order, with its label and its value in
+  two columns. With no tags, it shows `No Tags. Press n to add one.`
+- **Add.** `n` or the `+ New Tag` Button opens `TagFormModal` with the `Label` and `Value` fields.
+  The save calls `addTag`. An error of the service shows under its field or as a toast, and the
+  Modal stays open.
+- **Edit.** `enter`, `e` or a click on a row opens `TagFormModal` with only the `Label` field. The
+  title shows the value, for example `Edit Tag › frontend`. The value cannot change. The save calls
+  `updateTag`.
+- **Remove.** `d` opens a destructive `ConfirmDialog`. The message tells that Rowbly also removes
+  the tag from each Story. The confirmation calls `removeTag`.
+- **Reload.** After each change, the section reads the tags again and calls `onChange()`. Then the
+  Story list and the Story forms show the new tags.
+- **The `Tags` field.** The new Story form and the General tab have a `Tags` field after
+  `Depends on`. It is a `multiselect` field. Its options are the tag values, and each option shows
+  the tag label. A Story value that is not a tag of the Project shows as its value, and the user can
+  remove it. When the Project has no tags, the field does not show.
+- **Save.** The new Story form gives the list to `createStory` as `tags`. The edit form gives the
+  full list to `updateStory` as `tags`, only when the list changes. An empty list removes the `tags`
+  key from the Story file.
+- **The tag slot.** A Story row with tags shows the labels of its tags after the title, in
+  `ink-muted`, in the order of the Story. A value that is not a tag of the Project shows as its
+  value. If the row is narrow, the tag slot is cut before the title. A Story without tags has no tag
+  slot.
 
 ## Worker model overrides
 

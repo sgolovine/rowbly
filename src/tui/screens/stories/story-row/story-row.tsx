@@ -29,7 +29,8 @@ function showsWaiting(
 }
 
 /**
- * One Story in the list: its key and title on the left, its Stage on the right. A blocked Story (with upstream
+ * One Story in the list: its key and title on the left, its Stage on the right. The labels of its tags follow the
+ * title in `inkMuted`, and they truncate before the title does. A blocked Story (with upstream
  * Stories in `waitingFor`) shows `⊘` before the other slots. A Story with factory `activity`
  * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. A blocked Story in a work Stage
  * without activity shows `waiting for` and the IDs there. `indented` moves the key and title two columns to the
@@ -40,6 +41,7 @@ export function StoryRow({
   activity,
   stage,
   waitingFor = [],
+  tagLabels = [],
   selected,
   clickable,
   indented = false,
@@ -52,6 +54,8 @@ export function StoryRow({
   stage: { name: string; category: StageCategory };
   /** The IDs of the upstream Stories that are not complete. */
   waitingFor?: readonly string[];
+  /** The labels of the tags of the Story, in the order of the Story. */
+  tagLabels?: readonly string[];
   selected: boolean;
   clickable: boolean;
   indented?: boolean;
@@ -65,6 +69,14 @@ export function StoryRow({
             <Text color={theme.accent}>{story.id}</Text> {story.title}
           </Text>
         </Box>
+        {tagLabels.length > 0 && (
+          // The large shrink factor makes the tags give up their room before the title does.
+          <Box flexShrink={100} paddingLeft={2}>
+            <Text color={theme.inkMuted} wrap="truncate-end">
+              {tagLabels.join(" · ")}
+            </Text>
+          </Box>
+        )}
         {waitingFor.length > 0 && (
           <Box flexShrink={0} paddingLeft={2}>
             <Text color={theme.inkMuted}>⊘</Text>

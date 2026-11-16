@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { compactThreads } from "../../../services/config/config.js";
+import { compactThreads, projectTags } from "../../../services/config/config.js";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Sidebar } from "../../components/index.js";
 import type { FactoryView } from "../../screens/threads/index.js";
@@ -24,7 +24,15 @@ import {
 } from "./shell-selection.js";
 import { ALL_STAGES, type Board, type ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
-import { discardStory, newStory, openOverlayThread, openThread, requestStoryPane } from "./story-pane.js";
+import {
+  discardStory,
+  leaveStoryPane,
+  newStory,
+  openOverlayThread,
+  openThread,
+  requestStoryPane,
+  toggleStoryExpanded,
+} from "./story-pane.js";
 
 /** The header: the Project Button, and the controls of an open Project. */
 export function headerProps(env: ShellEnv, factory: FactoryStatus | undefined): ComponentProps<typeof Header> {
@@ -131,6 +139,7 @@ function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
     list: {
       rows,
       activity: board.activity.stories,
+      tags: projectTags(board.project),
       cursor,
       clickable: idle,
       height: frame.listInnerHeight,
@@ -171,14 +180,17 @@ export function storySidebarProps(env: ShellEnv, frame: ShellFrame): StorySideba
     width: story.width,
     height: story.height,
     maxWidth: story.room,
-    onResize: story.mode === "beside" ? env.setStoryWidth : undefined,
+    // An expanded Story sidebar has no list beside it, so its edge does not drag.
+    onResize: story.mode === "beside" && !story.expanded ? env.setStoryWidth : undefined,
+    // A Story sidebar that covers the main area of a narrow terminal cannot expand.
+    expand: env.storyExpandable ? { expanded: story.expanded, onToggle: () => toggleStoryExpanded(env) } : undefined,
     shown: story.shown,
     focused: storyFocused,
     clickable: idle && story.shown,
     onFocus: () => env.setPane("story"),
     onClose: () => requestStoryPane(env, null),
-    onBack: () => env.setPane("stories"),
-    onTab: (step) => env.setPane(cyclePane(env.view, step)),
+    onBack: () => leaveStoryPane(env),
+    onTab: (step) => env.setPane(cyclePane(env.view, step, story.expanded)),
     onSaved: (saved) => showSavedStory(env, saved),
     onDeleted: (id) => afterDelete(env, id),
     onOpenStory: (opened) => openThreadStory(env, opened),

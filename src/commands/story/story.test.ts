@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addCustomField } from "../../services/custom-field/custom-field.js";
 import { createStory, getStory } from "../../services/story/story.js";
+import { addTag } from "../../services/tag/tag.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { runCli } from "../test-cli/test-cli.js";
 
@@ -98,7 +99,7 @@ describe("story commands", () => {
       await cli("story", "create", "--title", "First", "--description", "Some *text*", "--field", "points=5");
       const { createdAt } = await getStory({ id: "ROW-01" }, project.ctx);
       expect((await cli("story", "get", "ROW-01")).stdout).toBe(
-        `ROW-01  First\nStage: Backlog (BACKLOG)\nDepends on: none\nBlocks: none\nBlocked: no\nCreated: ${createdAt}\nUpdated: ${createdAt}\nPoints: 5\nOwner: —\n\nSome *text*`,
+        `ROW-01  First\nStage: Backlog (BACKLOG)\nDepends on: none\nBlocks: none\nBlocked: no\nTags: none\nCreated: ${createdAt}\nUpdated: ${createdAt}\nPoints: 5\nOwner: —\n\nSome *text*`,
       );
     });
 
@@ -231,7 +232,7 @@ describe("story commands", () => {
       await createStory({ title: "Open" }, ctx);
       await createStory({ title: "Down", dependsOn: ["ROW-01", "ROW-02"] }, ctx);
       expect((await cli("story", "get", "ROW-03")).stdout).toBe(
-        "ROW-03  Down\nStage: Backlog (BACKLOG)\nDepends on: ROW-01, ROW-02\nBlocks: none\nBlocked: yes (ROW-02)\nCreated: 2025-01-02T03:04:05.678Z\nUpdated: 2025-01-02T03:04:05.678Z",
+        "ROW-03  Down\nStage: Backlog (BACKLOG)\nDepends on: ROW-01, ROW-02\nBlocks: none\nBlocked: yes (ROW-02)\nTags: none\nCreated: 2025-01-02T03:04:05.678Z\nUpdated: 2025-01-02T03:04:05.678Z",
       );
       expect((await cli("story", "get", "ROW-01")).stdout).toContain("Depends on: none\nBlocks: ROW-03\nBlocked: no");
       const json = JSON.parse((await cli("--json", "story", "get", "ROW-03")).stdout);
@@ -280,10 +281,87 @@ describe("story commands", () => {
         "path",
         "position",
         "stage",
+        "tags",
         "title",
         "updatedAt",
         "waitingFor",
       ]);
+    });
+  });
+
+  describe("story tags", () => {
+    const addTags = async () => {
+      await addTag({ label: "Front end", value: "frontend" }, project.ctx);
+      await addTag({ label: "Back end", value: "backend" }, project.ctx);
+      await addTag({ label: "Docs", value: "docs" }, project.ctx);
+    };
+
+    it("story create --tag saves each value one time", async () => {
+      await addTags();
+      const result = await cli(
+        "story",
+        "create",
+        "--title",
+        "A",
+        "--tag",
+        "frontend",
+        "--tag",
+        "backend",
+        "--tag",
+        "frontend",
+      );
+      expect(result.exitCode).toBe(0);
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).tags).toEqual(["frontend", "backend"]);
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).toContain("tags:\n  - frontend\n  - backend\n");
+    });
+
+    it("story update --tag replaces the list, and --add-tag and --remove-tag change it", async () => {
+      await addTags();
+      await cli("story", "create", "--title", "A", "--tag", "frontend");
+      await cli("story", "update", "ROW-01", "--tag", "docs", "--tag", "backend");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).tags).toEqual(["docs", "backend"]);
+      await cli("story", "update", "ROW-01", "--add-tag", "frontend", "--remove-tag", "docs");
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).tags).toEqual(["backend", "frontend"]);
+      await cli("story", "update", "ROW-01", "--tag", "");
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).not.toContain("tags");
+    });
+
+    it("fails with a validation error for an unknown value or --tag with --add-tag or --remove-tag", async () => {
+      await addTags();
+      await cli("story", "create", "--title", "A");
+      for (const args of [
+        ["story", "create", "--title", "B", "--tag", "nope"],
+        ["story", "update", "ROW-01", "--add-tag", "nope"],
+        ["story", "update", "ROW-01", "--tag", "docs", "--add-tag", "backend"],
+        ["story", "update", "ROW-01", "--tag", "docs", "--remove-tag", "backend"],
+      ]) {
+        const result = await cli("--json", ...args);
+        expect(result.exitCode).toBe(1);
+        expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+      }
+      expect((await getStory({ id: "ROW-01" }, project.ctx)).tags).toEqual([]);
+    });
+
+    it("story get shows the tags, and --json gives the list", async () => {
+      await addTags();
+      await cli("story", "create", "--title", "A", "--tag", "docs");
+      await cli("story", "create", "--title", "B");
+      expect((await cli("story", "get", "ROW-01")).stdout).toContain("\nTags: docs\n");
+      expect(JSON.parse((await cli("--json", "story", "get", "ROW-01")).stdout).tags).toEqual(["docs"]);
+      expect(JSON.parse((await cli("--json", "story", "get", "ROW-02")).stdout).tags).toEqual([]);
+    });
+
+    it("story search --tag gives only the stories that have all of the tags", async () => {
+      await addTags();
+      await cli("story", "create", "--title", "A", "--tag", "frontend");
+      await cli("story", "create", "--title", "B", "--tag", "frontend", "--tag", "backend");
+      await cli("story", "create", "--title", "C");
+      const search = async (...args: string[]) =>
+        JSON.parse((await cli("--json", "story", "search", ...args)).stdout)
+          .map((story: { id: string }) => story.id)
+          .sort();
+      expect(await search("--tag", "frontend")).toEqual(["ROW-01", "ROW-02"]);
+      expect(await search("--tag", "frontend", "--tag", "backend")).toEqual(["ROW-02"]);
     });
   });
 });

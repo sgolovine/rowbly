@@ -16,7 +16,9 @@ import {
   sortStoryFiles,
   storyPath,
   storyTimeOf,
+  tagsOf,
   withDependsOn,
+  withTags,
   withUpdatedAt,
   writeStoryFile,
 } from "./story-files.js";
@@ -66,6 +68,31 @@ describe("orderStoryData", () => {
       "updatedAt",
       "a",
     ]);
+  });
+});
+
+describe("tags", () => {
+  it("puts tags after dependsOn and before the times and the configured fields", () => {
+    const data = { a: "a", createdAt: "c", tags: ["docs"], dependsOn: ["ROW-01"], title: "T", stage: "BACKLOG" };
+    expect(Object.keys(orderStoryData(CONFIG, data))).toEqual([
+      "title",
+      "stage",
+      "dependsOn",
+      "tags",
+      "createdAt",
+      "a",
+    ]);
+  });
+
+  it("tagsOf reads the list, ignores items that are not strings, and gives [] for a bad value", () => {
+    expect(tagsOf({ tags: ["docs", 2, "frontend"] })).toEqual(["docs", "frontend"]);
+    expect(tagsOf({})).toEqual([]);
+    expect(tagsOf({ tags: "docs" })).toEqual([]);
+  });
+
+  it("withTags sets the list and removes the key for an empty list", () => {
+    expect(withTags({ title: "T" }, ["docs"])).toEqual({ title: "T", tags: ["docs"] });
+    expect(withTags({ title: "T", tags: ["docs"] }, [])).toEqual({ title: "T" });
   });
 });
 

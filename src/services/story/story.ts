@@ -17,6 +17,7 @@ import {
   saveStoryFile,
   storyHomePath,
   withDependsOn,
+  withTags,
   withUpdatedAt,
   writeStoryFile,
 } from "../story-files/story-files.js";
@@ -24,6 +25,7 @@ import { findProject, type ProjectPaths, type ServiceContext } from "../workspac
 import { changedDependsOn, checkedDependsOn, removeDependencies } from "./story-dependencies.js";
 import { fieldUpdates, titleIssues } from "./story-input.js";
 import { countAttachments, findStoryFile, getStory, positionIn, toStory } from "./story-read.js";
+import { checkedTags, updatedTags } from "./story-tags.js";
 import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
 export { getStory, getStoryDetails, searchStories } from "./story-read.js";
@@ -53,8 +55,9 @@ function newStoryData(config: ProjectConfig, input: CreateStoryInput, now: Date)
   throwIfIssues("The story is invalid", [...stageIssues, ...titleIssues(input.title), ...fields.issues]);
 
   const time = now.toISOString();
+  const data = { title: input.title.trim(), stage: stage?.key, createdAt: time, updatedAt: time };
 
-  return { title: input.title.trim(), stage: stage?.key, createdAt: time, updatedAt: time, ...empty, ...fields.values };
+  return { ...withTags(data, checkedTags(config, input.tags ?? [], ["tags"])), ...empty, ...fields.values };
 }
 
 /** Writes the file of a new story. A failure removes the file, so that no half story stays. */
@@ -166,7 +169,7 @@ function updatedStoryData(
     ...fields.values,
   };
 
-  return updatedDependsOn(config, files, file, data, input);
+  return updatedTags(config, updatedDependsOn(config, files, file, data, input), input);
 }
 
 /** The story file with `updatedAt` set to `now`. */

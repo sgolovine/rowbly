@@ -12,6 +12,8 @@ export interface Story {
   position: number;
   /** The IDs of the upstream Stories, in the saved order. `[]` when the story has no dependencies. */
   dependsOn: string[];
+  /** The values of the tags of the story, in the saved order. `[]` when the story has no tags. */
+  tags: string[];
   /** The ISO 8601 UTC time when the story was created. `null` when the file has no valid value. */
   createdAt: string | null;
   /** The ISO 8601 UTC time of the last change of the story. `null` when the file has no valid value. */
@@ -40,6 +42,8 @@ export interface CreateStoryInput {
   fields?: FieldInput;
   /** The IDs of the upstream Stories. `row-1` and `1` are saved as `ROW-01`. */
   dependsOn?: readonly string[];
+  /** The tag values. Each value must be a tag of the project. */
+  tags?: readonly string[];
 }
 
 export interface UpdateStoryInput {
@@ -56,6 +60,12 @@ export interface UpdateStoryInput {
   addDependsOn?: readonly string[];
   /** Upstream Stories to remove from the old list. Not together with `dependsOn`. */
   removeDependsOn?: readonly string[];
+  /** Replaces the list of tag values. `[]` removes all of them. `undefined` keeps the old list. */
+  tags?: readonly string[];
+  /** Tag values to add to the old list. Not together with `tags`. */
+  addTags?: readonly string[];
+  /** Tag values to remove from the old list. Not together with `tags`. */
+  removeTags?: readonly string[];
 }
 
 /** A Story with its dependency state. */
@@ -80,4 +90,6 @@ export interface SearchStoriesInput {
   fields?: FieldInput;
   /** Only blocked Stories, or only ready Stories. */
   dependency?: "blocked" | "ready";
+  /** Only Stories that have all of these tag values. */
+  tags?: readonly string[];
 }

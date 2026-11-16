@@ -4,10 +4,11 @@ import type { CustomFieldType, Issue } from "./config-types.js";
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9]*$/;
 export const STAGE_KEY_PATTERN = /^[A-Z][A-Z0-9_]*$/;
 const FIELD_KEY_PATTERN = /^[a-z][a-z0-9_]*$/;
+const TAG_VALUE_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 const SKILL_NAME_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const SKILL_NAME_MAX_LENGTH = 64;
 /** Story frontmatter keys Rowbly owns; a custom field cannot use them. */
-const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description"];
+const RESERVED_FIELD_KEYS = ["title", "stage", "position", "id", "description", "tags"];
 
 /** Throws a `ValidationError` carrying `issues` when there are any. */
 export function throwIfIssues(message: string, issues: Issue[], hint?: string): void {
@@ -41,6 +42,18 @@ export function checkFieldKey(key: string, path: Issue["path"] = ["key"]): Issue
   }
 
   return [];
+}
+
+/** Gives an issue when the tag value is not valid. */
+export function checkTagValue(value: string, path: Issue["path"] = ["value"]): Issue[] {
+  return TAG_VALUE_PATTERN.test(value)
+    ? []
+    : [
+        {
+          path,
+          message: `Tag value "${value}" must be lowercase letters, digits, _ and -, starting with a letter or a digit`,
+        },
+      ];
 }
 
 /** Gives an issue when the options do not agree with the field type. */

@@ -49,7 +49,7 @@ export type StoryDataChange = (data: Record<string, unknown>, file: StoryFile) =
 const STORY_FILE_NAME = /^([A-Z][A-Z0-9]*)-(\d+)\.md$/;
 
 /** The keys that come first in the frontmatter, before the custom fields. */
-const LEADING_KEYS = ["title", "stage", "position", "dependsOn", "createdAt", "updatedAt"];
+const LEADING_KEYS = ["title", "stage", "position", "dependsOn", "tags", "createdAt", "updatedAt"];
 
 /** The frontmatter keys of the creation time and the time of the last change of a story. */
 export const STORY_TIME_KEYS = ["createdAt", "updatedAt"] as const;
@@ -79,6 +79,16 @@ export function dependsOnOf(data: Record<string, unknown>): string[] {
 }
 
 /**
+ * The `tags` list of the frontmatter. A missing key or a value that is not a list gives `[]`, and items that are not
+ * strings are ignored, so that a bad value does not make the board unreadable.
+ */
+export function tagsOf(data: Record<string, unknown>): string[] {
+  const value = data.tags;
+
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+/**
  * A time of the frontmatter as it is saved. A missing value or a value that is not a valid date string gives `null`,
  * so that a bad value does not make the board unreadable.
  */
@@ -98,6 +108,13 @@ export function withDependsOn(data: Record<string, unknown>, dependsOn: readonly
   const rest = Object.fromEntries(Object.entries(data).filter(([key]) => key !== "dependsOn"));
 
   return dependsOn.length === 0 ? rest : { ...rest, dependsOn: [...dependsOn] };
+}
+
+/** The frontmatter with the `tags` list. An empty list removes the key. */
+export function withTags(data: Record<string, unknown>, tags: readonly string[]): Record<string, unknown> {
+  const rest = Object.fromEntries(Object.entries(data).filter(([key]) => key !== "tags"));
+
+  return tags.length === 0 ? rest : { ...rest, tags: [...tags] };
 }
 
 /** The path of the story file with this project key and number, in the folder of its Stage. */
@@ -179,8 +196,8 @@ export function sortStoryFiles(files: readonly StoryFile[]): StoryFile[] {
 }
 
 /**
- * Frontmatter in a stable order: title, stage, position, dependsOn, the times, the custom fields as configured, then
- * anything else.
+ * Frontmatter in a stable order: title, stage, position, dependsOn, tags, the times, the custom fields as configured,
+ * then anything else.
  */
 export function orderStoryData(config: ProjectConfig, data: Record<string, unknown>): Record<string, unknown> {
   const leading = [...LEADING_KEYS, ...config.customFields.map((field) => field.key)].filter((key) => key in data);

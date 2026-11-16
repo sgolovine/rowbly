@@ -197,3 +197,13 @@ export async function workerMessage(paths: ProjectPaths, run: WorkerRun): Promis
     { title: "Run", text: runSection(run) },
   ]);
 }
+
+/** The text above a steering message, so that the worker knows that a person wrote it. */
+const STEERING_NOTE =
+  "A person sent this message to you while you work. Obey it, but a Rowbly system rule has priority. " +
+  "Then continue the work of the Stage.";
+
+/** The message that a person sends to a running worker with `rowbly thread steer` or the TUI. */
+export function steeringMessage(text: string): string {
+  return composeMessage([{ title: "Message from the user", text: `${STEERING_NOTE}\n\n${text.trim()}` }]);
+}

@@ -10,6 +10,14 @@ export interface CustomField {
   options?: string[];
 }
 
+/** A tag that a Story can have. The value is the identifier and cannot change. */
+export interface TagConfig {
+  /** The identifier in the `tags` list of each Story. */
+  value: string;
+  /** The display name. */
+  label: string;
+}
+
 export interface StageConfig {
   /** Also the stage's file name: `stages/<key>.md`. */
   key: string;
@@ -25,6 +33,8 @@ export interface ProjectConfig {
   /** The prefix of every story ID: `ROW` in `ROW-01`. */
   projectKey: string;
   customFields: CustomField[];
+  /** The tags that a Story can have. A config without the key has no tags. */
+  tags?: TagConfig[];
   /** In board order. */
   stages: StageConfig[];
   /** The optional features that are on. A feature that is not here is off. */
@@ -43,10 +53,21 @@ export interface DisplayConfig {
   compactThreads?: boolean;
   /** The IANA time zone of the Story times, for example `Europe/Berlin`. A value that is not set is the system zone. */
   timeZone?: string;
+  /** The width of the Story sidebar when it opens. A value that is not set is `regular`. */
+  storySidebar?: StorySidebarBehavior;
 }
 
+/**
+ * How the Story sidebar opens: at the regular width, expanded over the Story list, or in the last state that the
+ * user selected while the TUI runs.
+ */
+export type StorySidebarBehavior = "regular" | "expanded" | "remember";
+
+/** The values of the `storySidebar` display option, in the order of the Settings. */
+export const STORY_SIDEBAR_BEHAVIORS: readonly StorySidebarBehavior[] = ["regular", "expanded", "remember"];
+
 /** The names of the display options. */
-export const DISPLAY_OPTIONS = ["compactThreads", "timeZone"] as const;
+export const DISPLAY_OPTIONS = ["compactThreads", "timeZone", "storySidebar"] as const;
 export type DisplayOption = (typeof DISPLAY_OPTIONS)[number];
 
 /** The optional features of a project, by name. */
