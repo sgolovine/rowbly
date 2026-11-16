@@ -7,10 +7,13 @@ import { updateStage } from "../stage/stage.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createStory, deleteStory, getStory, searchStories, updateStory } from "./story.js";
 
-/** The text of a story file without the times, for the tests that do not examine the times. */
+/** The text of a story file without the times and the uid, for the tests that do not examine them. */
 function withoutTimes(text: string): string {
-  return text.replace(/^(createdAt|updatedAt): .*\n/gm, "");
+  return text.replace(/^(uid|createdAt|updatedAt): .*\n/gm, "");
 }
+
+/** A lower-case UUID v4. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 describe("story", () => {
   const project = useTestProject();
@@ -31,6 +34,7 @@ describe("story", () => {
         attachmentCount: 0,
         id: "ROW-01",
         number: 1,
+        uid: story.uid,
         title: "First",
         stage: "DONE",
         position: 1,
@@ -42,6 +46,7 @@ describe("story", () => {
         fields: { points: null, priority: null, owner: null },
         path: join(project.paths.storiesDir, "DONE", "ROW-01.md"),
       });
+      expect(story.uid).toMatch(UUID);
       expect(story.createdAt).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
       expect(await readUntimed("stories/DONE/ROW-01.md")).toBe(
         "---\ntitle: First\nstage: DONE\npoints: null\npriority: null\nowner: null\n---\n\nBody\n",

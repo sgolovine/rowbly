@@ -168,6 +168,7 @@ A Story record has this shape:
 {
   "id": "APP-01",
   "number": 1,
+  "uid": "0b7c6f3e-2d4a-4f1e-9c8b-5a6d7e8f9a0b",
   "title": "Login page",
   "stage": "BACKLOG",
   "position": 1,
@@ -182,6 +183,9 @@ A Story record has this shape:
 ```
 
 - **IDs.** `APP-01`, `app-1` and `1` all select the same Story. The prefix must be the key of the Project.
+- **uid.** `uid` is the permanent identity of the Story, a UUID. Rowbly writes it when it creates the Story.
+  It does not change when the number of the Story changes. You cannot set or change it. An older Story can
+  have no `uid`. Then `story get` does not give the key, and `doctor --fix` adds a `uid`.
 - **New Stories.** A new Story goes first in its Stage. Without `--stage`, it goes in the first enabled Stage.
 - **Moves.** A Story that changes Stage goes first in the new Stage.
 - **Positions.** The Stories of a Stage are in the order of `updatedAt`, the most recent first. `position` is the
@@ -244,7 +248,7 @@ A Stage record has this shape:
 | `rowbly custom-field remove <key>`                                                        | Custom field |
 
 Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `position`, `id`,
-`description` and `tags` are reserved.
+`description`, `tags` and `uid` are reserved.
 
 | Type      | Value for `--field <key>=<value>`                       |
 | --------- | ------------------------------------------------------- |
@@ -506,7 +510,7 @@ Read these files if a command does not give the data. Users can edit these files
   prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
   prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
   prompts/WORKER.md    # the Worker prompt, for all workers
-  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, dependsOn, tags, createdAt, updatedAt, one key for each custom field
+  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, uid, dependsOn, tags, createdAt, updatedAt, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
 ```
@@ -515,6 +519,7 @@ Read these files if a command does not give the data. Users can edit these files
 ---
 title: Login page
 stage: BACKLOG
+uid: 0b7c6f3e-2d4a-4f1e-9c8b-5a6d7e8f9a0b
 createdAt: 2025-01-02T03:04:05.678Z
 updatedAt: 2025-01-03T10:00:00.000Z
 priority: null
@@ -569,6 +574,8 @@ One invalid Story file makes `story search` fail for the full Project.
 | Story has a tag value that is not in the config, or a `tags` value that is not a list | Removes the bad values |
 | Spec has no title, a wrong `stories` value, or a link to a Story that is deleted | Repairs it     |
 | Story has no title or has an unknown Stage                                       | No repair      |
+| Story has no `uid` (warning)                                                     | Adds a new `uid` |
+| Story has a `uid` that is not a UUID                                             | No repair      |
 | Story file has a bad name, a wrong Project key or a number that another file has | No repair      |
 | File has invalid frontmatter, or `rowbly.config.json` is invalid                 | No repair      |
 | Installed skill is missing, and the Rowbly package has the skill                 | Repairs it     |

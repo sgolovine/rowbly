@@ -36,6 +36,12 @@ describe("customField", () => {
       await expect(addCustomField({ label: "Tags", type: "string" }, project.ctx)).rejects.toBeInstanceOf(
         ValidationError,
       );
+      await expect(addCustomField({ label: "UID", type: "string" }, project.ctx)).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
+      await expect(addCustomField({ label: "X", key: "uid", type: "string" }, project.ctx)).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
       await expect(addCustomField({ label: "X", type: "nope" as "string" }, project.ctx)).rejects.toBeInstanceOf(
         ValidationError,
       );
