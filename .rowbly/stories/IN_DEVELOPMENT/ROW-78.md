@@ -1,8 +1,8 @@
 ---
 title: Sort stories by updated by
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 2
-updatedAt: 2026-11-16T19:52:35.287Z
+updatedAt: 2026-11-16T19:52:38.883Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-78
 pull_request: null
 ---
