@@ -1,9 +1,9 @@
 ---
 title: Better offline handling
-stage: IN_REFINEMENT
-position: 1
+stage: IN_DEVELOPMENT
+position: 2
 createdAt: 2026-11-16T16:32:19.285Z
-updatedAt: 2026-11-16T16:41:55.823Z
+updatedAt: 2026-11-16T16:42:01.207Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-71
 pull_request: null
 ---
