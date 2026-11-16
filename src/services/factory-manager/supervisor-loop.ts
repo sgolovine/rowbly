@@ -23,6 +23,7 @@ import {
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { resumeNetworkThreads } from "./network-resume.js";
+import { syncRemoteHosts } from "./remote-dispatch.js";
 import { failureText, runSideSteps, runStep } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
@@ -156,8 +157,13 @@ async function superviseOnce(manager: Manager): Promise<void> {
   await serial(manager, () => persistStatus(manager));
 }
 
-/** Writes the current policy decisions to the factory state, and gives them back. */
-export function reconcilePolicy(manager: Manager) {
+/**
+ * Applies the outbox of the worker hosts with active remote Threads, then writes the current policy decisions to the
+ * factory state, and gives them back. The sync runs before the lifecycle queue, because the apply uses the queue.
+ */
+export async function reconcilePolicy(manager: Manager) {
+  await syncRemoteHosts(manager);
+
   return serial(manager, async () => {
     const policy = await scan(manager);
 

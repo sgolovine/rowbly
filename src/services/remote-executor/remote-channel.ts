@@ -1,0 +1,106 @@
+// The `host attach` channel of each worker host. One channel serves all active runs of the host.
+
+import type { HostReceipt } from "../host-agent/host-agent-control.js";
+import type { HostRunState } from "../host-agent/host-run-state.js";
+import { openHostChannel } from "../host-transport/host-handshake.js";
+import { withEntry, withoutEntry } from "../store/store.js";
+import { type RunHooks, takeReceipt, takeRunFrame } from "./remote-run.js";
+import type { HostConnection, HostLink, RemoteEnv, RemoteRun } from "./remote-types.js";
+
+/** A frame of the channel after the hello frame. */
+interface ChannelFrame {
+  readonly type?: unknown;
+  readonly run?: HostRunState;
+  readonly receipt?: HostReceipt;
+}
+
+/** The active runs of a host. */
+export function hostRuns(env: RemoteEnv, host: string): RemoteRun[] {
+  return [...env.state.current.runs.values()].filter((run) => run.host === host);
+}
+
+/** Gives each frame to the run of its Thread or of its command. A frame of a different Thread is ignored. */
+function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unknown): void {
+  const frame = (value ?? {}) as ChannelFrame;
+
+  if (frame.type === "run" && frame.run) {
+    const run = env.state.current.runs.get(frame.run.threadId);
+
+    if (run?.host === host) {
+      takeRunFrame(run, frame.run, hooks);
+    }
+
+    return;
+  }
+
+  if (frame.type === "receipt" && frame.receipt) {
+    const id = frame.receipt.id;
+    const run = hostRuns(env, host).find((candidate) => candidate.store.current.commandId === id);
+
+    if (run) {
+      takeReceipt(run, frame.receipt);
+    }
+  }
+}
+
+/** Records that the channel closed. A later launch opens a new channel. The runs of the host wait. */
+function markClosed(env: RemoteEnv, host: string, closed: AbortController): void {
+  closed.abort();
+  env.state.update((state) => ({
+    links: state.links.get(host)?.closed === closed ? withoutEntry(state.links, host) : state.links,
+  }));
+}
+
+/** True when the host has an open channel, or a channel that opens now. */
+export function linkOpen(env: RemoteEnv, host: string): boolean {
+  const link = env.state.current.links.get(host);
+
+  return !!link && !link.closed.signal.aborted;
+}
+
+/** Opens the channel of the host when it has none. The host must send a hello frame with the same versions. */
+export async function ensureLink(
+  env: RemoteEnv,
+  host: string,
+  connection: HostConnection,
+  hooks: RunHooks,
+): Promise<void> {
+  const current = env.state.current.links.get(host);
+
+  if (current && !current.closed.signal.aborted) {
+    await current.opened;
+    return;
+  }
+
+  const closed = new AbortController();
+  const opened = openHostChannel(
+    connection.transport,
+    [connection.rowbly, "host", "attach", env.input.projectId],
+    {
+      onFrame: (frame) => dispatchFrame(env, host, hooks, frame),
+      onClose: () => markClosed(env, host, closed),
+    },
+    env.input.helloTimeoutMs === undefined ? {} : { helloTimeoutMs: env.input.helloTimeoutMs },
+  );
+  const link: HostLink = { opened, closed };
+
+  env.state.update((state) => ({ links: withEntry(state.links, host, link) }));
+  opened.catch(() => markClosed(env, host, closed));
+
+  await opened;
+}
+
+/** Closes the channel of the host when the host has no active run. */
+export function closeIdleLink(env: RemoteEnv, host: string): void {
+  const link = env.state.current.links.get(host);
+
+  if (!link || hostRuns(env, host).length > 0) {
+    return;
+  }
+
+  env.state.update((state) => ({ links: withoutEntry(state.links, host) }));
+  link.opened.then(
+    (channel) => channel.close(),
+    () => undefined,
+  );
+}

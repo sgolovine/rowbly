@@ -1,4 +1,5 @@
 import { stat } from "node:fs/promises";
+import { RemoteRunError } from "../remote-executor/run-frames.js";
 import type { Story } from "../story/story.js";
 import type { ThreadRecord } from "../thread/thread.js";
 import { isConnectivityError } from "./connectivity.js";
@@ -20,7 +21,8 @@ interface FailureFacts {
 
 /**
  * Gives the Thread error of a failed worker. A connectivity error gives the class `transient` and the code
- * `NETWORK`, so that the manager can resume the Thread when the pause of its provider ends.
+ * `NETWORK`, so that the manager can resume the Thread when the pause of its provider ends. A failure on a worker host
+ * keeps the error code of the host.
  */
 export function workerFailure(error: unknown, facts: FailureFacts): NonNullable<ThreadRecord["error"]> {
   const message = (error instanceof Error ? error.message : "Worker failed").slice(0, 1000);
@@ -29,7 +31,9 @@ export function workerFailure(error: unknown, facts: FailureFacts): NonNullable<
     return { class: "transient", code: NETWORK_ERROR_CODE, message, retryAt: facts.retryAt };
   }
 
-  return { class: facts.launched ? "unknown" : "launch", code: "WORKER_FAILED", message };
+  const code = error instanceof RemoteRunError ? error.code : "WORKER_FAILED";
+
+  return { class: facts.launched ? "unknown" : "launch", code, message };
 }
 
 /** Tells if a Thread can resume with a new run for the Story in its current Stage. */
