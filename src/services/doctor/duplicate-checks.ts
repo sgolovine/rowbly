@@ -24,12 +24,37 @@ export interface DuplicateRepair {
   readonly planned: ReadonlyMap<string, PlannedFix | undefined>;
 }
 
+function attemptsText(count: number): string[] {
+  return count > 0 ? [`${count} ${count === 1 ? "attempt" : "attempts"} without storyUid`] : [];
+}
+
+/** The references to the old ID that stayed with the Story that keeps the ID, as one sentence, or `""`. */
+function stayedText(run: DoctorRun, change: StoryRenumber): string {
+  const { stayed } = change;
+  const refs = [
+    ...stayed.dependents.map((path) => `${rel(run, path)} (dependsOn)`),
+    ...stayed.specs.map((path) => `${rel(run, path)} (Spec link)`),
+    ...stayed.attachments.map((name) => `attachment ${name}`),
+    ...attemptsText(stayed.attempts),
+  ];
+
+  return refs.length > 0 ? `. These references stayed with ${change.from}: ${refs.join(", ")}` : "";
+}
+
+function movedText(change: StoryRenumber): string {
+  const count = change.movedAttachments.length;
+
+  return count > 0 ? `. ${count} ${count === 1 ? "attachment" : "attachments"} moved to ${change.to}` : "";
+}
+
 function fixedIssue(run: DoctorRun, change: StoryRenumber): DoctorIssue {
+  const kept = `Give it the next free number. ${rel(run, change.keptPath)} keeps ${change.from}`;
+
   return {
     severity: "error",
     message: renumberNotice(change),
     file: rel(run, change.previousPath),
-    fix: `Give it the next free number. ${rel(run, change.keptPath)} keeps ${change.from}`,
+    fix: `${kept}${movedText(change)}${stayedText(run, change)}`,
     fixed: true,
   };
 }

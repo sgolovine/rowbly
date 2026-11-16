@@ -155,6 +155,41 @@ describe("doctor", () => {
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
+  it("--fix gives a new number to a Story with a uid and factory state, and reports the references that stayed", async () => {
+    const older =
+      "---\ntitle: Older\nstage: DONE\nuid: 625fd297-49d9-4880-8631-43cfd589bd8f\ncreatedAt: 2026-01-01T00:00:00.000Z\n---\n\nOlder.\n";
+    const newer =
+      "---\ntitle: Newer\nstage: BACKLOG\nuid: 236c7642-a79e-4b1b-8154-eb4712bd4068\ncreatedAt: 2026-02-01T00:00:00.000Z\n---\n\nNewer.\n";
+    const attempts = [
+      { story: "ROW-77", stage: "DONE", workerId: "worker-1", status: "completed" },
+      { story: "ROW-77", stage: "BACKLOG", workerId: "worker-2", status: "completed" },
+    ];
+    await project.write("stories/DONE/ROW-77.md", older);
+    await project.write("stories/BACKLOG/ROW-77.md", newer);
+    await project.write(
+      "stories/DONE/ROW-78.md",
+      "---\ntitle: Last\nstage: DONE\nuid: d55b3060-7c2a-4a26-8634-7d6edb789f6b\ndependsOn:\n  - ROW-77\n---\n",
+    );
+    await project.write("specs/design.md", "---\ntitle: Design\nstories: [ROW-77]\n---\n\nBody\n");
+    await project.write("state.json", JSON.stringify({ version: 1, updatedAt: null, scan: { stages: {} }, attempts }));
+
+    const fixed = await doctor({ fix: true }, project.ctx);
+    const duplicate = fixed.issues.find((issue) => issue.message === "ROW-77 → ROW-79: duplicate ID");
+
+    expect(duplicate).toEqual({
+      severity: "error",
+      message: "ROW-77 → ROW-79: duplicate ID",
+      file: join(".rowbly", "stories", "BACKLOG", "ROW-77.md"),
+      fix:
+        `Give it the next free number. ${join(".rowbly", "stories", "DONE", "ROW-77.md")} keeps ROW-77. ` +
+        `These references stayed with ROW-77: ${join(".rowbly", "stories", "DONE", "ROW-78.md")} (dependsOn), ` +
+        `${join(".rowbly", "specs", "design.md")} (Spec link), 2 attempts without storyUid`,
+      fixed: true,
+    });
+    expect(await project.read("stories/DONE/ROW-77.md")).toBe(older);
+    expect(await project.read("stories/BACKLOG/ROW-79.md")).toContain("title: Newer");
+  });
+
   it("reports an old copy of a Story with a fix, and --fix removes it", async () => {
     const copy = (stage: string, updatedAt: string) =>
       `---\ntitle: Search\nstage: ${stage}\nuid: 8a3c3f0e-6a55-4f43-9a0b-6f5b1e2d7c11\n` +
@@ -188,7 +223,7 @@ describe("doctor", () => {
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
-  it("reports two files with the same Story ID and factory state with no fix, and --fix does not change them", async () => {
+  it("reports two files with the same Story ID and a running attempt with no fix, and --fix does not change them", async () => {
     await project.write(
       "stories/ROW-01.md",
       "---\ntitle: Flat\nstage: BACKLOG\nuid: 745e3db6-a7ff-450e-8a72-b39482f0882d\n---\n",
@@ -209,7 +244,7 @@ describe("doctor", () => {
       { story: "ROW-01", stage: "BACKLOG" },
       { story: "ROW-02", stage: "DONE" },
       { story: "ROW-02", stage: "BACKLOG" },
-    ].map((attempt) => ({ ...attempt, workerId: "worker-1", status: "completed" }));
+    ].map((attempt) => ({ ...attempt, workerId: "worker-1", status: "running" }));
     await project.write("state.json", JSON.stringify({ version: 1, updatedAt: null, scan: { stages: {} }, attempts }));
     const report = await doctor({ fix: true }, project.ctx);
     expect(report.ok).toBe(false);

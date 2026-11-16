@@ -30,7 +30,24 @@ function pullRequestOf(story: Story): string | undefined {
   return typeof pr === "string" && pr ? pr : undefined;
 }
 
-/** Gives the branch of the Story. A pull request gives its head branch, and the branch is fetched. */
+/** The default branch of a Story without a pull request and without a `branch` key: `story/<ID>`. */
+export function defaultBranch(storyId: string): string {
+  return `story/${storyId}`;
+}
+
+/** The `branch` key of the Story, or the default branch. A name that starts with `-` is not a branch. */
+function savedBranch(story: Story): string {
+  if (story.branch?.startsWith("-")) {
+    throw new ConflictError("Invalid Story branch");
+  }
+
+  return story.branch ?? defaultBranch(story.id);
+}
+
+/**
+ * Gives the branch of the Story. A pull request gives its head branch, and the branch is fetched. Without a pull
+ * request, the `branch` key of the Story comes before the default `story/<ID>`.
+ */
 async function requiredBranch(root: string, story: Story): Promise<string> {
   const pr = pullRequestOf(story);
 
@@ -39,7 +56,7 @@ async function requiredBranch(root: string, story: Story): Promise<string> {
       throw new ConflictError("Review requires a pull_request field");
     }
 
-    return `story/${story.id}`;
+    return savedBranch(story);
   }
 
   const { stdout } = await exec("gh", ["pr", "view", pr, "--json", "headRefName", "--jq", ".headRefName"], {
@@ -56,10 +73,15 @@ async function requiredBranch(root: string, story: Story): Promise<string> {
   return branch;
 }
 
+/** The default worktree of a Story without a `worktree` field: `<root>-worktrees/<ID>`. */
+export function defaultWorktreePath(root: string, storyId: string): string {
+  return join(dirname(root), `${basename(root)}-worktrees`, storyId);
+}
+
 function worktreePath(root: string, story: Story): string {
   return typeof story.fields.worktree === "string" && story.fields.worktree
     ? resolve(story.fields.worktree)
-    : join(dirname(root), `${basename(root)}-worktrees`, story.id);
+    : defaultWorktreePath(root, story.id);
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -75,7 +97,8 @@ async function pathExists(path: string): Promise<boolean> {
   );
 }
 
-async function hasLocalBranch(root: string, branch: string): Promise<boolean> {
+/** Tells if the repository at `root` has the local branch. A Git failure, for example no repository, gives `false`. */
+export async function hasLocalBranch(root: string, branch: string): Promise<boolean> {
   return git(root, "show-ref", "--verify", `refs/heads/${branch}`).then(
     () => true,
     () => false,

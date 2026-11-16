@@ -3,7 +3,7 @@ import { readFactoryState } from "../factory-state/factory-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { formatStoryId, listStoryFileNames, type StoryFileName, storyTimeOf } from "../story-files/story-files.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
-import { type CopyGroup, type PlannedFile, type ReadStory, readStory, splitCopies } from "./copy-plan.js";
+import { type CopyGroup, type PlannedFile, type ReadStory, readStory, splitCopies, uidOf } from "./copy-plan.js";
 
 export type { CopyGroup } from "./copy-plan.js";
 
@@ -11,6 +11,11 @@ export type { CopyGroup } from "./copy-plan.js";
 export interface PlannedRenumber extends PlannedFile {
   /** The new ID that the plan expects. The repair takes the next free number again. */
   readonly to: string;
+  /**
+   * The `uid` of the Story, when each Story of the group has a `uid`. Then the records with this `storyUid` follow
+   * the Story. `undefined` for a group of the ROW-81 rules.
+   */
+  readonly storyUid: string | undefined;
 }
 
 /** Two or more Story files with the same number, and the Story that keeps the ID. */
@@ -42,20 +47,29 @@ interface Candidate {
   readonly createdAt: number;
   readonly mtimeMs: number;
   readonly factoryState: boolean;
+  readonly uid: string | undefined;
 }
 
-/** An attempt of `.rowbly/state.json`: the Story ID and the Stage. */
+/** An attempt of `.rowbly/state.json`: the Story ID, the Story `uid`, the Stage and the status. */
 interface StoryAttempt {
   readonly story: string;
+  readonly storyUid?: string;
   readonly stage: string;
+  readonly status: string;
 }
 
+/** A Story file that gets a new number, before the plan gives it the expected ID. */
+type RenumberFile = Omit<PlannedRenumber, "to">;
+
 type GroupDecision =
-  | { readonly group: Omit<DuplicateGroup, "renumber"> & { readonly renumber: readonly PlannedFile[] } }
+  | { readonly group: Omit<DuplicateGroup, "renumber"> & { readonly renumber: readonly RenumberFile[] } }
   | { readonly unrepaired: UnrepairedDuplicate }
   | { readonly copy: CopyGroup };
 
 const FACTORY_FIELDS = ["worktree", "pull_request"] as const;
+
+/** The statuses of an attempt in which a worker can write the Story file or its attachments. */
+const RUNNING_STATUSES: ReadonlySet<string> = new Set(["preparing", "running"]);
 
 /** The Story files of the project key, in groups of two or more files with the same number. */
 function duplicateNames(names: readonly StoryFileName[], projectKey: string): StoryFileName[][] {
@@ -105,6 +119,7 @@ function candidateOf(story: ReadStory, canonicalId: string, attempts: readonly S
     createdAt: createdTime({ ...story.data }),
     mtimeMs: story.mtimeMs,
     factoryState: hasFactoryState(story.data, [story.file.id, canonicalId], attempts),
+    uid: uidOf(story),
   };
 }
 
@@ -125,11 +140,15 @@ function unrepairedGroup(id: string, paths: readonly string[], reason: string): 
   return { unrepaired: { id, paths, reason } };
 }
 
+function ruleFile(file: PlannedFile): RenumberFile {
+  return { ...file, storyUid: undefined };
+}
+
 /**
- * Selects the Story that keeps the ID: the only Story with factory state, or else the oldest Story. A group with
- * more than one Story with factory state is not repaired.
+ * The ROW-81 rules for a group with a Story without `uid`. Selects the Story that keeps the ID: the only Story with
+ * factory state, or else the oldest Story. A group with more than one Story with factory state is not repaired.
  */
-function decideGroup(id: string, stories: readonly ReadStory[], attempts: readonly StoryAttempt[]): GroupDecision {
+function decideByState(id: string, stories: readonly ReadStory[], attempts: readonly StoryAttempt[]): GroupDecision {
   const ordered = stories.map((story) => candidateOf(story, id, attempts)).toSorted(compareAge);
   const withState = ordered.filter((candidate) => candidate.factoryState);
 
@@ -140,9 +159,50 @@ function decideGroup(id: string, stories: readonly ReadStory[], attempts: readon
   }
 
   const keep = withState[0] ?? (ordered[0] as Candidate);
-  const renumber = ordered.filter((candidate) => candidate !== keep).map((candidate) => candidate.file);
+  const renumber = ordered.filter((candidate) => candidate !== keep).map((candidate) => ruleFile(candidate.file));
 
   return { group: { id, keep: keep.file, renumber } };
+}
+
+/** Tells if an attempt of a Story of the group is running: by the `uid` of a Story, or else by the Story ID. */
+function isRunningAttempt(attempt: StoryAttempt, ids: readonly string[], uids: readonly string[]): boolean {
+  const byUid = attempt.storyUid !== undefined && uids.includes(attempt.storyUid);
+
+  return RUNNING_STATUSES.has(attempt.status) && (byUid || ids.includes(attempt.story));
+}
+
+/**
+ * The rules for a group in which each Story has a `uid`: each file is a different Story. The oldest Story keeps the
+ * ID, and factory state does not block the repair. A running attempt of a Story of the group blocks the repair,
+ * because the worker can write the Story file or its attachments.
+ */
+function decideByUid(
+  id: string,
+  stories: readonly ReadStory[],
+  uids: readonly string[],
+  attempts: readonly StoryAttempt[],
+): GroupDecision {
+  const ids = [id, ...stories.map((story) => story.file.id)];
+
+  if (attempts.some((attempt) => isRunningAttempt(attempt, ids, uids))) {
+    const paths = stories.map((story) => story.file.path);
+
+    return unrepairedGroup(id, paths, "A Story with this ID has a running attempt");
+  }
+
+  const [keep, ...rest] = stories.map((story) => candidateOf(story, id, [])).toSorted(compareAge);
+  const renumber = rest.map((candidate) => ({ ...candidate.file, storyUid: candidate.uid }));
+
+  return { group: { id, keep: (keep as Candidate).file, renumber } };
+}
+
+/** Selects the rules of the group: the `uid` rules when each Story has a `uid`, or else the ROW-81 rules. */
+function decideGroup(id: string, stories: readonly ReadStory[], attempts: readonly StoryAttempt[]): GroupDecision {
+  const uids = stories.flatMap((story) => uidOf(story) ?? []);
+
+  return uids.length === stories.length
+    ? decideByUid(id, stories, uids, attempts)
+    : decideByState(id, stories, attempts);
 }
 
 /**
