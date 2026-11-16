@@ -1,11 +1,11 @@
 ---
 title: Show factory connectivity state in the TUI
-stage: IN_DEVELOPMENT
-position: 2
+stage: CHANGELOG
+position: 1
 dependsOn:
   - ROW-71
 createdAt: 2026-11-16T16:41:21.272Z
-updatedAt: 2026-11-16T18:35:14.645Z
+updatedAt: 2026-11-16T18:35:17.591Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-73
 pull_request: https://github.com/sgolovine/rowbly/pull/260
 ---
