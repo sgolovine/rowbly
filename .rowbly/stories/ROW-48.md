@@ -2,6 +2,7 @@
 title: Build the landing page Hero and proof strip
 stage: DONE
 position: 56
+uid: f4f39690-548b-4e86-aac4-b26874333ef6
 createdAt: 2026-11-14T23:14:00.000Z
 updatedAt: 2026-11-15T00:41:42.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-48
