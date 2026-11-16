@@ -1,11 +1,11 @@
 ---
 title: Add the worker host registry and host add, list and remove
-stage: IN_REFINEMENT
-position: 3
+stage: IN_DEVELOPMENT
+position: 4
 dependsOn:
   - ROW-83
 createdAt: 2026-11-16T19:45:02.241Z
-updatedAt: 2026-11-16T20:09:17.905Z
+updatedAt: 2026-11-16T20:09:23.738Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-84
 pull_request: null
 ---
