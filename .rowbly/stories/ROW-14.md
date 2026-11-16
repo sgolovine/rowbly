@@ -2,6 +2,7 @@
 title: Click and dismiss warnings
 stage: DONE
 position: 14
+uid: 7f6992e5-c8a1-4869-9ef6-58db444208bb
 createdAt: 2026-11-14T15:44:41.000Z
 updatedAt: 2026-11-14T16:04:19.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-14
