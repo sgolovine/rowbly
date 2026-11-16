@@ -1,6 +1,9 @@
-import { readFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { addAttachment } from "../../services/attachment/attachment.js";
+import { putCachedAttachment } from "../../services/attachment-cache/attachment-cache.js";
+import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
 import { createStory, getStory } from "../../services/story/story.js";
 import { useTempDir, useTestProject } from "../../services/test-project/test-project.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -13,6 +16,18 @@ describe("commandContext", () => {
 
   it("has a recorder with ROWBLY_OUTBOX and ROWBLY_THREAD_ID", () => {
     expect(commandContext("/p", { ROWBLY_OUTBOX: "/o", ROWBLY_THREAD_ID: "t" }).recorder).toBeDefined();
+  });
+
+  it("has an attachment source only with ROWBLY_HOST_AGENT in a remote context", () => {
+    const agent = "/h/.local/share/rowbly/projects/p1/agent";
+    expect(commandContext("/p", { ROWBLY_OUTBOX: "/o", ROWBLY_THREAD_ID: "t" }).remoteAttachments).toBeUndefined();
+    expect(
+      commandContext("/p", { ROWBLY_OUTBOX: "/o", ROWBLY_THREAD_ID: "t", ROWBLY_HOST_AGENT: agent }).remoteAttachments,
+    ).toBeDefined();
+    expect(commandContext("/p", { ROWBLY_HOST_AGENT: agent })).toEqual({ cwd: "/p" });
+    expect(() =>
+      commandContext("/p", { ROWBLY_OUTBOX: "/o", ROWBLY_THREAD_ID: "t", ROWBLY_HOST_AGENT: "relative" }),
+    ).toThrow(expect.objectContaining({ code: "VALIDATION" }));
   });
 
   it("gives a ValidationError without ROWBLY_THREAD_ID or with a relative folder", () => {
@@ -92,5 +107,30 @@ describe("CLI writes with an outbox", () => {
     expect(result.exitCode).toBe(1);
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     expect(await getStory({ id: "ROW-01" }, project.ctx)).toMatchObject({ title: "First" });
+  });
+
+  it("gets a missing attachment file from the cache of the host agent with get-attachment", async () => {
+    await createStory({ title: "First" }, project.ctx);
+    const file = join(project.paths.root, "notes.txt");
+    await writeFile(file, "notes");
+    const record = await addAttachment({ story: "ROW-01", file }, project.ctx);
+    const copyFile = join(project.paths.dir, "attachments", "ROW-01", `${record.id}.txt`);
+    await rm(copyFile);
+    const agent = hostAgentPaths("p1", outbox.path);
+    vi.stubEnv("ROWBLY_OUTBOX", agent.outbox);
+    vi.stubEnv("ROWBLY_THREAD_ID", "thread-7");
+
+    const missing = await cli("get-attachment", "ROW-01", record.id);
+    expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
+
+    vi.stubEnv("ROWBLY_HOST_AGENT", agent.dir);
+    const offline = await cli("get-attachment", "ROW-01", record.id);
+    expect(JSON.parse(offline.stderr).error).toMatchObject({ code: "CONFLICT" });
+
+    await putCachedAttachment({ dir: agent.attachments, id: record.id, bytes: Buffer.from("notes") });
+    const result = await cli("get-attachment", "ROW-01", record.id);
+
+    expect(JSON.parse(result.stdout)).toEqual({ ...record, path: copyFile });
+    expect(await readFile(copyFile, "utf8")).toBe("notes");
   });
 });

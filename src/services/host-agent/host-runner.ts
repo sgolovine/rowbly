@@ -154,7 +154,11 @@ async function execute(options: HostRunnerOptions, run: HostRun, prepared: Prepa
       clone: prepared.data.clone,
       runtimeDir: options.paths.runtime,
       shim: options.shim,
-      env: { ROWBLY_OUTBOX: options.paths.outbox, ROWBLY_THREAD_ID: run.threadId },
+      env: {
+        ROWBLY_OUTBOX: options.paths.outbox,
+        ROWBLY_THREAD_ID: run.threadId,
+        ROWBLY_HOST_AGENT: options.paths.dir,
+      },
       runtime: options.runtime,
       checks: prepared.checks?.queue,
       settings: () => settings,

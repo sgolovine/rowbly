@@ -16,7 +16,8 @@ import {
 } from "../attachment-files/attachment-files.js";
 import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { type ClipboardImageType, clipboardFailure, readClipboard } from "../clipboard/clipboard.js";
-import { NotFoundError, ValidationError } from "../errors/errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
+import { pathExists, writeFileAtomic } from "../files/files.js";
 import { recordAttachmentAdd, recordAttachmentRemove, sha256Hex } from "../outbox/outbox.js";
 import { getStory, storyUidField, touchStory } from "../story/story.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
@@ -191,6 +192,43 @@ async function selected(story: string, id: string, ctx: ServiceContext) {
   await noSymlink(path);
 
   return { storyId, storyUid: storyUidField(found), dir, records, record, path };
+}
+
+/** The input of `getAttachment`. */
+interface GetAttachmentInput {
+  readonly story: string;
+  readonly id: string;
+}
+
+/** Puts the bytes of a fetched file in the copy of a remote worker. Bytes of a different size are refused. */
+async function writeFetchedFile(path: string, record: Attachment, bytes: Uint8Array): Promise<void> {
+  if (bytes.length !== record.size) {
+    throw new ConflictError(`The file of attachment ${record.id} has ${bytes.length} bytes, not ${record.size}`);
+  }
+
+  await writeFileAtomic(path, bytes);
+}
+
+/**
+ * Gives the attachment record and the absolute path of its file. In the copy of a remote worker, a file that is not
+ * in the copy comes from the attachment source of the host. Without a source, a missing file gives a NotFoundError.
+ */
+export async function getAttachment(input: GetAttachmentInput, ctx: ServiceContext = {}) {
+  const { storyId, record, path } = await selected(input.story, input.id, ctx);
+
+  if (await pathExists(path)) {
+    return { ...record, path };
+  }
+
+  if (!ctx.remoteAttachments) {
+    throw new NotFoundError(`The file of attachment ${input.id} is missing on ${storyId}`, {
+      hint: "Run `rowbly doctor` to check attachment files.",
+    });
+  }
+
+  await writeFetchedFile(path, record, await ctx.remoteAttachments.fetch({ storyId, id: record.id }));
+
+  return { ...record, path };
 }
 
 /** Gives the command of the platform that opens a file in its default application. */

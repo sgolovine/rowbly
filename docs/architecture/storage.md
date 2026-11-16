@@ -428,8 +428,14 @@ A Story can have attachments of all file types. The `attachment` service keeps t
   `src/services/attachment-files/attachment-type.ts` gives this name.
 - A manifest of an earlier version has only PNG records. Rowbly reads it with no migration.
 - The CLI commands are `add-attachment <story> [file]` (also `--from-clipboard`), `list-attachments`,
-  `open-attachment` and `remove-attachment`. `open-attachment` opens the file with the application of
-  the platform for its type.
+  `get-attachment`, `open-attachment` and `remove-attachment`. `open-attachment` opens the file with
+  the application of the platform for its type. `get-attachment` gives the record and the absolute
+  path of the file. A missing file gives `NOT_FOUND`.
+- In the copy of a remote worker, the manifest can have a record whose file is not in the copy.
+  `getAttachment` then gets the file from the attachment source of the host agent
+  (`ServiceContext.remoteAttachments`), writes it to the copy and gives that path. The bytes must have
+  the `size` of the record, else the read gives `CONFLICT`. A host that cannot get the file gives
+  `CONFLICT`. See [Attachment fetch](native-factory/host-agent.md#attachment-fetch).
 - In the TUI, the Attachments tab of a Story shows the attachments. `n` attaches a file from a path.
   A paste key adds a copied file or an image from the clipboard (`ctrl+v`, or `alt+v` on Windows).
 - The clipboard paths (`--from-clipboard` and the paste key) use `readClipboardAttachment` in
