@@ -14,6 +14,7 @@ This file records the changes to Rowbly that users can see.
 - Added: The host agent on a worker host can now run workers. The new hidden `rowbly host prepare`, `rowbly host cache-missing` and `rowbly host cache-put` commands send a copy of the `.rowbly/` files and the attachments to the host, and `rowbly host attach` sends the state of each run, but no command of the main machine uses them yet. (ROW-92)
 - Added: Each new Story file has a `uid` frontmatter key with a permanent UUID that does not change when the Story ID changes, and `rowbly --json story get` and `rowbly --json story search` show it. `rowbly doctor` shows a warning for a Story without a `uid` and `--fix` adds one, `rowbly doctor` shows an error for an invalid `uid`, and a custom field cannot use the key `uid`. (ROW-112)
 - Added: `rowbly host attach` now also sends the new lines of the session file of each remote worker, so that a later version can show the conversation of remote Threads on the main machine. (ROW-111)
+- Fixed: When two Story files have the same Story ID and the same `uid`, for example in two Stage folders, `rowbly doctor --fix` and the TUI board load now remove the old copy and keep the copy with the newest `updatedAt`, for example `ROW-78: removed the old copy in DONE`. If the copies have different content, `rowbly doctor` shows an error and Rowbly does not change a file. (ROW-114)
 
 ### 0.19.0
 

@@ -3,13 +3,17 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { type DuplicatePlan, planDuplicates, type UnrepairedDuplicate } from "./duplicate-plan.js";
+import { type CopyOutcome, type CopyRemoval, removeCopies } from "./remove-copy.js";
 import { type RenumberOutcome, renumberStory, type StoryRenumber } from "./renumber-file.js";
 
-export type { DuplicateGroup, DuplicatePlan } from "./duplicate-plan.js";
+export type { CopyGroup, DuplicateGroup, DuplicatePlan } from "./duplicate-plan.js";
+export { type CopyRemoval, copyNotice } from "./remove-copy.js";
 export type { StoryRenumber } from "./renumber-file.js";
 
 /** The changes of one repair, and the duplicate IDs that it did not change. */
 export interface RenumberResult {
+  /** The old copies of a Story that the repair removed. */
+  readonly removed: readonly CopyRemoval[];
   readonly changes: readonly StoryRenumber[];
   readonly unrepaired: readonly UnrepairedDuplicate[];
 }
@@ -29,8 +33,9 @@ export async function findDuplicateStoryIds(ctx: ServiceContext = {}): Promise<D
 }
 
 /**
- * Gives the newer Story of each duplicate Story ID the next free number. The service takes no lock: an exclusive
- * create and a check of the old file make two repairs at the same time safe. References to the ID do not change.
+ * Removes the old copies of each Story, then gives the newer Story of each duplicate Story ID the next free number.
+ * The service takes no lock: an exclusive create and a check of the old file make two repairs at the same time safe.
+ * References to the ID do not change.
  */
 export async function repairDuplicateStoryIds(ctx: ServiceContext = {}, plan?: DuplicatePlan): Promise<RenumberResult> {
   refuseRemoteWrite(ctx, "renumber Stories");
@@ -40,13 +45,16 @@ export async function repairDuplicateStoryIds(ctx: ServiceContext = {}, plan?: D
   const env = { paths, config, now: ctx.now?.() ?? new Date() };
 
   const planned = plan ?? (await planDuplicates(paths, config));
+  const copies: CopyOutcome[] = (await mapInOrder(planned.copies, (group) => removeCopies(paths, group))).flat();
   const steps = planned.groups.flatMap((group) => group.renumber.map((file) => ({ group, file })));
   const outcomes: RenumberOutcome[] = await mapInOrder(steps, (step) => renumberStory(env, step.group, step.file));
 
   return {
+    removed: copies.flatMap((outcome) => ("removed" in outcome ? [outcome.removed] : [])),
     changes: outcomes.flatMap((outcome) => ("change" in outcome ? [outcome.change] : [])),
     unrepaired: [
       ...planned.unrepaired,
+      ...copies.flatMap((outcome) => ("unrepaired" in outcome ? [outcome.unrepaired] : [])),
       ...outcomes.flatMap((outcome) => ("unrepaired" in outcome ? [outcome.unrepaired] : [])),
     ],
   };
