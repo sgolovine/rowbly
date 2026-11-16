@@ -3,8 +3,8 @@ title: Add the worker host registry and host add, list and remove
 stage: IN_REFINEMENT
 position: 3
 createdAt: 2026-11-16T19:45:02.241Z
-updatedAt: 2026-11-16T20:06:49.849Z
-worktree: null
+updatedAt: 2026-11-16T20:07:09.481Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-84
 pull_request: null
 ---
 

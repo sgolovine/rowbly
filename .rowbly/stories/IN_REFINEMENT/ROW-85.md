@@ -3,8 +3,8 @@ title: Add the SSH transport for worker hosts
 stage: IN_REFINEMENT
 position: 4
 createdAt: 2026-11-16T19:45:02.850Z
-updatedAt: 2026-11-16T20:06:50.395Z
-worktree: null
+updatedAt: 2026-11-16T20:07:09.593Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-85
 pull_request: null
 ---
 
