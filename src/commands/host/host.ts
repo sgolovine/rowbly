@@ -3,7 +3,6 @@ import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
-import { MAX_ATTACHMENT_BYTES } from "../../services/attachment-files/attachment-files.js";
 import { ValidationError } from "../../services/errors/errors.js";
 import type { FactoryLaunch } from "../../services/factory/factory-launch.js";
 import {
@@ -16,12 +15,9 @@ import {
   updateHost,
 } from "../../services/host/host.js";
 import { runHostAgent } from "../../services/host-agent/host-agent.js";
-import { hostCacheMissing, hostCachePut } from "../../services/host-agent/host-agent-cache.js";
 import { submitHostCommand } from "../../services/host-agent/host-agent-control.js";
-import { parseJsonInput, readBoundedInput } from "../../services/host-agent/host-agent-input.js";
 import { startHostAgent } from "../../services/host-agent/host-agent-launch.js";
 import { ensurePrivateDir, hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
-import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
 import { runHostAttach } from "../../services/host-agent/host-attach.js";
 import { createHostRunner } from "../../services/host-agent/host-runner.js";
 import { type CheckItem, checkHost, type HostCheck } from "../../services/host-check/host-check.js";
@@ -32,6 +28,7 @@ import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-h
 import type { ServiceContext } from "../../services/workspace/workspace.js";
 import { type LaunchDescriptor, writeCliShim } from "../factory-runner/cli-shim.js";
 import { run, runBytes, runQuiet, runWithoutContext, setExitCode } from "../output/output.js";
+import { registerHostRunCommands } from "./host-run-commands.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
@@ -256,50 +253,6 @@ function registerHostServeCommands(program: Command, launch: FactoryLaunch): voi
     .action((projectId: string, _opts: unknown, command: Command) =>
       runQuiet(command, () =>
         runHostAttach({ projectId, input: process.stdin, write: (line) => void process.stdout.write(line) }),
-      ),
-    );
-}
-
-/** Registers the hidden request and upload calls of a remote run: the attachment cache and the prepare step. */
-function registerHostRunCommands(program: Command): void {
-  program
-    .command("cache-missing <project-id>", { hidden: true })
-    .action((projectId: string, _opts: unknown, command: Command) =>
-      runWithoutContext(
-        command,
-        async () =>
-          hostCacheMissing(hostAgentPaths(projectId), parseJsonInput(await readBoundedInput(process.stdin, 1_048_576))),
-        (answer) => JSON.stringify(answer),
-      ),
-    );
-
-  program
-    .command("cache-put <project-id> <attachment-id>", { hidden: true })
-    .action((projectId: string, id: string, _opts: unknown, command: Command) =>
-      runWithoutContext(
-        command,
-        async () =>
-          hostCachePut(
-            hostAgentPaths(projectId),
-            id,
-            await readBoundedInput(process.stdin, MAX_ATTACHMENT_BYTES, "An attachment"),
-          ),
-        (answer) => JSON.stringify(answer),
-      ),
-    );
-
-  program
-    .command("prepare <project-id>", { hidden: true })
-    .action((projectId: string, _opts: unknown, command: Command) =>
-      runWithoutContext(
-        command,
-        async () =>
-          prepareHostThread(
-            hostAgentPaths(projectId),
-            parseJsonInput(await readBoundedInput(process.stdin, HOST_PREPARE_LIMIT)),
-            { home: homedir() },
-          ),
-        (answer) => JSON.stringify(answer),
       ),
     );
 }
