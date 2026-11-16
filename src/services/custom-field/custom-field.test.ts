@@ -13,7 +13,7 @@ describe("customField", () => {
       const field = await addCustomField({ label: " Due Date ", type: "date" }, project.ctx);
       expect(field).toEqual({ key: "due_date", label: "Due Date", type: "date" });
       expect(await listCustomFields(project.ctx)).toEqual([field]);
-      expect(await project.read("stories/ROW-01.md")).toContain("due_date: null");
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).toContain("due_date: null");
     });
 
     it("keeps the options of a select field", async () => {
@@ -50,7 +50,7 @@ describe("customField", () => {
       const field = await updateCustomField({ key: "owner", newKey: "assignee", label: "Assignee" }, project.ctx);
       expect(field).toEqual({ key: "assignee", label: "Assignee", type: "string" });
       expect((await getStory({ id: "1" }, project.ctx)).fields).toEqual({ assignee: "sam" });
-      expect(await project.read("stories/ROW-01.md")).not.toContain("owner");
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).not.toContain("owner");
     });
 
     it("converts existing values to the new type", async () => {
@@ -72,11 +72,11 @@ describe("customField", () => {
     it("changes nothing when an existing value does not fit", async () => {
       await addCustomField({ label: "Owner", type: "string" }, project.ctx);
       await createStory({ title: "T", fields: { owner: "sam" } }, project.ctx);
-      const before = await project.read("stories/ROW-01.md");
+      const before = await project.read("stories/BACKLOG/ROW-01.md");
       const error = await updateCustomField({ key: "owner", type: "number" }, project.ctx).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ValidationError);
       expect((error as ValidationError).details.issues).toMatchObject([{ path: ["ROW-01"] }]);
-      expect(await project.read("stories/ROW-01.md")).toBe(before);
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).toBe(before);
       expect((await listCustomFields(project.ctx))[0]?.type).toBe("string");
     });
 
@@ -103,7 +103,7 @@ describe("customField", () => {
         type: "string",
       });
       expect(await listCustomFields(project.ctx)).toEqual([]);
-      expect(await project.read("stories/ROW-01.md")).not.toContain("owner");
+      expect(await project.read("stories/BACKLOG/ROW-01.md")).not.toContain("owner");
     });
 
     it("throws NotFoundError for an unknown field", async () => {

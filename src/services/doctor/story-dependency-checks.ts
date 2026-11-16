@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
 import { RowblyError } from "../errors/errors.js";
 import { mapInOrder } from "../in-order/in-order.js";
@@ -52,7 +51,7 @@ interface StoryDependencies {
 
 /** A Story file with invalid frontmatter already has an error from the Story check, so it gives nothing here. */
 async function readDependencyFile(run: DoctorRun, name: StoryFileName): Promise<DependencyFile[]> {
-  const path = join(run.paths.storiesDir, name.fileName);
+  const { path } = name;
   const file = rel(run, path);
 
   try {
