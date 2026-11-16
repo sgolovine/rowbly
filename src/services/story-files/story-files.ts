@@ -1,10 +1,21 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import type { ProjectConfig } from "../config/config.js";
-import { listMarkdownFiles, writeFileAtomic } from "../files/files.js";
+import { writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { type MarkdownDocument, parseMarkdown, serializeMarkdown } from "../markdown/markdown.js";
-import type { ProjectPaths } from "../workspace/workspace.js";
+import { type ProjectPaths, storyStageDir } from "../workspace/workspace.js";
+import { listStoryEntries, removeMovedStoryFile, type StoryEntry, storyWritePath } from "./story-folders.js";
+
+export {
+  isStageFolderName,
+  listStoryEntries,
+  listStoryFolders,
+  moveStoryFile,
+  removeStoryFile,
+  type StoryEntry,
+  storyHomePath,
+} from "./story-folders.js";
 
 /** A story file as it is on disk, before its contents are checked against the config. */
 export interface StoryFile {
@@ -16,7 +27,7 @@ export interface StoryFile {
   doc: MarkdownDocument;
 }
 
-/** A story file name in the Story folder, parsed without a read of the file. */
+/** A story file name in the Story folder or in a Stage folder, parsed without a read of the file. */
 export interface StoryFileName {
   /** From the file name: `ROW-01`. */
   id: string;
@@ -24,6 +35,9 @@ export interface StoryFileName {
   number: number;
   /** `ROW-01.md`. */
   fileName: string;
+  path: string;
+  /** The Stage folder of the file, or `null` for a file directly in `stories/`. */
+  folder: string | null;
 }
 
 /**
@@ -86,41 +100,57 @@ export function withDependsOn(data: Record<string, unknown>, dependsOn: readonly
   return dependsOn.length === 0 ? rest : { ...rest, dependsOn: [...dependsOn] };
 }
 
-/** The path of the story file with this project key and number. */
-export function storyPath(paths: ProjectPaths, projectKey: string, number: number): string {
-  return join(paths.storiesDir, `${formatStoryId(projectKey, number)}.md`);
+/** The path of the story file with this project key and number, in the folder of its Stage. */
+export function storyPath(paths: ProjectPaths, projectKey: string, number: number, stageKey: string): string {
+  return join(storyStageDir(paths, stageKey), `${formatStoryId(projectKey, number)}.md`);
 }
 
-/** Reads and parses one story file. Throws when the name is not a story file name. */
-export async function readStoryFile(paths: ProjectPaths, fileName: string): Promise<StoryFile> {
+/** The path of the story file with a new ID, in the same folder. */
+export function renamedStoryPath(path: string, id: string): string {
+  return join(dirname(path), `${id}.md`);
+}
+
+/** Reads and parses one story file at `path`. Throws when the file name is not a story file name. */
+export async function readStoryFile(path: string): Promise<StoryFile> {
+  const fileName = basename(path);
   const parsed = parseStoryFileName(fileName);
 
   if (!parsed) {
     throw new Error(`Not a story file name: ${fileName}`);
   }
 
-  const path = join(paths.storiesDir, fileName);
   const doc = parseMarkdown(await readFile(path, "utf8"), path);
 
   return { id: fileName.slice(0, -3), ...parsed, path, doc };
 }
 
-/** `ROW-01.md` → its parsed name; an empty list when the name is not a story file name. */
-function toStoryFileName(fileName: string): StoryFileName[] {
-  const parsed = parseStoryFileName(fileName);
+/** A Markdown file → its parsed name; an empty list when the name is not a story file name. */
+function toStoryFileName(entry: StoryEntry): StoryFileName[] {
+  const parsed = parseStoryFileName(entry.fileName);
 
-  return parsed ? [{ id: fileName.slice(0, -3), ...parsed, fileName }] : [];
+  return parsed ? [{ id: entry.fileName.slice(0, -3), ...parsed, ...entry }] : [];
 }
 
-/** The names of the story files named like `<KEY>-<n>.md`, from one listing of the folder. No file is read. */
+/**
+ * The names of the story files named like `<KEY>-<n>.md`, directly in `stories/` and in each Stage folder. No file
+ * is read.
+ */
 export async function listStoryFileNames(paths: ProjectPaths): Promise<StoryFileName[]> {
-  return (await listMarkdownFiles(paths.storiesDir)).flatMap(toStoryFileName);
+  return (await listStoryEntries(paths)).flatMap(toStoryFileName);
 }
 
-/** Every story file named like `<KEY>-<n>.md`, by number. Other files are left for `doctor` to report. */
+/** Whether a story file with this ID is in `stories/` or in one of its Stage folders. */
+export async function hasStoryFile(paths: ProjectPaths, id: string): Promise<boolean> {
+  return (await listStoryFileNames(paths)).some((name) => name.id === id);
+}
+
+/**
+ * Every story file named like `<KEY>-<n>.md`, directly in `stories/` and in each Stage folder, by number. Other files
+ * are left for `doctor` to report.
+ */
 export async function readStoryFiles(paths: ProjectPaths): Promise<StoryFile[]> {
   const names = await listStoryFileNames(paths);
-  const files = await Promise.all(names.map((name) => readStoryFile(paths, name.fileName)));
+  const files = await Promise.all(names.map((name) => readStoryFile(name.path)));
 
   return files.toSorted((a, b) => a.number - b.number);
 }
@@ -166,8 +196,28 @@ export async function writeStoryFile(
   await writeFileAtomic(path, serializeMarkdown({ data: orderStoryData(config, data), body: doc.body }));
 }
 
+/**
+ * Writes a story file in the folder of its Stage, and gives the path of the written file. When the Stage folder
+ * changes, it writes the new file first and then removes the old file, so that a failure does not lose the story.
+ */
+export async function saveStoryFile(
+  paths: ProjectPaths,
+  config: ProjectConfig,
+  path: string,
+  doc: MarkdownDocument,
+  updatedAt?: Date,
+): Promise<string> {
+  const target = await storyWritePath(paths, config, path, doc.data);
+
+  await writeStoryFile(config, target, doc, updatedAt);
+  await removeMovedStoryFile(paths, path, target);
+
+  return target;
+}
+
 /** Writes the story when `change` changes it, with `now` as its `updatedAt`. Gives 1 for a write and 0 for no change. */
 async function rewriteStory(
+  paths: ProjectPaths,
   config: ProjectConfig,
   file: StoryFile,
   change: StoryDataChange,
@@ -180,7 +230,7 @@ async function rewriteStory(
     return 0;
   }
 
-  await writeStoryFile(config, file.path, { ...file.doc, data: result === true ? data : result }, now);
+  await saveStoryFile(paths, config, file.path, { ...file.doc, data: result === true ? data : result }, now);
 
   return 1;
 }
@@ -188,7 +238,7 @@ async function rewriteStory(
 /**
  * Applies `change` to the frontmatter of every story and rewrites the ones it changed. Used when a
  * stage or custom field changes, so a story that is otherwise invalid is still updated. Each rewritten story gets
- * `now` as its `updatedAt`.
+ * `now` as its `updatedAt`, and moves to the folder of its Stage.
  */
 export async function rewriteStories(
   paths: ProjectPaths,
@@ -198,7 +248,7 @@ export async function rewriteStories(
 ): Promise<number> {
   const files = await readStoryFiles(paths);
 
-  const counts = await mapInOrder(files, (file) => rewriteStory(config, file, change, now));
+  const counts = await mapInOrder(files, (file) => rewriteStory(paths, config, file, change, now));
 
   return counts.reduce((sum, count) => sum + count, 0);
 }

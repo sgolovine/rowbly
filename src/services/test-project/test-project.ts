@@ -1,6 +1,6 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { afterEach, beforeEach } from "vitest";
 import { type InitProjectInput, initProject } from "../project/project.js";
 import { Store } from "../store/store.js";
@@ -11,8 +11,10 @@ export interface TestProject {
   paths: ProjectPaths;
   /** Reads a file inside `.rowbly/`. */
   read(path: string): Promise<string>;
-  /** Writes a file inside `.rowbly/`, to set up a hand-edited state. */
+  /** Writes a file inside `.rowbly/`, to set up a hand-edited state. It creates the missing folders. */
   write(path: string, content: string): Promise<void>;
+  /** The absolute path of a file inside `.rowbly/`. */
+  path(path: string): string;
 }
 
 interface TempDir {
@@ -22,6 +24,12 @@ interface TempDir {
 interface ProjectState {
   readonly ctx: ServiceContext;
   readonly paths: ProjectPaths;
+}
+
+/** Writes a file and creates its missing folders. */
+async function writeWithFolders(path: string, content: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, content, "utf8");
 }
 
 async function makeTempDir(dir: Store<TempDir>): Promise<void> {
@@ -79,6 +87,7 @@ export function useTestProject(input: InitProjectInput = { name: "Rowbly", key: 
       return project.current.paths;
     },
     read: (path) => readFile(join(project.current.paths.dir, path), "utf8"),
-    write: (path, content) => writeFile(join(project.current.paths.dir, path), content, "utf8"),
+    write: (path, content) => writeWithFolders(join(project.current.paths.dir, path), content),
+    path: (path) => join(project.current.paths.dir, path),
   };
 }

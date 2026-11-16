@@ -26,6 +26,7 @@ export interface ProjectPaths {
   promptsDir: string;
   /** The old place of the Project prompt. `rowbly doctor --fix` moves it to `prompts/SYSTEM.md`. */
   legacyInstructionsFile: string;
+  /** The Story files, one subfolder for each Stage key. Old Projects can also have Story files directly in it. */
   storiesDir: string;
   stagesDir: string;
   specsDir: string;
@@ -71,6 +72,11 @@ async function nearestProject(dir: string): Promise<ProjectPaths | undefined> {
   }
 
   return parent === dir ? undefined : nearestProject(parent);
+}
+
+/** The folder of the Story files of one Stage: `stories/<STAGE_KEY>/`. */
+export function storyStageDir(paths: ProjectPaths, stageKey: string): string {
+  return join(paths.storiesDir, stageKey);
 }
 
 /** Finds the nearest project at or above `ctx.cwd`, the way git finds its repository. */

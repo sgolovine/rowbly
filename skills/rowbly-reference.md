@@ -173,7 +173,7 @@ A Story record has this shape:
   "updatedAt": "2025-01-03T10:00:00.000Z",
   "description": "Markdown text",
   "fields": { "priority": "P1", "story_points": null },
-  "path": "/abs/path/.rowbly/stories/APP-01.md"
+  "path": "/abs/path/.rowbly/stories/BACKLOG/APP-01.md"
 }
 ```
 
@@ -417,7 +417,7 @@ Read these files if a command does not give the data. Users can edit these files
   prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
   prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
   prompts/WORKER.md    # the Worker prompt, for all workers
-  stories/APP-01.md    # frontmatter: title, stage, position, one key for each custom field
+  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, position, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
 ```
@@ -439,6 +439,11 @@ are outside `.rowbly/`, in the project skills folder of each harness (section 5,
 In Story files, `null` means that the field has no value. A Story with no `position` comes after
 the Stories that have one.
 
+Each Story file is in the folder of its Stage. The `stage` key of the frontmatter is the authority.
+A Rowbly write that changes the Stage moves the file. Do not move a Story file by hand: change its
+Stage with `story update --stage`. Older Projects can have Story files directly in `stories/`. Rowbly
+reads them, and `rowbly doctor --fix` moves them to the folder of their Stage.
+
 ## 9. Repair a Project
 
 `rowbly doctor --json` compares the files with the config. It does not change files. Add `--fix` to
@@ -451,7 +456,7 @@ apply each available repair.
     {
       "severity": "error",
       "message": "Stage \"backlog\" should be BACKLOG",
-      "file": ".rowbly/stories/APP-01.md",
+      "file": ".rowbly/stories/BACKLOG/APP-01.md",
       "fix": "Correct it",
       "fixed": false
     }
@@ -489,6 +494,9 @@ One invalid Story file makes `story search` fail for the full Project.
 | Old `factory.json` with the same settings as the `factory` key (warning)         | Deletes it     |
 | Old `factory.json` with different settings from the `factory` key (warning)      | No repair. Merge them by hand. |
 | Story is in a disabled Stage (warning)                                           | No repair      |
+| Story file is not in the folder of its Stage (warning)                           | Moves it to `stories/<Stage key>/` |
+| Two Story files have the same ID, in one folder or in different folders          | No repair      |
+| Folder in `stories/` does not have the name of a Stage key (warning)             | No repair      |
 
 Fix a problem with no repair by hand. Then run `rowbly doctor --json` again. Do not delete an
 orphan Spec if the user did not tell you to do it. A problem with an installed skill has a

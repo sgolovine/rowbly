@@ -27,7 +27,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
-  stories/ROW-01.md   # <projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
+  stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, position?, dependsOn?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
   attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
@@ -153,10 +153,46 @@ read the settings continue to work.
 
 ## Stories
 
-A Story file is `stories/<projectKey>-<n>.md`, for example `ROW-01.md`. The number has at least two
-digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list,
+A Story file is `stories/<stage key>/<projectKey>-<n>.md`, for example `stories/BACKLOG/ROW-01.md`.
+The number has at least two digits. The frontmatter has `title`, `stage`, an optional `position`, an optional `dependsOn` list,
 the optional times `createdAt` and `updatedAt`, and one key for each custom field. A `null` value means that the field has no value. The Markdown body
 is the description.
+
+### Stage folders
+
+Each Story file is in the folder of its Stage. The name of the folder is the Stage key. Thus a person
+who reads the files or a Git diff can see the Stage of each Story from its path.
+
+- The `stage` key of the frontmatter is the authority for the Stage. The folder is a copy of this value.
+- `story create` writes the file in the folder of its Stage.
+- A write that changes the Stage moves the file: `story update --stage`, a Stage rename and a Stage
+  delete with `moveStoriesTo`. The service writes the new file first, then it removes the old file.
+  Thus a failure does not delete the Story.
+- A change of `position` in the same Stage does not move the file.
+- A Project key change renames the files in their Stage folders.
+- The service removes a Stage folder when its last Story moves out. Rowbly does not make an empty
+  Stage folder.
+- A Story with a `stage` value that is not in the config stays in its folder. `rowbly doctor` reports
+  the Stage.
+- A write does not replace a different file of the same Story. The Story stays in its old folder, and
+  `rowbly doctor` reports the two files.
+
+Older versions of Rowbly wrote all Story files directly in `stories/`. The services also read these
+files, so an older Project continues to work. A read does not move a file. These steps move a file to
+the folder of its Stage:
+
+- A write of the Story, for example `story update`.
+- `rowbly doctor --fix`.
+
+`rowbly doctor` examines the Story folders:
+
+| Problem                                                                                | Severity | `--fix`                                   |
+| -------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
+| A Story file is directly in `stories/`, or in the folder of a different Stage.         | warning  | Moves the file to `stories/<stage key>/`. |
+| Two files have the same Story ID or number, in one folder or in different folders.     | error    | None. The files stay.                     |
+| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it. | warning  | None.                                     |
+
+### Position
 
 The `position` of a Story sets its order in its Stage.
 
