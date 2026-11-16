@@ -70,6 +70,15 @@ describe("Pi import boundary", () => {
     await expect(import("../test-project/fake-host-transport.js")).resolves.toHaveProperty("createFakeHostTransport");
   });
 
+  it("imports the outbox apply and the host outbox commands without loading Pi", async () => {
+    await expect(import("../outbox/outbox-compare.js")).resolves.toHaveProperty("compareChange");
+    await expect(import("../outbox/outbox-host.js")).resolves.toHaveProperty("hostOutboxEntries");
+    await expect(import("../outbox-apply/outbox-apply.js")).resolves.toHaveProperty("syncOutbox");
+    await expect(import("../outbox-apply/outbox-source.js")).resolves.toHaveProperty("transportOutboxSource");
+    await expect(import("../outbox-apply/host-files.js")).resolves.toHaveProperty("readAppliedSeq");
+    await expect(import("../factory-manager/outbox-attention.js")).resolves.toHaveProperty("syncHostOutbox");
+  });
+
   it("imports the host install service without loading Pi", async () => {
     await expect(import("../host-install/host-install.js")).resolves.toHaveProperty("ensureHostVersion");
     await expect(import("../host-install/node-check.js")).resolves.toHaveProperty("checkHostNode");
@@ -87,6 +96,16 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-slots.js")).resolves.toHaveProperty("acquireSlot");
     await expect(import("../host-agent/host-attach.js")).resolves.toHaveProperty("runHostAttach");
     await expect(import("../host-agent/host-agent-launch.js")).resolves.toHaveProperty("startHostAgent");
+  });
+
+  it("imports the host project service without loading Pi", async () => {
+    await expect(import("../host-project/host-project.js")).resolves.toHaveProperty("useHost");
+    await expect(import("../host-project/host-clone.js")).resolves.toHaveProperty("cloneStatus");
+    await expect(import("../host-project/host-paths.js")).resolves.toHaveProperty("managedClonePath");
+    await expect(import("../host-project/repo-url.js")).resolves.toHaveProperty("sameRepository");
+    await expect(import("../host-project/local-origin.js")).resolves.toHaveProperty("localOrigin");
+    await expect(import("../host-project/host-project-errors.js")).resolves.toHaveProperty("HostGitAccessError");
+    await expect(import("../host/host-threads.js")).resolves.toHaveProperty("activeThreadsIn");
   });
 
   it("imports the TUI without loading Pi", async () => {

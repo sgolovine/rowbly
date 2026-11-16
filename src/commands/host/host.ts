@@ -9,13 +9,20 @@ import { submitHostCommand } from "../../services/host-agent/host-agent-control.
 import { startHostAgent } from "../../services/host-agent/host-agent-launch.js";
 import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
 import { runHostAttach } from "../../services/host-agent/host-attach.js";
+import { type UnusedHost, type UsedHost, unuseHost, useHost } from "../../services/host-project/host-project.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
-import { run, runBytes, runQuiet } from "../output/output.js";
+import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
+import { run, runBytes, runQuiet, runWithoutContext } from "../output/output.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
 
   return `${host.id}  ${host.ssh}  ${host.maxWorkers} worker(s)  ${state}`;
+}
+
+/** The outbox folder from `ROWBLY_OUTBOX` and the JSON request on stdin. */
+async function hostRequest() {
+  return { dir: process.env.ROWBLY_OUTBOX, text: await streamText(process.stdin) };
 }
 
 function addedText(host: AddedHost): string {
@@ -65,7 +72,7 @@ async function serveAgent(projectId: string | undefined) {
 }
 
 /** Registers the hidden commands that the main machine runs on a worker host over SSH. The output is JSON. */
-function registerHostAgentCommands(program: Command, launch: FactoryLaunch): void {
+function registerHostServeCommands(program: Command, launch: FactoryLaunch): void {
   program
     .command("serve [project-id]", { hidden: true })
     .option("--detach", "start a detached host agent with the JSON input on stdin")
@@ -102,7 +109,17 @@ function registerHostAgentCommands(program: Command, launch: FactoryLaunch): voi
     );
 }
 
-/** Registers the `rowbly host` subcommands on the `host` command. The commands do not need a Project. */
+function usedText(used: UsedHost): string {
+  const action = used.cloned ? "cloned to" : "uses the clone at";
+
+  return `Worker host ${used.host} ${action} ${used.path}`;
+}
+
+function unusedText(unused: UnusedHost): string {
+  return `Worker host ${unused.host} no longer uses this Project. The clone at ${unused.path} stays on the host.`;
+}
+
+/** Registers the `rowbly host` subcommands. Only `use` and `unuse` need a Project. */
 export function registerHostCommands(program: Command): void {
   program
     .command("add <id>")
@@ -135,6 +152,26 @@ export function registerHostCommands(program: Command): void {
       ),
     );
 
+  program
+    .command("use <id>")
+    .description("Turn a worker host on for this Project, and clone the repository on the host")
+    .option("--path <dir>", "use an existing clean clone on the host, not the managed folder")
+    .action((id: string, opts: { path?: string }, command: Command) =>
+      run(command, (ctx) => useHost(opts.path === undefined ? { id } : { id, path: opts.path }, ctx), usedText),
+    );
+
+  program
+    .command("unuse <id>")
+    .description("Turn a worker host off for this Project; the clone stays on the host")
+    .action((id: string, _opts: unknown, command: Command) =>
+      run(command, (ctx) => unuseHost({ id }, ctx), unusedText),
+    );
+
+  registerHostAgentCommands(program);
+}
+
+/** Registers the hidden subcommands that the main machine runs on a worker host over SSH. */
+function registerHostAgentCommands(program: Command): void {
   // The main machine runs this command over SSH to get the PNG of an `attachment.add` entry.
   program
     .command("blob <sha256>", { hidden: true })
@@ -142,8 +179,26 @@ export function registerHostCommands(program: Command): void {
       runBytes(command, () => readOutboxBlob({ dir: process.env.ROWBLY_OUTBOX, sha256 })),
     );
 
+  // The main machine runs this command over SSH to get the entries after the `afterSeq` of the request.
+  program.command("outbox", { hidden: true }).action((_opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      async () => hostOutboxEntries(await hostRequest()),
+      (answer) => `${answer.entries.length} entries`,
+    ),
+  );
+
+  // The main machine runs this command over SSH after it recorded the applied `seq` on its disk.
+  program.command("outbox-ack", { hidden: true }).action((_opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      async () => hostOutboxAck(await hostRequest()),
+      (result) => `Removed ${result.removed} entries`,
+    ),
+  );
+
   // A detached agent starts with the same Node, loader flags and entry file as this process.
-  registerHostAgentCommands(program, {
+  registerHostServeCommands(program, {
     executable: process.execPath,
     execArgv: [...process.execArgv],
     entry: resolve(process.argv[1] as string),

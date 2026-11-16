@@ -1,8 +1,12 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { Readable } from "node:stream";
+import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { writeOutboxBlob } from "../../services/outbox/outbox-file.js";
+import { appendOutboxEntry, writeOutboxBlob } from "../../services/outbox/outbox-file.js";
+import { initProject } from "../../services/project/project.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -12,7 +16,8 @@ import { runCli } from "../test-cli/test-cli.js";
 vi.mock("../../services/host-transport/ssh-transport.js", async (original) => {
   const actual = await original<typeof import("../../services/host-transport/ssh-transport.js")>();
   const bytes = async (command: readonly string[]) => ({
-    exitCode: 0,
+    // Nothing is at a path on the fake host, so `host use` clones.
+    exitCode: command[0] === "test" ? 1 : 0,
     bytes: Buffer.from(command[0] === "node" ? "v22.19.0\n" : "0.18.0\n"),
     stderr: "",
   });
@@ -154,6 +159,53 @@ describe("host commands", () => {
   });
 });
 
+describe("host use and unuse", () => {
+  const home = useTempDir();
+  const project = useTempDir();
+  const outside = useTempDir();
+  const rcFile = () => join(home.path, RC_FILE);
+  const cli = (cwd: string, ...args: string[]) => runCli(args, cwd);
+  const git = promisify(execFile);
+
+  beforeEach(async () => {
+    vi.stubEnv("HOME", home.path);
+    vi.stubEnv("USERPROFILE", home.path);
+    await initProject({ name: "Rowbly", key: "ROW" }, { cwd: project.path, home: home.path });
+    await git("git", ["init", "-q", project.path]);
+    await git("git", ["-C", project.path, "remote", "add", "origin", "git@github.com:o/r.git"]);
+    await writeFile(rcFile(), JSON.stringify({ hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true }] }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("host use clones in the managed folder, and host unuse removes the record", async () => {
+    const used = await cli(project.path, "--json", "host", "use", "mini");
+
+    expect(used.exitCode).toBe(0);
+    expect(JSON.parse(used.stdout)).toMatchObject({ host: "mini", managed: true, cloned: true });
+    expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts[0].projects).toHaveLength(1);
+    expect((await cli(project.path, "host", "unuse", "mini")).stdout).toContain("stays on the host");
+    expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts[0].projects).toEqual([]);
+    expect(JSON.parse((await cli(outside.path, "--json", "host", "list")).stdout)).toEqual([
+      { id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true },
+    ]);
+  });
+
+  it("host use and host unuse give NOT_FOUND outside a Project", async () => {
+    for (const args of [
+      ["host", "use", "mini"],
+      ["host", "unuse", "mini"],
+    ]) {
+      const result = await cli(outside.path, "--json", ...args);
+
+      expect(result.exitCode).toBe(1);
+      expect(JSON.parse(result.stderr).error.code).toBe("NOT_FOUND");
+    }
+  });
+});
+
 describe("host blob", () => {
   const outbox = useTempDir();
   const outside = useTempDir();
@@ -251,5 +303,58 @@ describe("host blob", () => {
     expect(result.exitCode).toBe(1);
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     expect(result.bytes.length).toBe(0);
+  });
+});
+
+describe("host outbox and host outbox-ack", () => {
+  const outbox = useTempDir();
+  const outside = useTempDir();
+  const write = (after: string) => ({ storyId: "ROW-01", changes: [{ path: "title", before: "A", after }] });
+
+  /** Runs the command with the text on stdin. */
+  async function withStdin(text: string, ...args: string[]) {
+    const stdin = Object.getOwnPropertyDescriptor(process, "stdin");
+    Object.defineProperty(process, "stdin", { value: Readable.from([text]), configurable: true });
+    try {
+      return await runCli(["--json", "host", ...args], outside.path);
+    } finally {
+      if (stdin) Object.defineProperty(process, "stdin", stdin);
+    }
+  }
+
+  beforeEach(() => {
+    vi.stubEnv("ROWBLY_OUTBOX", outbox.path);
+    vi.stubEnv("ROWBLY_THREAD_ID", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("gives the entries after afterSeq, then removes the acknowledged entries", async () => {
+    await appendOutboxEntry({ dir: outbox.path, threadId: "t" }, write("B"));
+    await appendOutboxEntry({ dir: outbox.path, threadId: "t" }, write("C"));
+
+    const read = await withStdin('{"afterSeq":1}\n', "outbox");
+    expect(read.exitCode).toBe(0);
+    expect(JSON.parse(read.stdout).entries).toEqual([expect.objectContaining({ seq: 2, ...write("C") })]);
+
+    const ack = await withStdin('{"seq":1}\n', "outbox-ack");
+    expect(ack.exitCode).toBe(0);
+    expect(JSON.parse(ack.stdout)).toEqual({ removed: 1, blobs: [] });
+
+    const after = await withStdin('{"afterSeq":0}\n', "outbox");
+    expect(JSON.parse(after.stdout).entries.map((entry: { seq: number }) => entry.seq)).toEqual([2]);
+  });
+
+  it("gives VALIDATION for bad JSON and for a missing ROWBLY_OUTBOX", async () => {
+    const bad = await withStdin("nope", "outbox");
+    expect(bad.exitCode).toBe(1);
+    expect(JSON.parse(bad.stderr).error.code).toBe("VALIDATION");
+
+    vi.stubEnv("ROWBLY_OUTBOX", "");
+    const missing = await withStdin('{"seq":1}', "outbox-ack");
+    expect(missing.exitCode).toBe(1);
+    expect(JSON.parse(missing.stderr).error.message).toBe("ROWBLY_OUTBOX is not set");
   });
 });
