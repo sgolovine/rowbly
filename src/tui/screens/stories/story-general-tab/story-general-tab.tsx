@@ -7,7 +7,7 @@ import {
   type FormValues,
   ScrollBody,
 } from "../../../components/index.js";
-import { IMAGE_PASTE_HINT } from "../../../hooks/index.js";
+import { PASTE_HINT } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { StoryDependencyLists } from "../story-dependency-lists/index.js";
 import type { DependencyLists } from "../story-dependency-view.js";
@@ -15,7 +15,7 @@ import { StoryTimeRows, type StoryTimes } from "../story-time-rows/index.js";
 
 const NO_HINTS: readonly KeyHint[] = [];
 /** One list for all renders, so that the Form does not report its keys again on each render. */
-const EXTRA_HINTS: readonly KeyHint[] = [IMAGE_PASTE_HINT];
+const EXTRA_HINTS: readonly KeyHint[] = [PASTE_HINT];
 /** The Form leaves `shift+tab` and the save key to the Story form, which changes the tab and asks the Form to save. */
 const NAVIGATION = { extraHints: NO_HINTS, register: () => () => {} };
 

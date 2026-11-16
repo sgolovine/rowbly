@@ -5,7 +5,7 @@ import { createStory, type Story } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { Form, type FormValues, useCovered } from "../../../components/index.js";
 import {
-  IMAGE_PASTE_HINT,
+  PASTE_HINT,
   showToast,
   type ToastStore,
   useEscape,
@@ -23,7 +23,7 @@ import { tagChoices, tagsValue } from "../story-tag-view.js";
 type StoryPaste = ReturnType<typeof useStoryPaste>;
 
 /** One list for all renders, so that the Form does not report its keys again on each render. */
-const EXTRA_HINTS = [IMAGE_PASTE_HINT];
+const EXTRA_HINTS = [PASTE_HINT];
 
 /** The environment of the creation of the Story. */
 interface NewStoryEnv {

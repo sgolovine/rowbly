@@ -1,7 +1,10 @@
 import { type Key, useInput, usePaste } from "ink";
 import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, useState } from "react";
-import { clipboardName, MAX_ATTACHMENT_BYTES, type PendingImage } from "../../services/attachment/attachment.js";
-import { clipboardFailure, readClipboardImage } from "../../services/clipboard/clipboard.js";
+import {
+  MAX_ATTACHMENT_BYTES,
+  type PendingImage,
+  readClipboardAttachment,
+} from "../../services/attachment/attachment.js";
 import { ValidationError } from "../../services/errors/errors.js";
 import { Store } from "../../services/store/store.js";
 import { useCovered } from "../components/index.js";
@@ -12,7 +15,7 @@ import { showToast, type ToastStore, useToast } from "./toasts.js";
 // A read stays busy after its original screen closes.
 const clipboard = new Store({ reading: false });
 
-export const IMAGE_PASTE_HINT = { key: process.platform === "win32" ? "alt+v" : "ctrl+v", description: "paste image" };
+export const PASTE_HINT = { key: process.platform === "win32" ? "alt+v" : "ctrl+v", description: "paste file" };
 
 /** What a paste reads and changes. */
 interface PasteEnv {
@@ -41,24 +44,20 @@ function totalBytes(images: readonly PendingImage[]): number {
   return images.reduce((n, image) => n + image.bytes.length, 0);
 }
 
-/** Reads the clipboard image and adds it to the draft. */
+/** Reads the copied file or image of the clipboard and adds it to the draft. */
 async function readImage(env: PasteEnv, session: number): Promise<void> {
-  const result = await readClipboardImage();
+  const file = await readClipboardAttachment({}, env.storyId);
 
   if (!isCurrent(env, session)) {
     return;
   }
 
-  if ("reason" in result) {
-    throw clipboardFailure(result.reason, env.storyId);
+  if (totalBytes(env.images.current) + file.bytes.length > MAX_ATTACHMENT_BYTES) {
+    throw new ValidationError("Pending files exceed 10 MiB in total");
   }
 
-  if (totalBytes(env.images.current) + result.bytes.length > MAX_ATTACHMENT_BYTES) {
-    throw new ValidationError("Pending images exceed 10 MiB in total");
-  }
-
-  env.setPending([...env.images.current, { name: clipboardName(new Date()), bytes: result.bytes }]);
-  showToast(env.toast, "info", "Image added to draft; save the Story to keep it");
+  env.setPending([...env.images.current, file]);
+  showToast(env.toast, "info", "File added to draft; save the Story to keep it");
 }
 
 async function paste(env: PasteEnv): Promise<void> {
@@ -71,7 +70,7 @@ async function paste(env: PasteEnv): Promise<void> {
   clipboard.update(() => ({ reading: true }));
   env.setBusy(true);
 
-  const progress = env.toast.pending("Reading clipboard image…");
+  const progress = env.toast.pending("Reading clipboard…");
 
   try {
     await readImage(env, session);
@@ -92,7 +91,7 @@ function pasteKey(env: PasteEnv, input: string, key: Key): void {
   }
 }
 
-/** An empty bracketed paste is the paste of an image in some terminals. */
+/** An empty bracketed paste is the paste of a file or an image in some terminals. */
 function pasteText(env: PasteEnv, text: string): void {
   if (text === "") {
     void paste(env);
@@ -101,11 +100,11 @@ function pasteText(env: PasteEnv, text: string): void {
 
 function pasteSummary(pending: readonly PendingImage[]): string | undefined {
   return pending.length
-    ? `${pending.length} pending image${pending.length === 1 ? "" : "s"} · ${totalBytes(pending)} bytes`
+    ? `${pending.length} pending file${pending.length === 1 ? "" : "s"} · ${totalBytes(pending)} bytes`
     : undefined;
 }
 
-/** Pastes clipboard images into the draft of the Story `owner` while its screen is active. */
+/** Pastes a copied file or a clipboard image into the draft of the Story `owner` while its screen is active. */
 export function useStoryPaste(owner: string, storyId?: string, enabled = true) {
   const active = useIsActive();
   const covered = useCovered();

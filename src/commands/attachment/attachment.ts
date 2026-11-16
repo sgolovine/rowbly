@@ -12,7 +12,7 @@ export function registerAttachmentCommands(program: Command): void {
   program
     .command("add-attachment <story> [file]")
     .description("Attach a file to a Story")
-    .option("--from-clipboard", "read a PNG image from the clipboard")
+    .option("--from-clipboard", "read a copied file or an image from the clipboard")
     .action((story: string, file: string | undefined, opts: { fromClipboard?: boolean }, command: Command) =>
       run(
         command,

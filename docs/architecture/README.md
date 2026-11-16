@@ -50,7 +50,8 @@ See [domain-concepts.md](domain-concepts.md) for the full definitions.
   Markdown in the TUI.
 - **Zod** defines the parameter schemas of the Pi tools.
 - **gray-matter** and **yaml** parse and write the frontmatter of Story and Spec files.
-- **@mariozechner/clipboard** reads PNG images from the clipboard (with `wl-paste` on Wayland).
+- **@mariozechner/clipboard** reads PNG images from the clipboard. Rowbly reads a copied file with `wl-paste`,
+  `xclip`, `osascript` or `powershell`, and other image types with `wl-paste` on Wayland.
 - **Vitest** (dev) runs the tests.
 - **tsup** bundles the CLI. **tsx** runs the source during development.
 - **Biome** lints and formats. **Knip** (dev) finds dead code. **agentic-tui** (dev) runs the CLI in a
