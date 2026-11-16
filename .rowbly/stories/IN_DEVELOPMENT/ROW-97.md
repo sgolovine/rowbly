@@ -6,9 +6,9 @@ uid: 46c3414b-e2fd-43af-95d5-cbfee713f080
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:29:41.981Z
+updatedAt: 2026-11-16T23:48:57.156Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/296
 ---
 
 ## Goal
@@ -76,3 +76,9 @@ Not in scope:
 - `factory stop` waits for a connected host with a time limit of 60 seconds. Reason: the Spec says that the stop waits for each connected host, but a stop must not wait without an end.
 - A `stop_worker` of the supervisor while the host is disconnected queues `stop-thread` and the run keeps its wait until the reconnect. A cancel while the host is disconnected queues `cancel-thread` and ends the wait, as today. Reason: a stop is not an abandon, and the cancel case belongs to ROW-99.
 - A cut before the `launch` command has a request id fails the launch with the error of the host, not with `NETWORK`. Reason: no work runs on the host yet, so no result can be lost, and a `NETWORK` failure would pause the provider of the model. The supervisor can start a new worker for the Story.
+- (Development) The host gives its receipt when the `submit` request succeeds: the host wrote the command durably. A queued command leaves the queue then. A submit that the host refuses (exit code other than 0) also leaves the queue, and a refused queued launch fails its run. Reason: the queue must not keep a command that the host will never accept.
+- (Development) A stop or a cancel of a Thread whose `launch` or `resume` is still in the queue removes that launch from the queue and ends the wait of the run. Reason: the host processes its command files in id order, not in the order of arrival, so a queued stop cannot be sure to come after a queued launch. The queued stop still stops a run that the host started.
+
+## Review findings
+
+- Merge conflict with `origin/main` (Changelog Stage): `docs/architecture/native-factory/host-agent.md` has a conflict when `origin/main` is merged into `story/ROW-97`. Merge `origin/main`, repair the conflict in this file, run the checks and push. The Changelog Stage did not add the changelog entry because of this conflict.
