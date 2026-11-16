@@ -16,6 +16,7 @@ This file records the changes to Rowbly that users can see.
 - Added: `rowbly host attach` now also sends the new lines of the session file of each remote worker, so that a later version can show the conversation of remote Threads on the main machine. (ROW-111)
 - Fixed: When two Story files have the same Story ID and the same `uid`, for example in two Stage folders, `rowbly doctor --fix` and the TUI board load now remove the old copy and keep the copy with the newest `updatedAt`, for example `ROW-78: removed the old copy in DONE`. If the copies have different content, `rowbly doctor` shows an error and Rowbly does not change a file. (ROW-114)
 - Changed: New factory attempts in `.rowbly/state.json`, worker Threads, outbox entries of worker hosts and attachment records in `.rowbly/attachments/<ID>/manifest.json` now keep the `storyUid` of their Story. Rowbly finds the Story of these records by its `uid` first and then by the Story ID, so old records stay valid. (ROW-113)
+- Added: The factory can now send a worker to a worker host, follow its run, apply the outbox of the host to the board before the Thread completes, and skip the Story with `waiting for host sync` until the host is synchronized. The hidden `rowbly host outbox`, `rowbly host outbox-ack` and `rowbly host blob` commands accept a project id, and the new hidden `rowbly host run-paths` command gives the run paths of the host, but the factory does not use real worker hosts yet. (ROW-96)
 
 ### 0.19.0
 
@@ -47,7 +48,6 @@ This file records the changes to Rowbly that users can see.
 - Added: The new hidden `rowbly host serve`, `rowbly host submit` and `rowbly host attach` commands run the host agent on a worker host, but no command of the main machine uses them yet. The host agent keeps the commands of the main machine with receipts, limits the workers of all Projects on the host with `~/.local/share/rowbly/slots/limit.json`, and stops when it has no work. (ROW-89)
 - Added: The new `rowbly host check <id>` command shows if a worker host is ready: SSH, Linux, `flock`, Git, Node, the Rowbly version, the Pi login, the worker models, the clone, Git push access, `gh`, the Git identity and local commits that are not on `origin`. The new `rowbly host login <id>` command logs in to Pi on the host in a terminal, and `rowbly host add` now shows the items that you must do. (ROW-87)
 - Added: `rowbly add-attachment <story> <file>` and the "New file" button of the Attachments tab in the TUI attach a file of any type of 10 MiB or less to a Story, for example a PDF, a JPEG or a text file. `--from-clipboard` and the paste key of the TUI still read only a PNG image. (ROW-108)
-- Added: The factory can now send a worker to a worker host, follow its run, apply the outbox of the host to the board before the Thread completes, and skip the Story with `waiting for host sync` until the host is synchronized. The hidden `rowbly host outbox`, `rowbly host outbox-ack` and `rowbly host blob` commands accept a project id, and the new hidden `rowbly host run-paths` command gives the run paths of the host, but the factory does not use real worker hosts yet. (ROW-96)
 
 ### 0.18.0
 
