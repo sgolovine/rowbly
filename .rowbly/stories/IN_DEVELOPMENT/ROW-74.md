@@ -1,7 +1,7 @@
 ---
 title: Threads Improvements - better scrolling
 stage: IN_DEVELOPMENT
-position: 3
+position: 2
 createdAt: 2026-11-16T16:59:12.508Z
 updatedAt: 2026-11-16T19:31:16.382Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-74
