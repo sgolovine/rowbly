@@ -1,9 +1,9 @@
 ---
 title: Better offline handling
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 1
 createdAt: 2026-11-16T16:32:19.285Z
-updatedAt: 2026-11-16T17:08:04.992Z
+updatedAt: 2026-11-16T17:10:02.834Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-71
 pull_request: https://github.com/sgolovine/rowbly/pull/259
 ---
@@ -72,3 +72,10 @@ Not in scope:
 - The pause starts at 1 minute and doubles to a maximum of 15 minutes. Reason: a short outage must resume quickly; the cap matches the 15 minute quota pause.
 - Auto-resume uses the same Thread and Pi session (a new run), not a new worker. Reason: "tasks must auto-resume" means the work continues where it stopped; the resume path already exists. The limit of three runs for each Thread stays; after it the policy retry starts a new Thread.
 - A worker that runs on a provider that is not paused continues to run. Reason: the Story asks to plan for one provider with problems, so other providers must keep working.
+
+## Review findings
+
+- CHANGELOG Stage: the merge of `origin/main` into `story/ROW-71` has conflicts in files other than `CHANGELOG.md`. The merge was aborted. Files with conflicts:
+  - `.rowbly/stories/ROW-70.md`
+  - `.rowbly/stories/ROW-72.md`
+- Cause: the branch has factory scan commits (`chore(rowbly): record project changes after scan`: c4a17278, 4f6be1f9, eeb136c5) that change these canonical `.rowbly/` files. Merge `origin/main` and keep the `origin/main` version of these `.rowbly/stories/` files (or remove the `.rowbly/` changes from the branch), so the pull request does not change canonical `.rowbly/` files.
