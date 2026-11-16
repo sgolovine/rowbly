@@ -2,6 +2,7 @@
 title: Add a view for deterministic checks
 stage: DONE
 position: 24
+uid: e7ea4cff-aee5-4708-b797-ae4efedea249
 createdAt: 2026-11-14T20:18:09.000Z
 updatedAt: 2026-11-14T20:36:01.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-25
