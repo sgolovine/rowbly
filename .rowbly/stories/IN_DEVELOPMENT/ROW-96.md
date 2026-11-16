@@ -1,6 +1,6 @@
 ---
 title: Send workers to worker hosts from the manager
-stage: IN_REFINEMENT
+stage: IN_DEVELOPMENT
 position: 15
 dependsOn:
   - ROW-82
@@ -9,7 +9,7 @@ dependsOn:
   - ROW-94
   - ROW-95
 createdAt: 2026-11-16T19:45:10.132Z
-updatedAt: 2026-11-16T22:48:04.799Z
+updatedAt: 2026-11-16T22:48:07.786Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-96
 pull_request: null
 ---
