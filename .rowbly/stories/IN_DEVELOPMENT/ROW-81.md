@@ -1,7 +1,7 @@
 ---
 title: Re-number a Story automatically when two Story files have the same ID
 stage: IN_DEVELOPMENT
-position: 3
+position: 1
 createdAt: 2026-11-16T19:31:02.777Z
 updatedAt: 2026-11-16T19:44:03.380Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-81
