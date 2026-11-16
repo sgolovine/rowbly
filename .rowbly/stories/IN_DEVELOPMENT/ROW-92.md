@@ -1,6 +1,6 @@
 ---
 title: Run remote workers in the host agent
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 11
 dependsOn:
   - ROW-82
@@ -9,7 +9,7 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:07.547Z
-updatedAt: 2026-11-16T22:21:49.352Z
+updatedAt: 2026-11-16T22:33:59.263Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-92
 pull_request: https://github.com/sgolovine/rowbly/pull/285
 ---
@@ -108,3 +108,4 @@ Not in scope:
 - The PNG cache is in the runtime folder of each Project on the host. Reason: attachment ids are unique, but a cache for each Project keeps the files of a Project together and private.
 - The fetch of a missing PNG and the session lines on the channel are separate Stories (ROW-110, ROW-111). Reason: one pull request cannot hold all the work. ROW-110 also needs the channel handler of the main machine (ROW-96).
 - A remote worker in this Story has no `run_check` tool. Reason: checks on the host are ROW-93. Without a check queue, the worker message must not have the checks block (ROW-96).
+- The cache commands accept an attachment file of any type, not only a PNG. Bytes that are not a PNG no longer give `VALIDATION`; only a bad id and bytes larger than 10 MiB do. The copy builder lists each attachment file with its name (`attachmentFileName`), and `prepare` writes it with that name. Reason: the base branch (`6ddebfef`) supports attachments of any file type, so the "not a PNG" part of the cache acceptance criterion no longer applies.

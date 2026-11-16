@@ -24,9 +24,29 @@ export interface HostProject {
   readonly managed: boolean;
 }
 
-/** A host entry of the file. `projects` is the list of the Projects that the host uses. */
+/** The summary of the last check of a host. Only the IDs of the `fail` items are stored. */
+export interface HostLastCheck {
+  /** The ISO time at the end of the check. */
+  readonly at: string;
+  readonly ready: boolean;
+  /** The IDs of the items with the state `fail`, in the order of the check. */
+  readonly failed: readonly string[];
+}
+
+/**
+ * A host entry of the file. `projects` is the list of the Projects that the host uses. `lastCheck` is the summary of
+ * the last `checkHost`.
+ */
 export interface HostEntry extends Host {
   readonly projects?: readonly HostProject[];
+  readonly lastCheck?: HostLastCheck;
+}
+
+/** The fields of a host that `updateHost` changes. An absent field does not change. */
+export interface HostUpdate {
+  readonly id: string;
+  readonly maxWorkers?: number;
+  readonly enabled?: boolean;
 }
 
 export interface HostInput {
@@ -61,6 +81,23 @@ function hasValidProjects(host: Partial<HostEntry>): boolean {
   return host.projects === undefined || (Array.isArray(host.projects) && host.projects.every(isHostProject));
 }
 
+function isLastCheck(value: unknown): value is HostLastCheck {
+  const check = value as Partial<HostLastCheck> | null;
+
+  return (
+    typeof check === "object" &&
+    check !== null &&
+    typeof check.at === "string" &&
+    typeof check.ready === "boolean" &&
+    Array.isArray(check.failed) &&
+    check.failed.every((id) => typeof id === "string")
+  );
+}
+
+function hasValidLastCheck(host: Partial<HostEntry>): boolean {
+  return host.lastCheck === undefined || isLastCheck(host.lastCheck);
+}
+
 function isHost(value: unknown): value is HostEntry {
   const host = value as Partial<HostEntry> | null;
 
@@ -71,7 +108,8 @@ function isHost(value: unknown): value is HostEntry {
     typeof host.ssh === "string" &&
     typeof host.maxWorkers === "number" &&
     typeof host.enabled === "boolean" &&
-    hasValidProjects(host)
+    hasValidProjects(host) &&
+    hasValidLastCheck(host)
   );
 }
 
@@ -89,6 +127,11 @@ export function rcHosts(rc: UserRc, file: string): readonly HostEntry[] {
 /** The Projects that the host uses. A missing key is an empty list. */
 export function hostProjects(host: HostEntry): readonly HostProject[] {
   return host.projects ?? [];
+}
+
+/** The record of the Project at `root` on the host, or `undefined` when the host does not use the Project. */
+export function hostProjectRecord(host: HostEntry, root: string): HostProject | undefined {
+  return hostProjects(host).find((project) => project.root === root);
 }
 
 /** Gives only the fields of a host. An entry in the file can have more keys, which a write keeps. */
@@ -150,5 +193,14 @@ export function validateHostInput(input: HostInput): void {
 
   if (first) {
     throw new ValidationError(first.message, { details: { issues } });
+  }
+}
+
+/** Throws a `ValidationError` when the worker limit is not a whole number of 1 or more. */
+export function validateMaxWorkers(maxWorkers: number): void {
+  const issue = maxWorkersIssue(maxWorkers);
+
+  if (issue) {
+    throw new ValidationError(issue.message, { details: { issues: [issue] } });
   }
 }

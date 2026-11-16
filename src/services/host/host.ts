@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError } from "../errors/errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "../errors/errors.js";
 import { type HostCheck, type HostCheckDeps, runHostCheck } from "../host-check/host-check.js";
 import { ensureHostVersion, type HostVersionResult } from "../host-install/host-install.js";
 import { HostInstallFailedError } from "../host-install/host-install-errors.js";
@@ -7,10 +7,19 @@ import type { HostTransport } from "../host-transport/host-transport.js";
 import { createSshTransport } from "../host-transport/ssh-transport.js";
 import { rcPath, readRc, writeRc } from "../user-rc/user-rc.js";
 import type { ServiceContext } from "../workspace/workspace.js";
-import { type Host, type HostInput, hostView, rcHosts, validateHostInput } from "./host-rules.js";
+import {
+  type Host,
+  type HostEntry,
+  type HostInput,
+  type HostUpdate,
+  hostView,
+  rcHosts,
+  validateHostInput,
+  validateMaxWorkers,
+} from "./host-rules.js";
 import { activeThreadsOn } from "./host-threads.js";
 
-export type { Host, HostInput, HostProject } from "./host-rules.js";
+export type { Host, HostInput, HostLastCheck, HostProject, HostUpdate } from "./host-rules.js";
 
 /** The connection, the build and the check facts that `addHost` uses. Tests give a fake transport and a fake build. */
 export type AddHostDeps = HostCheckDeps;
@@ -120,4 +129,45 @@ async function assertNoActiveThreads(id: string, ctx: ServiceContext): Promise<v
       details: { threads: active },
     });
   }
+}
+
+/** Throws a `ValidationError` when the update changes nothing or has a bad worker limit. */
+function validateUpdate(input: HostUpdate): void {
+  if (input.maxWorkers === undefined && input.enabled === undefined) {
+    throw new ValidationError("Give a new worker limit or a new on/off state", {
+      hint: "Use --max-workers <n>, --enable or --disable.",
+    });
+  }
+
+  if (input.maxWorkers !== undefined) {
+    validateMaxWorkers(input.maxWorkers);
+  }
+}
+
+function changedHost(host: HostEntry, input: HostUpdate): HostEntry {
+  return {
+    ...host,
+    ...(input.maxWorkers === undefined ? {} : { maxWorkers: input.maxWorkers }),
+    ...(input.enabled === undefined ? {} : { enabled: input.enabled }),
+  };
+}
+
+/** Changes the worker limit and/or the on/off state of a worker host. The other keys of the entry and the file stay. */
+export async function updateHost(input: HostUpdate, ctx: ServiceContext = {}): Promise<Host> {
+  validateUpdate(input);
+
+  const file = rcPath(ctx);
+  const rc = await readRc(file);
+  const hosts = rcHosts(rc, file);
+  const host = hosts.find((entry) => entry.id === input.id);
+
+  if (!host) {
+    throw new NotFoundError(`Host "${input.id}" not found`, { details: { hosts: hosts.map((entry) => entry.id) } });
+  }
+
+  const changed = changedHost(host, input);
+
+  await writeRc(file, { ...rc, hosts: hosts.map((entry) => (entry === host ? changed : entry)) });
+
+  return hostView(changed);
 }

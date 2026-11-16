@@ -25,25 +25,25 @@ separate chunk in `dist/`. The test `src/cli.test.ts` makes sure of this. `--ver
 Each command module is a folder: `<name>/<name>.ts`, and `<name>/<name>.test.ts` when the module has a
 test.
 
-| Folder                                                 | Function                                                                         |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `register-commands/`                                   | `registerCommands()`: adds the global options and attaches each command.         |
-| `output/`                                              | `run()`, `collect()`, `parseFieldFlags()`, `parsePosition()`, `formatValue()`.   |
-| `test-cli/`                                            | `runCli()`, `createProgram()`: run commands in tests.                            |
-| `init/`                                                | The `rowbly init` command: flags and JSON input.                                 |
-| `init-wizard/`                                         | `askOnboarding()`: the `@clack/prompts` questions of `rowbly init`.              |
-| `project/`                                             | `project update`: the name, the key, Specs and the display options.              |
-| `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.        |
-| `doctor/`                                              | `rowbly doctor [--fix]`.                                                         |
-| `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.    |
-| `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                   |
-| `tag/`                                                 | `tag list`, `add`, `update`, `remove`: the tags of a Project.                    |
-| `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.    |
-| `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt. |
-| `model/`                                               | `model list`.                                                                    |
-| `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
-| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `check`, `login`, `list`, `remove`, `use`, `unuse`, hidden commands. |
+| Folder                                                 | Function                                                                                   |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `register-commands/`                                   | `registerCommands()`: adds the global options and attaches each command.                   |
+| `output/`                                              | `run()`, `collect()`, `parseFieldFlags()`, `parsePosition()`, `formatValue()`.             |
+| `test-cli/`                                            | `runCli()`, `createProgram()`: run commands in tests.                                      |
+| `init/`                                                | The `rowbly init` command: flags and JSON input.                                           |
+| `init-wizard/`                                         | `askOnboarding()`: the `@clack/prompts` questions of `rowbly init`.                        |
+| `project/`                                             | `project update`: the name, the key, Specs and the display options.                        |
+| `prompt/`                                              | `prompt list`, `prompt get`, `prompt set`: the user prompts of a Project.                  |
+| `doctor/`                                              | `rowbly doctor [--fix]`.                                                                   |
+| `status/`                                              | `rowbly status`: a short summary of the factory, the Threads and the Stories.              |
+| `story/`, `stage/`, `custom-field/`, `spec/`, `skill/` | The commands of each resource.                                                             |
+| `tag/`                                                 | `tag list`, `add`, `update`, `remove`: the tags of a Project.                              |
+| `attachment/`                                          | `add-attachment`, `list-attachments`, `open-attachment`, `remove-attachment`.              |
+| `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt.           |
+| `model/`                                               | `model list`.                                                                              |
+| `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.                       |
+| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                          |
+| `host/`                                                | `host add`, `check`, `login`, `list`, `update`, `remove`, `use`, `unuse`, hidden commands. |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -143,13 +143,21 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   failed item does not make `host add` fail.
 - `host check <id>` shows if the host is ready. With `--json`, the result is `{ host, ready, items }`.
   The text output has one line for each item with its state, and the action of each `fail` or
-  `warning` item. The exit code is 0 also when items fail. An unknown id gives `NOT_FOUND`. See
+  `warning` item. The exit code is 0 also when items fail. An unknown id gives `NOT_FOUND`. After the
+  check, Rowbly writes a summary to the `lastCheck` key of the host entry. `host add` also writes it. See
   [host-check.md](native-factory/host-check.md).
 - `host login <id>` runs `ssh -t <target> <remote rowbly> auth login`, so that the user logs in to Pi
   on the host. It must run in a terminal. With `--json`, or without a terminal, it gives
   `VALIDATION` and starts no process. The exit code is the exit code of SSH.
 - `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
   `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
+- `host update <id> [--max-workers <n>] [--enable | --disable]` changes the worker limit of the host,
+  or turns the host on or off for all Projects. The result is the changed host
+  `{ id, ssh, maxWorkers, enabled }`. All other keys of the host entry and of the file stay.
+  - A worker limit that is not a whole number of 1 or more gives `VALIDATION`.
+  - A command without a change gives `VALIDATION`. `--enable` and `--disable` together give
+    `VALIDATION`.
+  - An unknown id gives `NOT_FOUND`.
 - `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or
   `false`). At this time, `--purge` does no work. The clone and the worktrees stay on the host.
 - `host use <id> [--path <dir>]` turns the host on for the current Project. The host then has a

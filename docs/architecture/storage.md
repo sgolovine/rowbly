@@ -620,7 +620,7 @@ apply in one place.
 
 ```
 ~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId;
-                      # hosts [{id,ssh,maxWorkers,enabled,projects?}], in the order that the user added them
+                      # hosts [{id,ssh,maxWorkers,enabled,projects?,lastCheck?}], in the order that the user added them
 ```
 
 - The TUI adds a Project to this file when the Project opens.
@@ -640,6 +640,17 @@ apply in one place.
   - `managed` is `true` when Rowbly made the clone in its own folder on the host.
   - If the value is not an array, or a record does not have the three fields with the correct types,
     the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
+- `lastCheck` of a host entry is the summary of the last host check:
+  `{ "at": string, "ready": boolean, "failed": [string] }`. `rowbly host check` and `rowbly host add`
+  write it after the check. The CLI and the TUI show the same value. A missing key means that the
+  host has no check.
+  - `at` is the ISO time at the end of the check.
+  - `ready` is `true` when no item of the check is `fail`.
+  - `failed` is the list of the ids of the `fail` items, in the order of the check.
+  - The check reads the file again before the write, because the check takes time. If the host is
+    not in the file at that time, Rowbly does not write the file, and the check does not fail.
+  - If the value is not an object with the three fields with the correct types, the full `hosts`
+    value is invalid. Then each `host` command gives `VALIDATION`.
 - Rowbly v1 uses the same file for its own keys. Keep all other keys when you write the file.
 - If the file is a symlink, for example from a dotfile manager, Rowbly writes through the link and
   keeps it.

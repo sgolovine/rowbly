@@ -9,6 +9,7 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: The new Hosts section in the Factory group of the TUI Settings shows the worker hosts and their last check, and sets the placement of new workers. It turns a host on or off for this Project or for all Projects, changes the worker limit and runs the check, and the new `rowbly host update <id> [--max-workers <n>] [--enable | --disable]` command changes a host from the CLI. (ROW-103)
 - Added: The host agent on a worker host can now run workers. The new hidden `rowbly host prepare`, `rowbly host cache-missing` and `rowbly host cache-put` commands send a copy of the `.rowbly/` files and the PNG attachments to the host, and `rowbly host attach` sends the state of each run. No command of the main machine uses this yet. (ROW-92)
 
 ### 0.19.0

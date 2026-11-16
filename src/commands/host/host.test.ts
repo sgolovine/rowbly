@@ -83,7 +83,13 @@ describe("host commands", () => {
       check: expect.objectContaining({ host: "mini", ready: true }),
     });
     expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts).toEqual([
-      { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true },
+      {
+        id: "mini",
+        ssh: "user@mini.lan",
+        maxWorkers: 2,
+        enabled: true,
+        lastCheck: { at: expect.any(String), ready: expect.any(Boolean), failed: expect.any(Array) },
+      },
     ]);
   });
 
@@ -213,6 +219,50 @@ describe("host commands", () => {
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
   });
 
+  it("host update changes the worker limit and the on/off state, and prints the changed host", async () => {
+    await writeFile(
+      rcFile(),
+      JSON.stringify({ theme: "x", hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true, note: "kept" }] }),
+    );
+
+    const json = await cli("--json", "host", "update", "mini", "--max-workers", "3");
+
+    expect(json.exitCode).toBe(0);
+    expect(JSON.parse(json.stdout)).toEqual({ id: "mini", ssh: "u@h", maxWorkers: 3, enabled: true });
+    expect((await cli("host", "update", "mini", "--disable")).stdout).toBe(
+      "Updated worker host mini  u@h  3 worker(s)  off",
+    );
+    expect(JSON.parse(await readFile(rcFile(), "utf8"))).toEqual({
+      theme: "x",
+      hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 3, enabled: false, note: "kept" }],
+    });
+    expect(JSON.parse((await cli("--json", "host", "update", "mini", "--enable")).stdout)).toMatchObject({
+      enabled: true,
+    });
+  });
+
+  it.each([
+    [["--enable", "--disable"], "VALIDATION"],
+    [[], "VALIDATION"],
+    [["--max-workers", "0"], "VALIDATION"],
+    [["--max-workers", "many"], "VALIDATION"],
+  ])("host update mini %j gives %s and keeps the bytes", async (flags, code) => {
+    const text = JSON.stringify({ hosts: [{ id: "mini", ssh: "u@h", maxWorkers: 1, enabled: true }] });
+    await writeFile(rcFile(), text);
+
+    const result = await cli("--json", "host", "update", "mini", ...flags);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe(code);
+    expect(await readFile(rcFile(), "utf8")).toBe(text);
+  });
+
+  it("host update gives NOT_FOUND for an unknown host", async () => {
+    const result = await cli("--json", "host", "update", "nope", "--max-workers", "2");
+
+    expect(JSON.parse(result.stderr).error.code).toBe("NOT_FOUND");
+  });
+
   it("gives CONFLICT for a host that exists and NOT_FOUND for an unknown host", async () => {
     await cli("host", "add", "mini", "--ssh", "u@h", "--max-workers", "1");
 
@@ -232,6 +282,7 @@ describe("host commands", () => {
       ["host", "list"],
       ["host", "add", "mini", "--ssh", "u@h", "--max-workers", "1"],
       ["host", "remove", "mini"],
+      ["host", "update", "mini", "--max-workers", "2"],
     ]) {
       const result = await cli("--json", ...args);
 
