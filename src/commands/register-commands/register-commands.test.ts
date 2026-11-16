@@ -34,6 +34,7 @@ const resources = {
     "submit",
     "cache-missing",
     "cache-put",
+    "run-paths",
     "prepare",
     "attach",
   ],
@@ -51,6 +52,7 @@ const hidden = [
   "attach",
   "cache-missing",
   "cache-put",
+  "run-paths",
   "prepare",
 ];
 

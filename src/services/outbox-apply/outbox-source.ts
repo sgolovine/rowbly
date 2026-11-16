@@ -15,10 +15,20 @@ export interface OutboxSource {
   acknowledge(seq: number): Promise<void>;
 }
 
-/** The transport of the host, and the path of `rowbly` on the host. */
+/** The transport of the host, the path of `rowbly` on the host and the project id of the host agent. */
 export interface TransportSourceInput {
   readonly transport: HostTransport;
   readonly rowbly: string;
+  /**
+   * The project id of the host agent. The host commands then use the outbox of that agent. Without it, the host
+   * commands read the outbox folder from `ROWBLY_OUTBOX`.
+   */
+  readonly projectId?: string;
+}
+
+/** The tokens of one `rowbly host` command, with the project id at the end when the input has one. */
+function hostCommand(input: TransportSourceInput, ...args: string[]): RemoteCommand {
+  return [input.rowbly, "host", ...args, ...(input.projectId === undefined ? [] : [input.projectId])];
 }
 
 /** Makes the error of a remote command that exited with a code other than 0. */
@@ -42,7 +52,7 @@ function answerEntries(value: unknown): readonly OutboxEntry[] {
 }
 
 async function entriesAfter(input: TransportSourceInput, seq: number): Promise<readonly OutboxEntry[]> {
-  const command: RemoteCommand = [input.rowbly, "host", "outbox"];
+  const command = hostCommand(input, "outbox");
   const result = await input.transport.request(command, { afterSeq: seq });
 
   if (result.exitCode !== 0) {
@@ -53,7 +63,7 @@ async function entriesAfter(input: TransportSourceInput, seq: number): Promise<r
 }
 
 async function blob(input: TransportSourceInput, sha256: string): Promise<Uint8Array> {
-  const command: RemoteCommand = [input.rowbly, "host", "blob", sha256];
+  const command = hostCommand(input, "blob", sha256);
   // One byte more than the limit tells the apply that the file is too large.
   const result = await input.transport.bytes(command, null, { limit: MAX_ATTACHMENT_BYTES + 1 });
 
@@ -65,7 +75,7 @@ async function blob(input: TransportSourceInput, sha256: string): Promise<Uint8A
 }
 
 async function acknowledge(input: TransportSourceInput, seq: number): Promise<void> {
-  const command: RemoteCommand = [input.rowbly, "host", "outbox-ack"];
+  const command = hostCommand(input, "outbox-ack");
   const result = await input.transport.request(command, { seq });
 
   if (result.exitCode !== 0) {
