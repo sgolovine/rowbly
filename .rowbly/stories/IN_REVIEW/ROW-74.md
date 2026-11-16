@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - better scrolling
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 1
 createdAt: 2026-11-16T16:59:12.508Z
-updatedAt: 2026-11-16T19:35:00.999Z
+updatedAt: 2026-11-16T19:35:54.079Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-74
 pull_request: https://github.com/sgolovine/rowbly/pull/262
 ---
