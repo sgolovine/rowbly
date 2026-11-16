@@ -1,9 +1,9 @@
 ---
 title: Organize story by stage within `stories` folder.
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 1
 createdAt: 2026-11-16T16:07:13.306Z
-updatedAt: 2026-11-16T16:47:09.809Z
+updatedAt: 2026-11-16T17:07:01.038Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-69
 pull_request: https://github.com/sgolovine/rowbly/pull/258
 ---
