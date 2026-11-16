@@ -2,6 +2,7 @@
 title: Capture real TUI screenshots for the website
 stage: DONE
 position: 63
+uid: b9b5f1b4-3c73-4cd7-8f52-125168ed974d
 createdAt: 2026-11-14T23:14:07.000Z
 updatedAt: 2026-11-15T01:24:26.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-55
