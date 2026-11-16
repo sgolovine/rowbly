@@ -11,20 +11,32 @@ import { useTempDir } from "../../services/test-project/test-project.js";
 import { RC_FILE } from "../../services/user-rc/user-rc.js";
 import { runCli } from "../test-cli/test-cli.js";
 
-// The command must never use real SSH or npm in a test. The fake host has Node and the same Rowbly build.
+// The command must never use real SSH or npm in a test. The fake host passes each check, with the same Rowbly build.
+// A test can change the answer of a command in `hostAnswers`.
 // The factory cannot import the fake transport, because the fake transport imports this mocked module.
+const hostAnswers = vi.hoisted(() => ({ overrides: {} as Record<string, unknown> }));
+const spawned = vi.hoisted(() => ({ calls: [] as unknown[] }));
+
 vi.mock("../../services/host-transport/ssh-transport.js", async (original) => {
   const actual = await original<typeof import("../../services/host-transport/ssh-transport.js")>();
-  const bytes = async (command: readonly string[]) => ({
-    // Nothing is at a path on the fake host, so `host use` clones.
-    exitCode: command[0] === "test" ? 1 : 0,
-    bytes: Buffer.from(command[0] === "node" ? "v22.19.0\n" : "0.18.0\n"),
-    stderr: "",
-  });
+  const answers = await import("../../services/test-project/fake-host-answers.js");
+  const bytes = async (command: readonly string[]) =>
+    answers.answerFor({ ...answers.healthyAnswers(), ...(hostAnswers.overrides as Record<string, never>) }, command);
   const fail = async () => {
     throw new Error("The host command test uses only bytes calls.");
   };
   return { ...actual, createSshTransport: () => ({ bytes, request: fail, upload: fail, channel: fail }) };
+});
+
+vi.mock("node:child_process", async (original) => {
+  const actual = await original<typeof import("node:child_process")>();
+  return {
+    ...actual,
+    spawn: (...args: Parameters<typeof actual.spawn>) => {
+      spawned.calls.push(args);
+      return actual.spawn(...args);
+    },
+  };
 });
 
 vi.mock("../../services/host-install/local-build.js", async (original) => {
@@ -45,6 +57,8 @@ describe("host commands", () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    hostAnswers.overrides = {};
+    spawned.calls = [];
   });
 
   it("host add records the host outside a Project and prints it as JSON", async () => {
@@ -66,6 +80,7 @@ describe("host commands", () => {
         nodeVersion: "v22.19.0",
         stderr: "",
       },
+      check: expect.objectContaining({ host: "mini", ready: true }),
     });
     expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts).toEqual([
       { id: "mini", ssh: "user@mini.lan", maxWorkers: 2, enabled: true },
@@ -78,8 +93,77 @@ describe("host commands", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toBe(
       "Added worker host mini  user@mini.lan  2 worker(s)  on\n" +
-        "Rowbly 0.18.0 found at .local/share/rowbly/versions/0.18.0/node_modules/.bin/rowbly",
+        "Rowbly 0.18.0 found at .local/share/rowbly/versions/0.18.0/node_modules/.bin/rowbly\n" +
+        "All checks pass.",
     );
+  });
+
+  it("host add lists the items that fail with their actions, and records the host", async () => {
+    hostAnswers.overrides = { gh: { exitCode: 1, bytes: Buffer.alloc(0), stderr: "You are not logged in." } };
+
+    const result = await cli("host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain(
+      "Do these items on the host:\nfail     gh: You are not logged in.\n         Action: Run gh auth login on the host.",
+    );
+    expect(JSON.parse(await readFile(rcFile(), "utf8")).hosts).toHaveLength(1);
+  });
+
+  it("host check prints { host, ready, items } as JSON and exits with 0 when items fail", async () => {
+    await cli("host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
+
+    const ok = await cli("--json", "host", "check", "mini");
+
+    expect(ok.exitCode).toBe(0);
+    expect(Object.keys(JSON.parse(ok.stdout))).toEqual(["host", "ready", "items"]);
+    expect(JSON.parse(ok.stdout)).toMatchObject({ host: "mini", ready: true });
+    expect(JSON.parse(ok.stdout).items).toHaveLength(13);
+
+    hostAnswers.overrides = { uname: { exitCode: 0, bytes: Buffer.from("Darwin\n"), stderr: "" } };
+
+    const failed = await cli("--json", "host", "check", "mini");
+
+    expect(failed.exitCode).toBe(0);
+    expect(JSON.parse(failed.stdout).ready).toBe(false);
+  });
+
+  it("host check prints one line for each item, with the action of a fail", async () => {
+    await cli("host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
+    hostAnswers.overrides = { uname: { exitCode: 0, bytes: Buffer.from("Darwin\n"), stderr: "" } };
+
+    const result = await cli("host", "check", "mini");
+    const lines = result.stdout.split("\n");
+
+    expect(result.exitCode).toBe(0);
+    expect(lines[0]).toBe("Host mini is not ready.");
+    expect(lines[1]).toBe("ok       ssh: SSH connects without a password");
+    expect(lines[2]).toBe("fail     linux: uname -s gives Darwin");
+    expect(lines[3]).toBe("         Action: Use a Linux host. Rowbly runs workers only on Linux.");
+    expect(result.stdout).toContain("skipped  clone: Not in a Rowbly Project.");
+  });
+
+  it("host check gives NOT_FOUND for an unknown host", async () => {
+    const result = await cli("--json", "host", "check", "nope");
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("NOT_FOUND");
+  });
+
+  it("host login gives VALIDATION with --json or without a terminal, and starts no process", async () => {
+    await cli("host", "add", "mini", "--ssh", "user@mini.lan", "--max-workers", "2");
+
+    const json = await cli("--json", "host", "login", "mini");
+    const text = await cli("host", "login", "mini");
+
+    expect(json.exitCode).toBe(1);
+    expect(JSON.parse(json.stderr).error).toMatchObject({
+      code: "VALIDATION",
+      hint: "Run rowbly host login mini in a terminal without --json.",
+    });
+    expect(text.exitCode).toBe(1);
+    expect(text.stderr).toContain("Login needs an interactive terminal");
+    expect(spawned.calls).toEqual([]);
   });
 
   it("host list prints [] without hosts, then the hosts in the order of the file", async () => {

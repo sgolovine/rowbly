@@ -114,6 +114,11 @@ export function sshArguments(settings: SshSettings, command: RemoteCommand): str
   validateTarget(settings.target);
   validateCommand(command);
 
+  return [...sshOptions(settings), "--", settings.target, ...command];
+}
+
+/** The `-o` options of each SSH call: no password prompt, keepalive and a shared connection. */
+export function sshOptions(settings: SshSettings): string[] {
   return [
     "-o",
     "BatchMode=yes",
@@ -127,14 +132,11 @@ export function sshArguments(settings: SshSettings, command: RemoteCommand): str
     `ControlPath=${join(settings.controlDir, "%C")}`,
     "-o",
     `ControlPersist=${settings.controlPersist}`,
-    "--",
-    settings.target,
-    ...command,
   ];
 }
 
 /** Makes the ControlMaster folder, and makes it private to the user. */
-async function ensureControlDir(settings: SshSettings): Promise<void> {
+export async function ensureControlDir(settings: SshSettings): Promise<void> {
   await mkdir(settings.controlDir, { recursive: true, mode: 0o700 });
   await chmod(settings.controlDir, 0o700);
 }
