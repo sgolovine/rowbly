@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
+import type { CheckQueueDeps } from "../check-queue/check-types.js";
 import { newOwner, type Owner, type OwnerProbe, probeOwner } from "../factory-ownership/ownership-lock.js";
 import { outboxPaths } from "../outbox/outbox-file.js";
 import { Store } from "../store/store.js";
@@ -20,6 +21,7 @@ import {
   type HostWorkRunner,
   stopAllWork,
 } from "./host-agent-work.js";
+import { closeHostChecks, type HostChecks, openHostChecks } from "./host-checks.js";
 
 /** The default idle period: the agent stops after 60 seconds without work. */
 export const DEFAULT_IDLE_MS = 60_000;
@@ -41,6 +43,8 @@ export interface HostAgentOptions {
   /** An abort stops the agent: it asks each work to stop and stops when the work ended. */
   readonly signal?: AbortSignal;
   readonly probe?: OwnerProbe;
+  /** The parts of the check queue that touch the machine. Tests give fakes. The default uses `/proc` and `bash`. */
+  readonly checkDeps?: CheckQueueDeps;
 }
 
 /** The result of `runHostAgent`. `already-running` means that a different live agent held the claim. */
@@ -168,7 +172,7 @@ async function takeClaim(
   return takeClaim(paths, self, probe, deadline);
 }
 
-function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner): AgentLoop {
+function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner, checks: HostChecks): AgentLoop {
   const store = new Store<AgentState>({ active: new Map(), stopping: false, stopRequested: false, busyAt: Date.now() });
   const agent: HostAgent = {
     paths,
@@ -176,6 +180,7 @@ function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner):
     self,
     runner: options.runner,
     probe: options.probe,
+    checks,
     store,
   };
 
@@ -187,6 +192,18 @@ function newLoop(options: HostAgentOptions, paths: HostAgentPaths, self: Owner):
     startedAt: new Date().toISOString(),
     written: new Store({ key: "" }),
   };
+}
+
+/** Runs the loop. When the loop ends, it stops the check queue, then writes `stopped`. */
+async function serveAgent(loop: AgentLoop, checks: HostChecks): Promise<void> {
+  try {
+    await recordState(loop, "running");
+    await agentLoop(loop);
+  } finally {
+    await closeHostChecks(checks);
+  }
+
+  await recordState(loop, "stopped");
 }
 
 /**
@@ -202,12 +219,10 @@ export async function runHostAgent(options: HostAgentOptions): Promise<HostAgent
     return { outcome: "already-running", owner: claim.owner };
   }
 
-  const loop = newLoop(options, paths, self);
-
   try {
-    await recordState(loop, "running");
-    await agentLoop(loop);
-    await recordState(loop, "stopped");
+    const checks = await openHostChecks(paths, self.token, options.checkDeps);
+
+    await serveAgent(newLoop(options, paths, self, checks), checks);
   } finally {
     await releaseAgentClaim(paths, self.token).catch(() => false);
   }

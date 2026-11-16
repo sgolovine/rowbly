@@ -5,6 +5,7 @@ import { type Store, withEntry, withoutEntry } from "../store/store.js";
 import type { ActiveWork } from "./host-agent-claim.js";
 import type { HostCommand } from "./host-agent-control.js";
 import type { HostAgentPaths } from "./host-agent-paths.js";
+import type { HostChecks } from "./host-checks.js";
 import { acquireSlot, releaseSlot, type SlotKey } from "./host-slots.js";
 
 /** The data of one accepted `launch` or `resume` that goes to the worker runner. */
@@ -14,6 +15,8 @@ export interface HostLaunchRequest {
   readonly threadId: string;
   readonly requestId: string;
   readonly payload: Record<string, unknown>;
+  /** The check queue of the agent. Without it, the worker gets no `run_check` tool and no check gate. */
+  readonly checks?: HostChecks;
 }
 
 /** The work of one launch. `ended` resolves when the work ends, also after a failure. */
@@ -54,6 +57,7 @@ export interface HostAgent {
   readonly self: Owner;
   readonly runner: HostWorkRunner | undefined;
   readonly probe: OwnerProbe | undefined;
+  readonly checks: HostChecks | undefined;
   readonly store: Store<AgentState>;
 }
 
@@ -84,6 +88,7 @@ function startWork(agent: HostAgent, command: HostCommand, threadId: string): Pr
     threadId,
     requestId: command.id,
     payload: command.payload ?? {},
+    ...(agent.checks ? { checks: agent.checks } : {}),
   });
 }
 

@@ -29,6 +29,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-run-state.ts`     | The read and the write of `run.json`.                                            |
 | `host-run-executor.ts`  | The only module that loads Pi. The runner imports it when a run starts.          |
 | `host-clone-update.ts`  | The fetch and the fast-forward of the clone.                                     |
+| `host-checks.ts`        | The check queue of the agent and the check records of each run.                  |
 | `host-agent.ts`         | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
 | `host-attach.ts`        | `runHostAttach`: the frames of `host attach`.                                    |
 | `host-agent-launch.ts`  | `startHostAgent`: the detached start of `host serve --detach`.                   |
@@ -71,6 +72,7 @@ All paths are below the home folder of the SSH user. Each folder that the agent 
 | `agent/threads/<thread-id>/run.json`                       | The run state.                              |
 | `agent/threads/<thread-id>/write.lock`                     | The `flock` file of the worker CLI prefix.  |
 | `agent/runtime/sessions/<thread-id>/`                      | The Pi session files of the Thread.         |
+| `agent/runtime/checks/jobs.json`, `<job id>.log`           | The check records and the check logs.       |
 | `agent/attachments/<id>.png`                               | The attachment cache of the Project.        |
 | `agent/bin/rowbly`                                         | The CLI shim of the workers.                |
 | `.local/share/rowbly/slots/limit.json`                     | The machine limit: `{ "maxWorkers": <n> }`. |
@@ -223,12 +225,15 @@ For each `launch` or `resume`, the runner does these steps:
 2. It runs `git -C <clone> fetch origin`, then `git -C <clone> merge --ff-only @{upstream}`, with
    `GIT_TERMINAL_PROMPT=0`. A clone that cannot fast-forward fails the run. Rowbly never resets the
    clone.
-3. It imports `host-run-executor.ts` and makes the local executor. The clone is the Git root of the
-   worktrees. The copy is `ROWBLY_ROOT`. The session files go below `agent/runtime/`.
-4. The executor makes the worktree `<clone>-worktrees/<story-id>` with `prepareWorkerWorktree`.
+3. It reads the factory settings of the copy (`getFactorySettings({ cwd: <copy> })`). A read that
+   fails fails the run.
+4. It imports `host-run-executor.ts` and makes the local executor. The clone is the Git root of the
+   worktrees. The copy is `ROWBLY_ROOT`. The session files go below `agent/runtime/`. The executor
+   gets the check queue of the agent and the settings of the copy.
+5. The executor makes the worktree `<clone>-worktrees/<story-id>` with `prepareWorkerWorktree`.
    Existing work is never reset. A `resume` keeps the worktree of the last run.
-5. The executor runs the Pi session with the prepared message and the result tool. A remote worker
-   has no `run_check` tool and no check gate.
+6. The executor runs the Pi session with the prepared message, the result tool and, if the copy
+   has checks, the `run_check` tool and the check gate. See [Checks](#checks).
 
 The worker shell has `ROWBLY_OUTBOX` (the outbox folder) and `ROWBLY_THREAD_ID`. Thus each CLI write
 of the worker goes to the copy and to the outbox.
@@ -246,6 +251,7 @@ Each event, except the activity, writes durably.
 | `worktree`                         | `{ path, branch }`.                                          |
 | `session`                          | `{ model, file }`. `file` is relative to `agent/runtime/`.   |
 | `activity`                         | The last activity and usage.                                 |
+| `checks`                           | The last 20 checks of the worker on this host.               |
 | `result`                           | The reported result.                                         |
 | `usage`                            | The final usage of the session.                              |
 | `failure`                          | `{ code, message, sessionOpened }`.                          |
@@ -254,6 +260,30 @@ Each event, except the activity, writes durably.
 The end reason is `stopped` or `cancelled` after the matching command, `failed` after a failure,
 and otherwise `completed`. A stop of the agent gives `stopped`. The host reports facts, not a Thread
 status. The main machine maps them to the Thread status.
+
+## Checks
+
+The agent has one check queue (`host-checks.ts`). See [checks.md](checks.md#remote-workers).
+
+1. After the agent takes its claim, `openHostChecks` calls `stopOrphanChecks` for
+   `agent/runtime/checks/`. The process groups of a dead agent stop only while their leader has the
+   recorded `/proc` start ticks. Their jobs become `cancelled`. Then it opens the queue with the
+   owner token of the agent.
+2. The agent gives the queue to the runner in the `checks` field of `HostLaunchRequest`.
+3. When a run starts, `bindHostRun` sets the limits of the queue from the settings of the copy, and
+   sends each job change of the Thread to the run. The next run of the Thread replaces it.
+4. Each job change writes the `checks` list of `run.json`: job id, check key, scope, status, `HEAD`
+   and duration. A final status writes durably. A `queued` or `running` status writes without a
+   sync. A change after the end of the run also writes `run.json`. A `resume` keeps the list.
+5. Thus the `run` frame of `host attach` sends the list when it changes, and again after a
+   reconnect.
+6. `stop-thread`, `cancel-thread`, a stop of the agent and the end of a worker session cancel the
+   queued and running checks of the worker: SIGTERM to the process group, then SIGKILL after 5
+   seconds.
+7. When the agent stops, it calls `stopCheckQueue` before it writes `stopped` and releases its claim.
+
+`HostAgentOptions.checkDeps` replaces the parts of the queue that touch the machine. Tests give
+fakes. Thus no test starts a real check.
 
 ## Stop when idle
 

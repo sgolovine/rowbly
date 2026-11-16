@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { NotFoundError } from "../errors/errors.js";
 import type { WorkerLaunch } from "../factory-manager/worker-executor.js";
+import { type FactorySettings, getFactorySettings } from "../factory-settings/factory-settings.js";
 import { pathExists } from "../files/files.js";
 import { Store } from "../store/store.js";
 import { getStory } from "../story/story.js";
@@ -8,6 +9,7 @@ import type { ThreadRecord } from "../thread/thread.js";
 import { type HostAgentPaths, hostRunPaths, threadPaths } from "./host-agent-paths.js";
 import { type HostLaunchData, readLaunchData } from "./host-agent-prepare.js";
 import type { HostLaunchRequest, HostWork, HostWorkRunner } from "./host-agent-work.js";
+import { bindHostRun, type HostChecks } from "./host-checks.js";
 import { updateClone } from "./host-clone-update.js";
 import {
   changeRun,
@@ -15,6 +17,7 @@ import {
   failureOf,
   type HostRun,
   type RunProgress,
+  recordRunCheck,
   requestStop,
   runEvents,
   throwIfStopping,
@@ -37,6 +40,8 @@ interface PreparedRun {
   readonly data: HostLaunchData;
   readonly launch: WorkerLaunch;
   readonly previous: HostRunState | undefined;
+  /** The check queue of the agent. Without it, the worker gets no check tools. */
+  readonly checks: HostChecks | undefined;
 }
 
 /** Makes the runner that runs each remote worker through the local executor. */
@@ -94,6 +99,7 @@ async function prepareRun(options: HostRunnerOptions, request: HostLaunchRequest
   return {
     data,
     previous,
+    checks: request.checks,
     launch: { thread, story: { ...story, fields: { ...story.fields, worktree: run.worktree } } },
   };
 }
@@ -111,23 +117,47 @@ function firstState(request: HostLaunchRequest, previous: HostRunState | undefin
     updatedAt: now,
     ...(previous?.worktree ? { worktree: previous.worktree } : {}),
     ...(previous?.session ? { session: previous.session } : {}),
+    ...(previous?.checks ? { checks: previous.checks } : {}),
   };
+}
+
+/**
+ * Reads the factory settings of the copy when the run starts. The check items and the limits of the queue come from
+ * them. The job changes of the Thread go to `run.json`.
+ */
+async function runSettings(run: HostRun, copy: string, checks: HostChecks | undefined): Promise<FactorySettings> {
+  const settings = await getFactorySettings({ cwd: copy });
+
+  if (checks) {
+    bindHostRun(checks, {
+      threadId: run.threadId,
+      settings,
+      receiver: (job) => recordRunCheck(run, job, checks.queue.deps.now()),
+    });
+  }
+
+  return settings;
 }
 
 /** Updates the clone, opens the executor and runs the worker. Each error goes to `run.json`. */
 async function execute(options: HostRunnerOptions, run: HostRun, prepared: PreparedRun): Promise<void> {
+  const { copy } = threadPaths(options.paths, run.threadId);
+
   try {
     await updateClone(prepared.data.clone);
     throwIfStopping(run);
 
+    const settings = await runSettings(run, copy, prepared.checks);
     const { openRunExecutor } = await import("./host-run-executor.js");
     const executor = await openRunExecutor({
-      copy: threadPaths(options.paths, run.threadId).copy,
+      copy,
       clone: prepared.data.clone,
       runtimeDir: options.paths.runtime,
       shim: options.shim,
       env: { ROWBLY_OUTBOX: options.paths.outbox, ROWBLY_THREAD_ID: run.threadId },
       runtime: options.runtime,
+      checks: prepared.checks?.queue,
+      settings: () => settings,
     });
 
     run.store.update(() => ({ executor }));

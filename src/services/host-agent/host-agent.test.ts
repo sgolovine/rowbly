@@ -207,6 +207,7 @@ describe("host agent", () => {
       threadId: "t1",
       requestId: "r1",
       payload: { story: "ROW-1" },
+      checks: expect.objectContaining({ queue: expect.objectContaining({ ownerToken: expect.any(String) }) }),
     });
 
     await submitHostCommand(paths("p1"), launch("r3", "t3"));
