@@ -99,6 +99,7 @@ describe("registerCommands", () => {
     expect(program.commands.map((command) => command.name())).toEqual([
       "add-attachment",
       "list-attachments",
+      "get-attachment",
       "open-attachment",
       "remove-attachment",
       "init",

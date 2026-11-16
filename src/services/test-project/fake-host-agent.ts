@@ -13,6 +13,7 @@ import { runHostAttach } from "../host-agent/host-attach.js";
 import { writeSlotLimit } from "../host-agent/host-slots.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import type { BytesResult, RemoteCommand, RequestResult, UploadResult } from "../host-transport/host-transport.js";
+import { encodeFrame } from "../host-transport/json-lines.js";
 import { readOutboxBlob } from "../outbox/outbox-file.js";
 import { hostOutboxAck, hostOutboxEntries } from "../outbox/outbox-host.js";
 import { Store } from "../store/store.js";
@@ -164,8 +165,18 @@ async function upload(fake: FakeAgent, command: RemoteCommand, data: Buffer): Pr
   }
 }
 
-/** Runs `host attach` for the channel. The channel of the host stops when the fake agent stops. */
-function attach(fake: FakeAgent, command: RemoteCommand, remote: FakeRemoteChannel): undefined {
+/** Writes a frame of the main machine to the input of the channel as one JSON line, as SSH does. */
+function writeInput(input: PassThrough, frame: unknown): void {
+  if (!input.writableEnded) {
+    input.write(encodeFrame(frame));
+  }
+}
+
+/**
+ * Runs `host attach` for the channel. The frames of the main machine go to its input. The channel of the host stops
+ * when the fake agent stops.
+ */
+function attach(fake: FakeAgent, command: RemoteCommand, remote: FakeRemoteChannel): (frame: unknown) => void {
   const input = new PassThrough();
 
   record(fake, command);
@@ -178,7 +189,7 @@ function attach(fake: FakeAgent, command: RemoteCommand, remote: FakeRemoteChann
     write: (line) => remote.send(JSON.parse(line)),
   });
 
-  return undefined;
+  return (frame) => writeInput(input, frame);
 }
 
 async function stop(fake: FakeAgent): Promise<void> {

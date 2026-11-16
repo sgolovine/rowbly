@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { useTempDir } from "../test-project/test-project.js";
 import {
   hostAgentPaths,
+  hostAgentPathsAt,
   hostRunPaths,
   hostRunPathsAnswer,
   prepareAgentDirs,
@@ -37,6 +38,8 @@ describe("host agent paths", () => {
     expect(paths.runtime).toBe(join(paths.dir, "runtime"));
     expect(paths.attachments).toBe(join(paths.dir, "attachments"));
     expect(paths.bin).toBe(join(paths.dir, "bin/rowbly"));
+    expect(paths.fetch).toBe(join(paths.dir, "fetch"));
+    expect(paths.channel).toBe(join(paths.dir, "channel.json"));
     expect(threadPaths(paths, "t1")).toEqual({
       dir: join(paths.dir, "threads/t1"),
       copy: join(paths.dir, "threads/t1/copy"),
@@ -63,8 +66,19 @@ describe("host agent paths", () => {
       paths.logs,
       paths.threads,
       paths.runtime,
+      paths.attachments,
+      paths.fetch,
     ]) {
       expect((await stat(dir)).mode & 0o777).toBe(0o700);
+    }
+  });
+
+  it("gives the same paths from the absolute agent folder, and refuses a relative or bad folder", () => {
+    const paths = hostAgentPaths("p1", home.path);
+    expect(hostAgentPathsAt(paths.dir)).toEqual(paths);
+    expect(hostAgentPathsAt(`${paths.dir}/`)).toEqual(paths);
+    for (const dir of ["relative/p1/agent", "/x/Bad_Id/agent"]) {
+      expect(() => hostAgentPathsAt(dir)).toThrow(expect.objectContaining({ code: "VALIDATION" }));
     }
   });
 

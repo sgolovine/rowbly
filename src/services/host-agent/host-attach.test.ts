@@ -2,7 +2,8 @@ import { appendFile, mkdir, truncate, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { PassThrough } from "node:stream";
 import { setTimeout as sleep } from "node:timers/promises";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { pathExists } from "../files/files.js";
 import { checkHello } from "../host-transport/host-handshake.js";
 import { DEFAULT_LINE_LIMIT, decodeChunk, EMPTY_DECODER, parseFrame } from "../host-transport/json-lines.js";
 import { useTempDir } from "../test-project/test-project.js";
@@ -10,6 +11,8 @@ import { type HostAgentResult, runHostAgent } from "./host-agent.js";
 import { submitHostCommand } from "./host-agent-control.js";
 import { hostAgentPaths } from "./host-agent-paths.js";
 import { runHostAttach } from "./host-attach.js";
+import { channelLive } from "./host-channel-mark.js";
+import { readFetchFailure, writeFetchRequest } from "./host-fetch.js";
 import { type HostRunState, writeHostRun } from "./host-run-state.js";
 import type { SessionFrame } from "./host-session-lines.js";
 import { writeSlotLimit } from "./host-slots.js";
@@ -390,5 +393,48 @@ describe("host attach", () => {
     await close(channel);
 
     expect(channel.sessions().at(-1)).toEqual(expect.objectContaining({ offset: 0, end: 8, lines: ['{"c":3}'] }));
+  });
+
+  it("marks the channel as live while it runs, and removes the mark when its input ends", async () => {
+    const paths = hostAgentPaths("p1", home.path);
+    const channel = attach();
+    await waitFor(() => channel.frames().length >= 2);
+    await vi.waitFor(async () => expect(await channelLive(paths)).toBe(true));
+
+    await close(channel);
+
+    expect(await pathExists(paths.channel)).toBe(false);
+    expect(await channelLive(paths)).toBe(false);
+  });
+
+  it("sends one attachment-request frame for each new fetch request, and writes the failure answer", async () => {
+    const paths = hostAgentPaths("p1", home.path);
+    const idA = "a00000000-0000-4000-8000-000000000001";
+    const idB = "a00000000-0000-4000-8000-000000000002";
+    const requests = () =>
+      (channel.frames() as { type: string; id?: string }[]).filter((frame) => frame.type === "attachment-request");
+    await writeFetchRequest(paths, { storyId: "ROW-1", id: idA, now: new Date() });
+    const channel = attach();
+    await waitFor(() => requests().length >= 1);
+    expect(requests()).toEqual([{ type: "attachment-request", storyId: "ROW-1", id: idA }]);
+
+    await writeFetchRequest(paths, { storyId: "ROW-2", id: idB, now: new Date() });
+    await waitFor(() => requests().length >= 2);
+    await sleep(50);
+    expect(requests().map((frame) => frame.id)).toEqual([idA, idB]);
+
+    channel.input.write("not json\n");
+    channel.input.write('{"type":"other"}\n');
+    channel.input.write(`{"type":"attachment-failed","id":"${idB}","message":"No such attachment"}\n`);
+    channel.input.write('{"type":"attachment-failed","id":"../x","message":"bad"}\n');
+    await vi.waitFor(async () => expect(await readFetchFailure(paths, idB)).toBe("No such attachment"));
+    expect(await readFetchFailure(paths, idA)).toBeUndefined();
+    await close(channel);
+
+    const second = attach();
+    await waitFor(
+      () => second.frames().filter((frame) => (frame as { type: string }).type === "attachment-request").length >= 2,
+    );
+    await close(second);
   });
 });
