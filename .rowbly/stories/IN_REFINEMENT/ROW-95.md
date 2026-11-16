@@ -6,8 +6,8 @@ dependsOn:
   - ROW-83
   - ROW-84
 createdAt: 2026-11-16T19:45:09.575Z
-updatedAt: 2026-11-16T20:06:55.620Z
-worktree: null
+updatedAt: 2026-11-16T20:33:06.908Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-95
 pull_request: null
 ---
 
