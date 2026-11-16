@@ -43,7 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `list`, `remove`, hidden `blob`: the worker hosts of the user.       |
+| `host/`                                                | `host add`, `list`, `remove`, `use`, `unuse`, hidden `blob`: the worker hosts.   |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -129,7 +129,8 @@ than one `--tag`, a Story must have all of the tags.
 
 `rowbly host` manages the worker hosts through the `host` service. A worker host is a remote machine
 that runs factory workers only. The hosts belong to the user, not to a Project. Thus the commands do
-not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. See
+not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. Only `host use`
+and `host unuse` need a Project. The `host-project` service does their work. See
 [storage.md](storage.md#rowblyrcjson).
 
 - `host add <id> --ssh <target> --max-workers <n>` checks Node 22.19.0 or later on the host, and
@@ -141,7 +142,29 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
 - `host list` shows the hosts in the order of the file. With `--json`, the result is an array of
   `{ id, ssh, maxWorkers, enabled }`. A file without `hosts` gives `[]`.
 - `host remove <id> [--purge]` removes the host. The result is the host with `purge` (`true` or
-  `false`). At this time, `--purge` does no work, because no clone or worktree exists on a host.
+  `false`). At this time, `--purge` does no work. The clone and the worktrees stay on the host.
+- `host use <id> [--path <dir>]` turns the host on for the current Project. The host then has a
+  clone of the repository of the Project. Rowbly writes the record to the `projects` list of the host
+  only after the remote steps pass. The result is `{ host, root, path, managed, url, cloned }`.
+  - Without `--path`, Rowbly clones the local `origin` URL into the managed folder
+    `.local/share/rowbly/projects/<project-id>/repo`, relative to the home folder of the SSH user. If
+    the folder has a clone of the same repository, Rowbly uses it again and does not clone. If the
+    folder has a different thing, `host use` gives `CONFLICT`.
+  - With `--path <dir>`, Rowbly uses an existing clone and does not clone. The folder must be a Git
+    work tree, its `origin` must be the same repository, and `git status --porcelain` must be empty.
+    If not, `host use` gives `VALIDATION`. A leading `~/` becomes a path relative to the home folder.
+  - Two URLs are the same repository when their `host/owner/repo` forms are equal. Thus
+    `git@github.com:o/r.git`, `ssh://git@github.com/o/r` and `https://github.com/o/r.git` are the same.
+  - A Project without an `origin` remote gives `VALIDATION`. An `origin` URL or a `--path` with a
+    character that is not a safe remote token gives `VALIDATION` before any remote command.
+  - A clone that fails because the host has no Git access gives `HOST_GIT_ACCESS`. Another failure of
+    the clone gives `HOST_CLONE_FAILED`. The two errors have the stderr of `git clone` in `details`.
+  - An unknown host gives `NOT_FOUND`. A Project that the host uses gives `CONFLICT`. Run
+    `host unuse` first.
+- `host unuse <id>` turns the host off for the current Project. It removes only the record. The clone
+  and the worktrees stay on the host. It runs no remote command. It gives `NOT_FOUND` when the host
+  does not use the Project, and `CONFLICT` while a `pending` or `running` Thread of the current
+  Project is on the host.
 - The id must be dash-case (`^[a-z0-9]+(-[a-z0-9]+)*$`). The id `local` is reserved for the main
   machine.
 - The SSH target must not be empty. It must not start with `-`, and it must not have whitespace or
@@ -167,6 +190,17 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
+- `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
+  apply the outbox. Each command reads one JSON object on stdin and the outbox folder from
+  `ROWBLY_OUTBOX`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.
+  - `host outbox` reads `{ "afterSeq": <n> }`. It gives `{ "entries": [...] }`: the complete entries
+    with a `seq` greater than `afterSeq`, in `seq` order.
+  - `host outbox-ack` reads `{ "seq": <n> }`. It removes the entries with a `seq` equal to or less
+    than `seq`, and each PNG that no remaining entry points to. It gives `{ "removed": <n>, "blobs":
+    [<sha256>, ...] }`.
+  - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
+    `ROWBLY_OUTBOX` gives a `VALIDATION` error.
+    See [storage.md](storage.md#apply-on-the-main-machine).
 
 ## Output and errors
 
@@ -178,6 +212,11 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
 4. If the service throws a `RowblyError`, it prints the message, each issue and the hint to stderr.
    With `--json`, it prints `{ "error": { code, message, hint, details } }`. Then it sets exit code 1.
 5. It throws each other error again, because that error is a bug.
+
+`runWithoutContext(command, call, text)` does the same work, but it does not make a `ServiceContext`.
+Thus it does not need `ROWBLY_THREAD_ID` when `ROWBLY_OUTBOX` is set. The hidden `host outbox` and
+`host outbox-ack` commands use it. `runBytes(command, call)` writes raw bytes to stdout, for
+`host blob`.
 
 ## Add a CLI command
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, open, readFile, realpath } from "node:fs/promises";
+import { lstat, mkdir, open, readdir, readFile, realpath, rm } from "node:fs/promises";
 import { isAbsolute, join, sep } from "node:path";
 import { noSymlink } from "../attachment-files/attachment-files.js";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
@@ -128,15 +128,22 @@ export async function writeOutboxBlob(dir: string, bytes: Uint8Array): Promise<s
   return sha256;
 }
 
-/** Writes the PNG first, then the entry. Thus an entry never points to a missing PNG. */
-async function appendAttachmentAdd(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
+/** Writes the PNG, then appends the entry. The caller holds the outbox lock. */
+async function appendAttachmentLocked(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
   const sha256 = await writeOutboxBlob(target.dir, write.bytes);
 
-  return appendOutboxEntry(target, {
-    storyId: write.storyId,
-    type: "attachment.add",
-    attachment: write.attachment,
-    sha256,
+  return appendLocked(target, { storyId: write.storyId, type: "attachment.add", attachment: write.attachment, sha256 });
+}
+
+/**
+ * Writes the PNG first, then the entry. Thus an entry never points to a missing PNG. The outbox lock covers both
+ * writes, so that an acknowledgement cannot remove the PNG before the entry is there.
+ */
+async function appendAttachmentAdd(target: OutboxTarget, write: AttachmentAddWrite): Promise<OutboxEntry> {
+  await mkdir(target.dir, { recursive: true });
+
+  return withFileLock(outboxPaths(target.dir).lockFile, () => appendAttachmentLocked(target, write), {
+    label: "Outbox lock",
   });
 }
 
@@ -164,9 +171,9 @@ interface BlobInput {
   readonly sha256: string;
 }
 
-/** Throws a ValidationError when the input does not name a blob of an outbox folder. Gives the folder. */
-function checkBlobInput(input: BlobInput): string {
-  const dir = input.dir?.trim();
+/** Throws a ValidationError when `value` is not the absolute path of an outbox folder. Gives the folder. */
+export function checkOutboxDir(value: string | undefined): string {
+  const dir = value?.trim();
 
   if (!dir) {
     throw new ValidationError("ROWBLY_OUTBOX is not set", {
@@ -177,6 +184,13 @@ function checkBlobInput(input: BlobInput): string {
   if (!isAbsolute(dir)) {
     throw new ValidationError(`ROWBLY_OUTBOX must be an absolute path: ${dir}`);
   }
+
+  return dir;
+}
+
+/** Throws a ValidationError when the input does not name a blob of an outbox folder. Gives the folder. */
+function checkBlobInput(input: BlobInput): string {
+  const dir = checkOutboxDir(input.dir);
 
   if (!/^[0-9a-f]{64}$/.test(input.sha256)) {
     throw new ValidationError("A blob hash must be 64 lowercase hex characters");
@@ -215,4 +229,108 @@ export async function readOutboxBlob(input: BlobInput): Promise<Buffer> {
   await checkInside(blobsDir, path);
 
   return readFile(path);
+}
+
+/** Throws a ValidationError when `seq` is not a whole number of 0 or more. */
+function checkSeq(seq: number): void {
+  if (!Number.isSafeInteger(seq) || seq < 0) {
+    throw new ValidationError("A seq must be a whole number of 0 or more");
+  }
+}
+
+/** The lines of the text that are not empty. */
+function nonEmptyLines(text: string): string[] {
+  return text.split("\n").filter((line) => line.trim() !== "");
+}
+
+/** The entry of one line, or `undefined` when the line is not a complete entry. */
+function parseLine(line: string): OutboxEntry | undefined {
+  return lineSeq(line) > 0 ? (JSON.parse(line) as OutboxEntry) : undefined;
+}
+
+/**
+ * Gives the complete entries with a `seq` greater than `afterSeq`, in `seq` order. A line that is not complete JSON,
+ * for example after a crash during an append, is ignored.
+ */
+export async function readOutboxEntries(dir: string, afterSeq: number): Promise<OutboxEntry[]> {
+  checkSeq(afterSeq);
+
+  const lines = nonEmptyLines(await readText(outboxPaths(dir).entriesFile));
+
+  return lines
+    .map((line) => parseLine(line))
+    .filter((entry): entry is OutboxEntry => entry !== undefined && entry.seq > afterSeq)
+    .toSorted((a, b) => a.seq - b.seq);
+}
+
+/** The result of an acknowledgement. */
+export interface AcknowledgeResult {
+  /** The number of removed lines. */
+  readonly removed: number;
+  /** The `sha256` of each removed PNG. */
+  readonly blobs: readonly string[];
+}
+
+/** The `sha256` of each PNG that an `attachment.add` line points to. */
+function blobsInUse(lines: readonly string[]): Set<string> {
+  const entries = lines.map((line) => parseLine(line));
+
+  return new Set(
+    entries.flatMap((entry) => (entry && "type" in entry && entry.type === "attachment.add" ? [entry.sha256] : [])),
+  );
+}
+
+/** The names of the files in the folder. A missing folder has no files. */
+async function fileNames(dir: string): Promise<string[]> {
+  try {
+    return await readdir(dir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
+/** Removes each PNG of `blobs/` that no line points to. Gives the `sha256` of each removed PNG. */
+async function removeUnusedBlobs(blobsDir: string, lines: readonly string[]): Promise<string[]> {
+  await noSymlink(blobsDir);
+
+  const inUse = blobsInUse(lines);
+  const unused = (await fileNames(blobsDir))
+    .map((name) => /^([0-9a-f]{64})\.png$/.exec(name)?.[1])
+    .filter((sha256): sha256 is string => sha256 !== undefined && !inUse.has(sha256));
+
+  await Promise.all(unused.map((sha256) => rm(join(blobsDir, `${sha256}.png`), { force: true })));
+
+  return unused;
+}
+
+/** Removes the acknowledged lines and the PNG files that no line points to. The caller holds the outbox lock. */
+async function acknowledgeLocked(dir: string, seq: number): Promise<AcknowledgeResult> {
+  const paths = outboxPaths(dir);
+  const last = await lastSeq(dir);
+  const lines = nonEmptyLines(await readText(paths.entriesFile));
+
+  const kept = lines.filter((line) => lineSeq(line) > seq);
+
+  // The `seq` file keeps the last `seq`, so that a new entry does not get the `seq` of a removed line.
+  await writeFileAtomic(paths.seqFile, `${last}\n`, { durable: true });
+  await writeFileAtomic(paths.entriesFile, kept.map((line) => `${line}\n`).join(""), { durable: true });
+
+  const blobs = await removeUnusedBlobs(paths.blobsDir, kept);
+
+  return { removed: lines.length - kept.length, blobs };
+}
+
+/**
+ * Removes the lines with a `seq` equal to or less than `seq` under the outbox lock. A line that is not a complete
+ * entry is also removed. Then removes each PNG of `blobs/` that no remaining `attachment.add` entry points to.
+ */
+export async function acknowledgeOutbox(dir: string, seq: number): Promise<AcknowledgeResult> {
+  checkSeq(seq);
+  await mkdir(dir, { recursive: true });
+
+  return withFileLock(outboxPaths(dir).lockFile, () => acknowledgeLocked(dir, seq), { label: "Outbox lock" });
 }
