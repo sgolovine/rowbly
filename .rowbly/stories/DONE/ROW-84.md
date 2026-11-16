@@ -2,6 +2,7 @@
 title: Add the worker host registry and host add, list and remove
 stage: DONE
 position: 4
+uid: 71cebd00-e0aa-4a00-93f3-0c468b8eac9b
 dependsOn:
   - ROW-83
 createdAt: 2026-11-16T19:45:02.241Z

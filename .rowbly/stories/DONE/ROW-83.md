@@ -2,6 +2,7 @@
 title: Record the host of each worker Thread and attempt
 stage: DONE
 position: 2
+uid: 1cf13c92-dfdf-4052-b846-8785083240da
 createdAt: 2026-11-16T19:45:01.623Z
 updatedAt: 2026-11-16T20:18:29.400Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-83
