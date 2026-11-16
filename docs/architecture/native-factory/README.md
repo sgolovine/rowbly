@@ -187,6 +187,7 @@ of the `factory` skill.
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
 | [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 | [host-install.md](host-install.md)               | You change the Node check or the install of Rowbly on a worker host.          |
+| [host-agent.md](host-agent.md)                   | You change the host agent, its commands, the machine slots or `host attach`.  |
 
 ## Related
 

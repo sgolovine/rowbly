@@ -53,4 +53,10 @@ describe("host errors", () => {
     expect(classifySshExit(1, "Permission denied", "host")).toBeUndefined();
     expect(classifySshExit(null, "", "host")).toBeUndefined();
   });
+
+  it("gives the codes of the host agent errors", async () => {
+    const { HostNoFreeSlotError, HostWorkerUnavailableError } = await import("./host-errors.js");
+    expect(new HostNoFreeSlotError("full").code).toBe("HOST_NO_FREE_SLOT");
+    expect(new HostWorkerUnavailableError("none").code).toBe("HOST_WORKER_UNAVAILABLE");
+  });
 });
