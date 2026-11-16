@@ -6,9 +6,9 @@ uid: 46c3414b-e2fd-43af-95d5-cbfee713f080
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:29:41.981Z
+updatedAt: 2026-11-16T23:47:47.758Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/296
 ---
 
 ## Goal
