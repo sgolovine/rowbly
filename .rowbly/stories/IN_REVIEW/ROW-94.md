@@ -1,13 +1,13 @@
 ---
 title: Apply outbox entries on the main machine
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 13
 dependsOn:
   - ROW-85
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:08.648Z
-updatedAt: 2026-11-16T21:24:59.644Z
+updatedAt: 2026-11-16T21:25:44.471Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-94
 pull_request: https://github.com/sgolovine/rowbly/pull/278
 ---
