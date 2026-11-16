@@ -6,7 +6,7 @@ dependsOn:
   - ROW-83
   - ROW-84
 createdAt: 2026-11-16T19:45:09.575Z
-updatedAt: 2026-11-16T21:10:33.350Z
+updatedAt: 2026-11-16T21:12:30.384Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-95
 pull_request: https://github.com/sgolovine/rowbly/pull/276
 ---
@@ -97,7 +97,3 @@ The function applies these rules in this order:
 - The `hosts` list in `status.json` has `id`, `state`, `max`, `used` and `free` only. Reason: `lastSeenAt` and the latency come with the heartbeat in ROW-97.
 - `rowbly factory configure --placement` is in scope. Reason: the Story makes a user setting, and the TUI control comes later (ROW-103); the CLI is the smallest way to set it without a hand edit.
 - The policy limit is the sum of the slots of the hosts that can take work, and `limit` stays the local limit. Reason: the policy must not stop at `maxWorkers` when a worker host has free slots, and the local limit stays `maxWorkers`.
-
-## Review findings
-
-- The merge of `origin/main` into `story/ROW-95` has a conflict in `docs/architecture/cli.md` (the list of `host` command rules near line 149). The branch adds the `rowbly factory configure --placement <policy>` item. `main` adds the `host blob <sha256>` items. Keep both texts, then merge `origin/main` again and run the checks. The Changelog Stage did not write an entry, because a file other than `CHANGELOG.md` has a conflict.
