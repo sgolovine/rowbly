@@ -5,7 +5,7 @@ position: 16
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:29:32.096Z
+updatedAt: 2026-11-16T23:29:38.904Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
 pull_request: null
 ---
@@ -37,7 +37,8 @@ Not in scope:
 
 ## Acceptance criteria
 
-- [ ] Cut at each step: a manager test with the faux provider, the fake transport (`createFakeHostTransport`) and one injected worker host cuts the connection (`disconnect()`) and restores it (`reconnect()`) at each of these steps of a run: after `prepare`, after the `launch` submit, after the worktree frame, after the session frame, after the result frame, after the end frame and before the outbox sync, and during the outbox sync. For each step, the Thread ends one time with the correct status, `resultReported` and `completed` (or `failed`) are each called one time, the Story is in the next Stage one time, and each outbox entry is applied one time.
+- [ ] Cut at each step: a manager test with the faux provider, the fake transport (`createFakeHostTransport`) and one injected worker host cuts the connection (`disconnect()`) and restores it (`reconnect()`) at each of these steps of a run: during the `launch` submit (the host gets the command but the answer is lost), after the `launch` submit, after the worktree frame, after the session frame, after the result frame, after the end frame and before the outbox sync, and during the outbox sync. For each step, the Thread ends one time with the correct status, `resultReported` and `completed` (or `failed`) are each called one time, the Story is in the next Stage one time, and each outbox entry is applied one time.
+- [ ] Cut before the submit: a cut after `prepare` and before the `launch` submit fails the Thread one time with the error code of the host error (not `NETWORK`), and no run starts on the host. A test examines this.
 - [ ] Disconnect during a run: the Thread keeps its status (`running`) while the host is disconnected. It does not become `failed` or `interrupted`. The Story waits with `waiting for host sync`. A test examines this.
 - [ ] Heartbeat states: a pure test of the state function examines each state: `connected` after a good heartbeat; `degraded` after one or two failed heartbeats in a row, or a latency above the limit; `disconnected` after three failed heartbeats in a row; `version-mismatch` for a `HostVersionMismatchError` or a different version; `auth-failed` for a `HostAuthFailedError`.
 - [ ] Placement: a host in a state other than `connected` gets no new worker. A test examines `degraded`, `disconnected`, `version-mismatch` and `auth-failed`.
