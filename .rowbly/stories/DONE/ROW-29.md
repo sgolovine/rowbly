@@ -2,6 +2,7 @@
 title: Read only changed Threads when a worker writes its activity
 stage: DONE
 position: 26
+uid: bb7038ca-1d02-4f91-b268-cc0524c41db4
 createdAt: 2026-11-14T21:06:42.000Z
 updatedAt: 2026-11-14T21:20:43.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-29
