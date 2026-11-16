@@ -4,8 +4,8 @@ stage: IN_REFINEMENT
 dependsOn:
   - ROW-71
 createdAt: 2026-11-16T16:41:21.272Z
-updatedAt: 2026-11-16T16:41:56.225Z
-worktree: null
+updatedAt: 2026-11-16T17:10:08.418Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-73
 pull_request: null
 ---
 
