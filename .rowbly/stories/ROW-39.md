@@ -2,6 +2,7 @@
 title: Cache Pi model list and provider auth status on disk
 stage: DONE
 position: 38
+uid: cf4124d0-4d71-45b4-99a8-4e20f7b9409f
 createdAt: 2026-11-14T21:25:47.000Z
 updatedAt: 2026-11-14T22:20:00.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-39
