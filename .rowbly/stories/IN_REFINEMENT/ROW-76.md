@@ -3,8 +3,8 @@ title: Threads Improvements - Allow user to steer thread.
 stage: IN_REFINEMENT
 position: 3
 createdAt: 2026-11-16T17:01:49.320Z
-updatedAt: 2026-11-16T19:29:40.650Z
-worktree: null
+updatedAt: 2026-11-16T19:34:59.192Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-76
 pull_request: null
 ---
 
