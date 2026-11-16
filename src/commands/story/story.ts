@@ -10,12 +10,11 @@ import {
   updateStory,
 } from "../../services/story/story.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
-import { collect, formatValue, parseFieldFlags, parseIdList, parsePosition, run } from "../output/output.js";
+import { collect, formatValue, parseFieldFlags, parseIdList, run } from "../output/output.js";
 
 interface StoryOptions {
   title?: string;
   stage?: string;
-  position?: number;
   description?: string;
   field?: string[];
   dependsOn?: string[];
@@ -103,11 +102,6 @@ function registerUpdate(program: Command): void {
     .description("Update a story")
     .option("--title <title>", "new title")
     .option("--stage <stage>", "move to this stage")
-    .option(
-      "--position <n>",
-      "move to this place in the stage, from 1 (default: last when the stage changes)",
-      parsePosition,
-    )
     .option("--description <markdown>", "replace the description")
     .option("--field <key=value>", "set a custom field; an empty value clears it (repeatable)", collect)
     .addOption(
@@ -126,7 +120,6 @@ function registerUpdate(program: Command): void {
               id,
               title: opts.title,
               stage: opts.stage,
-              position: opts.position,
               description: opts.description,
               fields: parseFieldFlags(opts.field),
               dependsOn: parseIdList(opts.dependsOn),

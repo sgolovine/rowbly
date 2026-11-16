@@ -129,9 +129,7 @@ describe("story", () => {
       await createStory({ title: "Two" }, project.ctx);
       const moved = await updateStory({ id: "1", stage: "DONE" }, project.ctx);
       expect(moved.path).toBe(join(project.paths.storiesDir, "DONE", "ROW-01.md"));
-      expect(await readUntimed("stories/DONE/ROW-01.md")).toBe(
-        "---\ntitle: One\nstage: DONE\nposition: 1\n---\n\nBody\n",
-      );
+      expect(await readUntimed("stories/DONE/ROW-01.md")).toBe("---\ntitle: One\nstage: DONE\n---\n\nBody\n");
       expect(await readdir(join(project.paths.storiesDir, "BACKLOG"))).toEqual(["ROW-02.md"]);
       await updateStory({ id: "2", stage: "DONE" }, project.ctx);
       expect(await readdir(project.paths.storiesDir)).toEqual(["DONE"]);
@@ -156,47 +154,69 @@ describe("story", () => {
     });
   });
 
-  describe("updateStory with a position", () => {
+  describe("board order", () => {
+    const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
     async function seed(): Promise<void> {
-      for (const title of ["One", "Two", "Three"]) await createStory({ title }, project.ctx);
-      await createStory({ title: "Shipped", stage: "DONE" }, project.ctx);
+      await createStory({ title: "One" }, at("2025-01-01T00:00:00.000Z"));
+      await createStory({ title: "Two" }, at("2025-01-02T00:00:00.000Z"));
+      await createStory({ title: "Three" }, at("2025-01-03T00:00:00.000Z"));
+      await createStory({ title: "Shipped", stage: "DONE" }, at("2025-01-04T00:00:00.000Z"));
     }
     const order = async (stage: string) =>
       (await searchStories({ stage }, project.ctx)).map((story) => `${story.position}:${story.title}`);
 
-    it("moves a story inside its stage and rewrites the positions", async () => {
+    it("puts a new story at position 1 of its stage", async () => {
       await seed();
-      const story = await updateStory({ id: "ROW-03", position: 1 }, project.ctx);
+      expect(await order("BACKLOG")).toEqual(["1:Three", "2:Two", "3:One"]);
+      expect((await getStory({ id: "ROW-03" }, project.ctx)).position).toBe(1);
+    });
+
+    it("puts a story at position 1 of its stage after a change of the description", async () => {
+      await seed();
+      const story = await updateStory({ id: "ROW-01", description: "New" }, at("2025-02-01T00:00:00.000Z"));
       expect(story.position).toBe(1);
-      expect(await order("BACKLOG")).toEqual(["1:Three", "2:One", "3:Two"]);
-      expect(story.path).toBe(join(project.paths.storiesDir, "BACKLOG", "ROW-03.md"));
-      expect(await readUntimed("stories/BACKLOG/ROW-03.md")).toBe(
-        "---\ntitle: Three\nstage: BACKLOG\nposition: 1\n---\n\n",
+      expect(await order("BACKLOG")).toEqual(["1:One", "2:Three", "3:Two"]);
+    });
+
+    it("puts a story at position 1 of a different stage, and writes only its file", async () => {
+      await seed();
+      const before = await Promise.all(
+        ["BACKLOG/ROW-01.md", "BACKLOG/ROW-03.md", "DONE/ROW-04.md"].map((path) => project.read(`stories/${path}`)),
       );
-      await updateStory({ id: "ROW-03", position: 99 }, project.ctx);
-      expect(await order("BACKLOG")).toEqual(["1:One", "2:Two", "3:Three"]);
-      expect(await readdir(join(project.paths.storiesDir, "BACKLOG"))).toEqual(["ROW-01.md", "ROW-02.md", "ROW-03.md"]);
-      expect(await readdir(join(project.paths.storiesDir, "DONE"))).toEqual(["ROW-04.md"]);
-    });
-
-    it("puts a story at the position in a different stage", async () => {
-      await seed();
-      await updateStory({ id: "ROW-02", stage: "DONE", position: 1 }, project.ctx);
+      const story = await updateStory({ id: "ROW-02", stage: "DONE" }, at("2025-02-01T00:00:00.000Z"));
+      expect(story.position).toBe(1);
       expect(await order("DONE")).toEqual(["1:Two", "2:Shipped"]);
-      expect(await order("BACKLOG")).toEqual(["1:One", "2:Three"]);
+      expect(await order("BACKLOG")).toEqual(["1:Three", "2:One"]);
+      expect((await getStory({ id: "ROW-02" }, project.ctx)).position).toBe(1);
+      const after = await Promise.all(
+        ["BACKLOG/ROW-01.md", "BACKLOG/ROW-03.md", "DONE/ROW-04.md"].map((path) => project.read(`stories/${path}`)),
+      );
+      expect(after).toEqual(before);
+      expect(await readUntimed("stories/DONE/ROW-02.md")).toBe("---\ntitle: Two\nstage: DONE\n---\n\n");
     });
 
-    it("rejects a position that is not a whole number from 1", async () => {
+    it("keeps the place of a story after an update that does not change it", async () => {
       await seed();
-      await expect(updateStory({ id: "ROW-01", position: 0 }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
-      await expect(updateStory({ id: "ROW-01", position: 1.5 }, project.ctx)).rejects.toBeInstanceOf(ValidationError);
+      const story = await updateStory({ id: "ROW-01", title: "One" }, at("2025-02-01T00:00:00.000Z"));
+      expect(story.position).toBe(3);
+      expect(await order("BACKLOG")).toEqual(["1:Three", "2:Two", "3:One"]);
     });
 
-    it("puts a story last when it changes stage without a position", async () => {
-      await seed();
-      await updateStory({ id: "ROW-01", stage: "DONE" }, project.ctx);
-      expect(await order("DONE")).toEqual(["1:Shipped", "2:One"]);
-      expect((await getStory({ id: "ROW-01" }, project.ctx)).position).toBe(2);
+    it("keeps an old position key in the file, and the key has no effect on the order", async () => {
+      await project.write(
+        "stories/BACKLOG/ROW-01.md",
+        "---\ntitle: One\nstage: BACKLOG\nposition: 1\nupdatedAt: 2025-01-01T00:00:00.000Z\n---\n",
+      );
+      await project.write(
+        "stories/BACKLOG/ROW-02.md",
+        "---\ntitle: Two\nstage: BACKLOG\nposition: 2\nupdatedAt: 2025-01-02T00:00:00.000Z\n---\n",
+      );
+      expect(await order("BACKLOG")).toEqual(["1:Two", "2:One"]);
+      await updateStory({ id: "ROW-01", title: "Uno" }, at("2025-02-01T00:00:00.000Z"));
+      expect(await order("BACKLOG")).toEqual(["1:Uno", "2:Two"]);
+      expect(await readUntimed("stories/BACKLOG/ROW-01.md")).toBe(
+        "---\ntitle: Uno\nstage: BACKLOG\nposition: 1\n---\n\n",
+      );
     });
   });
 
@@ -237,9 +257,9 @@ describe("story", () => {
       expect(await readUntimed("stories/BACKLOG/ROW-03.md")).toBe(
         "---\ntitle: Three\nstage: BACKLOG\ndependsOn:\n  - ROW-02\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
       );
-      await updateStory({ id: "ROW-03", position: 1, dependsOn: ["row-1"] }, project.ctx);
+      await updateStory({ id: "ROW-03", dependsOn: ["row-1"] }, project.ctx);
       expect(await readUntimed("stories/BACKLOG/ROW-03.md")).toBe(
-        "---\ntitle: Three\nstage: BACKLOG\nposition: 1\ndependsOn:\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
+        "---\ntitle: Three\nstage: BACKLOG\ndependsOn:\n  - ROW-01\npoints: null\npriority: null\nowner: null\n---\n\n",
       );
     });
 
@@ -344,9 +364,16 @@ describe("story", () => {
   describe("searchStories", () => {
     async function seed(): Promise<void> {
       await addFields();
-      await createStory({ title: "Login page", fields: { priority: "high", owner: "Sam" } }, project.ctx);
-      await createStory({ title: "Logout", description: "Clear the session", stage: "DONE" }, project.ctx);
-      await createStory({ title: "Signup", fields: { priority: "low", points: 2 } }, project.ctx);
+      const at = (iso: string) => ({ ...project.ctx, now: () => new Date(iso) });
+      await createStory(
+        { title: "Login page", fields: { priority: "high", owner: "Sam" } },
+        at("2025-01-03T00:00:00Z"),
+      );
+      await createStory(
+        { title: "Logout", description: "Clear the session", stage: "DONE" },
+        at("2025-01-02T00:00:00Z"),
+      );
+      await createStory({ title: "Signup", fields: { priority: "low", points: 2 } }, at("2025-01-01T00:00:00Z"));
     }
     const ids = (stories: { id: string }[]) => stories.map((story) => story.id);
 

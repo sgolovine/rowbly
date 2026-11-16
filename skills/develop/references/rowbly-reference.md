@@ -156,7 +156,7 @@ A Prompt record has this shape. `exists` is `false` and `text` is empty if the f
 | `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids>] (repeat)` | Story |
 | `rowbly story get <id>`                                                                             | Story, with `blocks` and `waitingFor` |
 | `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat) [--blocked \| --ready]`      | Array of Story  |
-| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids> \| --add-dependency <id> --remove-dependency <id>] (repeat)` | Story |
+| `rowbly story update <id> [--title <t>] [--stage <key>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids> \| --add-dependency <id> --remove-dependency <id>] (repeat)` | Story |
 | `rowbly story delete <id>`                                                                          | `{ "id": … }`   |
 
 A Story record has this shape:
@@ -178,14 +178,15 @@ A Story record has this shape:
 ```
 
 - **IDs.** `APP-01`, `app-1` and `1` all select the same Story. The prefix must be the key of the Project.
-- **New Stories.** A new Story goes last in its Stage. Without `--stage`, it goes in the first enabled Stage.
-- **Moves.** A Story that changes Stage goes last, if you do not give `--position`.
-- **Positions.** `--position` starts at 1. A value that is too large puts the Story in the last place.
+- **New Stories.** A new Story goes first in its Stage. Without `--stage`, it goes in the first enabled Stage.
+- **Moves.** A Story that changes Stage goes first in the new Stage.
+- **Positions.** The Stories of a Stage are in the order of `updatedAt`, the most recent first. `position` is the
+  1-based place in this order. A change of a Story puts it first. You cannot set the place of a Story.
 - **Descriptions.** `--description` replaces the full description. An empty value clears it.
 - **Fields.** `--field` changes only the fields that you name.
 - **Search.** With no filters, `story search` shows all Stories. A Story must agree with all filters.
 - **Search text.** Each word of `query` must occur in the ID, title, description or a field value. Case has no effect.
-- **Search order.** The results are in the order of the Stages, then in the order of the positions.
+- **Search order.** The results are in the order of the Stages, then in the order of `updatedAt`, the most recent first.
 - **Dependencies.** `dependsOn` has the IDs of the upstream Stories. A Story is complete only in the last Stage.
   A Story is blocked when one or more upstream Stories are not complete. Otherwise it is ready.
 - **Set dependencies.** `--depends-on` takes a comma-separated list, and you can repeat it. On update, the
@@ -346,7 +347,7 @@ rowbly story update APP-01 --description "$(cat notes.md)" --json
    rowbly prompt get worker --json
    ```
 
-2. Find the Stories of a Stage. They are in the order of their positions:
+2. Find the Stories of a Stage. The most recently updated Story is first:
 
    ```sh
    rowbly story search --stage IN_PROGRESS --json
@@ -417,7 +418,7 @@ Read these files if a command does not give the data. Users can edit these files
   prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
   prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
   prompts/WORKER.md    # the Worker prompt, for all workers
-  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, position, one key for each custom field
+  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, dependsOn, createdAt, updatedAt, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
 ```
@@ -426,7 +427,8 @@ Read these files if a command does not give the data. Users can edit these files
 ---
 title: Login page
 stage: BACKLOG
-position: 1
+createdAt: 2025-01-02T03:04:05.678Z
+updatedAt: 2025-01-03T10:00:00.000Z
 priority: null
 ---
 
@@ -436,8 +438,8 @@ The Markdown description of the Story.
 The `skills` list of `rowbly.config.json` holds each installed skill and its harnesses. The copies
 are outside `.rowbly/`, in the project skills folder of each harness (section 5, "Skill").
 
-In Story files, `null` means that the field has no value. A Story with no `position` comes after
-the Stories that have one.
+In Story files, `null` means that the field has no value. A Story with no valid `updatedAt` comes
+after the Stories that have one. Older Story files can have a `position` key. It has no effect.
 
 Each Story file is in the folder of its Stage. The `stage` key of the frontmatter is the authority.
 A Rowbly write that changes the Stage moves the file. Do not move a Story file by hand: change its
@@ -512,7 +514,8 @@ Older skills and notes can show commands that do not exist now. Do not use the i
 | `rowbly stories show`                                     | `rowbly story get`                                            |
 | `rowbly stories create --name`                            | `rowbly story create --title`                                 |
 | `rowbly stories edit`                                     | `rowbly story update`                                         |
-| `rowbly stories move`, `rowbly stories rank`              | `rowbly story update --stage`, `--position`                   |
+| `rowbly stories move`                                     | `rowbly story update --stage`                                 |
+| `rowbly stories rank`, `rowbly story update --position`   | None. The order in a Stage is by `updatedAt`                  |
 | `rowbly stories delete --yes`                             | `rowbly story delete`                                         |
 | `rowbly config show`                                      | Read `.rowbly/rowbly.config.json`                             |
 | Data Root                                                 | Project                                                       |

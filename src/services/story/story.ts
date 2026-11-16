@@ -15,7 +15,6 @@ import {
   removeStoryFile,
   type StoryFile,
   saveStoryFile,
-  sortStoryFiles,
   storyHomePath,
   withDependsOn,
   withUpdatedAt,
@@ -23,7 +22,7 @@ import {
 } from "../story-files/story-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { changedDependsOn, checkedDependsOn, removeDependencies } from "./story-dependencies.js";
-import { fieldUpdates, positionIssues, titleIssues } from "./story-input.js";
+import { fieldUpdates, titleIssues } from "./story-input.js";
 import { countAttachments, findStoryFile, getStory, positionIn, toStory } from "./story-read.js";
 import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
@@ -34,13 +33,6 @@ export * from "./story-types.js";
 interface Snapshot {
   readonly path: string;
   readonly bytes: Buffer;
-}
-
-/** The time of an update, and whether the update changes the story. */
-interface StoryChange {
-  readonly now: Date;
-  /** Whether the update changes the story itself, not only its place in the stage. */
-  readonly changed: boolean;
 }
 
 /** The current time of the service, which a test can set. */
@@ -164,7 +156,6 @@ function updatedStoryData(
   throwIfIssues("The story is invalid", [
     ...(input.title === undefined ? [] : titleIssues(input.title)),
     ...(input.stage === undefined ? [] : unknownStageIssues(config, input.stage, ["stage"])),
-    ...positionIssues(input.position),
     ...fields.issues,
   ]);
 
@@ -178,47 +169,9 @@ function updatedStoryData(
   return updatedDependsOn(config, files, file, data, input);
 }
 
-/**
- * Writes the story at `position` in its stage, and gives the path of its file. The moved story is always written. A
- * peer that gets a new `position` keeps its `updatedAt`, because the peer itself did not change.
- */
-async function writePosition(
-  paths: ProjectPaths,
-  config: ProjectConfig,
-  file: StoryFile,
-  position: number,
-  moved: boolean,
-): Promise<string> {
-  if (!moved && file.doc.data.position === position) {
-    return file.path;
-  }
-
-  return saveStoryFile(paths, config, file.path, { ...file.doc, data: { ...file.doc.data, position } });
-}
-
 /** The story file with `updatedAt` set to `now`. */
 function stamped(file: StoryFile, now: Date): StoryFile {
   return { ...file, doc: { ...file.doc, data: withUpdatedAt(file.doc.data, now) } };
-}
-
-/** Puts the story at its new place in its stage. The other stories keep their order; each one that moves is rewritten. */
-async function placeStory(
-  paths: ProjectPaths,
-  config: ProjectConfig,
-  files: readonly StoryFile[],
-  updated: StoryFile,
-  position: number | undefined,
-  change: StoryChange,
-): Promise<Story> {
-  const peers = sortStoryFiles(files.filter((f) => f.id !== updated.id && f.doc.data.stage === updated.doc.data.stage));
-  const at = Math.max(0, Math.min(peers.length, (position ?? peers.length + 1) - 1));
-  // A new place is a change of the moved story, also when nothing else of it changes.
-  const placed = change.changed || updated.doc.data.position !== at + 1 ? stamped(updated, change.now) : updated;
-  const order = [...peers.slice(0, at), placed, ...peers.slice(at)];
-
-  const written = await mapInOrder(order, (f, i) => writePosition(paths, config, f, i + 1, f.id === placed.id));
-
-  return toStory(config, { ...placed, path: written[at] ?? placed.path }, at + 1);
 }
 
 /** Whether the new frontmatter or body differs from the story file. */
@@ -237,23 +190,16 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext, t
   const file = await findStoryFile(paths, config, input.id, files);
   const data = updatedStoryData(config, files, file, input);
 
-  const moved = data.stage !== file.doc.data.stage;
   const updated = { ...file, doc: { data, body: input.description ?? file.doc.body } };
-
-  const change: StoryChange = { now: nowOf(ctx), changed: touched || changesStory(file, updated.doc) };
+  const written = touched || changesStory(file, updated.doc) ? stamped(updated, nowOf(ctx)) : updated;
 
   // Checked before writing, so an update never leaves a story invalid.
   toStory(config, updated);
 
-  if (input.position === undefined && !moved) {
-    const written = change.changed ? stamped(updated, change.now) : updated;
+  const path = await saveStoryFile(paths, config, file.path, written.doc);
+  const placed = { ...written, path };
 
-    const path = await saveStoryFile(paths, config, file.path, written.doc);
-
-    return toStory(config, { ...written, path }, positionIn(files, file));
-  }
-
-  return placeStory(paths, config, files, updated, input.position, change);
+  return toStory(config, placed, positionIn([...files.filter((f) => f.id !== file.id), placed], placed));
 }
 
 async function updateWithoutImages(input: UpdateStoryInput, ctx: ServiceContext): Promise<Story> {
@@ -262,13 +208,9 @@ async function updateWithoutImages(input: UpdateStoryInput, ctx: ServiceContext)
   return { ...story, attachmentCount: await countAttachments(await findProject(ctx), story.id) };
 }
 
-/** The story files that an update can write: the story, and the stories of its stage when it changes place. */
-async function snapshotStories(paths: ProjectPaths, story: Story, input: UpdateStoryInput): Promise<Snapshot[]> {
-  const destination = (input.stage ?? story.stage).trim().toUpperCase();
-  const reordered = destination !== story.stage || input.position !== undefined;
-  const before = (await readStoryFiles(paths)).filter(
-    (file) => file.id === story.id || (reordered && file.doc.data.stage === destination),
-  );
+/** The story file that an update writes. The update does not write the other stories. */
+async function snapshotStories(paths: ProjectPaths, story: Story): Promise<Snapshot[]> {
+  const before = (await readStoryFiles(paths)).filter((file) => file.id === story.id);
 
   return Promise.all(before.map(async (file) => ({ path: file.path, bytes: await readFile(file.path) })));
 }
@@ -323,7 +265,7 @@ async function updateOrRestore(
   }
 }
 
-/** Changes a story. A new stage or position also rewrites the positions of the stories in the stage. */
+/** Changes a story. A story that changes goes to the top of its stage, because the stage order is by `updatedAt`. */
 export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
   const images = prepareImages(input.attachments ?? [], true);
 
@@ -333,7 +275,7 @@ export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext =
 
   const paths = await findProject(ctx);
   const story = await getStory({ id: input.id }, ctx);
-  const snapshots = await snapshotStories(paths, story, input);
+  const snapshots = await snapshotStories(paths, story);
 
   return withAttachments(await attachmentDir(paths, story.id), images, nowOf(ctx), () =>
     updateOrRestore(paths, input, ctx, snapshots),

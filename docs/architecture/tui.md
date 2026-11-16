@@ -108,6 +108,18 @@ after a Project switch, `useStageDefaults` in `src/tui/shell/shell/` collapses e
 keys. All other sections are expanded. A reload of the board does not change the sections. See
 [storage.md](storage.md#stages).
 
+## The order and the moves of Stories
+
+In each Stage, the Story list shows the Stories in the order of their `updatedAt` times. The most
+recent Story is at the top. See [storage.md](storage.md#position). You cannot change the place of a
+Story in its Stage. `story-changes.ts` in `src/tui/shell/shell/` moves a Story to a different Stage:
+
+- `shift+↓` (or `ctrl+shift+↓`) moves the selected Story to the next Stage. `shift+↑` (or
+  `ctrl+shift+↑`) moves it to the previous Stage. A move sets `updatedAt`, so the Story goes to the
+  top of the new Stage. The selection stays on the Story.
+- A drop of a dragged Story in a different Stage moves the Story to that Stage. A drop in the same
+  Stage does nothing.
+
 ## The Factory view
 
 The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the

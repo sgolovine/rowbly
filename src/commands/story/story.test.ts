@@ -57,12 +57,14 @@ describe("story commands", () => {
       });
     });
 
-    it("moves a story to a position in its stage", async () => {
+    it("has no --position option", async () => {
       await cli("story", "create", "--title", "First");
-      await cli("story", "create", "--title", "Second");
-      expect((await cli("story", "update", "ROW-02", "--position", "1")).stdout).toBe("Updated ROW-02");
-      expect((await getStory({ id: "ROW-01" }, project.ctx)).position).toBe(2);
-      expect((await cli("story", "update", "ROW-02", "--position", "0")).exitCode).not.toBe(0);
+      const result = await cli("story", "update", "ROW-01", "--position", "2");
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stderr).toContain("unknown option '--position'");
+      const help = await cli("story", "update", "--help");
+      expect(help.stdout).toContain("--stage");
+      expect(help.stdout).not.toContain("--position");
     });
 
     it("fails for an unknown story", async () => {

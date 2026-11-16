@@ -184,6 +184,7 @@ async function unknownKeyIssues(
   const known = new Set([
     "title",
     "stage",
+    // An old key. It has no effect on the order now, but old Story files can still have it.
     "position",
     "dependsOn",
     ...STORY_TIME_KEYS,
