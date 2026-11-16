@@ -361,6 +361,38 @@ functions into the data that the components show.
   shows a maximum of three IDs, then `+<count>`. If the row is narrow, the text is cut. When a worker
   is active, the slot shows `▶ <agent>`.
 
+## Story tags
+
+The TUI shows and changes the tags of the Project and the tags of each Story. The tag service
+(`src/services/tag/tag.ts`), `createStory` and `updateStory` give the rules. A component does not
+contain a tag rule. `src/tui/screens/stories/story-tag-view.ts` changes the tags into the data that
+the components show.
+
+- **The Tags section.** Settings has a Tags section in the Project group, after Custom Fields
+  (`TagsSection`). It shows each tag of `listTags` in config order, with its label and its value in
+  two columns. With no tags, it shows `No Tags. Press n to add one.`
+- **Add.** `n` or the `+ New Tag` Button opens `TagFormModal` with the `Label` and `Value` fields.
+  The save calls `addTag`. An error of the service shows under its field or as a toast, and the
+  Modal stays open.
+- **Edit.** `enter`, `e` or a click on a row opens `TagFormModal` with only the `Label` field. The
+  title shows the value, for example `Edit Tag › frontend`. The value cannot change. The save calls
+  `updateTag`.
+- **Remove.** `d` opens a destructive `ConfirmDialog`. The message tells that Rowbly also removes
+  the tag from each Story. The confirmation calls `removeTag`.
+- **Reload.** After each change, the section reads the tags again and calls `onChange()`. Then the
+  Story list and the Story forms show the new tags.
+- **The `Tags` field.** The new Story form and the General tab have a `Tags` field after
+  `Depends on`. It is a `multiselect` field. Its options are the tag values, and each option shows
+  the tag label. A Story value that is not a tag of the Project shows as its value, and the user can
+  remove it. When the Project has no tags, the field does not show.
+- **Save.** The new Story form gives the list to `createStory` as `tags`. The edit form gives the
+  full list to `updateStory` as `tags`, only when the list changes. An empty list removes the `tags`
+  key from the Story file.
+- **The tag slot.** A Story row with tags shows the labels of its tags after the title, in
+  `ink-muted`, in the order of the Story. A value that is not a tag of the Project shows as its
+  value. If the row is narrow, the tag slot is cut before the title. A Story without tags has no tag
+  slot.
+
 ## Worker model overrides
 
 A person can see, set and remove the worker model overrides of the factory settings in the TUI. The

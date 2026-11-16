@@ -10,6 +10,7 @@ import { PromptsSection } from "./prompts-section/index.js";
 import { SkillsSection } from "./skills-section/index.js";
 import { SpecsSection } from "./specs-section/index.js";
 import { StagesSection } from "./stages-section/index.js";
+import { TagsSection } from "./tags-section/index.js";
 
 /** What the Settings Modal gives to each section. */
 export interface SettingsSectionProps {
@@ -64,6 +65,12 @@ export const SETTINGS_GROUPS: readonly SettingsGroup[] = [
         label: "Custom Fields",
         description: "The fields that every Story has.",
         Component: CustomFieldsSection,
+      },
+      {
+        id: "tags",
+        label: "Tags",
+        description: "The tags that a Story can have.",
+        Component: TagsSection,
       },
       {
         id: "skills",

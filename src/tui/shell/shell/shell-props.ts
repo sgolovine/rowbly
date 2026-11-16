@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { compactThreads } from "../../../services/config/config.js";
+import { compactThreads, projectTags } from "../../../services/config/config.js";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Sidebar } from "../../components/index.js";
 import type { FactoryView } from "../../screens/threads/index.js";
@@ -139,6 +139,7 @@ function panelBody(env: ShellEnv, frame: ShellFrame): StoryPanelBody {
     list: {
       rows,
       activity: board.activity.stories,
+      tags: projectTags(board.project),
       cursor,
       clickable: idle,
       height: frame.listInnerHeight,
