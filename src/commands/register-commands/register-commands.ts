@@ -13,6 +13,7 @@ import { registerSpecCommands } from "../spec/spec.js";
 import { registerStageCommands } from "../stage/stage.js";
 import { registerStatus } from "../status/status.js";
 import { registerStoryCommands } from "../story/story.js";
+import { registerTagCommands } from "../tag/tag.js";
 import { registerThreadCommands } from "../thread/thread.js";
 
 /**
@@ -33,6 +34,7 @@ export function registerCommands(program: Command): void {
   registerStoryCommands(resource(program, "story", "Manage stories"));
   registerStageCommands(resource(program, "stage", "Manage stages"));
   registerCustomFieldCommands(resource(program, "custom-field", "Manage custom fields"));
+  registerTagCommands(resource(program, "tag", "Manage tags"));
   registerSpecCommands(resource(program, "spec", "Manage specs"));
   registerSkillCommands(resource(program, "skill", "Manage agent skills"));
   registerFactoryCommands(resource(program, "factory", "Control the native factory"));

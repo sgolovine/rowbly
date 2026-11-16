@@ -15,24 +15,25 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 
 - Add `--json` to each command. Then read the result from stdout.
 - Do not run `rowbly` with no arguments. This starts the TUI, and the TUI waits for a person.
-- Do not assume the keys of the Stages or the custom fields. Read them from the config (section 3).
+- Do not assume the keys of the Stages, the custom fields or the tags. Read them from the config (section 3).
 - Change data only with commands. A command examines the data before it writes the data.
 - Run only one command that writes at a time for each Project. Rowbly does not lock its files. In a
   test, six parallel `story create` commands all reported success, but only four Stories were written.
-- Get approval from the user before you run `story delete`, `stage delete`, `spec delete` or
-  `custom-field remove`. These commands do not ask for confirmation.
+- Get approval from the user before you run `story delete`, `stage delete`, `spec delete`,
+  `custom-field remove` or `tag remove`. These commands do not ask for confirmation.
 - Do not run a failed command again with the same input. Read the error and change the input.
 
 ## 2. Concepts
 
 | Concept      | Description                                                                         |
 | ------------ | ----------------------------------------------------------------------------------- |
-| Project      | The top-level record. It holds the custom field definitions and the Stages.         |
-| Story        | One item of work. It has a title, a description, custom field values and one Stage. |
+| Project      | The top-level record. It holds the custom field definitions, the tags and the Stages. |
+| Story        | One item of work. It has a title, a description, custom field values, tags and one Stage. |
 | Stage        | A step of the workflow. Each Stage can have a prompt.                               |
 | Stage prompt | Instructions that tell agents what to do with a Story in that Stage.                |
 | User prompts | The Project prompt, the Supervisor prompt and the Worker prompt in `.rowbly/prompts/`. |
 | Custom field | A field that you define one time. It applies to all Stories of the Project.         |
+| Tag          | A value and a label that you define one time. A Story can have zero or more tags.   |
 | Spec         | A Markdown document that describes work. It links to one or more Stories.           |
 
 Each new Project has two Stages, `BACKLOG` and `DONE`. Specs are off in each new Project.
@@ -44,13 +45,14 @@ a different directory. If the Project is in Git, each Git worktree has its own c
 Use `-C <dir>` to select the Project that all agents share.
 
 The CLI has no command that lists the Stages or the custom fields. Read
-`.rowbly/rowbly.config.json` to find them. The file is safe to read.
+`.rowbly/rowbly.config.json` to find them. The file is safe to read. `rowbly tag list` lists the tags.
 
 ```json
 {
   "projectName": "My App",
   "projectKey": "APP",
   "customFields": [{ "key": "priority", "label": "Priority", "type": "select", "options": ["P1", "P2"] }],
+  "tags": [{ "value": "frontend", "label": "Front end" }],
   "stages": [
     { "key": "BACKLOG", "label": "Backlog", "enabled": true },
     { "key": "DONE", "label": "Done", "enabled": true }
@@ -84,7 +86,7 @@ With `--json`, an expected failure writes this object to stderr:
 | `error.code` | Meaning                                                                  | Action                               |
 | ------------ | ------------------------------------------------------------------------ | ------------------------------------ |
 | `VALIDATION` | The input or a file breaks a rule.                                       | Read `details.issues` and `hint`.    |
-| `NOT_FOUND`  | The Project, Story, Stage, custom field or Spec does not exist.          | Examine the ID or key.               |
+| `NOT_FOUND`  | The Project, Story, Stage, custom field, tag or Spec does not exist.     | Examine the ID or key.               |
 | `CONFLICT`   | The record exists, other records depend on it, or Specs are off.         | Read `message`, `hint` and `details`. |
 
 Some failures do not write JSON, also with `--json`. They write plain text to stderr and exit with
@@ -103,7 +105,7 @@ Each command has `--help`. These options apply to all commands:
 | `-v, --version`   | Shows the version.                                     |
 
 Resource commands use `<resource> <action>`.
-The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `spec` and `skill`.
+The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `tag`, `spec` and `skill`.
 Run `rowbly <resource>` or `rowbly <resource> --help` to see its actions.
 Run `rowbly <resource> <action> --help` to see its arguments and options.
 The old flat resource commands do not work.
@@ -153,10 +155,10 @@ A Prompt record has this shape. `exists` is `false` and `text` is empty if the f
 
 | Command                                                                                             | JSON result     |
 | --------------------------------------------------------------------------------------------------- | --------------- |
-| `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids>] (repeat)` | Story |
+| `rowbly story create --title <title> [--stage <key>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids>] (repeat) [--tag <value>] (repeat)` | Story |
 | `rowbly story get <id>`                                                                             | Story, with `blocks` and `waitingFor` |
-| `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat) [--blocked \| --ready]`      | Array of Story  |
-| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids> \| --add-dependency <id> --remove-dependency <id>] (repeat)` | Story |
+| `rowbly story search [query] [--stage <key>] [--field <k=v>] (repeat) [--tag <value>] (repeat) [--blocked \| --ready]` | Array of Story |
+| `rowbly story update <id> [--title <t>] [--stage <key>] [--position <n>] [--description <md>] [--field <k=v>] (repeat) [--depends-on <ids> \| --add-dependency <id> --remove-dependency <id>] (repeat) [--tag <value> \| --add-tag <value> --remove-tag <value>] (repeat)` | Story |
 | `rowbly story delete <id>`                                                                          | `{ "id": … }`   |
 
 A Story record has this shape:
@@ -169,6 +171,7 @@ A Story record has this shape:
   "stage": "BACKLOG",
   "position": 1,
   "dependsOn": ["APP-02"],
+  "tags": ["frontend"],
   "createdAt": "2025-01-02T03:04:05.678Z",
   "updatedAt": "2025-01-03T10:00:00.000Z",
   "description": "Markdown text",
@@ -194,6 +197,11 @@ A Story record has this shape:
   You cannot use them together with `--depends-on`.
 - **Bad dependencies.** An unknown ID, a self reference or a cycle gives `VALIDATION`. `details.unknown`,
   `details.self` or `details.cycle` has the IDs. Nothing is saved.
+- **Tags.** `tags` has the values of the tags of the Story. `--tag` sets the list. On update, it replaces the
+  list, and `--tag ""` removes all tags. `--add-tag` and `--remove-tag` change one value. You cannot use them
+  together with `--tag`. A value that is not a tag of the Project gives `VALIDATION`.
+- **Search by tag.** `story search --tag` finds the Stories that have the tag. With more than one `--tag`, a
+  Story must have all of the tags.
 - **Times.** `createdAt` and `updatedAt` are ISO 8601 UTC strings. Each change of a Story sets `updatedAt`.
   An older Story can have `null`.
 - **Dependency state.** `story get` adds `blocks` (the downstream Stories) and `waitingFor` (the upstream
@@ -233,8 +241,8 @@ A Stage record has this shape:
 | `rowbly custom-field update <key> [--rename <key>] [--label <l>] [--type <type>] [--option <v>] (repeat)` | Custom field |
 | `rowbly custom-field remove <key>`                                                        | Custom field |
 
-Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `position`, `id` and
-`description` are reserved.
+Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `position`, `id`,
+`description` and `tags` are reserved.
 
 | Type      | Value for `--field <key>=<value>`                       |
 | --------- | ------------------------------------------------------- |
@@ -251,6 +259,26 @@ Field keys are case sensitive and in snake_case. The keys `title`, `stage`, `pos
   replaces all options.
 - **Type changes.** `--type` converts the values in all Stories. If one value cannot change, the
   command gives `VALIDATION` and writes nothing.
+
+### Tag
+
+| Command                                                  | JSON result  |
+| -------------------------------------------------------- | ------------ |
+| `rowbly tag list`                                        | Array of Tag |
+| `rowbly tag add --label <label> --value <value>`         | Tag          |
+| `rowbly tag update <value> --label <label>`              | Tag          |
+| `rowbly tag remove <value>`                              | Tag          |
+
+A Tag record has this shape:
+
+```json
+{ "value": "frontend", "label": "Front end" }
+```
+
+- **Values.** A value has only lower-case letters, digits, `_` and `-`. It starts with a letter or a digit.
+  A value that exists gives `CONFLICT`.
+- **No value change.** The value of a tag cannot change. `tag update` changes only the label.
+- **Removal.** `tag remove` removes the tag from the config and from each Story that has it.
 
 ### Spec
 
@@ -413,11 +441,11 @@ Read these files if a command does not give the data. Users can edit these files
 
 ```
 .rowbly/
-  rowbly.config.json   # Project name and key, custom fields, Stages, features, installed skills, factory settings
+  rowbly.config.json   # Project name and key, custom fields, tags, Stages, features, installed skills, factory settings
   prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
   prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
   prompts/WORKER.md    # the Worker prompt, for all workers
-  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, position, one key for each custom field
+  stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, position, dependsOn, tags, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt
   specs/login-page.md  # frontmatter: title, stories; the body is the Spec
 ```
@@ -476,6 +504,7 @@ One invalid Story file makes `story search` fail for the full Project.
 | Story has no Stage, or has a Stage key in the wrong case                         | Repairs it     |
 | Story has a custom field too few or too many                                     | Repairs it     |
 | Story has a field value in the wrong format that Rowbly can convert              | Repairs it     |
+| Story has a tag value that is not in the config, or a `tags` value that is not a list | Removes the bad values |
 | Spec has no title, a wrong `stories` value, or a link to a Story that is deleted | Repairs it     |
 | Story has no title or has an unknown Stage                                       | No repair      |
 | Story file has a bad name, a wrong Project key or a number that another file has | No repair      |
