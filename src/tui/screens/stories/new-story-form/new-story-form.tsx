@@ -1,5 +1,5 @@
 import { type Dispatch, type RefObject, type SetStateAction, useRef, useState } from "react";
-import type { CustomField } from "../../../../services/config/config.js";
+import type { CustomField, TagConfig } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { createStory, type Story } from "../../../../services/story/story.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -18,6 +18,7 @@ import {
 import { NewStoryImages } from "../new-story-images/index.js";
 import { dependencyChoices, dependsOnValue } from "../story-dependency-view.js";
 import { customFieldInput, customFormValue, storyFormFields } from "../story-form.js";
+import { tagChoices, tagsValue } from "../story-tag-view.js";
 
 type StoryPaste = ReturnType<typeof useStoryPaste>;
 
@@ -54,6 +55,7 @@ async function createNewStory(env: NewStoryEnv, values: FormValues): Promise<voi
         description: String(values.description ?? ""),
         fields: customFieldInput(env.customFields, values),
         dependsOn: dependsOnValue(values.dependsOn),
+        tags: tagsValue(values.tags),
       },
       env.ctx,
     );
@@ -73,6 +75,7 @@ function initialValues(stages: readonly Stage[], customFields: readonly CustomFi
     stage: stage ?? stages[0]?.key ?? null,
     description: "",
     dependsOn: [],
+    tags: [],
     ...Object.fromEntries(customFields.map((f) => [f.key, customFormValue(f, null)])),
   };
 }
@@ -87,6 +90,7 @@ export function NewStoryForm({
   stories,
   stages,
   customFields,
+  tags,
   stage,
   onCreated,
   onBack,
@@ -96,6 +100,8 @@ export function NewStoryForm({
   stories: readonly Story[];
   stages: readonly Stage[];
   customFields: readonly CustomField[];
+  /** The tags of the project, for the `Tags` field. */
+  tags: readonly TagConfig[];
   /** The Stage the form starts with. Defaults to the first Stage. */
   stage?: string;
   onCreated(story: Story): void;
@@ -118,7 +124,7 @@ export function NewStoryForm({
       <NewStoryImages enabled={!saving} onPaste={(value) => writeRef(paste, value)} />
       <Form
         extraHints={EXTRA_HINTS}
-        fields={storyFormFields(stages, customFields, dependencyChoices(stories, undefined, []))}
+        fields={storyFormFields(stages, customFields, dependencyChoices(stories, undefined, []), tagChoices(tags, []))}
         initialValues={initialValues(stages, customFields, stage)}
         onSubmit={(values) => createNewStory(env, values)}
       />

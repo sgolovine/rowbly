@@ -16,13 +16,23 @@ export interface FactoryCommand {
   expectedRunId?: string;
   /** The key of the attention entry that a `dismiss` removes. */
   attentionKey?: string;
+  /** The text that a `steer` gives to the worker. */
+  message?: string;
   createdAt: string;
 }
 
 /** The kinds of request that the daemon runs. */
-export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss";
+export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss" | "steer";
 
-const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss"];
+const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss", "steer"];
+
+/** The maximum number of characters in a steering message, after trim. */
+const STEER_MESSAGE_LIMIT = 4000;
+
+/** The maximum size of a command file. A steering message of the maximum length fits after JSON escaping. */
+const COMMAND_FILE_LIMIT = 32_768;
+
+const STEER_MESSAGE_ERROR = `A message of 1 to ${STEER_MESSAGE_LIMIT} characters is necessary`;
 
 export interface CommandReceipt {
   version: 1;
@@ -47,6 +57,24 @@ function validId(id: string): boolean {
 /** True for an attention key of 1 to 128 characters. */
 export function validAttentionKey(key: unknown): key is string {
   return typeof key === "string" && key.length >= 1 && key.length <= 128;
+}
+
+/** True for a steering message of 1 to 4000 characters after trim. The count uses code points. */
+function validSteerMessage(message: unknown): message is string {
+  if (typeof message !== "string") {
+    return false;
+  }
+
+  const length = Array.from(message.trim()).length;
+
+  return length >= 1 && length <= STEER_MESSAGE_LIMIT;
+}
+
+/** Throws a ValidationError when the steering message is not valid. */
+export function assertSteerMessage(message: unknown): asserts message is string {
+  if (!validSteerMessage(message)) {
+    throw new ValidationError(STEER_MESSAGE_ERROR);
+  }
 }
 
 /** Reads a command receipt. An absent receipt gives `undefined`; a malformed receipt gives a ValidationError. */
@@ -106,7 +134,7 @@ async function loadCommand(paths: ProjectPaths, file: string): Promise<LoadedCom
   try {
     const path = await runtimePath(paths, `control/${file}`);
 
-    if ((await stat(path)).size > 4096) {
+    if ((await stat(path)).size > COMMAND_FILE_LIMIT) {
       throw new ValidationError("Command is too large");
     }
 
@@ -135,6 +163,10 @@ function acceptedCommand(loaded: LoadedCommand, id: string, token: string): Fact
 
   if (command.type === "dismiss" && !validAttentionKey(command.attentionKey)) {
     throw new ValidationError("An attention key of 1 to 128 characters is necessary");
+  }
+
+  if (command.type === "steer") {
+    assertSteerMessage(command.message);
   }
 
   if (command.targetOwnerToken !== token) {
@@ -190,10 +222,10 @@ export async function processCommands(
   await mapInOrder(files, (file) => processCommand(paths, token, execute, file));
 }
 
-/** Gives a well-formed command of at most 4096 bytes. Any other file gives `undefined`. */
+/** Gives a well-formed command of at most 32768 bytes. Any other file gives `undefined`. */
 async function readPrunable(path: string, file: string): Promise<FactoryCommand | undefined> {
   try {
-    if ((await stat(path)).size > 4096) {
+    if ((await stat(path)).size > COMMAND_FILE_LIMIT) {
       return undefined;
     }
 

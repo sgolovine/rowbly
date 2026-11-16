@@ -1,4 +1,4 @@
-import { compactThreads, storyTimeZone } from "../../../services/config/config.js";
+import { compactThreads, projectTags, storyTimeZone } from "../../../services/config/config.js";
 import type { Story } from "../../../services/story/story.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
@@ -69,6 +69,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, clickable, ...
         stories={board.stories}
         stages={board.stages}
         customFields={board.project.customFields}
+        tags={projectTags(board.project)}
         stage={cursorStage}
         onCreated={on.onSaved}
         onBack={on.onBack}
@@ -83,6 +84,7 @@ export function StorySidebarForm({ pane, board, ctx, cursorStage, clickable, ...
       stories={board.stories}
       stages={board.stages}
       customFields={board.project.customFields}
+      tags={projectTags(board.project)}
       specs={board.project.features?.specs === true}
       compactThreads={compactThreads(board.project)}
       timeZone={storyTimeZone(board.project)}

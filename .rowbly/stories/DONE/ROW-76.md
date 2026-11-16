@@ -1,11 +1,11 @@
 ---
 title: Threads Improvements - Allow user to steer thread.
-stage: IN_DEVELOPMENT
-position: 2
+stage: DONE
+position: 78
 createdAt: 2026-11-16T17:01:49.320Z
-updatedAt: 2026-11-16T19:36:23.088Z
+updatedAt: 2026-11-16T19:54:39.495Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-76
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/265
 ---
 
 ## Goal

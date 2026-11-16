@@ -21,5 +21,6 @@ export * from "./thread-detail/index.js";
 export * from "./thread-list-panel/index.js";
 export * from "./thread-panel/index.js";
 export * from "./thread-row/index.js";
+export * from "./thread-steer-input/index.js";
 export { threadName } from "./thread-text.js";
 export * from "./threads-tab/index.js";

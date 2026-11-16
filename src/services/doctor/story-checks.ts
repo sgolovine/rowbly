@@ -32,6 +32,7 @@ import {
 } from "./doctor-run.js";
 import { type PlannedFix, repairDuplicates } from "./duplicate-checks.js";
 import { fieldIssues } from "./story-field-checks.js";
+import { tagIssues } from "./story-tag-checks.js";
 
 interface NumberedFile {
   readonly entry: StoryEntry;
@@ -208,6 +209,7 @@ async function unknownKeyIssues(
     "stage",
     "position",
     "dependsOn",
+    "tags",
     ...STORY_TIME_KEYS,
     "agentLock",
     ...config.customFields.map((field) => field.key),
@@ -230,6 +232,7 @@ async function checkStory(
     ...titleIssues(repair.current.data, file),
     ...(await stageIssues(run, config, repair, file)),
     ...(await fieldIssues(run, config, repair, file)),
+    ...(await tagIssues(run, config, repair, file)),
     ...(await agentLockIssues(run, repair, file)),
     ...(await unknownKeyIssues(run, config, repair, file)),
   ];

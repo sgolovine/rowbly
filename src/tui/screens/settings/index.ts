@@ -29,4 +29,7 @@ export * from "./specs-section/index.js";
 export * from "./stage-model-list/index.js";
 export * from "./stage-row/index.js";
 export * from "./stages-section/index.js";
+export * from "./tag-form-modal/index.js";
+export * from "./tag-row/index.js";
+export * from "./tags-section/index.js";
 export * from "./thinking-picker/index.js";
