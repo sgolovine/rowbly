@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { type Issue, parseConfig } from "../config/config.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { checkAttachments } from "./attachment-checks.js";
 import { type DoctorIssue, type DoctorRun, noted, rel } from "./doctor-run.js";
@@ -41,6 +42,10 @@ function configIssue(run: DoctorRun, issue: Issue): DoctorIssue {
  * The `factory` section must be valid, and `--fix` moves an old `factory.json` into the config.
  */
 export async function doctor(input: DoctorInput = {}, ctx: ServiceContext = {}): Promise<DoctorReport> {
+  if (input.fix) {
+    refuseRemoteWrite(ctx, "repair the Project");
+  }
+
   const paths = await findProject(ctx);
   const run: DoctorRun = { paths, fix: input.fix ?? false, ctx };
   const parsed = parseConfig(await readFile(paths.configFile, "utf8"));

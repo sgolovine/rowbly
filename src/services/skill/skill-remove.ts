@@ -2,6 +2,7 @@ import { lstat, rm } from "node:fs/promises";
 import { readConfig, type SkillHarness, writeConfig } from "../config/config.js";
 import { NotFoundError } from "../errors/errors.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { findSkill, parseHarnesses } from "./skill-config.js";
 import { isMissing, physicalPath, skillEntry, skillPath } from "./skill-paths.js";
@@ -62,6 +63,8 @@ async function removeFor(
  * through a symlink at the skill or at its skills folder. For a symlink at the skill, it deletes only the link.
  */
 export async function removeSkill(input: RemoveSkillInput, ctx: ServiceContext = {}): Promise<RemoveSkillResult> {
+  refuseRemoteWrite(ctx, "remove a skill");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const { name } = input;

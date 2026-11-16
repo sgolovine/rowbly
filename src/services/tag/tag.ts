@@ -9,6 +9,7 @@ import {
   writeConfig,
 } from "../config/config.js";
 import { ConflictError, NotFoundError } from "../errors/errors.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { rewriteStories, tagsOf, withTags } from "../story-files/story-files.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
@@ -49,6 +50,8 @@ export async function listTags(ctx: ServiceContext = {}): Promise<TagConfig[]> {
 
 /** Adds a tag to the project. No Story changes. */
 export async function addTag(input: AddTagInput, ctx: ServiceContext = {}): Promise<TagConfig> {
+  refuseRemoteWrite(ctx, "add a tag");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const label = input.label.trim();
@@ -69,6 +72,8 @@ export async function addTag(input: AddTagInput, ctx: ServiceContext = {}): Prom
 
 /** Changes the label of a tag. The value and the Stories do not change. */
 export async function updateTag(input: UpdateTagInput, ctx: ServiceContext = {}): Promise<TagConfig> {
+  refuseRemoteWrite(ctx, "change a tag");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const tag = requireTag(config, input.value);
@@ -97,6 +102,8 @@ function withoutTag(data: Record<string, unknown>, value: string): Record<string
 
 /** Removes a tag from the project and from the `tags` list of each Story that has it. */
 export async function removeTag(input: { value: string }, ctx: ServiceContext = {}): Promise<TagConfig> {
+  refuseRemoteWrite(ctx, "remove a tag");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const tag = requireTag(config, input.value);

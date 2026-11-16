@@ -6,6 +6,7 @@ import { type ProjectConfig, readConfig, throwIfIssues } from "../config/config.
 import { ValidationError } from "../errors/errors.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import type { MarkdownDocument } from "../markdown/markdown.js";
+import { recordStoryWrite, refuseRemoteWrite, storyChanges } from "../outbox/outbox.js";
 import { rewriteSpecLinks } from "../spec-files/spec-files.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import {
@@ -81,6 +82,8 @@ async function writeNewStory(
 
 /** Creates a story with the next free number, in the given stage or the first enabled stage. */
 export async function createStory(input: CreateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
+  refuseRemoteWrite(ctx, "create a Story");
+
   const images = prepareImages(input.attachments ?? [], true);
   const now = nowOf(ctx);
   const paths = await findProject(ctx);
@@ -201,6 +204,10 @@ async function updateStoryFields(input: UpdateStoryInput, ctx: ServiceContext, t
 
   const path = await saveStoryFile(paths, config, file.path, written.doc);
   const placed = { ...written, path };
+  const fieldKeys = config.customFields.map((field) => field.key);
+
+  // The entry follows the Story write, so that a failed write records no change.
+  await recordStoryWrite(ctx, { storyId: file.id, changes: storyChanges(fieldKeys, file.doc, updated.doc) });
 
   return toStory(config, placed, positionIn([...files.filter((f) => f.id !== file.id), placed], placed));
 }
@@ -270,6 +277,10 @@ async function updateOrRestore(
 
 /** Changes a story. A story that changes goes to the top of its stage, because the stage order is by `updatedAt`. */
 export async function updateStory(input: UpdateStoryInput, ctx: ServiceContext = {}): Promise<Story> {
+  if (input.attachments?.length) {
+    refuseRemoteWrite(ctx, "add an attachment");
+  }
+
   const images = prepareImages(input.attachments ?? [], true);
 
   if (!images.length) {
@@ -299,6 +310,8 @@ export async function touchStory(input: { id: string }, ctx: ServiceContext = {}
  * downstream story, and gives a warning for each changed story.
  */
 export async function deleteStory(input: { id: string }, ctx: ServiceContext = {}): Promise<DeleteStoryResult> {
+  refuseRemoteWrite(ctx, "delete a Story");
+
   const paths = await findProject(ctx);
   const config = await readConfig(paths);
   const files = await readStoryFiles(paths);

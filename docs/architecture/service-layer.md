@@ -54,8 +54,38 @@ Most public service functions take a `ServiceContext` as their last parameter. T
 | `home`      | `os.homedir()`                  | The home directory, for `~/.rowblyrc.json` and `~/.cache/rowbly/`. |
 | `now`       | the system time                 | The clock.                                                         |
 | `skillsDir` | `skills/` of the Rowbly package | The folder of the bundled skills.                                  |
+| `recorder`  | none                            | The `WriteRecorder` of a remote worker. See below.                 |
 
 The CLI sets `cwd` from `-C <dir>`. Tests set the fields to temporary paths.
+
+### The `recorder` key
+
+A remote worker writes to a copy of the Project. The `recorder` records each Story write in an outbox,
+so that the main machine can apply the changes to the board later. The module is `src/services/outbox/`.
+
+- Without a `recorder`, the services do not record writes, and their behaviour does not change.
+- With a `recorder`, `updateStory` records one entry after it writes the Story file. The entry has the
+  Story ID and one change for each changed path: `title`, `description`, `stage`, `fields.<key>`,
+  `tags` and `dependsOn`. Each change has a `before` and an `after` value. `tags` and `dependsOn` are
+  complete lists.
+- An entry does not have `updatedAt`, `position` or `createdAt`. A write that changes no recorded value,
+  for example `touchStory`, records no entry. A write that fails records no entry.
+- With a `recorder`, all other canonical writes call `refuseRemoteWrite(ctx, action)` before they write.
+  It throws a `ConflictError` with the message `A remote worker cannot <action>`. This applies to new and
+  deleted Stories, Stages, Specs, tags, custom fields, prompts, skills, the Project, the factory
+  settings, `doctor --fix`, the renumber of duplicate IDs, the start of the factory and all attachment
+  writes.
+- If you add a service that writes a canonical file, record the write or call `refuseRemoteWrite`.
+- A service does not read `process.env`. The CLI makes the recorder in `run`
+  (`src/commands/output/outbox-env.ts`) from two environment variables:
+
+| Variable           | Value                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| `ROWBLY_OUTBOX`    | The absolute path of the outbox folder of the worker host.        |
+| `ROWBLY_THREAD_ID` | The Thread of the remote worker. Each entry has it as `threadId`. |
+
+If `ROWBLY_OUTBOX` is set and `ROWBLY_THREAD_ID` is not set, each command fails with a `VALIDATION`
+error before it writes. See [storage.md](storage.md#outbox-of-a-remote-worker) for the files.
 
 ## Errors
 
@@ -120,30 +150,32 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 
 ### Native factory
 
-| Module                              | Function                                                          |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| `pi-runtime/`                       | Lazy Pi imports, sessions, runtime, model catalog and Pi worker.  |
-| `agent-auth/`                       | Provider status, model checks, login and logout.                  |
-| `factory-settings/`                 | The `factory` config key, the role models, Git sync and checks.   |
-| `factory/`                          | Daemon client, status, controls and operational logs.             |
-| `factory-manager/`                  | Serial supervisor loop, tools, reservations and worker lifecycle. |
-| `factory-worker/`                   | Independent worker session, result and activity.                  |
-| `check-queue/`                      | The memory-aware queue of the worker checks in the daemon.        |
-| `factory-ownership/`                | Daemon ownership and process identity.                            |
-| `factory-control/`                  | Durable commands and receipts.                                    |
-| `factory-recovery/`                 | Reconciliation after owner death, and resume eligibility.         |
-| `factory-policy/`, `factory-state/` | The v1 policy rules and the `state.json` transactions.            |
-| `factory-activity/`                 | The factory activity of each Story, from `state.json`.            |
-| `project-write/`                    | The kernel `flock` and the commits of canonical factory writes.   |
-| `project-sync/`                     | The Git pull and push of the canonical checkout.                  |
-| `runtime-files/`                    | Private runtime paths and ignore rules.                           |
-| `thread/`                           | Thread metadata, runs, state projection and watches.              |
-| `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.     |
-| `supervisor-digest/`                | Bounded operational facts, without worker transcripts.            |
-| `messages/`                         | The only builder of the supervisor and worker messages.           |
-| `worker-worktree/`                  | One worktree for each Story. Existing work stays.                 |
-| `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.            |
-| `host-transport/`                   | The SSH transport and the handshake to a worker host. No Pi.      |
+| Module                              | Function                                                            |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `pi-runtime/`                       | Lazy Pi imports, sessions, runtime, model catalog and Pi worker.    |
+| `agent-auth/`                       | Provider status, model checks, login and logout.                    |
+| `factory-settings/`                 | The `factory` config key, the role models, Git sync and checks.     |
+| `factory/`                          | Daemon client, status, controls and operational logs.               |
+| `factory-manager/`                  | Serial supervisor loop, tools, reservations and worker lifecycle.   |
+| `factory-worker/`                   | Independent worker session, result and activity.                    |
+| `check-queue/`                      | The memory-aware queue of the worker checks in the daemon.          |
+| `factory-ownership/`                | Daemon ownership and process identity.                              |
+| `factory-control/`                  | Durable commands and receipts.                                      |
+| `factory-recovery/`                 | Reconciliation after owner death, and resume eligibility.           |
+| `factory-policy/`, `factory-state/` | The v1 policy rules and the `state.json` transactions.              |
+| `factory-activity/`                 | The factory activity of each Story, from `state.json`.              |
+| `project-write/`                    | The Project write lock and the commits of canonical factory writes. |
+| `file-lock/`                        | `withFileLock()`: an exclusive kernel `flock` on one file.          |
+| `outbox/`                           | The `WriteRecorder`, the Story changes and the `outbox.jsonl` file. |
+| `project-sync/`                     | The Git pull and push of the canonical checkout.                    |
+| `runtime-files/`                    | Private runtime paths and ignore rules.                             |
+| `thread/`                           | Thread metadata, runs, state projection and watches.                |
+| `conversation/`                     | Read-only Pi v3 history of a selected file, in bounded pages.       |
+| `supervisor-digest/`                | Bounded operational facts, without worker transcripts.              |
+| `messages/`                         | The only builder of the supervisor and worker messages.             |
+| `worker-worktree/`                  | One worktree for each Story. Existing work stays.                   |
+| `tool-schema/`                      | Converts a Zod schema to the JSON Schema of a Pi tool.              |
+| `host-transport/`                   | The SSH transport and the handshake to a worker host. No Pi.        |
 
 See [native-factory/README.md](native-factory/README.md) for how these modules work together.
 

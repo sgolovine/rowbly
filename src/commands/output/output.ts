@@ -2,6 +2,7 @@ import { type Command, InvalidArgumentError } from "commander";
 import { RowblyError, ValidationError } from "../../services/errors/errors.js";
 import type { FieldValue } from "../../services/fields/fields.js";
 import type { ServiceContext } from "../../services/workspace/workspace.js";
+import { commandContext } from "./outbox-env.js";
 
 /**
  * Sets the exit code of the process. The process stops by itself after all output is written, so a command does
@@ -61,12 +62,26 @@ export async function run<T>(
   text: (result: T, ctx: ServiceContext) => string | Promise<string>,
 ): Promise<void> {
   const { json, cwd } = command.optsWithGlobals<{ json?: boolean; cwd?: string }>();
-  const ctx = { cwd };
 
   try {
+    const ctx = commandContext(cwd, process.env);
     const result = await call(ctx);
 
     console.log(json ? JSON.stringify(result, null, 2) : await text(result, ctx));
+  } catch (error) {
+    reportError(error, json);
+  }
+}
+
+/**
+ * Runs a service call that gives raw bytes, and writes the bytes to stdout without a change. It does not make an
+ * outbox context, so it does not need `ROWBLY_THREAD_ID`. Errors are printed as in `run`.
+ */
+export async function runBytes(command: Command, call: () => Promise<Uint8Array>): Promise<void> {
+  const { json } = command.optsWithGlobals<{ json?: boolean }>();
+
+  try {
+    process.stdout.write(await call());
   } catch (error) {
     reportError(error, json);
   }

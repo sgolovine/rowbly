@@ -8,6 +8,7 @@ import type { PolicyAttempt, PolicyState } from "../factory-policy/factory-polic
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { getStory } from "../story/story.js";
 import { listThreads, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
@@ -101,6 +102,8 @@ export async function recoverFactory(
 
 /** Checks execution prerequisites before loading credentials or Pi. */
 export async function preflightFactory(ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "run the factory");
+
   if (process.platform !== "linux") {
     throw new ConflictError("Native factory execution requires Linux and util-linux flock");
   }

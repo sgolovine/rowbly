@@ -1,6 +1,7 @@
 import { type ProjectConfig, readConfig, writeConfig } from "../config/config.js";
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
 import { getStory } from "../story/story.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
@@ -36,6 +37,7 @@ import {
 } from "./placement-settings.js";
 import {
   hasWorkerOverride,
+  isOverrideInput,
   type OverrideTarget,
   type StageWorkerModels,
   type StoryWorkerModels,
@@ -176,6 +178,8 @@ export async function writeSettings(
   change: (current: FactorySettings) => FactorySettings,
   ctx: ServiceContext,
 ): Promise<FactorySettings> {
+  refuseRemoteWrite(ctx, "change the factory settings");
+
   const paths = await findProject(ctx);
 
   await assertNoLegacyFactorySettings(paths);
@@ -238,10 +242,6 @@ async function chooseRole(
   const resolved = runtime ?? (await auth.authRuntime());
 
   return { runtime: resolved, choice: await auth.validateModelChoice(resolved, choice) };
-}
-
-function isOverrideInput(input: ConfigureInput): boolean {
-  return input.stage !== undefined || input.story !== undefined || !!input.clearWorker;
 }
 
 /** Gives the first rule that the flags of an override break. */
@@ -364,6 +364,8 @@ export async function configureFactory(
   ctx: ServiceContext = {},
   runtime?: AuthRuntime,
 ): Promise<FactorySettings> {
+  refuseRemoteWrite(ctx, "change the factory settings");
+
   if (isOverrideInput(input)) {
     return configureWorkerOverride(input, ctx, runtime);
   }

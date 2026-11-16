@@ -11,6 +11,7 @@ import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState, type WatchdogState } from "../factory-watchdog/factory-watchdog.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
@@ -147,6 +148,8 @@ async function waitForReady(input: StartFactoryInput, launch: Store<LaunchState>
 
 /** Starts a detached daemon when no live owner exists, and waits until it is ready. */
 export async function startFactory(input: StartFactoryInput, ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "start the factory");
+
   const paths = await findProject(ctx);
 
   await prepareRuntime(paths);
@@ -277,6 +280,8 @@ export async function stopFactory(input: { timeoutMs?: number } = {}, ctx: Servi
 
 /** Stops the daemon, waits for the owner release, and starts a new daemon. */
 export async function restartFactory(input: Parameters<typeof startFactory>[0], ctx: ServiceContext = {}) {
+  refuseRemoteWrite(ctx, "restart the factory");
+
   await stopFactory({ timeoutMs: input.timeoutMs }, ctx);
 
   return startFactory(input, ctx);

@@ -43,7 +43,7 @@ test.
 | `model/`                                               | `model list`.                                                                    |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.             |
 | `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                |
-| `host/`                                                | `host add`, `list`, `remove`: the worker hosts of the user.                      |
+| `host/`                                                | `host add`, `list`, `remove`, hidden `blob`: the worker hosts of the user.       |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
 
@@ -152,6 +152,17 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
 - `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
   [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
+- `host blob <sha256>` is hidden. It does not show in `rowbly host --help`. The main machine runs it
+  on a worker host to get the PNG of an `attachment.add` entry. The command reads the outbox folder
+  from `ROWBLY_OUTBOX`. It does not need `ROWBLY_THREAD_ID`. It writes the exact bytes of
+  `$ROWBLY_OUTBOX/blobs/<sha256>.png` to stdout and exits with 0.
+  - A value that is not 64 lowercase hex characters gives a `VALIDATION` error. A missing
+    `ROWBLY_OUTBOX` also gives `VALIDATION`.
+  - A blob or a `blobs` folder that is a symlink, or a path that resolves outside `blobs/`, gives a
+    `VALIDATION` error.
+  - A hash without a file gives `NOT_FOUND`.
+  - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
+    See [storage.md](storage.md#outbox-of-a-remote-worker).
 
 ## Output and errors
 

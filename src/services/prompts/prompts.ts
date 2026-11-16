@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { packageDir, writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
+import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 /**
@@ -124,6 +125,8 @@ export interface SetPromptInput {
 
 /** Replaces the text of a user prompt. It creates the file and the folder when they do not exist. */
 export async function setPrompt(input: SetPromptInput, ctx: ServiceContext = {}): Promise<UserPrompt> {
+  refuseRemoteWrite(ctx, "change a user prompt");
+
   const name = checkName(input.name);
 
   if (typeof input.text !== "string") {
