@@ -9,8 +9,8 @@ tool, the bash gate or the check records.
 
 ## Scope
 
-- Only the workers of the native factory (`rowbly factory run`) use the queue. The CLI, the board
-  and the agent sessions outside the factory do not change.
+- Only the workers of the native factory (`rowbly factory run`) and the remote workers of a host
+  agent use a queue. The CLI, the board and the agent sessions outside the factory do not change.
 - The supervisor does not run checks and does not decide about them. The queue has no model work.
 - The memory rules use `/proc`. The native factory runs only on Linux.
 - Without a `checks` key in the factory settings, or without items, the factory works as before. The
@@ -169,7 +169,8 @@ runs if the command contains the `command` text or a `block` text of a configure
 - Each job in `jobs.json` has its id, owner token, Thread, Story, Stage, check key, scope, files,
   status, times, exit code, `HEAD`, memory estimate, peak memory, process group and Linux start ticks.
 - The Thread metadata (`runtime/threads/<id>.json`) gets a short `checks` list: job id, check key,
-  scope, status, `HEAD` and duration. The list keeps the last 20 checks.
+  scope, status, `HEAD` and duration. The list keeps the last 20 checks. `check-queue/thread-checks.ts`
+  makes the list for the factory and for the host agent.
 - `runtime-files/` creates `runtime/checks/` with mode 0700. The `/runtime/` ignore rule keeps it
   out of Git.
 
@@ -184,6 +185,30 @@ runs if the command contains the `command` text or a `block` text of a configure
 - After the death of an owner, `factory-recovery/` calls `stopOrphanChecks`. It reads `jobs.json`.
   It stops each process group whose leader still has the recorded start ticks. It marks the jobs of
   the dead owner `cancelled`.
+
+## Remote workers
+
+A remote worker runs its checks on its worker host. `host-agent/host-checks.ts` holds the queue.
+See [host-agent.md](host-agent.md#checks) for the files of the host agent.
+
+- Each host agent has one queue, thus one queue for each Project on a host. The main machine and
+  each host have different queues.
+- The host agent opens the queue after it takes its claim, with its owner token. Before that, it
+  calls `stopOrphanChecks` for its runtime folder.
+- The records and the logs go to `<agent>/runtime/checks/` (`jobs.json` and `<job id>.log`), not
+  below the clone and not below the copy. `hostCheckPaths` gives the Project paths of this folder.
+- Each run reads the factory settings from its copy when it starts. The check items of the run come
+  from these settings. The limits of the queue come from the settings of the run that started last.
+- The remote worker gets `run_check` and the bash gate as a local worker. A copy without checks
+  gives no tool and no gate.
+- A check runs in the worktree of the worker on the host. Its environment is the environment of
+  the worker `bash` tool, with `ROWBLY_ROOT` (the copy), `ROWBLY_OUTBOX`, `ROWBLY_THREAD_ID` and
+  `ROWBLY_CHECK=1`.
+- Each job change writes the `checks` list of `run.json` of the Thread. The list has the same shape
+  as the `checks` list of the Thread metadata (`check-queue/thread-checks.ts`).
+- `stop-thread`, `cancel-thread`, a stop of the agent and the end of a worker session cancel the
+  checks of the worker. When the agent stops, it calls `stopCheckQueue` before it releases its claim.
+- A check continues when the attach channel stops.
 
 ## Related
 

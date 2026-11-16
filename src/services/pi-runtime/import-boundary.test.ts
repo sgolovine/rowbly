@@ -136,6 +136,8 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-run-events.js")).resolves.toHaveProperty("runEvents");
     await expect(import("../host-agent/host-run-state.js")).resolves.toHaveProperty("readHostRun");
     await expect(import("../host-agent/host-runner.js")).resolves.toHaveProperty("createHostRunner");
+    await expect(import("../host-agent/host-checks.js")).resolves.toHaveProperty("openHostChecks");
+    await expect(import("../check-queue/thread-checks.js")).resolves.toHaveProperty("withCheck");
     await expect(import("../thread-copy/thread-copy.js")).resolves.toHaveProperty("buildThreadCopy");
   });
 
