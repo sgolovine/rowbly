@@ -1,8 +1,8 @@
 ---
 title: Add support for story tags.
-stage: IN_REFINEMENT
-position: 5
-updatedAt: 2026-11-16T19:30:45.004Z
+stage: IN_DEVELOPMENT
+position: 2
+updatedAt: 2026-11-16T19:30:55.286Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-79
 pull_request: null
 ---
@@ -63,7 +63,7 @@ Not in scope:
 - Story: add `tags: string[]` to `Story`, and `tags`, `addTags`, `removeTags` to the inputs in `src/services/story/story-types.ts`. Follow the `dependsOn` / `addDependsOn` / `removeDependsOn` code in `src/services/story/story.ts`. Add `tags?: string[]` to `SearchStoriesInput`.
 - CLI: new `src/commands/tag/tag.ts`, registered in `src/commands/register-commands/register-commands.ts` as resource `tag` ("Manage tags"). Update `register-commands.test.ts`. Add `--tag`, `--add-tag`, `--remove-tag` (repeatable, `collect`) to `src/commands/story/story.ts`.
 - Doctor: add `tags` to the known keys in `unknownKeyIssues` of `src/services/doctor/story-checks.ts`, and add the check of unknown tag values with a fix.
-- The tag write must use the Project write lock in the same way as the custom-field service. Do not take the Project write lock while you hold the state lock.
+- The custom-field service takes no lock itself. The tag service does the same. Do not add a lock to the service.
 - Docs: update `docs/architecture/domain-concepts.md`, `docs/architecture/storage.md` and `docs/architecture/cli.md` in STE. Update `skills/rowbly-reference.md` and copy it to each `skills/<name>/references/rowbly-reference.md`.
 
 ## Assumptions
