@@ -179,8 +179,19 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   Thread replaces it (`discardStory` overlay).
 - In the Thread, `esc` gives the focus to the Thread list, and the Thread stays open. `tab` and
   `shift+tab` move the focus to the next or the previous pane. The footer shows the conversation
-  keys, `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
+  keys, `ctrl+f` (`full screen`), `o` (`open Story`) when the Button shows, and `esc`. In the Thread list, `esc` and the `✕` close the Thread. The selection stays on
   the same row.
+- `ctrl+f` in the Thread shows the conversation over the whole terminal, in the same area as a
+  `FullScreenEditor`. `useFullScreenConversation` (`components/use-full-screen-conversation.tsx`)
+  opens a `FullScreenConversation` with `useMainOverlay()`. The border title is the title of the
+  Story sidebar, `<story-id> › <thread name>`. The footer shows the conversation keys and
+  `ctrl+f/esc` (`close`). The view is read-only. It starts at the newest entries, and it follows the
+  new entries while the Thread is `running`. The scroll keys, `f` and the mouse wheel operate as in
+  the small view.
+- `ctrl+f`, `esc` or a click on the `✕` closes the full-screen view. The Thread keeps the focus and
+  stays open. While the view is open, the panes below it take no keys and no wheel events.
+- In the Threads tab of a Story, `ctrl+f` opens the same view when the Thread region has the focus
+  and shows the conversation. Then `esc` closes only the view. The tab and the Modal stay open.
 - The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
   does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
   wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
