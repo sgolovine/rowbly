@@ -2,6 +2,7 @@
 title: Factory View
 stage: DONE
 position: 13
+uid: 7d066719-56ee-4ee2-8ad2-b6bb177a4f7f
 createdAt: 2026-11-14T00:45:00.000Z
 updatedAt: 2026-11-14T01:12:06.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-13
