@@ -1,12 +1,12 @@
 ---
 title: Survive worker host disconnects and reconnects
-stage: IN_REVIEW
+stage: DONE
 position: 16
 uid: 46c3414b-e2fd-43af-95d5-cbfee713f080
 dependsOn:
   - ROW-96
 createdAt: 2026-11-16T19:45:10.683Z
-updatedAt: 2026-11-16T23:52:38.869Z
+updatedAt: 2026-11-16T23:58:05.060Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-97
 pull_request: https://github.com/sgolovine/rowbly/pull/296
 ---
@@ -78,7 +78,3 @@ Not in scope:
 - A cut before the `launch` command has a request id fails the launch with the error of the host, not with `NETWORK`. Reason: no work runs on the host yet, so no result can be lost, and a `NETWORK` failure would pause the provider of the model. The supervisor can start a new worker for the Story.
 - (Development) The host gives its receipt when the `submit` request succeeds: the host wrote the command durably. A queued command leaves the queue then. A submit that the host refuses (exit code other than 0) also leaves the queue, and a refused queued launch fails its run. Reason: the queue must not keep a command that the host will never accept.
 - (Development) A stop or a cancel of a Thread whose `launch` or `resume` is still in the queue removes that launch from the queue and ends the wait of the run. Reason: the host processes its command files in id order, not in the order of arrival, so a queued stop cannot be sure to come after a queued launch. The queued stop still stops a run that the host started.
-
-## Review findings
-
-- Merge conflict with `origin/main` (Changelog Stage): `docs/architecture/native-factory/host-agent.md` has a conflict when `origin/main` is merged into `story/ROW-97`. Merge `origin/main`, repair the conflict in this file, run the checks and push. The Changelog Stage did not add the changelog entry because of this conflict.
