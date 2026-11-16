@@ -10,6 +10,7 @@ import {
   type Issue,
   type ProjectConfig,
   type StageConfig,
+  type StorySidebarBehavior,
 } from "./config-types.js";
 
 export { configIssues } from "./config-issues.js";
@@ -29,6 +30,11 @@ export function compactThreads(config: ProjectConfig): boolean {
 /** The time zone of the Story times in the TUI. `undefined` means the system time zone. */
 export function storyTimeZone(config: ProjectConfig): string | undefined {
   return config.display?.timeZone;
+}
+
+/** How the Story sidebar of the TUI opens. It opens at the regular width when the config does not set it. */
+export function storySidebarBehavior(config: ProjectConfig): StorySidebarBehavior {
+  return config.display?.storySidebar ?? "regular";
 }
 
 /** Gives the parsed JSON, or the message of the syntax error. */

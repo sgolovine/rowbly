@@ -16,6 +16,8 @@ import {
   type Issue,
   SKILL_HARNESSES,
   type SkillHarness,
+  STORY_SIDEBAR_BEHAVIORS,
+  type StorySidebarBehavior,
 } from "./config-types.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -264,6 +266,12 @@ function displayOptionIssues(name: string, value: unknown): Issue[] {
     return typeof value === "string"
       ? checkTimeZone(value)
       : [{ path: ["display", name], message: `${name} must be a time zone name` }];
+  }
+
+  if (name === "storySidebar") {
+    return STORY_SIDEBAR_BEHAVIORS.includes(value as StorySidebarBehavior)
+      ? []
+      : [{ path: ["display", name], message: `${name} must be one of: ${STORY_SIDEBAR_BEHAVIORS.join(", ")}` }];
   }
 
   if (typeof value !== "boolean") {
