@@ -160,6 +160,17 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
+- `host outbox` and `host outbox-ack` are hidden. The main machine runs them on a worker host to
+  apply the outbox. Each command reads one JSON object on stdin and the outbox folder from
+  `ROWBLY_OUTBOX`. They do not need `ROWBLY_THREAD_ID`. Use `--json` to get the JSON output.
+  - `host outbox` reads `{ "afterSeq": <n> }`. It gives `{ "entries": [...] }`: the complete entries
+    with a `seq` greater than `afterSeq`, in `seq` order.
+  - `host outbox-ack` reads `{ "seq": <n> }`. It removes the entries with a `seq` equal to or less
+    than `seq`, and each PNG that no remaining entry points to. It gives `{ "removed": <n>, "blobs":
+    [<sha256>, ...] }`.
+  - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
+    `ROWBLY_OUTBOX` gives a `VALIDATION` error.
+    See [storage.md](storage.md#apply-on-the-main-machine).
 
 ## Output and errors
 
@@ -171,6 +182,11 @@ not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json
 4. If the service throws a `RowblyError`, it prints the message, each issue and the hint to stderr.
    With `--json`, it prints `{ "error": { code, message, hint, details } }`. Then it sets exit code 1.
 5. It throws each other error again, because that error is a bug.
+
+`runWithoutContext(command, call, text)` does the same work, but it does not make a `ServiceContext`.
+Thus it does not need `ROWBLY_THREAD_ID` when `ROWBLY_OUTBOX` is set. The hidden `host outbox` and
+`host outbox-ack` commands use it. `runBytes(command, call)` writes raw bytes to stdout, for
+`host blob`.
 
 ## Add a CLI command
 

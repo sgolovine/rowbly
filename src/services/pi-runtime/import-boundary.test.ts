@@ -70,6 +70,15 @@ describe("Pi import boundary", () => {
     await expect(import("../test-project/fake-host-transport.js")).resolves.toHaveProperty("createFakeHostTransport");
   });
 
+  it("imports the outbox apply and the host outbox commands without loading Pi", async () => {
+    await expect(import("../outbox/outbox-compare.js")).resolves.toHaveProperty("compareChange");
+    await expect(import("../outbox/outbox-host.js")).resolves.toHaveProperty("hostOutboxEntries");
+    await expect(import("../outbox-apply/outbox-apply.js")).resolves.toHaveProperty("syncOutbox");
+    await expect(import("../outbox-apply/outbox-source.js")).resolves.toHaveProperty("transportOutboxSource");
+    await expect(import("../outbox-apply/host-files.js")).resolves.toHaveProperty("readAppliedSeq");
+    await expect(import("../factory-manager/outbox-attention.js")).resolves.toHaveProperty("syncHostOutbox");
+  });
+
   it("imports the TUI without loading Pi", async () => {
     await expect(import("../../tui/app.js")).resolves.toHaveProperty("App");
   });

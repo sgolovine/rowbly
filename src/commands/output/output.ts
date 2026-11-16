@@ -74,6 +74,26 @@ export async function run<T>(
 }
 
 /**
+ * Runs a service call without a service context, and prints its result as `run` does. It does not make an outbox
+ * context, so it does not need `ROWBLY_THREAD_ID`. The host commands of the outbox use it.
+ */
+export async function runWithoutContext<T>(
+  command: Command,
+  call: () => Promise<T>,
+  text: (result: T) => string,
+): Promise<void> {
+  const { json } = command.optsWithGlobals<{ json?: boolean }>();
+
+  try {
+    const result = await call();
+
+    console.log(json ? JSON.stringify(result, null, 2) : text(result));
+  } catch (error) {
+    reportError(error, json);
+  }
+}
+
+/**
  * Runs a service call that gives raw bytes, and writes the bytes to stdout without a change. It does not make an
  * outbox context, so it does not need `ROWBLY_THREAD_ID`. Errors are printed as in `run`.
  */

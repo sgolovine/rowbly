@@ -1,12 +1,19 @@
+import { text as streamText } from "node:stream/consumers";
 import type { Command } from "commander";
 import { addHost, type Host, listHosts, removeHost } from "../../services/host/host.js";
 import { readOutboxBlob } from "../../services/outbox/outbox-file.js";
-import { run, runBytes } from "../output/output.js";
+import { hostOutboxAck, hostOutboxEntries } from "../../services/outbox/outbox-host.js";
+import { run, runBytes, runWithoutContext } from "../output/output.js";
 
 function describe(host: Host): string {
   const state = host.enabled ? "on" : "off";
 
   return `${host.id}  ${host.ssh}  ${host.maxWorkers} worker(s)  ${state}`;
+}
+
+/** The outbox folder from `ROWBLY_OUTBOX` and the JSON request on stdin. */
+async function hostRequest() {
+  return { dir: process.env.ROWBLY_OUTBOX, text: await streamText(process.stdin) };
 }
 
 function listText(hosts: readonly Host[]): string {
@@ -52,4 +59,22 @@ export function registerHostCommands(program: Command): void {
     .action((sha256: string, _opts: unknown, command: Command) =>
       runBytes(command, () => readOutboxBlob({ dir: process.env.ROWBLY_OUTBOX, sha256 })),
     );
+
+  // The main machine runs this command over SSH to get the entries after the `afterSeq` of the request.
+  program.command("outbox", { hidden: true }).action((_opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      async () => hostOutboxEntries(await hostRequest()),
+      (answer) => `${answer.entries.length} entries`,
+    ),
+  );
+
+  // The main machine runs this command over SSH after it recorded the applied `seq` on its disk.
+  program.command("outbox-ack", { hidden: true }).action((_opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      async () => hostOutboxAck(await hostRequest()),
+      (result) => `Removed ${result.removed} entries`,
+    ),
+  );
 }

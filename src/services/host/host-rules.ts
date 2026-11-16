@@ -95,6 +95,15 @@ function maxWorkersIssue(maxWorkers: number): Issue | undefined {
   return undefined;
 }
 
+/** Throws a `ValidationError` when `id` is not the ID of a worker host. */
+export function validateHostId(id: string): void {
+  const issue = idIssue(id);
+
+  if (issue) {
+    throw new ValidationError(issue.message, { details: { issues: [issue] } });
+  }
+}
+
 /** Throws a `ValidationError` with one issue for each bad field of the input. */
 export function validateHostInput(input: HostInput): void {
   const issues = [idIssue(input.id), sshIssue(input.ssh), maxWorkersIssue(input.maxWorkers)].filter(
