@@ -17,6 +17,8 @@ function view(overrides: Partial<ShellView> = {}): ShellView {
     row: undefined,
     cursorStage: undefined,
     stageIndex: 0,
+    marked: new Set(),
+    ranging: false,
     storyPane: { kind: "new" },
     storyActive: true,
     idle: true,

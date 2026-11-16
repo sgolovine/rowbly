@@ -26,6 +26,9 @@ export function useShellState() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // The Stage sections that are collapsed in All Stages.
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  // The multi-selection of the Story list: the IDs of the selected Stories, and the Story where the range mode started.
+  const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
+  const [anchor, setAnchor] = useState<string | null>(null);
 
   return {
     values: {
@@ -43,6 +46,8 @@ export function useShellState() {
       stageKey,
       selectedId,
       collapsed,
+      marked,
+      anchor,
     },
     setters: {
       setOverlay,
@@ -59,6 +64,8 @@ export function useShellState() {
       setStageKey,
       setSelectedId,
       setCollapsed,
+      setMarked,
+      setAnchor,
     },
   };
 }

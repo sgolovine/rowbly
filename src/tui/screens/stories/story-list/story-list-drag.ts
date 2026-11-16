@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { RowDragProps } from "../../../components/index.js";
+import type { ClickEvent } from "../../../hooks/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
 
 /** What a drag of a Story carries: its id, and the list that it comes from. */
@@ -17,6 +18,10 @@ export interface StoryListEnv {
   readonly setSlot: Dispatch<SetStateAction<number | null>>;
   readonly onCursor: (index: number) => void;
   readonly onActivate?: (index: number) => void;
+  /** A `shift+click` on the Story row at `index`. */
+  readonly onRange?: (index: number) => void;
+  /** A click without `shift` clears the multi-selection before it does its action. */
+  readonly onClear?: () => void;
   readonly onMove?: (id: string, gap: number) => void;
 }
 
@@ -46,8 +51,19 @@ export function dropStory(env: StoryListEnv, value: unknown, gap: number | null)
   }
 }
 
-/** A click on the selected row activates it, and a click on another row selects it. */
-export function clickRow(env: StoryListEnv, index: number): void {
+/**
+ * A `shift+click` on a Story row selects the range to it. A different click clears the multi-selection. Then a click
+ * on the selected row activates it, and a click on another row selects it.
+ */
+export function clickRow(env: StoryListEnv, index: number, event: ClickEvent): void {
+  if (event.shift && env.onRange && env.rows[index]?.kind === "story") {
+    env.onRange(index);
+
+    return;
+  }
+
+  env.onClear?.();
+
   if (env.onActivate && index === env.cursor) {
     env.onActivate(index);
 

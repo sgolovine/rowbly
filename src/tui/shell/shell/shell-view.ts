@@ -16,6 +16,8 @@ export interface ShellViewInput {
   readonly stageKey: string | null;
   readonly selectedId: string | null;
   readonly collapsed: ReadonlySet<string>;
+  readonly marked: ReadonlySet<string>;
+  readonly anchor: string | null;
 }
 
 function visibleStories(stories: readonly Story[], stage: Stage | undefined): readonly Story[] {
@@ -27,6 +29,32 @@ function rowCursor(rows: readonly StoryListRow[], selectedId: string | null): nu
   const selectedAt = rows.findIndex((row) => row.id === selectedId);
 
   return Math.max(0, selectedAt >= 0 ? selectedAt : rows.findIndex((row) => row.kind === "story"));
+}
+
+/** The IDs of the Story rows from the row at `from` to the row at `to`. The order of `from` and `to` does not matter. */
+export function storyIdsBetween(rows: readonly StoryListRow[], from: number, to: number): readonly string[] {
+  return rows
+    .slice(Math.min(from, to), Math.max(from, to) + 1)
+    .flatMap((row) => (row.kind === "story" ? [row.id] : []));
+}
+
+/**
+ * The Stories that show a mark. In the range mode, they are the Story rows from the anchor to the cursor. Otherwise,
+ * they are the selected Stories that exist, so a Story that a reload removed goes out of the selection.
+ */
+function shownMarks(
+  rows: readonly StoryListRow[],
+  stories: readonly Story[],
+  input: ShellViewInput,
+  cursor: number,
+): ReadonlySet<string> {
+  if (input.anchor !== null) {
+    const at = rows.findIndex((row) => row.id === input.anchor);
+
+    return new Set(at >= 0 ? storyIdsBetween(rows, at, cursor) : []);
+  }
+
+  return new Set(stories.filter((story) => input.marked.has(story.id)).map((story) => story.id));
 }
 
 /** `n` creates the Story in the Stage of the filter, or in the Stage of the selected row when the list shows every Stage. */
@@ -68,6 +96,8 @@ export function shellView(input: ShellViewInput): ShellView {
     row,
     cursorStage: newStoryStage(stages, stage, row),
     stageIndex: stage ? stages.indexOf(stage) + 1 : 0,
+    marked: shownMarks(rows, stories, input, cursor),
+    ranging: input.anchor !== null,
     storyPane,
     storyActive,
     idle,
