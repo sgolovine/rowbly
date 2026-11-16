@@ -6,7 +6,7 @@ dependsOn:
   - ROW-84
   - ROW-85
 createdAt: 2026-11-16T19:45:03.438Z
-updatedAt: 2026-11-16T21:20:25.774Z
+updatedAt: 2026-11-16T21:21:56.424Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-86
 pull_request: https://github.com/sgolovine/rowbly/pull/277
 ---
@@ -87,10 +87,3 @@ Not in scope:
 - The upload is a new `upload` method of the transport, with `dd` on the host. Reason: the transport sends only JSON on stdin, and the host has no Rowbly before the install, so a Rowbly command cannot receive the package.
 - `@` becomes a safe token character. Reason: `npm install` needs `rowbly@<version>`, and `@` has no special meaning in the usual remote shells. The other dangerous characters stay refused.
 - An interrupted install leaves a folder that the `--version` check does not accept, so the next connection installs again. Reason: the version check is the authority, and an atomic rename adds work that the Spec does not ask for.
-
-## Review findings
-
-- The merge of `origin/main` into `story/ROW-86` has conflicts in these files:
-  - `docs/architecture/service-layer.md`
-  - `src/commands/host/host.ts`
-- Merge `origin/main` into the branch, repair the conflicts, and run the checks again. Then the Changelog Stage can add the entry.
