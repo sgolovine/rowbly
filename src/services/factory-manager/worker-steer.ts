@@ -1,11 +1,11 @@
 import { ConflictError } from "../errors/errors.js";
 import { steeringMessage } from "../messages/messages.js";
-import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import { getThread } from "../thread/thread.js";
 import { getState, type Manager, serial } from "./manager-state.js";
+import type { WorkerControl } from "./worker-executor.js";
 
-/** Gives the Pi session of the expected run of a running worker. Otherwise throws the reason. */
-async function steerableSession(manager: Manager, id: string, expectedRunId: string): Promise<PiSession> {
+/** Gives the executor control of the expected run of a running worker. Otherwise throws the reason. */
+async function steerableWorker(manager: Manager, id: string, expectedRunId: string): Promise<WorkerControl> {
   const thread = await getThread(id, manager.ctx);
   const lastRun = thread.runs.at(-1);
 
@@ -19,23 +19,19 @@ async function steerableSession(manager: Manager, id: string, expectedRunId: str
     throw new ConflictError("Worker is not running");
   }
 
-  if (!worker.session) {
+  if (!worker.control) {
     throw new ConflictError("Worker has no session");
   }
 
-  return worker.session;
+  return worker.control;
 }
 
 /**
- * Gives a message of a person to the expected run of a running worker. Pi delivers it after the current tool calls.
- * A session that does not stream gets no message, because a new prompt outside the worker run can break its result.
+ * Gives a message of a person to the expected run of a running worker. The executor refuses a worker that does not
+ * work now, because a new prompt outside the worker run can break its result.
  */
 export async function steerWorker(manager: Manager, id: string, expectedRunId: string, message: string): Promise<void> {
-  const session = await serial(manager, () => steerableSession(manager, id, expectedRunId));
+  const control = await serial(manager, () => steerableWorker(manager, id, expectedRunId));
 
-  if (!session.session.isStreaming) {
-    throw new ConflictError("Worker is not working now");
-  }
-
-  await session.session.steer(steeringMessage(message));
+  await control.steer(steeringMessage(message));
 }

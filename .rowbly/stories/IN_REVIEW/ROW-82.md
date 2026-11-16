@@ -1,9 +1,9 @@
 ---
 title: Put worker execution behind an executor interface
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 2
 createdAt: 2026-11-16T19:45:01.115Z
-updatedAt: 2026-11-16T20:20:18.682Z
+updatedAt: 2026-11-16T20:25:33.325Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82
 pull_request: https://github.com/sgolovine/rowbly/pull/271
 ---
@@ -77,11 +77,12 @@ Not in scope:
 
 ## Review findings
 
-The CHANGELOG Stage found merge conflicts between `story/ROW-82` and `origin/main` (commit `f734b01c`, the merge of PR #269 for ROW-83). The merge was aborted. No changelog entry was written.
+The review of PR #271 found no defects in the code. All acceptance criteria are satisfied, and the CI checks `Lint and format` and `Test` passed on commit `43269419`. Local `pnpm lint`, `pnpm typecheck` and `pnpm build` passed. The earlier conflicts with the merge of ROW-83 are repaired.
 
-Files with conflicts:
+Blocking findings:
 
-- `src/services/factory-manager/manager-state.ts`
-- `src/services/factory-manager/worker-steer.test.ts`
+1. The merge failed. `origin/main` now has the merge of PR #270 (ROW-85, commit `2538984b`). It conflicts with `story/ROW-82` in these files:
+   - `src/services/pi-runtime/import-boundary.test.ts`, near line 58. Both branches add an `it(...)` block after the `factory.phase` test: ROW-85 adds "imports the host transport without loading Pi" and ROW-82 adds "imports the worker executor interface without loading Pi". Fix: merge `origin/main` into `story/ROW-82` and keep both tests.
+   - `CHANGELOG.md`, the `### Pre Release` section. Fix: keep the ROW-85 entry and the ROW-82 entry.
 
-Merge `origin/main` into `story/ROW-82`, repair the conflicts, run all checks and push. Then the Story can go to the CHANGELOG Stage again.
+   Then run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, and push.

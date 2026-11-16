@@ -30,7 +30,7 @@ async function stopFactory(manager: Manager): Promise<void> {
 
   const workers = [...state.active.values()];
 
-  await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.session?.session.abort())]);
+  await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.control?.stop())]);
   // No check process stays alive after a stop.
   await stopCheckQueue(manager.checks);
   await getState(manager).loopDone;
