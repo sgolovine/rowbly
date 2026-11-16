@@ -1,8 +1,9 @@
 ---
 title: Organize story by stage within `stories` folder.
-stage: BACKLOG
+stage: IN_REFINEMENT
+position: 1
 createdAt: 2026-11-16T16:07:13.306Z
-updatedAt: 2026-11-16T16:07:13.306Z
+updatedAt: 2026-11-16T16:07:14.733Z
 worktree: null
 pull_request: null
 ---
