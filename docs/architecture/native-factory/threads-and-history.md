@@ -18,6 +18,15 @@ Read this when you change Thread metadata, runs, the Threads tab, Peek or the co
 - A worker Thread can have a short `checks` list: the last 20 checks of the worker, with the job id,
   check key, scope, status, `HEAD` and duration. The thread pane of the Factory view shows the last
   three. See [checks.md](checks.md#records).
+- A Thread has a `host`: the ID of the machine that runs it. The value is `local` (`LOCAL_HOST`) for
+  all current work. The manager writes `host` to each new worker Thread. A supervisor Thread has no
+  `host` in its file. A Thread file without `host` reads as `local`. Rowbly gives this default in one
+  place, when it reads the file, so that all readers get the same value. A save after a read writes
+  the field. `rowbly thread list` and `rowbly thread show` show the host. A `host` must be a string
+  that is not empty.
+- The projection copies the `host` of a worker Thread to its attempt in `state.json`. An attempt
+  without `host` ran on the local host. The `threads` entries of `status.json` and the active worker
+  entries of the manager also have the host.
 
 The `thread/` service reads and writes `runtime/threads/<id>.json` under the state lock. It also
 projects Thread changes into the v1 policy state and watches the Thread files for changes.

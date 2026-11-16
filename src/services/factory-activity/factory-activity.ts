@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { LOCAL_HOST } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 /**
@@ -13,11 +14,14 @@ type FactoryStateStatus = "ok" | "missing" | "unavailable" | "incomplete";
 
 /**
  * The recorded factory activity of one Story in its current Stage. A Story with no active attempt has no entry.
- * - `active`: one worker, with the `model` of its attempt, or its `workerId`.
+ * - `active`: one worker, with the `model` of its attempt, or its `workerId`, and the `host` that runs it.
  * - `conflict`: more than one attempt could be active. Rowbly does not choose one.
  * - `unknown`: an attempt does not have the data to decide.
  */
-export type StoryActivity = { kind: "active"; label: string } | { kind: "conflict" } | { kind: "unknown" };
+export type StoryActivity =
+  | { kind: "active"; label: string; host: string }
+  | { kind: "conflict" }
+  | { kind: "unknown" };
 
 export interface FactoryActivity {
   /** The absolute path of the state file. */
@@ -42,7 +46,7 @@ const ATTEMPT_FIELDS = ["stage", "workerId", "status"] as const;
 
 const CONFLICT_MARKER = /^(<{7}|={7}|>{7})(\s|$)/m;
 
-type Attempt = Partial<Record<"story" | "stage" | "workerId" | "status" | "model", string>>;
+type Attempt = Partial<Record<"story" | "stage" | "workerId" | "status" | "model" | "host", string>>;
 
 /** The attempts of a valid file, and the names of the parts that the file does not have. */
 interface CheckedState {
@@ -117,7 +121,7 @@ function checkAttempt(attempt: unknown, i: number): { attempt: Attempt; missing:
     throw new InvalidState(`${at} must be an object`);
   }
 
-  for (const key of ["story", "stage", "workerId", "status", "model"] as const) {
+  for (const key of ["story", "stage", "workerId", "status", "model", "host"] as const) {
     checkString(attempt[key], `${at}.${key}`);
   }
 
@@ -176,7 +180,7 @@ function storyActivity(story: { id: string; stage: string }, attempts: readonly 
 
   const last = matched[matched.length - 1] as Attempt;
 
-  return { kind: "active", label: last.model ?? (last.workerId as string) };
+  return { kind: "active", label: last.model ?? (last.workerId as string), host: last.host ?? LOCAL_HOST };
 }
 
 /** Gives the text of the file, or the activity for a file that is absent or cannot be read. */
