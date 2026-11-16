@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+### 0.19.0
+
 - Added: In the Factory view, a Thread that is open in the Story sidebar has an `Open Story` button with the key `o`. The button shows the Story list and opens the Story of the Thread in the Story sidebar. (ROW-70)
 - Added: Each Stage in `.rowbly/rowbly.config.json` can have the optional `expandedByDefault` key. When it is `false`, the section of that Stage in the All Stages view of the TUI is collapsed when a Project opens. (ROW-72)
 - Changed: Each Story file is now in the folder of its Stage, for example `.rowbly/stories/BACKLOG/ROW-1.md`, and Rowbly moves the file when the Stage of the Story changes. Rowbly still reads Story files directly in `.rowbly/stories/`, `rowbly doctor` shows a warning for a Story file that is not in the folder of its Stage, and `rowbly doctor --fix` moves it. (ROW-69)
@@ -36,6 +38,7 @@ This file records the changes to Rowbly that users can see.
 - Added: In the General tab of the Story sidebar of the TUI, a click on a Story in the `Depends on` list or the `Blocks` list opens that Story in the Story sidebar. If the form has unsaved changes, the TUI asks before it discards them. (ROW-107)
 - Added: The new hidden `rowbly host serve`, `rowbly host submit` and `rowbly host attach` commands run the host agent on a worker host, but no command of the main machine uses them yet. The host agent keeps the commands of the main machine with receipts, limits the workers of all Projects on the host with `~/.local/share/rowbly/slots/limit.json`, and stops when it has no work. (ROW-89)
 - Added: The new `rowbly host check <id>` command shows if a worker host is ready: SSH, Linux, `flock`, Git, Node, the Rowbly version, the Pi login, the worker models, the clone, Git push access, `gh`, the Git identity and local commits that are not on `origin`. The new `rowbly host login <id>` command logs in to Pi on the host in a terminal, and `rowbly host add` now shows the items that you must do. (ROW-87)
+- Added: `rowbly add-attachment <story> <file>` and the "New file" button of the Attachments tab in the TUI attach a file of any type of 10 MiB or less to a Story, for example a PDF, a JPEG or a text file. `--from-clipboard` and the paste key of the TUI still read only a PNG image. (ROW-108)
 
 ### 0.18.0
 

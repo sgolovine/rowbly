@@ -307,7 +307,7 @@ export function registerHostCommands(program: Command): void {
 
 /** Registers the hidden subcommands that the main machine runs on a worker host over SSH. */
 function registerHostAgentCommands(program: Command): void {
-  // The main machine runs this command over SSH to get the PNG of an `attachment.add` entry.
+  // The main machine runs this command over SSH to get the file of an `attachment.add` entry.
   program
     .command("blob <sha256>", { hidden: true })
     .action((sha256: string, _opts: unknown, command: Command) =>

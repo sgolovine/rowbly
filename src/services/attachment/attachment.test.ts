@@ -45,16 +45,17 @@ describe("attachments", () => {
     expect(await readdir(dir)).not.toContain(`${first?.id}.png`);
     expect(await listAttachments({ story: story.id }, p.ctx)).toEqual([second]);
   });
-  it("accepts the exact byte limit and rejects invalid or oversized bytes before writes", async () => {
+  it("accepts the exact byte limit and rejects oversized bytes before writes", async () => {
     const { story, dir } = await setup();
     const limit = Buffer.alloc(MAX_ATTACHMENT_BYTES);
     png.copy(limit);
     await addAttachment({ story: story.id, image: { name: "limit.png", bytes: limit } }, p.ctx);
-    for (const bytes of [Buffer.alloc(8), Buffer.alloc(MAX_ATTACHMENT_BYTES + 1)]) {
-      await expect(addAttachment({ story: story.id, image: { name: "bad.png", bytes } }, p.ctx)).rejects.toMatchObject({
-        code: "VALIDATION",
-      });
-    }
+    await expect(
+      addAttachment(
+        { story: story.id, image: { name: "big.png", bytes: Buffer.alloc(MAX_ATTACHMENT_BYTES + 1) } },
+        p.ctx,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION", message: "Attachment exceeds 10 MiB" });
     expect(await readdir(dir)).toHaveLength(2);
   });
   it("reports unknown owners, IDs, invalid sources, and unsafe IDs", async () => {
@@ -107,13 +108,14 @@ describe("attachments", () => {
     const { story, file, dir } = await setup();
     const attachment = await addAttachment({ story: story.id, file }, p.ctx);
     await rm(join(dir, `${attachment?.id}.png`));
-    await writeFile(join(dir, "orphan.png"), png);
+    const orphan = "a00000000-0000-4000-8000-0000000000aa.png";
+    await writeFile(join(dir, orphan), png);
     const report = await doctor({}, p.ctx);
-    expect(report.issues.some((i) => i.message.includes("has no PNG"))).toBe(true);
-    expect(report.issues.some((i) => i.message.includes("Orphan PNG"))).toBe(true);
+    expect(report.issues.some((i) => i.message.includes("has no file"))).toBe(true);
+    expect(report.issues.some((i) => i.message.includes("Orphan attachment file"))).toBe(true);
     await doctor({ fix: true }, p.ctx);
     expect(await listAttachments({ story: story.id }, p.ctx)).toEqual([]);
-    expect(await readFile(join(dir, "orphan.png"))).toEqual(png);
+    expect(await readFile(join(dir, orphan))).toEqual(png);
     await writeFile(join(dir, "manifest.json"), "broken");
     expect((await doctor({ fix: true }, p.ctx)).ok).toBe(false);
     expect(await readFile(join(dir, "manifest.json"), "utf8")).toBe("broken");
@@ -124,17 +126,17 @@ describe("attachments", () => {
     const second = await addAttachment({ story: story.id, file }, p.ctx);
     await rm(join(dir, `${first?.id}.png`));
     await rm(join(dir, `${second?.id}.png`));
-    await writeFile(join(dir, "orphan-a.png"), png);
-    await writeFile(join(dir, "orphan-b.png"), png);
-    const orphans = (await readdir(dir)).filter((name) => name.startsWith("orphan-"));
+    await writeFile(join(dir, "a00000000-0000-4000-8000-0000000000aa.png"), png);
+    await writeFile(join(dir, "a00000000-0000-4000-8000-0000000000ab.pdf"), "pdf");
+    const orphans = (await readdir(dir)).filter((name) => name.startsWith("a00000000-"));
     const report = await doctor({}, p.ctx);
     const messages = report.issues.filter((i) => i.file?.includes("attachments")).map((i) => i.message);
     expect(messages).toEqual([
-      `Attachment ${first?.name} has no PNG`,
-      `Attachment ${second?.name} has no PNG`,
-      "Attachment metadata references missing PNGs",
-      "Orphan PNG: preserve it for recovery",
-      "Orphan PNG: preserve it for recovery",
+      `Attachment ${first?.name} has no file`,
+      `Attachment ${second?.name} has no file`,
+      "Attachment metadata references missing files",
+      "Orphan attachment file: preserve it for recovery",
+      "Orphan attachment file: preserve it for recovery",
     ]);
     expect(report.issues.filter((i) => i.message.startsWith("Orphan")).map((i) => i.file?.split("/").at(-1))).toEqual(
       orphans,

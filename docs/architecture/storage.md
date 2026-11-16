@@ -30,7 +30,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
   stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
   specs/login-page.md # <slug>.md; frontmatter: title, stories (a list of story IDs); the body is the spec
-  attachments/ROW-01/ # manifest.json and <id>.png for each PNG attachment of a story
+  attachments/ROW-01/ # manifest.json and one <id>[.<ext>] file for each attachment of a story
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; see native-factory/runtime-and-locks.md
@@ -355,16 +355,29 @@ body is the Spec.
 
 ## Attachments
 
-A Story can have PNG attachments. The `attachment` service keeps them in `attachments/<story ID>/`,
-with a `manifest.json` file and one `<id>.png` file for each image.
+A Story can have attachments of all file types. The `attachment` service keeps them in
+`attachments/<story ID>/`, with a `manifest.json` file and one file for each attachment.
 
-- Each attachment must be a PNG image of 10 MiB or less.
+- Each attachment must be a file of 10 MiB or less. An empty file is valid.
+- Each record of the manifest has `id`, `name`, `type`, `size` and `createdAt`. `type` is a
+  lower-case MIME type. Bytes with the PNG signature get `image/png`. Else the extension of the name
+  gives the type from a small table, for example `.pdf` gives `application/pdf`. An unknown extension
+  gives `application/octet-stream`.
+- The file of a PNG record is `<id>.png`. The file of a different record is `<id>` and the
+  lower-case extension of its name, for example `<id>.pdf`. If the name has no safe extension
+  (`.` and 1 to 16 characters `a-z` or `0-9`), the file is `<id>`. `attachmentFileName` in
+  `src/services/attachment-files/attachment-type.ts` gives this name.
+- A manifest of an earlier version has only PNG records. Rowbly reads it with no migration.
 - The CLI commands are `add-attachment <story> [file]` (also `--from-clipboard`), `list-attachments`,
-  `open-attachment` and `remove-attachment`.
-- In the TUI, the Attachments tab of a Story shows the images. A paste key adds an image from the
-  clipboard (`ctrl+v`, or `alt+v` on Windows).
-- `rowbly doctor` reports a manifest entry without a PNG, a PNG without an entry, and a malformed
-  manifest. It keeps an orphan PNG for recovery.
+  `open-attachment` and `remove-attachment`. `open-attachment` opens the file with the application of
+  the platform for its type.
+- In the TUI, the Attachments tab of a Story shows the attachments. `n` attaches a file from a path.
+  A paste key adds an image from the clipboard (`ctrl+v`, or `alt+v` on Windows).
+- The clipboard paths (`--from-clipboard` and the paste key) accept only a PNG image.
+- `rowbly doctor` reports a manifest entry without its file, a file without an entry, and a
+  malformed manifest. It keeps an orphan file for recovery. An orphan is a file with the name
+  `a<uuid>` or `a<uuid>.<ext>` that no record owns. A temporary file (`.*.tmp`, `*.removed`) and
+  `manifest.json` are not orphans.
 
 ## User prompts
 
@@ -436,7 +449,7 @@ $ROWBLY_OUTBOX/
   outbox.jsonl    # one JSON entry for each line
   seq             # the last seq that the folder gave
   outbox.lock     # the flock of the writers
-  blobs/          # <sha256>.png: the PNG of each attachment.add entry
+  blobs/          # <sha256>.png: the file of each attachment.add entry, of all types
 ```
 
 A field entry of `outbox.jsonl` has this shape. It has no `type` key:
@@ -490,22 +503,24 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
 }
 ```
 
-- `sha256` is the lowercase hex SHA-256 of the PNG bytes.
-- For an add, the service writes the PNG and the manifest of the copy first. Then the recorder writes
-  the PNG to `blobs/<sha256>.png`. Then it adds the entry. Thus an entry never points to a missing
-  PNG. A crash after the PNG write leaves only a PNG without an entry. This is harmless.
-- The recorder holds the outbox lock while it writes the PNG and adds the entry. Thus an
-  acknowledgement cannot remove the PNG before the entry is there.
-- The recorder writes a PNG through a temporary file in `blobs/`. It syncs the file, renames it and
+- `sha256` is the lowercase hex SHA-256 of the bytes of the file.
+- The blob name is `<sha256>.png` for all file types. The name stays the same as in earlier versions,
+  so that an outbox folder of an older version stays valid.
+- For an add, the service writes the file and the manifest of the copy first. Then the recorder
+  writes the file to `blobs/<sha256>.png`. Then it adds the entry. Thus an entry never points to a
+  missing file. A crash after the file write leaves only a file without an entry. This is harmless.
+- The recorder holds the outbox lock while it writes the file and adds the entry. Thus an
+  acknowledgement cannot remove the file before the entry is there.
+- The recorder writes a file through a temporary file in `blobs/`. It syncs the file, renames it and
   syncs the folder. If `<sha256>.png` exists, the recorder keeps it, because it has the same bytes.
-  Thus two adds of the same bytes give one PNG and two entries.
-- For a remove, the service calculates `sha256` from the PNG of the copy. It adds the entry after the
+  Thus two adds of the same bytes give one file and two entries.
+- For a remove, the service calculates `sha256` from the file of the copy. It adds the entry after the
   remove succeeds.
 - `addAttachment` accepts an optional `id`. The main machine uses it when it applies an
   `attachment.add` entry. An id that is not valid gives `VALIDATION`. An id that is in the manifest
   gives `CONFLICT`. Both errors occur before the first write.
 - `updateStory` with `attachments` stays refused for a remote worker.
-- The main machine gets a PNG with `rowbly host blob <sha256>`. See
+- The main machine gets a file with `rowbly host blob <sha256>`. See
   [cli.md](cli.md#worker-hosts).
 
 ### Read and acknowledgement on the host
@@ -515,7 +530,7 @@ An attachment entry has a `type` key. `addAttachment` writes an `attachment.add`
   append.
 - `acknowledgeOutbox(dir, seq)` holds the outbox lock. It removes the lines with a `seq` equal to or
   less than `seq`, and each line that is not a complete entry. It keeps the `seq` file, so that a new
-  entry does not get the `seq` of a removed line. Then it removes each PNG of `blobs/` that no
+  entry does not get the `seq` of a removed line. Then it removes each file of `blobs/` that no
   remaining `attachment.add` entry points to.
 - The main machine uses these functions through the hidden commands `rowbly host outbox` and
   `rowbly host outbox-ack`. See [cli.md](cli.md#worker-hosts).
@@ -557,9 +572,10 @@ body for `description`.
 - An unknown path, a new value with a bad form, or a write that the service refuses is a conflict.
 - An `attachment.add` entry is skipped when the Story has an attachment with the same id and the same
   `sha256`. A missing Story, or the same id with a different `sha256`, is a conflict. Else the apply
-  gets the PNG with `rowbly host blob <sha256>`, and adds it with the id and the name of the entry.
-- A PNG with a different hash, more than 10 MiB, or bytes that are not a PNG is a conflict. The apply
-  does not add the attachment.
+  gets the file with `rowbly host blob <sha256>`, and adds it with the id and the name of the entry.
+  The type comes again from the bytes and the name, so it is the same as the type of the entry.
+- A file with a different hash or more than 10 MiB is a conflict. The apply does not add the
+  attachment.
 - An `attachment.remove` entry removes the attachment when it is on the Story. It is skipped when the
   attachment or the Story is not there.
 - An entry with an unknown `type` or a bad shape is a conflict. The apply continues with the next
@@ -579,16 +595,17 @@ The main machine keeps the files of each host in `runtime/hosts/<host>/`. The fo
 ```
 .rowbly/runtime/hosts/<host>/
   outbox-applied.json   # { "seq": <n> }: the last applied seq. A missing file is 0.
-  conflicts/            # <sha256>.png: the PNG of each attachment.add conflict, for recovery
+  conflicts/            # <sha256>.png: the file of each attachment.add conflict, for recovery
 ```
 
 ### Attachment cache of a host
 
-The `attachment-cache` service keeps PNG files by attachment id, in a folder that the caller gives.
-Each file is `<dir>/<attachment-id>.png`. The content of an attachment never changes, so a file never
+The `attachment-cache` service keeps attachment files by attachment id, in a folder that the caller
+gives. Each file is `<dir>/<attachment-id>.png` for all file types, for compatibility with earlier
+versions. The content of an attachment never changes, so a file never
 becomes old.
 
-- `putCachedAttachment` checks the id and the PNG bytes (10 MiB or less) first. It writes the file
+- `putCachedAttachment` checks the id and the size of the bytes (10 MiB or less) first. It writes the file
   atomically. If the id is in the cache, the first file stays.
 - `readCachedAttachment` gives the bytes. A missing file gives `NOT_FOUND`.
 - `hasCachedAttachment` tells if the id is in the cache. `missingCachedAttachments` gives the ids of
