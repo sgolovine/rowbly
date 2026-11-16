@@ -41,7 +41,11 @@ describe("doctor factory checks", () => {
     expect(await factoryIssues(true)).toEqual([expect.objectContaining({ fixed: true })]);
     expect(await pathExists(project.paths.legacyFactorySettingsFile)).toBe(false);
     expect((await readConfig(project.paths)).factory).toEqual(MOVED);
-    expect(await getFactorySettings(project.ctx)).toEqual({ ...MOVED, git: { ...MOVED.git, pull: false } });
+    expect(await getFactorySettings(project.ctx)).toEqual({
+      ...MOVED,
+      git: { ...MOVED.git, pull: false },
+      placement: "prefer-local",
+    });
     expect(await factoryIssues()).toEqual([]);
   });
 

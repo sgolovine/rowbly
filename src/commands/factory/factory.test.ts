@@ -113,6 +113,18 @@ describe("factory commands", () => {
     expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     expect(await project.read("rowbly.config.json")).toBe(before);
   });
+  it("sets the placement policy, and rejects an unknown policy without a change of the config", async () => {
+    await writeFactory(JSON.stringify({ maxWorkers: 3, git: { push: true } }));
+    const set = await runCli(["--json", "factory", "configure", "--placement", "most-free"], project.paths.root);
+    expect(set.exitCode).toBe(0);
+    expect(JSON.parse(set.stdout).placement).toBe("most-free");
+    expect(await readFactory()).toEqual({ maxWorkers: 3, git: { push: true }, placement: "most-free" });
+    const before = await project.read("rowbly.config.json");
+    const result = await runCli(["--json", "factory", "configure", "--placement", "random"], project.paths.root);
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    expect(await project.read("rowbly.config.json")).toBe(before);
+  });
   it("returns exit one for unavailable runtime status", async () => {
     await prepareRuntime(project.paths);
     await writeFile(`${project.paths.runtimeDir}/factory.lock`, "{");
@@ -134,6 +146,7 @@ describe("factory commands", () => {
       workerModel: worker,
       stageWorkerModels: { BACKLOG: { provider: "openai", modelId: "gpt-sol" } },
       git: { push: false, pull: false, syncIntervalSeconds: 300 },
+      placement: "prefer-local",
     });
     const pinned = await cli(
       "--story",
