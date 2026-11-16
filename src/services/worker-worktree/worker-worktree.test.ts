@@ -88,6 +88,16 @@ describe("Story worktree", () => {
     expect(await readFile(join(first.path, "notes"), "utf8")).toBe("dirty refinement");
     expect(await readFile(join(first.path, "untracked"), "utf8")).toBe("keep");
   });
+  it("uses the branch key of the Story before the default branch", async () => {
+    const { root, story } = await fixture();
+    await exec("git", ["-C", root, "branch", "story/TST-07"]);
+    const next = await prepareWorkerWorktree(root, { ...story, branch: "story/TST-07" });
+    expect(next).toEqual({ path: join(`${root}-worktrees`, "TST-01"), branch: "story/TST-07" });
+    expect((await exec("git", ["-C", next.path, "branch", "--show-current"])).stdout.trim()).toBe("story/TST-07");
+    await expect(prepareWorkerWorktree(root, { ...story, id: "TST-02", branch: "-x" })).rejects.toThrow(
+      "Invalid Story branch",
+    );
+  });
   it("rejects an unrelated named branch", async () => {
     const { root, story } = await fixture();
     const first = await prepareWorkerWorktree(root, { ...story, stage: "IN_REFINEMENT" });
