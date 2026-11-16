@@ -20,7 +20,7 @@ import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
-import { readAuthStamp } from "./manager-state.js";
+import { getState, readAuthStamp, setState } from "./manager-state.js";
 import { scan } from "./manager-status.js";
 import { startProjectSync } from "./project-sync-step.js";
 
@@ -47,7 +47,7 @@ vi.mock("../project-write/project-write.js", async (importOriginal) => {
 });
 vi.mock("./manager-state.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-state.js")>();
-  return { ...actual, readAuthStamp: vi.fn(actual.readAuthStamp) };
+  return { ...actual, readAuthStamp: vi.fn(actual.readAuthStamp), setState: vi.fn(actual.setState) };
 });
 vi.mock("./manager-status.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-status.js")>();
@@ -267,6 +267,16 @@ describe("foreground factory", () => {
       expect(await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "a" })).toEqual(reservation);
       expect((await f.manager.snapshot()).workers.pending).toBe(1);
       expect((await readFactoryState(root)).attempts[0]?.status).toBe("preparing");
+      // The worker Thread, its attempt, the active entry and the status snapshot record the local host.
+      const threadFile = join(root, ".rowbly/runtime/threads", `${reservation.threadId}.json`);
+      expect(JSON.parse(await readFile(threadFile, "utf8")).host).toBe("local");
+      expect((await readFactoryState(root)).attempts[0]?.host).toBe("local");
+      const managerArg = vi.mocked(setState).mock.calls.at(-1)?.[0];
+      if (!managerArg) throw new Error("Missing manager");
+      expect(getState(managerArg).active.get(reservation.threadId)?.host).toBe("local");
+      expect((await f.manager.snapshot()).threads).toContainEqual(
+        expect.objectContaining({ id: reservation.threadId, host: "local" }),
+      );
       // The status file lists queued work for the TUI, without the Stories that wait for no worker.
       const status = JSON.parse(await readFile(join(root, ".rowbly/runtime/status.json"), "utf8"));
       expect(status.queue).toContainEqual(
@@ -599,14 +609,18 @@ describe("foreground factory", () => {
   it("moves the indirect upstream Stories in one pass", async () => {
     const indirect = await createStory({ title: "Indirect", stage: "BACKLOG" }, { cwd: root });
     const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
-    await updateStory({ id: upstream.id, dependsOn: [indirect.id] }, { cwd: root });
+    // A later time puts the upstream Story first in the board order, and so first in the commit message.
+    await updateStory(
+      { id: upstream.id, dependsOn: [indirect.id] },
+      { cwd: root, now: () => new Date(Date.now() + 60_000) },
+    );
     f.supervisor.setResponses([fauxAssistantMessage("Wait"), fauxAssistantMessage("Wait")]);
     await runUntil(f, async () => {
       expect((await getStory({ id: upstream.id }, { cwd: root })).stage).toBe("BUILD");
       expect((await getStory({ id: indirect.id }, { cwd: root })).stage).toBe("BUILD");
     });
     expect(await subjects()).toContain(
-      `chore(rowbly): move ${indirect.id}, ${upstream.id} out of Backlog for ${downstream.id}`,
+      `chore(rowbly): move ${upstream.id}, ${indirect.id} out of Backlog for ${downstream.id}`,
     );
   });
   it("does not move a parked upstream Story or an upstream Story in a hold Stage", async () => {

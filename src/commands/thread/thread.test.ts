@@ -23,6 +23,19 @@ describe("thread", () => {
     expect(JSON.parse(list.stdout).threads[0].id).toBe(t.id);
     expect((await runCli(["thread", "show", t.id], p.paths.root)).stdout).toContain("pending");
   });
+  it("shows the host of each Thread, also of an old Thread file without a host", async () => {
+    const worker = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test" },
+      p.ctx,
+    );
+    const old = await createThread({ role: "supervisor", cwd: p.paths.root, ownerToken: "test" }, p.ctx);
+    const list = await runCli(["thread", "list", "--json"], p.paths.root);
+    expect(JSON.parse(list.stdout).threads.map((t: { host: string }) => t.host)).toEqual(["local", "local"]);
+    const shown = await runCli(["thread", "show", old.id, "--json"], p.paths.root);
+    expect(JSON.parse(shown.stdout).host).toBe("local");
+    const text = await runCli(["thread", "list"], p.paths.root);
+    expect(text.stdout).toContain(`${worker.id}  ROW-1 DEVELOP pending  unresolved  local`);
+  });
   it("prints a bounded active-branch tail and rejects excessive limits", async () => {
     const t = await createThread({ role: "supervisor", cwd: p.paths.root, ownerToken: "test" }, p.ctx);
     const file = `sessions/${t.id}/fixture.jsonl`;

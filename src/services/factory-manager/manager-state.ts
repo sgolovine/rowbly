@@ -46,6 +46,8 @@ export interface ProviderPause {
 
 interface ActiveWorker {
   readonly task: Promise<void>;
+  /** The host ID of the machine that runs the worker. */
+  readonly host: string;
   /** The operations of the executor for the worker. The manager sets it when the session opens. */
   readonly control?: WorkerControl;
 }

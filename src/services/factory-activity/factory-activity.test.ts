@@ -40,12 +40,32 @@ describe("getFactoryActivity", () => {
 
     it("gives the model of one active attempt", async () => {
       await project.write("state.json", state([attempt({ status: "completed" }), attempt({ status: "preparing" })]));
-      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "claude-opus" } });
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "claude-opus", host: "local" } });
     });
 
     it("gives the worker ID when the model is absent", async () => {
       await project.write("state.json", state([attempt({ model: undefined })]));
-      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "worker-1" } });
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "worker-1", host: "local" } });
+    });
+
+    it("gives the recorded host of an active attempt, and local for an old attempt without it", async () => {
+      await project.write(
+        "state.json",
+        state([attempt({ host: "builder" }), attempt({ story: "ROW-02", stage: "IN_REVIEW", host: undefined })]),
+      );
+      expect(await read()).toEqual({
+        path: path(),
+        status: "ok",
+        stories: {
+          "ROW-01": { kind: "active", label: "claude-opus", host: "builder" },
+          "ROW-02": { kind: "active", label: "claude-opus", host: "local" },
+        },
+      });
+    });
+
+    it("gives unavailable for an attempt with a host that is not a string", async () => {
+      await project.write("state.json", state([attempt({ host: 7 })]));
+      expect(await read()).toMatchObject({ status: "unavailable", message: "attempts[0].host must be a string" });
     });
 
     it("gives a conflict for a later terminal attempt after an active one", async () => {
@@ -68,7 +88,7 @@ describe("getFactoryActivity", () => {
 
     it("ignores a later attempt for another Stage", async () => {
       await project.write("state.json", state([attempt({}), attempt({ stage: "IN_REFINEMENT", status: "failed" })]));
-      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "claude-opus" } });
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "claude-opus", host: "local" } });
     });
 
     it("ignores an attempt for a deleted Story", async () => {
@@ -90,8 +110,8 @@ describe("getFactoryActivity", () => {
         state([attempt({}), attempt({ story: "ROW-02", stage: "IN_REVIEW", workerId: "w2", model: undefined })]),
       );
       expect(await activity()).toEqual({
-        "ROW-01": { kind: "active", label: "claude-opus" },
-        "ROW-02": { kind: "active", label: "w2" },
+        "ROW-01": { kind: "active", label: "claude-opus", host: "local" },
+        "ROW-02": { kind: "active", label: "w2", host: "local" },
       });
     });
   });
@@ -156,7 +176,9 @@ describe("getFactoryActivity", () => {
       const result = await read();
       expect(result.status).toBe("incomplete");
       expect(result.message).toBe(`Missing ${key}`);
-      expect(result.stories).toEqual(key === "scan" ? { "ROW-01": { kind: "active", label: "claude-opus" } } : {});
+      expect(result.stories).toEqual(
+        key === "scan" ? { "ROW-01": { kind: "active", label: "claude-opus", host: "local" } } : {},
+      );
     });
 
     it("gives incomplete for an attempt without a Story, and the activity of the attempts that match", async () => {
@@ -168,7 +190,7 @@ describe("getFactoryActivity", () => {
         path: path(),
         status: "incomplete",
         message: "Missing attempts[0].story",
-        stories: { "ROW-02": { kind: "active", label: "claude-opus" } },
+        stories: { "ROW-02": { kind: "active", label: "claude-opus", host: "local" } },
       });
     });
 

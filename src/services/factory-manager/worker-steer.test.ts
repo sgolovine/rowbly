@@ -21,7 +21,7 @@ function fakeSession(isStreaming = true) {
 }
 
 function active(session: PiSession) {
-  return { task: Promise.resolve(), control: sessionControl(session) };
+  return { task: Promise.resolve(), host: "local", control: sessionControl(session) };
 }
 
 function thread(patch: Partial<ThreadRecord> = {}): ThreadRecord {
@@ -89,7 +89,7 @@ describe("steerWorker", () => {
   });
 
   it("rejects a worker without a Pi session", async () => {
-    const manager = createManager(new Map([["thread", { task: Promise.resolve() }]]));
+    const manager = createManager(new Map([["thread", { task: Promise.resolve(), host: "local" }]]));
     mocks.getThread.mockResolvedValue(thread());
 
     await expect(steerWorker(manager, "thread", "run", "text")).rejects.toMatchObject({

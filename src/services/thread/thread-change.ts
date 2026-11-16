@@ -6,7 +6,14 @@ import { withStateLock } from "../factory-state/factory-state.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { getThread, saveThread } from "./thread-files.js";
-import { isTerminal, type ThreadPatch, type ThreadRecord, type ThreadRun, type ThreadStatus } from "./thread-types.js";
+import {
+  isTerminal,
+  LOCAL_HOST,
+  type ThreadPatch,
+  type ThreadRecord,
+  type ThreadRun,
+  type ThreadStatus,
+} from "./thread-types.js";
 
 interface CreateInput {
   id?: string;
@@ -18,6 +25,8 @@ interface CreateInput {
   cwd: string;
   ownerToken: string;
   model?: ModelChoice;
+  /** The host of a worker Thread. A worker Thread without it runs on `LOCAL_HOST`. */
+  host?: string;
 }
 
 interface TransitionInput {
@@ -62,10 +71,12 @@ async function saveNewThread(input: CreateInput, ctx: ServiceContext): Promise<T
   const createdAt = nowText(ctx);
   const { ownerToken, ...fields } = input;
   const run: ThreadRun = { id: randomUUID(), ownerToken, createdAt, status: "pending" };
+  const host = input.role === "worker" ? { host: input.host ?? LOCAL_HOST } : {};
 
   return saveThread(
     {
       ...fields,
+      ...host,
       version: 1,
       id,
       revision: 1,

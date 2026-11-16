@@ -11,6 +11,7 @@ import {
   appendThreadRun,
   createThread,
   getThread,
+  LOCAL_HOST,
   listThreads,
   projectNativeAttempt,
   type ThreadRecord,
@@ -86,7 +87,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     promptClaims: withEntry(state.promptClaims, thread.id, stage?.promptHash ?? ""),
     requests: withEntry(state.requests, input.requestId, thread.id),
   }));
-  startWorkerTask(manager, thread.id);
+  startWorkerTask(manager, thread.id, thread.host ?? LOCAL_HOST);
 
   await persistStatus(manager);
 
@@ -189,6 +190,7 @@ function createWorkerThread(manager: Manager, story: Story, attemptNumber: numbe
       ownerToken: manager.owner.token,
       parentThreadId: getState(manager).supervisorId,
       attemptNumber,
+      host: LOCAL_HOST,
     },
     manager.ctx,
   );
@@ -198,10 +200,10 @@ function createWorkerThread(manager: Manager, story: Story, attemptNumber: numbe
  * Registers the worker slot before the launch starts, so that the slot counts at once.
  * The launch starts in a later microtask, after the registration.
  */
-function startWorkerTask(manager: Manager, threadId: string): void {
+function startWorkerTask(manager: Manager, threadId: string, host: string): void {
   const task = Promise.resolve().then(() => launchWorker(manager, threadId));
 
-  setState(manager, (state) => ({ active: withEntry(state.active, threadId, { task }) }));
+  setState(manager, (state) => ({ active: withEntry(state.active, threadId, { task, host }) }));
 }
 
 /** Cancels the expected run of an active worker and holds its Story in the current Stage. */
