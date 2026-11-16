@@ -2,6 +2,7 @@
 title: Store Story dependencies in the Story service
 stage: DONE
 position: 44
+uid: 77f1db65-39ba-4ed1-8bec-fd33f4d09e6e
 createdAt: 2026-11-14T23:26:41.000Z
 updatedAt: 2026-11-14T23:39:53.000Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-59
