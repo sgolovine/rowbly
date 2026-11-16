@@ -1,13 +1,13 @@
 ---
 title: Record attachment writes in the outbox
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 10
 dependsOn:
   - ROW-90
 createdAt: 2026-11-16T19:45:07.000Z
-updatedAt: 2026-11-16T20:57:59.649Z
+updatedAt: 2026-11-16T21:04:13.105Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-91
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/275
 ---
 
 ## Goal
