@@ -1,12 +1,12 @@
 ---
 title: Install the exact Rowbly version on a worker host
-stage: CHANGELOG
+stage: IN_REVIEW
 position: 5
 dependsOn:
   - ROW-84
   - ROW-85
 createdAt: 2026-11-16T19:45:03.438Z
-updatedAt: 2026-11-16T21:18:04.972Z
+updatedAt: 2026-11-16T21:18:50.341Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-86
 pull_request: https://github.com/sgolovine/rowbly/pull/277
 ---
