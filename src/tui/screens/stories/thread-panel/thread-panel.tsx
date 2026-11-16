@@ -34,7 +34,11 @@ export interface ThreadPanelProps {
 }
 
 /** The title of the Panel: the Story and the thread, or "Thread" without a thread. */
-function panelTitle(storyId: string, current: ThreadRecord | undefined, stages: StageNames | undefined): string {
+export function threadPanelTitle(
+  storyId: string,
+  current: ThreadRecord | undefined,
+  stages: StageNames | undefined,
+): string {
   return current ? `${storyId} › ${threadName(current, stages)}` : "Thread";
 }
 
@@ -58,7 +62,7 @@ export function ThreadPanel({
 }: ThreadPanelProps) {
   return (
     <Panel
-      title={panelTitle(storyId, current, stages)}
+      title={threadPanelTitle(storyId, current, stages)}
       focused={viewing}
       onClick={listing && current ? onFocusThread : undefined}
       flexGrow={1}

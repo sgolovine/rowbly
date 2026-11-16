@@ -65,6 +65,7 @@ The library also contains other code that has no guideline of its own:
 | `SelectionRow` | The `▌` bar and the `selection` fill of a highlighted row. Use them for lists that you lay out yourself. |
 | `TextInput`, `TextArea` | Text fields for one line and for many lines, with a caret and paste. `TextArea` also opens full screen with `ctrl+f`. |
 | `FullScreenEditor`, `useFullScreenEditor` | Markdown text on the full terminal, with View and Edit modes and an optional save. |
+| `FullScreenConversation`, `useFullScreenConversation` | The read-only conversation of one Thread on the full terminal. `ctrl+f`, `esc` and the `✕` close it. |
 | `SearchableSelect`, `SearchableSelectPicker`, `fuzzySearch` | The fuzzy picker that a searchable select field opens. |
 | `MarkdownView`, `markdown.ts` | Markdown that is rendered for the terminal (`marked-terminal`), in a viewport that scrolls. |
 | `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. `active` controls the keys. `wheel` controls the wheel, and its default is `active`. |
