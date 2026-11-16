@@ -22,7 +22,8 @@ This file records the changes to Rowbly that users can see.
 - Added: The TUI shows and changes Story tags. The new "Tags" section of the Settings adds a tag, changes its label and removes it, the new Story form and the edit Story form have a "Tags" field, and each Story row in the Story list shows the labels of the tags of the Story. (ROW-80)
 - Fixed: When two Story files have the same Story ID, `rowbly doctor --fix` and the TUI board load give the newer Story the next free number and show a notice, for example `ROW-77 → ROW-79: duplicate ID`. The older Story and a Story that the factory works on keep the ID. (ROW-81)
 - Changed: In each Stage, the TUI board, `rowbly story search` and `rowbly story get` show the Stories in the order of their `updatedAt` time, with the most recently changed Story first. `rowbly story update` does not have the `--position` flag any more, and in the TUI, `shift+↑/↓` and a drag move a Story only to a different Stage. (ROW-78)
-- Changed: Rowbly has a new internal SSH transport that the main machine will use to send work to remote worker hosts. It has no command yet, and the Stories that follow use it. (ROW-85)
+- Added: Each worker Thread records the host that runs it, for now always `local`. `rowbly thread list` and `rowbly thread get` show the host, and `rowbly factory status --json` has the new `host` field on each Thread. (ROW-83)
+- Changed: Rowbly has a new internal SSH transport for the connection from the main machine to remote worker hosts. No command uses it yet. (ROW-85)
 
 ### 0.18.0
 
