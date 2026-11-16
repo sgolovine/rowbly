@@ -12,9 +12,9 @@ function noHandlers() {
 }
 
 describe("host handshake", () => {
-  it("uses protocol version 1 and the Rowbly version of package.json", () => {
-    expect(HOST_PROTOCOL_VERSION).toBe(1);
-    expect(localVersions().protocol).toBe(1);
+  it("uses protocol version 2 and the Rowbly version of package.json", () => {
+    expect(HOST_PROTOCOL_VERSION).toBe(2);
+    expect(localVersions().protocol).toBe(2);
     expect(localVersions().rowbly).toMatch(/^\d+\.\d+\.\d+/);
     expect(helloFrame(LOCAL)).toEqual({ type: "hello", protocol: 1, rowbly: "1.2.3" });
   });
