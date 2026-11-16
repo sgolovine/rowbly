@@ -4,13 +4,14 @@ import type { Readable } from "node:stream";
 import { setTimeout as sleep } from "node:timers/promises";
 import type { Owner, OwnerProbe } from "../factory-ownership/ownership-lock.js";
 import { helloFrame } from "../host-transport/host-transport.js";
-import { encodeFrame } from "../host-transport/json-lines.js";
+import { DEFAULT_LINE_LIMIT, encodeFrame } from "../host-transport/json-lines.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { Store, withEntry } from "../store/store.js";
 import { agentStatus, type HostAgentPhase } from "./host-agent-claim.js";
 import { type HostReceipt, pendingCommandCount, readHostReceipt, validRequestId } from "./host-agent-control.js";
 import { type HostAgentPaths, hostAgentPaths, threadPaths } from "./host-agent-paths.js";
 import { type HostRunState, hostThreadIds, readHostRun } from "./host-run-state.js";
+import { readSessionChunk, type SessionCursor, type SessionFrame, sessionFrames } from "./host-session-lines.js";
 import { type SlotUsage, slotUsage } from "./host-slots.js";
 
 /** The default time between two reads of the runtime folder. */
@@ -46,6 +47,8 @@ export interface AttachOptions {
   readonly home?: string;
   readonly pollMs?: number;
   readonly probe?: OwnerProbe;
+  /** The maximum bytes of one encoded frame. The default is `DEFAULT_LINE_LIMIT`. Tests make it smaller. */
+  readonly frameLimit?: number;
 }
 
 /** The fixed environment and the last sent values of one channel. */
@@ -56,11 +59,17 @@ interface Channel {
   readonly sent: Store<SentValues>;
 }
 
-/** The last sent values: the status frame, and the file stamp of each receipt and each run state. */
+/** The last sent values: the status frame, the file stamp of each receipt and each run state, and the session lines. */
 interface SentValues {
   readonly status: string;
   readonly receipts: ReadonlyMap<string, string>;
   readonly runs: ReadonlyMap<string, string>;
+  /** The `session.file` of the last read `run.json` of each Thread. */
+  readonly sessionFiles: ReadonlyMap<string, string>;
+  /** The read position of the session file of each Thread. */
+  readonly sessions: ReadonlyMap<string, SessionCursor>;
+  /** True after the first poll. A session file that the channel first sees after this time starts at offset 0. */
+  readonly opened: boolean;
 }
 
 async function statusFrame(channel: Channel): Promise<StatusFrame> {
@@ -108,6 +117,12 @@ async function sendRun(channel: Channel, threadId: string): Promise<void> {
 
   channel.sent.update((sent) => ({ runs: withEntry(sent.runs, threadId, stamp) }));
 
+  if (run?.session?.file) {
+    const file = run.session.file;
+
+    channel.sent.update((sent) => ({ sessionFiles: withEntry(sent.sessionFiles, threadId, file) }));
+  }
+
   if (run) {
     channel.options.write(encodeFrame({ type: "run", run } satisfies RunFrame));
   }
@@ -145,10 +160,44 @@ async function sendReceipts(channel: Channel): Promise<void> {
   await mapInOrder(ids, (id) => sendReceipt(channel, id));
 }
 
+/** Sends the new complete lines of the session file of the Thread. A missing or unreadable file gives no frame. */
+async function sendSession(channel: Channel, threadId: string, file: string): Promise<void> {
+  const { sent } = channel;
+  const read = {
+    runtime: channel.paths.runtime,
+    file,
+    cursor: sent.current.sessions.get(threadId),
+    startAtEnd: !sent.current.opened,
+  };
+  const chunk = await readSessionChunk(read).catch(() => undefined);
+
+  if (!chunk) {
+    return;
+  }
+
+  const limit = channel.options.frameLimit ?? DEFAULT_LINE_LIMIT;
+  const { frames, cursor } = sessionFrames({ threadId, file, limit }, chunk);
+
+  for (const frame of frames) {
+    channel.options.write(encodeFrame(frame satisfies SessionFrame));
+  }
+
+  sent.update((current) => ({ sessions: withEntry(current.sessions, threadId, cursor) }));
+}
+
+async function sendSessions(channel: Channel): Promise<void> {
+  const files = [...channel.sent.current.sessionFiles].toSorted(([a], [b]) => a.localeCompare(b));
+
+  await mapInOrder(files, ([threadId, file]) => sendSession(channel, threadId, file));
+}
+
+/** Sends the changes in this order: status, receipts, runs, then session lines. A run frame comes before its lines. */
 async function sendChanges(channel: Channel): Promise<void> {
   await sendStatus(channel);
   await sendReceipts(channel);
   await sendRuns(channel);
+  await sendSessions(channel);
+  channel.sent.update(() => ({ opened: true }));
 }
 
 /** Reads and drops the frames of the main machine. Later Stories add their frames. Aborts at the end of the input. */
@@ -165,7 +214,7 @@ function watchInput(input: Readable, ended: AbortController): void {
 
 /**
  * Runs the `host attach` channel. It sends the hello frame, then a status frame, the receipts and the run state of
- * each Thread, then each change.
+ * each Thread, then each change and the new lines of each session file.
  * It reads only the files of the runtime folder. It does not start or stop the agent. It ends at the end of input.
  */
 export async function runHostAttach(options: AttachOptions): Promise<void> {
@@ -174,7 +223,14 @@ export async function runHostAttach(options: AttachOptions): Promise<void> {
     paths,
     options,
     ended: new AbortController(),
-    sent: new Store<SentValues>({ status: "", receipts: new Map(), runs: new Map() }),
+    sent: new Store<SentValues>({
+      status: "",
+      receipts: new Map(),
+      runs: new Map(),
+      sessionFiles: new Map(),
+      sessions: new Map(),
+      opened: false,
+    }),
   };
   const pollMs = options.pollMs ?? DEFAULT_ATTACH_POLL_MS;
 
