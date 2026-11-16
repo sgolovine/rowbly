@@ -1,12 +1,12 @@
 ---
 title: Add the host agent (rowbly host serve)
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 8
 dependsOn:
   - ROW-85
   - ROW-86
 createdAt: 2026-11-16T19:45:05.891Z
-updatedAt: 2026-11-16T21:39:43.507Z
+updatedAt: 2026-11-16T21:40:43.240Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-89
 pull_request: https://github.com/sgolovine/rowbly/pull/280
 ---
@@ -107,3 +107,12 @@ Not in scope:
 - `host submit` refuses text that is not JSON, has no valid id or is larger than 65536 bytes with `VALIDATION`, because such a command cannot have a file name. The agent rejects all other bad commands with a receipt.
 - A missing machine limit is 0 free slots. Reason: no work must start before the main machine sends the limit.
 - When the new detached agent runs a queued `stop` and stops before `serve --detach` sees it, the result is `started: true` with the owner in `agent.json`.
+
+## Review findings
+
+- The changelog Stage could not merge `origin/main` into `story/ROW-89` (pull request #280). These files have merge conflicts with `origin/main` (the main branch has the changes of ROW-88, pull request #279):
+  - `docs/architecture/cli.md`
+  - `src/commands/host/host.ts`
+  - `src/commands/register-commands/register-commands.test.ts`
+  - `src/services/pi-runtime/import-boundary.test.ts`
+- Merge `origin/main` into the branch, solve the conflicts, keep the changes of both sides, run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`, and push the branch.
