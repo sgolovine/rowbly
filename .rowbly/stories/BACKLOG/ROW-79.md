@@ -1,7 +1,8 @@
 ---
 title: Add support for story tags.
 stage: BACKLOG
-position: 4
+position: 5
+updatedAt: 2026-11-16T19:29:34.292Z
 worktree: null
 pull_request: null
 ---
