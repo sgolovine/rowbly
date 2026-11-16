@@ -3,8 +3,8 @@ title: Re-number a Story automatically when two Story files have the same ID
 stage: IN_REFINEMENT
 position: 1
 createdAt: 2026-11-16T19:31:02.777Z
-updatedAt: 2026-11-16T19:41:13.901Z
-worktree: null
+updatedAt: 2026-11-16T19:42:00.271Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-81
 pull_request: null
 ---
 
