@@ -233,13 +233,68 @@ describe("host check", () => {
     expect(check.ready).toBe(true);
   });
 
-  it("skips the clone without rowbly host use, and skips git-push with the action", async () => {
-    const check = await run({}, { localAhead: async () => 0 });
-    const clone = check.items.find((item) => item.id === "clone");
-    const push = check.items.find((item) => item.id === "git-push");
+  describe("the clone finder of rowbly host use", () => {
+    const REPO = "/srv/rowbly";
+    const writeHost = (projects: unknown[]) =>
+      writeFile(
+        join(p.ctx.home as string, RC_FILE),
+        JSON.stringify({ hosts: [{ id: "mini", ssh: "u@mini", maxWorkers: 1, enabled: true, projects }] }),
+      );
+    const useOrigin = async () => {
+      await exec("git", ["init", "-q", p.paths.root]);
+      await exec("git", ["-C", p.paths.root, "remote", "add", "origin", "git@github.com:o/r.git"]);
+    };
+    const cloneOn = (origin: string): FakeHostAnswers => ({
+      test: output(0, ""),
+      "git-rev-parse": output(0, "true\n"),
+      "git-remote": output(0, `${origin}\n`),
+    });
+    const items = async (overrides: FakeHostAnswers) => {
+      const check = await run(overrides, { localAhead: async () => 0 });
 
-    expect(clone).toMatchObject({ state: "skipped", detail: "rowbly host use is not available." });
-    expect(push).toMatchObject({ state: "skipped", action: "Run rowbly host use mini." });
+      return {
+        clone: check.items.find((item) => item.id === "clone"),
+        push: check.items.find((item) => item.id === "git-push"),
+      };
+    };
+
+    it("fails the clone, and skips git-push with the action, when the host does not use the Project", async () => {
+      await writeHost([]);
+
+      const { clone, push } = await items({});
+
+      expect(clone).toMatchObject({ state: "fail", action: "Run rowbly host use mini." });
+      expect(push).toMatchObject({ state: "skipped", action: "Run rowbly host use mini." });
+    });
+
+    it("gives the recorded clone when its origin is the same repository", async () => {
+      await useOrigin();
+      await writeHost([{ root: p.paths.root, path: REPO, managed: false }]);
+
+      const { clone, push } = await items(cloneOn("https://github.com/o/r.git"));
+
+      expect(clone).toMatchObject({ state: "ok", detail: REPO });
+      expect(push).toMatchObject({ state: "ok" });
+    });
+
+    it("fails the clone when the recorded folder is missing", async () => {
+      await useOrigin();
+      await writeHost([{ root: p.paths.root, path: REPO, managed: false }]);
+
+      const { clone } = await items({ test: output(1, "") });
+
+      expect(clone).toMatchObject({ state: "fail", action: "Run rowbly host use mini." });
+    });
+
+    it("fails the clone with VALIDATION when the folder has a different repository", async () => {
+      await useOrigin();
+      await writeHost([{ root: p.paths.root, path: REPO, managed: false }]);
+
+      const { clone } = await items(cloneOn("git@github.com:o/other.git"));
+
+      expect(clone).toMatchObject({ state: "fail", action: "Run rowbly host unuse mini, then rowbly host use mini." });
+      expect(clone?.detail).toContain("VALIDATION");
+    });
   });
 
   it("fails the clone item and skips git-push when the host has no clone", async () => {

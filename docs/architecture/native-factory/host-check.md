@@ -19,6 +19,7 @@ clone. Credentials never go over SSH.
 | `host-items.ts`    | The items `linux`, `flock`, `git`, `node`, `rowbly`, `gh` and `git-identity`.          |
 | `pi-items.ts`      | The items `pi-login` and `models`, and `hostProviders`.                                |
 | `project-items.ts` | The items `clone`, `git-push` and `local-ahead`, and the worker models of the Project. |
+| `clone-finder.ts`  | `hostCloneFinder`: the clone of the Project from the records of `rowbly host use`.     |
 | `host-login.ts`    | `hostLoginArguments` and `hostLogin`: the SSH process of `rowbly host login`.          |
 
 ## Items
@@ -65,9 +66,15 @@ These rules apply:
   host uses its default Pi model. The supervisor stays on the main machine, so its model is not in
   the check.
 - Outside a Project, `models`, `clone`, `git-push` and `local-ahead` are `skipped`.
-- `rowbly host use` is not available at this time. Thus `clone` is `skipped` with the reason
-  `rowbly host use is not available.` The dependency `cloneFor` gives the clone path. Without a clone,
-  `git-push` is `skipped` with the action `Run rowbly host use <id>.`
+- The `clone` item reads the record of the current Project on the host (`hostProjectFor`), then runs
+  `cloneStatus` with the local `origin` URL. A test can replace this finder with the dependency
+  `cloneFor`.
+  - If the host does not use the Project, or the folder is missing, `clone` is `fail` with the action
+    `Run rowbly host use <id>.`
+  - If the folder is not a Git clone, or its `origin` is a different repository, `clone` is `fail` with
+    `VALIDATION` and the action `Run rowbly host unuse <id>, then rowbly host use <id>.`
+  - A local Project without `origin` makes `clone` `fail` with `VALIDATION`.
+  - Without a clone, `git-push` is `skipped` with the action `Run rowbly host use <id>.`
 - With a clone, `git-identity` reads the config in the clone, because Git uses a value of the clone
   first.
 - `local-ahead` runs `git` on the main machine without a shell. Remote worktrees start from `origin`,

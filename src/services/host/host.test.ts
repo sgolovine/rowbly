@@ -46,6 +46,7 @@ function fakeDeps(answers: Record<string, BytesResult> = {}, installWorks = fals
       return transport;
     },
     build: async () => BUILD,
+    cloneFor: async () => "/srv/rowbly",
     localAhead: async () => 0,
   };
   return { deps, commands, targets };

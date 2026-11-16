@@ -45,7 +45,7 @@ export interface ProjectFacts {
 
 /**
  * Finds the clone of the Project on the host. It gives the path of the clone, or `undefined` when the host has no
- * clone. `rowbly host use` (ROW-88) gives this function.
+ * clone. `hostCloneFinder` uses the records of `rowbly host use`.
  */
 export type CloneFinder = (transport: HostTransport, hostId: string, root: string) => Promise<string | undefined>;
 

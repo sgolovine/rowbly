@@ -16,6 +16,7 @@ import {
   runRemote,
   skipped,
 } from "./check-item.js";
+import { hostCloneFinder } from "./clone-finder.js";
 import {
   flockItem,
   ghItem,
@@ -42,7 +43,7 @@ export type { CheckItem } from "./check-item.js";
 export interface HostCheckDeps {
   readonly transportFor?: (target: string) => HostTransport;
   readonly build?: () => Promise<LocalBuild>;
-  /** Finds the clone of the Project on the host. Without it, `rowbly host use` is not available. */
+  /** Finds the clone of the Project on the host. The default uses the records of `rowbly host use`. */
   readonly cloneFor?: CloneFinder;
   readonly localAhead?: LocalAheadCounter;
 }
@@ -95,10 +96,10 @@ async function piItems(env: CheckEnv, system: readonly CheckItem[]): Promise<Che
 }
 
 /** The items after the SSH call passed. */
-async function laterItems(env: CheckEnv, deps: HostCheckDeps): Promise<CheckItem[]> {
+async function laterItems(env: CheckEnv, ctx: ServiceContext, deps: HostCheckDeps): Promise<CheckItem[]> {
   const system = [await flockItem(env), await gitItem(env), await nodeItem(env), await rowblyItem(env)];
   const pi = await piItems(env, system);
-  const clone = await cloneItem(env, deps.cloneFor);
+  const clone = await cloneItem(env, deps.cloneFor ?? hostCloneFinder(ctx));
   const push = await pushItem(env, clone.path);
   const gh = await ghItem(env);
   const identity = await identityItem(env, clone.path);
@@ -124,7 +125,7 @@ export async function runHostCheck(
     return sshFailed(env, first.error);
   }
 
-  const items = await laterItems(env, deps);
+  const items = await laterItems(env, ctx, deps);
 
   return result(env.hostId, [item("ssh", "ok", "SSH connects without a password"), linuxItem(first.result), ...items]);
 }

@@ -56,14 +56,10 @@ export async function projectFacts(ctx: ServiceContext): Promise<ProjectFacts | 
   }
 }
 
-/** The `clone` item. Without a clone finder, `rowbly host use` is not available, and the item is `skipped`. */
-export async function cloneItem(env: CheckEnv, finder: CloneFinder | undefined): Promise<CloneCheck> {
+/** The `clone` item. The finder gives the path of the clone, or `undefined` when the host has no clone. */
+export async function cloneItem(env: CheckEnv, finder: CloneFinder): Promise<CloneCheck> {
   if (!env.project) {
     return { item: skipped("clone", NOT_IN_PROJECT), path: undefined };
-  }
-
-  if (!finder) {
-    return { item: skipped("clone", "rowbly host use is not available."), path: undefined };
   }
 
   try {
