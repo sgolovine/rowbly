@@ -2,6 +2,7 @@
 title: Send workers to worker hosts from the manager
 stage: DONE
 position: 15
+uid: fce6c147-04e5-4ce2-991c-cb8a72c75ae0
 dependsOn:
   - ROW-82
   - ROW-83

@@ -2,6 +2,7 @@
 title: Show factory connectivity state in the TUI
 stage: DONE
 position: 73
+uid: f68bb692-5314-4b4a-91aa-f2f4462689cb
 dependsOn:
   - ROW-71
 createdAt: 2026-11-16T16:41:21.272Z

@@ -2,6 +2,7 @@
 title: Put worker execution behind an executor interface
 stage: DONE
 position: 2
+uid: 8cce9d14-c8e2-46a2-a78f-312b883cfb7b
 createdAt: 2026-11-16T19:45:01.115Z
 updatedAt: 2026-11-16T20:26:19.526Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-82

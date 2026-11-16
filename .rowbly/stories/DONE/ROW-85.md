@@ -2,6 +2,7 @@
 title: Add the SSH transport for worker hosts
 stage: DONE
 position: 3
+uid: 10ec8dbb-4caa-417d-88e4-6c874f7f4263
 createdAt: 2026-11-16T19:45:02.850Z
 updatedAt: 2026-11-16T20:22:19.058Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-85

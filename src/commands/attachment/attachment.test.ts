@@ -21,6 +21,22 @@ describe("attachment commands", () => {
     expect(record.name).toBe("image.png");
     const list = await runCli(["--json", "list-attachments", "ROW-01"], p.paths.root);
     expect(JSON.parse(list.stdout)).toEqual([record]);
+    const got = await runCli(["--json", "get-attachment", "ROW-01", record.id], p.paths.root);
+    expect(JSON.parse(got.stdout)).toEqual({
+      ...record,
+      path: join(p.paths.dir, "attachments", "ROW-01", `${record.id}.png`),
+    });
+    const human = await runCli(["get-attachment", "ROW-01", record.id], p.paths.root);
+    expect(human.stdout.trim()).toBe(join(p.paths.dir, "attachments", "ROW-01", `${record.id}.png`));
+    for (const args of [
+      ["ROW-99", record.id],
+      ["ROW-01", "a00000000-0000-4000-8000-000000000009"],
+    ]) {
+      const missing = await runCli(["--json", "get-attachment", ...args], p.paths.root);
+      expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
+    }
+    const invalid = await runCli(["--json", "get-attachment", "ROW-01", "../x"], p.paths.root);
+    expect(JSON.parse(invalid.stderr).error.code).toBe("VALIDATION");
     const remove = await runCli(["--json", "remove-attachment", "ROW-01", record.id], p.paths.root);
     expect(JSON.parse(remove.stdout)).toEqual({ removed: record.id });
     const unknown = await runCli(["--json", "open-attachment", "ROW-01", record.id], p.paths.root);

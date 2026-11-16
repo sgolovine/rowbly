@@ -215,6 +215,8 @@ async function unknownKeyIssues(
     ...STORY_TIME_KEYS,
     "agentLock",
     "uid",
+    // The Git branch of a Story that got a new number. See `Story.branch`.
+    "branch",
     ...config.customFields.map((field) => field.key),
   ]);
   const unknown = Object.keys(repair.current.data).filter((key) => !known.has(key));

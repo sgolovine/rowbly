@@ -2,6 +2,7 @@
 title: Threads Improvements - full-screen view.
 stage: DONE
 position: 77
+uid: d0ac2def-a142-4d69-914a-38c37d1473ac
 createdAt: 2026-11-16T17:00:18.867Z
 updatedAt: 2026-11-16T21:50:21.868Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-75

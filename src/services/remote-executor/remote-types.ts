@@ -87,6 +87,10 @@ export interface RemoteRun {
 export interface HostLink {
   readonly opened: Promise<HostChannel>;
   readonly closed: AbortController;
+  /** The connection of the host. The attachment uploads of the channel use it. */
+  readonly connection: HostConnection;
+  /** The attachment ids with an upload in progress. */
+  readonly fetching: Store<{ readonly ids: ReadonlySet<string> }>;
 }
 
 /** The runs and the channels of the executor. */

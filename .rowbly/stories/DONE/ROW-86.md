@@ -2,6 +2,7 @@
 title: Install the exact Rowbly version on a worker host
 stage: DONE
 position: 5
+uid: 6415fe2c-bc0f-4944-bce5-e6d7a418260d
 dependsOn:
   - ROW-84
   - ROW-85

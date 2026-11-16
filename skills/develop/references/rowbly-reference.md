@@ -109,7 +109,7 @@ The resources are `project`, `prompt`, `story`, `stage`, `custom-field`, `tag`, 
 Run `rowbly <resource>` or `rowbly <resource> --help` to see its actions.
 Run `rowbly <resource> <action> --help` to see its arguments and options.
 The old flat resource commands do not work.
-The commands `init`, `doctor` and `status` stay at the root.
+The commands `init`, `doctor`, `status` and the attachment commands stay at the root.
 
 A flag with `(repeat)` can occur more than one time.
 
@@ -378,6 +378,24 @@ A Spec record has this shape:
 - **Last link.** `spec unlink` cannot remove the last link. Link a different Story or delete the Spec.
 - **Deleted Stories.** `story delete` removes the Story from each Spec. A Spec with no Stories stays.
   It is an orphan, and its `stories` list is empty.
+
+### Attachment
+
+The attachment commands stay at the root.
+
+| Command                                  | JSON result                   |
+| ---------------------------------------- | ----------------------------- |
+| `rowbly list-attachments <story>`        | Array of Attachment           |
+| `rowbly get-attachment <story> <id>`     | Attachment with `path`        |
+
+`get-attachment` gives the record and the absolute `path` of the attachment file. Read the file at
+`path` with your read tool. Without `--json`, the command prints only the path.
+
+- **Errors.** An unknown Story or id, or a missing file, gives `NOT_FOUND`. A bad id gives `VALIDATION`.
+- **Remote worker.** On a worker host, a file that is not in the copy comes from the main machine.
+  This can take up to 30 seconds. If the host is offline, or the main machine cannot send the file,
+  the command gives `CONFLICT`. The message gives the reason. Do not try again in a loop. Record the
+  problem and continue.
 
 ### Skill
 

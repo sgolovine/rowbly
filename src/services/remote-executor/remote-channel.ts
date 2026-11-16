@@ -3,7 +3,8 @@
 import type { HostReceipt } from "../host-agent/host-agent-control.js";
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import { openHostChannel } from "../host-transport/host-handshake.js";
-import { withEntry, withoutEntry } from "../store/store.js";
+import { Store, withEntry, withoutEntry } from "../store/store.js";
+import { takeAttachmentRequest } from "./remote-attachment.js";
 import { type RunHooks, takeReceipt, takeRunFrame } from "./remote-run.js";
 import type { HostConnection, HostLink, RemoteEnv, RemoteRun } from "./remote-types.js";
 
@@ -19,9 +20,27 @@ export function hostRuns(env: RemoteEnv, host: string): RemoteRun[] {
   return [...env.state.current.runs.values()].filter((run) => run.host === host);
 }
 
-/** Gives each frame to the run of its Thread or of its command. A frame of a different Thread is ignored. */
+/** Gives an `attachment-request` frame to the attachment handler of the link. */
+function dispatchAttachmentRequest(env: RemoteEnv, host: string, value: unknown): void {
+  const link = env.state.current.links.get(host);
+
+  if (link) {
+    void takeAttachmentRequest(env, link, value);
+  }
+}
+
+/**
+ * Gives each frame to the run of its Thread or of its command, or to the attachment handler. A frame of a different
+ * Thread is ignored.
+ */
 function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unknown): void {
   const frame = (value ?? {}) as ChannelFrame;
+
+  if (frame.type === "attachment-request") {
+    dispatchAttachmentRequest(env, host, value);
+
+    return;
+  }
 
   if (frame.type === "run" && frame.run) {
     const run = env.state.current.runs.get(frame.run.threadId);
@@ -82,7 +101,7 @@ export async function ensureLink(
     },
     env.input.helloTimeoutMs === undefined ? {} : { helloTimeoutMs: env.input.helloTimeoutMs },
   );
-  const link: HostLink = { opened, closed };
+  const link: HostLink = { opened, closed, connection, fetching: new Store({ ids: new Set<string>() }) };
 
   env.state.update((state) => ({ links: withEntry(state.links, host, link) }));
   opened.catch(() => markClosed(env, host, closed));

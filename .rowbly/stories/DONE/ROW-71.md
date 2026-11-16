@@ -2,6 +2,7 @@
 title: Better offline handling
 stage: DONE
 position: 72
+uid: 96f3604f-f0fa-44a8-8aea-f8ae2052a1e2
 createdAt: 2026-11-16T16:32:19.285Z
 updatedAt: 2026-11-16T18:32:11.917Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-71

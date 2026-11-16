@@ -2,6 +2,7 @@
 title: Add host check and host login
 stage: DONE
 position: 6
+uid: f996f31f-085b-4582-8c4c-34f1a894d48b
 dependsOn:
   - ROW-84
   - ROW-85

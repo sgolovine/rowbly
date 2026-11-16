@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import {
   addAttachment,
+  getAttachment,
   listAttachments,
   openAttachment,
   removeAttachment,
@@ -30,6 +31,17 @@ export function registerAttachmentCommands(program: Command): void {
         (ctx) => listAttachments({ story }, ctx),
         (items) =>
           items.length ? items.map((a) => `${a.id}  ${a.name}  ${a.size} bytes`).join("\n") : "No attachments.",
+      ),
+    );
+
+  program
+    .command("get-attachment <story> <id>")
+    .description("Show an attachment and the absolute path of its file")
+    .action((story: string, id: string, _opts: unknown, command: Command) =>
+      run(
+        command,
+        (ctx) => getAttachment({ story, id }, ctx),
+        (a) => a.path,
       ),
     );
 

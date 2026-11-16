@@ -2,6 +2,7 @@
 title: Record canonical writes in an outbox
 stage: DONE
 position: 9
+uid: 185c4ae9-1bec-4090-8da7-2c417751e881
 createdAt: 2026-11-16T19:45:06.450Z
 updatedAt: 2026-11-16T20:56:15.631Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-90

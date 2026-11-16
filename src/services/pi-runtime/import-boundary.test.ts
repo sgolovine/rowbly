@@ -74,6 +74,7 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/remote-executor.js")).resolves.toHaveProperty("createRemoteExecutor");
     await expect(import("../remote-executor/remote-calls.js")).resolves.toHaveProperty("submit");
     await expect(import("../remote-executor/remote-channel.js")).resolves.toHaveProperty("ensureLink");
+    await expect(import("../remote-executor/remote-attachment.js")).resolves.toHaveProperty("takeAttachmentRequest");
     await expect(import("../remote-executor/remote-run.js")).resolves.toHaveProperty("takeRunFrame");
     await expect(import("../remote-executor/run-frames.js")).resolves.toHaveProperty("newFacts");
     await expect(import("../remote-executor/remote-heartbeat.js")).resolves.toHaveProperty("nextHostState");
@@ -136,6 +137,10 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-agent-work.js")).resolves.toHaveProperty("executeCommand");
     await expect(import("../host-agent/host-slots.js")).resolves.toHaveProperty("acquireSlot");
     await expect(import("../host-agent/host-attach.js")).resolves.toHaveProperty("runHostAttach");
+    await expect(import("../host-agent/host-attach-fetch.js")).resolves.toHaveProperty("sendFetchRequests");
+    await expect(import("../host-agent/host-fetch.js")).resolves.toHaveProperty("writeFetchRequest");
+    await expect(import("../host-agent/host-channel-mark.js")).resolves.toHaveProperty("channelLive");
+    await expect(import("../host-agent/host-attachment-source.js")).resolves.toHaveProperty("hostAttachmentSource");
     await expect(import("../host-agent/host-agent-launch.js")).resolves.toHaveProperty("startHostAgent");
     await expect(import("../host-agent/host-agent-cache.js")).resolves.toHaveProperty("hostCachePut");
     await expect(import("../host-agent/host-agent-input.js")).resolves.toHaveProperty("readBoundedInput");
