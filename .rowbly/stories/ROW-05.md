@@ -2,6 +2,7 @@
 title: Automatically retry failed refinement attempts
 stage: DONE
 position: 2
+uid: 65104088-a992-4fc2-a0f0-26caef077c04
 createdAt: 2026-11-10T21:02:01.000Z
 updatedAt: 2026-11-10T22:13:05.000Z
 worktree: /home/sgolovine/.t3/worktrees/rowbly/row-05-in_development
