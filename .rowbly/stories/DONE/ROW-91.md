@@ -1,11 +1,11 @@
 ---
 title: Record attachment writes in the outbox
-stage: IN_REVIEW
+stage: DONE
 position: 10
 dependsOn:
   - ROW-90
 createdAt: 2026-11-16T19:45:07.000Z
-updatedAt: 2026-11-16T21:05:04.527Z
+updatedAt: 2026-11-16T21:07:28.838Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-91
 pull_request: https://github.com/sgolovine/rowbly/pull/275
 ---
