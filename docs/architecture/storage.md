@@ -194,11 +194,47 @@ the folder of its Stage:
 
 `rowbly doctor` examines the Story folders:
 
-| Problem                                                                                | Severity | `--fix`                                   |
-| -------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
-| A Story file is directly in `stories/`, or in the folder of a different Stage.         | warning  | Moves the file to `stories/<stage key>/`. |
-| Two files have the same Story ID or number, in one folder or in different folders.     | error    | None. The files stay.                     |
-| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it. | warning  | None.                                     |
+| Problem                                                                                         | Severity | `--fix`                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A Story file is directly in `stories/`, or in the folder of a different Stage.                  | warning  | Moves the file to `stories/<stage key>/`.                                                                                                 |
+| Two files of the Project key have the same Story number, in one folder or in different folders. | error    | Gives the newer Story the next free number, for example `ROW-77 → ROW-79: duplicate ID`. See [Duplicate Story IDs](#duplicate-story-ids). |
+| Two Stories with the same number have factory state, or a file of the group cannot be read.     | error    | None. The files stay.                                                                                                                     |
+| Two files with a different key have the same Story number.                                      | error    | None. The files stay.                                                                                                                     |
+| A subfolder of `stories/` has a name that is not a Stage key. Rowbly does not read it.          | warning  | None.                                                                                                                                     |
+
+### Duplicate Story IDs
+
+Two Story files can get the same Story ID. For example, an older build of `rowbly` reads only the flat
+`stories/` folder and gives out a number again, or a Git merge adds a second file with the same ID.
+`ROW-7.md` and `ROW-07.md` also have the same ID.
+
+The repair runs in `rowbly doctor --fix` and each time that the TUI loads or reloads the board. It does not
+run in other commands or in the factory daemon. The TUI shows one info toast for each change, and
+`rowbly doctor --fix` shows one fixed issue for each change. Without `--fix`, `rowbly doctor` shows the
+change as the fix of the error, and it does not change a file.
+
+These rules select the Story that keeps the ID. The other Stories of the group get the next free number:
+
+1. The Story with the earliest valid `createdAt` keeps the ID. A Story with no valid `createdAt` is older
+   than a Story with one.
+2. If the times are equal, the file with the earlier modification time keeps the ID.
+3. If the times are equal, the path that comes first in string order keeps the ID.
+
+The factory state rule comes before these rules. A Story has factory state when its `worktree` or
+`pull_request` value is not empty, or when `.rowbly/state.json` has an attempt with its ID and its Stage.
+
+- If one Story of the group has factory state, that Story keeps the ID.
+- If more than one Story of the group has factory state, Rowbly does not change the group. `rowbly doctor`
+  reports the error with no fix.
+
+The repair writes the new file at `stories/<stage key>/<projectKey>-<n>.md`. The file has the same
+frontmatter and body, and a new `updatedAt`. The repair does not change the references to the old ID:
+the `dependsOn` lists, the Spec links, the attachment folder, the Threads, the factory attempts, the
+worktrees and the branches stay with the Story that keeps the ID.
+
+The repair takes no lock. It creates the new file only if no file is at its path, and it removes the
+old file only if the old file did not change. Thus two repairs at the same time do not lose or copy
+a Story.
 
 ### Position
 

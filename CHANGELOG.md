@@ -19,6 +19,8 @@ This file records the changes to Rowbly that users can see.
 - Added: Stories can have tags. The new `rowbly tag list|add|update|remove` commands manage the tags in `tags` of `.rowbly/rowbly.config.json`, `rowbly story create|update` have the `--tag`, `--add-tag` and `--remove-tag` flags, `rowbly story search --tag` shows only the Stories that have all the given tags, and `rowbly tag remove` also removes the tag from each Story. (ROW-79)
 - Added: In the Factory view and in the Threads tab of a Story, `ctrl+f` shows the conversation of the open Thread over the full terminal. `ctrl+f`, `esc` or the `✕` closes the full-screen view, and the Thread stays open. (ROW-75)
 - Added: You can send a message to a running worker Thread. In the Threads tab of a Story and in the Factory view, push `m` to type in the input under the conversation and push `enter` to send the message, or use the new `rowbly thread steer <id> --message <text>` command. (ROW-76)
+- Added: The TUI shows and changes Story tags. The new "Tags" section of the Settings adds a tag, changes its label and removes it, the new Story form and the edit Story form have a "Tags" field, and each Story row in the Story list shows the labels of the tags of the Story. (ROW-80)
+- Fixed: When two Story files have the same Story ID, `rowbly doctor --fix` and the TUI board load give the newer Story the next free number and show a notice, for example `ROW-77 → ROW-79: duplicate ID`. The older Story and a Story that the factory works on keep the ID. (ROW-81)
 
 ### 0.18.0
 

@@ -3,15 +3,20 @@ import type { FieldValue } from "../../../services/fields/fields.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { FormField, FormValue, FormValues } from "../../components/index.js";
 import type { DependencyChoices } from "./story-dependency-view.js";
+import type { TagChoices } from "./story-tag-view.js";
 
 /** The choice of a select or boolean custom field that leaves it unset. */
 const NONE = "—";
 
-/** The fields of the Story form: title, Stage, description, `Depends on`, then the custom fields of the project. */
+/**
+ * The fields of the Story form: title, Stage, description, `Depends on`, `Tags` when the project has tags, then
+ * the custom fields of the project.
+ */
 export function storyFormFields(
   stages: readonly Stage[],
   customFields: readonly CustomField[],
   dependencies: DependencyChoices,
+  tags: TagChoices,
 ): FormField[] {
   return [
     { name: "title", label: "Title", kind: "text", required: true },
@@ -33,8 +38,18 @@ export function storyFormFields(
       optionLabels: dependencies.labels,
       optionSearchText: dependencies.searchText,
     },
+    ...tagsFormField(tags),
     ...customFields.map(customFormField),
   ];
+}
+
+/** The `Tags` field, or no field when there are no tag choices. */
+function tagsFormField(tags: TagChoices): FormField[] {
+  if (tags.options.length === 0) {
+    return [];
+  }
+
+  return [{ name: "tags", label: "Tags", kind: "multiselect", options: tags.options, optionLabels: tags.labels }];
 }
 
 /** The form value of a custom field: `NONE` or `""` when it is unset, otherwise its value as text. */

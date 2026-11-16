@@ -104,30 +104,73 @@ describe("doctor", () => {
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
 
-  it("reports two files with the same Story ID as an error, and --fix does not change them", async () => {
+  it("reports a duplicate Story ID with a fix, and --fix gives the newer Story the next free number", async () => {
+    const older = "---\ntitle: Older\nstage: DONE\ncreatedAt: 2026-01-01T00:00:00.000Z\n---\n\nOlder.\n";
+    const newer = "---\ntitle: Newer\nstage: BACKLOG\ncreatedAt: 2026-02-01T00:00:00.000Z\n---\n\nNewer.\n";
+    await project.write("stories/DONE/ROW-77.md", older);
+    await project.write("stories/BACKLOG/ROW-77.md", newer);
+    await project.write("stories/DONE/ROW-78.md", "---\ntitle: Last\nstage: DONE\n---\n");
+
+    const before = await doctor({}, project.ctx);
+    expect(before.ok).toBe(false);
+    expect(before.issues).toEqual([
+      {
+        severity: "error",
+        message: `Story ID ROW-77 is also used by ${join(".rowbly", "stories", "DONE", "ROW-77.md")}`,
+        file: join(".rowbly", "stories", "BACKLOG", "ROW-77.md"),
+        fix: "ROW-77 → ROW-79: duplicate ID",
+        fixed: false,
+      },
+    ]);
+    expect(await project.read("stories/BACKLOG/ROW-77.md")).toBe(newer);
+    expect(await pathExists(project.path("stories/BACKLOG/ROW-79.md"))).toBe(false);
+
+    const fixed = await doctor({ fix: true }, project.ctx);
+    expect(fixed.ok).toBe(true);
+    expect(fixed.issues.map(({ message, file, fixed }) => [message, file, fixed])).toEqual([
+      ["ROW-77 → ROW-79: duplicate ID", join(".rowbly", "stories", "BACKLOG", "ROW-77.md"), true],
+    ]);
+    expect(await project.read("stories/DONE/ROW-77.md")).toBe(older);
+    expect(await pathExists(project.path("stories/BACKLOG/ROW-77.md"))).toBe(false);
+    expect(await project.read("stories/BACKLOG/ROW-79.md")).toContain("title: Newer");
+    expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
+  });
+
+  it("reports two files with the same Story ID and factory state with no fix, and --fix does not change them", async () => {
     await project.write("stories/ROW-01.md", "---\ntitle: Flat\nstage: BACKLOG\n---\n");
     await project.write("stories/BACKLOG/ROW-01.md", "---\ntitle: Folder\nstage: BACKLOG\n---\n");
     await project.write("stories/DONE/ROW-02.md", "---\ntitle: Two\nstage: DONE\n---\n");
     await project.write("stories/BACKLOG/ROW-02.md", "---\ntitle: Two again\nstage: BACKLOG\n---\n");
+    const attempts = [
+      { story: "ROW-01", stage: "BACKLOG" },
+      { story: "ROW-02", stage: "DONE" },
+      { story: "ROW-02", stage: "BACKLOG" },
+    ].map((attempt) => ({ ...attempt, workerId: "worker-1", status: "completed" }));
+    await project.write("state.json", JSON.stringify({ version: 1, updatedAt: null, scan: { stages: {} }, attempts }));
     const report = await doctor({ fix: true }, project.ctx);
     expect(report.ok).toBe(false);
-    expect(report.issues.map(({ severity, message, file, fixed }) => [severity, message, file, fixed])).toEqual([
+    expect(
+      report.issues.map(({ severity, message, file, fix, fixed }) => [severity, message, file, fix, fixed]),
+    ).toEqual([
       [
         "warning",
         "Story file is not in the folder of its Stage BACKLOG",
         join(".rowbly", "stories", "ROW-01.md"),
+        undefined,
         false,
       ],
       [
         "error",
         `Story ID ROW-01 is also used by ${join(".rowbly", "stories", "ROW-01.md")}`,
         join(".rowbly", "stories", "BACKLOG", "ROW-01.md"),
+        undefined,
         false,
       ],
       [
         "error",
         `Story ID ROW-02 is also used by ${join(".rowbly", "stories", "BACKLOG", "ROW-02.md")}`,
         join(".rowbly", "stories", "DONE", "ROW-02.md"),
+        undefined,
         false,
       ],
     ]);

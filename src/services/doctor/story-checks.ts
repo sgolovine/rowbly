@@ -30,6 +30,7 @@ import {
   runNow,
   withoutKey,
 } from "./doctor-run.js";
+import { type PlannedFix, repairDuplicates } from "./duplicate-checks.js";
 import { fieldIssues } from "./story-field-checks.js";
 import { tagIssues } from "./story-tag-checks.js";
 
@@ -45,10 +46,14 @@ interface RepeatedFile {
   readonly path: string;
 }
 
-/** The Story files with a repeated number: each later file → the last earlier file, and each file of a pair. */
+/**
+ * The Story files with a repeated number: each later file → the last earlier file, and each file of a pair. A file
+ * that `--fix` gives a new number refers to the Story that keeps the ID, and has the fix.
+ */
 interface Repeats {
   readonly previous: ReadonlyMap<string, RepeatedFile>;
   readonly paths: ReadonlySet<string>;
+  readonly fixes: ReadonlyMap<string, string>;
 }
 
 type StoryRead = { readonly story: StoryFile } | { readonly issue: DoctorIssue };
@@ -65,15 +70,32 @@ function previousEntry(order: readonly NumberedFile[], entry: NumberedFile, inde
   return before?.number === entry.number ? [[entry.entry.path, { id: before.id, path: before.entry.path }]] : [];
 }
 
+function plannedPrevious([path, planned]: [string, PlannedFix | undefined]): [string, RepeatedFile][] {
+  return planned ? [[path, { id: planned.keptId, path: planned.keptPath }]] : [];
+}
+
+function plannedFix([path, planned]: [string, PlannedFix | undefined]): [string, string][] {
+  return planned ? [[path, planned.fix]] : [];
+}
+
 /**
  * Maps each Story file path to the last earlier file with the same number. A stable sort keeps the file
- * order inside each number, so one pass finds each pair.
+ * order inside each number, so one pass finds each pair. A group that `--fix` can repair uses the plan.
  */
-function repeatedNumbers(entries: readonly StoryEntry[]): Repeats {
+function repeatedNumbers(
+  entries: readonly StoryEntry[],
+  planned: ReadonlyMap<string, PlannedFix | undefined>,
+): Repeats {
   const order = entries.flatMap(numberedFile).toSorted((a, b) => a.number - b.number);
-  const previous = new Map(order.flatMap((entry, index) => previousEntry(order, entry, index)));
+  const found = new Map(order.flatMap((entry, index) => previousEntry(order, entry, index)));
+  const paths = new Set([...found.keys(), ...[...found.values()].map((file) => file.path)]);
 
-  return { previous, paths: new Set([...previous.keys(), ...[...previous.values()].map((file) => file.path)]) };
+  const previous = new Map([
+    ...[...found].filter(([path]) => !planned.has(path)),
+    ...[...planned].flatMap(plannedPrevious),
+  ]);
+
+  return { previous, paths, fixes: new Map([...planned].flatMap(plannedFix)) };
 }
 
 async function readStory(
@@ -222,21 +244,26 @@ async function checkStory(
   return { issues, data: repair.current.data };
 }
 
+function fixOf(fix: string | undefined): { readonly fix?: string } {
+  return fix === undefined ? {} : { fix };
+}
+
 /** The file name must use the project key, and its number must be unique. */
 function storyNameIssues(
   run: DoctorRun,
   config: ProjectConfig,
   read: { readonly id: string; readonly projectKey: string; readonly number: number },
   other: RepeatedFile | undefined,
-  file: string,
+  issue: { readonly file: string; readonly fix: string | undefined },
 ): DoctorIssue[] {
+  const { file, fix } = issue;
   const { projectKey, number } = read;
   const message = `Story key ${projectKey} does not match the project key ${config.projectKey}`;
   const repeat = other?.id === read.id ? `Story ID ${read.id}` : `Story number ${number}`;
 
   const foreign = projectKey !== config.projectKey ? [noted({ severity: "error", message, file })] : [];
   const repeated = other
-    ? [noted({ severity: "error", message: `${repeat} is also used by ${rel(run, other.path)}`, file })]
+    ? [noted({ severity: "error", message: `${repeat} is also used by ${rel(run, other.path)}`, file, ...fixOf(fix) })]
     : [];
 
   return [...foreign, ...repeated];
@@ -291,7 +318,8 @@ async function checkStoryFile(
   }
 
   const id = entry.fileName.slice(0, -3);
-  const nameIssues = storyNameIssues(run, config, { id, ...parsedName }, repeats.previous.get(path), file);
+  const other = repeats.previous.get(path);
+  const nameIssues = storyNameIssues(run, config, { id, ...parsedName }, other, { file, fix: repeats.fixes.get(path) });
   const read = await readStory(entry.fileName, path, file, parsedName);
 
   if ("issue" in read) {
@@ -319,13 +347,14 @@ async function folderNameIssues(run: DoctorRun): Promise<DoctorIssue[]> {
 
 /**
  * Checks the name, the frontmatter, the stage, the custom fields and the folder of each Story file, directly in
- * `stories/` and in each Stage folder.
+ * `stories/` and in each Stage folder. `--fix` first gives the newer Story of each duplicate Story ID a new number.
  */
 export async function checkStories(run: DoctorRun, config: ProjectConfig): Promise<DoctorIssue[]> {
+  const duplicates = await repairDuplicates(run);
   const entries = await listStoryEntries(run.paths);
-  const repeats = repeatedNumbers(entries);
+  const repeats = repeatedNumbers(entries, duplicates.planned);
 
   const issues = await mapInOrder(entries, (entry) => checkStoryFile(run, config, repeats, entry));
 
-  return [...(await folderNameIssues(run)), ...issues.flat()];
+  return [...(await folderNameIssues(run)), ...duplicates.issues, ...issues.flat()];
 }
