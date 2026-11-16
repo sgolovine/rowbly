@@ -9,7 +9,7 @@ dependsOn:
   - ROW-90
   - ROW-91
 createdAt: 2026-11-16T19:45:07.547Z
-updatedAt: 2026-11-16T22:30:32.669Z
+updatedAt: 2026-11-16T22:33:59.263Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-92
 pull_request: https://github.com/sgolovine/rowbly/pull/285
 ---
@@ -108,10 +108,4 @@ Not in scope:
 - The PNG cache is in the runtime folder of each Project on the host. Reason: attachment ids are unique, but a cache for each Project keeps the files of a Project together and private.
 - The fetch of a missing PNG and the session lines on the channel are separate Stories (ROW-110, ROW-111). Reason: one pull request cannot hold all the work. ROW-110 also needs the channel handler of the main machine (ROW-96).
 - A remote worker in this Story has no `run_check` tool. Reason: checks on the host are ROW-93. Without a check queue, the worker message must not have the checks block (ROW-96).
-## Review findings
-
-Review of PR #285 at `e0d443a7`. The PR merges `origin/main`, which has `6ddebfef feat(attachments): support attachments of any file type`. The attachment cache and the attachment files now accept any file type. The PR code and tests still assume that each attachment is a PNG.
-
-1. **CI `Test` fails because of the PR.** `src/services/host-agent/host-agent-cache.test.ts:32` and `src/commands/host/host-agent-commands.test.ts:101-107` expect `VALIDATION` for bytes that are not a PNG. On the merged base, `putCachedAttachment` accepts any bytes (only the 10 MiB limit stays), so both tests fail (`pnpm test`: 2 failed; GitHub check `Test` fails). Fix: remove the "not a PNG" case from both tests (keep the bad id and > 10 MiB cases), and change the names, comments and docs of the cache commands from "PNG" to "attachment file" where the type is not a PNG. Record the changed acceptance criterion as an assumption in the Story.
-2. **The copy builder sends non-PNG attachment files as text.** `src/services/thread-copy/thread-copy.ts:36` (`excludedFromCopy`) skips only `*.png`. An attachment of a different type (for example `.rowbly/attachments/<story>/<id>.pdf`, or `<id>` without an extension) is read with `readFile(..., "utf8")` and goes into the copy as a text file. This corrupts binary data and can make the prepare input large. Fix: skip all attachment files (each file below `attachments/<story>/` other than the manifest `attachments.json`), not only `*.png`, and list them in `attachments` from the manifest records. Add a test with a non-PNG attachment.
-3. **The prepare step writes each attachment as `<id>.png`.** `src/services/host-agent/host-agent-prepare.ts:184` writes `.rowbly/attachments/<story-id>/<id>.png` for each attachment. On the base branch, the file of a non-PNG record is `attachmentFileName(record)` (for example `<id>.pdf`). `attachment get`/`open` and `doctor` in the copy then do not find the file of a non-PNG attachment. Fix: give the file name (or the record name and type) in `CopyAttachment`, validate it as one safe path segment that `attachmentFileName` can give, and write the file with that name. Add a test.
+- The cache commands accept an attachment file of any type, not only a PNG. Bytes that are not a PNG no longer give `VALIDATION`; only a bad id and bytes larger than 10 MiB do. The copy builder lists each attachment file with its name (`attachmentFileName`), and `prepare` writes it with that name. Reason: the base branch (`6ddebfef`) supports attachments of any file type, so the "not a PNG" part of the cache acceptance criterion no longer applies.
