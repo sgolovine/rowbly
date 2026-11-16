@@ -1,9 +1,9 @@
 ---
 title: Threads Improvements - full-screen view.
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 2
 createdAt: 2026-11-16T17:00:18.867Z
-updatedAt: 2026-11-16T19:41:41.468Z
+updatedAt: 2026-11-16T19:43:52.615Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-75
 pull_request: https://github.com/sgolovine/rowbly/pull/264
 ---
@@ -61,3 +61,7 @@ Not in scope:
 - The full-screen view shows only the conversation, not the Thread metadata. Reason: the author asks for "a full-screen view of the message history".
 - `esc` also closes the full-screen view, and the `✕` in the border closes it. Reason: `FullScreenEditor` closes with `esc`, `ctrl+f` and the `✕`, and the author asks for the same behaviour.
 - The full-screen view starts at the newest entries (and follows while the Thread runs). It does not keep the scroll position of the small view. Reason: a new `ConversationView` starts at the end; to share the position needs a change to the window state, which is a larger scope.
+
+## Review findings
+
+- CHANGELOG Stage: the merge of `origin/main` into `story/ROW-75` has a conflict in `src/tui/screens/threads/thread-pane/thread-pane.tsx`. Merge `origin/main` (it has the ROW-74 changes) into the branch, repair the conflict, and run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`. The merge was aborted. The branch did not change.
