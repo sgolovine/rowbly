@@ -29,13 +29,15 @@ Each pass of the supervisor loop does these steps in this order:
    progress, and removes the other `upstream-stuck:` entries.
 2. The steps that the digest does not need: the settings refresh (`settings`), the provider pause
    check (`providers`), the canonical commit (`commit`) and the start of the Git sync (`sync`).
-3. The digest and its delivery to the supervisor.
+3. The automatic resume of the Threads that wait for the network (`network-resume`). See
+   [Network failures](#network-failures).
+4. The digest and its delivery to the supervisor.
 
 If the scan fails, the pass stops. The loop sets the `reconcile` attention entry, and the next scan
 tries again. A scan occurs at least each 30 seconds. A pass with a successful scan removes the
 `reconcile` entry.
 
-If a step of item 2 fails, the loop sets the attention entry of that step, and the pass continues
+If a step of item 2 or item 3 fails, the loop sets the attention entry of that step, and the pass continues
 to the digest. Thus a step that fails on each pass cannot stop the digests. For example, the
 supervisor continues to get the unclassified Stages. A step that does not fail removes its entry. A
 failed settings refresh keeps the current settings. While a Git sync runs, the commit does not run,
@@ -47,7 +49,7 @@ The text of each entry has the error message, limited to 500 characters.
 
 The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
 them. The supervisor loop uses the keys `reconcile`, `settings`, `providers`, `commit`, `sync`,
-`supervisor`, `pull`, `push` and `upstream-stuck:<ID>`. A successful Git pull removes the `pull` entry, and a successful push
+`supervisor`, `network-resume`, `pull`, `push` and `upstream-stuck:<ID>`. A successful Git pull removes the `pull` entry, and a successful push
 removes the `push` entry. A pass removes an `upstream-stuck:` entry when its Story can progress. If
 you dismiss an `upstream-stuck:` entry and the Story still cannot progress, the next pass adds it again. A
 `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
@@ -94,6 +96,77 @@ Each Thread has at most three runs. A resume adds a run to the same Thread. A re
 
 A later start lets the supervisor select eligible interrupted Threads. It does not resume all Threads
 automatically.
+
+## Network failures
+
+The machine can go offline, or the connection to one AI provider can fail. The factory then pauses
+the provider and resumes the work when the pause ends. The code is in `src/services/factory-manager/`:
+`connectivity.ts`, `network-wait.ts` and `network-resume.ts`.
+
+### Classification
+
+`isConnectivityError()` reads the message and the `code` of an error, and of each nested `cause`.
+The error is a connectivity error when it contains one of these texts: `fetch failed`, `ECONNRESET`,
+`ECONNREFUSED`, `ENOTFOUND`, `EAI_AGAIN`, `ETIMEDOUT`, `ENETUNREACH`, `EHOSTUNREACH`, `socket hang up`,
+`network error`, `Connection error` or `terminated`. A quota error (`429`) or an authentication error
+(`401`) is not a connectivity error. The classification does not load Pi.
+
+### The network pause
+
+When a worker or the supervisor fails with a connectivity error, `pausedProviders()` gives the
+provider a pause with the reason `network`:
+
+- The first network pause of a provider has a retry time of now plus 1 minute.
+- Each later network pause in a row doubles the delay, to a maximum of 15 minutes.
+- While a network pause holds, a new failure of the same provider does not change the pause. The
+  workers of one outage fail at about the same time, and they must not make the delay longer.
+- The pause has the field `failures`, the count of network pauses in a row. The manager also keeps
+  the count in `networkFailures` of `status.json`, so that the count stays after the pause ends and
+  after a daemon restart.
+- A successful prompt of the provider removes its count. The next pause starts at 1 minute again.
+
+While the pause holds, the manager starts no new worker on the provider, and the supervisor sends no
+digest if the pause is on its provider. Workers on other providers continue. The problem list of the
+factory controls shows `Provider <id> is paused (network) until <time>.`
+
+### The failed Thread
+
+A worker that fails with a connectivity error gets the status `failed` and this error:
+`{ class: "transient", code: "NETWORK", message, retryAt }`. `retryAt` is the end of the pause. The
+Thread is resumable when it has a session file. Other failures keep the class `unknown` or `launch`
+and the code `WORKER_FAILED`.
+
+A failure does not count against the attempt budget of a Story. Thus a connectivity error does not
+park a Story.
+
+### Automatic resume
+
+On each pass, after the provider pause check, the manager resumes each `NETWORK` Thread when the
+pause of its provider has ended. The Thread must be the last worker Thread of its Story, and it must
+agree with the conditions of [Resume and retry](#resume-and-retry). The resume adds a new run to the
+same Thread and the same Pi session. It uses a generated request ID. It does not wait for the
+supervisor, and it does not need a person. If the resume cannot start now, for example because all
+worker slots are full, the next pass tries again.
+
+While the manager can resume a `NETWORK` Thread, the scan skips its Story with the reason
+`waiting for network resume`. Thus the policy does not start a new Thread for the Story. If the
+Thread cannot resume (no session file, three runs, a Stage move or no worktree), the normal policy
+retry applies.
+
+### Connectivity in the status
+
+The factory status (`status.json` and `rowbly factory status --json`) has the field `connectivity`.
+The providers are those of the supervisor model, the worker model and the worker overrides of the
+factory settings.
+
+| Value      | Condition                                     |
+| ---------- | --------------------------------------------- |
+| `online`   | No provider has a `network` pause.            |
+| `degraded` | One or more providers have a `network` pause. |
+| `offline`  | Each provider has a `network` pause.          |
+
+The factory does not send a network probe. The first request to the provider after the pause ends
+is the probe. Pi does not retry a request (`retry: { enabled: false }`).
 
 ## Automatic restart after a crash
 

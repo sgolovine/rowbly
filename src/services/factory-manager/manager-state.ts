@@ -5,9 +5,10 @@ import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import type { PiSession } from "../pi-runtime/pi-runtime.js";
-import { type Store, withEntry } from "../store/store.js";
+import { type Store, withEntry, withoutEntry } from "../store/store.js";
 import { getThread, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
+import { isAuthenticationError, isConnectivityError, isQuotaError, networkPauseDelay } from "./connectivity.js";
 
 export interface FactoryDependencies {
   runtime: ModelRuntime;
@@ -36,6 +37,8 @@ export interface Attention {
 export interface ProviderPause {
   readonly reason: string;
   readonly retryAt?: string;
+  /** The number of network pauses in a row of the provider, for a `network` pause. */
+  readonly failures?: number;
 }
 
 interface ActiveWorker {
@@ -85,6 +88,8 @@ export interface ManagerState {
   readonly holds: ReadonlyMap<string, Hold>;
   readonly attention: ReadonlyMap<string, Attention>;
   readonly providers: ReadonlyMap<string, ProviderPause>;
+  /** The number of network pauses in a row of each provider. A successful prompt removes the entry. */
+  readonly networkFailures: ReadonlyMap<string, number>;
 
   // Git sync of the canonical checkout
   readonly lastSyncAt: number;
@@ -96,6 +101,9 @@ export interface ManagerState {
   readonly heartbeat?: NodeJS.Timeout;
   readonly deadlineTimer?: NodeJS.Timeout;
 }
+
+/** The provider pauses and the network failure counts of the state. */
+export type ProviderState = Pick<ManagerState, "providers" | "networkFailures">;
 
 /** The fixed environment of one factory manager, and the store of its state. */
 export interface Manager {
@@ -155,29 +163,85 @@ export async function changeThread(
   return next;
 }
 
-/** Gives the provider pauses with a new pause when an error shows a quota or an authentication problem. */
+/**
+ * Gives the provider pauses with a new pause when an error shows a quota, an authentication or a connectivity
+ * problem. `failures` is the number of earlier network pauses in a row of the provider.
+ */
 export function pausedProviders(
   providers: ReadonlyMap<string, ProviderPause>,
   provider: string | undefined,
   error: unknown,
+  failures = 0,
 ): ReadonlyMap<string, ProviderPause> {
   if (!provider) {
     return providers;
   }
 
-  const message = error instanceof Error ? error.message : "";
-
-  if (/quota|usage.limit|billing|429/i.test(message)) {
+  if (isQuotaError(error)) {
     const retryAt = new Date(Date.now() + 15 * 60_000).toISOString();
 
     return withEntry(providers, provider, { reason: "quota", retryAt });
   }
 
-  if (/oauth|unauthorized|authentication|401/i.test(message)) {
+  if (isAuthenticationError(error)) {
     return withEntry(providers, provider, { reason: "authentication" });
   }
 
+  if (isConnectivityError(error)) {
+    return withNetworkPause(providers, provider, failures);
+  }
+
   return providers;
+}
+
+/**
+ * Adds a network pause. A network pause that still holds does not change, because the workers of one outage
+ * fail at about the same time. They must not make the delay longer.
+ */
+function withNetworkPause(
+  providers: ReadonlyMap<string, ProviderPause>,
+  provider: string,
+  failures: number,
+): ReadonlyMap<string, ProviderPause> {
+  const current = providers.get(provider);
+
+  if (current?.reason === "network" && Date.parse(current.retryAt ?? "") > Date.now()) {
+    return providers;
+  }
+
+  const count = failures + 1;
+  const retryAt = new Date(Date.now() + networkPauseDelay(count)).toISOString();
+
+  return withEntry(providers, provider, { reason: "network", retryAt, failures: count });
+}
+
+/** Gives the provider pauses and the network failure counts after an error of the provider. */
+export function pauseProvider(
+  state: Readonly<ProviderState>,
+  provider: string | undefined,
+  error: unknown,
+): ProviderState {
+  const failures = provider ? (state.networkFailures.get(provider) ?? 0) : 0;
+  const providers = pausedProviders(state.providers, provider, error, failures);
+  const pause = provider ? providers.get(provider) : undefined;
+
+  if (!provider || pause?.reason !== "network" || pause.failures === undefined) {
+    return { providers, networkFailures: state.networkFailures };
+  }
+
+  return { providers, networkFailures: withEntry(state.networkFailures, provider, pause.failures) };
+}
+
+/** Gives the network failure counts after a successful prompt of the provider. The next pause starts at 1 minute. */
+export function providerSucceeded(
+  state: Readonly<ProviderState>,
+  provider: string | undefined,
+): Pick<ManagerState, "networkFailures"> {
+  if (!provider || !state.networkFailures.has(provider)) {
+    return { networkFailures: state.networkFailures };
+  }
+
+  return { networkFailures: withoutEntry(state.networkFailures, provider) };
 }
 
 /** Tells if a provider pause still holds: it has no retry time, or the retry time is in the future. */

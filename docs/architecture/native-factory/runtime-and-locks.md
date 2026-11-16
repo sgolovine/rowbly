@@ -17,7 +17,7 @@ take or change a lock.
   runtime/            # private, ignored; directories use mode 0700
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
-    status.json       # heartbeat, workers, queue, holds, provider pauses, attention and checks
+    status.json       # heartbeat, workers, queue, holds, provider pauses, connectivity, attention and checks
     watchdog.json     # watchdog phase, process identity, crashes in a row, last crash, last exit and last log
     watchdog.lock     # watchdog claim: the identity of the one watchdog that can start a daemon
     watchdog.guard    # short exclusive gate for changes of the watchdog claim

@@ -21,11 +21,13 @@ import {
   type Manager,
   type ManagerState,
   notify,
-  pausedProviders,
+  pauseProvider,
+  providerSucceeded,
   serial,
   setState,
 } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
+import { workerFailure } from "./network-wait.js";
 import { configuredChecks, workerChecks } from "./worker-checks.js";
 
 type WorkerWorktree = Awaited<ReturnType<typeof prepareWorkerWorktree>>;
@@ -95,6 +97,7 @@ async function runWorker(manager: Manager, run: RunStore): Promise<void> {
 
   trackWorkerActivity(manager, run, opened.handle);
   await opened.handle.prompt(prompt);
+  setState(manager, (state) => providerSucceeded(state, opened.model.provider));
 
   const result = await collectWorkerResult(manager, run, opened.handle);
 
@@ -341,21 +344,20 @@ async function completeWorker(
 
 async function failWorker(manager: Manager, run: WorkerRun, error: unknown): Promise<void> {
   await serial(manager, async () => {
-    setState(manager, (state) => ({ providers: pausedProviders(state.providers, run.assignedProvider, error) }));
-
     const thread = await getThread(run.id, manager.ctx);
+    const provider = run.assignedProvider ?? thread.model?.provider;
+    const { providers } = setState(manager, (state) => pauseProvider(state, provider, error));
 
     if (!isActiveStatus(thread.status)) {
       return;
     }
 
-    await changeThread(manager, run.id, getState(manager).stopping ? "interrupted" : "failed", {
+    const { stopping } = getState(manager);
+    const pause = provider ? providers.get(provider) : undefined;
+
+    await changeThread(manager, run.id, stopping ? "interrupted" : "failed", {
       resumable: !!thread.session.file,
-      error: {
-        class: run.handle ? "unknown" : "launch",
-        code: "WORKER_FAILED",
-        message: (error instanceof Error ? error.message : "Worker failed").slice(0, 1000),
-      },
+      error: workerFailure(error, { launched: !!run.handle, stopping, retryAt: pause?.retryAt }),
     });
   });
 }

@@ -16,11 +16,13 @@ import {
   type Manager,
   type ManagerState,
   notify,
-  pausedProviders,
+  pauseProvider,
+  providerSucceeded,
   serial,
   setState,
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
+import { resumeNetworkThreads } from "./network-resume.js";
 import { failureText, runSideSteps, runStep } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
@@ -126,6 +128,8 @@ async function superviseOnce(manager: Manager): Promise<void> {
   await refreshUpstreamAttention(manager);
   setState(manager, (state) => ({ attention: withoutEntry(state.attention, "reconcile") }));
   await runSideSteps(manager);
+  // After the provider pause check, so that a pause that ended lets its network Threads resume.
+  await runStep(manager, "network-resume", "Automatic resume failed", () => resumeNetworkThreads(manager));
 
   if (getState(manager).stopping) {
     return;
@@ -268,7 +272,7 @@ async function deliverDigest(manager: Manager, delivery: Delivery): Promise<void
     const text = "Supervisor turn failed; retry after backoff";
 
     setState(manager, (state) => ({
-      providers: pausedProviders(state.providers, state.supervisorChoice?.provider, error),
+      ...pauseProvider(state, state.supervisorChoice?.provider, error),
       attention: withEntry(state.attention, "supervisor", { text }),
       nextWakeAt: Date.now() + 60_000,
     }));
@@ -281,6 +285,7 @@ async function sendDigest(manager: Manager, delivery: Delivery): Promise<void> {
   await serial(manager, () => persistStatus(manager));
 
   await getState(manager).supervisor?.sendDigest(await supervisorMessage(manager.paths, delivery.text));
+  setState(manager, (state) => providerSucceeded(state, state.supervisorChoice?.provider));
 
   const reportIds = delivery.reports.map((r) => promptHash(JSON.stringify(r)));
 
