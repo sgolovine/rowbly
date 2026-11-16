@@ -1,11 +1,11 @@
 ---
 title: Run checks of remote workers on their host
-stage: IN_REVIEW
+stage: IN_DEVELOPMENT
 position: 12
 dependsOn:
   - ROW-92
 createdAt: 2026-11-16T19:45:08.084Z
-updatedAt: 2026-11-16T23:01:08.682Z
+updatedAt: 2026-11-16T23:01:12.076Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-93
 pull_request: https://github.com/sgolovine/rowbly/pull/289
 ---
