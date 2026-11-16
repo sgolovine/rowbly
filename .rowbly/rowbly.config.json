@@ -68,6 +68,9 @@
       ]
     }
   ],
+  "display": {
+    "compactThreads": false
+  },
   "factory": {
     "maxWorkers": 4,
     "supervisorModel": {
