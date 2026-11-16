@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: The host agent on a worker host can now run workers. The new hidden `rowbly host prepare`, `rowbly host cache-missing` and `rowbly host cache-put` commands send a copy of the `.rowbly/` files and the PNG attachments to the host, and `rowbly host attach` sends the state of each run. No command of the main machine uses this yet. (ROW-92)
+
 ### 0.19.0
 
 - Added: In the Factory view, a Thread that is open in the Story sidebar has an `Open Story` button with the key `o`. The button shows the Story list and opens the Story of the Thread in the Story sidebar. (ROW-70)
