@@ -3,8 +3,8 @@ title: Allow expanding of right hand panel.
 stage: IN_REFINEMENT
 position: 1
 createdAt: 2026-11-16T18:36:13.319Z
-updatedAt: 2026-11-16T18:36:19.428Z
-worktree: null
+updatedAt: 2026-11-16T18:36:25.459Z
+worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-77
 pull_request: null
 ---
 
