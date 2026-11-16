@@ -79,6 +79,8 @@ describe("story renumber", () => {
           path: project.path("stories/IN_DEVELOPMENT/ROW-79.md"),
           previousPath: project.path(sidebar),
           keptPath: project.path(tags),
+          movedAttachments: [],
+          stayed: { dependents: [], specs: [], attachments: [], attempts: 0 },
         },
       ],
       unrepaired: [],
@@ -245,7 +247,18 @@ describe("story renumber", () => {
 
     const { changes } = await repair();
 
-    expect(changes.map((change) => change.to)).toEqual(["ROW-81"]);
+    expect(changes.map((change) => [change.to, change.movedAttachments, change.stayed])).toEqual([
+      [
+        "ROW-81",
+        [],
+        {
+          dependents: [project.path("stories/BACKLOG/ROW-80.md")],
+          specs: [project.path("specs/design.md")],
+          attachments: [],
+          attempts: 0,
+        },
+      ],
+    ]);
     expect(await project.read("stories/BACKLOG/ROW-80.md")).toBe(dependent);
     expect(await project.read("specs/design.md")).toBe(spec);
     expect(await project.read("attachments/ROW-77/image.png")).toBe("png");
