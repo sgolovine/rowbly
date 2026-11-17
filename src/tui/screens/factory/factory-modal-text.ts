@@ -20,12 +20,16 @@ export function factoryHints(can: {
   readonly start: boolean;
   readonly stop: boolean;
   readonly warnings: boolean;
+  readonly scroll: boolean;
+  readonly dismissAll: boolean;
   readonly aiSettings: boolean;
 }): KeyHint[] {
   return [
+    ...(can.scroll ? [{ key: "↑/↓", description: "scroll" }] : []),
     ...(can.start ? [{ key: "s", description: "start" }] : []),
     ...(can.stop ? [{ key: "x", description: "stop" }] : []),
     ...(can.warnings ? [{ key: "w", description: "warnings" }] : []),
+    ...(can.dismissAll ? [{ key: "d", description: "dismiss all" }] : []),
     { key: "h", description: "history" },
     ...(can.aiSettings ? [{ key: "a", description: "AI settings" }] : []),
     { key: "esc", description: "back" },

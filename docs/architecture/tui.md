@@ -73,11 +73,20 @@ The screen areas in `screens/` are:
 Modal has these views:
 
 - **Main.** The overview, the `Attention` list, the queue and the buttons. `s` starts, `x` stops,
-  `w` opens the warnings, `h` opens the history and `a` opens the AI settings. The overview has no
+  `w` opens the warnings, `d` dismisses all warnings that you can dismiss, `h` opens the history and `a` opens the AI settings. The overview has no
   model row. The `Attention` list shows a maximum of five rows. A click on a row selects the row: the
   row shows the `▌` bar and the selection fill. A click on the selected row opens the detail view of
   that warning. A click on a different row moves the selection and does not open a warning. If the
-  selected warning goes away, no row stays selected. The `Attention` list has no keys.
+  selected warning goes away, no row stays selected. When the list has more than five rows, `↑/↓`
+  and the mouse wheel move the five-row window by one row. A `↑ n more` row shows above the window
+  when rows are hidden above it. A `↓ n more` row shows below the window when rows are hidden below
+  it. When warnings go away, the window moves back to show the last rows. Only the `Attention` list
+  scrolls. The `Hosts` and `Queue` lists show the first five rows. When the live factory has a
+  warning that you can dismiss, the `Dismiss all` button (`d`) shows. `d` opens the
+  `Factory › Dismiss all` confirmation. When you confirm, the TUI calls `dismissFactoryAttentions`.
+  This service sends one `dismiss` command for each attention entry, one after the other. A pending
+  toast shows during the work. Then an info toast gives the number of dismissed warnings. If a
+  command fails, an error toast shows and that warning stays in the list.
   When the live factory status has a worker host (a `hosts` entry that is not `local`), a `Hosts`
   list shows above the `Attention` list. Each row shows the host id, the connection state, the used
   and the total slots (`<used>/<max>`) and, for a lost host, the last contact (`last contact <duration>

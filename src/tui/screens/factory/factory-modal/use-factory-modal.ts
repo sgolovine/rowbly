@@ -45,6 +45,10 @@ interface FactoryAbilities {
   readonly stop: boolean;
   /** The live factory has warnings, so `w` can open their list. */
   readonly warnings: boolean;
+  /** The `Attention` list has more rows than its window, so `↑/↓` scroll it. */
+  readonly scroll: boolean;
+  /** A warning can be dismissed and no dismiss runs, so `d` asks to dismiss all. */
+  readonly dismissAll: boolean;
 }
 
 /** The handlers of the buttons, the history and the stop confirmation. */
@@ -104,7 +108,7 @@ function factoryView(inspecting: boolean, history: boolean, attention: FactoryAt
 interface AbilityInput {
   readonly busy: FactoryRunKind | null;
   readonly launch: FactoryLaunch | undefined;
-  readonly warnings: number;
+  readonly attention: FactoryAttention;
 }
 
 function abilities(status: FactoryStatus | undefined, input: AbilityInput): FactoryAbilities {
@@ -113,7 +117,9 @@ function abilities(status: FactoryStatus | undefined, input: AbilityInput): Fact
   return {
     start: !live && input.busy === null && input.launch !== undefined,
     stop: live && status?.phase !== "stopping" && input.busy === null,
-    warnings: input.warnings > 0,
+    warnings: input.attention.problems.length > 0,
+    scroll: input.attention.can.scroll,
+    dismissAll: input.attention.can.dismissAll,
   };
 }
 
@@ -183,7 +189,20 @@ function oldThreadsOf(all: readonly ThreadRecord[], selectedId: string | undefin
 
 /** The abilities in the form that the keys read. */
 function keyAbilities(can: FactoryAbilities) {
-  return { canStart: can.start, canStop: can.stop, canWarnings: can.warnings };
+  return {
+    canStart: can.start,
+    canStop: can.stop,
+    canWarnings: can.warnings,
+    canScroll: can.scroll,
+    canDismissAll: can.dismissAll,
+  };
+}
+
+/** The actions of the Attention views that the keys of the main view call. */
+function attentionKeyActions(attention: FactoryAttention) {
+  const { openList, scroll, askDismissAll } = attention.actions;
+
+  return { openWarnings: openList, scroll, askDismissAll };
 }
 
 /**
@@ -214,9 +233,9 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
     threads: allThreads,
     active: active && !confirm && !inspecting && !history,
   });
-  const can = abilities(status, { busy, launch, warnings: attention.problems.length });
+  const can = abilities(status, { busy, launch, attention });
   const view = factoryView(inspecting, history, attention);
-  const idle = active && !confirm && view === "main";
+  const idle = active && !confirm && !attention.confirmAll && view === "main";
 
   const env: FactoryKeyEnv = {
     ...input,
@@ -225,7 +244,7 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
     working,
     setBusy,
     setProvider,
-    openWarnings: attention.actions.openList,
+    ...attentionKeyActions(attention),
     setConfirm,
     setHistory,
   };

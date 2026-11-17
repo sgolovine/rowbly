@@ -31,6 +31,8 @@ export function FactoryMain({ model, status, canLaunch, stages, onAiSettings }: 
         stages={stages}
         clickable={idle}
         onProblem={attention.actions.pick}
+        attentionOffset={attention.offset}
+        onScrollAttention={attention.actions.scroll}
       />
       <FactoryButtons
         live={live}
@@ -40,9 +42,11 @@ export function FactoryMain({ model, status, canLaunch, stages, onAiSettings }: 
         canStart={can.start}
         canStop={can.stop}
         canWarnings={can.warnings}
+        canDismissAll={can.dismissAll}
         idle={idle}
         onStart={actions.start}
         onWarnings={attention.actions.openList}
+        onDismissAll={attention.actions.askDismissAll}
         onHistory={actions.openHistory}
         onStop={actions.askStop}
         onAiSettings={onAiSettings}

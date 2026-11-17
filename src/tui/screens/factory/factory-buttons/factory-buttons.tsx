@@ -12,11 +12,14 @@ export interface FactoryButtonsProps {
   readonly canStop: boolean;
   /** The live factory has warnings. */
   readonly canWarnings?: boolean;
+  /** The live factory has a warning that can be dismissed, and no dismiss runs. */
+  readonly canDismissAll?: boolean;
   /** False while a dialog or a different view has the keys; then the buttons do not take a click. */
   readonly idle: boolean;
   readonly onStart: () => void;
   readonly onHistory: () => void;
   readonly onWarnings?: () => void;
+  readonly onDismissAll?: () => void;
   readonly onStop: () => void;
   readonly onAiSettings?: () => void;
 }
@@ -39,6 +42,9 @@ export function FactoryButtons(props: FactoryButtonsProps) {
       )}
       {props.canWarnings && props.onWarnings && (
         <Button label="Warnings" keyName="w" compact clickable={idle} onClick={props.onWarnings} />
+      )}
+      {props.canDismissAll && props.onDismissAll && (
+        <Button label="Dismiss all" keyName="d" compact clickable={idle} onClick={props.onDismissAll} />
       )}
       <Button label="History" keyName="h" compact clickable={idle} onClick={props.onHistory} />
       {props.onAiSettings && (
