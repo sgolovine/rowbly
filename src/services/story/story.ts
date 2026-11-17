@@ -31,6 +31,7 @@ import { storyUidField } from "./story-ref.js";
 import { checkedTags, updatedTags } from "./story-tags.js";
 import type { CreateStoryInput, DeleteStoryResult, Story, UpdateStoryInput } from "./story-types.js";
 
+export { withoutStory, withStory } from "./story-order.js";
 export { getStory, getStoryDetails, listStoryRefs, resolveStoryRef, searchStories } from "./story-read.js";
 export { matchStoryRef, recordRef, refersToStory, type StoryRef, storyUidField } from "./story-ref.js";
 export * from "./story-types.js";

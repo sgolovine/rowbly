@@ -40,6 +40,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The README has a new "Remote worker hosts" section that tells how to add, log in, use and check a worker host with `rowbly host` and how to set the placement with `rowbly factory configure --placement`, and the README no longer says that more than one machine is not supported. The contributor documentation has a new overview page of the remote worker hosts. (ROW-105)
 - Changed: The `Depends on` field of the new Story form and the edit Story form now opens faster on a large board, because the TUI finds the Stories that you can select in one pass and only when the Stories change. (ROW-132)
 - Changed: The factory now starts the workers itself from its rules and the factory settings, without a supervisor session, so it makes no model call when no worker runs. The new `rowbly factory release <story-id>` command releases a parked Story in the running factory, and `status.json` no longer has `supervisorThreadId`, the holds or the notes. (ROW-124)
+- Changed: In the TUI, a Stage move, a save or a delete of a Story now shows on the board at once, and Rowbly reads the Story files one time for each action, not two times. The TUI repairs duplicate Story IDs only when it first loads a Project, not on each refresh. (ROW-133)
 
 ### 0.19.0
 
