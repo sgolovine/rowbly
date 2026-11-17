@@ -1,11 +1,10 @@
-import { Box, Text } from "ink";
+import { Text } from "ink";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ThreadConnection } from "../../../../services/thread-connection/thread-connection.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { ConversationView, Panel } from "../../../components/index.js";
+import { Panel } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
-import { ThreadDetail } from "../thread-detail/index.js";
-import { ThreadSteerInput } from "../thread-steer-input/index.js";
+import { ThreadBody } from "../thread-body/index.js";
 import { type StageNames, threadName } from "../thread-text.js";
 
 export interface ThreadPanelProps {
@@ -89,35 +88,24 @@ export function ThreadPanel({
       overflow="hidden"
     >
       {current ? (
-        <>
-          <ThreadDetail thread={current} now={now} compact={compact} connection={connection} held={held} />
-          {selected && shownId === current.id && (
-            <Box marginTop={1}>
-              <ConversationView
-                key={current.id}
-                ctx={ctx}
-                threadId={current.id}
-                live={current.status === "running"}
-                active={viewing && !steering}
-                width={threadWidth}
-                height={conversationHeight}
-              />
-            </Box>
-          )}
-          {current.status === "running" && (
-            <ThreadSteerInput
-              key={current.id}
-              ctx={ctx}
-              threadId={current.id}
-              name={`${storyId} ${threadName(current, stages)}`}
-              focused={steering}
-              clickable={listing || viewing}
-              width={threadWidth}
-              onFocus={onFocusSteer}
-              onLeave={onLeaveSteer}
-            />
-          )}
-        </>
+        <ThreadBody
+          ctx={ctx}
+          thread={current}
+          now={now}
+          compact={compact}
+          connection={connection}
+          held={held}
+          showConversation={selected && shownId === current.id}
+          conversationActive={viewing && !steering}
+          width={threadWidth}
+          conversationHeight={conversationHeight}
+          steerable={current.status === "running"}
+          steerName={`${storyId} ${threadName(current, stages)}`}
+          steering={steering}
+          steerClickable={listing || viewing}
+          onFocusSteer={onFocusSteer}
+          onLeaveSteer={onLeaveSteer}
+        />
       ) : (
         <Text color={theme.inkFaint} wrap="wrap">
           The factory adds a thread when it starts a worker for this Story.

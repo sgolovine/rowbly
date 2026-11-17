@@ -527,7 +527,9 @@ functions into the data that the components show.
   `none`. A `+ add` line is under the list.
 - **The picker.** `enter`, typed text or a click on `+ add` opens a `SearchableSelectPicker` in a
   generic Modal (`Add Depends on`). Each choice has the label `<ID> <title>`. `enter` or a click adds
-  the Story to the list. `dependencyCandidates` gives the choices. The picker does not show the Story
+  the Story to the list. The `usePickerField` hook
+  (`components/searchable-select-picker/use-picker-field.tsx`) opens the picker for `SearchableSelect`
+  and `SearchableMultiSelect`. `dependencyCandidates` gives the choices. The picker does not show the Story
   itself, a Story that is already in the list, or a Story that makes a cycle. For a new Story, all
   Stories of the Project are choices. A Story in the last Stage is also a choice.
 - **Removal.** `←/→` select an upstream Story, and `backspace` removes it. A click on `✕` also
