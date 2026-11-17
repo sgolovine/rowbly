@@ -3,15 +3,19 @@ import type { FactoryLaunch } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { Footer, Sidebar, ToastArea } from "../../components/index.js";
 import { FactoryStatusContext, LayoutContext } from "../../hooks/index.js";
+import type { KeyHint } from "../../keymap.js";
 import { Header } from "../header/index.js";
 import { ShellOverlays } from "../shell-overlays/index.js";
 import { StoryPanel } from "../story-panel/index.js";
 import { StorySidebar } from "../story-sidebar/index.js";
-import { headerProps, overlayHandlers, stageSidebarProps, storyPanelProps, storySidebarProps } from "./shell-props.js";
 import { useShell } from "./use-shell.js";
+import { useShellProps } from "./use-shell-props.js";
 
 /** The project in the directory where Rowbly runs. */
 const CWD: ServiceContext = {};
+
+/** One empty list, so the memo children that get no keys keep the same prop. */
+const NO_HINTS: readonly KeyHint[] = [];
 
 interface ShellProps {
   readonly ctx?: ServiceContext;
@@ -45,36 +49,37 @@ interface ShellProps {
  * Story sidebar, which then shows the Thread in place of a form.
  */
 export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) {
-  const { env, overlay, factory, factoryState, layout, frame, hints } = useShell(initialCtx, preloadPi);
+  const { env, handlers, overlay, factory, factoryState, layout, frame, hints } = useShell(initialCtx, preloadPi);
   const { view } = env;
-  const story = storySidebarProps(env, frame);
+  const props = useShellProps(handlers, env, frame, factory);
   const cover = frame.story.cover;
 
   return (
     <FactoryStatusContext.Provider value={factoryState}>
       <Box flexDirection="column" width={layout.width} height={layout.height}>
-        <Header {...headerProps(env, factory)} />
+        <Header {...props.header} />
         <Box flexGrow={1} flexDirection="column">
           <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
-            {view.sidebar && !cover && <Sidebar {...stageSidebarProps(env, frame)} />}
-            {!cover && frame.listShown && <StoryPanel {...storyPanelProps(env, frame)} />}
-            {story && <StorySidebar {...story} />}
+            {view.sidebar && !cover && <Sidebar {...props.sidebar} />}
+            {!cover && frame.listShown && <StoryPanel {...props.panel} />}
+            {props.story && <StorySidebar {...props.story} />}
           </Box>
           <Box flexDirection="column" {...frame.overlayBox}>
-            <LayoutContext.Provider value={{ width: frame.overlayWidth, height: frame.overlayHeight }}>
+            <LayoutContext.Provider value={props.overlayLayout}>
               <ShellOverlays
                 overlay={overlay}
                 board={view.board}
                 ctx={env.ctx}
                 launch={launch}
                 factory={factory}
-                hints={hints}
-                on={overlayHandlers(env)}
+                // Only the help Modal shows the keys, so the overlays do not render again when the keys change.
+                hints={overlay?.kind === "help" ? hints : NO_HINTS}
+                on={handlers.overlay}
               />
             </LayoutContext.Provider>
           </Box>
         </Box>
-        <Footer hints={overlay ? [] : hints} atRoot />
+        <Footer hints={overlay ? NO_HINTS : hints} atRoot />
         <ToastArea />
       </Box>
     </FactoryStatusContext.Provider>

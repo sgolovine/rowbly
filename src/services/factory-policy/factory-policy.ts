@@ -206,10 +206,6 @@ function stageSkipReason(stage: PolicyStage | undefined): string | undefined {
     return "stage prompt missing or invalid";
   }
 
-  if (stage.promptClass === "unclassified") {
-    return "stage prompt not classified";
-  }
-
   return stage.promptClass === "work" ? undefined : "hold stage";
 }
 

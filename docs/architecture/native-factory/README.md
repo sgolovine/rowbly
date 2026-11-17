@@ -33,13 +33,20 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Supervisor.** One Pi session. Its message comes from `supervisorMessage()` in
   `src/services/messages/messages.ts`.
   It decides which Stories get a worker. It uses only the manager tools, for example
-  `factory_snapshot`, `stage_get`, `classify_stage`, `story_get`, `start_worker`, `stop_worker`,
+  `factory_snapshot`, `story_get`, `start_worker`, `stop_worker`,
   `hold_candidate`, `release_story`, `inspect_worker`, `save_note` and `raise_attention`. It receives
   bounded worker summaries (`supervisor-digest/`), not transcripts.
 - **Worker problems.** The manager shows the problems that a worker reports as the attention entry
   `worker:<ID>`. See [Worker attention](#worker-attention).
-- **Stage classes.** The supervisor classifies each Stage prompt as `work`, `hold` or `invalid`. Only
-  `work` Stages get workers.
+- **Stage classes.** The manager gives each Stage the class `work`, `hold` or `invalid` with a fixed
+  rule (`factory-settings/stage-classes.ts`). Only `work` Stages get workers. The rule has this order:
+  1. The class of the Stage in the setting `factory.stageClasses` (`work` or `hold`).
+  2. `invalid` for a Stage with an empty prompt (only white space).
+  3. `hold` for the first Stage and the last Stage of `stages` in `rowbly.config.json`.
+  4. `work` for all other Stages.
+
+  Thus a new Stage with a prompt gets workers at once. The manager does not read or write the
+  `prompts` key of `state.json`. An old `state.json` with this key stays valid.
 - **Workers.** Each worker is an independent Pi session for one Story in one Stage. It gets the first
   message from `workerMessage()` in `src/services/messages/messages.ts`. It works in one worktree for the
   Story (`worker-worktree/`). It makes canonical Project changes only through the CLI shim

@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+import { memo } from "react";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button, Panel } from "../../components/index.js";
 import { useLayout } from "../../hooks/index.js";
@@ -21,7 +22,7 @@ import { headerFit } from "./header-fit.js";
  * becomes its glyph, the Factory Button loses its pending count and its key cap, then the Factory Button goes.
  * Their keys still work.
  */
-export function Header({
+export const Header = memo(function Header({
   project,
   finder,
   factory,
@@ -117,4 +118,4 @@ export function Header({
       </Box>
     </Panel>
   );
-}
+});

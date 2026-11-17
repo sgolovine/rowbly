@@ -12,10 +12,13 @@ export interface PolicyStory {
   dependsOn?: readonly string[];
 }
 
+/** The class of a Stage prompt. `missing` is for a Stage without a prompt file. */
+type PromptClass = "work" | "hold" | "invalid" | "missing";
+
 export interface PolicyStage {
   key: string;
   enabled: boolean;
-  promptClass?: string;
+  promptClass?: PromptClass;
 }
 
 export interface PolicyWorker {

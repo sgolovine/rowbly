@@ -24,6 +24,8 @@ interface ConfigureOptions {
   stage?: string;
   story?: string;
   clearWorker?: boolean;
+  class?: string;
+  clearClass?: boolean;
   fallbackWorker?: string[];
   clearFallbackWorkers?: boolean;
   commitMessage?: string;
@@ -166,16 +168,18 @@ function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set factory models, fallback worker models, worker limit, worker model overrides, Git commit settings, Git sync, check limits, pull-upstream and placement",
+      "Set factory models, fallback worker models, worker limit, worker model overrides, Stage classes, Git commit settings, Git sync, check limits, pull-upstream and placement",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
     .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
-    .option("--stage <key>", "set the worker model override of this Stage")
+    .option("--stage <key>", "select the Stage of a worker model override or of a class")
     .option("--story <id>", "with --stage, set the override of this Story in the Stage")
     .option("--clear-worker", "with --stage, remove the worker model override")
+    .option("--class <class>", "with --stage, set the class of the Stage: work or hold")
+    .option("--clear-class", "with --stage, remove the class of the Stage")
     .option(
       "--fallback-worker <model>",
       "provider/model to use when the worker provider is paused (repeat; replaces the list)",

@@ -1,6 +1,10 @@
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
-import { waitingFor } from "../../../services/story-dependency/story-dependency.js";
+import {
+  type DependencyIndex,
+  dependencyIndex,
+  indexedWaitingFor,
+} from "../../../services/story-dependency/story-dependency.js";
 import type { StageCategory } from "../../components/index.js";
 import { stageCategory } from "./stage-category.js";
 
@@ -34,13 +38,13 @@ export function stageRowId(key: string): string {
   return `stage:${key}`;
 }
 
-/** The row of `story`, with the name and the category of its Stage, and the upstream Stories of `all` that it waits for. */
-function storyRow(stages: readonly Stage[], all: readonly Story[], story: Story): StoryListRow {
+/** The row of `story`, with the name and the category of its Stage, and the upstream Stories of `index` that it waits for. */
+function storyRow(stages: readonly Stage[], index: DependencyIndex, story: Story): StoryListRow {
   return {
     kind: "story",
     id: story.id,
     story,
-    waitingFor: waitingFor(all, stages, story.id),
+    waitingFor: indexedWaitingFor(index, stages, story.id),
     stage: {
       name: stages.find((s) => s.key === story.stage)?.label ?? story.stage,
       category: stageCategory(stages, story.stage),
@@ -58,7 +62,7 @@ function sectionsOf(stages: readonly Stage[], stories: readonly Story[]): Sectio
 /** The heading of `section`, then its Stories if the section is not collapsed. */
 function sectionRows(
   stages: readonly Stage[],
-  all: readonly Story[],
+  index: DependencyIndex,
   stories: readonly Story[],
   collapsed: ReadonlySet<string>,
   { key, label }: Section,
@@ -74,7 +78,7 @@ function sectionRows(
     collapsed: folded,
   };
 
-  return [heading, ...(folded ? [] : inStage.map((story) => storyRow(stages, all, story)))];
+  return [heading, ...(folded ? [] : inStage.map((story) => storyRow(stages, index, story)))];
 }
 
 /**
@@ -89,11 +93,13 @@ export function storyListRows(
   collapsed?: ReadonlySet<string>,
   all: readonly Story[] = stories,
 ): StoryListRow[] {
+  const index = dependencyIndex(all);
+
   if (!collapsed) {
-    return stories.map((story) => storyRow(stages, all, story));
+    return stories.map((story) => storyRow(stages, index, story));
   }
 
-  return sectionsOf(stages, stories).flatMap((section) => sectionRows(stages, all, stories, collapsed, section));
+  return sectionsOf(stages, stories).flatMap((section) => sectionRows(stages, index, stories, collapsed, section));
 }
 
 /** The Stage key of a row: the Stage of its section heading, or the Stage of its Story. */

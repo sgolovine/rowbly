@@ -205,6 +205,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
   [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure)
   and [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
+- `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
+  `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
+  [native-factory/controls.md](native-factory/controls.md#cli-commands).
 - `rowbly factory status --json` has a `hosts` list with the state and the slots of each machine.
   See [native-factory/README.md](native-factory/README.md#placement) and
   [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md#factory-files-in-rowbly).
