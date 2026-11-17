@@ -142,9 +142,13 @@ overview of the worker hosts.
 - The list shows the hosts of `~/.rowblyrc.json`, in the order of the file. Each row shows the id,
   the SSH target, the worker limit, the switch for this Project, the switch for all Projects
   (`enabled`) and the last check. Before the first check, the row shows `not checked`.
-- Without hosts, the section shows the command that adds a host:
-  `rowbly host add <id> --ssh <target> --max-workers <n>`. The TUI does not add, remove or log in to
-  a host. Use the CLI for these operations.
+- `a` and the "Add host" Button open a `FormModal` with the title `Hosts › Add host`. The form has
+  three mandatory fields: ID, SSH target and Workers. The key and the Button are available with and
+  without hosts. The section calls `addHost({ id, ssh, maxWorkers })` of the `host` service. This is
+  the same service as `rowbly host add`.
+- Without hosts, the section tells the user to push `a`. It also shows the CLI command that adds a
+  host: `rowbly host add <id> --ssh <target> --max-workers <n>`.
+- The TUI does not remove or log in to a host. Use the CLI for these operations.
 - A box under the list has the controls of the selected host. Each control has a key, and the
   mouse can also click it.
 
@@ -166,10 +170,19 @@ overview of the worker hosts.
   last check.
 - An incorrect worker limit shows the `VALIDATION` message under the field, and the file does not
   change.
+- The add form stays open while the service checks Node, installs the Rowbly build and runs the
+  check. This can take minutes. While the form is busy, it does not accept a second submit. While a
+  different remote operation runs, `a` shows a warning and does not open the form.
+- After a successful add, the form closes and a toast shows `Added <id>` with the ready state of the
+  check. The list shows the new host, and the section shows the items of the check under the list.
+- An incorrect ID, SSH target or worker limit shows the `VALIDATION` message under its field, and
+  `~/.rowblyrc.json` does not change. An ID that exists gives `CONFLICT`. `HOST_NODE_MISSING`,
+  `HOST_NODE_TOO_OLD`, `HOST_INSTALL_FAILED` and SSH errors also show their message and hint in a
+  toast. The list does not change.
 
 The section gets its rows from `hostRows` of the `host-project` service. It calls only the `host`,
 `host-project`, `host-check` and `factory-settings` services. When Settings or the section opens, the
-section reads only local files. Only `u` and `c` open SSH. The section does not load Pi.
+section reads only local files. Only `a`, `u` and `c` open SSH. The section does not load Pi.
 
 ## The Stage sections
 
