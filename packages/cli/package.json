@@ -22,15 +22,10 @@
     "build": "tsup",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check . && node scripts/check-names.mjs",
-    "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
-    "knip": "knip",
-    "knip:production": "knip --production",
-    "test": "vitest run && node --test scripts/*.test.mjs",
+    "test": "vitest run",
     "test:watch": "vitest",
-    "website:dev": "pnpm --dir website dev",
-    "website:build": "pnpm --dir website build"
+    "prepack": "node -e \"for (const f of ['README.md', 'LICENSE.md']) require('node:fs').copyFileSync('../../' + f, f)\"",
+    "postpack": "node -e \"for (const f of ['README.md', 'LICENSE.md']) require('node:fs').rmSync(f, { force: true })\""
   },
   "license": "MIT",
   "dependencies": {
@@ -50,12 +45,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.5",
-    "@codebolt/agentic-tui": "0.3.2",
     "@types/marked-terminal": "^6.1.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
-    "knip": "^6.44.1",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",

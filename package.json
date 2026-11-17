@@ -1,0 +1,30 @@
+{
+  "name": "rowbly-monorepo",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/cli.ts",
+    "start": "node packages/cli/dist/cli.js",
+    "build": "pnpm --filter rowbly build",
+    "typecheck": "pnpm --filter rowbly typecheck",
+    "lint": "biome check . && node scripts/check-names.mjs",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "knip": "knip",
+    "knip:production": "knip --production",
+    "test": "pnpm --filter rowbly test && node --test scripts/*.test.mjs",
+    "test:watch": "pnpm --filter rowbly test:watch",
+    "website:dev": "pnpm --filter rowbly-website dev",
+    "website:build": "pnpm --filter rowbly-website build",
+    "website:typecheck": "pnpm --filter rowbly-website typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.5",
+    "@codebolt/agentic-tui": "0.3.2",
+    "knip": "^6.44.1",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,6 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "project": ["src/**/*.{ts,tsx}!", "!src/commands/test-cli/**!", "!src/services/test-project/**!"],
-  "ignoreBinaries": ["wl-paste", "flock"],
-  "ignoreDependencies": ["@codebolt/agentic-tui", "@mariozechner/clipboard"]
+  "workspaces": {
+    ".": {
+      "ignoreDependencies": ["@codebolt/agentic-tui"]
+    },
+    "packages/cli": {
+      "project": ["src/**/*.{ts,tsx}!", "!src/commands/test-cli/**!", "!src/services/test-project/**!"],
+      "ignoreDependencies": ["@mariozechner/clipboard"]
+    }
+  },
+  "ignoreWorkspaces": ["packages/website"],
+  "ignoreBinaries": ["wl-paste", "flock"]
 }
