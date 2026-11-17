@@ -40,12 +40,12 @@ import {
 } from "./worker-executor.js";
 
 /** The manager side of one worker launch. The provider comes from the session, when the session opens. */
-interface LaunchState {
+export interface LaunchState {
   readonly id: string;
   readonly provider?: string;
 }
 
-type LaunchStore = Store<LaunchState>;
+export type LaunchStore = Store<LaunchState>;
 
 /** Checks the reserved worker Thread, runs it through the executor of its host and frees the slot. */
 export async function launchWorker(manager: Manager, id: string): Promise<void> {
@@ -136,7 +136,7 @@ async function prepareLaunch(manager: Manager, id: string): Promise<WorkerLaunch
 }
 
 /** The reactions of the manager to the events of one worker run. Each handler can stop the run with an error. */
-function workerEvents(manager: Manager, launch: LaunchStore, request: WorkerLaunch): WorkerEvents {
+export function workerEvents(manager: Manager, launch: LaunchStore, request: WorkerLaunch): WorkerEvents {
   const { thread: intent, story } = request;
   const { id } = launch.current;
 
@@ -391,7 +391,7 @@ async function failWorker(manager: Manager, launch: LaunchState, failure: Worker
 }
 
 /** Frees the slot of the worker after the executor closed its session. */
-async function releaseWorker(manager: Manager, id: string): Promise<void> {
+export async function releaseWorker(manager: Manager, id: string): Promise<void> {
   await serial(manager, async () => {
     setState(manager, (state) => ({ active: withoutEntry(state.active, id) }));
     await persistStatus(manager);
