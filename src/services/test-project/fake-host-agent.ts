@@ -11,6 +11,7 @@ import { prepareHostThread } from "../host-agent/host-agent-prepare.js";
 import type { HostWorkRunner } from "../host-agent/host-agent-work.js";
 import { runHostAttach } from "../host-agent/host-attach.js";
 import { hostPing } from "../host-agent/host-ping.js";
+import { hostRuns } from "../host-agent/host-runs.js";
 import { writeSlotLimit } from "../host-agent/host-slots.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import type { BytesResult, RemoteCommand, RequestResult, UploadResult } from "../host-transport/host-transport.js";
@@ -110,6 +111,7 @@ const REQUESTS: Readonly<Record<string, RequestHandler>> = {
   serve,
   submit: (fake, input) => submitHostCommand(fake.paths, JSON.stringify(input)),
   ping: (fake) => hostPing(fake.paths, fake.options.home),
+  runs: (fake, input) => hostRuns(fake.paths, input),
   outbox: outboxEntries,
   "outbox-ack": outboxAck,
 };

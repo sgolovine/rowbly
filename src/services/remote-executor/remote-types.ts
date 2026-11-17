@@ -53,6 +53,17 @@ export interface RemoteExecutor extends WorkerExecutor {
    * For a host without a channel, `stop-thread` goes in the queue and the wait of the run ends.
    */
   readonly shutdown: (timeoutMs?: number) => Promise<void>;
+  /**
+   * Follows a run that a previous daemon started on the host, without a new command. Resolves when the run ended and
+   * its outbox is applied, or when the wait ends.
+   */
+  readonly adopt: (launch: WorkerLaunch, events: WorkerEvents) => Promise<void>;
+}
+
+/** The values of an adopted run that the Thread record already has. The manager does not get them again. */
+export interface AdoptedFacts {
+  readonly worktree: boolean;
+  readonly session: boolean;
 }
 
 /** The short-lived state of one remote run, from the launch to the end of its wait. */
@@ -68,6 +79,8 @@ export interface RemoteRunState {
   readonly stopRequested?: "stop" | "cancel";
   /** The `launch` or `resume` command is in the queue of the host, because its submit failed in the transport. */
   readonly launchQueued?: boolean;
+  /** A previous daemon started the run. Until the run has a command id, the reconnect asks the host for its run. */
+  readonly adopted?: AdoptedFacts;
   /** The run sent its last event, or its wait ended. Later frames do nothing. */
   readonly closed: boolean;
   /** The frames of the run, one at a time. */

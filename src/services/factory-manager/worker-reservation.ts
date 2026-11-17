@@ -28,7 +28,7 @@ import {
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { canResume } from "./network-wait.js";
 import { launchWorker } from "./worker-launch.js";
-import { placeStory } from "./worker-placement.js";
+import { placeStory, resumeHost } from "./worker-placement.js";
 
 export interface ReserveWorkerInput {
   storyId: string;
@@ -103,7 +103,10 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
   return { threadId: thread.id };
 }
 
-/** Checks that the factory runs, the Story has no worker and is in the Stage, and a host has a free slot. */
+/**
+ * Checks that the factory runs, the Story has no worker and is in the Stage, and a host has a free slot. A resume uses
+ * only the host of its Thread.
+ */
 async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput): Promise<Slot> {
   if (getState(manager).stopping) {
     throw new ConflictError("Factory is stopping");
@@ -122,10 +125,32 @@ async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput):
     throw new ConflictError("Story Stage changed");
   }
 
+  if (input.resumeThreadId) {
+    const thread = await getThread(input.resumeThreadId, manager.ctx);
+
+    return { story, host: await resumeHost(manager, thread, threads) };
+  }
+
   const choice = workerModelFor(manager, story, input.model);
   const host = await placeStory(manager, { story, choice, requested: input.host, threads });
 
   return { story, host };
+}
+
+/** True when the Thread runs on a worker host. Its worktree is on that host, not on the main machine. */
+function isRemoteThread(thread: ThreadRecord): boolean {
+  return (thread.host ?? LOCAL_HOST) !== LOCAL_HOST;
+}
+
+/** Checks that the worktree of a local Thread is a folder. The host of a remote Thread checks its own worktree. */
+async function assertResumeWorktree(thread: ThreadRecord): Promise<void> {
+  if (isRemoteThread(thread)) {
+    return;
+  }
+
+  if (!(await stat(thread.worktree as string)).isDirectory()) {
+    throw new ConflictError("Resume worktree is unavailable");
+  }
 }
 
 /** Checks a resume, then releases the policy parking and the user cancellation of the Story. */
@@ -134,7 +159,7 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
     throw new ConflictError("Thread cannot resume in this Stage");
   }
 
-  await stat(previous.worktree as string);
+  await assertResumeWorktree(previous);
 
   const stories = await listStoryRefs(manager.ctx);
 
@@ -178,9 +203,7 @@ async function appendResumeRun(manager: Manager, threadId: string, story: Story,
     throw new ConflictError("Thread cannot resume in this Stage");
   }
 
-  if (!(await stat(previous.worktree as string)).isDirectory()) {
-    throw new ConflictError("Resume worktree is unavailable");
-  }
+  await assertResumeWorktree(previous);
 
   return appendThreadRun(
     previous.id,

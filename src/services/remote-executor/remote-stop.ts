@@ -58,10 +58,11 @@ function requestStop(run: RemoteRun, kind: "stop" | "cancel"): boolean {
     return false;
   }
 
-  const { commandId } = run.store.update((state) => ({ stopRequested: state.stopRequested ?? kind }));
+  const { commandId, adopted } = run.store.update((state) => ({ stopRequested: state.stopRequested ?? kind }));
 
-  // Without a command id, the launch command has not gone to the host. The launch steps stop before it.
-  return !!commandId;
+  // Without a command id, the launch command has not gone to the host. The launch steps stop before it. An adopted
+  // run can have a run on the host before the host gives its command id.
+  return !!commandId || !!adopted;
 }
 
 /**

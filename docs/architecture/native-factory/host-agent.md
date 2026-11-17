@@ -33,6 +33,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-agent.ts`             | `runHostAgent`: the loop of `host serve` and the stop when idle.                 |
 | `host-attach.ts`            | `runHostAttach`: the frames of `host attach`.                                    |
 | `host-ping.ts`              | `hostPing`: the answer of the heartbeat `host ping`.                             |
+| `host-runs.ts`              | `hostRuns`: the run states of `host runs`.                                       |
 | `host-session-lines.ts`     | The read of the session files and the `session` frames of `host attach`.         |
 | `host-attach-fetch.ts`      | The `attachment-request` and `attachment-failed` frames of `host attach`.        |
 | `host-fetch.ts`             | The fetch request files and their failure answers.                               |
@@ -57,6 +58,7 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                               |
 | `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`               |
 | `[<remote rowbly>, "host", "ping", <project-id>]`            | request | `{}`                                         | `{ protocol, rowbly, agent, slots, pending }` |
+| `[<remote rowbly>, "host", "runs", <project-id>]`            | request | `{ "threadIds": [<thread id>, …] }`          | `{ "runs": [<run state>, …] }`                |
 | `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                        |
 | `[<remote rowbly>, "host", "outbox-ack", <project-id>]`      | request | `{ "seq": <n> }`                             | `{ "removed": <n>, "blobs": [...] }`          |
 | `[<remote rowbly>, "host", "blob", <sha256>, <project-id>]`  | bytes   | None                                         | The bytes of the outbox file                  |
@@ -334,6 +336,24 @@ When the connection comes back, the main machine submits the queued commands aga
 request ids. A command file that exists does not change, so a command that arrives two times has one
 effect. Then it opens a new `host attach` channel. A new channel starts with no sent values, so it
 sends the status, each receipt and each run state again.
+
+### Reconnect of adopted runs
+
+After a restart of the daemon, the new daemon adopts the active remote Threads. See
+[recovery.md](recovery.md#adopt-remote-threads-at-start). The main machine does not keep the request
+id of the `launch` or `resume` command of an adopted run. Only the frames of that command apply to the
+run. Thus the reconnect of a host with adopted runs does these steps, in this order:
+
+1. It submits the queued commands. The stop and cancel commands go first.
+2. It sends `host runs` with the Thread id of each adopted run that has no request id.
+   `hostRuns` reads `run.json` of each Thread. Each id must be a valid request id.
+3. It opens the `host attach` channel again.
+
+The `requestId` of the run state becomes the request id of the adopted run. The main machine applies
+the run state as the first `run` frame. A run that ended while the daemon was off completes one time.
+When the host has no run state for an adopted Thread, and the queue of the host has no `launch` or
+`resume` for it, the Thread fails with the error code `HOST_RUN_MISSING`. A transport error keeps the
+runs adopted, and the next heartbeat tries again.
 
 ## Attach channel
 
