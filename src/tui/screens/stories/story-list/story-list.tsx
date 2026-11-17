@@ -2,13 +2,19 @@ import { Box, type DOMElement, Text } from "ink";
 import { useRef, useState } from "react";
 import type { TagConfig } from "../../../../services/config/config.js";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
-import { useMouse, WHEEL_LINES } from "../../../hooks/index.js";
+import { type HostFacts, hostLost, liveHosts } from "../../../../services/thread-connection/thread-connection.js";
+import { useMouse, useSharedFactoryStatus, WHEEL_LINES } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { DropSlotRow } from "../drop-slot-row/index.js";
 import { StoryListItem } from "../story-list-item/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
 import { clickRow, dropStory, rowDragProps, type StoryListEnv, wheelCursor } from "./story-list-drag.js";
 import { listWindow, visibleItems } from "./story-list-window.js";
+
+/** True when the active agent of `activity` runs on a worker host with a lost connection. */
+function activityLost(activity: StoryActivity | undefined, hosts: readonly HostFacts[] | undefined): boolean {
+  return activity?.kind === "active" && hostLost(activity.host, hosts);
+}
 
 /** No Story is in the multi-selection. */
 const NO_MARKS: ReadonlySet<string> = new Set();
@@ -44,7 +50,8 @@ export interface StoryListProps {
  * `↓ n more` line shows only when rows are below them, so that no blank line shows. The mouse wheel
  * calls `onCursor`. A click on the selected row calls `onActivate`. A click on another row selects it
  * through `onCursor`. A `shift+click` on a Story row calls `onRange`, and each other click calls `onClear` first.
- * Each Story in `marked` shows a `●` mark. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
+ * Each Story in `marked` shows a `●` mark. The `▶` of a Story whose worker host has a lost connection in the shared
+ * factory status shows `connection lost`. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
  * shows the gap where it lands, and the release calls `onMove`. Over a Story above the dragged Story, the gap
  * is above that Story; over a Story below it, the gap is below that Story. Over a heading, the gap is below
  * the heading, at the top of its section.
@@ -68,6 +75,8 @@ export function StoryList({
   const self = useRef({}).current;
   // The gap that the dragged Story lands in: the index of the row below it.
   const [slot, setSlot] = useState<number | null>(null);
+  const status = useSharedFactoryStatus()?.data;
+  const hosts = status ? liveHosts(status) : undefined;
 
   const view = listWindow(rows.length, height, cursor, slot);
   const sections = rows.some((row) => row.kind === "stage");
@@ -96,6 +105,7 @@ export function StoryList({
             key={item.row.id}
             row={item.row}
             activity={item.row.kind === "story" ? activity[item.row.story.id] : undefined}
+            hostLost={item.row.kind === "story" && activityLost(activity[item.row.story.id], hosts)}
             tags={tags}
             selected={item.index === cursor}
             clickable={clickable}

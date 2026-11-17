@@ -1,7 +1,9 @@
 import { Box, Text } from "ink";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
+import type { ThreadConnection } from "../../../../services/thread-connection/thread-connection.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
+import { abandonedText, lostText } from "../thread-host-view.js";
 import {
   THREAD_GLYPHS,
   threadDuration,
@@ -47,21 +49,30 @@ function worktreeText(thread: ThreadRecord): string {
 
 /**
  * The metadata of one thread: status, model, times, last tool, worktree and result. The status line shows
- * `waiting for network` for a thread that waits for the network. It reads no
+ * `waiting for network` for a thread that waits for the network, `abandoned` with the number of `held` entries for an
+ * abandoned thread, and `connection lost (…)` in `danger` for a remote thread with a lost `connection`. It reads no
  * conversation. `compact` shows only the status line and the result, for a short layout.
  */
 export function ThreadDetail({
   thread,
   now,
   compact = false,
+  connection,
+  held,
 }: {
   thread: ThreadRecord;
   now: number;
   compact?: boolean;
+  /** The lost connection of a remote thread. */
+  connection?: ThreadConnection;
+  /** The number of held entries of an abandoned thread, when the caller read it. */
+  held?: number;
 }) {
   const { glyph, color } = THREAD_GLYPHS[thread.status];
   const outcome = threadOutcome(thread);
   const duration = threadDuration(thread, now);
+  const abandoned = abandonedText(thread, held);
+  const lost = lostText(connection, now);
 
   const status = (
     <Text wrap="truncate-end">
@@ -69,6 +80,8 @@ export function ThreadDetail({
       <Text color={thread.status === "failed" ? theme.danger : theme.ink}>{thread.status}</Text>
       <Text color={theme.inkMuted}>{runsNote(thread)}</Text>
       {threadWaitsForNetwork(thread) && <Text color={theme.stageBoard}> · waiting for network</Text>}
+      {abandoned && <Text color={theme.stageBoard}>{abandoned}</Text>}
+      {lost && <Text color={theme.danger}>{lost}</Text>}
     </Text>
   );
   const result = outcome ? (

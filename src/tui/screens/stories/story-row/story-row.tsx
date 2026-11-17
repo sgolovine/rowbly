@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import type { Story } from "../../../../services/story/story.js";
+import { LOCAL_HOST } from "../../../../services/thread/thread.js";
 import { type RowDragProps, SelectionRow, StageBadge, type StageCategory } from "../../../components/index.js";
 import type { ClickEvent } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
@@ -17,7 +18,9 @@ function activityLabel(activity: StoryActivity): string {
 
   const chars = [...activity.label.replace(/\s+/g, " ")];
 
-  return chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
+  const label = chars.length <= AGENT_LABEL_MAX ? chars.join("") : `${chars.slice(0, AGENT_LABEL_MAX - 1).join("")}…`;
+
+  return activity.host === LOCAL_HOST ? label : `${label} @${activity.host}`;
 }
 
 /**
@@ -45,13 +48,15 @@ function showsWaiting(
  * One Story in the list: its key and title on the left, its Stage on the right. The labels of its tags follow the
  * title in `inkMuted`, and they truncate before the title does. A blocked Story (with upstream
  * Stories in `waitingFor`) shows `⊘` before the other slots. A Story with factory `activity`
- * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. A blocked Story in a work Stage
+ * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. An agent on a worker host shows
+ * `@<host>` after the agent, and `connection lost` in `danger` when `hostLost` is true. A blocked Story in a work Stage
  * without activity shows `waiting for` and the IDs there. `indented` moves the key and title two columns to the
  * right, below the heading of a Stage section. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it.
  */
 export function StoryRow({
   story,
   activity,
+  hostLost = false,
   stage,
   waitingFor = [],
   tagLabels = [],
@@ -65,6 +70,8 @@ export function StoryRow({
   story: Story;
   /** The activity that the factory state records for the Story. */
   activity?: StoryActivity;
+  /** The worker host of the active agent has a lost connection. */
+  hostLost?: boolean;
   stage: { name: string; category: StageCategory };
   /** The IDs of the upstream Stories that are not complete. */
   waitingFor?: readonly string[];
@@ -106,7 +113,10 @@ export function StoryRow({
         )}
         {activity && (
           <Box flexShrink={0} paddingLeft={2}>
-            <Text color={theme.inkMuted}>▶ {activityLabel(activity)}</Text>
+            <Text color={theme.inkMuted}>
+              ▶ {activityLabel(activity)}
+              {hostLost && <Text color={theme.danger}> connection lost</Text>}
+            </Text>
           </Box>
         )}
         {showsWaiting(waitingFor, activity, stage.category) && (
