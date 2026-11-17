@@ -59,7 +59,7 @@ export function createManagerRemote(
     maxWorkers: (host) => getState(manager()).hosts.find((entry) => entry.id === host)?.maxWorkers ?? 1,
     model: (launch) => launch.thread.model ?? getState(manager()).settings.workerModel,
     sync: (host) => syncHost(manager(), host),
-    abandon: (threadId, host) => abandonThread(manager(), threadId, host),
+    abandon: (threadId, host, reason) => abandonThread(manager(), threadId, host, reason),
     abandoned: () => pendingAbandoned(manager()),
     outcome: (threadId, run) => writeRemoteOutcome(manager(), threadId, run),
     readLocked: (read) => serial(manager(), () => projectWrite(paths.root, read)),

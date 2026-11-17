@@ -68,10 +68,21 @@ function knownProviders(hosts: readonly WorkerHostView[]): ReadonlyMap<string, r
   );
 }
 
+/**
+ * Gives the host of the last worker Thread of the Story. A Thread that the user released while its host was offline
+ * gives no host, so that the Story does not wait for that host.
+ */
+function lastHostOf(last: ThreadRecord | undefined): string | undefined {
+  if (!last || last.abandoned?.reason === "release") {
+    return undefined;
+  }
+
+  return last.host ?? LOCAL_HOST;
+}
+
 /** Reads the facts of the Story. Git runs only when a worker host is in the list. */
 async function storyFacts(manager: Manager, request: PlacementRequest): Promise<StoryPlacementFacts> {
-  const last = request.threads.filter((thread) => thread.storyId === request.story.id).at(-1);
-  const lastHost = last ? (last.host ?? LOCAL_HOST) : undefined;
+  const lastHost = lastHostOf(request.threads.filter((thread) => thread.storyId === request.story.id).at(-1));
 
   if (getState(manager).hosts.length === 0) {
     return { lastHost };

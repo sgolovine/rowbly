@@ -156,9 +156,13 @@ rowbly thread list --story APP-01
 rowbly thread show <id>
 rowbly thread log <id> --tail 20
 rowbly thread cancel <id>
+rowbly thread release <id>
 rowbly thread resume <id>
 rowbly thread steer <id> --message "Use the new API"
 ```
+
+`thread release` stops a worker on a worker host as a cancel, but the Story does not wait for the
+user or for that host. The factory can then start a new worker for the Story.
 
 `thread log` has a maximum of 100 entries. Metadata lists do not load transcripts.
 Conversation reads use bounded pages from the selected current-format Pi history.

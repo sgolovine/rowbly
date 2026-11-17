@@ -63,8 +63,8 @@ describe("remote executor with abandoned Threads", () => {
         log.push(["sync", name]);
         await sync();
       },
-      abandon: async (threadId, name) => {
-        log.push(["abandon", threadId, name]);
+      abandon: async (threadId, name, reason) => {
+        log.push(["abandon", threadId, name, reason]);
         state.abandoned = [{ threadId, host: name }];
       },
       abandoned: async () => state.abandoned,
@@ -93,7 +93,27 @@ describe("remote executor with abandoned Threads", () => {
     offline.host.transport.disconnect();
     await offline.executor.cancel("t1");
     await waiting;
-    expect(offline.log.filter((entry) => entry[0] === "abandon")).toEqual([["abandon", "t1", "mini"]]);
+    expect(offline.log.filter((entry) => entry[0] === "abandon")).toEqual([["abandon", "t1", "mini", "cancel"]]);
+  });
+
+  it("abandons a release that cannot reach the host with the reason release, and queues a cancel", async () => {
+    const story = await createStory({ title: "Remote" }, project.ctx);
+    const online = setup();
+    const running = online.executor.launch({ thread: threadRecord(story.id), story }, quietEvents());
+    await vi.waitFor(() => expect(online.host.commands).toHaveLength(1));
+    await online.executor.release?.("t1");
+    expect(online.host.commands.map((command) => command.type)).toEqual(["launch", "cancel-thread"]);
+    online.host.sendRun("t1", { phase: "ended", endReason: "cancelled" });
+    await running;
+    expect(online.log.filter((entry) => entry[0] === "abandon")).toEqual([]);
+
+    const offline = setup();
+    const waiting = offline.executor.launch({ thread: threadRecord(story.id), story }, quietEvents());
+    await vi.waitFor(() => expect(offline.host.commands).toHaveLength(1));
+    offline.host.transport.disconnect();
+    await offline.executor.release?.("t1");
+    await waiting;
+    expect(offline.log.filter((entry) => entry[0] === "abandon")).toEqual([["abandon", "t1", "mini", "release"]]);
   });
 
   it("reconnects for an abandoned Thread without a run: the stop, the channel, the sync, then the outcome", async () => {
