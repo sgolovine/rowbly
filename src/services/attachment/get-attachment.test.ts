@@ -111,6 +111,7 @@ describe("getAttachment", () => {
           links: new Map(),
           queueChain: Promise.resolve(),
           reconnects: new Map(),
+          outcomes: new Map(),
         }),
       };
       await ensureLink(env, "mini", { transport: agent.transport, rowbly: "/r/rowbly", clone: "repo" }, hooks);

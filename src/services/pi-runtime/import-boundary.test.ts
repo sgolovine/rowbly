@@ -83,6 +83,9 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/remote-reconnect.js")).resolves.toHaveProperty("reconnectHost");
     await expect(import("../remote-executor/remote-stop.js")).resolves.toHaveProperty("shutdownRemote");
     await expect(import("../remote-executor/remote-sync.js")).resolves.toHaveProperty("syncHosts");
+    await expect(import("../remote-executor/remote-abandoned.js")).resolves.toHaveProperty("flushOutcomes");
+    await expect(import("../factory-manager/abandoned-threads.js")).resolves.toHaveProperty("pendingAbandoned");
+    await expect(import("../factory-manager/abandoned-attention.js")).resolves.toHaveProperty("heldAttention");
     await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
     await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
@@ -96,6 +99,8 @@ describe("Pi import boundary", () => {
     await expect(import("../outbox-apply/outbox-source.js")).resolves.toHaveProperty("transportOutboxSource");
     await expect(import("../outbox-apply/host-files.js")).resolves.toHaveProperty("readAppliedSeq");
     await expect(import("../factory-manager/outbox-attention.js")).resolves.toHaveProperty("syncHostOutbox");
+    await expect(import("../outbox-apply/held-entries.js")).resolves.toHaveProperty("holdEntry");
+    await expect(import("../outbox-apply/held-actions.js")).resolves.toHaveProperty("heldAction");
   });
 
   it("imports the host install service without loading Pi", async () => {

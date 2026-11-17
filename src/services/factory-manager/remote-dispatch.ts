@@ -8,6 +8,7 @@ import { createRemoteExecutor, type RemoteExecutor } from "../remote-executor/re
 import { withMember, withoutMember } from "../store/store.js";
 import { LOCAL_HOST } from "../thread/thread-types.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
+import { abandonThread, pendingAbandoned, writeRemoteOutcome } from "./abandoned-threads.js";
 import { type Attention, type FactoryDependencies, getState, type Manager, setState } from "./manager-state.js";
 import { syncHostOutbox } from "./outbox-attention.js";
 import type { WorkerExecutor } from "./worker-executor.js";
@@ -57,6 +58,9 @@ export function createManagerRemote(
     maxWorkers: (host) => getState(manager()).hosts.find((entry) => entry.id === host)?.maxWorkers ?? 1,
     model: (launch) => launch.thread.model ?? getState(manager()).settings.workerModel,
     sync: (host) => syncHost(manager(), host),
+    abandon: (threadId, host) => abandonThread(manager(), threadId, host),
+    abandoned: () => pendingAbandoned(manager()),
+    outcome: (threadId, run) => writeRemoteOutcome(manager(), threadId, run),
   });
 }
 

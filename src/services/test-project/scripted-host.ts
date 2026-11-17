@@ -3,13 +3,14 @@
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import {
+  type BytesResult,
   type HostVersions,
   helloFrame,
   localVersions,
   type RemoteCommand,
   type RequestResult,
 } from "../host-transport/host-transport.js";
-import { Store } from "../store/store.js";
+import { Store, withEntry } from "../store/store.js";
 import { createFakeHostTransport, type FakeHostTransport, type FakeRemoteChannel } from "./fake-host-transport.js";
 
 /** One request call that the host got. */
@@ -56,6 +57,12 @@ export interface ScriptedHost {
   readonly closeChannels: () => void;
   /** While it is on, each outbox call fails with the unreachable error of the transport. */
   readonly failOutbox: (fail: boolean) => void;
+  /** Adds an entry to the outbox of the host. `outbox` gives it until an `outbox-ack` with its `seq` or more. */
+  readonly addOutbox: (entry: { readonly seq: number }) => void;
+  /** Adds the file of an `attachment.add` entry, for `host blob <sha256>`. */
+  readonly addBlob: (sha256: string, bytes: Uint8Array) => void;
+  /** The entries of the outbox that the host did not remove. */
+  readonly outbox: readonly { readonly seq: number }[];
 }
 
 interface ScriptedState {
@@ -63,6 +70,8 @@ interface ScriptedState {
   readonly events: readonly string[];
   readonly channels: readonly FakeRemoteChannel[];
   readonly failOutbox: boolean;
+  readonly outbox: readonly { readonly seq: number }[];
+  readonly blobs: ReadonlyMap<string, Uint8Array>;
 }
 
 interface Scripted {
@@ -128,7 +137,7 @@ function answer(scripted: Scripted, command: RemoteCommand, input: unknown): Req
   if (name === "outbox" || name === "outbox-ack") {
     checkOutbox(scripted);
 
-    return ok(name === "outbox" ? { entries: [] } : { removed: 0, blobs: [] });
+    return name === "outbox" ? outboxAnswer(scripted, input) : acknowledge(scripted, input);
   }
 
   if (name === "cache-missing") {
@@ -149,6 +158,30 @@ function answer(scripted: Scripted, command: RemoteCommand, input: unknown): Req
   }
 
   return name === "submit" ? submitted(scripted, input) : ok({});
+}
+
+function outboxAnswer(scripted: Scripted, input: unknown): RequestResult {
+  const after = (input as { afterSeq?: number }).afterSeq ?? 0;
+
+  return ok({ entries: scripted.state.current.outbox.filter((entry) => entry.seq > after) });
+}
+
+function acknowledge(scripted: Scripted, input: unknown): RequestResult {
+  const seq = (input as { seq?: number }).seq ?? 0;
+  const { outbox } = scripted.state.current;
+  const kept = outbox.filter((entry) => entry.seq > seq);
+
+  scripted.state.update(() => ({ outbox: kept }));
+
+  return ok({ removed: outbox.length - kept.length, blobs: [] });
+}
+
+function blobAnswer(scripted: Scripted, command: RemoteCommand): BytesResult {
+  const bytes = scripted.state.current.blobs.get(command[3] ?? "");
+
+  return bytes
+    ? { exitCode: 0, bytes: Buffer.from(bytes), stderr: "" }
+    : { exitCode: 1, bytes: Buffer.alloc(0), stderr: "NOT_FOUND: The file does not exist" };
 }
 
 function openChannel(scripted: Scripted, remote: FakeRemoteChannel): undefined {
@@ -195,11 +228,19 @@ function closeAll(scripted: Scripted): void {
 export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedHost {
   const scripted: Scripted = {
     options,
-    state: new Store<ScriptedState>({ requests: [], events: [], channels: [], failOutbox: false }),
+    state: new Store<ScriptedState>({
+      requests: [],
+      events: [],
+      channels: [],
+      failOutbox: false,
+      outbox: [],
+      blobs: new Map(),
+    }),
     host: new Store<{ readonly value?: ScriptedHost }>({}),
   };
   const transport = createFakeHostTransport({
     request: (command, input) => answer(scripted, command, input),
+    bytes: (command) => blobAnswer(scripted, command),
     channel: (_command, remote) => openChannel(scripted, remote),
   });
   const host: ScriptedHost = {
@@ -217,6 +258,12 @@ export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedH
     sendRun: (threadId, patch) => sendRun(scripted, threadId, patch),
     closeChannels: () => closeAll(scripted),
     failOutbox: (fail) => void scripted.state.update(() => ({ failOutbox: fail })),
+    addOutbox: (entry) => void scripted.state.update((state) => ({ outbox: [...state.outbox, entry] })),
+    addBlob: (sha256, bytes) =>
+      void scripted.state.update((state) => ({ blobs: withEntry(state.blobs, sha256, bytes) })),
+    get outbox() {
+      return scripted.state.current.outbox;
+    },
   };
 
   scripted.host.update(() => ({ value: host }));

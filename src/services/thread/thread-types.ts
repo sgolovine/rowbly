@@ -36,6 +36,28 @@ export interface ThreadCheck {
   readonly durationSeconds?: number;
 }
 
+/** Why a remote Thread became abandoned: a cancel while its host was offline, or a release. */
+type AbandonReason = "cancel" | "release";
+
+/**
+ * The note of a remote Thread that the user cancelled or released while its host was offline. The main machine holds
+ * each later outbox entry of the Thread and does not apply it automatically.
+ */
+interface ThreadAbandon {
+  readonly at: string;
+  readonly reason: AbandonReason;
+  /** The last applied `seq` of the host at the time of the abandon. Only the entries after it are held. */
+  readonly appliedSeq: number;
+}
+
+/** The end of the last run of an abandoned Thread on its host. It does not change the status of the Thread. */
+export interface RemoteOutcome {
+  readonly endReason: "completed" | "failed" | "stopped" | "cancelled";
+  readonly endedAt?: string;
+  readonly result?: WorkerResult;
+  readonly failure?: { readonly code: string; readonly message: string };
+}
+
 export interface ThreadRecord {
   // Identity
   readonly version: 1;
@@ -90,6 +112,12 @@ export interface ThreadRecord {
   };
   /** The last checks of the worker, oldest first. */
   readonly checks?: readonly ThreadCheck[];
+
+  // Remote abandon
+  /** Set when the user cancelled or released the remote Thread while its host was offline. */
+  readonly abandoned?: ThreadAbandon;
+  /** The end of the run on the host, after the Thread became abandoned. */
+  readonly remoteOutcome?: RemoteOutcome;
 }
 
 export interface ThreadList {
@@ -113,10 +141,17 @@ export type ThreadPatch = Partial<
     | "lastTool"
     | "usage"
     | "checks"
+    | "abandoned"
+    | "remoteOutcome"
   >
 >;
 
 /** Tells if a status is final: a pending or running Thread is not. */
 export function isTerminal(status: ThreadStatus): boolean {
   return status !== "pending" && status !== "running";
+}
+
+/** Tells if the Thread is an abandoned remote Thread. A later step drops the inbound updates of such a Thread. */
+export function isAbandoned(thread: Pick<ThreadRecord, "abandoned">): boolean {
+  return thread.abandoned !== undefined;
 }

@@ -85,4 +85,40 @@ describe("thread", () => {
     expect(done.exitCode).toBe(0);
     expect(JSON.parse(done.stdout)).toMatchObject({ status: "completed", threadId: t.id });
   });
+  it("lists, applies and discards the held entries of an abandoned remote Thread without a factory", async () => {
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test", host: "mini" },
+      p.ctx,
+    );
+    const abandoned = { at: "2026-11-16T10:00:00.000Z", reason: "cancel" as const, appliedSeq: 0 };
+    await transitionThread(t.id, { expectedRevision: 1, status: "cancelled", patch: { abandoned } }, p.ctx);
+    const held = join(p.paths.runtimeDir, "hosts", "mini", "held", t.id);
+    await mkdir(held, { recursive: true });
+    const entry = {
+      seq: 5,
+      opId: "op",
+      threadId: t.id,
+      storyId: "ROW-1",
+      changes: [{ path: "title", before: "Missing", after: "X" }],
+    };
+    await writeFile(join(held, "entries.jsonl"), `${JSON.stringify(entry)}\n`);
+
+    const list = await runCli(["thread", "held", t.id], p.paths.root);
+    expect(list.exitCode).toBe(0);
+    expect(list.stdout).toContain("5  ROW-1  title");
+    const json = await runCli(["thread", "held", t.id, "--json"], p.paths.root);
+    expect(JSON.parse(json.stdout)).toMatchObject({ action: "list", host: "mini", entries: [{ seq: 5 }] });
+
+    const both = await runCli(["thread", "held", t.id, "--apply", "--discard", "--json"], p.paths.root);
+    expect(both.exitCode).not.toBe(0);
+    expect(both.stdout + both.stderr).toContain("VALIDATION");
+
+    const applied = await runCli(["thread", "held", t.id, "--apply", "--json"], p.paths.root);
+    expect(applied.exitCode).toBe(0);
+    expect(JSON.parse(applied.stdout)).toMatchObject({ action: "apply", applied: [], conflicts: [{ seq: 5 }] });
+
+    const discarded = await runCli(["thread", "held", t.id, "--discard"], p.paths.root);
+    expect(discarded.stdout).toContain("Discarded 1 held entries");
+    expect((await runCli(["thread", "held", t.id], p.paths.root)).stdout).toContain("No held entries.");
+  });
 });

@@ -34,6 +34,20 @@ export interface RemoteExecutorInput {
   readonly sync: (host: string) => Promise<void>;
   /** The time that a channel waits for the hello frame of the host. */
   readonly helloTimeoutMs?: number;
+
+  // Abandoned Threads
+  /** Records that a cancel of the Thread did not reach its host. The manager makes the Thread abandoned. */
+  readonly abandon?: (threadId: string, host: string) => Promise<void>;
+  /** Gives the abandoned remote Threads that have no remote outcome. */
+  readonly abandoned?: () => Promise<readonly AbandonedThread[]>;
+  /** Writes the remote outcome of an abandoned Thread from the last run frame. The status of the Thread stays. */
+  readonly outcome?: (threadId: string, run: HostRunState) => Promise<void>;
+}
+
+/** One abandoned remote Thread that waits for its remote outcome. */
+export interface AbandonedThread {
+  readonly threadId: string;
+  readonly host: string;
 }
 
 /** The remote executor. The manager also calls `syncHosts` at each scan. */
@@ -101,6 +115,8 @@ export interface RemoteState {
   readonly queueChain: Promise<void>;
   /** The reconnect of each host that runs now. */
   readonly reconnects: ReadonlyMap<string, Promise<string | undefined>>;
+  /** The last run frame of each abandoned Thread, until the outbox sync of its host. The key is the Thread id. */
+  readonly outcomes: ReadonlyMap<string, { readonly host: string; readonly frame: HostRunState }>;
 }
 
 /** The fixed environment of the remote executor, and the store of its runs and channels. */

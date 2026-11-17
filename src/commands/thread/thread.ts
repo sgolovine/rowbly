@@ -1,6 +1,8 @@
 import type { Command } from "commander";
 import { getThreadLog } from "../../services/conversation/conversation.js";
 import { sendFactoryCommand, steerThread } from "../../services/factory/factory.js";
+import { conflictText } from "../../services/factory-manager/outbox-attention.js";
+import { type HeldActionResult, type HeldEntryView, heldAction } from "../../services/outbox-apply/held-actions.js";
 import { getThread, LOCAL_HOST, listThreads } from "../../services/thread/thread.js";
 import { parsePosition, run } from "../output/output.js";
 
@@ -104,6 +106,39 @@ function registerShow(program: Command): void {
     );
 }
 
+function heldLine(entry: HeldEntryView): string {
+  return `${entry.seq}  ${entry.storyId}  ${entry.paths ? entry.paths.join(", ") : `attachment ${entry.attachmentId}`}`;
+}
+
+function heldText(result: HeldActionResult): string {
+  if (result.action === "discard") {
+    return `Discarded ${result.discarded} held entries of Thread ${result.threadId}.`;
+  }
+
+  if (result.action === "apply") {
+    const lines = result.conflicts.map((conflict) => conflictText(conflict));
+
+    return [`Applied ${result.applied.length} held entries of Thread ${result.threadId}.`, ...lines].join("\n");
+  }
+
+  return result.entries.map((entry) => heldLine(entry)).join("\n") || "No held entries.";
+}
+
+function registerHeld(program: Command): void {
+  program
+    .command("held <id>")
+    .description("List, apply or discard the held outbox entries of an abandoned remote thread")
+    .option("--apply", "apply the held entries with the compare-and-set of the outbox apply")
+    .option("--discard", "delete the held entries")
+    .action((id: string, opts: { apply?: boolean; discard?: boolean }, command: Command) =>
+      run(
+        command,
+        (ctx) => heldAction({ id, ...opts }, ctx),
+        (result) => heldText(result),
+      ),
+    );
+}
+
 /** Registers the `rowbly thread` subcommands on the `thread` command. */
 export function registerThreadCommands(program: Command): void {
   registerControl(program, "cancel");
@@ -112,4 +147,5 @@ export function registerThreadCommands(program: Command): void {
   registerLog(program);
   registerList(program);
   registerShow(program);
+  registerHeld(program);
 }

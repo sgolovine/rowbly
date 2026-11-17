@@ -15,7 +15,7 @@ const THREADS_DIR = "threads";
 const BASE_FILE = "base.json";
 
 /** Creates a private folder with mode 0700. */
-async function makePrivateDir(path: string): Promise<void> {
+export async function makePrivateDir(path: string): Promise<void> {
   await mkdir(path, { recursive: true, mode: 0o700 });
   await chmod(path, 0o700);
 }

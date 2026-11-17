@@ -42,7 +42,7 @@ test.
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt.                |
 | `model/`                                               | `model list`.                                                                                   |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.                            |
-| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                               |
+| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`, `held`.                                       |
 | `host/`                                                | `host add`, `check`, `login`, `list`, `update`, `remove`, `use`, `unuse`, hidden commands.      |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
@@ -253,6 +253,24 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.
     See [storage.md](storage.md#apply-on-the-main-machine).
+
+### Held entries
+
+`rowbly thread held <id> [--apply | --discard]` shows or changes the held outbox entries of an
+abandoned remote Thread. The command does not need a running factory. The service is
+`heldAction` in `src/services/outbox-apply/held-actions.ts`. See
+[native-factory/README.md](native-factory/README.md#abandoned-threads).
+
+- Without an option, the command lists the held entries: the `seq`, the Story, and the paths or the
+  attachment id of each entry. A Thread without held entries gives an empty list.
+- `--apply` applies the held entries under the Project write lock, with the same compare-and-set as
+  the outbox apply. The applied entries leave the held folder. An entry with a conflict stays held,
+  and the result lists the conflict. A second `--apply` has no new effect and gives no error.
+- `--discard` deletes the held folder of the Thread under the Project write lock. The canonical
+  Story does not change.
+- `--apply` and `--discard` together give a `VALIDATION` error.
+- `--json` gives `{ action, threadId, host, ... }`: `entries` for a list, `applied` and `conflicts`
+  for an apply, and `discarded` for a discard. `host` is `null` for a Thread of the main machine.
 
 ## Output and errors
 

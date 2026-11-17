@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
@@ -89,5 +89,36 @@ describe("thread change", () => {
     await expect(appendThreadRun(t.id, { expectedRevision: 2, ownerToken: "next" }, p.ctx)).rejects.toThrow(
       "Thread cannot resume",
     );
+  });
+
+  it("removes the abandoned note and the remote outcome when an abandoned Thread resumes", async () => {
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "owner", host: "mini" },
+      p.ctx,
+    );
+    await mkdir(join(p.paths.runtimeDir, "sessions", t.id), { recursive: true });
+    await writeFile(join(p.paths.runtimeDir, "sessions", t.id, "s.jsonl"), "");
+    const abandoned = { at: "2026-11-13T00:00:00.000Z", reason: "cancel" as const, appliedSeq: 2 };
+
+    await transitionThread(
+      t.id,
+      {
+        expectedRevision: 1,
+        status: "cancelled",
+        patch: { resumable: true, session: { id: t.id, file: `sessions/${t.id}/s.jsonl` }, abandoned },
+      },
+      p.ctx,
+    );
+    const ended = await transitionThread(
+      t.id,
+      { expectedRevision: 2, status: "cancelled", patch: { remoteOutcome: { endReason: "cancelled" } } },
+      p.ctx,
+    );
+    expect(ended).toMatchObject({ status: "cancelled", abandoned, remoteOutcome: { endReason: "cancelled" } });
+
+    const resumed = await appendThreadRun(t.id, { expectedRevision: 3, ownerToken: "next" }, p.ctx);
+    expect(resumed.status).toBe("pending");
+    expect(resumed.abandoned).toBeUndefined();
+    expect(resumed.remoteOutcome).toBeUndefined();
   });
 });

@@ -147,6 +147,8 @@ async function applyRunFrame(run: RemoteRun, frame: HostRunState, hooks: RunHook
 export interface RunHooks {
   readonly sync: (host: string) => Promise<void>;
   readonly stopHost: (run: RemoteRun) => Promise<void>;
+  /** Takes a run frame of a Thread without an active run, for example the end of an abandoned Thread. */
+  readonly otherRun?: (host: string, frame: HostRunState) => void;
 }
 
 /** Takes a `run` frame of the host. Only a frame of the command of the run belongs to it. */

@@ -17,6 +17,7 @@ function env(): RemoteEnv {
       links: new Map(),
       queueChain: Promise.resolve(),
       reconnects: new Map(),
+      outcomes: new Map(),
     }),
   };
 }
