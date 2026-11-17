@@ -1,5 +1,6 @@
 import { isMainThread, type MessagePort, parentPort, workerData } from "node:worker_threads";
 import { type AuthRuntime, getAuthStatus, listAvailableModels } from "../agent-auth/agent-auth.js";
+import { enableRowblyCompileCache } from "../compile-cache/compile-cache.js";
 import { RowblyError } from "../errors/errors.js";
 import { createFactoryRuntime } from "./factory-runtime.js";
 import { isPiWorkerData, type PiWorkerKind, type PiWorkerReply, type PiWorkerRequest } from "./pi-worker-protocol.js";
@@ -55,7 +56,37 @@ function serve(port: MessagePort): void {
   port.on("message", (request: PiWorkerRequest) => answerAndPost(port, request));
 }
 
-// Only the thread that the client starts serves requests. An import in a test or in the main thread does nothing.
-if (!isMainThread && parentPort && isPiWorkerData(workerData)) {
-  serve(parentPort);
+/** The thread facts and the compile cache function of `startPiWorker`. Tests inject them. */
+export interface PiWorkerStartDeps {
+  readonly isMainThread: boolean;
+  readonly parentPort: MessagePort | null;
+  readonly workerData: unknown;
+  readonly enableCompileCache: () => void;
 }
+
+const defaultStartDeps: PiWorkerStartDeps = {
+  isMainThread,
+  parentPort,
+  workerData,
+  enableCompileCache: enableRowblyCompileCache,
+};
+
+/**
+ * Serves requests in the thread that the client starts. It turns on the compile cache first, because a worker thread
+ * does not get the cache of the main thread, and Pi is a large module graph. The cache never throws and never writes
+ * output. In the main thread or in a test, the function does nothing and gives `false`.
+ */
+export function startPiWorker(overrides: Partial<PiWorkerStartDeps> = {}): boolean {
+  const deps = { ...defaultStartDeps, ...overrides };
+
+  if (deps.isMainThread || !deps.parentPort || !isPiWorkerData(deps.workerData)) {
+    return false;
+  }
+
+  deps.enableCompileCache();
+  serve(deps.parentPort);
+
+  return true;
+}
+
+startPiWorker();
