@@ -45,7 +45,8 @@ describe("TUI import boundary", () => {
     expect(
       imports.filter((specifier) => /^(ink|react)(\/|$)/.test(specifier) || specifier.startsWith("./tui/")),
     ).toEqual([]);
-    expect(source).toMatch(/await import\("\.\/tui\/index\.js"\)/);
+    // React loads its production bundles, because the helper sets NODE_ENV only for the load of the TUI.
+    expect(source).toMatch(/await loadInProductionMode\(\(\) => import\("\.\/tui\/index\.js"\)\)/);
   });
 
   it("finds a static import of the TUI", () => {
