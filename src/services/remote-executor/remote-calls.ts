@@ -6,7 +6,7 @@ import type { HostReceipt } from "../host-agent/host-agent-control.js";
 import type { HostRunPaths } from "../host-agent/host-agent-paths.js";
 import type { HostPrepareInput, HostPrepareResult } from "../host-agent/host-agent-prepare.js";
 import { HostProtocolError } from "../host-transport/host-errors.js";
-import type { RemoteCommand } from "../host-transport/host-transport.js";
+import type { HostVersions, RemoteCommand } from "../host-transport/host-transport.js";
 import type { HostConnection } from "./remote-types.js";
 
 /** The host and the project id of the calls. */
@@ -16,7 +16,7 @@ export interface CallTarget {
 }
 
 /** The kinds of command that the executor sends to the host agent. */
-type CommandType = "launch" | "resume" | "stop-thread" | "cancel-thread";
+export type CommandType = "launch" | "resume" | "stop-thread" | "cancel-thread";
 
 /** The time limit of the prepare call, because its input can be large. */
 const PREPARE_TIMEOUT_MS = 120_000;
@@ -111,4 +111,23 @@ export function submit(
   id: string = newCommandId(),
 ): Promise<HostReceipt | null> {
   return request<HostReceipt | null>(target, command(target, "submit"), { version: 1, id, type, threadId });
+}
+
+/** Asks the host for its versions, without a start of the host agent. A remote failure gives a HostProtocolError. */
+export async function ping(target: CallTarget, timeoutMs: number): Promise<HostVersions> {
+  const answer = await request<Partial<HostVersions> | null>(target, command(target, "ping"), {}, timeoutMs);
+
+  if (typeof answer?.protocol !== "number" || typeof answer.rowbly !== "string") {
+    throw new HostProtocolError("The answer of `rowbly host ping` has no versions");
+  }
+
+  return { protocol: answer.protocol, rowbly: answer.rowbly };
+}
+
+/**
+ * True when a call failed in the transport, so that the host can have the command or not. A command that the host
+ * ran and refused gives a HostProtocolError.
+ */
+export function isTransportError(error: unknown): boolean {
+  return !(error instanceof HostProtocolError);
 }

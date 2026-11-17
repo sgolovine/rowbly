@@ -106,7 +106,12 @@ describe("getAttachment", () => {
       const agent = createFakeHostAgent({ projectId: "p1", home: home.path, runner, pollMs: 10 });
       const env: RemoteEnv = {
         input: { projectId: "p1", paths: main.paths, ctx: main.ctx } as unknown as RemoteEnv["input"],
-        state: new Store<RemoteState>({ runs: new Map(), links: new Map() }),
+        state: new Store<RemoteState>({
+          runs: new Map(),
+          links: new Map(),
+          queueChain: Promise.resolve(),
+          reconnects: new Map(),
+        }),
       };
       await ensureLink(env, "mini", { transport: agent.transport, rowbly: "/r/rowbly", clone: "repo" }, hooks);
       await vi.waitFor(async () => expect(await readFile(agent.paths.channel, "utf8")).toContain("token"));

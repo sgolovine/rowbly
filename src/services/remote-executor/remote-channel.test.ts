@@ -12,7 +12,12 @@ const events = { failed: vi.fn(async () => undefined) } as unknown as WorkerEven
 function env(): RemoteEnv {
   return {
     input: { projectId: "p1" } as RemoteEnv["input"],
-    state: new Store<RemoteState>({ runs: new Map(), links: new Map() }),
+    state: new Store<RemoteState>({
+      runs: new Map(),
+      links: new Map(),
+      queueChain: Promise.resolve(),
+      reconnects: new Map(),
+    }),
   };
 }
 

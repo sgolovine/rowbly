@@ -21,14 +21,14 @@ async function makePrivateDir(path: string): Promise<void> {
 }
 
 /** Checks the folder `runtime/hosts/<host>/` of the host. It does not create it. */
-async function hostDir(paths: ProjectPaths, host: string): Promise<RuntimeDir> {
+export async function hostDir(paths: ProjectPaths, host: string): Promise<RuntimeDir> {
   validateHostId(host);
 
   return checkRuntimeDir(paths, `hosts/${host}`);
 }
 
 /** Checks and creates `runtime/hosts/<host>/` with mode 0700. */
-async function preparedHostDir(paths: ProjectPaths, host: string): Promise<RuntimeDir> {
+export async function preparedHostDir(paths: ProjectPaths, host: string): Promise<RuntimeDir> {
   const dir = await hostDir(paths, host);
 
   await makePrivateDir(await checkRuntimeDir(paths, "hosts").then((hosts) => hosts.path));

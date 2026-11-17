@@ -19,6 +19,7 @@ import { runtimePath } from "../runtime-files/runtime-files.js";
 import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import { shutdownFactory } from "./factory-shutdown.js";
+import { startHostHeartbeat } from "./host-heartbeat.js";
 import type { WorkerHostView } from "./host-slots.js";
 import { createLocalExecutor } from "./local-executor.js";
 import {
@@ -88,6 +89,8 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 
+  startHostHeartbeat(manager);
+
   return {
     owner,
     run: () => runFactory(manager),
@@ -132,6 +135,7 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     limit: recovered.limit,
     authStamp,
     hosts: recovered.hosts,
+    hostHealth: new Map(),
 
     active: new Map(),
     promptClaims: new Map(),

@@ -25,6 +25,17 @@ export class HostProtocolError extends RowblyError {
   readonly code = "HOST_PROTOCOL";
 }
 
+/** True when the error is an error of the connection to a worker host, or of the host protocol. */
+export function isHostTransportError(error: unknown): error is RowblyError {
+  return [
+    HostUnreachableError,
+    HostAuthFailedError,
+    HostVersionMismatchError,
+    HostTimeoutError,
+    HostProtocolError,
+  ].some((type) => error instanceof type);
+}
+
 const AUTH_FAILURES = ["Permission denied", "Host key verification failed"];
 const UNREACHABLE_FAILURES = [
   "Could not resolve hostname",
