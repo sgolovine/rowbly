@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { ComponentProps } from "react";
+import { type ComponentProps, memo } from "react";
 import type { FactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { Loading, Panel } from "../../components/index.js";
@@ -48,7 +48,7 @@ interface StoryPanelProps {
  * The Panel of the Story list, or of the Factory view. Without a Project, it holds the onboarding steps, because
  * they have no Modal.
  */
-export function StoryPanel({ title, focused, height, inner, onClick, body }: StoryPanelProps) {
+export const StoryPanel = memo(function StoryPanel({ title, focused, height, inner, onClick, body }: StoryPanelProps) {
   return (
     <Panel
       title={title}
@@ -81,4 +81,4 @@ export function StoryPanel({ title, focused, height, inner, onClick, body }: Sto
       </LayoutContext.Provider>
     </Panel>
   );
-}
+});

@@ -18,10 +18,28 @@ export interface ShellViewInput {
   readonly collapsed: ReadonlySet<string>;
   readonly marked: ReadonlySet<string>;
   readonly anchor: string | null;
+  /** The rows of the Story list, from `shellRows`. */
+  readonly rows: readonly StoryListRow[];
 }
 
 function visibleStories(stories: readonly Story[], stage: Stage | undefined): readonly Story[] {
   return stage ? stories.filter((story) => story.stage === stage.key) : stories;
+}
+
+/**
+ * The rows of the Story list of `board`. With a Stage filter, the list shows only the Stories of that Stage, without
+ * headings. The caller memoizes the result, so that a key that only moves the cursor does not build the rows again.
+ */
+export function shellRows(
+  board: Board | null | undefined,
+  stageKey: string | null,
+  collapsed: ReadonlySet<string>,
+): readonly StoryListRow[] {
+  const stages = board?.stages ?? [];
+  const stories = board?.stories ?? [];
+  const stage = stages.find((s) => s.key === stageKey);
+
+  return storyListRows(stages, visibleStories(stories, stage), stage ? undefined : collapsed, stories);
 }
 
 /** The row of the selection. Without a selection, the cursor starts on the first Story, not on a heading. */
@@ -72,7 +90,7 @@ export function shellView(input: ShellViewInput): ShellView {
   const stages = board?.stages ?? [];
   const stories = board?.stories ?? [];
   const stage = stages.find((s) => s.key === input.stageKey);
-  const rows = storyListRows(stages, visibleStories(stories, stage), stage ? undefined : input.collapsed, stories);
+  const { rows } = input;
   const cursor = rowCursor(rows, input.selectedId);
   const row = rows[cursor];
 
