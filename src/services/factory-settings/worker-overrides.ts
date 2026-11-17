@@ -11,6 +11,9 @@ export type StageWorkerModels = Readonly<Record<string, ModelChoice>>;
 /** The worker models of each Story, by Story ID and then by Stage key. */
 export type StoryWorkerModels = Readonly<Record<string, StageWorkerModels>>;
 
+/** The worker model of each tag, by tag value. The rule applies in all Stages. */
+export type TagWorkerModels = Readonly<Record<string, ModelChoice>>;
+
 /** The override maps of the factory settings. An empty map is not kept. */
 export type WorkerOverrideMaps = Pick<FactorySettings, "stageWorkerModels" | "storyWorkerModels">;
 
@@ -20,9 +23,32 @@ export interface OverrideTarget {
   readonly storyId?: string;
 }
 
-/** Gives the Story override for the Stage, else the Stage override. It does not use `workerModel`. */
-export function workerOverride(settings: FactorySettings, storyId: string, stage: string): ModelChoice | undefined {
-  return settings.storyWorkerModels?.[storyId]?.[stage] ?? settings.stageWorkerModels?.[stage];
+/** The Story, its Stage and its tags, for the selection of a worker model. */
+export interface WorkerTarget {
+  readonly storyId: string;
+  readonly stage: string;
+  /** The tags of the Story, in the order of its `tags` list. */
+  readonly tags?: readonly string[];
+}
+
+/** Gives the rule of the first tag of the Story that has a rule, in the order of the `tags` list. */
+export function tagWorkerModel(settings: FactorySettings, tags: readonly string[] = []): ModelChoice | undefined {
+  const rules = settings.tagWorkerModels ?? {};
+  const tag = tags.find((value) => Object.hasOwn(rules, value));
+
+  return tag === undefined ? undefined : rules[tag];
+}
+
+/**
+ * Gives the Story override for the Stage, else the rule of the first tag of the Story, else the Stage override. It
+ * does not use `workerModel`.
+ */
+export function workerOverride(settings: FactorySettings, target: WorkerTarget): ModelChoice | undefined {
+  return (
+    settings.storyWorkerModels?.[target.storyId]?.[target.stage] ??
+    tagWorkerModel(settings, target.tags) ??
+    settings.stageWorkerModels?.[target.stage]
+  );
 }
 
 /** The worker model that the manager selects for a Story. */
@@ -34,16 +60,16 @@ export interface WorkerSelection {
 }
 
 /**
- * Selects the worker model of a Story in a Stage: the Story override, the Stage override, the requested model,
- * then `workerModel`. When the provider of that model is paused, the first fallback model whose provider
- * is not paused applies. Without a model, Pi selects one, so the manager cannot check a pause.
+ * Selects the worker model of a Story in a Stage: the Story override, the tag rule, the Stage override, the requested
+ * model, then `workerModel`. When the provider of that model is paused, the first fallback model whose provider is not
+ * paused applies. Without a model, Pi selects one, so the manager cannot check a pause.
  */
 export function selectWorkerModel(
   settings: FactorySettings,
-  target: { readonly storyId: string; readonly stage: string; readonly model?: ModelChoice },
+  target: WorkerTarget & { readonly model?: ModelChoice },
   isPaused: (provider: string) => boolean,
 ): WorkerSelection {
-  const resolved = workerOverride(settings, target.storyId, target.stage) ?? target.model ?? settings.workerModel;
+  const resolved = workerOverride(settings, target) ?? target.model ?? settings.workerModel;
 
   if (!resolved || !isPaused(resolved.provider)) {
     return { choice: resolved, paused: false };
@@ -61,7 +87,8 @@ export function hasWorkerOverride(settings: FactorySettings, target: OverrideTar
   return map?.[target.stage] !== undefined;
 }
 
-function withKey<T>(map: Readonly<Record<string, T>> | undefined, key: string, value: T | undefined) {
+/** Gives the map with the key set to the value, or without the key without a value. An empty map is undefined. */
+export function withKey<T>(map: Readonly<Record<string, T>> | undefined, key: string, value: T | undefined) {
   const others = Object.entries(map ?? {}).filter(([k]) => k !== key);
   const entries = value === undefined ? others : [...others, [key, value] as const];
 

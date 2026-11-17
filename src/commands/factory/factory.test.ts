@@ -7,6 +7,7 @@ import { writeWatchdogState } from "../../services/factory-watchdog/factory-watc
 import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
 import { createStage } from "../../services/stage/stage.js";
 import { createStory } from "../../services/story/story.js";
+import { addTag } from "../../services/tag/tag.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { runCli } from "../test-cli/test-cli.js";
 
@@ -180,6 +181,72 @@ describe("factory commands", () => {
     expect((await cli("--story", story.id, "--stage", "DONE", "--clear-worker")).exitCode).toBe(0);
     expect((await cli("--stage", "BACKLOG", "--clear-worker")).exitCode).toBe(0);
     expect(await readFactory()).toEqual({ maxWorkers: 2, workerModel: worker });
+  });
+  describe("configure tag worker models", () => {
+    const cli = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
+    const worker = { provider: "anthropic", modelId: "claude-opus-5-5" };
+    const seed = { maxWorkers: 2, workerModel: worker, stageWorkerModels: { BACKLOG: worker }, git: { push: true } };
+
+    it("sets the rule of a tag, keeps the other keys, and clears it", async () => {
+      vi.spyOn(agentAuth, "authRuntime").mockResolvedValue({} as agentAuth.AuthRuntime);
+      const validate = vi
+        .spyOn(agentAuth, "validateModelChoice")
+        .mockImplementation(async (_runtime, choice) => choice);
+      await addTag({ label: "Bug", value: "bug" }, project.ctx);
+      await addTag({ label: "UI", value: "ui" }, project.ctx);
+      await writeFactory(JSON.stringify(seed));
+      const set = await cli("--tag", "bug", "--worker", "openai/gpt-sol");
+      expect(set.exitCode).toBe(0);
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(set.stdout).tagWorkerModels).toEqual({ bug: { provider: "openai", modelId: "gpt-sol" } });
+      expect(await readFactory()).toEqual({
+        ...seed,
+        tagWorkerModels: { bug: { provider: "openai", modelId: "gpt-sol" } },
+      });
+      expect((await cli("--tag", "ui", "--worker", "a/b", "--worker-thinking", "high")).exitCode).toBe(0);
+      expect((await readFactory()).tagWorkerModels).toEqual({
+        bug: { provider: "openai", modelId: "gpt-sol" },
+        ui: { provider: "a", modelId: "b", thinkingLevel: "high" },
+      });
+      expect((await cli("--tag", "bug", "--clear-worker")).exitCode).toBe(0);
+      expect((await readFactory()).tagWorkerModels).toEqual({
+        ui: { provider: "a", modelId: "b", thinkingLevel: "high" },
+      });
+      const cleared = await cli("--tag", "ui", "--clear-worker");
+      expect(cleared.exitCode).toBe(0);
+      expect(JSON.parse(cleared.stdout)).not.toHaveProperty("tagWorkerModels");
+      expect(await readFactory()).toEqual(seed);
+    });
+    it("clears the rule of a tag that the Project does not have", async () => {
+      await writeFactory(JSON.stringify({ ...seed, tagWorkerModels: { gone: worker } }));
+      expect((await cli("--tag", "gone", "--clear-worker")).exitCode).toBe(0);
+      expect(await readFactory()).toEqual(seed);
+    });
+    it("rejects an unknown tag and invalid flag sets without a write", async () => {
+      vi.spyOn(agentAuth, "authRuntime").mockResolvedValue({} as agentAuth.AuthRuntime);
+      vi.spyOn(agentAuth, "validateModelChoice").mockImplementation(async (_runtime, choice) => choice);
+      await addTag({ label: "Bug", value: "bug" }, project.ctx);
+      await writeFactory(JSON.stringify(seed));
+      const before = await project.read("rowbly.config.json");
+      const invalid = [
+        ["--tag", "nope", "--worker", "a/b"],
+        ["--tag", "bug", "--stage", "BACKLOG", "--worker", "a/b"],
+        ["--tag", "bug", "--story", "ROW-1", "--worker", "a/b"],
+        ["--tag", "bug", "--worker", "a/b", "--max-workers", "3"],
+        ["--tag", "bug", "--worker", "a/b", "--fallback-worker", "a/x"],
+        ["--tag", "bug", "--worker", "a/b", "--git-push"],
+        ["--tag", "bug", "--class", "hold"],
+        ["--tag", "bug", "--clear-worker", "--worker", "a/b"],
+        ["--tag", "bug"],
+        ["--tag", " ", "--worker", "a/b"],
+      ];
+      for (const args of invalid) {
+        const result = await cli(...args);
+        expect(result.exitCode, args.join(" ")).toBe(1);
+        expect(JSON.parse(result.stderr).error.code, args.join(" ")).toBe("VALIDATION");
+      }
+      expect(await project.read("rowbly.config.json")).toBe(before);
+    });
   });
   it("sets and clears the class of a Stage, and rejects invalid class flags without a write", async () => {
     await createStage({ label: "In Review", key: "IN_REVIEW", prompt: "Review it.", position: 2 }, project.ctx);

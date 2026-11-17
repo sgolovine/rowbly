@@ -22,6 +22,7 @@ interface ConfigureOptions {
   workerThinking?: ModelChoice["thinkingLevel"];
   stage?: string;
   story?: string;
+  tag?: string;
   clearWorker?: boolean;
   class?: string;
   clearClass?: boolean;
@@ -180,14 +181,15 @@ function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set the worker model, fallback worker models, worker limit, worker model overrides, Stage classes, Git commit settings, Git sync, check limits, pull-upstream and placement",
+      "Set the worker model, fallback worker models, worker limit, worker model overrides, tag worker models, Stage classes, Git commit settings, Git sync, check limits, pull-upstream and placement",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--worker <model>", "provider/model")
     .option("--worker-thinking <level>", "supported thinking level")
     .option("--stage <key>", "select the Stage of a worker model override or of a class")
     .option("--story <id>", "with --stage, set the override of this Story in the Stage")
-    .option("--clear-worker", "with --stage, remove the worker model override")
+    .option("--tag <value>", "set the worker model rule of the Stories with this tag, in all Stages")
+    .option("--clear-worker", "with --stage or --tag, remove the worker model override")
     .option("--class <class>", "with --stage, set the class of the Stage: work or hold")
     .option("--clear-class", "with --stage, remove the class of the Stage")
     .option(
