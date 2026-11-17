@@ -1,11 +1,9 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { updateFactoryState } from "../factory-state/factory-state.js";
 import { initProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
 import { createStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, listThreads } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
@@ -71,11 +69,7 @@ describe("worker executor", () => {
     await mkdir(root);
     vi.stubEnv("HOME", join(dir.path, "home"));
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
-    await createStage({ label: "Work", key: "WORK", prompt: PROMPT }, { cwd: root });
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { WORK: { hash: promptHash(PROMPT), class: "work" } },
-    }));
+    await createStage({ label: "Work", key: "WORK", prompt: PROMPT, position: 2 }, { cwd: root });
   });
 
   afterEach(async () => {

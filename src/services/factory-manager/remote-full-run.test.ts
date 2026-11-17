@@ -8,7 +8,6 @@ import { writeCliShim } from "../../commands/factory-runner/cli-shim.js";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import { HOST_SYNC_REASON } from "../factory-policy/factory-policy.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
-import { updateFactoryState } from "../factory-state/factory-state.js";
 import { hostAgentPaths, threadPaths } from "../host-agent/host-agent-paths.js";
 import { readHostRun } from "../host-agent/host-run-state.js";
 import { createHostRunner } from "../host-agent/host-runner.js";
@@ -18,7 +17,6 @@ import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { initProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, getStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { createFakeHostAgent, type FakeHostAgent } from "../test-project/fake-host-agent.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, type ThreadRecord } from "../thread/thread.js";
@@ -59,7 +57,7 @@ describe("factory manager with a host agent", () => {
     vi.stubEnv("PI_CODING_AGENT_DIR", join(dir.path, "agent"));
     vi.stubEnv("PI_OFFLINE", "1");
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
-    await createStage({ label: "Work", key: "WORK", prompt: PROMPT }, { cwd: root });
+    await createStage({ label: "Work", key: "WORK", prompt: PROMPT, position: 2 }, { cwd: root });
     await git(dir.path, "init", "-q", root);
     await git(root, "add", ".rowbly");
     await git(root, "-c", "user.name=T", "-c", "user.email=t@example.com", "commit", "-q", "-m", "initial");
@@ -95,10 +93,6 @@ describe("factory manager with a host agent", () => {
       { maxWorkers: 1, workerModel: { provider: "worker", modelId: worker.getModel().id } },
       { cwd: root },
     );
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { WORK: { hash: promptHash(PROMPT), class: "work" } },
-    }));
 
     const projectId = hostProjectId(root);
     const agent = createFakeHostAgent({
@@ -192,6 +186,30 @@ describe("factory manager with a host agent", () => {
     const base = join(root, ".rowbly/runtime/hosts/mini/threads", threadId, "base.json");
     expect(JSON.parse(await readFile(base, "utf8"))).toMatchObject({ version: 1, threadId, host: "mini" });
     expect((await stat(base)).mode & 0o777).toBe(0o600);
+  }, 60_000);
+
+  it("raises the worker attention entry for a blocker that a remote worker reports", async () => {
+    const f = await fixture();
+    const story = await createStory({ title: "Remote blocker", stage: "WORK" }, { cwd: root });
+    f.worker.setResponses([
+      tool("report_result", { outcome: "blocked", summary: "Blocked", blockers: ["Needs a key"], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+
+    const { threadId } = await f.manager.reserveWorker({
+      storyId: story.id,
+      stage: "WORK",
+      requestId: "r",
+      host: "mini",
+    });
+    await completed(threadId);
+    await freeSlot(f);
+
+    const attention = new Map((await f.manager.snapshot()).attention as [string, { text: string; storyId?: string }][]);
+    const entry = attention.get(`worker:${story.id}`);
+    expect(entry?.storyId).toBe(story.id);
+    expect(entry?.text).toContain(`${story.id} in WORK: worker ${threadId}`);
+    expect(entry?.text).toContain("Needs a key");
   }, 60_000);
 
   it("waits for the host sync after a failed outbox apply, and the next scan applies it and completes the Thread", async () => {

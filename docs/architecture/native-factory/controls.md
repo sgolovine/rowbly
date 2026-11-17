@@ -19,6 +19,8 @@ viewer or the AI section of Settings.
 | `factory configure --placement <policy>`                                   | Set the placement policy of new workers.                              |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
+| `factory configure --stage <key> --class work\|hold`                       | Set the class of a Stage in `factory.stageClasses`.                   |
+| `factory configure --stage <key> --clear-class`                            | Remove the class of a Stage. The manager uses its rule again.         |
 | `factory configure --fallback-worker <provider/model>` (repeat)            | Replace the fallback worker models, in the given order.               |
 | `factory configure --clear-fallback-workers`                               | Remove the fallback worker models.                                    |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
@@ -44,6 +46,11 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
   `--pull-upstream`, `--placement`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
   `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
+- `--class` with a value that is not `work` or `hold`.
+- `--class` or `--clear-class` without `--stage`.
+- `--class` together with `--clear-class`.
+- `--class` or `--clear-class` together with a flag other than `--stage`, for example `--story` or
+  `--worker`.
 - `--fallback-worker` with a value that is not `provider/model`.
 - `--fallback-worker` together with `--clear-fallback-workers`.
 - `--fallback-worker` or `--clear-fallback-workers` together with `--stage`, `--story` or
@@ -126,6 +133,9 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 - The header shows the active and pending counts when space permits.
 - When the live factory has checks, the `Checks` row shows the running and queued checks, the limit
   and the free memory.
+- When the live factory has a worker host, the `Hosts` list shows each host: the id, the connection
+  state, `<used>/<max>` slots and, for a host that is not `connected` or `degraded`, the time since
+  the last contact or `no contact`. Without a worker host, the list does not show.
 - In Factory controls:
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
@@ -173,7 +183,8 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 - The Stage sidebar filters the Threads by their Stage.
 - `enter` or a click on a Thread opens the Thread in the Story sidebar, on the right of the Thread
   list: the Thread metadata and its conversation.
-- The view and the Thread in the Story sidebar are read-only, except for the steering input. Use the Threads tab of a Story to interrupt or resume a Thread.
+- The view and the Thread in the Story sidebar are read-only, except for the steering input. Use the Threads tab of a Story to interrupt or resume a Thread, or to apply or discard held entries.
+- Each row shows the host column and `connection lost (…)` with the rules of the Threads tab.
 - A running worker Thread shows a steering input under its conversation. See
   [Steering input](#steering-input).
 
@@ -185,6 +196,16 @@ See [../tui.md](../tui.md#the-factory-view) for the structure.
 - Select a Thread to Peek at its conversation.
 - `x` interrupts an active Thread, with confirmation.
 - `r` resumes an eligible Thread through the active factory.
+- When the list has a remote Thread, each row shows the host of its Thread. A remote Thread with a
+  lost connection shows `connection lost (…)` in `danger`.
+- An abandoned remote Thread shows `abandoned` and the number of its held entries.
+- `a` applies the held entries of the selected abandoned Thread. A toast gives the number of applied
+  entries and the number of conflicts. An entry with a conflict stays held.
+- `d` discards the held entries of the selected abandoned Thread, with confirmation. A toast gives
+  the number of discarded entries.
+- `a` and `d` do not need a running factory. They do nothing on a Thread that is not abandoned or
+  that has no held entries. The key hints show them only for an abandoned Thread with held entries.
+  After the action, the tab reads the Threads again.
 - A running Thread shows a steering input under its conversation. See [Steering input](#steering-input).
 
 ## Steering input

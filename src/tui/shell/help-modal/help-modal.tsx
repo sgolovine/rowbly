@@ -23,9 +23,10 @@ export function HelpModal({ hints, onClose }: { hints: readonly KeyHint[]; onClo
       <Box marginTop={1}>
         <Text color={theme.inkMuted}>
           <Text color={theme.accent}>▶</Text> shows a worker that the factory state (.rowbly/state.json) records for the
-          Stage of the Story. Rowbly does not check that the worker is alive. ▶ conflict shows more than one recorded
-          worker. ▶ unknown shows a record that is not complete. Factory in the header shows the factory of this
-          Project: off, or the running workers and the worker limit. ! shows the number of problems.
+          Stage of the Story. Rowbly does not check that the worker is alive. ▶ opus @ws1 shows a worker on the worker
+          host ws1, and connection lost shows that the factory lost the connection to that host. ▶ conflict shows more
+          than one recorded worker. ▶ unknown shows a record that is not complete. Factory in the header shows the
+          factory of this Project: off, or the running workers and the worker limit. ! shows the number of problems.
         </Text>
       </Box>
     </Modal>

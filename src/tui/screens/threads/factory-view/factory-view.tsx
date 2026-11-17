@@ -1,7 +1,7 @@
 import { Text } from "ink";
 import { Loading, ScrollBody } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
-import { ThreadRow } from "../../stories/index.js";
+import { ThreadRow, threadHostProps } from "../../stories/index.js";
 import { ThreadSectionRow } from "../thread-section-row/index.js";
 import { clickRow } from "./factory-view-actions.js";
 import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
@@ -15,7 +15,7 @@ import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
  */
 export function FactoryView(props: FactoryViewProps) {
   const { stages, active, clickable, compact, emptyText } = props;
-  const { env, data, rows, empty, now, layout } = useFactoryView(props);
+  const { env, data, rows, empty, now, layout, hostView } = useFactoryView(props);
 
   if (!data.data) {
     return data.loading ? <Loading label="Loading Threads…" /> : null;
@@ -53,6 +53,7 @@ export function FactoryView(props: FactoryViewProps) {
             selected={index === env.cursor}
             clickable={clickable}
             compact={compact}
+            {...threadHostProps(hostView, row.thread)}
             onClick={() => clickRow(env, index)}
           />
         ),

@@ -130,15 +130,36 @@ export function isComplete(stages: readonly DependencyStage[], stageKey: string)
   return stages.length > 0 && stages.at(-1)?.key === stageKey;
 }
 
+/**
+ * The Stories of a Project by ID, built one time, so that a lookup for each Story does not build a new Map. The
+ * `dependsOn` of each Story is on its entry in `byId`.
+ */
+export interface DependencyIndex {
+  readonly byId: ReadonlyMap<string, DependencyStory>;
+}
+
+/** Builds the dependency index of `stories`. */
+export function dependencyIndex(stories: readonly DependencyStory[]): DependencyIndex {
+  return { byId: new Map(stories.map((story) => [story.id, story])) };
+}
+
 /** Whether the upstream Story `id` exists and is not complete. */
-function isWaiting(
-  byId: ReadonlyMap<string, DependencyStory>,
-  stages: readonly DependencyStage[],
-  id: string,
-): boolean {
-  const story = byId.get(id);
+function isWaiting(index: DependencyIndex, stages: readonly DependencyStage[], id: string): boolean {
+  const story = index.byId.get(id);
 
   return story !== undefined && !isComplete(stages, story.stage);
+}
+
+/** The same as `waitingFor`, with an index that the caller built one time for many Stories. */
+export function indexedWaitingFor(index: DependencyIndex, stages: readonly DependencyStage[], id: string): string[] {
+  const upstream = index.byId.get(id)?.dependsOn ?? [];
+
+  return upstream.filter((dep) => isWaiting(index, stages, dep));
+}
+
+/** The same as `isBlocked`, with an index that the caller built one time for many Stories. */
+export function indexedIsBlocked(index: DependencyIndex, stages: readonly DependencyStage[], id: string): boolean {
+  return indexedWaitingFor(index, stages, id).length > 0;
 }
 
 /**
@@ -150,10 +171,7 @@ export function waitingFor(
   stages: readonly DependencyStage[],
   id: string,
 ): string[] {
-  const byId = new Map(stories.map((story) => [story.id, story]));
-  const upstream = byId.get(id)?.dependsOn ?? [];
-
-  return upstream.filter((dep) => isWaiting(byId, stages, dep));
+  return indexedWaitingFor(dependencyIndex(stories), stages, id);
 }
 
 /** Whether the Story `id` has one or more upstream Stories that are not complete. */
@@ -162,7 +180,7 @@ export function isBlocked(
   stages: readonly DependencyStage[],
   id: string,
 ): boolean {
-  return waitingFor(stories, stages, id).length > 0;
+  return indexedIsBlocked(dependencyIndex(stories), stages, id);
 }
 
 /**

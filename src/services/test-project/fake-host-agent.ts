@@ -10,6 +10,7 @@ import { type HostAgentPaths, hostAgentPaths, hostRunPathsAnswer } from "../host
 import { prepareHostThread } from "../host-agent/host-agent-prepare.js";
 import type { HostWorkRunner } from "../host-agent/host-agent-work.js";
 import { runHostAttach } from "../host-agent/host-attach.js";
+import { applyHostInbound } from "../host-agent/host-inbound.js";
 import { hostPing } from "../host-agent/host-ping.js";
 import { hostRuns } from "../host-agent/host-runs.js";
 import { hostSessionBytes } from "../host-agent/host-session-bytes.js";
@@ -109,6 +110,7 @@ const REQUESTS: Readonly<Record<string, RequestHandler>> = {
   "cache-missing": (fake, input) => hostCacheMissing(fake.paths, input),
   "run-paths": (fake, input) => Promise.resolve(hostRunPathsAnswer(fake.options.projectId, input, fake.options.home)),
   prepare: (fake, input) => prepareHostThread(fake.paths, input, { home: fake.options.home }),
+  inbound: (fake, input) => applyHostInbound(fake.paths, input),
   serve,
   submit: (fake, input) => submitHostCommand(fake.paths, JSON.stringify(input)),
   ping: (fake) => hostPing(fake.paths, fake.options.home),

@@ -1,5 +1,5 @@
 import { Box, type DOMElement, Text } from "ink";
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import { Button, type ButtonProps } from "../button/index.js";
@@ -57,7 +57,7 @@ function moreText(arrow: string, count: number): string {
  * A click on the `✎` of an `editable` entry focuses the sidebar and calls `onEdit`. A `movable` entry
  * dropped on another row focuses the sidebar and calls `onMove` with the index of that row.
  */
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   title,
   entries,
   current,
@@ -131,4 +131,4 @@ export function Sidebar({
       )}
     </Box>
   );
-}
+});
