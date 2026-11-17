@@ -53,8 +53,8 @@ The screen areas in `screens/` are:
 Modal has these views:
 
 - **Main.** The overview, the `Attention` list, the queue and the buttons. `s` starts, `x` stops,
-  `enter` opens the supervisor, `w` opens the warnings, `h` opens the history and `a` opens the AI
-  settings. The `Attention` list shows a maximum of five rows. A click on a row selects the row: the
+  `w` opens the warnings, `h` opens the history and `a` opens the AI settings. The overview has no
+  model row. The `Attention` list shows a maximum of five rows. A click on a row selects the row: the
   row shows the `▌` bar and the selection fill. A click on the selected row opens the detail view of
   that warning. A click on a different row moves the selection and does not open a warning. If the
   selected warning goes away, no row stays selected. The `Attention` list has no keys.
@@ -71,8 +71,9 @@ Modal has these views:
 - **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
   Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
   attention entry. `esc` goes back.
-- **Supervisor** and **History.** The conversation and the history of the old supervisor Threads.
-  The factory does not create supervisor Threads now. Without one, the views have no Thread.
+- **History.** `Factory › Old supervisor Threads` lists the old supervisor Threads, the newest first.
+  The factory does not create supervisor Threads now. `enter` shows the read-only conversation of the
+  selected Thread (`FactoryOldThread`), and `esc` goes back to the list.
 
 `factoryProblems` in `factory-status.ts` makes the warnings. Each warning has a kind: `heartbeat`,
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
@@ -540,8 +541,8 @@ the components show.
 
 A person can see, set and remove the worker model overrides of the factory settings in the TUI. The
 factory uses the Story override, then the Stage override, then the worker model. The TUI writes
-the overrides only through `setWorkerOverride` in `src/services/factory-settings/`. The supervisor
-reads the factory settings again on each turn, so a change applies to the next worker without a
+the overrides only through `setWorkerOverride` in `src/services/factory-settings/`. The manager
+reads the factory settings again on each pass, so a change applies to the next worker without a
 restart.
 
 Both places use `ModelPickerModal` (`settings/model-picker-modal/`) and `StageModelList`

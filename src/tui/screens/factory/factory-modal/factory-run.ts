@@ -23,11 +23,9 @@ export interface FactoryRunEnv {
 export interface FactoryKeyEnv extends FactoryRunEnv {
   readonly canStart: boolean;
   readonly canStop: boolean;
-  readonly canInspect: boolean;
   readonly canWarnings: boolean;
   readonly openWarnings: () => void;
   readonly setConfirm: Dispatch<SetStateAction<boolean>>;
-  readonly setInspect: Dispatch<SetStateAction<boolean>>;
   readonly setHistory: Dispatch<SetStateAction<boolean>>;
   readonly onAiSettings: (() => void) | undefined;
 }
@@ -65,7 +63,7 @@ async function changeFactory(env: FactoryRunEnv, kind: FactoryRunKind): Promise<
   await stopFactory({}, env.ctx);
 }
 
-/** The keys of the Factory controls: `s` starts, `x` asks to stop, `enter` shows the supervisor. */
+/** The keys of the Factory controls: `s` starts and `x` asks to stop. */
 export function handleFactoryKey(env: FactoryKeyEnv, input: string, key: Key): void {
   if (key.ctrl || key.meta) {
     return;
@@ -83,16 +81,10 @@ export function handleFactoryKey(env: FactoryKeyEnv, input: string, key: Key): v
     return;
   }
 
-  if (key.return && env.canInspect) {
-    env.setInspect(true);
-
-    return;
-  }
-
   openOther(env, input);
 }
 
-/** `w` shows the warnings, `h` shows the supervisor history and `a` opens the AI settings. */
+/** `w` shows the warnings, `h` shows the old supervisor Threads and `a` opens the AI settings. */
 function openOther(env: FactoryKeyEnv, input: string): void {
   if (input === "w" && env.canWarnings) {
     env.openWarnings();

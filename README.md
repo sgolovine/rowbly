@@ -51,14 +51,14 @@ Run `rowbly doctor` to examine the Project files. Run `rowbly --help` to see the
 2. Run `rowbly auth login` in an interactive terminal.
 3. Select a provider and follow its account or API-key prompts.
 4. Run `rowbly model list` to see configured models and supported thinking levels.
-5. Set the factory models and worker limit:
+5. Set the worker model and the worker limit:
 
    ```sh
-   rowbly factory configure --supervisor <provider/model> --worker <provider/model> --max-workers 4
+   rowbly factory configure --worker <provider/model> --max-workers 4
    ```
 
-`--supervisor-thinking` and `--worker-thinking` select a supported thinking level for each role.
-Without explicit choices, Pi selects default models. Rowbly does not change global Pi settings.
+`--worker-thinking` selects a supported thinking level for the workers.
+Without an explicit choice, Pi selects a default model. Rowbly does not change global Pi settings.
 Factory preferences stay in the `factory` key of `.rowbly/rowbly.config.json`. Credentials stay in Pi
 storage, outside the Project.
 
@@ -72,7 +72,7 @@ Models and Limits. Use `←` and `→` to change the tab.
 
 - **Providers** shows the signed-in providers. The `d` key signs out with confirmation, and `r` reloads.
   The `n` key opens a page with the other providers. On that page, Enter signs in and Escape goes back.
-- **Models** shows the supervisor model and the worker model. The `s` and `w` keys change them. The picker
+- **Models** shows the worker model. The `w` key changes it. The picker
   offers supported thinking levels and `Pi default`.
 - **Limits** shows the worker limit. The `l` key edits it.
 
@@ -85,8 +85,8 @@ Escape cancels sign-in and returns focus.
 3. Press `s` to start the native factory.
 
 The header shows Factory status and worker counts when space permits.
-Factory controls show the supervisor model, worker counts, queue reasons, provider pauses and attention items.
-Enter opens the supervisor conversation. The `a` key opens the AI section of Settings.
+Factory controls show the worker counts, queue reasons, provider pauses and attention items.
+The `h` key opens the old supervisor Threads. The `a` key opens the AI section of Settings.
 
 The factory runs in a separate daemon. Close the TUI to leave the factory active.
 
@@ -110,15 +110,14 @@ A Project without `state.json` remains valid and shows no activity status line b
 
 Each factory agent gets the Rowbly system prompts first. Then it gets the prompts of your Project:
 
-| File                            | Prompt            | Who gets it                    |
-| ------------------------------- | ----------------- | ------------------------------ |
-| `.rowbly/prompts/SYSTEM.md`     | Project prompt    | The supervisor and all workers |
-| `.rowbly/prompts/SUPERVISOR.md` | Supervisor prompt | The supervisor only            |
-| `.rowbly/prompts/WORKER.md`     | Worker prompt     | All workers, in all Stages     |
-| `.rowbly/stages/<KEY>.md`       | Stage prompt      | Only the workers of that Stage |
+| File                        | Prompt         | Who gets it                    |
+| --------------------------- | -------------- | ------------------------------ |
+| `.rowbly/prompts/SYSTEM.md` | Project prompt | All workers                    |
+| `.rowbly/prompts/WORKER.md` | Worker prompt  | All workers, in all Stages     |
+| `.rowbly/stages/<KEY>.md`   | Stage prompt   | Only the workers of that Stage |
 
 The Rowbly system prompts have the highest priority. Your prompts cannot remove a system rule.
-After the system prompts, the Stage prompt comes first, then the Supervisor or Worker prompt, then the Project prompt.
+After the system prompts, the Stage prompt comes first, then the Worker prompt, then the Project prompt.
 
 Edit a prompt in the file, in Settings › Project › Prompts, or with the CLI:
 
@@ -128,7 +127,7 @@ rowbly prompt get worker
 rowbly prompt set worker --file worker-prompt.md
 ```
 
-`rowbly init` creates the three files with no text. A missing file has no text.
+`rowbly init` creates the two files with no text. A missing file has no text.
 `rowbly doctor --fix` creates a missing prompt file.
 Rowbly does not read the old `.rowbly/ROWBLY.md` now. `rowbly doctor --fix` moves its text to `prompts/SYSTEM.md` when that prompt has no text.
 

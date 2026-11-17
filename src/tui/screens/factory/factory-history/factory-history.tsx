@@ -5,10 +5,10 @@ import { historyModel } from "../factory-modal-text.js";
 
 /** The props of `FactoryHistory`. */
 export interface FactoryHistoryProps {
-  /** The supervisor Threads, the oldest first. */
+  /** The old supervisor Threads, the oldest first. */
   readonly threads: readonly ThreadRecord[];
-  /** The supervisor that the list highlights first. */
-  readonly supervisorId: string | undefined;
+  /** The Thread that the list highlights first. */
+  readonly selectedId: string | undefined;
   /** The most rows that the room around the Modal lets the list show. */
   readonly height: number | undefined;
   readonly active: boolean;
@@ -21,10 +21,10 @@ function historyLimit(height: number | undefined): number {
   return Math.max(1, Math.min(8, (height ?? 20) - 10));
 }
 
-/** The supervisor Threads of the factory, the newest first. `enter` picks a Thread to peek. */
+/** The old supervisor Threads of the factory, the newest first. `enter` shows the conversation of a Thread. */
 export function FactoryHistory({
   threads,
-  supervisorId,
+  selectedId,
   height,
   active,
   onFilteringChange,
@@ -41,10 +41,10 @@ export function FactoryHistory({
       }))}
       defaultIndex={Math.max(
         0,
-        newest.findIndex((thread) => thread.id === supervisorId),
+        newest.findIndex((thread) => thread.id === selectedId),
       )}
       limit={historyLimit(height)}
-      emptyText="No supervisor history"
+      emptyText="No old supervisor Threads"
       isActive={active}
       onFilteringChange={onFilteringChange}
       onSelect={(item) => onPick(item.value)}

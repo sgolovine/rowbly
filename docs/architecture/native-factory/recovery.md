@@ -234,8 +234,7 @@ retry applies.
 ### Connectivity in the status
 
 The factory status (`status.json` and `rowbly factory status --json`) has the field `connectivity`.
-The providers are those of the supervisor model, the worker model and the worker overrides of the
-factory settings.
+The providers are those of the worker model and the worker overrides of the factory settings.
 
 | Value      | Condition                                     |
 | ---------- | --------------------------------------------- |
@@ -351,12 +350,12 @@ activity and the end that arrived while the daemon was off still go to the manag
 ## Adopt external attempts
 
 Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
-of the `factory` skill. Native start preserves the active attempts of that external supervisor.
+of the `factory` skill. Native start preserves the active attempts of that external skill.
 
 - `--adopt-external` marks these attempts as interrupted. It does not stop external workers or import
   their conversations.
 - Stop the external workers before this explicit adoption.
-- Never run both supervisors together. Old copies of the external skill can ignore native ownership.
+- Never run the external skill and the native factory together. Old copies of the external skill can ignore native ownership.
 
 ## Related
 

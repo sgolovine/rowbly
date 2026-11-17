@@ -14,7 +14,7 @@ viewer or the AI section of Settings.
 | `auth providers`, `auth status`                                            | Show login methods and configured status, without a health check.     |
 | `auth login [provider] [--type oauth\|api_key]`, `auth logout <provider>`  | Sign in through an interactive prompt, or remove a stored credential. |
 | `model list [--provider <id>]`                                             | Show configured models and supported thinking levels.                 |
-| `factory configure`                                                        | Set workers, role models, thinking levels, commits, Git sync, checks. |
+| `factory configure`                                                        | Set workers, the worker model, thinking level, commits, sync, checks. |
 | `factory configure --pull-upstream on\|off`                                | Turn on or turn off the move of stuck upstream Stories.               |
 | `factory configure --placement <policy>`                                   | Set the placement policy of new workers.                              |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
@@ -43,8 +43,7 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 - `--clear-worker` together with `--worker` or `--worker-thinking`.
 - `--pull-upstream` with a value that is not `on` or `off`.
 - `--placement` with a value that is not `prefer-local`, `most-free` or `prefer-remote`.
-- `--stage` together with `--supervisor`, `--supervisor-thinking`, `--max-workers`,
-  `--pull-upstream`, `--placement`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
+- `--stage` together with `--max-workers`, `--pull-upstream`, `--placement`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
   `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
 - `--class` with a value that is not `work` or `hold`.
@@ -155,12 +154,12 @@ See [recovery.md](recovery.md#release-a-parked-story).
 - In Factory controls:
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
-  - `enter` opens the conversation of the last old supervisor Thread, if one exists. The factory
-    does not create supervisor Threads now.
   - `w` opens the list of all warnings (`Factory › Attention`). The key works only when the live
     factory has warnings.
   - A click on a row of the `Attention` list opens the detail view of that warning.
-  - `h` opens the history.
+  - `h` opens the history of the old supervisor Threads (`Factory › Old supervisor Threads`). The
+    factory does not create supervisor Threads now. In the history, `enter` shows the read-only
+    conversation of the selected Thread, and `esc` goes back to the history.
   - `a` opens Settings at the AI section.
 - In the list of the warnings, `↑/↓` selects a row, `enter` opens the detail view and `esc` goes back.
 - The detail view (`Factory › Attention › <title>`) shows the full text of the warning, its kind,
@@ -259,8 +258,8 @@ and Checks.
 
 - The Providers tab shows only the signed-in providers. `d` signs out, with confirmation. `r` reloads.
 - `n` opens the page of the other providers. On that page, Enter signs in and Escape goes back to the Providers tab.
-- The Models tab shows each role model in its own card. `s` and `w` select the supervisor and worker models.
-- Under the cards, the Models tab shows one row for each Stage, with the worker model override of the Stage.
+- The Models tab shows the worker model in a card. `w` selects the worker model.
+- Under the card, the Models tab shows one row for each Stage, with the worker model override of the Stage.
   `↑/↓` select a Stage. Enter or a click opens the model picker of the Stage.
   See [../tui.md](../tui.md#worker-model-overrides).
 - The Limits tab shows each limit in its own card. `l` sets the worker limit.

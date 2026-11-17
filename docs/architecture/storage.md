@@ -23,9 +23,8 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,fallbackWorkerModels,stageClasses,git,checks,dependencies,placement}
-  prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
-  prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,workerModel,stageWorkerModels,storyWorkerModels,fallbackWorkerModels,stageClasses,git,checks,dependencies,placement}
+  prompts/SYSTEM.md   # the Project prompt: all workers get it
   prompts/WORKER.md   # the Worker prompt: all workers get it
   stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, uid?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
   stages/BACKLOG.md   # <stage key>.md; the whole file is the stage's prompt
@@ -91,7 +90,6 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | Key                    | Type    | Default            | Effect                                                 |
 | ---------------------- | ------- | ------------------ | ------------------------------------------------------ |
 | `maxWorkers`           | integer | `4`                | The maximum number of workers. The minimum is 1.       |
-| `supervisorModel`      | object  | Pi selects a model | Not used now. The factory opens no supervisor session. |
 | `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
 | `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
@@ -106,7 +104,11 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 
 A model choice has `provider`, `modelId` and an optional `thinkingLevel`. Without the `factory` key,
-the worker limit is four and Pi selects the default models. Without the `checks` key, the factory has
+the worker limit is four and Pi selects the default models.
+
+An old config can have the key `supervisorModel`. The key is valid with all values, and the factory
+ignores it. `rowbly factory configure` keeps the key when it writes the config. `rowbly doctor` shows
+a warning for it, and `rowbly doctor --fix` removes it. Without the `checks` key, the factory has
 no checks. See [native-factory/checks.md](native-factory/checks.md#settings) for the keys of `checks`.
 
 The config check of the board examines only that `factory` is an object. The `factory-settings`
@@ -508,10 +510,12 @@ A Story can have attachments of all file types. The `attachment` service keeps t
 
 ## User prompts
 
-`prompts/` holds the three user prompts of a Project: `SYSTEM.md`, `SUPERVISOR.md` and `WORKER.md`.
+`prompts/` holds the two user prompts of a Project: `SYSTEM.md` and `WORKER.md`.
 The whole file is the prompt. Rowbly does not parse or enforce its text.
 
-- Initialization creates the three files with no text.
+- Initialization creates the two files with no text.
+- Rowbly does not use an old `SUPERVISOR.md` and never deletes it. `rowbly doctor` shows a warning
+  for it.
 - Rowbly never assumes that a user prompt exists. A missing file has no text.
 - `rowbly prompt get` and `rowbly prompt set` read and write the files. The TUI edits them in
   Settings › Prompts.
@@ -527,7 +531,8 @@ read this file now. See [prompts.md](prompts.md) for the prompt levels and the r
 - Folders, Stage files, Story files, Spec files and attachments.
 - Tracked skills. See [skills-and-stages.md](skills-and-stages.md#doctor-and-skills).
 - User prompts and an old `ROWBLY.md`. See [prompts.md](prompts.md#doctor-and-prompts).
-- The `factory` key of the config and an old `factory.json`. See the rules below.
+- The `factory` key of the config, an old `factory.json` and an old `factory.supervisorModel` key.
+  See the rules below.
 - Runtime ignore rules, runtime files that Git tracks, and corrupt or orphan Threads. Doctor does not
   repair Thread histories and does not take over a live daemon.
 
@@ -541,6 +546,7 @@ rules:
 | `factory.json` exists, and the config has no `factory` key.              | warning  | Moves the settings without `version`, then deletes the file. |
 | `factory.json` has the same settings as the `factory` key.               | warning  | Deletes the file.                                            |
 | `factory.json` has different settings from the `factory` key.            | warning  | None. Merge them by hand, then delete the file.              |
+| The `factory` key has the old key `supervisorModel`.                     | warning  | Reads the config again, then removes only this key.          |
 
 The Story dependency check runs after the Story check, because it needs the IDs of all Stories. It
 reads the frontmatter after the fixes of the Story check. It does not examine a Story file with

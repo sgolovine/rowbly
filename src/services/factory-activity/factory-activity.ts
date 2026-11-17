@@ -4,7 +4,7 @@ import { LOCAL_HOST } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 /**
- * The state of `.rowbly/state.json`, which the factory supervisor writes:
+ * The state of `.rowbly/state.json`, which the factory manager writes:
  * - `ok`: a valid version 1 file.
  * - `missing`: no file.
  * - `unavailable`: Rowbly cannot read or accept the file, so it shows no activity.

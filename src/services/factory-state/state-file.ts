@@ -1,4 +1,4 @@
-// Reads and replaces the factory state. Assignment belongs to the supervisor.
+// Reads and replaces the factory state. Assignment belongs to the factory manager.
 import { randomUUID } from "node:crypto";
 import { open, readFile, rename, stat, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -53,7 +53,7 @@ function statePath(root: string): string {
   return join(resolve(root, ".rowbly"), "state.json");
 }
 
-/** Runs the action on the state file. Each failure names the file and the repair, for the report of the supervisor. */
+/** Runs the action on the state file. Each failure names the file and the repair, for the report of the manager. */
 async function guard<T>(root: string, action: (path: string) => Promise<T>): Promise<T> {
   try {
     if (!(await stat(resolve(root, ".rowbly"))).isDirectory()) {

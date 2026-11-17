@@ -76,7 +76,7 @@ The plugins use GritQL. They find patterns in the syntax, not in the types. Thus
 - A callback argument can stay inline. Keep it to one expression, and call a named function from it.
 - An object of methods can call top-level functions. Each method must be one expression.
 
-Example from `supervisor-loop.ts`:
+Example from `factory-loop.ts`:
 
 ```ts
 async function passOnce(manager: Manager): Promise<void> {

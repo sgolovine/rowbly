@@ -73,12 +73,10 @@ export { type ModelChoice, validModel } from "./model-settings.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;
-type Role = "supervisor" | "worker";
 
 /** The `factory` section of `rowbly.config.json`. */
 export interface FactorySettings {
   maxWorkers: number;
-  supervisorModel?: ModelChoice;
   workerModel?: ModelChoice;
   /** Worker model overrides by Stage key. A Story override has priority. */
   stageWorkerModels?: StageWorkerModels;
@@ -100,9 +98,7 @@ export type FactorySettingsInput = Partial<FactorySettings>;
 
 interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput, FallbackInput, StageClassInput {
   maxWorkers?: number;
-  supervisor?: string;
   worker?: string;
-  supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
   /** With `stage`, the worker model is an override for the Stage, or for the Story in the Stage. */
   stage?: string;
@@ -110,7 +106,7 @@ interface ConfigureInput extends GitInput, CheckInput, DependencyInput, Placemen
   clearWorker?: boolean;
 }
 
-/** The model choice of one role, and the runtime that the next role can use again. */
+/** The worker model choice, and the runtime that the fallback models can use again. */
 interface RoleChoice {
   readonly runtime?: AuthRuntime;
   readonly choice?: ModelChoice;
@@ -127,7 +123,6 @@ function validSettings(settings: FactorySettings): boolean {
   return (
     Number.isSafeInteger(settings.maxWorkers) &&
     settings.maxWorkers >= 1 &&
-    (settings.supervisorModel === undefined || validModel(settings.supervisorModel)) &&
     (settings.workerModel === undefined || validModel(settings.workerModel)) &&
     validOverrides(settings) &&
     validFallbacks(settings.fallbackWorkerModels) &&
@@ -231,18 +226,13 @@ export async function updateFactorySettings(
   );
 }
 
-/** Validates the model of one role. The runtime starts only for the first role with a model. */
-async function chooseRole(
-  auth: AgentAuth,
-  role: Role,
-  input: ConfigureInput,
-  runtime?: AuthRuntime,
-): Promise<RoleChoice> {
-  const value = input[role];
-  const thinkingLevel = input[`${role}Thinking`];
+/** Validates the worker model. The runtime starts only when the input has a worker model. */
+async function chooseWorker(auth: AgentAuth, input: ConfigureInput, runtime?: AuthRuntime): Promise<RoleChoice> {
+  const value = input.worker;
+  const thinkingLevel = input.workerThinking;
 
   if (!value && thinkingLevel) {
-    throw new ValidationError(`Select the ${role} model with its thinking level`);
+    throw new ValidationError("Select the worker model with its thinking level");
   }
 
   if (!value) {
@@ -264,8 +254,6 @@ function overrideProblem(input: ConfigureInput): string | undefined {
   }
 
   if (
-    input.supervisor !== undefined ||
-    input.supervisorThinking !== undefined ||
     input.maxWorkers !== undefined ||
     hasGitInput(input) ||
     hasCheckInput(input) ||
@@ -329,7 +317,7 @@ async function configureWorkerOverride(
   }
 
   const auth = await import("../agent-auth/agent-auth.js");
-  const { choice } = await chooseRole(auth, "worker", input, runtime);
+  const { choice } = await chooseWorker(auth, input, runtime);
 
   return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, choice) }), ctx);
 }
@@ -388,15 +376,13 @@ export async function configureFactory(
   checkFallbackInput(input);
 
   const auth = await import("../agent-auth/agent-auth.js");
-  const supervisor = await chooseRole(auth, "supervisor", input, runtime);
-  const worker = await chooseRole(auth, "worker", input, supervisor.runtime);
+  const worker = await chooseWorker(auth, input, runtime);
   const fallbacks = await chooseFallbacks(auth, input, worker.runtime);
 
   return writeSettings(
     (current) => ({
       ...current,
       ...(input.maxWorkers !== undefined ? { maxWorkers: input.maxWorkers } : {}),
-      ...(supervisor.choice ? { supervisorModel: supervisor.choice } : {}),
       ...(worker.choice ? { workerModel: worker.choice } : {}),
       ...(hasGitInput(input) ? { git: mergeGit(current.git, input) } : {}),
       ...(hasCheckInput(input) ? { checks: mergeChecks(current.checks, input) } : {}),

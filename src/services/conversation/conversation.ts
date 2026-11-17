@@ -61,7 +61,7 @@ export function closeConversation(conversation: Conversation): void {
   conversation.close();
 }
 
-/** Returns a bounded tail for CLI output and explicit supervisor inspection. */
+/** Returns a bounded tail for CLI output and an explicit inspection of a Thread. */
 export async function getThreadLog(
   threadId: string,
   input: { tail?: number } = {},
