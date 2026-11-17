@@ -45,10 +45,17 @@ function listText(result: ThreadList, now: number): string {
   );
 }
 
-function registerControl(program: Command, action: "cancel" | "resume"): void {
+const CONTROL_DESCRIPTIONS = {
+  cancel: "cancel a worker through the running factory",
+  release:
+    "release a worker on a worker host through the running factory: stop it as a cancel, but let a new worker start",
+  resume: "resume a worker through the running factory",
+} as const;
+
+function registerControl(program: Command, action: keyof typeof CONTROL_DESCRIPTIONS): void {
   program
     .command(`${action} <id>`)
-    .description(`${action} a worker through the running factory`)
+    .description(CONTROL_DESCRIPTIONS[action])
     .action((id: string, _opts: unknown, command: Command) =>
       run(
         command,
@@ -149,6 +156,7 @@ function registerHeld(program: Command): void {
 /** Registers the `rowbly thread` subcommands on the `thread` command. */
 export function registerThreadCommands(program: Command): void {
   registerControl(program, "cancel");
+  registerControl(program, "release");
   registerControl(program, "resume");
   registerSteer(program);
   registerLog(program);
