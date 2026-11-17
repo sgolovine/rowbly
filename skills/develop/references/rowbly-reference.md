@@ -124,6 +124,7 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly project update --time-zone <zone>`            | Project     | Sets the time zone of the Story times in the TUI. `""` uses the system time zone. |
 | `rowbly status`                                       | Status      | Shows the factory phase, the Thread counts and the Story count of each Stage. |
 | `rowbly thread steer <id> --message <text>`           | Receipt     | Sends a message of 1 to 4000 characters to a running worker through the running factory. Gives `VALIDATION` for an empty or long message, and `CONFLICT` when the factory or the worker does not run. |
+| `rowbly factory release <story-id>`                   | Receipt     | Releases a parked Story in the running factory, so that the next pass can start a worker for it. A Story that is not parked gives a success with no change. Gives `CONFLICT` with `Factory is not running` when the factory does not run. |
 
 `rowbly status --json` gives this object. `stages` is in config order and includes the disabled Stages.
 A Story with a Stage that is not in the config is in `stories` only.
@@ -344,6 +345,12 @@ A Host record has this shape:
 - **Unuse.** `host unuse` removes only the record of the current Project. The clone stays on the host. It
   gives `CONFLICT` while a `pending` or `running` Thread of the Project is on the host.
 - **Bad file.** If `~/.rowblyrc.json` is not valid, each command gives `VALIDATION` and does not change the file.
+- **Placement.** `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a
+  new worker. The policies are `prefer-local` (the default), `most-free` and `prefer-remote`.
+- **Remote worker.** A worker on a worker host writes to a copy of the Project. Its command prefix has
+  `-C <copy>`. Story field changes, Stage moves and attachments go through the outbox. The main machine
+  applies them to the board later. A new Story, Stage or Spec, and each config change, give `CONFLICT`
+  with the text `A remote worker cannot …`. Do not try the write again. Record the problem in the result.
 
 ### Spec
 

@@ -63,14 +63,16 @@ Modal has these views:
   and the total slots (`<used>/<max>`) and, for a lost host, the last contact (`last contact <duration>
   ago` or `no contact`). A lost host has a state that is not `connected` or `degraded`. Its state is
   in `danger`. A `degraded` state is in `stage-board`. Without a worker host, the list does not show.
-  `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows.
+  `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows. See
+  [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 - **Attention.** `Factory › Attention` lists all warnings in a `SelectList` with `clickToHighlight`.
   `↑/↓` selects, `enter` opens the detail view, `/` filters and `esc` goes back. A click on a row
   that is not highlighted highlights the row. A click on the highlighted row opens the detail view.
 - **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
   Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
   attention entry. `esc` goes back.
-- **Supervisor** and **History.** The conversation and the history of the supervisor.
+- **Supervisor** and **History.** The conversation and the history of the old supervisor Threads.
+  The factory does not create supervisor Threads now. Without one, the views have no Thread.
 
 `factoryProblems` in `factory-status.ts` makes the warnings. Each warning has a kind: `heartbeat`,
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
@@ -109,7 +111,8 @@ command uses the same Git rules. The section does not load Pi or `agent-auth`.
 
 The Factory group of Settings has a Hosts section under the Git section (`HostsSection` in
 `src/tui/screens/settings/hosts-section/`). The section shows the placement of new workers and the
-worker hosts of the user.
+worker hosts of the user. See [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an
+overview of the worker hosts.
 
 - The placement card at the top shows the `placement` value of the factory settings. A config
   without the `placement` key shows `prefer-local`. `p` opens a `FormModal` with the policies of
@@ -190,8 +193,8 @@ step. The shell keeps the selection as a set of Story IDs, and the range anchor 
   move sets `updatedAt`, so each Story goes to the top of its new Stage. A Story in the last Stage
   (for `shift+↓`) or in the first Stage (for `shift+↑`) does not move. The shell calls `updateStory`
   for one Story at a time, in the reverse list order. Thus each Story gets a later `updatedAt` than
-  the Story below it, and the Stories keep their relative order. Then the shell reloads the board
-  one time. The target sections expand, and a Stage filter follows the first moved Story.
+  the Story below it, and the Stories keep their relative order. Then the shell puts the moved
+  Stories on the board in memory, in the order of the writes. The target sections expand, and a Stage filter follows the first moved Story.
   The Stories stay selected, so the next `shift+↓` moves them one more Stage. If a move fails, the
   TUI shows the error as a toast and reloads the board. The Stories that moved stay moved.
 - **No selection.** `shift+↑/↓` and `K/J` move the Story of the cursor to a different Stage, as before.
@@ -369,11 +372,21 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 
 ## Board load
 
-`useShellData` loads the board. Before it reads the Stories, it calls `repairDuplicateStoryIds`. This
-service gives the newer Story of each duplicate Story ID the next free number. The shell shows one info
-toast for each change, for example `ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast
-shows and the board loads. The repair runs again each time that `useStoryChanges` reloads the board.
-See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+`useShellData` loads the board. On the first load for a `ServiceContext`, before it reads the Stories, it
+calls `repairDuplicateStoryIds`. The first load is the load after the start, after a Project switch, or
+after the onboarding creates the Project. This service gives the newer Story of each duplicate Story ID
+the next free number. The shell shows one info toast for each change, for example
+`ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast shows and the board loads. A reload
+or a `useStoryChanges` refresh of the same Project does not repair. `rowbly doctor` reports a duplicate
+ID that a different process makes later. See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+
+A Story action does not read the board. After a Story move, a move of the multi-selection, a delete or
+a save in the Story sidebar, the shell changes the board in memory with `putOnBoard` or `takeFromBoard`.
+These functions use `withStory` and `withoutStory` from `src/services/story/story-order.ts`. The moved
+or saved Story goes to the top of its Stage, the same as after a full read. The watcher echo of the
+write then reads the board one time. This read replaces the change in memory and also shows the changes
+of the write to other Stories, for example the `dependsOn` cleanup of a delete. A Stage change and a
+failed move of the multi-selection still read the board again with `reload`.
 
 ## Factory status
 

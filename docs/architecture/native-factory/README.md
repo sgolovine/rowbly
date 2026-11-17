@@ -1,8 +1,9 @@
 # Native factory
 
-The native factory runs AI agents on the Stories of a Project. A detached daemon holds one Pi
-supervisor session and up to a limit of independent Pi worker sessions. The manager in the daemon
-controls ownership, worker slots, worktrees, sessions, commands and recovery. The board, the metadata
+The native factory runs AI agents on the Stories of a Project. A detached daemon holds up to a limit of
+independent Pi worker sessions. The manager in the daemon starts the workers from the decisions of the
+policy. No model makes a dispatch decision. The manager controls ownership, worker slots, worktrees,
+sessions, commands and recovery. The board, the metadata
 and the history views work without the daemon and without Pi.
 
 Read this page when you start a task on the factory. Then read only the sub-page that is necessary for your task.
@@ -16,7 +17,7 @@ Read this page when you start a task on the factory. Then read only the sub-page
                                    rowbly factory run  (daemon)
                                          │
                                          ├── factory manager (src/services/factory-manager/)
-                                         │     ├── serial supervisor loop ── Pi supervisor session + tools
+                                         │     ├── serial factory loop ── policy scan, side steps, dispatch
                                          │     ├── reservations and worker slots
                                          │     └── worker lifecycle ── Pi worker sessions (factory-worker/)
                                          │                                one worktree for each Story
@@ -30,12 +31,8 @@ Read this page when you start a task on the factory. Then read only the sub-page
   [recovery.md](recovery.md#automatic-restart-after-a-crash). `--foreground` runs the daemon code
   in the current terminal, without a watchdog (`src/commands/factory-runner/`). Close the TUI
   without a stop to leave the daemon active.
-- **Supervisor.** One Pi session. Its message comes from `supervisorMessage()` in
-  `src/services/messages/messages.ts`.
-  It decides which Stories get a worker. It uses only the manager tools, for example
-  `factory_snapshot`, `story_get`, `start_worker`, `stop_worker`,
-  `hold_candidate`, `release_story`, `inspect_worker`, `save_note` and `raise_attention`. It receives
-  bounded worker summaries (`supervisor-digest/`), not transcripts.
+- **Dispatch.** The factory does not open a supervisor session. See [Factory pass](#factory-pass).
+  A pass with no eligible Story and no running worker makes no model call.
 - **Worker problems.** The manager shows the problems that a worker reports as the attention entry
   `worker:<ID>`. See [Worker attention](#worker-attention).
 - **Stage classes.** The manager gives each Stage the class `work`, `hold` or `invalid` with a fixed
@@ -63,7 +60,7 @@ Read this page when you start a task on the factory. Then read only the sub-page
     `waiting for <IDs>` and the `waitingFor` list. A Story in a hold Stage keeps the reason `hold stage`.
     A blocked Story records no attempt, uses no attempt budget and is not parked. When the Story becomes
     ready, it starts with the reason `new stage stay` if it has no attempt in its current Stage stay.
-    The gate does not stop a worker that runs. `start_worker` refuses a blocked Story with the error
+    The gate does not stop a worker that runs. A reservation refuses a blocked Story with the error
     `Story is not eligible: waiting for <IDs>`.
   - **Story references.** An attempt in `state.json` has `story` (the Story ID) and `storyUid` (the
     `uid` of the Story), when the Story has a `uid`. A decision also has `storyUid`. The policy finds
@@ -75,18 +72,15 @@ Read this page when you start a task on the factory. Then read only the sub-page
     direct and the indirect downstream Stories that are not complete, each one time. Then the order of
     the board applies. Thus an upstream Story starts and goes to the main branch before its downstream
     Stories.
-  - **Dependencies for the supervisor.** Each decision of `factory_snapshot` and the `story_get` result
-    have the `dependsOn`, `blocks` and `waitingFor` lists. In the `story_get` result, the lists come
-    before `description`, so the limit of 8192 characters does not cut them. The digest has a `blocked`
-    section with an item such as `ROW-03 waits for ROW-01, ROW-02` for each blocked Story in a `work`
-    Stage. The section has a maximum of 12 items. It does not wake the supervisor.
+  - **Dependency lists.** Each decision of the factory snapshot has the `dependsOn`, `blocks` and
+    `waitingFor` lists.
   - **Stuck upstream Story.** On each pass, the manager finds the upstream Stories of the blocked
     Stories in a `work` Stage. An upstream Story cannot progress when it is in the first Stage of the
     board, when the policy parked it, or when it is in a `hold` Stage that is not the last Stage. For
     each of these Stories, the manager sets one attention entry with the key `upstream-stuck:<ID>`.
     The text gives the reason and the downstream Stories, for example
     `ROW-04 cannot progress (in Backlog). ROW-05 waits for it.` The manager removes the entry when the
-    Story can progress. The manager is the guard. The supervisor prompt rules only help the model.
+    Story can progress.
   - **Pull upstream Stories.** This step is off by default. When `dependencies.pullUpstream` is
     `true`, the step runs after the policy scan and before the `upstream-stuck:` step. For each blocked
     Story in a `work` Stage, the manager finds all its upstream Stories that are not complete, also
@@ -103,6 +97,50 @@ Read this page when you start a task on the factory. Then read only the sub-page
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
 
+## Factory pass
+
+The factory loop (`factory-manager/supervisor-loop.ts`) runs one pass after each change of the
+Project, after each worker end, at each deadline and every 30 seconds. A pass does these steps, in this
+order:
+
+1. The policy scan (`reconcilePolicy`). It applies the outbox of the worker hosts, then writes the
+   policy state to `state.json`. Only a failed scan stops the pass. It sets the attention entry
+   `reconcile`.
+2. The upstream steps: `pull-upstream`, the `upstream-stuck:` entries and the removal of stale
+   `worker:` entries.
+3. The side steps: the settings, the worker hosts, the provider pauses, the canonical commit and the Git
+   sync.
+4. The network resume of the worker Threads that wait for their provider.
+5. The dispatch (`factory-manager/worker-dispatch.ts`). The manager scans again, because the network
+   resume can change the decisions. It reserves a worker for each `start` and `retry` decision, in the
+   order of `policy.decisions`. It calls `reserveWorker` with no `model`, no `host` and no
+   `resumeThreadId`. Thus the model comes from the factory settings (`selectWorkerModel`: the Story
+   override, the Stage override, `factory.workerModel`, then `factory.fallbackWorkerModels` when the
+   provider is paused). The placement (`placeStory`) selects the host.
+6. The write of `status.json`.
+
+Each failure of steps 2 to 5 sets one attention entry, and the pass continues. A step without a problem
+removes its entry.
+
+- **Request ID.** Each start has the request ID `<story-id>:<stage>:<attempt>`, with the `attempt` of
+  the decision, or 1. A known request ID gives the Thread of the first request. Thus a second pass, or a
+  second decision for the same work, cannot start the same work two times. When the Thread of a known
+  request ID is final, the dispatch forgets the request ID, because a new Stage stay after a budget
+  reset can have the same attempt number.
+- **Errors.** A `ConflictError` for one Story skips only that Story, with no attention entry. Examples
+  are a full host, a paused provider and a Story that moved. A different error sets the attention entry
+  `dispatch` with the Story ID and the error message, and the dispatch continues with the next decision.
+  A pass with no dispatch error removes the `dispatch` entry.
+- **Retry.** A `retry` decision starts a new worker Thread. The network resume adds a run to an old
+  Thread. A dispatch never does.
+- **Stop confirmation.** The scan that first confirms the stop of a worker gives the reason
+  `stop confirmed this scan`. Then the loop runs one more pass, so that the next worker of the Story can
+  start.
+- **Stalled workers.** The policy gives `stalled` workers. The manager does not stop them.
+- **Parked Stories.** The policy parks a Story after the attempt limit. A person releases it with
+  `rowbly factory release <story-id>`, a Stage move or a change of the Story. See
+  [controls.md](controls.md).
+
 ## Worker attention
 
 The manager makes the attention entry `worker:<ID>` from the end of a worker Thread. `<ID>` is the
@@ -115,7 +153,7 @@ Story ID. The entry has `storyId`. The rules are in `factory-manager/worker-atte
 - **Failure.** A Thread ends as `failed`. The manager sets the entry with the error code and the error
   message. A failure with the code `NETWORK` does not set the entry, because the network resume
   continues the Thread.
-- **Limit.** The text has a maximum of 1000 characters, the same limit as `raise_attention`.
+- **Limit.** The text has a maximum of 1000 characters.
 - **Added problem.** The manager adds the problem `Story remains in the assigned Stage` when the
   Story did not move. This problem does not set the entry. Only the result that the worker reported
   counts.
@@ -123,7 +161,7 @@ Story ID. The entry has `storyId`. The rules are in `factory-manager/worker-atte
   the entry.
 - **Stop and cancel.** A Thread that ends as `interrupted` or `cancelled` does not change the entry.
 - **Removal.** A later worker Thread of the Story that ends as `completed` without blockers and
-  without problems removes the entry. Each supervisor pass also removes the entry when the Story is
+  without problems removes the entry. Each factory pass also removes the entry when the Story is
   deleted, or when the Story is not in the Stage of its last worker Thread.
 
 ## Story references
@@ -146,6 +184,8 @@ when the number of the Story changes. See [../storage.md](../storage.md).
 
 ## Placement
 
+For an overview of the worker hosts, read [remote-hosts.md](remote-hosts.md) first.
+
 The manager places each new worker on a machine: the main machine (`local`) or a worker host. The pure
 function `placeWorker` in `factory-manager/placement.ts` selects the host. The slots of each host come
 from `factory-manager/host-slots.ts`. These modules do no I/O.
@@ -159,12 +199,10 @@ from `factory-manager/host-slots.ts`. These modules do no I/O.
   number of active workers on the host.
 - **Policy limit.** The policy limit is the sum of `max` of the hosts that are `connected`. Without
   worker hosts, it is the worker limit.
-- **Status.** `factory_snapshot`, `status.json` and the supervisor digest have a `hosts` list with the
-  slots of each host. The digest shows a maximum of 12 hosts.
-- **Contact facts.** In `factory_snapshot` and `status.json`, the entry of a worker host also has
+- **Status.** The factory snapshot and `status.json` have a `hosts` list with the slots of each host.
+- **Contact facts.** In the factory snapshot and `status.json`, the entry of a worker host also has
   `lastSeenAt` (ISO text) and `latencyMs` from the heartbeat facts, when the heartbeat has them. The
-  `state` is the heartbeat state or `not-ready`. `local` has no `lastSeenAt` and no `latencyMs`. The
-  digest does not have these two fields, because they change at each heartbeat.
+  `state` is the heartbeat state or `not-ready`. `local` has no `lastSeenAt` and no `latencyMs`.
 
 The function applies these rules in this order:
 
@@ -181,7 +219,8 @@ The function applies these rules in this order:
 5. A requested host must be eligible and must agree with rules 2 and 3. The policy does not apply to
    it.
 
-`start_worker` has an optional `host` (a string). Without a host, the placement selects one. A
+`reserveWorker` has an optional `host` (a string). The dispatch gives no host, so the placement
+selects one. A
 refused placement, or an unknown host, gives a `ConflictError` with the reason, and the manager
 creates no Thread. The manager reads the Git facts of the local worktree (`readWorktreeFacts` in
 `worker-worktree/`) only when the list has a worker host. The new worker Thread and the active entry
@@ -198,8 +237,7 @@ interface lets a different executor, for example a remote executor, run a worker
 - **Interface.** `factory-manager/worker-executor.ts` has the interface. It has these operations:
   - `launch` prepares the worktree, opens the session, prompts the worker and collects the result.
     A resume uses `launch` also. The Thread record tells if the run is new or a resume.
-  - `stop` stops the worker. The manager makes the Thread `interrupted`. Shutdown and `stop_worker`
-    use it.
+  - `stop` stops the worker. The manager makes the Thread `interrupted`. Shutdown uses it.
   - `cancel` stops the worker. The manager makes the Thread `cancelled`. `cancelWorker` uses it.
   - `steer` gives a steering message to a worker. It refuses a worker that does not work now.
 - **Events.** The executor sends events to the manager through `WorkerEvents`: `worktreeReady`,
@@ -337,7 +375,7 @@ mirror".
 
 - **Path.** The mirror path is the `session.file` value of the Thread
   (`sessions/<thread-id>/<name>.jsonl`), below the local runtime folder. Thus the `conversation/`
-  service, `rowbly thread log`, `inspect_worker` and Peek read the mirror as a local session file. They
+  service, `rowbly thread log` and Peek read the mirror as a local session file. They
   work also while the host is offline, with the lines that arrived before the cut.
 - **Live lines.** The channel gives each `session` frame to the mirror of its Thread, but only when the
   Thread is an active run of the same host. The pure function `frameStep(size, frame)` compares the
@@ -418,7 +456,7 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   `connected`. A heartbeat is one `rowbly host ping <project-id>` request. The host gives its versions
   and the status values of its agent. The manager starts the heartbeat only when it has
   `hostConnection` and `workerHosts`. The heartbeat has its own timer
-  (`factory-manager/host-heartbeat.ts`), not the supervisor loop. It takes no Project write lock and no
+  (`factory-manager/host-heartbeat.ts`), not the factory loop. It takes no Project write lock and no
   state lock. `stopFactory` stops it. The defaults are: interval 15 seconds, request time limit 10
   seconds, latency limit 5 seconds. Tests give the interval and the clock with the dependency
   `hostHeartbeat`.
@@ -553,9 +591,16 @@ section "Abandoned Threads".
 
 ## Prerequisites and limits
 
-- Native execution must have Linux, Git, local files and util-linux `flock`.
+- Native execution on the main machine must have Linux, Git, local files and util-linux `flock`.
 - The board, metadata and Peek stay separate from these prerequisites.
-- There is no ownership guarantee across hosts, NFS, PID namespaces or copied runtime directories.
+- Each worker host must have these items:
+  - Linux, Git and util-linux `flock`.
+  - Node 22.19.0 or later.
+  - SSH access from the main machine with a key and without a password.
+  - Its own logins: Pi, `gh`, Git push access and the Git identity. SSH agent forwarding is not
+    sufficient, because the work continues after a disconnect.
+- The daemon ownership has no guarantee across machines, NFS, PID namespaces or copied runtime
+  folders. Worker hosts are supported only through the host agent. See [remote-hosts.md](remote-hosts.md).
 - Existing Projects do not change. There is no migration of Stories, Stages, Specs or config.
 - Do not assume exactly-once shell effects. Dirty worktrees and malformed runtime files stay on disk.
 
@@ -579,6 +624,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [remote-hosts.md](remote-hosts.md)               | You start a task on worker hosts. It links to each host page.                 |
 | [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 | [host-install.md](host-install.md)               | You change the Node check or the install of Rowbly on a worker host.          |
 | [host-check.md](host-check.md)                   | You change `rowbly host check`, the short check or `rowbly host login`.       |
@@ -587,5 +633,5 @@ of the `factory` skill.
 ## Related
 
 - [../service-layer.md](../service-layer.md#native-factory): the index of the factory modules.
-- [../prompts.md](../prompts.md): the prompts and the messages of the supervisor and the workers.
+- [../prompts.md](../prompts.md): the prompts and the messages of the workers.
 - [../testing.md](../testing.md#native-factory-tests): the faux provider and daemon tests.

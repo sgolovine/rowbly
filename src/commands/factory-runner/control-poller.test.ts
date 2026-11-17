@@ -12,6 +12,7 @@ function fakeManager() {
     resumeWorker: vi.fn(async () => {}),
     steerWorker: vi.fn(async () => {}),
     dismissAttention: vi.fn(async () => {}),
+    releaseStory: vi.fn(async () => ({ storyId: "TST-1", released: true })),
   };
 }
 
@@ -85,6 +86,28 @@ describe("control poller", () => {
     expect(manager.dismissAttention).toHaveBeenCalledWith("commit");
     expect((await readReceipt(project.paths, dismiss.id))?.status).toBe("completed");
     expect((await readReceipt(project.paths, missing.id))?.status).toBe("rejected");
+  });
+
+  it("gives a Story release with its Story ID to the manager, and rejects a Story release without a Story ID", async () => {
+    await prepareRuntime(project.paths);
+    const manager = fakeManager();
+    const release = await publishCommand(project.paths, {
+      targetOwnerToken: "owner",
+      type: "release-story",
+      storyId: "TST-1",
+    });
+    const missing = await publishCommand(project.paths, { targetOwnerToken: "owner", type: "release-story" });
+    const poller = createControlPoller(project.paths, "owner", manager as unknown as ControlTarget);
+
+    pollControl(poller);
+    await settledControl(poller);
+
+    expect(manager.releaseStory).toHaveBeenCalledExactlyOnceWith("TST-1");
+    expect((await readReceipt(project.paths, release.id))?.status).toBe("completed");
+    expect(await readReceipt(project.paths, missing.id)).toMatchObject({
+      status: "rejected",
+      error: { message: "A Story ID of 1 to 128 characters is necessary" },
+    });
   });
 
   it("gives a steer with its Thread, run and message to the manager", async () => {
