@@ -18,13 +18,15 @@ export interface FactoryCommand {
   attentionKey?: string;
   /** The text that a `steer` gives to the worker. */
   message?: string;
+  /** The Story that a `release` releases. */
+  storyId?: string;
   createdAt: string;
 }
 
 /** The kinds of request that the daemon runs. */
-export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss" | "steer";
+export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss" | "steer" | "release";
 
-const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss", "steer"];
+const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss", "steer", "release"];
 
 /** The maximum number of characters in a steering message, after trim. */
 const STEER_MESSAGE_LIMIT = 4000;
@@ -57,6 +59,11 @@ function validId(id: string): boolean {
 /** True for an attention key of 1 to 128 characters. */
 export function validAttentionKey(key: unknown): key is string {
   return typeof key === "string" && key.length >= 1 && key.length <= 128;
+}
+
+/** True for a Story ID of 1 to 128 characters. */
+export function validStoryId(id: unknown): id is string {
+  return typeof id === "string" && id.length >= 1 && id.length <= 128;
 }
 
 /** True for a steering message of 1 to 4000 characters after trim. The count uses code points. */
@@ -167,6 +174,10 @@ function acceptedCommand(loaded: LoadedCommand, id: string, token: string): Fact
 
   if (command.type === "steer") {
     assertSteerMessage(command.message);
+  }
+
+  if (command.type === "release" && !validStoryId(command.storyId)) {
+    throw new ValidationError("A Story ID of 1 to 128 characters is necessary");
   }
 
   if (command.targetOwnerToken !== token) {

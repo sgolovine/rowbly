@@ -1,11 +1,10 @@
-// The supervisor supplies fresh Project and harness facts. This module does no I/O.
+// The factory manager supplies fresh Project and harness facts. This module does no I/O.
 import { createHash } from "node:crypto";
 import { recordRef, refersToStory, type StoryRef } from "../story/story-ref.js";
 import type {
   AttemptStatus,
   PolicyAttempt,
   PolicyLimits,
-  PolicyReport,
   PolicyState,
   PolicyStory,
   PolicyWorker,
@@ -57,6 +56,11 @@ export function storyHash(story: PolicyStory): string {
   const content = JSON.stringify([story.title ?? "", story.description ?? "", story.fields ?? {}]);
 
   return createHash("sha256").update(content).digest("hex").slice(0, 16);
+}
+
+/** Gives a short hash of a prompt, to find a changed prompt. */
+export function promptHash(text: string): string {
+  return createHash("sha256").update(text).digest("hex").slice(0, 16);
 }
 
 /** Gives a copy of the record without the key. */
@@ -176,60 +180,4 @@ export function releaseStory(previous: PolicyState, story: StoryRef, stories: re
   const reset = resetBudget(state, story, known);
 
   return { ...reset, attempts: markLastDeparture(reset.attempts, story, known) };
-}
-
-/** Gives the unsent reports of one attempt. No start flag in an old record means that its launch was reported. */
-function attemptReports(attempt: PolicyAttempt): PolicyReport[] {
-  const id = workerId(attempt);
-  const started: PolicyReport[] =
-    attempt.startReported === false ? [{ story: attempt.story, workerId: id, event: "started" }] : [];
-  const stopped: PolicyReport[] =
-    STOPPED_STATUSES.has(attempt.status) && !attempt.reported
-      ? [{ story: attempt.story, workerId: id, event: "stopped", result: attempt.result }]
-      : [];
-
-  return [...started, ...stopped];
-}
-
-/** Gives unsent reports. Save the flags after the supervisor reports each event. */
-export function pendingReports(state: PolicyState): PolicyReport[] {
-  const reports = (state.attempts ?? []).flatMap(attemptReports);
-  const parked = Object.entries(state.parked ?? {})
-    .filter(([, record]) => !record.reported)
-    .map(([story, record]): PolicyReport => ({ story, event: "parked", stage: record.stage, reason: record.reason }));
-
-  return [...reports, ...parked];
-}
-
-/** Acknowledges one report without suppressing reports for other attempts. */
-export function markReported(previous: PolicyState, report: PolicyReport): PolicyState {
-  const state = structuredClone(previous);
-
-  if (report.event === "parked") {
-    const parked = state.parked?.[report.story];
-
-    if (!parked) {
-      throw new Error("Unknown parked report");
-    }
-
-    return { ...state, parked: { ...state.parked, [report.story]: { ...parked, reported: true } } };
-  }
-
-  // A harness can give the same ID to two workers. Mark the attempt that still has this report.
-  const flag = report.event === "started" ? "startReported" : "reported";
-  const attempts = state.attempts ?? [];
-  const unsent = attempts.findIndex(
-    (attempt) =>
-      workerId(attempt) === report.workerId &&
-      !attempt[flag] &&
-      (flag === "startReported" || STOPPED_STATUSES.has(attempt.status)),
-  );
-  const index = unsent >= 0 ? unsent : attempts.findIndex((attempt) => workerId(attempt) === report.workerId);
-  const attempt = attempts[index];
-
-  if (!attempt) {
-    throw new Error("Unknown worker report");
-  }
-
-  return { ...state, attempts: attempts.with(index, { ...attempt, [flag]: true }) };
 }

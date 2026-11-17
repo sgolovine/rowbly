@@ -70,7 +70,8 @@ Modal has these views:
 - **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
   Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
   attention entry. `esc` goes back.
-- **Supervisor** and **History.** The conversation and the history of the supervisor.
+- **Supervisor** and **History.** The conversation and the history of the old supervisor Threads.
+  The factory does not create supervisor Threads now. Without one, the views have no Thread.
 
 `factoryProblems` in `factory-status.ts` makes the warnings. Each warning has a kind: `heartbeat`,
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the

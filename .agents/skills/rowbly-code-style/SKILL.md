@@ -79,7 +79,7 @@ The plugins use GritQL. They find patterns in the syntax, not in the types. Thus
 Example from `supervisor-loop.ts`:
 
 ```ts
-async function superviseOnce(manager: Manager, contract: string): Promise<void> {
+async function passOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
   await refreshSettings(manager);
   await clearProviderPauses(manager);
@@ -130,7 +130,7 @@ Keep a `while` or `for` loop with `await` only when a condition, not a list, end
   `src/services/conversation/session-index.ts`.
 - A search that stops at the first match.
 
-A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
+A pure helper takes values, not the store. For example, `nextDeadline(state, decisions)` takes the
 state that the caller read.
 
 A service from a different module can change a file or a different object. That is I/O, not a change of

@@ -15,7 +15,7 @@ import {
 import { getState, type Manager, type ManagerState, setState } from "./manager-state.js";
 import { placeWorker, type StoryPlacementFacts } from "./placement.js";
 
-/** The request of one placement in `start_worker`. */
+/** The request of one placement of a worker reservation. */
 export interface PlacementRequest {
   readonly story: Story;
   readonly choice?: ModelChoice;

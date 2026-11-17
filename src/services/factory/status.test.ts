@@ -6,7 +6,13 @@ import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createThread } from "../thread/thread.js";
 import { runtimePaths } from "../workspace/workspace.js";
-import { dismissFactoryAttention, getFactoryStatus, sendFactoryCommand, steerThread } from "./factory.js";
+import {
+  dismissFactoryAttention,
+  getFactoryStatus,
+  releaseFactoryStory,
+  sendFactoryCommand,
+  steerThread,
+} from "./factory.js";
 
 describe("factory status probes", () => {
   const project = useTestProject();
@@ -48,6 +54,29 @@ describe("factory attention dismiss", () => {
     await expect(dismissFactoryAttention("commit", {}, project.ctx)).rejects.toThrow("Factory is not running");
     await expect(dismissFactoryAttention("", {}, project.ctx)).rejects.toThrow("attention key");
     await expect(dismissFactoryAttention("k".repeat(129), {}, project.ctx)).rejects.toThrow("attention key");
+  });
+});
+
+describe("factory story release", () => {
+  const project = useTestProject();
+  it("sends the Story ID to the live daemon and waits for its receipt", async () => {
+    await prepareRuntime(project.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const execute = vi.fn(async () => {});
+    const sent = releaseFactoryStory("TST-1", { timeoutMs: 5000 }, project.ctx);
+    await vi.waitFor(async () => {
+      await processCommands(project.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "release", storyId: "TST-1" }));
+    });
+    await expect(sent).resolves.toMatchObject({ status: "completed", storyId: "TST-1" });
+  });
+  it("fails when the factory does not run or the Story ID is not valid", async () => {
+    await expect(releaseFactoryStory("TST-1", {}, project.ctx)).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Factory is not running",
+    });
+    await expect(releaseFactoryStory("", {}, project.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
   });
 });
 

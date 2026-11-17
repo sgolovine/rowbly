@@ -25,6 +25,7 @@ viewer or the AI section of Settings.
 | `factory configure --clear-fallback-workers`                               | Remove the fallback worker models.                                    |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
 | `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                 |
+| `factory release <story-id>`                                               | Release a parked Story in the live factory. See below.                |
 | `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.               |
 | `factory check add <key> --command <command> [options]`                    | Add a check that the factory runs for its workers.                    |
 | `factory check update <key> [options]`, `factory check remove <key>`       | Change or remove a check.                                             |
@@ -127,6 +128,19 @@ removes the key. The other keys of `rowbly.config.json` do not change.
 A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out of range gives
 `VALIDATION`. In each case, `rowbly.config.json` does not change. See [checks.md](checks.md#settings).
 
+### The release command
+
+`rowbly factory release <story-id>` releases a parked Story, so that the next pass of the live factory
+can start a worker for it. The command sends the control command `release` to the daemon and waits for
+the receipt. The JSON output is the receipt with `storyId`.
+
+- A Story that is not parked gives a success with no change.
+- Without a live daemon, the command gives `CONFLICT` with the text `Factory is not running`.
+- A Story ID that is empty or longer than 128 characters gives `VALIDATION`.
+- The command does not load Pi. The TUI has no key for it.
+
+See [recovery.md](recovery.md#release-a-parked-story).
+
 ## Factory controls in the TUI
 
 - `f` opens Factory controls. It is a global key of the shell.
@@ -139,7 +153,8 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 - In Factory controls:
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
-  - `enter` opens the supervisor conversation.
+  - `enter` opens the conversation of the last old supervisor Thread, if one exists. The factory
+    does not create supervisor Threads now.
   - `w` opens the list of all warnings (`Factory › Attention`). The key works only when the live
     factory has warnings.
   - A click on a row of the `Attention` list opens the detail view of that warning.
@@ -154,9 +169,8 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
   - `d` (or the `Dismiss` button) sends a `dismiss` command to the daemon. Only an attention entry
     has this action. If the command fails, an error toast shows and the warning stays.
   - `esc` goes back.
-- The related Thread of the `supervisor` entry is the supervisor Thread of the status file. The
-  related Thread of an entry with a Story is the newest Thread of that Story. Other warnings have no
-  Thread.
+- The related Thread of an entry with a Story is the newest Thread of that Story. Other warnings have
+  no Thread.
 - Close the TUI without a stop to leave the daemon active.
 
 ## The Checks view

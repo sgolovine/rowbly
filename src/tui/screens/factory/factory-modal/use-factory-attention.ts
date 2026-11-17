@@ -105,7 +105,7 @@ export function useFactoryAttention(input: FactoryAttentionInput): FactoryAttent
   const problems = factoryProblems(status);
   const problem = problems.find((item) => item.key === problemKey);
   const story = problem && problemStory(problem, stories);
-  const thread = problem && problemThread(problem, threads, status?.supervisorThreadId);
+  const thread = problem && problemThread(problem, threads);
   const detail = active && problem !== undefined;
 
   const env: AttentionEnv = {

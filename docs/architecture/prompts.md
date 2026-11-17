@@ -30,6 +30,9 @@ prompts. There is no system Stage prompt.
 | `.rowbly/prompts/WORKER.md`        | Worker prompt            | All workers, in all Stages     |
 | `.rowbly/stages/<KEY>.md`          | Stage prompt             | Only the workers of that Stage |
 
+The factory does not open a supervisor session now. Thus no agent gets the two supervisor prompts. The
+files and `rowbly prompt get supervisor` stay, but the factory does not use them.
+
 ## Priority
 
 The global system prompt tells each agent this order of priority:
@@ -42,18 +45,19 @@ The global system prompt tells each agent this order of priority:
 ## The messages
 
 `src/services/messages/messages.ts` is the only place that builds the messages of the factory agents.
-Do not build a message in a different module. Each section starts with a `# ` heading, in this order:
+Do not build a message in a different module. It builds only the first message of a worker. Each
+section starts with a `# ` heading, in this order:
 
 1. `Rowbly system prompt`
-2. `Rowbly supervisor system prompt` or `Rowbly worker system prompt`
+2. `Rowbly worker system prompt`
 3. `Project prompt`
-4. `Supervisor prompt` or `Worker prompt`
-5. `Stage prompt (<KEY>)`, for workers only
-6. `Digest` for the supervisor, or `Run` for a worker
+4. `Worker prompt`
+5. `Stage prompt (<KEY>)`
+6. `Run`
 
 The `Run` section gives the Story, the Stage, the canonical Project root, the worktree, the model and
 the `flock` command prefix. When the Project has checks, it also lists the checks, and the worker
-system prompt keeps its check rules. See [native-factory/checks.md](native-factory/checks.md#prompts-and-the-digest). A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
+system prompt keeps its check rules. See [native-factory/checks.md](native-factory/checks.md#prompts). A user prompt or a Stage prompt with no text gives no section. Rowbly cuts
 each user prompt at 16000 characters (`USER_PROMPT_LIMIT`).
 
 ### Upstream Stories
@@ -78,17 +82,11 @@ When the Story of a worker has upstream Stories (`dependsOn`), the worker messag
 - The message does not include the descriptions of the upstream Stories. The worker reads them with
   `rowbly story get`.
 
-## Dependency rules of the supervisor
+## Dependency rules
 
-The supervisor system prompt (`src/config/prompts/SUPERVISOR.md`) has these rules for Story dependencies:
-
-- Do not start a worker for a blocked Story. The manager refuses it.
-- Start the upstream Stories first when you must choose.
-- Do not use `hold_candidate` for a blocked Story. The policy already holds it.
-
-The digest, `factory_snapshot` and `story_get` give the dependency lists. The manager also raises an
-`upstream-stuck:<ID>` attention entry for an upstream Story that cannot progress. These rules only help
-the model. The manager is the guard. See
+The manager does not start a worker for a blocked Story, and the launch order starts the upstream
+Stories first. The factory snapshot gives the dependency lists. The manager also raises an
+`upstream-stuck:<ID>` attention entry for an upstream Story that cannot progress. See
 [native-factory/README.md](native-factory/README.md).
 
 ## Read and write the user prompts
@@ -118,5 +116,5 @@ the model. The manager is the guard. See
 ## Related
 
 - [storage.md](storage.md): the layout of `.rowbly/`.
-- [native-factory/README.md](native-factory/README.md): the supervisor and the workers.
+- [native-factory/README.md](native-factory/README.md): the factory pass and the workers.
 - [skills-and-stages.md](skills-and-stages.md): the default Stage prompts.
