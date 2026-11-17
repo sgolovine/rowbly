@@ -1,8 +1,7 @@
 import type { TagConfig } from "../../../../services/config/config.js";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
-import type { RowDragProps } from "../../../components/index.js";
+import { type RowDragProps, SectionHeadingRow } from "../../../components/index.js";
 import type { ClickEvent } from "../../../hooks/index.js";
-import { StageHeadingRow } from "../stage-heading-row/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
 import { StoryRow } from "../story-row/index.js";
 import { tagLabels } from "../story-tag-view.js";
@@ -40,13 +39,14 @@ export function StoryListItem({
   dragProps,
 }: StoryListItemProps) {
   return row.kind === "stage" ? (
-    <StageHeadingRow
+    <SectionHeadingRow
       label={row.label}
       count={row.count}
       collapsed={row.collapsed}
       selected={selected}
       clickable={clickable}
       onClick={() => onClick({ shift: false })}
+      emptyText="No Stories"
       {...dragProps}
     />
   ) : (
