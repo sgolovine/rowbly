@@ -1,6 +1,10 @@
 import type { Key } from "ink";
 import type { Dispatch, RefObject, SetStateAction } from "react";
-import { dismissFactoryAttention } from "../../../../services/factory/factory.js";
+import {
+  type DismissAllResult,
+  dismissFactoryAttention,
+  dismissFactoryAttentions,
+} from "../../../../services/factory/factory.js";
 import type { Story } from "../../../../services/story/story.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -58,6 +62,63 @@ async function dismissTask(env: AttentionEnv, key: string, attentionKey: string)
     await dismissFactoryAttention(attentionKey, {}, env.ctx);
     showToast(env.toast, "info", "Dismissed the warning");
     env.setProblemKey((current) => (current === key ? undefined : current));
+  } catch (error) {
+    env.toast.error(error);
+  } finally {
+    env.toast.dismiss(progress);
+    env.setBusy(false);
+  }
+}
+
+/** The attention keys of the warnings that a person can dismiss. */
+export function dismissibleKeys(problems: readonly FactoryProblem[]): string[] {
+  return problems.flatMap((problem) =>
+    problem.dismissible && problem.attentionKey !== undefined ? [problem.attentionKey] : [],
+  );
+}
+
+/**
+ * Asks the daemon to remove each attention entry in `keys`, one after the other. It shares the guard of the dismiss
+ * of one warning, so that a second key press sends no more commands.
+ */
+export async function dismissAllProblems(env: AttentionEnv, keys: readonly string[]): Promise<void> {
+  if (keys.length === 0) {
+    return;
+  }
+
+  await runExclusive(env.dismissing, () => dismissAllTask(env, keys));
+}
+
+/** The words for `count` warnings. */
+function warningsText(count: number): string {
+  return count === 1 ? "1 warning" : `${count} warnings`;
+}
+
+/** The message of the first failure, after a colon. */
+function errorText(result: DismissAllResult): string {
+  const error = result.failed[0]?.error;
+
+  return error instanceof Error ? `: ${error.message}` : "";
+}
+
+/** An info toast for the warnings that went away, and an error toast for the warnings that stay. */
+function reportDismissAll(env: AttentionEnv, result: DismissAllResult): void {
+  if (result.dismissed.length > 0) {
+    showToast(env.toast, "info", `Dismissed ${warningsText(result.dismissed.length)}`);
+  }
+
+  if (result.failed.length > 0) {
+    showToast(env.toast, "error", `Could not dismiss ${warningsText(result.failed.length)}${errorText(result)}`);
+  }
+}
+
+async function dismissAllTask(env: AttentionEnv, keys: readonly string[]): Promise<void> {
+  env.setBusy(true);
+
+  const progress = env.toast.pending(`Dismissing ${warningsText(keys.length)}…`);
+
+  try {
+    reportDismissAll(env, await dismissFactoryAttentions(keys, {}, env.ctx));
   } catch (error) {
     env.toast.error(error);
   } finally {
