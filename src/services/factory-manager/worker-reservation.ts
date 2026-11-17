@@ -35,10 +35,13 @@ import { placeStory, resumeHost } from "./worker-placement.js";
 export interface ReserveWorkerInput {
   storyId: string;
   stage: string;
+  /** The ID of the request. A second request with the same ID gives the Thread of the first request. */
   requestId: string;
+  /** The Thread of a resume. The control command `resume` and network resume give it. */
   resumeThreadId?: string;
+  /** The requested worker model. A Story or Stage override in the factory settings has priority. */
   model?: ModelChoice;
-  /** The host that the supervisor requests. Without a host, the placement rules select one. */
+  /** The requested host. Without a host, the placement rules select one. */
   host?: string;
 }
 
@@ -75,7 +78,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
 
   await assertWorkerModel(manager, choice);
 
-  // The reservation checked the pause of its own model, which can be the model of the supervisor or of the Thread.
+  // The reservation checked the pause of its own model, which can be the requested model or the model of the Thread.
   const policy = await scan(manager, Number.MAX_SAFE_INTEGER, {
     resumeThreadId: input.resumeThreadId,
     reservedStory: story.id,
@@ -187,8 +190,8 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
 }
 
 /**
- * A Story override, a tag rule or a Stage override in the factory settings has priority over the model of the
- * supervisor. When the provider of the model is paused, the first fallback model whose provider is not paused applies.
+ * A Story override, a tag rule or a Stage override in the factory settings has priority over the requested model.
+ * When the provider of the model is paused, the first fallback model whose provider is not paused applies.
  */
 function workerModelFor(manager: Manager, story: Story, model: ModelChoice | undefined): ModelChoice | undefined {
   const { settings } = getState(manager);
@@ -241,7 +244,6 @@ function createWorkerThread(
       stage: story.stage,
       cwd: manager.paths.root,
       ownerToken: manager.owner.token,
-      parentThreadId: getState(manager).supervisorId,
       attemptNumber,
       host,
     },

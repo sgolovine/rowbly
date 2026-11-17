@@ -14,7 +14,7 @@ const resources = {
   tag: ["list", "add", "update", "remove"],
   spec: ["create", "update", "delete", "get", "list", "link", "unlink"],
   skill: ["install", "list", "remove"],
-  factory: ["status", "run", "watchdog", "stop", "restart", "logs", "start", "configure", "check"],
+  factory: ["status", "run", "watchdog", "stop", "release", "restart", "logs", "start", "configure", "check"],
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
   thread: ["cancel", "release", "resume", "steer", "log", "list", "show", "held"],

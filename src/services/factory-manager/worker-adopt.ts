@@ -64,7 +64,7 @@ async function adoptThread(manager: Manager, thread: ThreadRecord): Promise<void
 }
 
 /**
- * Adopts each active worker Thread on a worker host, before the first supervisor turn. Only a manager with remote
+ * Adopts each active worker Thread on a worker host, before the first factory pass. Only a manager with remote
  * dispatch adopts. A Thread that cannot be adopted keeps its status.
  */
 export async function adoptRemoteThreads(manager: Manager): Promise<void> {

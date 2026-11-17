@@ -162,7 +162,7 @@ worker. The machine is the main machine (`local`) or a worker host. See
   `validFactorySettings` gives `false`. Thus `rowbly doctor` shows the problem.
 - `rowbly factory configure --placement <policy>` sets the key. An unknown policy gives a
   `VALIDATION` error, and the config does not change. The flag does not start the Pi runtime.
-- The supervisor loop reads the factory settings again on each turn. Thus a changed policy applies to
+- The factory loop reads the factory settings again on each pass. Thus a changed policy applies to
   the next reservation.
 
 ### Worker model overrides
@@ -210,14 +210,15 @@ When the factory reserves a worker, it uses the first model in this list:
 2. The tag rule. When the Story has more than one tag with a rule, the rule of the first such tag in
    the `tags` list of the Story applies.
 3. The Stage override.
-4. The `model` argument of the supervisor tool `start_worker`.
+4. The `model` of the reservation. The dispatch of the factory gives no model. Only a direct call of
+   `reserveWorker`, for example in a test, gives one.
 5. `workerModel`.
 
 The pure function `selectWorkerModel(settings, target, isPaused)` in `worker-overrides.ts` gives the
 model. It also applies the fallback worker models. The reservation uses the selected model for the
 placement, the validation, the Thread `model` and the launch. The reservation stores the selected model
-on the Thread. The supervisor loop reads the factory settings
-again on each turn. Thus a changed override applies to the next reservation, and a restart is not
+on the Thread. The factory loop reads the factory settings
+again on each pass. Thus a changed override applies to the next reservation, and a restart is not
 necessary.
 
 ### Fallback worker models
@@ -228,21 +229,19 @@ Without the key, there is no fallback.
 - The manager first selects the model from the list above. If the provider of that model is paused,
   the manager uses the first fallback model whose provider is not paused.
 - The fallback applies also when the selected model is a Story override, a tag rule, a Stage override
-  or the model of the supervisor.
+  or the model of the reservation.
 - If the provider of the selected model and the providers of all fallback models are paused, the
   reservation gives the `ConflictError` `Worker provider is paused`. The `scan` of the manager changes
   each `start` and `retry` decision of the Story to `skip` with the reason `provider paused`. The
-  status file, `rowbly factory status` and the supervisor tool `factory_snapshot` show this reason.
-- `scan` does not know the model of the supervisor. Thus it uses only the overrides, the tag rules of
-  the tags of the Story and `workerModel`.
+  status file and `rowbly factory status` show this reason.
+- `scan` uses only the overrides, the tag rules of the tags of the Story, `workerModel` and the
+  fallback models.
   The `provider` of each queue entry of the status file is the provider of this selection, with the
   fallback.
 - If no model resolves, Pi selects the model. The manager does not check a pause and does not use the
   list.
 - A resumed Thread keeps its model, also when its provider is paused. A network resume waits for the
   end of the pause of the provider of the Thread.
-- The supervisor does not select a different provider because of a pause. The manager applies the
-  fallback.
 - `rowbly factory configure --fallback-worker <provider/model>` (repeat) replaces the list.
   `--clear-fallback-workers` removes the key. See [controls.md](controls.md#cli-commands).
 

@@ -28,7 +28,7 @@ export interface PlacementInput {
   /** The provider of the worker model, when it is known. */
   readonly provider?: string;
   readonly story: StoryPlacementFacts;
-  /** The host that the supervisor requests. */
+  /** The requested host. */
   readonly requested?: string;
 }
 

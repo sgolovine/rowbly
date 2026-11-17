@@ -5,7 +5,6 @@ import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
 import { isHostTransportError } from "../host-transport/host-errors.js";
-import type { PiSession } from "../pi-runtime/pi-runtime.js";
 import type { HostConnection, RemoteExecutor } from "../remote-executor/remote-executor.js";
 import type { HeartbeatLimits, HostHealth } from "../remote-executor/remote-heartbeat.js";
 import { type Store, withEntry, withoutEntry } from "../store/store.js";
@@ -43,12 +42,6 @@ export interface FactoryDependencies {
   remoteStopTimeoutMs?: number;
   /** Reads the Git facts of the local worktree of a Story. Tests give fakes. */
   worktreeFacts?: (root: string, story: Story) => Promise<LocalWorktreeFacts | undefined>;
-}
-
-export interface Hold {
-  readonly stage: string;
-  readonly reason: string;
-  readonly reconsiderAt: string;
 }
 
 export interface Attention {
@@ -104,22 +97,7 @@ export interface ManagerState {
   /** The Stories of the remote worker Threads that are not synchronized: their outbox or final status did not arrive. */
   readonly hostSync: ReadonlySet<string>;
 
-  // Supervisor
-  readonly supervisor?: PiSession;
-  readonly supervisorId?: string;
-  readonly supervisorChoice?: ModelChoice;
-  readonly supervisorBorn: number;
-  readonly wakeCount: number;
-
-  // Digest delivery
-  readonly acknowledgedHash?: string;
-  readonly attemptedHash?: string;
-  readonly nextWakeAt: number;
-  readonly unanswered: number;
-  readonly deliveredReportIds: readonly string[];
-
   // Status
-  readonly holds: ReadonlyMap<string, Hold>;
   readonly attention: ReadonlyMap<string, Attention>;
   readonly providers: ReadonlyMap<string, ProviderPause>;
   /** The number of network pauses in a row of each provider. A successful prompt removes the entry. */
@@ -181,7 +159,7 @@ export function serial<T>(manager: Manager, call: () => Promise<T>): Promise<T> 
   return next;
 }
 
-/** Marks the Project as changed and wakes the supervisor loop. */
+/** Marks the Project as changed and wakes the factory loop. */
 export function notify(manager: Manager): void {
   const { wake } = setState(manager, () => ({ dirty: true }));
 
