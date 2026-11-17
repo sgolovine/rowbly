@@ -69,6 +69,7 @@ The library also contains other code that has no guideline of its own:
 | `FullScreenEditor`, `useFullScreenEditor` | Markdown text on the full terminal, with View and Edit modes and an optional save. |
 | `FullScreenConversation`, `useFullScreenConversation` | The read-only conversation of one Thread on the full terminal. `ctrl+f`, `esc` and the `✕` close it. |
 | `SearchableSelect`, `SearchableSelectPicker`, `fuzzySearch` | The fuzzy picker that a searchable select field opens. |
+| `FuzzyPicker` | The generic fuzzy picker: a query input, an optional header and footer line, and a window of `SelectListRow` results. `↑/↓` move, `enter` chooses, `esc` cancels. `SearchableSelectPicker` and the Story finder use it. |
 | `MarkdownView`, `markdown.ts` | Markdown that is rendered for the terminal (`marked-terminal`), in a viewport that scrolls. |
 | `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. `active` controls the keys. `wheel` controls the wheel, and its default is `active`. |
 | `Spinner`, `Loading` | The braille spinner, alone or with a label. |
