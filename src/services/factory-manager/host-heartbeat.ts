@@ -5,12 +5,42 @@ import { hostProjectId } from "../host-project/host-paths.js";
 import {
   DEFAULT_HEARTBEAT_LIMITS,
   type HeartbeatLimits,
+  type HostHealth,
   nextHostState,
   type PingOutcome,
   pingHost,
 } from "../remote-executor/remote-heartbeat.js";
-import { withEntry } from "../store/store.js";
-import { getState, type Manager, setState } from "./manager-state.js";
+import { withEntry, withoutEntry } from "../store/store.js";
+import { type Attention, getState, type Manager, type ManagerState, setState } from "./manager-state.js";
+
+/** The heartbeat states that do not heal without a person or without more failures: they get an attention entry. */
+const LOST_STATES: ReadonlySet<HostHealth["state"]> = new Set(["disconnected", "version-mismatch", "auth-failed"]);
+
+/** The key of the attention entry of a worker host. */
+export function hostAttentionKey(host: string): string {
+  return `host:${host}`;
+}
+
+/** Gives the text of the attention entry of a host that is lost: the host, the state and the last contact time. */
+export function hostAttentionText(host: string, health: HostHealth): string {
+  return `Worker host ${host} is ${health.state}. Last contact: ${health.lastSeenAt ?? "never"}.`;
+}
+
+/**
+ * Sets the attention entry `host:<id>` when the heartbeat state of the host is lost, and removes it when the host
+ * answers again (`connected` or `degraded`).
+ */
+export function withHostAttention(
+  attention: ReadonlyMap<string, Attention>,
+  host: string,
+  health: HostHealth,
+): ReadonlyMap<string, Attention> {
+  const key = hostAttentionKey(host);
+
+  return LOST_STATES.has(health.state)
+    ? withEntry(attention, key, { text: hostAttentionText(host, health) })
+    : withoutEntry(attention, key);
+}
 
 /** Gives the limits of the heartbeat: the defaults with the values of the dependencies. */
 function limitsOf(manager: Manager): HeartbeatLimits {
@@ -37,12 +67,25 @@ async function pingOnce(manager: Manager, host: string, limits: HeartbeatLimits)
   }
 }
 
+/** Gives the next heartbeat facts of the host and its attention entry. */
+function recordHealth(
+  state: Readonly<ManagerState>,
+  host: string,
+  outcome: PingOutcome,
+  limits: HeartbeatLimits,
+): Pick<ManagerState, "hostHealth" | "attention"> {
+  const health = nextHostState(state.hostHealth.get(host), outcome, limits);
+
+  return {
+    hostHealth: withEntry(state.hostHealth, host, health),
+    attention: withHostAttention(state.attention, host, health),
+  };
+}
+
 /** Sends one heartbeat to the host and records its state. A host that is `connected` again does the reconnect. */
 async function beatHost(manager: Manager, host: string, limits: HeartbeatLimits): Promise<void> {
   const outcome = await pingOnce(manager, host, limits);
-  const { hostHealth, stopping } = setState(manager, (state) => ({
-    hostHealth: withEntry(state.hostHealth, host, nextHostState(state.hostHealth.get(host), outcome, limits)),
-  }));
+  const { hostHealth, stopping } = setState(manager, (state) => recordHealth(state, host, outcome, limits));
 
   if (stopping || hostHealth.get(host)?.state !== "connected") {
     return;

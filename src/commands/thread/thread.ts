@@ -1,11 +1,16 @@
 import type { Command } from "commander";
 import { getThreadLog } from "../../services/conversation/conversation.js";
 import { sendFactoryCommand, steerThread } from "../../services/factory/factory.js";
-import { getThread, LOCAL_HOST, listThreads } from "../../services/thread/thread.js";
+import { LOCAL_HOST } from "../../services/thread/thread.js";
+import {
+  connectionLostText,
+  getThreadWithConnection,
+  listThreadsWithConnection,
+} from "../../services/thread-connection/thread-connection.js";
 import { parsePosition, run } from "../output/output.js";
 
 type ThreadLog = Awaited<ReturnType<typeof getThreadLog>>;
-type ThreadList = Awaited<ReturnType<typeof listThreads>>;
+type ThreadList = Awaited<ReturnType<typeof listThreadsWithConnection>>;
 
 function logText(page: ThreadLog): string {
   if (page.status === "unsupported") {
@@ -22,17 +27,19 @@ function logText(page: ThreadLog): string {
   );
 }
 
-function threadLine(t: ThreadList["threads"][number]): string {
+function threadLine(t: ThreadList["threads"][number], now: number): string {
   const model = t.model ? `${t.model.provider}/${t.model.modelId}` : "unresolved";
+  const line = `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}  ${t.host ?? LOCAL_HOST}`;
 
-  return `${t.id}  ${t.storyId ?? "Factory"} ${t.stage ?? ""} ${t.status}  ${model}  ${t.host ?? LOCAL_HOST}`;
+  return t.connection ? `${line}  ${connectionLostText(t.connection, now)}` : line;
 }
 
-function listText(result: ThreadList): string {
+function listText(result: ThreadList, now: number): string {
   return (
-    [...result.threads.map((t) => threadLine(t)), ...result.issues.map((i) => `Warning: ${i.file}: ${i.message}`)].join(
-      "\n",
-    ) || "No threads found."
+    [
+      ...result.threads.map((t) => threadLine(t, now)),
+      ...result.issues.map((i) => `Warning: ${i.file}: ${i.message}`),
+    ].join("\n") || "No threads found."
   );
 }
 
@@ -85,8 +92,8 @@ function registerList(program: Command): void {
     .action((opts: { story?: string }, command: Command) =>
       run(
         command,
-        (ctx) => listThreads(opts, ctx),
-        (result) => listText(result),
+        (ctx) => listThreadsWithConnection(opts, ctx),
+        (result) => listText(result, Date.now()),
       ),
     );
 }
@@ -98,7 +105,7 @@ function registerShow(program: Command): void {
     .action((id: string, _opts: unknown, command: Command) =>
       run(
         command,
-        (ctx) => getThread(id, ctx),
+        (ctx) => getThreadWithConnection(id, ctx),
         (t) => JSON.stringify(t, null, 2),
       ),
     );

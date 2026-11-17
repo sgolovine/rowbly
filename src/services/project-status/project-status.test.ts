@@ -56,6 +56,26 @@ describe("project status", () => {
     expect((await getProjectStatus(p.ctx)).threads).toEqual({ running: 2, pending: 1 });
   });
 
+  it("lists the remote Threads whose host lost its connection in a live factory", async () => {
+    const remote = await createThread(
+      { role: "worker", storyId: "ROW-01", stage: "BACKLOG", cwd: p.paths.root, ownerToken: "o", host: "mini" },
+      p.ctx,
+    );
+    const live = { version: 1, phase: "ready" as const, owner: { token: "t" } as never, liveness: "alive" as const };
+    const hosts = [{ id: "mini", state: "version-mismatch" as const, max: 1, used: 1, free: 0 }];
+    const spy = vi.spyOn(factory, "getFactoryStatus").mockResolvedValue({ ...live, hosts });
+
+    try {
+      expect((await getProjectStatus(p.ctx)).connectionLost).toEqual([
+        { threadId: remote.id, storyId: "ROW-01", host: "mini", hostState: "version-mismatch" },
+      ]);
+      spy.mockResolvedValue({ ...live, liveness: "dead", hosts });
+      expect(await getProjectStatus(p.ctx)).not.toHaveProperty("connectionLost");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it("does not fail when the factory status is unavailable", async () => {
     const spy = vi.spyOn(factory, "getFactoryStatus").mockResolvedValue({ version: 1, phase: "unavailable" });
 
