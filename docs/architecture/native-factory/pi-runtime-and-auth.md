@@ -60,6 +60,13 @@ keys and the screen stay responsive.
 
 - `pi-runtime/pi-worker.ts` is the worker entry. It imports Pi and answers two requests: `models` and
   `authStatus`. It uses `createFactoryRuntime()` and the functions of `agent-auth/`.
+- A worker thread does not get the compile cache of the main thread. Thus `startPiWorker()` calls
+  `enableRowblyCompileCache()` before the worker serves a request and imports Pi. The next start of
+  the TUI compiles less of the Pi SDK. The same rules as in the main thread apply. A failure of the
+  cache is silent and does not stop the worker. See [../tooling.md](../tooling.md#compile-cache).
+- Only the worker thread that the client starts runs `startPiWorker()` to the end. An import of
+  `pi-worker.ts` in the main thread or in a test does not serve requests and does not turn on the
+  cache.
 - The worker makes a new Pi runtime for each request. Thus a login or a logout in the TUI or in a
   different process shows in the next answer.
 - A reply has plain data, or an error message. It does not have an `Error` object or a stack, so

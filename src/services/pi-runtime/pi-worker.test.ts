@@ -1,7 +1,8 @@
+import { MessageChannel } from "node:worker_threads";
 import { describe, expect, it, vi } from "vitest";
 import { type AuthRuntime, getAuthStatus, listAvailableModels } from "../agent-auth/agent-auth.js";
 import { ValidationError } from "../errors/errors.js";
-import { answerPiRequest } from "./pi-worker.js";
+import { answerPiRequest, startPiWorker } from "./pi-worker.js";
 import type { PiWorkerKind } from "./pi-worker-protocol.js";
 
 vi.mock("@earendil-works/pi-coding-agent", () => {
@@ -79,5 +80,51 @@ describe("answerPiRequest", () => {
     const reply = await answerPiRequest({ id: 9, kind: "other" as PiWorkerKind }, loader);
     expect(reply).toEqual({ id: 9, ok: false, message: "Pi could not answer" });
     expect(loader).not.toHaveBeenCalled();
+  });
+});
+
+describe("startPiWorker", () => {
+  const workerData = { rowblyPiWorker: true };
+
+  it("turns on the compile cache before it serves requests in the worker thread", () => {
+    const { port1, port2 } = new MessageChannel();
+    const order: string[] = [];
+    const on = port1.on.bind(port1);
+    const spy = vi.spyOn(port1, "on").mockImplementation((event, listener) => {
+      order.push(`on:${String(event)}`);
+      return on(event, listener);
+    });
+    const enableCompileCache = vi.fn(() => {
+      order.push("cache");
+    });
+
+    try {
+      expect(startPiWorker({ isMainThread: false, parentPort: port1, workerData, enableCompileCache })).toBe(true);
+      expect(enableCompileCache).toHaveBeenCalledTimes(1);
+      expect(order).toEqual(["cache", "on:message"]);
+    } finally {
+      spy.mockRestore();
+      port1.close();
+      port2.close();
+    }
+  });
+
+  it("does nothing in the main thread, without a parent port or without the worker data", () => {
+    const { port1, port2 } = new MessageChannel();
+    const enableCompileCache = vi.fn();
+
+    try {
+      expect(startPiWorker({ isMainThread: true, parentPort: port1, workerData, enableCompileCache })).toBe(false);
+      expect(startPiWorker({ isMainThread: false, parentPort: null, workerData, enableCompileCache })).toBe(false);
+      expect(startPiWorker({ isMainThread: false, parentPort: port1, workerData: {}, enableCompileCache })).toBe(false);
+      expect(enableCompileCache).not.toHaveBeenCalled();
+    } finally {
+      port1.close();
+      port2.close();
+    }
+  });
+
+  it("does not turn on the compile cache when a test imports the module", () => {
+    expect(startPiWorker({ enableCompileCache: () => expect.unreachable("cache in the main thread") })).toBe(false);
   });
 });

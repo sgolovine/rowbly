@@ -126,6 +126,10 @@ the CLI, the TUI or the factory daemon compiles less JavaScript.
 - A failure is silent. The function does not throw and does not write to stdout or stderr. Rowbly
   operates the same without the cache.
 - The factory daemon starts from the same entry, so it also gets the cache.
+- A `worker_threads` worker does not get the cache of the main thread. Thus the Pi worker
+  (`src/services/pi-runtime/pi-worker.ts`) calls `enableRowblyCompileCache()` in the worker thread
+  before it imports Pi. The worker uses the same directory and the same rules. See
+  [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#the-pi-worker).
 
 ## Knip
 
