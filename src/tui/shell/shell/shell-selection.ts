@@ -123,7 +123,7 @@ export function openThreadStory(env: ShellEnv, story: Story): void {
 export function showSavedStory(env: ShellEnv, story: Story): void {
   reveal(env, story);
   showStoryPane(env, null);
-  env.reload();
+  env.putOnBoard(story);
 }
 
 /** Shows the Stories of a Stage that a Modal created or saved. */
