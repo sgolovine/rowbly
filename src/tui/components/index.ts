@@ -29,6 +29,7 @@ export * from "./panel/index.js";
 export * from "./resize-edge/index.js";
 export { ScrollBody } from "./scroll-body/index.js";
 export * from "./searchable-select-picker/index.js";
+export * from "./section-heading-row/index.js";
 export * from "./select-list/index.js";
 export * from "./select-list-row/index.js";
 export { type RowDragProps, SelectionRow } from "./selection-row/index.js";

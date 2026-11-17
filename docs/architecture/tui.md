@@ -65,7 +65,7 @@ The screen areas in `screens/` are:
 | `onboarding/` | The onboarding steps in the Story panel. See [onboarding.md](onboarding.md).                                                                                        |
 | `settings/`   | The Settings modal and its sections, the Prompts section, the AI section, the Git section, the Hosts section, the model picker and the list of Stage worker models. |
 | `factory/`    | The Factory controls modal and the factory status helpers.                                                                                                          |
-| `threads/`    | The Factory view (the worker Threads of all Stories), its section headings and the Thread pane of the Story sidebar.                                                |
+| `threads/`    | The Factory view (the worker Threads of all Stories) and the Thread pane of the Story sidebar.                                                                      |
 
 ## The Factory controls
 
