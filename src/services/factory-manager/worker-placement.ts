@@ -114,3 +114,53 @@ export async function placeStory(manager: Manager, request: PlacementRequest): P
 
   return placement.host;
 }
+
+/** Gives the reason why the slot of a host cannot take a resume, or undefined when it can. */
+function resumeRefusal(slot: HostSlots | undefined, host: string): string | undefined {
+  if (!slot) {
+    return `host ${host} is not in the list of worker hosts`;
+  }
+
+  if (slot.state !== "connected") {
+    return `host ${host} is ${slot.state}`;
+  }
+
+  return slot.free > 0 ? undefined : `host ${host} has no free slot`;
+}
+
+/**
+ * Gives the host of a resume: the host of the Thread, because its session and its worktree are only on that host. The
+ * placement rules do not apply. A host that is not `connected`, or that has no free slot, gives a `ConflictError`.
+ */
+export async function resumeHost(
+  manager: Manager,
+  thread: ThreadRecord,
+  threads: readonly ThreadRecord[],
+): Promise<string> {
+  const host = thread.host ?? LOCAL_HOST;
+
+  await refreshHosts(manager);
+
+  const state = getState(manager);
+  const active = threads.filter((candidate) => candidate.status === "pending" || candidate.status === "running");
+  const slots = hostSlots(state.limit, managerHosts(state), usedSlots(state, active));
+  const refusal = resumeRefusal(
+    slots.find((slot) => slot.id === host),
+    host,
+  );
+
+  if (refusal) {
+    throw new ConflictError(`Cannot resume the worker: ${refusal}`, { details: { host } });
+  }
+
+  if (host !== LOCAL_HOST && !manager.remote) {
+    throw new ConflictError("Remote dispatch is not available", { details: { host } });
+  }
+
+  return host;
+}
+
+/** True when the host is `local`, or a worker host whose state is `connected` now. */
+export function hostConnected(state: Readonly<ManagerState>, host: string): boolean {
+  return host === LOCAL_HOST || managerHosts(state).some((entry) => entry.id === host && entry.state === "connected");
+}

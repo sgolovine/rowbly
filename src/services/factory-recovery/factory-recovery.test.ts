@@ -85,6 +85,41 @@ describe("factory recovery", () => {
       hint: expect.stringContaining("rowbly doctor --fix"),
     });
   });
+  it("interrupts a local worker of a dead owner, and keeps an active worker on a worker host", async () => {
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const local = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "BACKLOG", ownerToken: "dead", cwd: project.paths.root },
+      project.ctx,
+    );
+    await transitionThread(local.id, { expectedRevision: local.revision, status: "running" }, project.ctx);
+    const remote = await createThread(
+      { role: "worker", storyId: "ROW-2", stage: "BACKLOG", ownerToken: "dead", cwd: project.paths.root, host: "mini" },
+      project.ctx,
+    );
+    await transitionThread(remote.id, { expectedRevision: remote.revision, status: "running" }, project.ctx);
+    const pending = await createThread(
+      { role: "worker", storyId: "ROW-3", stage: "BACKLOG", ownerToken: "dead", cwd: project.paths.root, host: "mini" },
+      project.ctx,
+    );
+
+    await recoverFactory(owner.token, "dead", false, project.ctx);
+
+    expect(await getThread(local.id, project.ctx)).toMatchObject({
+      status: "interrupted",
+      error: { code: "OWNER_DIED" },
+    });
+    const running = await getThread(remote.id, project.ctx);
+    expect(running.status).toBe("running");
+    expect(running.error).toBeUndefined();
+    const waiting = await getThread(pending.id, project.ctx);
+    expect(waiting.status).toBe("pending");
+    expect(waiting.error).toBeUndefined();
+    // The projection of the remote Threads is repaired.
+    const attempts = (await readFactoryState(project.paths.root)).attempts;
+    expect(attempts.find((a) => a.threadId === remote.id)?.status).toBe("running");
+    expect(attempts.find((a) => a.threadId === pending.id)).toBeDefined();
+  });
   it("preserves external attempts unless adoption is explicit", async () => {
     const owner = await newOwner();
     await acquireFactoryOwnership(project.paths, owner);

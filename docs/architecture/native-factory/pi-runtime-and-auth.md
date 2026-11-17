@@ -85,7 +85,7 @@ keys and the screen stay responsive.
 
 The `factory-settings/` service reads and writes the optional `factory` key of
 `.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
+`storyWorkerModels`, `fallbackWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
 
 - Without the `factory` key, the worker limit is four and Pi selects default models.
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
@@ -98,7 +98,7 @@ The `factory-settings/` service reads and writes the optional `factory` key of
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model
   supports only some of them.
 - `rowbly factory configure` sets `--max-workers`, `--supervisor`, `--worker`,
-  `--supervisor-thinking` and `--worker-thinking`.
+  `--supervisor-thinking`, `--worker-thinking` and `--fallback-worker`.
 - The `git` section has `commitMessage`, `authorName` and `authorEmail`. They set the canonical
   commits of the factory. See [runtime-and-locks.md](runtime-and-locks.md#git-and-the-runtime-files).
 - `rowbly factory configure --commit-message "<text>"` sets `git.commitMessage`.
@@ -193,10 +193,37 @@ When the factory reserves a worker, it uses the first model in this list:
 3. The `model` argument of the supervisor tool `start_worker`.
 4. `workerModel`.
 
-The pure function `resolveWorkerModel(settings, storyId, stage)` gives items 1, 2 and 4. The
-reservation stores the selected model on the Thread. The supervisor loop reads the factory settings
+The pure function `selectWorkerModel(settings, target, isPaused)` in `worker-overrides.ts` gives the
+model. It also applies the fallback worker models. The reservation uses the selected model for the
+placement, the validation, the Thread `model` and the launch. The reservation stores the selected model
+on the Thread. The supervisor loop reads the factory settings
 again on each turn. Thus a changed override applies to the next reservation, and a restart is not
 necessary.
+
+### Fallback worker models
+
+`fallbackWorkerModels` is an ordered list of model choices in the `factory` section. It is optional.
+Without the key, there is no fallback.
+
+- The manager first selects the model from the list above. If the provider of that model is paused,
+  the manager uses the first fallback model whose provider is not paused.
+- The fallback applies also when the selected model is a Story override, a Stage override or the model
+  of the supervisor.
+- If the provider of the selected model and the providers of all fallback models are paused, the
+  reservation gives the `ConflictError` `Worker provider is paused`. The `scan` of the manager changes
+  each `start` and `retry` decision of the Story to `skip` with the reason `provider paused`. The
+  status file, `rowbly factory status` and the supervisor tool `factory_snapshot` show this reason.
+- `scan` does not know the model of the supervisor. Thus it uses only the overrides and `workerModel`.
+  The `provider` of each queue entry of the status file is the provider of this selection, with the
+  fallback.
+- If no model resolves, Pi selects the model. The manager does not check a pause and does not use the
+  list.
+- A resumed Thread keeps its model, also when its provider is paused. A network resume waits for the
+  end of the pause of the provider of the Thread.
+- The supervisor does not select a different provider because of a pause. The manager applies the
+  fallback.
+- `rowbly factory configure --fallback-worker <provider/model>` (repeat) replaces the list.
+  `--clear-fallback-workers` removes the key. See [controls.md](controls.md#cli-commands).
 
 ## Related
 
