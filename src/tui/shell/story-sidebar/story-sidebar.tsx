@@ -3,8 +3,7 @@ import { memo, useMemo, useRef, useState } from "react";
 import type { Story } from "../../../services/story/story.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import {
-  CloseButton,
-  ExpandButton,
+  BorderIcon,
   PaneBody,
   Panel,
   ResizeEdge,
@@ -119,8 +118,8 @@ export const StorySidebar = memo(function StorySidebar(props: StorySidebarProps)
           paddingX={0}
           aside={
             <Box flexShrink={0}>
-              {props.expand && <ExpandButton expanded={props.expand.expanded} onClick={props.expand.onToggle} />}
-              <CloseButton onClick={props.onClose} />
+              {props.expand && <BorderIcon glyph={props.expand.expanded ? "⤡" : "⤢"} onClick={props.expand.onToggle} />}
+              <BorderIcon glyph="✕" onClick={props.onClose} />
             </Box>
           }
           focused={focused}
