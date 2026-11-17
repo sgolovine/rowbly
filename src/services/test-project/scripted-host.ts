@@ -1,7 +1,8 @@
 // A worker host for tests with scripted answers. The test sends the `run` frames. It runs no host service and no Pi.
 
+import { RowblyError } from "../errors/errors.js";
 import type { HostRunState } from "../host-agent/host-run-state.js";
-import { HostUnreachableError } from "../host-transport/host-errors.js";
+import { HostUnreachableError, isHostTransportError } from "../host-transport/host-errors.js";
 import {
   type BytesResult,
   type HostVersions,
@@ -40,6 +41,14 @@ export interface ScriptedHostOptions {
    * unreachable error of the transport.
    */
   readonly loseAnswer?: (command: ScriptedCommand, host: ScriptedHost) => boolean;
+  /**
+   * Answers a request before the scripted answers, for example with a real host service. A value other than
+   * `undefined` is the answer. A thrown `RowblyError` gives exit code 1 with the message, as `rowbly host` does. A
+   * thrown transport error is the error of the call.
+   */
+  readonly handle?: (name: string, input: unknown) => unknown | Promise<unknown>;
+  /** Receives each upload, for example `cache-put`. */
+  readonly upload?: (command: RemoteCommand, data: Buffer) => void | Promise<void>;
   /** Answers each bytes call, for example `session-bytes`. The default is no bytes. */
   readonly bytes?: (command: RemoteCommand, input: unknown) => BytesResult | Promise<BytesResult>;
 }
@@ -119,7 +128,27 @@ function submitted(scripted: Scripted, input: unknown): RequestResult {
   return ok(scripted.options.receipt?.(command) ?? null);
 }
 
-function answer(scripted: Scripted, command: RemoteCommand, input: unknown): RequestResult {
+/** True for an error of the connection, which the call gives as it is. It is not a type guard on purpose. */
+function failedInTransport(error: unknown): boolean {
+  return isHostTransportError(error);
+}
+
+/** Gives the answer of the `handle` option, or `undefined` when it does not answer. */
+async function handled(scripted: Scripted, name: string, input: unknown): Promise<RequestResult | undefined> {
+  try {
+    const value = await scripted.options.handle?.(name, input);
+
+    return value === undefined ? undefined : ok(value);
+  } catch (error) {
+    if (!(error instanceof RowblyError) || failedInTransport(error)) {
+      throw error;
+    }
+
+    return { exitCode: 1, value: undefined, stderr: `Error: ${error.message}\n` };
+  }
+}
+
+async function answer(scripted: Scripted, command: RemoteCommand, input: unknown): Promise<RequestResult> {
   const name = command[2] ?? "";
   const event = name === "submit" ? `submit:${(input as ScriptedCommand).type}` : name;
 
@@ -127,6 +156,12 @@ function answer(scripted: Scripted, command: RemoteCommand, input: unknown): Req
     requests: [...state.requests, { command: [...command], input }],
     events: [...state.events, event],
   }));
+
+  const custom = await handled(scripted, name, input);
+
+  if (custom) {
+    return custom;
+  }
 
   if (name === "outbox" || name === "outbox-ack") {
     checkOutbox(scripted);
@@ -205,6 +240,10 @@ export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedH
     request: (command, input) => answer(scripted, command, input),
     ...(options.bytes ? { bytes: options.bytes } : {}),
     channel: (_command, remote) => openChannel(scripted, remote),
+    upload: async (command, data) => {
+      await options.upload?.(command, data);
+      return { exitCode: 0, stderr: "" };
+    },
   });
   const host: ScriptedHost = {
     transport,
