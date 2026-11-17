@@ -27,7 +27,6 @@ import { attachmentFileName } from "../attachment-files/attachment-type.js";
 import { getFactorySettings, updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { DEFAULT_COMMIT_MESSAGE } from "../factory-settings/git-settings.js";
 import type { PlacementPolicy } from "../factory-settings/placement-settings.js";
-import { updateFactoryState } from "../factory-state/factory-state.js";
 import { hostCacheMissing } from "../host-agent/host-agent-cache.js";
 import { hostAgentPaths, threadPaths } from "../host-agent/host-agent-paths.js";
 import { readHostRun } from "../host-agent/host-run-state.js";
@@ -43,7 +42,6 @@ import { initProject } from "../project/project.js";
 import { commitCanonicalProject } from "../project-write/project-write.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, getStory, updateStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { createFakeHostAgent, type FakeHostAgent } from "../test-project/fake-host-agent.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, type ThreadRecord } from "../thread/thread.js";
@@ -163,7 +161,7 @@ describe("remote factory end to end", () => {
     vi.stubEnv("PI_CODING_AGENT_DIR", join(dir.path, "agent"));
     vi.stubEnv("PI_OFFLINE", "1");
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
-    await createStage({ label: "Work", key: "WORK", prompt: PROMPT }, { cwd: root });
+    await createStage({ label: "Work", key: "WORK", prompt: PROMPT, position: 2 }, { cwd: root });
     await git(dir.path, "init", "-q", root);
     await git(root, "add", ".rowbly");
     await git(root, "-c", "user.name=T", "-c", "user.email=t@example.com", "commit", "-q", "-m", "initial");
@@ -222,10 +220,6 @@ describe("remote factory end to end", () => {
       },
       { cwd: root },
     );
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { WORK: { hash: promptHash(PROMPT), class: "work" } },
-    }));
 
     const runner = async () => ({ runtime, agentDir: join(dir.path, "agent") });
     const ids = Object.keys(options.hosts);

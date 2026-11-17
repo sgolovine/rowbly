@@ -15,7 +15,6 @@ import { commitCanonicalProject } from "../project-write/project-write.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, deleteStory, getStory, updateStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
@@ -86,7 +85,7 @@ describe("foreground factory", () => {
     );
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
     await createStage(
-      { label: "Work", key: "WORK", prompt: "Move this Story to Done. Report complete." },
+      { label: "Work", key: "WORK", prompt: "Move this Story to Done. Report complete.", position: 2 },
       { cwd: root },
     );
     await exec("git", ["init", root]);
@@ -114,7 +113,6 @@ describe("foreground factory", () => {
   });
   async function fixture(
     beforeLaunch?: Parameters<typeof createFactoryManager>[0]["beforeLaunch"],
-    classify = true,
     extra: Partial<Parameters<typeof createFactoryManager>[0]> = {},
   ) {
     const sdk = await loadPi();
@@ -140,11 +138,6 @@ describe("foreground factory", () => {
       },
       { cwd: root },
     );
-    if (classify)
-      await updateFactoryState(root, (state) => ({
-        ...state,
-        prompts: { WORK: { hash: promptHash("Move this Story to Done. Report complete."), class: "work" } },
-      }));
     const shim = await createCliShim(
       {
         executable: process.execPath,
@@ -158,6 +151,17 @@ describe("foreground factory", () => {
       { cwd: root },
     );
     return { supervisor, worker, shim, manager };
+  }
+  /**
+   * Waits until no worker runs and each host slot is free. A Thread can be final before the executor releases its slot,
+   * so a check of only the Thread status races with the next reservation.
+   */
+  async function idle(target: FactoryManager) {
+    await vi.waitFor(async () => {
+      const snapshot = await target.snapshot();
+      expect(snapshot.workers.running).toBe(0);
+      expect(snapshot.hosts.every((host) => host.used === 0)).toBe(true);
+    });
   }
   async function settled() {
     await vi.waitFor(
@@ -319,7 +323,7 @@ describe("foreground factory", () => {
       { id: "remote-b", maxWorkers: 1, state: "disconnected" as const, providers: ["worker"] },
     ];
     const worktreeFacts = vi.fn(async () => undefined);
-    const f = await fixture(() => barrier, true, { workerHosts: async () => hosts, worktreeFacts });
+    const f = await fixture(() => barrier, { workerHosts: async () => hosts, worktreeFacts });
     const workers = async () => (await listThreads({ role: "worker" }, { cwd: root })).threads;
     try {
       await expect(
@@ -357,7 +361,7 @@ describe("foreground factory", () => {
   it("gives the slots of each host in the supervisor digest", async () => {
     await createStory({ title: "Digest", stage: "WORK" }, { cwd: root });
     const hosts = [{ id: "remote-a", maxWorkers: 2, state: "connected" as const, providers: ["worker"] }];
-    const f = await fixture(undefined, false, { workerHosts: async () => hosts, worktreeFacts: async () => undefined });
+    const f = await fixture(undefined, { workerHosts: async () => hosts, worktreeFacts: async () => undefined });
     const digests: string[] = [];
     f.supervisor.setResponses([
       (context) => {
@@ -404,7 +408,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "simulated" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "first" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     await f.manager.reconcile();
     f.worker.setResponses([
       tool("report_result", { outcome: "complete", summary: "Resumed", blockers: [], problems: [] }),
@@ -509,38 +513,89 @@ describe("foreground factory", () => {
       await run;
     }
   });
-  it("classifies the fresh prompt through real Pi tools before a reservation", async () => {
-    const story = await createStory({ title: "Classify me", stage: "WORK" }, { cwd: root });
-    const f = await fixture(undefined, false);
-    await expect(f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "early" })).rejects.toThrow(
-      "not eligible",
+  it("starts a worker for a new middle Stage on the first scan, with no classification", async () => {
+    const story = await createStory({ title: "No classification", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    expect((await f.manager.snapshot()).decisions).toContainEqual(
+      expect.objectContaining({ story: story.id, stage: "WORK", action: "start" }),
     );
+    expect(await readFactoryState(root)).not.toHaveProperty("prompts");
     f.supervisor.setResponses([
-      tool("classify_stage", { stage: "WORK", promptHash: "expired", class: "work" }),
-      tool("classify_stage", {
-        stage: "WORK",
-        promptHash: promptHash("Move this Story to Done. Report complete."),
-        class: "work",
-      }),
-      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "classified" }),
+      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "first" }),
       fauxAssistantMessage("Wait"),
       fauxAssistantMessage("Done"),
     ]);
     f.worker.setResponses([
-      tool("report_result", { outcome: "complete", summary: "WORKER_PRIVATE", blockers: [], problems: [] }),
+      tool("report_result", { outcome: "complete", summary: "Done", blockers: [], problems: [] }),
       fauxAssistantMessage("Done"),
     ]);
     const run = f.manager.run();
     try {
       expect((await settled())?.status).toBe("completed");
-      const supervisor = (await listThreads({ role: "supervisor" }, { cwd: root })).threads[0];
-      const history = await readFile(join(root, ".rowbly/runtime", supervisor?.session.file as string), "utf8");
-      expect(history).toContain("Stage prompt changed");
-      expect(history).not.toContain('"name":"bash"');
+      expect(await readFactoryState(root)).not.toHaveProperty("prompts");
     } finally {
       await f.manager.shutdown();
       await run;
     }
+  });
+  it("keeps the prompts key of an old state file and does not use it", async () => {
+    const story = await createStory({ title: "Old state", stage: "WORK" }, { cwd: root });
+    const prompts = { WORK: { hash: "old", class: "hold" }, BACKLOG: { hash: "old", class: "work" } };
+    await updateFactoryState(root, (state) => ({ ...state, prompts }));
+    const f = await fixture();
+    expect((await f.manager.snapshot()).decisions).toContainEqual(
+      expect.objectContaining({ story: story.id, action: "start" }),
+    );
+    expect((await readFactoryState(root)).prompts).toEqual(prompts);
+  });
+  it("gives no workers to a Stage with hold in factory.stageClasses", async () => {
+    const story = await createStory({ title: "Held by class", stage: "WORK" }, { cwd: root });
+    await updateFactorySettings({ stageClasses: { WORK: "hold" } }, { cwd: root });
+    const f = await fixture();
+    expect((await f.manager.snapshot()).decisions).toContainEqual(
+      expect.objectContaining({ story: story.id, action: "skip", reason: "hold stage" }),
+    );
+    await expect(f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "held" })).rejects.toThrow(
+      "not eligible",
+    );
+    expect((await listThreads({ role: "worker" }, { cwd: root })).threads).toEqual([]);
+  });
+  it("makes the first and the last Stage work when factory.stageClasses says work", async () => {
+    const first = await createStory({ title: "First", stage: "BACKLOG" }, { cwd: root });
+    const last = await createStory({ title: "Last", stage: "DONE" }, { cwd: root });
+    await updateFactorySettings({ stageClasses: { BACKLOG: "work", DONE: "work" } }, { cwd: root });
+    const f = await fixture();
+    const { decisions } = await f.manager.snapshot();
+    // The limit is one worker, so one Story waits for the limit, not for its Stage.
+    expect(decisions.map((d) => d.story).toSorted()).toEqual([first.id, last.id]);
+    expect(decisions.map((d) => d.reason).toSorted()).toEqual(["new stage stay", "worker limit"]);
+  });
+  it("holds the first and the last Stage of the config order also with other keys", async () => {
+    await createStage({ label: "Ideas", key: "IDEAS", prompt: "Ideas.", position: 1 }, { cwd: root });
+    await createStage({ label: "Shipped", key: "SHIPPED", prompt: "Shipped." }, { cwd: root });
+    const first = await createStory({ title: "Idea", stage: "IDEAS" }, { cwd: root });
+    const last = await createStory({ title: "Shipped", stage: "SHIPPED" }, { cwd: root });
+    const backlog = await createStory({ title: "Backlog", stage: "BACKLOG" }, { cwd: root });
+    const f = await fixture();
+    const { decisions } = await f.manager.snapshot();
+    expect(decisions).toContainEqual(
+      expect.objectContaining({ story: first.id, action: "skip", reason: "hold stage" }),
+    );
+    expect(decisions).toContainEqual(expect.objectContaining({ story: last.id, action: "skip", reason: "hold stage" }));
+    expect(decisions).toContainEqual(expect.objectContaining({ story: backlog.id, action: "start" }));
+  });
+  it("gives invalid to an empty prompt, unless factory.stageClasses has the Stage", async () => {
+    await createStage({ label: "Empty", key: "EMPTY", prompt: " ", position: 2 }, { cwd: root });
+    await createStage({ label: "Blank", key: "BLANK", prompt: "", position: 2 }, { cwd: root });
+    const empty = await createStory({ title: "Empty", stage: "EMPTY" }, { cwd: root });
+    const blank = await createStory({ title: "Blank", stage: "BLANK" }, { cwd: root });
+    await updateFactorySettings({ stageClasses: { BLANK: "work" } }, { cwd: root });
+    const f = await fixture();
+    const { decisions } = await f.manager.snapshot();
+    expect(decisions).toContainEqual(
+      expect.objectContaining({ story: empty.id, action: "skip", reason: "stage prompt missing or invalid" }),
+    );
+    expect(decisions).toContainEqual(expect.objectContaining({ story: blank.id, action: "start" }));
   });
   it("refuses to reserve a worker for a blocked Story", async () => {
     const upstream = await createStory({ title: "Upstream", stage: "BACKLOG" }, { cwd: root });
@@ -562,10 +617,6 @@ describe("foreground factory", () => {
       { cwd: root },
     );
     const f = await fixture();
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { ...(state.prompts as object), BUILD: { hash: promptHash(prompt), class: "work" } },
-    }));
     return { f, upstream, downstream };
   }
   it("gives the dependency lists in factory_snapshot and story_get", async () => {
@@ -713,11 +764,11 @@ describe("foreground factory", () => {
     const prompt = "Wait for a person.";
     await createStage({ label: "Wait", key: "WAIT", prompt, position: 3 }, { cwd: root });
     const held = await createStory({ title: "Held", stage: "WAIT" }, { cwd: root });
+    await updateFactorySettings({ stageClasses: { WAIT: "hold" } }, { cwd: root });
     const { f, upstream, downstream } = await pullFixture("BACKLOG", true);
     await updateStory({ id: downstream.id, dependsOn: [upstream.id, held.id] }, { cwd: root });
     await updateFactoryState(root, (state) => ({
       ...state,
-      prompts: { ...(state.prompts as object), WAIT: { hash: promptHash(prompt), class: "hold" } },
       parked: {
         [upstream.id]: { stage: "BACKLOG", hash: storyHash(upstream), reason: "test", since: "", reported: true },
       },
@@ -798,7 +849,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
     await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
       "paused",
@@ -828,7 +879,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
     expect(previous?.model).toEqual({ provider: "worker", modelId: "faux-1" });
 
@@ -861,7 +912,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
       "Worker provider is paused",
     );
@@ -877,7 +928,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "fetch failed" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "offline" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect(previous?.status).toBe("failed");
     expect(previous?.resumable).toBe(true);
     expect(previous?.error).toMatchObject({ class: "transient", code: "NETWORK", message: "fetch failed" });
@@ -1138,12 +1189,11 @@ describe("foreground factory", () => {
   async function attentionOf(f: { manager: FactoryManager }) {
     return new Map((await f.manager.snapshot()).attention as [string, { text: string }][]);
   }
-  it("delivers a digest with the unclassified Stage while the commit step throws on each pass", async () => {
-    const hash = promptHash("Move this Story to Done. Report complete.");
-    await createStory({ title: "Unclassified", stage: "WORK" }, { cwd: root });
+  it("delivers a digest with the candidate Story while the commit step throws on each pass", async () => {
+    const story = await createStory({ title: "Candidate", stage: "WORK" }, { cwd: root });
     const long = `Project write lock is unavailable ${"x".repeat(1000)}`;
     vi.mocked(commitCanonicalProject).mockRejectedValue(new Error(long));
-    const f = await fixture(undefined, false);
+    const f = await fixture();
     const digests: string[] = [];
     f.supervisor.setResponses([
       (context) => {
@@ -1154,8 +1204,8 @@ describe("foreground factory", () => {
     const run = f.manager.run();
     try {
       await vi.waitFor(() => expect(digests).toHaveLength(1), { timeout: 10000, interval: 20 });
-      expect(digests[0]).toContain("unclassified");
-      expect(digests[0]).toContain(hash);
+      expect(digests[0]).toContain("candidates");
+      expect(digests[0]).toContain(story.id);
       const commit = (await attentionOf(f)).get("commit");
       expect(commit?.text).toContain("Canonical commit failed: Project write lock is unavailable");
       expect(commit?.text.length).toBeLessThanOrEqual(500);
@@ -1175,7 +1225,7 @@ describe("foreground factory", () => {
     ],
   ])("delivers the digest when the %s step throws, and records the error", async (key, label, breakStep) => {
     await createStory({ title: "Step failure", stage: "WORK" }, { cwd: root });
-    const f = await fixture(undefined, false);
+    const f = await fixture();
     const digests: string[] = [];
     f.supervisor.setResponses([
       (context) => {
@@ -1187,7 +1237,7 @@ describe("foreground factory", () => {
     const run = f.manager.run();
     try {
       await vi.waitFor(() => expect(digests).toHaveLength(1), { timeout: 10000, interval: 20 });
-      expect(digests[0]).toContain("unclassified");
+      expect(digests[0]).toContain("candidates");
       const text = (await attentionOf(f)).get(key)?.text ?? "";
       expect(text).toBe(`${label}: ${"y".repeat(500)}`.slice(0, 500));
     } finally {
