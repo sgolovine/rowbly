@@ -24,6 +24,10 @@ export interface FactoryOverviewProps {
   readonly clickable?: boolean;
   /** Opens the detail view of the warning with this key. */
   readonly onProblem?: (key: string) => void;
+  /** The index of the first row in the window of the `Attention` list. */
+  readonly attentionOffset?: number;
+  /** Scrolls the `Attention` list by one row: `-1` up, `1` down. */
+  readonly onScrollAttention?: (direction: -1 | 1) => void;
 }
 
 function failed(status: FactoryStatus | undefined): boolean {
@@ -50,6 +54,8 @@ export function FactoryOverview({
   stages,
   clickable = false,
   onProblem,
+  attentionOffset,
+  onScrollAttention,
 }: FactoryOverviewProps) {
   const queue = live ? (status?.queue ?? []) : [];
   const hosts = workerHosts(status, live);
@@ -88,6 +94,8 @@ export function FactoryOverview({
       <FactoryList
         title="Attention"
         clickable={clickable}
+        offset={attentionOffset}
+        onScroll={onScrollAttention}
         rows={factoryProblems(status).map((problem) => ({
           key: problem.key,
           onClick: onProblem && (() => onProblem(problem.key)),

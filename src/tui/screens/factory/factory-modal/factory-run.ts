@@ -24,7 +24,12 @@ export interface FactoryKeyEnv extends FactoryRunEnv {
   readonly canStart: boolean;
   readonly canStop: boolean;
   readonly canWarnings: boolean;
+  readonly canScroll: boolean;
+  readonly canDismissAll: boolean;
   readonly openWarnings: () => void;
+  /** Moves the window of the `Attention` list by one row: `-1` up, `1` down. */
+  readonly scroll: (direction: -1 | 1) => void;
+  readonly askDismissAll: () => void;
   readonly setConfirm: Dispatch<SetStateAction<boolean>>;
   readonly setHistory: Dispatch<SetStateAction<boolean>>;
   readonly onAiSettings: (() => void) | undefined;
@@ -63,9 +68,15 @@ async function changeFactory(env: FactoryRunEnv, kind: FactoryRunKind): Promise<
   await stopFactory({}, env.ctx);
 }
 
-/** The keys of the Factory controls: `s` starts and `x` asks to stop. */
+/** The keys of the Factory controls: `s` starts, `x` asks to stop and `↑/↓` scroll the `Attention` list. */
 export function handleFactoryKey(env: FactoryKeyEnv, input: string, key: Key): void {
   if (key.ctrl || key.meta) {
+    return;
+  }
+
+  if (key.upArrow || key.downArrow) {
+    scrollAttention(env, key.upArrow ? -1 : 1);
+
     return;
   }
 
@@ -84,8 +95,23 @@ export function handleFactoryKey(env: FactoryKeyEnv, input: string, key: Key): v
   openOther(env, input);
 }
 
-/** `w` shows the warnings, `h` shows the old supervisor Threads and `a` opens the AI settings. */
+function scrollAttention(env: FactoryKeyEnv, direction: -1 | 1): void {
+  if (env.canScroll) {
+    env.scroll(direction);
+  }
+}
+
+/**
+ * `w` shows the warnings, `d` asks to dismiss all, `h` shows the old supervisor Threads and `a` opens the AI
+ * settings.
+ */
 function openOther(env: FactoryKeyEnv, input: string): void {
+  if (input === "d" && env.canDismissAll) {
+    env.askDismissAll();
+
+    return;
+  }
+
   if (input === "w" && env.canWarnings) {
     env.openWarnings();
 

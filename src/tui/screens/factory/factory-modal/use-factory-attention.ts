@@ -4,11 +4,15 @@ import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import type { Story } from "../../../../services/story/story.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
+import { clampOffset } from "../../../components/scroll-offset.js";
 import { useEscape, useToast } from "../../../hooks/index.js";
+import { factoryListMaxOffset } from "../factory-list/index.js";
 import { problemStory, problemThread } from "../factory-problem-links.js";
 import { type FactoryProblem, factoryProblems } from "../factory-status.js";
 import {
   type AttentionEnv,
+  dismissAllProblems,
+  dismissibleKeys,
   dismissProblem,
   handleProblemKey,
   openProblemStory,
@@ -33,6 +37,10 @@ interface AttentionAbilities {
   readonly story: boolean;
   readonly thread: boolean;
   readonly dismiss: boolean;
+  /** The main view can scroll the `Attention` list: it has more rows than its window. */
+  readonly scroll: boolean;
+  /** A warning can be dismissed and no dismiss runs, so `d` in the main view can dismiss all. */
+  readonly dismissAll: boolean;
 }
 
 /** The handlers of the Attention views. */
@@ -45,6 +53,11 @@ interface AttentionActions {
   readonly openStory: () => void;
   readonly openThread: () => void;
   readonly dismiss: () => void;
+  /** Moves the window of the `Attention` list of the main view by one row: `-1` up, `1` down. */
+  readonly scroll: (direction: -1 | 1) => void;
+  readonly askDismissAll: () => void;
+  readonly confirmDismissAll: () => void;
+  readonly cancelDismissAll: () => void;
   readonly setFiltering: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -60,32 +73,63 @@ export interface FactoryAttention {
   readonly thread: ThreadRecord | undefined;
   /** True while a dismiss waits for the factory. */
   readonly busy: boolean;
+  /** The index of the first row in the window of the `Attention` list of the main view. */
+  readonly offset: number;
+  /** True while the confirmation of `Dismiss all` is open. */
+  readonly confirmAll: boolean;
   readonly can: AttentionAbilities;
   readonly actions: AttentionActions;
 }
 
-function attentionAbilities(env: AttentionEnv, busy: boolean): AttentionAbilities {
+function attentionAbilities(env: AttentionEnv, problems: readonly FactoryProblem[], busy: boolean): AttentionAbilities {
   return {
     story: env.story !== undefined && env.onOpenStory !== undefined,
     thread: env.thread !== undefined && env.onOpenThread !== undefined,
     dismiss: env.problem?.dismissible === true && !busy,
+    scroll: factoryListMaxOffset(problems.length) > 0,
+    dismissAll: dismissibleKeys(problems).length > 0 && !busy,
   };
+}
+
+/** The setters of the state of the Attention views that the actions change. */
+interface AttentionSetters {
+  readonly setListOpen: Dispatch<SetStateAction<boolean>>;
+  readonly setFiltering: Dispatch<SetStateAction<boolean>>;
+  readonly setOffset: Dispatch<SetStateAction<number>>;
+  readonly setConfirmAll: Dispatch<SetStateAction<boolean>>;
+}
+
+/** The offset after a move of one row. It starts from the offset in range, also when the list became shorter. */
+function scrolledOffset(current: number, count: number, direction: -1 | 1): number {
+  const max = factoryListMaxOffset(count);
+
+  return clampOffset(Math.min(current, max) + direction, max);
+}
+
+/** Closes the confirmation, then dismisses each warning that a person can dismiss. */
+function confirmDismissAll(env: AttentionEnv, problems: readonly FactoryProblem[], setters: AttentionSetters): void {
+  setters.setConfirmAll(false);
+  void dismissAllProblems(env, dismissibleKeys(problems));
 }
 
 function attentionActions(
   env: AttentionEnv,
-  setListOpen: Dispatch<SetStateAction<boolean>>,
-  setFiltering: Dispatch<SetStateAction<boolean>>,
+  problems: readonly FactoryProblem[],
+  setters: AttentionSetters,
 ): AttentionActions {
   return {
-    openList: () => setListOpen(true),
-    closeList: () => setListOpen(false),
+    openList: () => setters.setListOpen(true),
+    closeList: () => setters.setListOpen(false),
     pick: (key) => env.setProblemKey(key),
     closeDetail: () => env.setProblemKey(undefined),
     openStory: () => openProblemStory(env),
     openThread: () => openProblemThread(env),
     dismiss: () => void dismissProblem(env),
-    setFiltering,
+    scroll: (direction) => setters.setOffset((current) => scrolledOffset(current, problems.length, direction)),
+    askDismissAll: () => setters.setConfirmAll(true),
+    confirmDismissAll: () => confirmDismissAll(env, problems, setters),
+    cancelDismissAll: () => setters.setConfirmAll(false),
+    setFiltering: setters.setFiltering,
   };
 }
 
@@ -100,6 +144,8 @@ export function useFactoryAttention(input: FactoryAttentionInput): FactoryAttent
   const [problemKey, setProblemKey] = useState<string>();
   const [filtering, setFiltering] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [confirmAll, setConfirmAll] = useState(false);
   const dismissing = useRef(false);
 
   const problems = factoryProblems(status);
@@ -132,7 +178,9 @@ export function useFactoryAttention(input: FactoryAttentionInput): FactoryAttent
     story,
     thread,
     busy,
-    can: attentionAbilities(env, busy),
-    actions: attentionActions(env, setListOpen, setFiltering),
+    offset: clampOffset(offset, factoryListMaxOffset(problems.length)),
+    confirmAll,
+    can: attentionAbilities(env, problems, busy),
+    actions: attentionActions(env, problems, { setListOpen, setFiltering, setOffset, setConfirmAll }),
   };
 }

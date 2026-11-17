@@ -12,6 +12,7 @@ import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState, type WatchdogState } from "../factory-watchdog/factory-watchdog.js";
+import { mapInOrder } from "../in-order/in-order.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { Store } from "../store/store.js";
@@ -256,6 +257,44 @@ export async function dismissFactoryAttention(
   }
 
   return sendFactoryCommand("dismiss", { ...input, attentionKey: key }, ctx);
+}
+
+/** The result of `dismissFactoryAttentions`: the keys that the daemon removed and the keys that failed. */
+export interface DismissAllResult {
+  readonly dismissed: string[];
+  readonly failed: { readonly key: string; readonly error: unknown }[];
+}
+
+/** The outcome of the dismiss of one key. A failure is a value, so that the later keys still go. */
+type DismissOutcome =
+  | { readonly key: string; readonly ok: true }
+  | { readonly key: string; readonly ok: false; readonly error: unknown };
+
+async function dismissOne(key: string, input: { timeoutMs?: number }, ctx: ServiceContext): Promise<DismissOutcome> {
+  try {
+    await dismissFactoryAttention(key, input, ctx);
+
+    return { key, ok: true };
+  } catch (error) {
+    return { key, ok: false, error };
+  }
+}
+
+/**
+ * Asks the live daemon to remove each attention entry in `keys`, one command after the other. A failed command
+ * does not stop the later keys.
+ */
+export async function dismissFactoryAttentions(
+  keys: readonly string[],
+  input: { timeoutMs?: number } = {},
+  ctx: ServiceContext = {},
+): Promise<DismissAllResult> {
+  const outcomes = await mapInOrder(keys, (key) => dismissOne(key, input, ctx));
+
+  return {
+    dismissed: outcomes.filter((outcome) => outcome.ok).map((outcome) => outcome.key),
+    failed: outcomes.flatMap((outcome) => (outcome.ok ? [] : [{ key: outcome.key, error: outcome.error }])),
+  };
 }
 
 /**

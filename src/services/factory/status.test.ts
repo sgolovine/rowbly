@@ -8,6 +8,7 @@ import { createThread } from "../thread/thread.js";
 import { runtimePaths } from "../workspace/workspace.js";
 import {
   dismissFactoryAttention,
+  dismissFactoryAttentions,
   getFactoryStatus,
   releaseFactoryStory,
   sendFactoryCommand,
@@ -54,6 +55,38 @@ describe("factory attention dismiss", () => {
     await expect(dismissFactoryAttention("commit", {}, project.ctx)).rejects.toThrow("Factory is not running");
     await expect(dismissFactoryAttention("", {}, project.ctx)).rejects.toThrow("attention key");
     await expect(dismissFactoryAttention("k".repeat(129), {}, project.ctx)).rejects.toThrow("attention key");
+  });
+});
+
+describe("factory attention dismiss of many keys", () => {
+  const project = useTestProject();
+  it("sends one dismiss for each key in order, continues after a failure and returns both lists", async () => {
+    await prepareRuntime(project.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const execute = vi.fn(async (_command: FactoryCommand) => {});
+    const sent = dismissFactoryAttentions(["first", "", "second"], { timeoutMs: 5000 }, project.ctx);
+    await vi.waitFor(async () => {
+      await processCommands(project.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalledTimes(2);
+    });
+    const result = await sent;
+    expect(execute.mock.calls.map(([command]) => [command.type, command.attentionKey])).toEqual([
+      ["dismiss", "first"],
+      ["dismiss", "second"],
+    ]);
+    expect(result.dismissed).toEqual(["first", "second"]);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.key).toBe("");
+    expect(String(result.failed[0]?.error)).toContain("attention key");
+  });
+  it("returns each key as failed when the factory does not run", async () => {
+    const result = await dismissFactoryAttentions(["a", "b"], {}, project.ctx);
+    expect(result.dismissed).toEqual([]);
+    expect(result.failed.map((entry) => entry.key)).toEqual(["a", "b"]);
+  });
+  it("returns empty lists for no keys", async () => {
+    expect(await dismissFactoryAttentions([], {}, project.ctx)).toEqual({ dismissed: [], failed: [] });
   });
 });
 

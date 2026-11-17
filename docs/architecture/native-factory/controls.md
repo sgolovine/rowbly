@@ -156,7 +156,16 @@ See [recovery.md](recovery.md#release-a-parked-story).
   - `x` requests a stop, with confirmation.
   - `w` opens the list of all warnings (`Factory › Attention`). The key works only when the live
     factory has warnings.
-  - A click on a row of the `Attention` list opens the detail view of that warning.
+  - A click on a row of the `Attention` list selects the row. A click on the selected row opens the
+    detail view of that warning.
+  - The `Attention` list shows five rows at a time. When it has more rows, `↑/↓` and the mouse
+    wheel scroll the list by one row. A `↑ n more` row and a `↓ n more` row give the number of hidden
+    rows above and below.
+  - `d` (or the `Dismiss all` button) asks for confirmation, then sends one `dismiss` command for
+    each attention entry, one after the other. The button and the key show only when the live
+    factory has an attention entry. A pending toast shows during the work, then an info toast gives
+    the number of dismissed warnings. If a command fails, an error toast shows and that warning stays.
+    Other warnings (heartbeat, Thread file issues, providers and the watchdog) stay in the list.
   - `h` opens the history of the old supervisor Threads (`Factory › Old supervisor Threads`). The
     factory does not create supervisor Threads now. In the history, `enter` shows the read-only
     conversation of the selected Thread, and `esc` goes back to the history.

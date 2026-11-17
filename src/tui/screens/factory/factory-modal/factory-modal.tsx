@@ -59,7 +59,8 @@ function modalInput(props: FactoryModalProps): FactoryModalInput {
  * own, and `x` asks before it stops the factory. The factory keeps running when the TUI quits. `h` lists the old
  * supervisor Threads, `enter` shows the read-only conversation of one, and `esc` goes back. `w` lists the warnings,
  * and `enter` or a click on a warning shows its full text, its Story and its Thread. `d` dismisses an attention entry
- * of the live factory. `a` opens the AI settings. `status` comes from the shell, which reads it again on each change.
+ * of the live factory. In the main view, `↑/↓` and the wheel scroll the `Attention` list, and `d` asks to dismiss
+ * all attention entries. `a` opens the AI settings. `status` comes from the shell, which reads it again on each change.
  */
 export function FactoryModal(props: FactoryModalProps) {
   const { ctx, status, stages = {}, launch, onClose, onAiSettings } = props;
@@ -104,6 +105,17 @@ export function FactoryModal(props: FactoryModalProps) {
           destructive
           onConfirm={actions.confirmStop}
           onCancel={actions.cancelStop}
+        />
+      )}
+      {view === "main" && model.attention.confirmAll && (
+        <ConfirmDialog
+          title="Factory › Dismiss all"
+          message="Dismiss all warnings that can be dismissed? The factory removes their attention entries. You cannot undo this."
+          confirmLabel="Dismiss all"
+          cancelLabel="Cancel"
+          destructive
+          onConfirm={model.attention.actions.confirmDismissAll}
+          onCancel={model.attention.actions.cancelDismissAll}
         />
       )}
     </Modal>
