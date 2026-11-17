@@ -23,6 +23,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-agent-work.ts`        | The `HostWorkRunner` interface and the run commands.                             |
 | `host-agent-prepare.ts`     | `prepareHostThread`: the copy and `launch.json` of a Thread.                     |
 | `host-agent-cache.ts`       | The attachment cache commands `cache-missing` and `cache-put`.                   |
+| `host-inbound.ts`           | `applyHostInbound`: the inbound updates of a Thread and their applied `seq`.     |
 | `host-agent-input.ts`       | The bounded read of stdin.                                                       |
 | `host-runner.ts`            | `createHostRunner`: the real `HostWorkRunner`.                                   |
 | `host-run-events.ts`        | The events of the executor that write `run.json`.                                |
@@ -57,6 +58,7 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | `[<remote rowbly>, "host", "cache-missing", <project-id>]`   | request | `{ "ids": [<attachment id>, …] }`            | `{ "missing": [<id>, …] }`                    |
 | `[<remote rowbly>, "host", "cache-put", <project-id>, <id>]` | upload  | The file bytes (10 MiB or less)              | `{ id, added }`                               |
 | `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`               |
+| `[<remote rowbly>, "host", "inbound", <project-id>]`         | request | `{ threadId, updates }` (32 MiB or less)     | `{ threadId, appliedSeq }`                    |
 | `[<remote rowbly>, "host", "ping", <project-id>]`            | request | `{}`                                         | `{ protocol, rowbly, agent, slots, pending }` |
 | `[<remote rowbly>, "host", "session-bytes", <project-id>]`   | bytes   | `{ threadId, file, offset }`                 | The session bytes (see "Session bytes")       |
 | `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                        |
@@ -90,6 +92,7 @@ All paths are below the home folder of the SSH user. Each folder that the agent 
 | `agent/threads/<thread-id>/launch.json`                    | The prepared launch data.                   |
 | `agent/threads/<thread-id>/run.json`                       | The run state.                              |
 | `agent/threads/<thread-id>/write.lock`                     | The `flock` file of the worker CLI prefix.  |
+| `agent/threads/<thread-id>/inbound-applied.json`           | The last applied inbound `seq`.             |
 | `agent/runtime/sessions/<thread-id>/`                      | The Pi session files of the Thread.         |
 | `agent/runtime/checks/jobs.json`, `<job id>.log`           | The check records and the check logs.       |
 | `agent/attachments/<id>.png`                               | The attachment cache of the Project.        |
@@ -321,6 +324,46 @@ The agent stops and releases its claim when all of these conditions are true for
 
 An open attach channel does not keep the agent alive. After a `stop` command, the agent stops when it
 has no active work, without the idle period.
+
+## Inbound updates
+
+An inbound update is a change of the canonical files on the main machine that goes to the copy of a
+running remote Thread. See [README.md](README.md#inbound-updates) for the diff and the queue of the
+main machine. The `src/services/inbound/` folder has the shared types (`inbound-types.ts`), the diff
+(`inbound-diff.ts`) and the apply to a copy (`inbound-apply.ts`).
+
+`host inbound <project-id>` reads `{ threadId, updates }`. Each update has a `seq` and a `type`.
+`applyHostInbound` does these steps:
+
+1. It checks the full input before it changes a file. A bad Thread id, a bad `seq`, an unknown type,
+   a bad Story ID, a bad attachment id or a bad path gives `VALIDATION`. Each path must obey
+   `validateCopyPath`.
+2. It reads `launch.json`. A Thread that is not prepared gives `NOT_FOUND`.
+3. It holds `threads/<thread-id>/write.lock`, the `flock` file of the worker command prefix. Thus a
+   worker write and an update do not change the copy at the same time.
+4. It applies each update in `seq` order. It skips an update with a `seq` equal to or less than the
+   value in `inbound-applied.json`. A missing file gives `0`. After each update, it writes the `seq`
+   durably to that file.
+5. It writes `{ threadId, appliedSeq }`. This answer is the acknowledgement.
+
+The apply runs the services on the copy without a recorder. Thus it writes no outbox entry. The
+update types have these effects on the copy:
+
+| Type                | Effect                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `story.update`      | A compare-and-set of each change, with the shared code of `outbox/outbox-decision.ts`. |
+| `story.create`      | Writes the Story file when the copy has no Story with that ID.                         |
+| `story.delete`      | Removes the Story file and the attachment folder of the Story.                         |
+| `attachment.add`    | Adds the record when its id is not in the manifest, and writes `file` from the cache.  |
+| `attachment.remove` | Removes the record and its file.                                                       |
+| `file.put`          | Replaces the full file.                                                                |
+| `file.delete`       | Removes the file.                                                                      |
+
+For `story.update`, a value equal to `before` gets `after`. A value equal to `after` is skipped. Each
+other value is a change of the worker: the value of the worker stays, and the apply records nothing.
+A Story that is not in the copy skips the update. A missing Story, record or file also skips its
+update, so a second send of an update has no effect. An `attachment.add` whose file is not in the
+cache adds only the record. The worker then gets the file through the attachment fetch.
 
 ## Heartbeat
 

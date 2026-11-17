@@ -92,6 +92,44 @@ export interface CopyBase extends ThreadCopy {
   readonly sentAt: string;
 }
 
+function validateBaseThreadId(threadId: string): void {
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(threadId)) {
+    throw new ValidationError("Invalid Thread ID", { details: { threadId } });
+  }
+}
+
+/** Gives the path of a file in `runtime/hosts/<host>/threads/<thread-id>/`. It does not create a folder. */
+export async function hostThreadFile(
+  paths: ProjectPaths,
+  host: string,
+  threadId: string,
+  name: string,
+): Promise<string> {
+  validateBaseThreadId(threadId);
+
+  return runtimeChild(await hostDir(paths, host), `${THREADS_DIR}/${threadId}/${name}`);
+}
+
+/**
+ * Gives the path of a file in `runtime/hosts/<host>/threads/<thread-id>/`, after it creates the folders with mode
+ * 0700.
+ */
+export async function preparedHostThreadFile(
+  paths: ProjectPaths,
+  host: string,
+  threadId: string,
+  name: string,
+): Promise<string> {
+  validateBaseThreadId(threadId);
+
+  const dir = await preparedHostDir(paths, host);
+
+  await makePrivateDir(await runtimeChild(dir, THREADS_DIR));
+  await makePrivateDir(await runtimeChild(dir, `${THREADS_DIR}/${threadId}`));
+
+  return runtimeChild(dir, `${THREADS_DIR}/${threadId}/${name}`);
+}
+
 /**
  * Writes the copy that went to the host for the Thread to `runtime/hosts/<host>/threads/<thread-id>/base.json`, with
  * mode 0600. The folders get mode 0700. A later send replaces the file. Gives the path.
@@ -102,17 +140,7 @@ export async function writeCopyBase(
   threadId: string,
   copy: ThreadCopy,
 ): Promise<string> {
-  if (!/^[A-Za-z0-9_-]{1,128}$/.test(threadId)) {
-    throw new ValidationError("Invalid Thread ID", { details: { threadId } });
-  }
-
-  const dir = await preparedHostDir(paths, host);
-  const threadDir = await runtimeChild(dir, `${THREADS_DIR}/${threadId}`);
-
-  await makePrivateDir(await runtimeChild(dir, THREADS_DIR));
-  await makePrivateDir(threadDir);
-
-  const file = await runtimeChild(dir, `${THREADS_DIR}/${threadId}/${BASE_FILE}`);
+  const file = await preparedHostThreadFile(paths, host, threadId, BASE_FILE);
   const base: CopyBase = {
     version: 1,
     threadId,
@@ -125,4 +153,34 @@ export async function writeCopyBase(
   await writeFileAtomic(file, `${JSON.stringify(base)}\n`, { durable: true, mode: 0o600 });
 
   return file;
+}
+
+function parseBase(text: string, threadId: string): CopyBase | undefined {
+  try {
+    const value = JSON.parse(text) as Partial<CopyBase> | null;
+
+    return value?.version === 1 &&
+      value.threadId === threadId &&
+      Array.isArray(value.files) &&
+      Array.isArray(value.attachments)
+      ? (value as CopyBase)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Reads the base of the Thread. A missing or bad file gives `undefined`. */
+export async function readCopyBase(paths: ProjectPaths, host: string, threadId: string): Promise<CopyBase | undefined> {
+  const file = await hostThreadFile(paths, host, threadId, BASE_FILE);
+
+  try {
+    return parseBase(await readFile(file, "utf8"), threadId);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return undefined;
+    }
+
+    throw error;
+  }
 }

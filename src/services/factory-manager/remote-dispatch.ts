@@ -1,15 +1,16 @@
 // The dispatch of workers to worker hosts: the remote executor of the manager, the executor of each host, and the
-// outbox sync of the hosts with active remote Threads.
+// outbox sync and the inbound updates of the hosts with active remote Threads.
 
 import { ConflictError } from "../errors/errors.js";
 import { hostProjectId } from "../host-project/host-paths.js";
 import { transportOutboxSource } from "../outbox-apply/outbox-source.js";
+import { projectWrite } from "../project-write/project-write.js";
 import { createRemoteExecutor, type RemoteExecutor } from "../remote-executor/remote-executor.js";
 import { withMember, withoutMember } from "../store/store.js";
 import { LOCAL_HOST } from "../thread/thread-types.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import { abandonThread, pendingAbandoned, writeRemoteOutcome } from "./abandoned-threads.js";
-import { type Attention, type FactoryDependencies, getState, type Manager, setState } from "./manager-state.js";
+import { type Attention, type FactoryDependencies, getState, type Manager, serial, setState } from "./manager-state.js";
 import { syncHostOutbox } from "./outbox-attention.js";
 import type { WorkerExecutor } from "./worker-executor.js";
 
@@ -61,6 +62,7 @@ export function createManagerRemote(
     abandon: (threadId, host) => abandonThread(manager(), threadId, host),
     abandoned: () => pendingAbandoned(manager()),
     outcome: (threadId, run) => writeRemoteOutcome(manager(), threadId, run),
+    readLocked: (read) => serial(manager(), () => projectWrite(paths.root, read)),
   });
 }
 

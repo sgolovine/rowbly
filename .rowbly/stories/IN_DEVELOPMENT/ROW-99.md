@@ -7,7 +7,7 @@ dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:12.293Z
-updatedAt: 2026-11-17T00:20:26.907Z
+updatedAt: 2026-11-17T00:26:38.883Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-99
 pull_request: https://github.com/sgolovine/rowbly/pull/300
 ---
@@ -81,21 +81,22 @@ Not in scope:
 
 ## Review findings
 
-The Changelog Stage cannot merge `origin/main` (`d6b2ea8f`) into `story/ROW-99`. These files have merge conflicts with the base branch:
+The code satisfies the acceptance criteria. Local `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass, and CI passes on `a73aa963`. The earlier finding (conflicts with `d6b2ea8f`) is repaired.
 
-- `docs/architecture/cli.md`
-- `docs/architecture/native-factory/README.md`
-- `src/commands/thread/thread.ts`
-- `src/services/attachment/get-attachment.test.ts`
-- `src/services/pi-runtime/import-boundary.test.ts`
-- `src/services/remote-executor/remote-attachment.test.ts`
-- `src/services/remote-executor/remote-channel.test.ts`
-- `src/services/remote-executor/remote-channel.ts`
-- `src/services/remote-executor/remote-commands.ts`
-- `src/services/remote-executor/remote-executor.ts`
-- `src/services/remote-executor/remote-run.ts`
-- `src/services/remote-executor/remote-sync.ts`
-- `src/services/remote-executor/remote-types.ts`
-- `src/services/test-project/scripted-host.ts`
+Blocking findings:
 
-Merge `origin/main` into the branch, repair the conflicts, and make sure that `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
+1. The pull request has merge conflicts with `origin/main` (`98223572`, the merge of ROW-98, pull request #299). GitHub refuses the merge. These files have conflicts:
+   - `CHANGELOG.md`
+   - `docs/architecture/native-factory/README.md`
+   - `docs/architecture/native-factory/runtime-and-locks.md`
+   - `src/services/factory-manager/remote-dispatch.ts`
+   - `src/services/pi-runtime/import-boundary.test.ts`
+   - `src/services/remote-executor/remote-reconnect.ts`
+   - `src/services/remote-executor/remote-sync.ts`
+
+   Fix: merge `origin/main` into `story/ROW-99`. Keep the inbound update steps of ROW-98 and the abandoned Thread steps of this Story in `remote-reconnect.ts`, `remote-sync.ts` and `remote-dispatch.ts`. Keep the `(ROW-99)` line in the `### Pre Release` section of `CHANGELOG.md`. Then make sure that `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
+
+Non-blocking notes (also in a comment on the pull request):
+
+- `abandonedHolds` and `pendingAbandoned` read all worker Threads at each sync. This can become slow with many Threads.
+- A resume removes the `abandoned` note and `remoteOutcome`. The documentation can say this.

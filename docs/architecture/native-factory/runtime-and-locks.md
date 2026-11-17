@@ -34,6 +34,7 @@ take or change a lock.
     hosts/<host>/threads/<id>/base.json # the copy that the main machine sent last to the host
     hosts/<host>/held/<id>/entries.jsonl # the held outbox entries of an abandoned remote Thread (mode 0600)
     hosts/<host>/held/<id>/blobs/<sha256>.png # the file of each held attachment.add entry (mode 0600)
+    hosts/<host>/threads/<id>/inbound.json # the inbound updates that wait for the host (mode 0600)
 ```
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private
@@ -52,6 +53,9 @@ take or change a lock.
 - `hosts/<host>/commands.json` is the durable command queue of a worker host:
   `{ "version": 1, "commands": [{ id, type, threadId, queuedAt }] }`. The file has mode 0600, and its
   folders have mode 0700. See [README.md](README.md#disconnects-and-reconnects).
+- `hosts/<host>/threads/<id>/inbound.json` is the durable queue of the inbound updates of a remote
+  Thread: `{ "version": 1, "nextSeq": <n>, "updates": [{ seq, type, … }] }`. The file has mode 0600,
+  and its folders have mode 0700. See [README.md](README.md#inbound-updates).
 - `hosts/<host>/held/<id>/` holds the outbox entries of an abandoned remote Thread. The outbox apply
   writes it, and `rowbly thread held <id> --apply` or `--discard` changes or removes it. These changes
   occur only under the Project write lock, never under the state lock. The folders have mode 0700.
