@@ -351,24 +351,24 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.
 
-| File in `hooks/`            | Exports                                                                                            |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
-| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
-| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
-| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
-| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useOverlayOpen`, `useKeyCapture`, `useKeyHints`.    |
-| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
-| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
-| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
-| `use-clock.ts`              | `useClock`: the time, which counts up each second only while it is enabled, for the run times.     |
-| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
-| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
-| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
-| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                          |
-| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.         |
-| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
-| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
+| File in `hooks/`            | Exports                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                          |
+| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.             |
+| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                        |
+| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.        |
+| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useOverlayOpen`, `useKeyCapture`, `useKeyHints`. |
+| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.            |
+| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                       |
+| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                |
+| `use-clock.ts`              | `useClock`: the time, which counts up each second only while it is enabled, for the run times.  |
+| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                               |
+| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.               |
+| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                |
+| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                       |
+| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.      |
+| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.   |
+| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.     |
 
 ## Board load
 
