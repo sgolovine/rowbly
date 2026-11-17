@@ -13,12 +13,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import type { CheckProcess, CheckQueueDeps } from "../check-queue/check-types.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
-import { updateFactoryState } from "../factory-state/factory-state.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { initProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
 import { createStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
@@ -71,7 +69,7 @@ describe("factory checks", () => {
     vi.stubEnv("PI_CODING_AGENT_DIR", join(dir.path, "agent"));
     vi.stubEnv("PI_OFFLINE", "1");
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
-    await createStage({ label: "Work", key: "WORK", prompt: PROMPT }, { cwd: root });
+    await createStage({ label: "Work", key: "WORK", prompt: PROMPT, position: 2 }, { cwd: root });
     await exec("git", ["init", root]);
     await exec("git", ["-C", root, "add", ".rowbly"]);
     await exec("git", ["-C", root, "-c", "user.name=T", "-c", "user.email=t@example.com", "commit", "-m", "initial"]);
@@ -104,10 +102,6 @@ describe("factory checks", () => {
       },
       { cwd: root },
     );
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { WORK: { hash: promptHash(PROMPT), class: "work" } },
-    }));
     const shim = await createCliShim(
       {
         executable: process.execPath,

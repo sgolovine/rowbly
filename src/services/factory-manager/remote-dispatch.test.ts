@@ -7,14 +7,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import { HOST_SYNC_REASON } from "../factory-policy/factory-policy.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
-import { updateFactoryState } from "../factory-state/factory-state.js";
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import type { HostTransport } from "../host-transport/host-transport.js";
 import { loadPi } from "../pi-runtime/pi-runtime.js";
 import { initProject } from "../project/project.js";
 import { createStage } from "../stage/stage.js";
 import { createStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { createScriptedHost, type ScriptedCommand, type ScriptedHost } from "../test-project/scripted-host.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, listThreads, type ThreadRecord } from "../thread/thread.js";
@@ -64,7 +62,7 @@ describe("factory manager with a scripted worker host", () => {
     vi.stubEnv("PI_CODING_AGENT_DIR", join(dir.path, "agent"));
     vi.stubEnv("PI_OFFLINE", "1");
     await initProject({ name: "Test", key: "TST" }, { cwd: root });
-    await createStage({ label: "Work", key: "WORK", prompt: PROMPT }, { cwd: root });
+    await createStage({ label: "Work", key: "WORK", prompt: PROMPT, position: 2 }, { cwd: root });
     await exec("git", ["init", root]);
     await exec("git", ["-C", root, "add", ".rowbly"]);
     await exec("git", ["-C", root, "-c", "user.name=T", "-c", "user.email=t@example.com", "commit", "-m", "initial"]);
@@ -97,10 +95,6 @@ describe("factory manager with a scripted worker host", () => {
       },
       { cwd: root },
     );
-    await updateFactoryState(root, (state) => ({
-      ...state,
-      prompts: { WORK: { hash: promptHash(PROMPT), class: "work" } },
-    }));
     const shim = await createCliShim(
       {
         executable: process.execPath,
