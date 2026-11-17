@@ -1,14 +1,8 @@
 import { Box } from "ink";
-import { Button, ConversationView, conversationKeys } from "../../../components/index.js";
+import { Button, conversationKeys } from "../../../components/index.js";
 import { useReportHints } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
-import {
-  STEER_INPUT_ROWS,
-  THREAD_DETAIL_ROWS,
-  ThreadDetail,
-  ThreadSteerInput,
-  threadName,
-} from "../../stories/index.js";
+import { STEER_INPUT_ROWS, THREAD_DETAIL_ROWS, ThreadBody, threadName } from "../../stories/index.js";
 import { ThreadChecks, threadCheckRows } from "../thread-checks/index.js";
 import { type ThreadPaneProps, useThreadPane } from "./use-thread-pane.js";
 
@@ -70,44 +64,38 @@ export function ThreadPane(props: ThreadPaneProps) {
 
   return (
     <Box flexDirection="column" width={layout.width}>
-      {onOpenStory && (
-        <Box>
-          <Button
-            label="Open Story"
-            keyName="o"
-            onClick={onOpenStory}
-            clickable={props.clickable && !full.isOpen}
-            compact
-          />
-        </Box>
-      )}
-      <ThreadDetail thread={current} now={now} compact={compact} />
-      <ThreadChecks checks={current.checks} />
-      <Box marginTop={1}>
-        <ConversationView
-          ctx={ctx}
-          threadId={current.id}
-          live={live}
-          active={active && !steering}
-          wheel={props.clickable && !full.isOpen}
-          onWheelFocus={props.onFocus}
-          width={layout.width}
-          height={conversationHeight(layout.height, head)}
-        />
-      </Box>
-      {steerable && (
-        <ThreadSteerInput
-          key={current.id}
-          ctx={ctx}
-          threadId={current.id}
-          name={`${current.storyId ?? "Factory"} ${threadName(current, stages)}`}
-          focused={steering}
-          clickable={props.clickable && active}
-          width={layout.width}
-          onFocus={() => setSteering(true)}
-          onLeave={() => setSteering(false)}
-        />
-      )}
+      <ThreadBody
+        ctx={ctx}
+        thread={current}
+        now={now}
+        compact={compact}
+        header={
+          onOpenStory && (
+            <Box>
+              <Button
+                label="Open Story"
+                keyName="o"
+                onClick={onOpenStory}
+                clickable={props.clickable && !full.isOpen}
+                compact
+              />
+            </Box>
+          )
+        }
+        beforeConversation={<ThreadChecks checks={current.checks} />}
+        showConversation
+        conversationActive={active && !steering}
+        wheel={props.clickable && !full.isOpen}
+        onWheelFocus={props.onFocus}
+        width={layout.width}
+        conversationHeight={conversationHeight(layout.height, head)}
+        steerable={steerable}
+        steerName={`${current.storyId ?? "Factory"} ${threadName(current, stages)}`}
+        steering={steering}
+        steerClickable={props.clickable && active}
+        onFocusSteer={() => setSteering(true)}
+        onLeaveSteer={() => setSteering(false)}
+      />
       {/* Outside the shell there is nothing to cover, so the full-screen view shows here. */}
       {full.inline}
     </Box>
