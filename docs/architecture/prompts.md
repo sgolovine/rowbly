@@ -20,18 +20,24 @@ prompts. There is no system Stage prompt.
 
 ## Who gets each prompt
 
-| File                               | Name                     | Who gets it                    |
-| ---------------------------------- | ------------------------ | ------------------------------ |
-| `src/config/prompts/SYSTEM.md`     | Rowbly system prompt     | The supervisor and all workers |
-| `src/config/prompts/SUPERVISOR.md` | Supervisor system prompt | The supervisor only            |
-| `src/config/prompts/WORKER.md`     | Worker system prompt     | All workers, in all Stages     |
-| `.rowbly/prompts/SYSTEM.md`        | Project prompt           | The supervisor and all workers |
-| `.rowbly/prompts/SUPERVISOR.md`    | Supervisor prompt        | The supervisor only            |
-| `.rowbly/prompts/WORKER.md`        | Worker prompt            | All workers, in all Stages     |
-| `.rowbly/stages/<KEY>.md`          | Stage prompt             | Only the workers of that Stage |
+| File                           | Name                 | Who gets it                    |
+| ------------------------------ | -------------------- | ------------------------------ |
+| `src/config/prompts/SYSTEM.md` | Rowbly system prompt | All workers                    |
+| `src/config/prompts/WORKER.md` | Worker system prompt | All workers, in all Stages     |
+| `.rowbly/prompts/SYSTEM.md`    | Project prompt       | All workers                    |
+| `.rowbly/prompts/WORKER.md`    | Worker prompt        | All workers, in all Stages     |
+| `.rowbly/stages/<KEY>.md`      | Stage prompt         | Only the workers of that Stage |
 
-The factory does not open a supervisor session now. Thus no agent gets the two supervisor prompts. The
-files and `rowbly prompt get supervisor` stay, but the factory does not use them.
+## Old Supervisor prompt
+
+Older versions of Rowbly had a Supervisor prompt in `.rowbly/prompts/SUPERVISOR.md`. Rowbly does not
+use it now.
+
+- No agent gets the text of this file.
+- `rowbly prompt get supervisor` and `rowbly prompt set supervisor` give a `VALIDATION` error with a
+  hint. The exit code is 1.
+- `rowbly prompt list` does not show it.
+- Rowbly never deletes the file. The user can delete it.
 
 ## Priority
 
@@ -39,7 +45,7 @@ The global system prompt tells each agent this order of priority:
 
 1. The Rowbly system prompts. A user prompt cannot remove a rule of a system prompt.
 2. The Stage prompt.
-3. The Supervisor prompt or the Worker prompt.
+3. The Worker prompt.
 4. The Project prompt.
 
 ## The messages
@@ -95,13 +101,13 @@ Stories first. The factory snapshot gives the dependency lists. The manager also
 `getPrompt()`, `setPrompt()`, `readUserPrompt()`, `readSystemPrompt()` and `createUserPrompts()`.
 
 - Rowbly never assumes that a user prompt exists. A missing file has no text.
-- `rowbly init` and the onboarding of the TUI create the three user prompts with no text.
-- `rowbly prompt list` shows the three user prompts.
-- `rowbly prompt get <system|supervisor|worker>` shows the text of one prompt. With `--json`, it gives
+- `rowbly init` and the onboarding of the TUI create the two user prompts with no text.
+- `rowbly prompt list` shows the two user prompts.
+- `rowbly prompt get <system|worker>` shows the text of one prompt. With `--json`, it gives
   `{name,label,path,exists,text}`.
 - `rowbly prompt set <name> --text <markdown>` replaces a prompt. `--file <path>` reads the text from a
   file, and `--file -` reads stdin.
-- In the TUI, Settings › Project › Prompts shows the three user prompts, their state and their
+- In the TUI, Settings › Project › Prompts shows the two user prompts, their state and their
   audience. The state is `missing`, `empty` or the number of lines. Press `enter` or `e`, or click a
   row, to edit a prompt in a Modal. Press `ctrl+s` to save.
 
@@ -112,6 +118,9 @@ Stories first. The factory snapshot gives the dependency lists. The manager also
 - If `ROWBLY.md` has no text or only `# ROWBLY INSTRUCTIONS`, `--fix` deletes it.
 - If the Project prompt has no text, `--fix` moves `ROWBLY.md` to `prompts/SYSTEM.md`.
 - If the two files both have text, `doctor` offers no fix. Merge them by hand.
+- `rowbly doctor` shows no warning when `.rowbly/prompts/SUPERVISOR.md` is missing.
+- When `.rowbly/prompts/SUPERVISOR.md` exists, `rowbly doctor` shows a warning: Rowbly does not use
+  the file, and the user can delete it. The warning has no fix. `--fix` does not delete the file.
 
 ## Related
 

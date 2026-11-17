@@ -31,7 +31,7 @@ Read this page when you start a task on the factory. Then read only the sub-page
   [recovery.md](recovery.md#automatic-restart-after-a-crash). `--foreground` runs the daemon code
   in the current terminal, without a watchdog (`src/commands/factory-runner/`). Close the TUI
   without a stop to leave the daemon active.
-- **Dispatch.** The factory does not open a supervisor session. See [Factory pass](#factory-pass).
+- **Dispatch.** The manager starts the workers itself. See [Factory pass](#factory-pass).
   A pass with no eligible Story and no running worker makes no model call.
 - **Worker problems.** The manager shows the problems that a worker reports as the attention entry
   `worker:<ID>`. See [Worker attention](#worker-attention).
@@ -99,7 +99,7 @@ Read this page when you start a task on the factory. Then read only the sub-page
 
 ## Factory pass
 
-The factory loop (`factory-manager/supervisor-loop.ts`) runs one pass after each change of the
+The factory loop (`factory-manager/factory-loop.ts`) runs one pass after each change of the
 Project, after each worker end, at each deadline and every 30 seconds. A pass does these steps, in this
 order:
 
@@ -604,7 +604,7 @@ section "Abandoned Threads".
 - Existing Projects do not change. There is no migration of Stories, Stages, Specs or config.
 - Do not assume exactly-once shell effects. Dirty worktrees and malformed runtime files stay on disk.
 
-## The external supervisor
+## The external factory skill
 
 Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
 of the `factory` skill.

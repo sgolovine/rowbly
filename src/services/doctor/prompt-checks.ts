@@ -1,7 +1,8 @@
 import { mkdir, readFile, rename, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { pathExists, writeFileAtomic } from "../files/files.js";
 import { mapInOrder } from "../in-order/in-order.js";
-import { PROMPT_NAMES, type PromptName, readUserPrompt } from "../prompts/prompts.js";
+import { OLD_SUPERVISOR_FILE, PROMPT_NAMES, type PromptName, readUserPrompt } from "../prompts/prompts.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report } from "./doctor-run.js";
 
 /** The text that `rowbly init` wrote to `ROWBLY.md` before the user prompts. A file with only this text has no prompt. */
@@ -61,12 +62,33 @@ async function missingIssue(run: DoctorRun, name: PromptName): Promise<DoctorIss
 }
 
 /**
+ * An old `.rowbly/prompts/SUPERVISOR.md` is a warning, because Rowbly does not use it. The warning has no fix:
+ * Rowbly never deletes this user file, and a missing file is not a problem.
+ */
+async function oldSupervisorIssues(run: DoctorRun): Promise<DoctorIssue[]> {
+  const path = join(run.paths.promptsDir, OLD_SUPERVISOR_FILE);
+
+  if (!(await pathExists(path))) {
+    return [];
+  }
+
+  return [
+    noted({
+      severity: "warning",
+      message: "Rowbly does not use the Supervisor prompt. You can delete this file",
+      file: rel(run, path),
+    }),
+  ];
+}
+
+/**
  * Each user prompt in `.rowbly/prompts/` must exist. The factory works without them, so a missing prompt is a
  * warning. An old `ROWBLY.md` is also a warning, because the factory does not read it.
  */
 export async function checkPrompts(run: DoctorRun): Promise<DoctorIssue[]> {
   const legacy = await legacyIssues(run);
   const missing = await mapInOrder(PROMPT_NAMES, (name) => missingIssue(run, name));
+  const oldSupervisor = await oldSupervisorIssues(run);
 
-  return [...legacy, ...missing.flat()];
+  return [...legacy, ...missing.flat(), ...oldSupervisor];
 }

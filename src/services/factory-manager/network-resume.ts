@@ -3,9 +3,9 @@ import { ConflictError } from "../errors/errors.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { searchStories } from "../story/story.js";
 import { LOCAL_HOST, listThreads, type ThreadRecord } from "../thread/thread.js";
+import { failureText, type StepResult } from "./factory-steps.js";
 import { getState, isProviderPaused, type Manager } from "./manager-state.js";
 import { networkWaitingThreads } from "./network-wait.js";
-import { failureText, type StepResult } from "./supervisor-steps.js";
 import { hostConnected } from "./worker-placement.js";
 import { resumeWorker } from "./worker-reservation.js";
 

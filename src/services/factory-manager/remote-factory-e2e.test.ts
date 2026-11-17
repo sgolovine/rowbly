@@ -449,7 +449,7 @@ describe("remote factory end to end", () => {
       stories.push(await createStory({ title, stage: "WORK" }, { cwd: root }));
     for (const created of stories) f.scripts.set(created.id, [blocked]);
 
-    // The supervisor fills studio.
+    // The manager fills studio.
     const first = await reserve(f, stories[0]?.id as string, "studio");
     expect((await threadWith(first, "running")).host).toBe("studio");
 

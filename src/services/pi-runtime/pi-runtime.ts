@@ -8,7 +8,7 @@ export type PiLoader = () => Promise<PiSdk>;
 /** Loads the SDK only for authentication or execution. */
 export const loadPi: PiLoader = () => import("@earendil-works/pi-coding-agent");
 
-/** A Pi prompt that ended with an error, an abort or a busy supervisor. */
+/** A Pi prompt that ended with an error or an abort. */
 export class PiPromptError extends RowblyError {
   readonly code = "PI_PROMPT";
 }
@@ -16,7 +16,6 @@ export class PiPromptError extends RowblyError {
 export interface PiSession {
   session: AgentSession;
   prompt(text: string): Promise<void>;
-  sendDigest(text: string): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -106,18 +105,6 @@ async function prompt(env: SessionEnv, text: string): Promise<void> {
   await checkSettled(env);
 }
 
-async function sendDigest(env: SessionEnv, text: string): Promise<void> {
-  if (!env.session.isIdle) {
-    throw new PiPromptError("Supervisor is busy");
-  }
-
-  await env.session.sendCustomMessage(
-    { customType: "rowbly:factory-digest", content: text, display: false },
-    { triggerTurn: true },
-  );
-  await checkSettled(env);
-}
-
 async function shutdown(env: SessionEnv): Promise<void> {
   await env.session.abort();
   await env.session.waitForIdle();
@@ -160,7 +147,6 @@ export async function createPiSession(options: SessionOptions, loader: PiLoader 
   return {
     session,
     prompt: (text) => prompt(env, text),
-    sendDigest: (text) => sendDigest(env, text),
     close: () => close(env),
   };
 }

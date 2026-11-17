@@ -17,8 +17,7 @@ describe("doctor prompt checks", () => {
     expect(report.ok).toBe(true);
     expect(report.issues).toEqual([
       expect.objectContaining({ severity: "warning", message: "The Project prompt is missing", fixed: false }),
-      expect.objectContaining({ file: join(".rowbly", "prompts", "SUPERVISOR.md"), fix: "Create an empty one" }),
-      expect.objectContaining({ message: "The Worker prompt is missing" }),
+      expect.objectContaining({ file: join(".rowbly", "prompts", "WORKER.md"), fix: "Create an empty one" }),
     ]);
 
     const fixed = await doctor({ fix: true }, project.ctx);
@@ -26,6 +25,26 @@ describe("doctor prompt checks", () => {
     expect(fixed.issues.every((issue) => issue.fixed)).toBe(true);
     expect(await readFile(promptFile("WORKER.md"), "utf8")).toBe("");
     expect((await doctor({}, project.ctx)).issues).toEqual([]);
+  });
+
+  it("shows no warning when the old Supervisor prompt is missing", async () => {
+    expect(await pathExists(promptFile("SUPERVISOR.md"))).toBe(false);
+    expect((await doctor({}, project.ctx)).issues).toEqual([]);
+  });
+
+  it("warns about an old Supervisor prompt, with no fix, and does not delete it with --fix", async () => {
+    await project.write("prompts/SUPERVISOR.md", "Start one worker.\n");
+
+    const expected = {
+      severity: "warning",
+      message: "Rowbly does not use the Supervisor prompt. You can delete this file",
+      file: join(".rowbly", "prompts", "SUPERVISOR.md"),
+      fixed: false,
+    };
+
+    expect((await doctor({}, project.ctx)).issues).toEqual([expected]);
+    expect((await doctor({ fix: true }, project.ctx)).issues).toEqual([expected]);
+    expect(await readFile(promptFile("SUPERVISOR.md"), "utf8")).toBe("Start one worker.\n");
   });
 
   it("moves the text of an old ROWBLY.md to the Project prompt with --fix", async () => {

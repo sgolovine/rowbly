@@ -276,7 +276,7 @@ describe("assignment guards", () => {
   });
 
   it.each(["running", "starting", "unknown", "a new harness status"])(
-    "skips a retry with another supervisor's %s worker",
+    "skips a retry with another factory's %s worker",
     (status) => {
       expect(action(evaluateScan(failed(), facts([{ story: story.id, threadId: "external", status }])))).toBe("skip");
     },
@@ -386,7 +386,7 @@ describe("worker limit", () => {
     expect(limited.map((decision) => decision.story)).toEqual(["ROW-01", "ROW-02"]);
   });
 
-  it("counts the workers that run, from this supervisor and from others", () => {
+  it("counts the workers that run, from this factory and from others", () => {
     const state = recordStart(empty(), "ROW-04", "IN_REVIEW", { threadId: "own" });
     const other = { story: "ROW-09", threadId: "other", status: "running" };
     expect(started(evaluateScan(state, facts([other], board, { maxActive: 3 })))).toEqual(["ROW-03"]);
