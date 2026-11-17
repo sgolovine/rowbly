@@ -1,6 +1,11 @@
 import { useInput } from "ink";
 import { useEffect, useRef, useState } from "react";
-import { type FactoryQueueEntry, type FactoryStatus, getFactoryStatus } from "../../../../services/factory/factory.js";
+import {
+  type FactoryQueueEntry,
+  type FactoryStatus,
+  getFactoryStatus,
+  sameFactoryStatus,
+} from "../../../../services/factory/factory.js";
 import { listHeldEntries } from "../../../../services/outbox-apply/held-actions.js";
 import { isAbandoned, listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -13,11 +18,13 @@ import {
   type AsyncState,
   type Layout,
   useAsync,
+  useClock,
   useCursor,
   useEscape,
   useFactoryChanges,
   useIsActive,
   useLayout,
+  useOverlayOpen,
   useReportHints,
   useSharedFactoryStatus,
   useThreadChanges,
@@ -149,7 +156,7 @@ function useThreadList(ctx: ServiceContext, storyId: string, selected: boolean) 
 function useTabStatus(ctx: ServiceContext, selected: boolean, opened: boolean): FactoryStatus | undefined {
   const shared = useSharedFactoryStatus();
   const own = shared === undefined && opened;
-  const status = useAsync(() => loadOwnStatus(ctx, own), [ctx, own]);
+  const status = useAsync(() => loadOwnStatus(ctx, own), [ctx, own], { isEqual: sameFactoryStatus });
 
   useFactoryChanges(own ? watchRoot(ctx, selected) : undefined, status.refresh);
 
@@ -167,23 +174,6 @@ function useShownId(id: string | undefined): string | undefined {
   }, [id]);
 
   return shownId;
-}
-
-/** The time that counts up each second while the tab is on the screen and a thread runs. */
-function useNow(selected: boolean, running: boolean): number {
-  const [now, setNow] = useState(Date.now);
-
-  useEffect(() => {
-    if (!selected || !running) {
-      return;
-    }
-
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-
-    return () => clearInterval(timer);
-  }, [selected, running]);
-
-  return now;
 }
 
 /**
@@ -256,15 +246,20 @@ function useThreadFullScreen(
   });
 }
 
-/** The selected thread, its conversation and the time of the run times. */
+/**
+ * The selected thread, its conversation and the time of the run times. The clock ticks only while the tab is on the
+ * screen, a thread runs, and no full-screen view, Modal or main overlay covers the tab.
+ */
 function useTabSelection(props: ThreadsTabProps, threads: readonly ThreadRecord[], listing: boolean) {
   const [cursor, setCursor] = useCursor(threads.length, listing);
+  const covered = useCovered();
+  const overlay = useOverlayOpen();
   const current = threads[cursor];
   const running = threads.some((thread) => thread.status === "running");
   const shownId = useShownId(current?.id);
-  const now = useNow(props.selected, running);
   const conversation = props.selected && current !== undefined && shownId === current.id;
   const full = useThreadFullScreen(props, current);
+  const now = useClock(props.selected && running && !full.isOpen && !covered && !overlay);
 
   return { cursor, setCursor, current, shownId, now, conversation, full };
 }

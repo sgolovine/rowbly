@@ -7,6 +7,7 @@ export * from "./shell.js";
 export * from "./stop-on-abort.js";
 export * from "./toasts.js";
 export * from "./use-async.js";
+export * from "./use-clock.js";
 export * from "./use-cursor.js";
 export * from "./use-escape.js";
 export * from "./use-factory-state-changes.js";

@@ -352,23 +352,24 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.
 
-| File in `hooks/`            | Exports                                                                                            |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
-| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
-| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
-| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
-| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useKeyCapture`, `useDirty`, `useKeyHints` and more. |
-| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
-| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
-| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
-| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
-| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
-| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
-| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                          |
-| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.         |
-| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
-| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
+| File in `hooks/`            | Exports                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                          |
+| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.             |
+| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                        |
+| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.        |
+| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useOverlayOpen`, `useKeyCapture`, `useKeyHints`. |
+| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.            |
+| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                       |
+| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                |
+| `use-clock.ts`              | `useClock`: the time, which counts up each second only while it is enabled, for the run times.  |
+| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                               |
+| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.               |
+| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                |
+| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                       |
+| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.      |
+| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.   |
+| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.     |
 
 The mouse registry measures only the boxes that want an event. It keeps each measured box in a cache.
 `runFullScreen` emits `layout` on the mouse source after each frame that Ink draws. `useMouseSource`
@@ -661,10 +662,13 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    and data states, and shows a toast if a call fails. Keep the loading, error and result states in
    the component.
 4. For a change that comes from outside the TUI, use `refresh` from `useAsync`. It does not show a
-   loading state or a toast. `useStoryChanges` and `useThreadChanges` call a function when the files
-   change.
-5. Declare the keys with `useKeyHints`.
-6. Examine the layout in a real terminal with the
+   loading state or a toast, and it does not render when it starts. `useStoryChanges` and
+   `useThreadChanges` call a function when the files change. For a poll, give `useAsync` an `isEqual`
+   option. Then a read that gives the same data does not render again.
+5. For a run time that counts up, use `useClock(enabled)`. Enable it only while the view shows a
+   running Thread and no full-screen view, Modal or main overlay (`useOverlayOpen()`) covers it.
+6. Declare the keys with `useKeyHints`.
+7. Examine the layout in a real terminal with the
    [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 
 If a CLI command also uses a part of the logic, put that logic in the service, not in the component.
