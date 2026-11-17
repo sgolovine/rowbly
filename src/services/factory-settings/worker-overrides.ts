@@ -1,3 +1,8 @@
+import { readConfig } from "../config/config.js";
+import { ValidationError } from "../errors/errors.js";
+import { lookupStage, unknownStageIssues } from "../stage/stage.js";
+import { getStory } from "../story/story.js";
+import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import type { FactorySettings, ModelChoice } from "./factory-settings.js";
 
 /** The worker model of each Stage, by Stage key. */
@@ -63,4 +68,20 @@ export function withWorkerOverride(
 /** Whether the configure flags select a worker model override in place of the default models. */
 export function isOverrideInput(input: { stage?: string; story?: string; clearWorker?: boolean }): boolean {
   return input.stage !== undefined || input.story !== undefined || !!input.clearWorker;
+}
+
+/** Checks the Stage key and the Story ID of an override target, and gives their canonical keys. */
+export async function checkedTarget(target: OverrideTarget, ctx: ServiceContext): Promise<OverrideTarget> {
+  const config = await readConfig(await findProject(ctx));
+  const stage = lookupStage(config, target.stage);
+
+  if (!stage) {
+    throw new ValidationError("Unknown stage", {
+      details: { issues: unknownStageIssues(config, target.stage, ["stage"]) },
+    });
+  }
+
+  const story = target.storyId === undefined ? undefined : await getStory({ id: target.storyId }, ctx);
+
+  return { stage: stage.key, storyId: story?.id };
 }

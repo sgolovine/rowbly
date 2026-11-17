@@ -1,3 +1,5 @@
+import { ValidationError } from "../errors/errors.js";
+
 /** The model and the thinking level of one factory role. */
 export interface ModelChoice {
   provider: string;
@@ -47,4 +49,21 @@ export function validOverrides(settings: OverrideValues): boolean {
     (settings.stageWorkerModels === undefined || validModelMap(settings.stageWorkerModels)) &&
     (stories === undefined || (isRecord(stories) && Object.values(stories).every(validModelMap)))
   );
+}
+
+/** Parses `provider/model`. The provider and the model must not be empty. */
+export function parseChoice(value: string, thinkingLevel: ModelChoice["thinkingLevel"]): ModelChoice {
+  const slash = value.indexOf("/");
+
+  if (slash < 1 || slash === value.length - 1) {
+    throw new ValidationError("Use provider/model for a model choice");
+  }
+
+  const choice = { provider: value.slice(0, slash), modelId: value.slice(slash + 1), thinkingLevel };
+
+  if (!validModel(choice)) {
+    throw new ValidationError("Invalid model choice");
+  }
+
+  return choice;
 }

@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies,placement}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,stageClasses,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -88,6 +88,7 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | `workerModel`       | object  | Pi selects a model | The model choice of the workers.                       |
 | `stageWorkerModels` | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels` | object  | none               | The worker model overrides for each Story ID.          |
+| `stageClasses`      | object  | none               | The class of a Stage key: `work` or `hold`. See below. |
 | `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
 | `checks`            | object  | none               | The check queue and the named checks of the workers.   |
 | `dependencies`      | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
@@ -108,6 +109,11 @@ The factory settings can hold worker model overrides. `stageWorkerModels` maps a
 choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
 priority is the Story override, then the Stage override, then `workerModel`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
+
+`stageClasses` maps a Stage key to `work` or `hold`. It has priority over the class rule of the
+manager. A different value is not valid, and the settings read gives a `VALIDATION` error. A key for a
+Stage that does not exist is valid, and it has no effect. See
+[native-factory/README.md](native-factory/README.md) for the rule.
 
 The optional `git` section sets the canonical commits and the Git sync of the factory:
 

@@ -195,11 +195,8 @@ async function buildDigest(manager: Manager) {
 
   const { settings, holds, providers, attention } = getState(manager);
   const candidates = policy.decisions.filter((d) => ["start", "retry"].includes(d.action));
-  const unclassified = stages.filter(
-    (s) => s.enabled && s.promptClass === "unclassified" && stories.some((story) => story.stage === s.key),
-  );
   // A blocked Story needs no action from the supervisor, so the `blocked` section is not material.
-  const material = candidates.length > 0 || unclassified.length > 0 || reports.length > 0;
+  const material = candidates.length > 0 || reports.length > 0;
 
   const digest = supervisorDigest({
     settings,
@@ -208,7 +205,6 @@ async function buildDigest(manager: Manager) {
 
       return { ...candidate, hash: story ? storyHash(story) : undefined };
     }),
-    unclassified: unclassified.map((s) => ({ stage: s.key, promptHash: s.promptHash })),
     workers: threads
       .filter((t) => t.role === "worker")
       .map((t) => ({

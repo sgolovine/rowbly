@@ -2,8 +2,6 @@ import { type ProjectConfig, readConfig, writeConfig } from "../config/config.js
 import { ConflictError, ValidationError } from "../errors/errors.js";
 import { pathExists } from "../files/files.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
-import { lookupStage, unknownStageIssues } from "../stage/stage.js";
-import { getStory } from "../story/story.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 import {
   assertChecks,
@@ -27,7 +25,7 @@ import {
   parseAuthor,
   validGit,
 } from "./git-settings.js";
-import { isRecord, type ModelChoice, validModel, validOverrides } from "./model-settings.js";
+import { isRecord, type ModelChoice, parseChoice, validModel, validOverrides } from "./model-settings.js";
 import {
   DEFAULT_PLACEMENT,
   type PlacementInput,
@@ -36,6 +34,16 @@ import {
   validPlacement,
 } from "./placement-settings.js";
 import {
+  hasStageClassInput,
+  type StageClasses,
+  type StageClassInput,
+  stageClassChoice,
+  stageClassProblem,
+  validStageClasses,
+  withStageClass,
+} from "./stage-classes.js";
+import {
+  checkedTarget,
   hasWorkerOverride,
   isOverrideInput,
   type OverrideTarget,
@@ -67,12 +75,14 @@ export interface FactorySettings {
   dependencies?: Dependencies;
   /** How the manager selects the machine of a new worker. The default is `prefer-local`. */
   placement?: PlacementPolicy;
+  /** The class of each Stage, by Stage key. It has priority over the rule of the manager. */
+  stageClasses?: StageClasses;
 }
 
 /** The changes of an update. The `git` keys merge into the current `git` section. */
 export type FactorySettingsInput = Partial<FactorySettings>;
 
-interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput {
+interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput, StageClassInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -107,7 +117,8 @@ function validSettings(settings: FactorySettings): boolean {
     (settings.git === undefined || validGit(settings.git)) &&
     (settings.checks === undefined || validChecks(settings.checks)) &&
     validDependencies(settings.dependencies) &&
-    validPlacement(settings.placement)
+    validPlacement(settings.placement) &&
+    validStageClasses(settings.stageClasses)
   );
 }
 
@@ -121,7 +132,7 @@ function validate(value: unknown): FactorySettings {
 
   if (!validFactorySettings(value)) {
     throw new ValidationError("Invalid factory settings", {
-      hint: `Use booleans for git.push and git.pull, and ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds`,
+      hint: `Use booleans for git.push and git.pull, ${MIN_SYNC_SECONDS} to ${MAX_SYNC_SECONDS} for git.syncIntervalSeconds, and work or hold for stageClasses`,
     });
   }
 
@@ -203,23 +214,6 @@ export async function updateFactorySettings(
   );
 }
 
-/** Parses `provider/model`. The provider and the model must not be empty. */
-function parseChoice(value: string, thinkingLevel: ModelChoice["thinkingLevel"]): ModelChoice {
-  const slash = value.indexOf("/");
-
-  if (slash < 1 || slash === value.length - 1) {
-    throw new ValidationError("Use provider/model for a model choice");
-  }
-
-  const choice = { provider: value.slice(0, slash), modelId: value.slice(slash + 1), thinkingLevel };
-
-  if (!validModel(choice)) {
-    throw new ValidationError("Invalid model choice");
-  }
-
-  return choice;
-}
-
 /** Validates the model of one role. The runtime starts only for the first role with a model. */
 async function chooseRole(
   auth: AgentAuth,
@@ -282,22 +276,6 @@ async function overrideTarget(input: ConfigureInput, ctx: ServiceContext): Promi
   return checkedTarget({ stage: input.stage as string, storyId: input.story }, ctx);
 }
 
-/** Checks the Stage key and the Story ID of an override target, and gives their canonical keys. */
-async function checkedTarget(target: OverrideTarget, ctx: ServiceContext): Promise<OverrideTarget> {
-  const config = await readConfig(await findProject(ctx));
-  const stage = lookupStage(config, target.stage);
-
-  if (!stage) {
-    throw new ValidationError("Unknown stage", {
-      details: { issues: unknownStageIssues(config, target.stage, ["stage"]) },
-    });
-  }
-
-  const story = target.storyId === undefined ? undefined : await getStory({ id: target.storyId }, ctx);
-
-  return { stage: stage.key, storyId: story?.id };
-}
-
 /**
  * Sets the worker model override of a Stage, or of a Story in a Stage, to a model that was already selected.
  * Without a choice, it removes the override. An empty map is not kept, and the other keys do not change.
@@ -338,6 +316,20 @@ async function configureWorkerOverride(
   return writeSettings((current) => ({ ...current, ...withWorkerOverride(current, target, choice) }), ctx);
 }
 
+/** Sets or clears the class of a Stage. The flags and the Stage key are checked before the config changes. */
+async function configureStageClass(input: ConfigureInput, ctx: ServiceContext): Promise<FactorySettings> {
+  const problem = stageClassProblem(input);
+
+  if (problem) {
+    throw new ValidationError(problem);
+  }
+
+  const stageClass = stageClassChoice(input);
+  const { stage } = await checkedTarget({ stage: input.stage as string }, ctx);
+
+  return writeSettings((current) => ({ ...current, ...withStageClass(current.stageClasses, stage, stageClass) }), ctx);
+}
+
 /** Rejects an invalid commit author, dependency value or placement policy before the runtime starts. */
 function checkGitInput(input: ConfigureInput): void {
   dependencyChange(undefined, input);
@@ -365,6 +357,10 @@ export async function configureFactory(
   runtime?: AuthRuntime,
 ): Promise<FactorySettings> {
   refuseRemoteWrite(ctx, "change the factory settings");
+
+  if (hasStageClassInput(input)) {
+    return configureStageClass(input, ctx);
+  }
 
   if (isOverrideInput(input)) {
     return configureWorkerOverride(input, ctx, runtime);

@@ -4,17 +4,11 @@ The manager owns reservations, capacity, worktrees, sessions and canonical commi
 Use only the supplied tools. Never start a process yourself.
 
 1. Use `factory_snapshot({})` to read policy decisions and worker metadata.
-2. Use `stage_get({stage})` to read an unclassified prompt and its `promptHash`.
-3. Use `classify_stage({stage,promptHash,class})` with `work`, `hold` or `invalid`.
-4. Use `story_get({storyId})` for the current Story when necessary.
-5. Use `start_worker({storyId,stage,requestId})` for an eligible Story.
-6. End the turn when no further action is necessary.
+2. Use `story_get({storyId})` for the current Story when necessary.
+3. Use `start_worker({storyId,stage,requestId})` for an eligible Story.
+4. End the turn when no further action is necessary.
 
-Classify a Stage as `work` only when its prompt gives an agent an action.
-Classify a Stage as `hold` when its prompt tells the agent to wait.
-Classify an unusable prompt as `invalid`.
-Do not launch work for Backlog or Done.
-The manager rejects a classification when the prompt hash changes.
+The manager gives the class of each Stage. Only the Stories of a `work` Stage are eligible.
 
 Supply a unique `requestId` for each start intent. Reuse it only for the same intent.
 An optional `model` has `provider`, `modelId` and an optional supported `thinkingLevel`.

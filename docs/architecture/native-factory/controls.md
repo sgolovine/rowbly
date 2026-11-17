@@ -19,6 +19,8 @@ viewer or the AI section of Settings.
 | `factory configure --placement <policy>`                                   | Set the placement policy of new workers.                              |
 | `factory configure --stage <key> [--story <id>] --worker <provider/model>` | Set a worker model override for a Stage, or for a Story in a Stage.   |
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
+| `factory configure --stage <key> --class work\|hold`                       | Set the class of a Stage in `factory.stageClasses`.                   |
+| `factory configure --stage <key> --clear-class`                            | Remove the class of a Stage. The manager uses its rule again.         |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
 | `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                 |
 | `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.               |
@@ -42,6 +44,11 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
   `--pull-upstream`, `--placement`, a check flag or a Git flag (`--commit-message`, `--commit-author`,
   `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` or `--git-sync-interval`).
 - `--stage` without `--worker` and without `--clear-worker`.
+- `--class` with a value that is not `work` or `hold`.
+- `--class` or `--clear-class` without `--stage`.
+- `--class` together with `--clear-class`.
+- `--class` or `--clear-class` together with a flag other than `--stage`, for example `--story` or
+  `--worker`.
 - An unknown Stage key.
 
 An unknown Story ID gives `NOT_FOUND`. For the order of priority of the overrides, see

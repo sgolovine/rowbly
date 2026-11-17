@@ -5,6 +5,7 @@ import * as factory from "../../services/factory/factory.js";
 import { newOwner } from "../../services/factory-ownership/factory-ownership.js";
 import { writeWatchdogState } from "../../services/factory-watchdog/factory-watchdog.js";
 import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
+import { createStage } from "../../services/stage/stage.js";
 import { createStory } from "../../services/story/story.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -165,6 +166,30 @@ describe("factory commands", () => {
     expect((await cli("--story", story.id, "--stage", "DONE", "--clear-worker")).exitCode).toBe(0);
     expect((await cli("--stage", "BACKLOG", "--clear-worker")).exitCode).toBe(0);
     expect(await readFactory()).toEqual({ maxWorkers: 2, workerModel: worker });
+  });
+  it("sets and clears the class of a Stage, and rejects invalid class flags without a write", async () => {
+    await createStage({ label: "In Review", key: "IN_REVIEW", prompt: "Review it.", position: 2 }, project.ctx);
+    await writeFactory(JSON.stringify({ maxWorkers: 2 }));
+    const cli = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
+    const set = await cli("--stage", "IN_REVIEW", "--class", "hold");
+    expect(set.exitCode).toBe(0);
+    expect(JSON.parse(set.stdout).stageClasses).toEqual({ IN_REVIEW: "hold" });
+    expect(await readFactory()).toEqual({ maxWorkers: 2, stageClasses: { IN_REVIEW: "hold" } });
+    const before = await project.read("rowbly.config.json");
+    const invalid = [
+      ["--stage", "IN_REVIEW", "--class", "invalid"],
+      ["--class", "hold"],
+      ["--stage", "NOPE", "--class", "hold"],
+      ["--stage", "IN_REVIEW", "--class", "work", "--clear-class"],
+    ];
+    for (const args of invalid) {
+      const result = await cli(...args);
+      expect(result.exitCode).toBe(1);
+      expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    }
+    expect(await project.read("rowbly.config.json")).toBe(before);
+    expect((await cli("--stage", "IN_REVIEW", "--clear-class")).exitCode).toBe(0);
+    expect(await readFactory()).toEqual({ maxWorkers: 2 });
   });
   it("rejects invalid override flags without a write", async () => {
     const text = JSON.stringify({ maxWorkers: 2 });

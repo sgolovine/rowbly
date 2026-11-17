@@ -67,7 +67,7 @@ describe("factory policy", () => {
     const state: PolicyState = { ...empty(), custom: "keep" };
     const work = {
       stories: [{ id: "ROW-01", stage: "WORK" }],
-      stages: [{ key: "WORK", enabled: true, promptClass: "work" }],
+      stages: [{ key: "WORK", enabled: true, promptClass: "work" as const }],
     };
     const planned = evaluateScan(state, work);
     expect(action(planned)).toBe("start");
@@ -332,24 +332,30 @@ describe("assignment guards", () => {
     expect(action(evaluateScan(empty(), facts([], [locked])))).toBe("start");
   });
 
-  it.each([null, { ...refinement, enabled: false }, { ...refinement, promptClass: "hold" }])(
+  it.each([null, { ...refinement, enabled: false }, { ...refinement, promptClass: "hold" as const }])(
     "skips a retry when the Stage is %o",
     (stage) => {
       expect(action(evaluateScan(failed(), { ...facts(), stages: stage ? [stage] : [] }))).toBe("skip");
     },
   );
 
-  it.each(["missing", "invalid", "unclassified"])(
-    "skips only the Stories of a Stage with a %s prompt",
-    (promptClass) => {
-      const plan = evaluateScan(failed(), {
-        ...facts([], [story, { id: "ROW-02", stage: "IN_REVIEW" }]),
-        stages: [{ ...refinement, promptClass }, stages[3] as PolicyStage],
-      });
-      expect(plan.decisions.map((decision) => decision.action)).toEqual(["skip", "start"]);
-      expect(reason(plan)).toMatch(/^stage prompt/);
-    },
-  );
+  it.each(["missing", "invalid"] as const)("skips only the Stories of a Stage with a %s prompt", (promptClass) => {
+    const plan = evaluateScan(failed(), {
+      ...facts([], [story, { id: "ROW-02", stage: "IN_REVIEW" }]),
+      stages: [{ ...refinement, promptClass }, stages[3] as PolicyStage],
+    });
+    expect(plan.decisions.map((decision) => decision.action)).toEqual(["skip", "start"]);
+    expect(reason(plan)).toBe("stage prompt missing or invalid");
+  });
+
+  it("skips the Stories of a hold Stage with the reason hold stage", () => {
+    const plan = evaluateScan(empty(), {
+      ...facts([], [story]),
+      stages: [{ ...refinement, promptClass: "hold" }],
+    });
+    expect(action(plan)).toBe("skip");
+    expect(reason(plan)).toBe("hold stage");
+  });
 
   it("uses the current Stage if it changes before a retry", () => {
     const plan = evaluateScan(running(), facts([stopped("failed")]));

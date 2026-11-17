@@ -64,7 +64,7 @@ tries again. A scan occurs at least each 30 seconds. A pass with a successful sc
 
 If a step of item 2 or item 3 fails, the loop sets the attention entry of that step, and the pass continues
 to the digest. Thus a step that fails on each pass cannot stop the digests. For example, the
-supervisor continues to get the unclassified Stages. A step that does not fail removes its entry. A
+supervisor continues to get the candidate Stories. A step that does not fail removes its entry. A
 failed settings refresh keeps the current settings. While a Git sync runs, the commit does not run,
 and its entry does not change.
 
