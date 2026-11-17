@@ -2,6 +2,11 @@ import { Box, Text } from "ink";
 import { SelectionRow } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 
+/** The lines of a `ThreadSectionRow`: the heading, and the empty line above it when it is `spaced`. */
+export function threadSectionRowHeight(spaced: boolean): number {
+  return spaced ? 2 : 1;
+}
+
 /**
  * The heading of a section of the Factory view: `▾`/`▸`, the name of the section and its count of Threads.
  * `spaced` puts one empty line above the heading, outside the highlight of the selection.

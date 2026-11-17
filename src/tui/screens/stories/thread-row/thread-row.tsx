@@ -14,6 +14,15 @@ import {
   threadWaitsForNetwork,
 } from "../thread-text.js";
 
+/** The lines of a `ThreadRow`: row 1, then row 2 and the outcome row when the row is not `compact`. */
+export function threadRowHeight(thread: ThreadRecord, compact: boolean): number {
+  if (compact) {
+    return 1;
+  }
+
+  return threadOutcome(thread) ? 3 : 2;
+}
+
 /**
  * One thread in the Threads tab of a Story, or in the Factory view. Row 1: the Story id when `storyId` is set, the
  * status glyph and text, the attempt and the Stage, `waiting for network` for a thread that waits for the network,
