@@ -11,7 +11,7 @@ import { resumeWorker } from "./worker-reservation.js";
 
 /**
  * Resumes each worker Thread that failed with a connectivity error when the pause of its provider has ended.
- * The resume adds a new run to the same Thread and session. It does not wait for the supervisor.
+ * The resume adds a new run to the same Thread and session. It does not wait for a person.
  * A Thread that cannot resume now, for example because no slot is free, tries again on the next scan. A Thread on a
  * worker host resumes on that host, only while the host is `connected`.
  */

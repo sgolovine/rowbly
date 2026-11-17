@@ -31,8 +31,7 @@ import { createFakeHostAgent, type FakeHostAgent } from "../test-project/fake-ho
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, type ThreadRecord } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
-import { changeThread, type Manager } from "./manager-state.js";
-import { createSupervisorTools } from "./supervisor-tools.js";
+import { changeThread } from "./manager-state.js";
 
 vi.mock("./manager-state.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-state.js")>();
@@ -360,14 +359,6 @@ describe("factory manager with a worker host that disconnects", () => {
     const log = await getThreadLog(threadId, { tail: 20 }, { cwd: root });
     expect(log.status).toBe("ok");
     expect(log.entries.length).toBeGreaterThan(0);
-    const inspect = createSupervisorTools({ ctx: { cwd: root } } as unknown as Manager).find(
-      (tool) => tool.name === "inspect_worker",
-    );
-    const inspected = await inspect?.execute("call", { threadId, history: true } as never);
-    const answer = JSON.parse(inspected?.content[0]?.text ?? "{}");
-    expect(answer.thread.id).toBe(threadId);
-    expect(answer.history).toContain('"status":"ok"');
-    expect(answer.history).toContain('"entries":[{');
 
     f.host.transport.reconnect();
     await finalThread(threadId, "completed");

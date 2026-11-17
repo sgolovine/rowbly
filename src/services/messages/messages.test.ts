@@ -7,7 +7,6 @@ import {
   composeMessage,
   runSection,
   steeringMessage,
-  supervisorMessage,
   USER_PROMPT_LIMIT,
   upstreamOf,
   workerMessage,
@@ -197,31 +196,6 @@ describe("factory messages", () => {
     expect(message).not.toContain(await readSystemPrompt("supervisor"));
   });
 
-  it("gives the supervisor its prompts and the digest, with no Stage prompt", async () => {
-    await project.write("prompts/SUPERVISOR.md", "Start one worker.\n");
-    await project.write("prompts/WORKER.md", "Not for the supervisor.\n");
-
-    const message = await supervisorMessage(project.paths, "Digest text.");
-
-    expect(headings(message)).toEqual([
-      "# Rowbly system prompt",
-      "# Rowbly supervisor system prompt",
-      "# Supervisor prompt",
-      "# Digest",
-    ]);
-    expect(message).toContain("# Supervisor prompt\n\nStart one worker.");
-    expect(message).toMatch(/# Digest\n\nDigest text\.$/);
-    expect(message).not.toContain("Not for the supervisor.");
-  });
-
-  it("gives the supervisor the dependency rules", async () => {
-    const message = await supervisorMessage(project.paths, "Digest text.");
-
-    expect(message).toContain("Do not start a worker for a blocked Story. The manager refuses it.");
-    expect(message).toContain("Start the upstream Stories first when you must choose.");
-    expect(message).toContain("Do not use `hold_candidate` for a blocked Story. The policy already holds it.");
-  });
-
   it("gives a worker the check rules when the Project has checks", async () => {
     const message = await workerMessage(project.paths, {
       ...run,
@@ -267,9 +241,9 @@ describe("factory messages", () => {
   it("cuts a long user prompt", async () => {
     await project.write("prompts/SYSTEM.md", "x".repeat(USER_PROMPT_LIMIT + 50));
 
-    const message = await supervisorMessage(project.paths, "Digest text.");
+    const message = await workerMessage(project.paths, run);
 
-    expect(message).toContain(`# Project prompt\n\n${"x".repeat(USER_PROMPT_LIMIT)}\n\n# Digest`);
+    expect(message).toContain(`# Project prompt\n\n${"x".repeat(USER_PROMPT_LIMIT)}\n\n# Stage prompt`);
   });
 });
 

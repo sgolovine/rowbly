@@ -6,7 +6,7 @@
  * 3. The Project prompt (`.rowbly/prompts/SYSTEM.md`).
  * 4. The user prompt of the role (`.rowbly/prompts/SUPERVISOR.md` or `WORKER.md`).
  * 5. Workers only: the Stage prompt (`.rowbly/stages/<STAGE>.md`).
- * 6. The data of the turn: the digest of the supervisor, or the run of the worker.
+ * 6. The data of the turn: the run of the worker.
  *
  * A user prompt or a Stage prompt with no text gives no section. A missing user prompt file has no text.
  */
@@ -47,11 +47,6 @@ async function promptSections(paths: ProjectPaths, role: Exclude<PromptName, "sy
     { title: "Project prompt", text: project.text.slice(0, USER_PROMPT_LIMIT) },
     { title: `${label} prompt`, text: roleUser.text.slice(0, USER_PROMPT_LIMIT) },
   ];
-}
-
-/** The message that the manager sends to the supervisor on each wake. */
-export async function supervisorMessage(paths: ProjectPaths, digest: string): Promise<string> {
-  return composeMessage([...(await promptSections(paths, "supervisor")), { title: "Digest", text: digest }]);
 }
 
 /** The facts of one worker run. The caller reads every value and passes it in. */

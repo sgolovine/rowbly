@@ -1,4 +1,4 @@
-import { type Dispatch, type RefObject, type SetStateAction, useRef, useState } from "react";
+import { type Dispatch, type RefObject, type SetStateAction, useMemo, useRef, useState } from "react";
 import type { CustomField, TagConfig } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
 import { createStory, type Story } from "../../../../services/story/story.js";
@@ -113,6 +113,7 @@ export function NewStoryForm({
   const covered = useCovered();
   const [saving, setSaving] = useState(false);
   const paste = useRef<StoryPaste | null>(null);
+  const choices = useMemo(() => dependencyChoices(stories, undefined, []), [stories]);
 
   const env: NewStoryEnv = { ctx, customFields, toast, paste, setSaving, onCreated };
 
@@ -124,7 +125,7 @@ export function NewStoryForm({
       <NewStoryImages enabled={!saving} onPaste={(value) => writeRef(paste, value)} />
       <Form
         extraHints={EXTRA_HINTS}
-        fields={storyFormFields(stages, customFields, dependencyChoices(stories, undefined, []), tagChoices(tags, []))}
+        fields={storyFormFields(stages, customFields, choices, tagChoices(tags, []))}
         initialValues={initialValues(stages, customFields, stage)}
         onSubmit={(values) => createNewStory(env, values)}
       />

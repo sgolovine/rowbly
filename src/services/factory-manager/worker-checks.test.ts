@@ -2,13 +2,7 @@ import { execFile } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
-import {
-  type FauxResponseStep,
-  fauxAssistantMessage,
-  fauxProvider,
-  fauxToolCall,
-  InMemoryCredentialStore,
-} from "@earendil-works/pi-ai";
+import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import type { CheckProcess, CheckQueueDeps } from "../check-queue/check-types.js";
@@ -20,7 +14,6 @@ import { createStory } from "../story/story.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
-import { checkHistory } from "./worker-checks.js";
 
 const exec = promisify(execFile);
 const PROMPT = "Move this Story to Done. Report complete.";
@@ -89,14 +82,11 @@ describe("factory checks", () => {
       refreshOnCreate: false,
       allowModelNetwork: false,
     });
-    const supervisor = fauxProvider({ provider: "supervisor", api: "supervisor-faux" });
     const worker = fauxProvider({ provider: "worker", api: "worker-faux" });
-    runtime.registerNativeProvider(supervisor.provider);
     runtime.registerNativeProvider(worker.provider);
     await updateFactorySettings(
       {
         maxWorkers: 1,
-        supervisorModel: { provider: "supervisor", modelId: supervisor.getModel().id },
         workerModel: { provider: "worker", modelId: worker.getModel().id },
         ...(checks ? { checks } : {}),
       },
@@ -115,7 +105,7 @@ describe("factory checks", () => {
       { runtime, agentDir: join(dir.path, "agent"), shim, checkDeps: machine.deps },
       { cwd: root },
     );
-    return { supervisor, worker, manager, machine };
+    return { worker, manager, machine };
   }
 
   async function settledWorker() {
@@ -129,26 +119,16 @@ describe("factory checks", () => {
     return (await listThreads({ role: "worker" }, { cwd: root })).threads[0];
   }
 
-  it("gates the check in bash, runs it through run_check, and records it for the Thread and the digest", async () => {
+  it("gates the check in bash, runs it through run_check, and records it for the Thread", async () => {
     const story = await createStory({ title: "Check me", stage: "WORK" }, { cwd: root });
     const f = await fixture({
       maxConcurrent: 1,
       items: [{ key: "test", label: "Tests", command: "pnpm test", narrowCommand: "pnpm vitest {files}" }],
     });
-    const digests: string[] = [];
-    const remember: FauxResponseStep = (context) => {
-      digests.push(JSON.stringify(context.messages));
-      return fauxAssistantMessage("Wait");
-    };
-    f.supervisor.setResponses([
-      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "one" }),
-      remember,
-      remember,
-      remember,
-    ]);
+    const prompts: string[] = [];
     f.worker.setResponses([
       (context) => {
-        digests.push(`worker:${JSON.stringify(context.messages)}`);
+        prompts.push(JSON.stringify(context.messages));
         return tool("bash", { command: "pnpm test --silent" });
       },
       tool("run_check", { check: "test", files: ["src/a.ts"] }),
@@ -181,18 +161,10 @@ describe("factory checks", () => {
       expect(session).toContain("status: failed\\nexitCode: 1");
       expect(session).toContain("1 failed");
       expect(f.machine.started).toHaveLength(1);
-      expect(digests.find((text) => text.startsWith("worker:"))).toContain("run_check");
+      expect(prompts[0]).toContain("run_check");
       const jobs = JSON.parse(await readFile(join(root, ".rowbly/runtime/checks/jobs.json"), "utf8")).jobs;
       expect(jobs).toEqual([expect.objectContaining({ key: "test", status: "failed", threadId: worker?.id })]);
       expect(await readFile(join(root, `.rowbly/runtime/checks/${jobs[0].id}.log`), "utf8")).toBe("1 failed\n");
-      await vi.waitFor(
-        () => {
-          const digest = digests.filter((text) => !text.startsWith("worker:")).at(-1) ?? "";
-          expect(digest).toContain("checks");
-          expect(digest).toContain("0123456789ab");
-        },
-        { timeout: 10_000 },
-      );
     } finally {
       await f.manager.shutdown();
       await run;
@@ -203,11 +175,6 @@ describe("factory checks", () => {
     const story = await createStory({ title: "Plain", stage: "WORK" }, { cwd: root });
     const f = await fixture(undefined);
     const prompts: string[] = [];
-    f.supervisor.setResponses([
-      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "one" }),
-      fauxAssistantMessage("Wait"),
-      fauxAssistantMessage("Done"),
-    ]);
     f.worker.setResponses([
       (context) => {
         prompts.push(JSON.stringify(context.messages));
@@ -240,13 +207,8 @@ describe("factory checks", () => {
   });
 
   it("cancels the running check of a cancelled worker", async () => {
-    const story = await createStory({ title: "Cancel me", stage: "WORK" }, { cwd: root });
+    await createStory({ title: "Cancel me", stage: "WORK" }, { cwd: root });
     const f = await fixture({ items: [{ key: "test", command: "pnpm test" }] });
-    f.supervisor.setResponses([
-      tool("start_worker", { storyId: story.id, stage: "WORK", requestId: "one" }),
-      fauxAssistantMessage("Wait"),
-      fauxAssistantMessage("Wait"),
-    ]);
     f.worker.setResponses([tool("run_check", { check: "test" }), fauxAssistantMessage("Done")]);
 
     const run = f.manager.run();
@@ -266,25 +228,5 @@ describe("factory checks", () => {
       await f.manager.shutdown();
       await run;
     }
-  });
-});
-
-describe("checkHistory", () => {
-  it("gives the last full and narrow result and the commit of each check key", () => {
-    expect(
-      checkHistory([
-        { id: "1", key: "test", scope: "full", status: "failed", head: "aaaaaaaaaaaaaaaa" },
-        { id: "2", key: "test", scope: "narrow", status: "passed", head: "bbbbbbbbbbbbbbbb" },
-        { id: "3", key: "test", scope: "full", status: "passed", head: "cccccccccccccccc" },
-        { id: "4", key: "lint", scope: "full", status: "running" },
-      ]),
-    ).toEqual([
-      {
-        key: "test",
-        full: { status: "passed", head: "cccccccccccc" },
-        narrow: { status: "passed", head: "bbbbbbbbbbbb" },
-      },
-      { key: "lint", full: { status: "running" }, narrow: undefined },
-    ]);
   });
 });

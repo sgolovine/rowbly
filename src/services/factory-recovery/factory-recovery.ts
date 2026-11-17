@@ -85,7 +85,7 @@ async function recoverThread(
   await projectNativeAttempt(thread.id, ctx);
 }
 
-/** Recovery runs only under new ownership, before any supervisor session opens. */
+/** Recovery runs only under new ownership, before the first factory pass. */
 export async function recoverFactory(
   token: string,
   _deadToken: string | undefined,
