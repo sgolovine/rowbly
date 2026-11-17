@@ -43,6 +43,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: In the TUI, a Stage move, a save or a delete of a Story now shows on the board at once, and Rowbly reads the Story files one time for each action, not two times. The TUI repairs duplicate Story IDs only when it first loads a Project, not on each refresh. (ROW-133)
 - Changed: All spinners in the TUI now share one animation clock, so the TUI redraws one time for each spinner frame, and no spinner timer runs when no spinner shows. (ROW-128)
 - Changed: The TUI board now refreshes faster on a large Project, and Rowbly reads `.rowbly/state.json` again only when the file changed. (ROW-134)
+- Changed: The TUI does less work on each mouse move, because it measures only the parts of the screen that use the move, and it measures each part one time for each frame. Clicks, hover, drag and drop, resize and the mouse wheel operate as before. (ROW-135)
 
 ### 0.19.0
 
