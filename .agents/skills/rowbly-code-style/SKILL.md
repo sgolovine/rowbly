@@ -15,8 +15,11 @@ Biome enforces part of the style. This guide also gives the rules that Biome can
 
 ## Scope
 
+In this skill, `src/` means `packages/cli/src/`.
+
 The strict style applies to all non-test TypeScript in `src/`. The strict override of `biome.jsonc` is
-the entry with the `biome-plugins/` plugins. Its `includes` list is `src/**` without the test files.
+the entry with the `biome-plugins/` plugins. Its `includes` list is `packages/cli/src/**` without the
+test files.
 
 - Write all code in `src/` in the strict style.
 - Test files (`*.test.ts`, `*.test.tsx`) use only the recommended rules of Biome. Keep them clear,

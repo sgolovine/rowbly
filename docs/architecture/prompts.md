@@ -15,7 +15,7 @@ message of a factory agent.
 | User   | `.rowbly/prompts/` of each Project     | The user, by hand, CLI or TUI |
 | Stage  | `.rowbly/stages/<KEY>.md` of a Project | The user, by hand, CLI or TUI |
 
-The `files` list of `package.json` includes `src/config/prompts`, so the package has the system
+The `files` list of `packages/cli/package.json` includes `src/config/prompts`, so the package has the system
 prompts. There is no system Stage prompt.
 
 ## Who gets each prompt

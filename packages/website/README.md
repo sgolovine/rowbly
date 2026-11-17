@@ -5,15 +5,21 @@ This folder has the marketing website of Rowbly. The site is served at `https://
 The website uses TanStack Start, Tailwind CSS v4 and shadcn/ui. The build prerenders each page to static
 files for GitHub Pages.
 
-The website is a separate pnpm package. It has its own `package.json`, its own `pnpm-workspace.yaml` and its
-own `pnpm-lock.yaml`. Do not add website dependencies to the root package.
+The website is the `rowbly-website` package of the pnpm workspace. It is in `packages/website/`. It has its
+own `package.json`, but the root of the repository has the only `pnpm-workspace.yaml` and `pnpm-lock.yaml`. Do
+not add website dependencies to the root package or to `packages/cli/`. To add a dependency, run this command
+from the root of the repository:
+
+```sh
+pnpm --filter rowbly-website add <name>
+```
 
 ## Install
 
-Run this command from the root of the repository:
+Run this command from the root of the repository. It installs the dependencies of all packages:
 
 ```sh
-pnpm --dir website install
+pnpm install
 ```
 
 ## Run the development server
@@ -22,7 +28,7 @@ Run one of these commands from the root of the repository:
 
 ```sh
 pnpm website:dev
-pnpm --dir website dev
+pnpm --filter rowbly-website dev
 ```
 
 The server shows the URL of the site in the terminal.
@@ -33,13 +39,13 @@ Run one of these commands from the root of the repository:
 
 ```sh
 pnpm website:build
-pnpm --dir website build
+pnpm --filter rowbly-website build
 ```
 
-The build writes the static site to `website/dist/client/`. This folder has `index.html`, and the CSS, the
+The build writes the static site to `packages/website/dist/client/`. This folder has `index.html`, and the CSS, the
 scripts and the font files in `assets/`. Deploy only this folder.
 
-The build also writes `website/dist/server/`. The prerender step uses it. Do not deploy it.
+The build also writes `packages/website/dist/server/`. The prerender step uses it. Do not deploy it.
 
 The build writes one HTML file for each prerendered route, for example `install/index.html` for `/install`.
 GitHub Pages serves each of these files directly.
@@ -53,12 +59,14 @@ without changes.
 
 The workflow `.github/workflows/website.yml` deploys the site to GitHub Pages. It starts when:
 
-- A push to `main` changes `website/` or the workflow. The workflow builds and deploys the site.
-- A pull request changes `website/` or the workflow. The workflow only builds the site. It does not deploy it.
+- A push to `main` changes `packages/website/`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` or the workflow. The
+  workflow builds and deploys the site.
+- A pull request changes `packages/website/`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` or the workflow. The
+  workflow only builds the site. It does not deploy it.
 - A person starts the workflow manually from the Actions tab ("Run workflow"). The workflow builds and deploys
   the site.
 
-The `build` job installs the dependencies, builds the site, checks the types and makes sure that
+The `build` job installs only the dependencies of the website, builds the site, checks the types and makes sure that
 `dist/client/` has `index.html`, `404.html`, `CNAME`, `.nojekyll`, `sitemap.xml`, `robots.txt` and
 `images/og-image.png`. Then it uploads `dist/client/` as the
 Pages artifact. The `deploy` job publishes the artifact. Only one deploy runs at a time. A new deploy does not
@@ -93,8 +101,11 @@ Do these steps one time:
 Run the build or the development server one time before you check the types. TanStack Start generates the
 route tree `src/route-tree.gen.ts` when it starts. Git does not track this file.
 
+Run one of these commands from the root of the repository:
+
 ```sh
-pnpm --dir website typecheck
+pnpm website:typecheck
+pnpm --filter rowbly-website typecheck
 ```
 
 ## Lint
@@ -103,10 +114,10 @@ The root `pnpm lint` also checks the website. Run it from the root of the reposi
 
 ## Add a shadcn/ui component
 
-1. Run the shadcn CLI in the `website/` folder:
+1. Run the shadcn CLI in the `packages/website/` folder:
 
    ```sh
-   cd website
+   cd packages/website
    pnpm dlx shadcn@latest add <component>
    ```
 
@@ -115,10 +126,10 @@ The root `pnpm lint` also checks the website. Run it from the root of the reposi
 3. Format the new files from the root of the repository:
 
    ```sh
-   pnpm exec biome check --write website
+   pnpm exec biome check --write packages/website
    ```
 
-4. Run the root `pnpm lint` and `pnpm --dir website typecheck`.
+4. Run the root `pnpm lint` and `pnpm website:typecheck`.
 
 The components are in `src/components/ui/`. Each file name must be dash-case.
 
@@ -158,7 +169,7 @@ icon is an upscale with a Lanczos filter. The icons are committed files. The bui
 To make the icons again, use an image tool one time, for example:
 
 ```sh
-magick assets/icon.png -filter Lanczos -resize 32x32 website/public/favicon-32x32.png
+magick assets/icon.png -filter Lanczos -resize 32x32 packages/website/public/favicon-32x32.png
 ```
 
 `public/site.webmanifest` refers to `icon-512.png`.
@@ -171,7 +182,7 @@ The pages show `board.webp` and `board-no-tags.webp`. These files are lossless W
 WebP file again, for example:
 
 ```sh
-cwebp -lossless -z 9 website/public/images/board.png -o website/public/images/board.webp
+cwebp -lossless -z 9 packages/website/public/images/board.png -o packages/website/public/images/board.webp
 ```
 
 ## Site URL
@@ -214,10 +225,10 @@ The image is a committed file. The build does not make it. To make the image aga
 
    ```sh
    google-chrome --headless=new --hide-scrollbars --force-device-scale-factor=1 \
-     --window-size=1200,630 --screenshot=website/public/images/og-image.png file:///tmp/og/og.html
+     --window-size=1200,630 --screenshot=packages/website/public/images/og-image.png file:///tmp/og/og.html
    ```
 
-3. Make sure that `file website/public/images/og-image.png` shows `1200 x 630`. Keep the file small (less
+3. Make sure that `file packages/website/public/images/og-image.png` shows `1200 x 630`. Keep the file small (less
    than 300 KB).
 
 Do not commit the HTML page. Do not add a dependency or a build step for the image.

@@ -4,28 +4,53 @@ Rowbly uses pnpm scripts for development, checks and the build. Biome lints and 
 enforces the strict code style. A script checks that all names are dash-case. tsup bundles the CLI,
 and CI runs the same checks on each pull request.
 
-Read this when you change a script, the lint setup, a Biome plugin, the build, Knip or CI. Also read
-it when a check fails and you do not know which tool reports it.
+Read this when you change a script, the lint setup, a Biome plugin, the build, Knip, CI or the
+workspace. Also read it when a check fails and you do not know which tool reports it.
+
+## Workspace
+
+The repository is a pnpm workspace. `pnpm-workspace.yaml` lists the packages in `packages/*`:
+
+- `packages/cli/` is the `rowbly` package. Its `package.json` has the version, the `bin` and the
+  `files` of the npm package.
+- `packages/website/` is the `rowbly-website` package. It is private. See its `README.md`.
+
+The root `package.json` is private. It has the shared tools (Biome, Knip, agentic-tui and tsx) and
+the scripts below. The root has the only `pnpm-lock.yaml`. `pnpm-workspace.yaml` also has the
+settings of pnpm, for example `minimumReleaseAge` and the `node-pty` override.
+
+Run all `pnpm` commands from the root of the repository. To add a dependency to one package, use a
+filter:
+
+```sh
+pnpm --filter rowbly add <name>
+pnpm --filter rowbly-website add <name>
+```
 
 ## Scripts
 
 ```sh
-pnpm dev              # run from source: launches the TUI
-pnpm dev --help       # run from source with CLI args
-pnpm build            # bundle to dist/
-pnpm start            # run the built bundle
-pnpm typecheck        # tsc --noEmit
-pnpm test             # vitest run: run all tests one time; then the node:test suite of scripts/
-pnpm test:watch       # vitest: run the tests again when a file changes
-pnpm lint             # biome check: lint, formatting and import order; then the dash-case name check
-pnpm lint:fix         # biome check --write: apply safe fixes and format
-pnpm format           # biome format --write
-pnpm knip             # knip: find unused files, exports and dependencies
-pnpm knip:production  # knip --production: also find code that only the tests use
-pnpm link --global    # put `rowbly` on your PATH for local testing
+pnpm dev               # run from source: launches the TUI
+pnpm dev --help        # run from source with CLI args
+pnpm build             # bundle to packages/cli/dist/
+pnpm start             # run the built bundle
+pnpm typecheck         # tsc --noEmit in packages/cli/
+pnpm test              # vitest run in packages/cli/: run all tests one time; then the node:test suite of scripts/
+pnpm test:watch        # vitest: run the tests again when a file changes
+pnpm lint              # biome check: lint, formatting and import order; then the dash-case name check
+pnpm lint:fix          # biome check --write: apply safe fixes and format
+pnpm format            # biome format --write
+pnpm knip              # knip: find unused files, exports and dependencies
+pnpm knip:production   # knip --production: also find code that only the tests use
+pnpm website:dev       # run the development server of the website
+pnpm website:build     # build the website to packages/website/dist/
+pnpm website:typecheck # tsc --noEmit in packages/website/
+# put `rowbly` on your PATH for local testing
+pnpm --dir packages/cli link --global
 ```
 
-**tsx** runs the source directly during development (`pnpm dev`).
+**tsx** runs the source directly during development (`pnpm dev`). The working directory of `pnpm dev`
+stays the root of the repository, so `pnpm dev` uses the Rowbly Project of this repository.
 
 ## Biome
 
@@ -34,12 +59,12 @@ pnpm link --global    # put `rowbly` on your PATH for local testing
 - The format is double quotes, semicolons, 2-space indent and 120 columns. Do not format by hand. Run
   `pnpm lint:fix`.
 - The linter uses the recommended rules, and `useFilenamingConvention` with kebab-case for all script
-  files. An override sets `useFilenamingConvention` to off in `website/src/routes/**`, because TanStack
+  files. An override sets `useFilenamingConvention` to off in `packages/website/src/routes/**`, because TanStack
   Router route names are not kebab-case. The [name check](#name-check) examines these names.
 - `biome.jsonc` is JSONC, so it can have comments. Write a comment that tells why for each override that
   is not clear.
 - Biome does not examine `.agents/`, `.claude/`, `skills/` or `.rowbly/`.
-- The **strict override** applies to `src/**` without the test files. It adds the rules of the strict
+- The **strict override** applies to `packages/cli/src/**` without the test files. It adds the rules of the strict
   code style and the GritQL plugins in `biome-plugins/`. The
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#rules-that-biome-enforces)
   lists each rule and plugin.
@@ -60,8 +85,9 @@ The script lists the exceptions:
   `UPSTREAM.md` and `CHANGELOG.md`.
 - Dotfiles and dotfolders. The name after the dot is dash-case.
 - `.agents/skills/agentic-tui/`, because it is an unchanged upstream copy.
-- `stages/*.md` and all of `.rowbly/`, because these names are stage keys and Story IDs.
-- The TanStack Router file-based routes in `website/src/routes/`. `isGoodRouteSegment` examines each
+- `packages/cli/stages/*.md` and all of `.rowbly/`, because these names are stage keys and Story IDs.
+- `packages/cli/src/config/prompts/*.md`, because these names are the names of the user prompts.
+- The TanStack Router file-based routes in `packages/website/src/routes/`. `isGoodRouteSegment` examines each
   file and folder below this folder. Each word in a name must be dash-case. The script accepts these
   forms:
 
@@ -79,20 +105,21 @@ The script lists the exceptions:
   | `[x]`                    | `script[.]js.tsx`        | An escaped character                     |
   | `index`, `route`, `lazy` | `index.lazy.tsx`         | Special route file names                 |
 
-  Outside `website/src/routes/`, these forms are errors. For example, `$storyKey.tsx`, `__Root.tsx` and
+  Outside `packages/website/src/routes/`, these forms are errors. For example, `$storyKey.tsx`, `__Root.tsx` and
   `My_Page.tsx` are errors in all folders.
 - The generated route tree of TanStack Router must have a dash-case name. Set
   `generatedRouteTree: "./src/route-tree.gen.ts"` in the router config.
 
 ## TypeScript
 
-- `pnpm typecheck` runs `tsc --noEmit`.
+- `pnpm typecheck` runs `tsc --noEmit` in `packages/cli/`. `pnpm website:typecheck` does the same for
+  the website.
 - Use `.js` extensions in relative imports (`./tui/index.js`), also for `.ts` and `.tsx` sources. The
   NodeNext ESM resolution makes this necessary.
 
 ## Build
 
-`tsup.config.ts` bundles `src/cli.ts` into `dist/cli.js` as ESM for Node 22, with a
+`packages/cli/tsup.config.ts` bundles `src/cli.ts` into `dist/cli.js` as ESM for Node 22, with a
 `#!/usr/bin/env node` banner. A second entry bundles `src/services/pi-runtime/pi-worker.ts` into
 `dist/pi-worker.js`, the [Pi worker](native-factory/pi-runtime-and-auth.md#the-pi-worker). The
 shared chunks are also in `dist/`, so the worker client finds `pi-worker.js` next to its chunk. It keeps `@earendil-works/pi-coding-agent` external, so that Pi loads
@@ -133,7 +160,8 @@ the CLI, the TUI or the factory daemon compiles less JavaScript.
 
 ## Knip
 
-`knip.json` sets the files that Knip examines. The test helpers (`src/commands/test-cli/` and
+`knip.json` sets the files that Knip examines in each workspace. Knip examines the root and
+`packages/cli/`. It does not examine `packages/website/`. The test helpers (`src/commands/test-cli/` and
 `src/services/test-project/`) are not production code. `pnpm knip:production`
 also finds code that only the tests use.
 
@@ -146,7 +174,7 @@ to examine each change to the TUI layout in a real terminal.
 - The full reference for the tool is the [`agentic-tui` skill](../../.agents/skills/agentic-tui/SKILL.md).
   It is an unchanged copy from `@codebolt/agentic-tui` (see its `UPSTREAM.md`).
 - Do not draw screens by hand. Do not commit screenshots. The only exception is the website images in
-  `website/public/screenshots/`. Its `README.md` gives the alt text of each image.
+  `packages/website/public/screenshots/`. Its `README.md` gives the alt text of each image.
 
 ## Agent skills for development
 
@@ -172,11 +200,17 @@ The `changelog` folder in `.agents/skills/` is a skill of this repository only. 
 - **Lint and format**: `biome ci .`, `node scripts/check-names.mjs` and `pnpm typecheck`.
 - **Test**: `pnpm test` and `pnpm build`.
 
+`.github/workflows/website.yml` builds the website and deploys it to GitHub Pages. It runs when a change
+is in `packages/website/`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` or the workflow file.
+
 `.github/workflows/release.yml` creates a release. Node comes from `.nvmrc`.
 
 - `scripts/release-changelog.mjs` changes the `### Pre Release` heading of `CHANGELOG.md` to the new version,
   for example `### 1.12.0`. Then it adds a new empty `### Pre Release` section above it.
-- The release commit holds `package.json` and `CHANGELOG.md`. If a later step fails, the `revert-version` job
+- The workflow changes the version in `packages/cli/package.json` and publishes the package from
+  `packages/cli/`. The `prepack` script of the package copies `README.md` and `LICENSE.md` from the root
+  into the package. The `postpack` script removes the copies.
+- The release commit holds `packages/cli/package.json` and `CHANGELOG.md`. If a later step fails, the `revert-version` job
   reverts that commit, and the changelog also goes back.
 - The script stops the release if `CHANGELOG.md` does not have exactly one `### Pre Release` heading.
 

@@ -9,6 +9,8 @@ description: >
 
 # Rowbly TUI design system
 
+In this skill, `src/` means `packages/cli/src/`.
+
 The design system and its components come from Rowbly v1. The tokens, rules and shared components
 are in this repository, and you can use them now. The v1 screens (Board, Story, Settings) were not
 ported. Their guidelines below are patterns to adapt, not code to look for. The new UI can be

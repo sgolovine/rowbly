@@ -16,7 +16,7 @@ Make each screenshot of Rowbly from the real built CLI. Run the CLI in a PTY and
 
 Run these commands from the root of the repository. Use absolute paths for all files. The
 agentic-tui daemon keeps the working directory of its first start. If you use a relative
-`dist/cli.js`, the daemon can run the build of a different checkout.
+`packages/cli/dist/cli.js`, the daemon can run the build of a different checkout.
 
 ```bash
 repo="$(pwd)"
@@ -25,7 +25,7 @@ mkdir "$out/agentic-tui-state" "$out/home"
 export AGENTIC_TUI_STATE_DIR="$out/agentic-tui-state"   # a daemon of its own, never a shared one
 pnpm build
 t() { pnpm -s exec agentic-tui --session-namespace rowbly-screenshots "$@"; }
-t run node "$repo/dist/cli.js" --cwd "$out" --cols 140 --rows 38 --env HOME="$out/home"
+t run node "$repo/packages/cli/dist/cli.js" --cwd "$out" --cols 140 --rows 38 --env HOME="$out/home"
 ```
 
 `HOME` points to an empty folder. Because of this, the CLI does not read or change the files in the

@@ -18,7 +18,7 @@ Read this when you add or change a CLI command, a flag, the text or JSON output,
 Keep `src/cli.ts` small. It only connects the parts. Do not import Ink, React or a module in
 `src/tui/` statically in `src/cli.ts`. The CLI commands must not load the TUI. tsup puts the TUI in a
 separate chunk in `dist/`. The test `src/cli.test.ts` makes sure of this. `--version` (`-v`) reads the version from
-`package.json`. Change the version only in that file.
+`packages/cli/package.json`. Change the version only in that file.
 
 ## Layout of `src/commands/`
 

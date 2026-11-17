@@ -21,12 +21,27 @@ separate daemon process that uses the same services and the Pi SDK.
                      Specs, prompts, config)      .rowbly/runtime/, state.json)
 ```
 
-| Command                            | Mode | Result                                          |
-| ---------------------------------- | ---- | ----------------------------------------------- |
-| `rowbly`                           | TUI  | Starts the interactive terminal UI (React Ink). |
-| `rowbly <command> [--flag value…]` | CLI  | Runs one command and stops (Commander.js).      |
-| `rowbly --help` / `rowbly -h`      | CLI  | Shows the usage text.                           |
-| `rowbly --version` / `rowbly -v`   | CLI  | Shows the version from `package.json`.          |
+| Command                            | Mode | Result                                              |
+| ---------------------------------- | ---- | --------------------------------------------------- |
+| `rowbly`                           | TUI  | Starts the interactive terminal UI (React Ink).     |
+| `rowbly <command> [--flag value…]` | CLI  | Runs one command and stops (Commander.js).          |
+| `rowbly --help` / `rowbly -h`      | CLI  | Shows the usage text.                               |
+| `rowbly --version` / `rowbly -v`   | CLI  | Shows the version from `packages/cli/package.json`. |
+
+## Repository layout
+
+The repository is a pnpm workspace. The root has one `pnpm-lock.yaml` and the shared tools.
+
+| Folder              | Contents                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| `packages/cli/`     | The `rowbly` package: `src/`, `skills/`, `stages/` and its `package.json`.          |
+| `packages/website/` | The marketing website (`rowbly-website`). See its `README.md`.                      |
+| `scripts/`          | The scripts of the workspace, for example the name check and the release changelog. |
+| `docs/`             | This documentation.                                                                 |
+
+In `docs/`, a path that starts with `src/`, `skills/`, `stages/` or `dist/` is relative to
+`packages/cli/`. Run the `pnpm` commands from the root of the repository. See
+[tooling.md](tooling.md#workspace).
 
 ## The main concepts
 
