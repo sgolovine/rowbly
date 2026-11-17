@@ -1,5 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { Store } from "../store/store.js";
 import { LOCAL_HOST } from "../thread/thread.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
@@ -53,6 +54,21 @@ interface CheckedState {
   readonly attempts: Attempt[];
   readonly missing: string[];
 }
+
+/** The checked state, with the attempts of each Story in file order. Attempts without a Story have no group. */
+interface GroupedState {
+  readonly groups: ReadonlyMap<string, readonly Attempt[]>;
+  readonly missing: readonly string[];
+}
+
+/** The parse result of one version of the file. `key` identifies the version by path, time, size and inode. */
+interface CacheEntry {
+  readonly key: string;
+  readonly result: GroupedState | FactoryActivity;
+}
+
+/** One entry is sufficient: the TUI shows one Project at a time. */
+const stateCache = new Store<{ entry?: CacheEntry }>({});
 
 class InvalidState extends Error {}
 
@@ -158,10 +174,31 @@ function validate(state: unknown): CheckedState {
   };
 }
 
+function compareText(a: string, b: string): number {
+  if (a === b) {
+    return 0;
+  }
+
+  return a < b ? -1 : 1;
+}
+
+/**
+ * Groups the attempts by Story in one sort. The sort is stable, so each group keeps the file order.
+ * Attempts without a Story are not in a group.
+ */
+function groupByStory(attempts: readonly Attempt[]): ReadonlyMap<string, readonly Attempt[]> {
+  const sorted = attempts
+    .filter((a) => a.story !== undefined)
+    .toSorted((a, b) => compareText(a.story as string, b.story as string));
+  const starts = sorted.flatMap((a, i) => (i === 0 || a.story !== sorted[i - 1]?.story ? [i] : []));
+
+  return new Map(starts.map((start, n) => [sorted[start]?.story as string, sorted.slice(start, starts[n + 1])]));
+}
+
 /** The activity of one Story from its attempts, by the activity rules. */
 function storyActivity(story: { id: string; stage: string }, attempts: readonly Attempt[]): StoryActivity | undefined {
   // An attempt without a Stage can belong to the current Stage, so it counts here.
-  const matched = attempts.filter((a) => a.story === story.id && (a.stage === undefined || a.stage === story.stage));
+  const matched = attempts.filter((a) => a.stage === undefined || a.stage === story.stage);
 
   if (matched.some((a) => ATTEMPT_FIELDS.some((key) => a[key] === undefined))) {
     return { kind: "unknown" };
@@ -208,10 +245,12 @@ function parseState(text: string): unknown {
   }
 }
 
-/** Gives the checked state, or the `unavailable` activity of a file that Rowbly cannot accept. */
-function checkText(path: string, text: string): CheckedState | FactoryActivity {
+/** Gives the grouped state, or the `unavailable` activity of a file that Rowbly cannot accept. */
+function checkText(path: string, text: string): GroupedState | FactoryActivity {
   try {
-    return validate(parseState(text));
+    const checked = validate(parseState(text));
+
+    return { groups: groupByStory(checked.attempts), missing: checked.missing };
   } catch (err) {
     if (!(err instanceof InvalidState)) {
       throw err;
@@ -221,17 +260,65 @@ function checkText(path: string, text: string): CheckedState | FactoryActivity {
   }
 }
 
-function activityEntry(story: { id: string; stage: string }, attempts: readonly Attempt[]): [string, StoryActivity][] {
-  const activity = storyActivity(story, attempts);
+function activityEntry(
+  story: { id: string; stage: string },
+  groups: ReadonlyMap<string, readonly Attempt[]>,
+): [string, StoryActivity][] {
+  const activity = storyActivity(story, groups.get(story.id) ?? []);
 
   return activity ? [[story.id, activity]] : [];
 }
 
 function activities(
   stories: readonly { id: string; stage: string }[],
-  attempts: readonly Attempt[],
+  groups: ReadonlyMap<string, readonly Attempt[]>,
 ): Record<string, StoryActivity> {
-  return Object.fromEntries(stories.flatMap((story) => activityEntry(story, attempts)));
+  return Object.fromEntries(stories.flatMap((story) => activityEntry(story, groups)));
+}
+
+/** Gives the cache key of the current version of the file, or the activity for a file that is absent. */
+async function stateKey(path: string): Promise<string | FactoryActivity> {
+  try {
+    const info = await stat(path);
+
+    return `${path}|${info.mtimeMs}|${info.size}|${info.ino}`;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return { path, status: "missing", stories: {} };
+    }
+
+    return { path, status: "unavailable", message: (err as Error).message, stories: {} };
+  }
+}
+
+/**
+ * Gives the grouped state of the file. An unchanged file is not parsed again. A missing file or a read
+ * error is not cached, so the next call reads the file again.
+ */
+async function loadState(path: string): Promise<GroupedState | FactoryActivity> {
+  const key = await stateKey(path);
+
+  if (typeof key !== "string") {
+    return key;
+  }
+
+  const cached = stateCache.current.entry;
+
+  if (cached?.key === key) {
+    return cached.result;
+  }
+
+  const text = await readStateText(path);
+
+  if (typeof text !== "string") {
+    return text;
+  }
+
+  const result = checkText(path, text);
+
+  stateCache.update(() => ({ entry: { key, result } }));
+
+  return result;
 }
 
 function missingMessage(missing: readonly string[]): string {
@@ -251,19 +338,13 @@ export async function getFactoryActivity(
   ctx: ServiceContext = {},
 ): Promise<FactoryActivity> {
   const path = join((await findProject(ctx)).dir, "state.json");
-  const text = await readStateText(path);
-
-  if (typeof text !== "string") {
-    return text;
-  }
-
-  const checked = checkText(path, text);
+  const checked = await loadState(path);
 
   if ("status" in checked) {
     return checked;
   }
 
-  const stories = activities(input.stories, checked.attempts);
+  const stories = activities(input.stories, checked.groups);
 
   if (checked.missing.length === 0) {
     return { path, status: "ok", stories };

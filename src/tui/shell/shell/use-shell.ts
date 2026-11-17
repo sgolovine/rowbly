@@ -45,7 +45,7 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   const active = useIsActive();
   const registry = useContext(ShellContext);
   const layout = useLayout();
-  const { data, factory, reload } = useShellData(ctx, preloadPi);
+  const { data, factory, reload, putOnBoard, takeFromBoard } = useShellData(ctx, preloadPi);
   const { values, setters } = useShellState();
   const { overlay, sidebarShown, stageKey, tagKey, collapsed } = values;
   const toast = useToast();
@@ -72,6 +72,8 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
     toast,
     exit,
     reload,
+    putOnBoard,
+    takeFromBoard,
     setCtx,
     ...setters,
   };

@@ -48,7 +48,7 @@ function storyPlaced(env: ShellEnv, moved: Story): void {
 
   fold(env, moved.stage, false);
   env.setSelectedId(moved.id);
-  env.reload();
+  env.putOnBoard(moved);
 }
 
 /** Moves the Story `story` `delta` Stages along the board order, to the top of that Stage. */
@@ -107,11 +107,11 @@ function markedPlaced(env: ShellEnv, moved: readonly Story[]): void {
     env.setStageKey(first.stage);
   }
 
+  // The order of the writes: each Story goes to the top of its Stage, so the Stories keep their relative order.
   for (const story of moved) {
     fold(env, story.stage, false);
+    env.putOnBoard(story);
   }
-
-  env.reload();
 }
 
 /** A move failed. The Stories that moved before the failure stay moved. */
@@ -176,7 +176,7 @@ export function afterDelete(env: ShellEnv, id: string): void {
   env.setSelectedId(at >= 0 && next ? next.id : null);
   closeOverlay(env);
   closeDeletedStory(env, id);
-  env.reload();
+  env.takeFromBoard(id);
 }
 
 /** Deletes the Story `story` after the confirmation. */

@@ -117,6 +117,13 @@ export interface ShellEnv {
   readonly exit: () => void;
   /** Reads the board again. */
   readonly reload: () => void;
+  /**
+   * Puts a Story that a write returned on the board in memory, at the top of its Stage, with no read. The watcher
+   * echo of the write reads the board again, and also applies the changes of the write to other Stories.
+   */
+  readonly putOnBoard: (story: Story) => void;
+  /** Removes the Story `id` from the board in memory, with no read. The watcher echo of the delete reads the board. */
+  readonly takeFromBoard: (id: string) => void;
 
   // The state setters.
   readonly setCtx: Dispatch<SetStateAction<ServiceContext>>;
