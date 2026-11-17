@@ -6,11 +6,12 @@ import { parseJsonInput, readBoundedInput } from "../../services/host-agent/host
 import { hostAgentPaths, hostRunPathsAnswer } from "../../services/host-agent/host-agent-paths.js";
 import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
 import { hostPing } from "../../services/host-agent/host-ping.js";
-import { runWithoutContext } from "../output/output.js";
+import { hostSessionBytes } from "../../services/host-agent/host-session-bytes.js";
+import { runBytes, runWithoutContext } from "../output/output.js";
 
 /**
  * Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths, the prepare step
- * and the heartbeat.
+ * the heartbeat and the session bytes of the session mirror.
  */
 export function registerHostRunCommands(program: Command): void {
   program
@@ -71,4 +72,18 @@ export function registerHostRunCommands(program: Command): void {
       (answer) => JSON.stringify(answer),
     ),
   );
+
+  registerSessionBytesCommand(program);
+}
+
+/** Registers the hidden bytes call that gives the session lines of a Thread to the session mirror. */
+function registerSessionBytesCommand(program: Command): void {
+  // The main machine runs this command to fill a gap of the session mirror of a remote Thread.
+  program
+    .command("session-bytes <project-id>", { hidden: true })
+    .action((projectId: string, _opts: unknown, command: Command) =>
+      runBytes(command, async () =>
+        hostSessionBytes(hostAgentPaths(projectId), parseJsonInput(await readBoundedInput(process.stdin, 65_536))),
+      ),
+    );
 }

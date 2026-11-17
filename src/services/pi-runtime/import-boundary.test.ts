@@ -95,6 +95,7 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/remote-reconnect.js")).resolves.toHaveProperty("reconnectHost");
     await expect(import("../remote-executor/remote-stop.js")).resolves.toHaveProperty("shutdownRemote");
     await expect(import("../remote-executor/remote-sync.js")).resolves.toHaveProperty("syncHosts");
+    await expect(import("../remote-executor/session-mirror.js")).resolves.toHaveProperty("takeSessionFrame");
     await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
     await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
@@ -160,6 +161,7 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-clone-update.js")).resolves.toHaveProperty("updateClone");
     await expect(import("../host-agent/host-run-events.js")).resolves.toHaveProperty("runEvents");
     await expect(import("../host-agent/host-run-state.js")).resolves.toHaveProperty("readHostRun");
+    await expect(import("../host-agent/host-session-bytes.js")).resolves.toHaveProperty("hostSessionBytes");
     await expect(import("../host-agent/host-runner.js")).resolves.toHaveProperty("createHostRunner");
     await expect(import("../host-agent/host-checks.js")).resolves.toHaveProperty("openHostChecks");
     await expect(import("../check-queue/thread-checks.js")).resolves.toHaveProperty("withCheck");

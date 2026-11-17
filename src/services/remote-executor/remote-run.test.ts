@@ -41,7 +41,7 @@ describe("remote run", () => {
     const sync = vi.fn(async () => {
       throw new Error("offline");
     });
-    const hooks = { sync, stopHost: async () => undefined };
+    const hooks = { sync, stopHost: async () => undefined, catchUp: async () => undefined };
     run.store.update(() => ({ commandId: "c1" }));
 
     takeRunFrame(run, frame({ requestId: "old", phase: "ended", endReason: "completed" }), hooks);
@@ -57,7 +57,7 @@ describe("remote run", () => {
     expect(log).toEqual(["worktree"]);
     expect(waitsForSync(run)).toBe(true);
 
-    await endSyncedRuns([run]);
+    await endSyncedRuns([run], hooks);
     await waitForAbort(run.done.signal);
     expect(log).toEqual(["worktree", "completed"]);
     expect(waitsForSync(run)).toBe(false);
@@ -72,6 +72,7 @@ describe("remote run", () => {
     takeRunFrame(run, frame({ session: { model: { provider: "p", modelId: "m" }, file: "f" } }), {
       sync: async () => undefined,
       stopHost,
+      catchUp: async () => undefined,
     });
     await waitForAbort(run.done.signal);
 

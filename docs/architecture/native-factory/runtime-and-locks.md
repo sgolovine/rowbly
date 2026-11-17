@@ -24,7 +24,7 @@ take or change a lock.
     control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
-    sessions/<id>/<pi-name>.jsonl # native Pi history; file reference starts as null
+    sessions/<id>/<pi-name>.jsonl # native Pi history, or the session mirror of a remote Thread; file reference starts as null
     bin/rowbly        # exact-version CLI shim for workers
     logs/<id>.jsonl   # operational logs; no transcript bodies
     checks/jobs.json  # the records of the last 500 check jobs, with process group and start ticks
