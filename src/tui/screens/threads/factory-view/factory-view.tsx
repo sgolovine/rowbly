@@ -1,9 +1,15 @@
 import { Text } from "ink";
-import { Loading, ScrollBody, SectionHeadingRow } from "../../../components/index.js";
+import { Loading, SectionHeadingRow, sectionHeadingRowHeight, VirtualList } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
-import { ThreadRow, threadHostProps } from "../../stories/index.js";
+import { ThreadRow, threadHostProps, threadRowHeight } from "../../stories/index.js";
+import type { FactoryViewRow } from "../factory-view-rows.js";
 import { clickRow } from "./factory-view-actions.js";
 import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
+
+/** The lines of a row of the Factory view. Each heading after the first has an empty line above it. */
+function factoryRowHeight(row: FactoryViewRow, index: number, compact: boolean | undefined): number {
+  return row.kind === "section" ? sectionHeadingRowHeight(index > 0) : threadRowHeight(row.thread, compact ?? false);
+}
 
 /**
  * The Factory view: the worker Threads of all Stories in two sections, "Active Threads" (pending and running)
@@ -29,8 +35,14 @@ export function FactoryView(props: FactoryViewProps) {
   }
 
   return (
-    <ScrollBody active={active} wheel={clickable} height={layout.height}>
-      {rows.map((row, index) =>
+    <VirtualList
+      active={active}
+      wheel={clickable}
+      height={layout.height}
+      cursor={env.cursor}
+      items={rows}
+      rowHeight={(row, index) => factoryRowHeight(row, index, compact)}
+      renderRow={(row, index) =>
         row.kind === "section" ? (
           <SectionHeadingRow
             key={row.id}
@@ -56,8 +68,8 @@ export function FactoryView(props: FactoryViewProps) {
             {...threadHostProps(hostView, row.thread)}
             onClick={() => clickRow(env, index)}
           />
-        ),
-      )}
-    </ScrollBody>
+        )
+      }
+    />
   );
 }
