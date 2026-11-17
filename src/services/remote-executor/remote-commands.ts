@@ -34,7 +34,7 @@ export function hooksOf(env: RemoteEnv): RunHooks {
 }
 
 /** Runs a change of a queue file after the earlier changes, so that two changes do not lose a command. */
-function withQueueLock<T>(env: RemoteEnv, action: () => Promise<T>): Promise<T> {
+export function withQueueLock<T>(env: RemoteEnv, action: () => Promise<T>): Promise<T> {
   const next = env.state.current.queueChain.then(action);
 
   env.state.update(() => ({
