@@ -1,7 +1,6 @@
-import { Box, Text } from "ink";
+import { Text } from "ink";
 import type { Stage } from "../../../../services/stage/stage.js";
-import { SelectionRow, StageBadge, Switch } from "../../../components/index.js";
-import { theme } from "../../../theme.js";
+import { ColumnRow, StageBadge, Switch, subtleColor } from "../../../components/index.js";
 import { stageCategory } from "../../stories/index.js";
 
 /** The props of `StageRow`. */
@@ -22,16 +21,22 @@ export interface StageRowProps {
 /** One Stage in the settings list: its badge, its key and a Switch that enables or disables it. */
 export function StageRow({ stage, stages, selected, idle, labelWidth, keyWidth, onClick, onToggle }: StageRowProps) {
   return (
-    <SelectionRow selected={selected} active={idle} onClick={onClick}>
-      <Box>
-        <Box width={labelWidth} flexShrink={0}>
-          <StageBadge stage={{ name: stage.label, category: stageCategory(stages, stage.key) }} />
-        </Box>
-        <Box width={keyWidth} flexShrink={0}>
-          <Text color={selected ? theme.inkMuted : theme.inkFaint}>{stage.key}</Text>
-        </Box>
-        <Switch on={stage.enabled} onLabel="Enabled" offLabel="Disabled" onChange={onToggle} clickable={idle} />
-      </Box>
-    </SelectionRow>
+    <ColumnRow
+      selected={selected}
+      active={idle}
+      onClick={onClick}
+      columns={[
+        {
+          width: labelWidth,
+          content: <StageBadge stage={{ name: stage.label, category: stageCategory(stages, stage.key) }} />,
+        },
+        { width: keyWidth, content: <Text color={subtleColor(selected)}>{stage.key}</Text> },
+        {
+          content: (
+            <Switch on={stage.enabled} onLabel="Enabled" offLabel="Disabled" onChange={onToggle} clickable={idle} />
+          ),
+        },
+      ]}
+    />
   );
 }

@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import type { Stage } from "../../../../services/stage/stage.js";
-import { SelectionRow, StageBadge } from "../../../components/index.js";
+import { ColumnRow, StageBadge, subtleColor } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { stageCategory } from "../../stories/stage-category.js";
 import { columnWidth } from "../column-width.js";
@@ -32,7 +32,7 @@ function valueColor(item: StageModelItem, selected: boolean): string {
     return theme.ink;
   }
 
-  return selected ? theme.inkMuted : theme.inkFaint;
+  return subtleColor(selected);
 }
 
 /** One row for each Stage, in board order: the Stage badge, then the worker model of the Stage. */
@@ -46,21 +46,27 @@ export function StageModelList({ items, cursor, active, clickable, onPick }: Sta
   return (
     <Box flexDirection="column" flexShrink={0}>
       {items.map((item, index) => (
-        <SelectionRow
+        <ColumnRow
           key={item.stage.key}
           selected={index === cursor}
           active={active}
           onClick={clickable ? () => onPick(index) : undefined}
-        >
-          <Box>
-            <Box width={labelWidth} flexShrink={0}>
-              <StageBadge stage={{ name: item.stage.label, category: stageCategory(stages, item.stage.key) }} />
-            </Box>
-            <Text color={valueColor(item, index === cursor)} wrap="truncate-end">
-              {item.value}
-            </Text>
-          </Box>
-        </SelectionRow>
+          columns={[
+            {
+              width: labelWidth,
+              content: (
+                <StageBadge stage={{ name: item.stage.label, category: stageCategory(stages, item.stage.key) }} />
+              ),
+            },
+            {
+              content: (selected) => (
+                <Text color={valueColor(item, selected)} wrap="truncate-end">
+                  {item.value}
+                </Text>
+              ),
+            },
+          ]}
+        />
       ))}
     </Box>
   );
