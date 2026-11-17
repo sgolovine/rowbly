@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,git,checks,dependencies,placement}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,fallbackWorkerModels,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -81,17 +81,18 @@ display options, the installed skills and the factory settings. The `config` ser
 The optional `factory` key of `rowbly.config.json` holds the settings of the native factory. The
 `factory-settings` service reads, checks and writes it. All keys are optional:
 
-| Key                 | Type    | Default            | Effect                                                 |
-| ------------------- | ------- | ------------------ | ------------------------------------------------------ |
-| `maxWorkers`        | integer | `4`                | The maximum number of workers. The minimum is 1.       |
-| `supervisorModel`   | object  | Pi selects a model | The model choice of the supervisor.                    |
-| `workerModel`       | object  | Pi selects a model | The model choice of the workers.                       |
-| `stageWorkerModels` | object  | none               | The worker model overrides for each Stage key.         |
-| `storyWorkerModels` | object  | none               | The worker model overrides for each Story ID.          |
-| `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
-| `checks`            | object  | none               | The check queue and the named checks of the workers.   |
-| `dependencies`      | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
-| `placement`         | string  | `prefer-local`     | The machine of a new worker. See below.                |
+| Key                    | Type    | Default            | Effect                                                 |
+| ---------------------- | ------- | ------------------ | ------------------------------------------------------ |
+| `maxWorkers`           | integer | `4`                | The maximum number of workers. The minimum is 1.       |
+| `supervisorModel`      | object  | Pi selects a model | The model choice of the supervisor.                    |
+| `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
+| `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
+| `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
+| `fallbackWorkerModels` | array   | none               | The worker models to use when a provider is paused.    |
+| `git`                  | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
+| `checks`               | object  | none               | The check queue and the named checks of the workers.   |
+| `dependencies`         | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
+| `placement`            | string  | `prefer-local`     | The machine of a new worker. See below.                |
 
 `placement` is `prefer-local`, `most-free` or `prefer-remote`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
@@ -106,8 +107,16 @@ but the board continues to work. `rowbly doctor` shows the problem as an error.
 
 The factory settings can hold worker model overrides. `stageWorkerModels` maps a Stage key to a model
 choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
-priority is the Story override, then the Stage override, then `workerModel`. See
+priority is the Story override, then the Stage override, then the model of the supervisor, then
+`workerModel`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
+
+`fallbackWorkerModels` is an ordered list of model choices. When the provider of the selected worker
+model is paused, the manager uses the first model of the list whose provider is not paused. If the key
+is absent, there is no fallback. If the value is not an array, or an entry is not a valid model choice,
+the section is not valid, and `rowbly doctor` shows an error. `rowbly factory configure
+--fallback-worker <provider/model>` (repeat) replaces the list. `--clear-fallback-workers` removes the
+key. See [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#fallback-worker-models).
 
 The optional `git` section sets the canonical commits and the Git sync of the factory:
 

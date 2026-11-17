@@ -3,7 +3,7 @@ import { cancelThreadChecks } from "../check-queue/check-queue.js";
 import { ConflictError } from "../errors/errors.js";
 import { releaseStory, storyHash } from "../factory-policy/factory-policy.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
-import { workerOverride } from "../factory-settings/worker-overrides.js";
+import { selectWorkerModel } from "../factory-settings/worker-overrides.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
 import { withEntry } from "../store/store.js";
 import { getStory, listStoryRefs, type Story, storyUidField } from "../story/story.js";
@@ -40,10 +40,11 @@ export interface ReserveWorkerInput {
   host?: string;
 }
 
-/** The checked Story of a reservation, and the host that the placement selected. */
+/** The checked Story of a reservation, its worker model and the host that the placement selected. */
 interface Slot {
   readonly story: Story;
   readonly host: string;
+  readonly choice?: ModelChoice;
 }
 
 /** Reserves a worker slot for an eligible Story, then launches the worker in the background. */
@@ -58,7 +59,7 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     return { threadId: prior };
   }
 
-  const { story, host } = await assertSlotAvailable(manager, input);
+  const { story, host, choice } = await assertSlotAvailable(manager, input);
 
   if (input.resumeThreadId) {
     const previous = await getThread(input.resumeThreadId, manager.ctx);
@@ -70,11 +71,13 @@ async function reserveWorkerSlot(manager: Manager, input: ReserveWorkerInput): P
     await releaseForResume(manager, previous, story);
   }
 
-  const choice = workerModelFor(manager, story, input.model);
-
   await assertWorkerModel(manager, choice);
 
-  const policy = await scan(manager, Number.MAX_SAFE_INTEGER, input.resumeThreadId);
+  // The reservation checked the pause of its own model, which can be the model of the supervisor or of the Thread.
+  const policy = await scan(manager, Number.MAX_SAFE_INTEGER, {
+    resumeThreadId: input.resumeThreadId,
+    reservedStory: story.id,
+  });
   const decision = policy.decisions.find((d) => d.story === story.id);
 
   if (!decision || !["start", "retry"].includes(decision.action)) {
@@ -122,10 +125,21 @@ async function assertSlotAvailable(manager: Manager, input: ReserveWorkerInput):
     throw new ConflictError("Story Stage changed");
   }
 
-  const choice = workerModelFor(manager, story, input.model);
+  const choice = await reservationModel(manager, story, input);
   const host = await placeStory(manager, { story, choice, requested: input.host, threads });
 
-  return { story, host };
+  return { story, host, choice };
+}
+
+/** A resumed Thread keeps its model, also when its provider is paused. A new Thread selects one with the fallback. */
+async function reservationModel(
+  manager: Manager,
+  story: Story,
+  input: ReserveWorkerInput,
+): Promise<ModelChoice | undefined> {
+  const resumed = input.resumeThreadId ? (await getThread(input.resumeThreadId, manager.ctx)).model : undefined;
+
+  return resumed ?? workerModelFor(manager, story, input.model);
 }
 
 /** Checks a resume, then releases the policy parking and the user cancellation of the Story. */
@@ -150,11 +164,15 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
   );
 }
 
-/** A Story or Stage override in the factory settings has priority over the model of the supervisor. */
+/**
+ * A Story or Stage override in the factory settings has priority over the model of the supervisor. When the provider
+ * of the model is paused, the first fallback model whose provider is not paused applies.
+ */
 function workerModelFor(manager: Manager, story: Story, model: ModelChoice | undefined): ModelChoice | undefined {
   const { settings } = getState(manager);
+  const target = { storyId: story.id, stage: story.stage, model };
 
-  return workerOverride(settings, story.id, story.stage) ?? model ?? settings.workerModel;
+  return selectWorkerModel(settings, target, (provider) => isProviderPaused(manager, provider)).choice;
 }
 
 async function assertWorkerModel(manager: Manager, choice: ModelChoice | undefined): Promise<void> {
