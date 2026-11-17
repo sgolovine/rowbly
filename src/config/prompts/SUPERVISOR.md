@@ -12,7 +12,8 @@ The manager gives the class of each Stage. Only the Stories of a `work` Stage ar
 
 Supply a unique `requestId` for each start intent. Reuse it only for the same intent.
 An optional `model` has `provider`, `modelId` and an optional supported `thinkingLevel`.
-Use another available provider when a provider pause prevents a start.
+Do not select a different provider because of a provider pause. The manager applies the fallback worker models.
+A Story whose worker models all have a paused provider has the skip reason `provider paused`.
 An optional `resumeThreadId` resumes the exact session in its original Stage.
 An optional `host` requests a machine. Without a `host`, the manager selects one from the `hosts` slots.
 The manager checks eligibility, duplicate claims, capacity, provider pauses and resume limits.

@@ -855,6 +855,57 @@ describe("foreground factory", () => {
     await f.manager.retryProvider("worker");
     expect((await f.manager.snapshot()).providers.worker).toBeUndefined();
   });
+  it("starts a new worker with the first fallback model when the worker provider is paused", async () => {
+    const story = await createStory({ title: "Quota", stage: "WORK" }, { cwd: root });
+    const other = await createStory({ title: "Fallback", stage: "WORK" }, { cwd: root });
+    const fallback = { provider: "supervisor", modelId: "faux-1" };
+    await updateFactorySettings({ fallbackWorkerModels: [fallback] }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
+    const previous = await settled();
+    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
+    expect(previous?.model).toEqual({ provider: "worker", modelId: "faux-1" });
+
+    // A resumed Thread keeps its model, so the pause of its provider stops it, also with a fallback model.
+    const lastRun = previous?.runs.at(-1)?.id ?? "missing";
+    await expect(f.manager.resumeWorker(previous?.id ?? "missing", lastRun, "resume")).rejects.toThrow("paused");
+    expect((await listThreads({ story: story.id }, { cwd: root })).threads[0]?.model).toEqual(previous?.model);
+
+    // The fallback model has a provider that is not paused, so the Story is not skipped.
+    const decision = (await f.manager.snapshot()).decisions.find((d) => d.story === other.id);
+    expect(decision?.action).toBe("start");
+    f.supervisor.setResponses([
+      tool("report_result", { outcome: "complete", summary: "Fallback", blockers: [], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+    await f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "fallback" });
+    await vi.waitFor(async () => {
+      const thread = (await listThreads({ story: other.id }, { cwd: root })).threads[0];
+      expect(thread?.status).toBe("completed");
+      expect(thread?.model).toEqual(fallback);
+    });
+    const status = JSON.parse(await readFile(await runtimePath(projectPaths(root), "status.json"), "utf8"));
+    expect(status.queue.find((entry: { story: string }) => entry.story === story.id)?.provider).toBe("supervisor");
+  });
+  it("skips a Story with the reason provider paused when each worker model has a paused provider", async () => {
+    const story = await createStory({ title: "Quota", stage: "WORK" }, { cwd: root });
+    const other = await createStory({ title: "No model", stage: "WORK" }, { cwd: root });
+    await updateFactorySettings({ fallbackWorkerModels: [{ provider: "worker", modelId: "faux-1" }] }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
+    await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
+    await settled();
+    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
+      "Worker provider is paused",
+    );
+    expect((await listThreads({ story: other.id }, { cwd: root })).threads).toHaveLength(0);
+    const decision = (await f.manager.snapshot()).decisions.find((d) => d.story === other.id);
+    expect(decision).toMatchObject({ action: "skip", reason: "provider paused" });
+    expect((await f.manager.reconcile()).find((d) => d.story === other.id)?.reason).toBe("provider paused");
+  });
   it("pauses the provider for a connectivity error, then resumes the same Thread when the pause ends", async () => {
     const story = await createStory({ title: "Offline", stage: "WORK" }, { cwd: root });
     const other = await createStory({ title: "Other", stage: "WORK" }, { cwd: root });

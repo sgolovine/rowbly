@@ -21,6 +21,8 @@ viewer or the AI section of Settings.
 | `factory configure --stage <key> [--story <id>] --clear-worker`            | Remove a worker model override.                                       |
 | `factory configure --stage <key> --class work\|hold`                       | Set the class of a Stage in `factory.stageClasses`.                   |
 | `factory configure --stage <key> --clear-class`                            | Remove the class of a Stage. The manager uses its rule again.         |
+| `factory configure --fallback-worker <provider/model>` (repeat)            | Replace the fallback worker models, in the given order.               |
+| `factory configure --clear-fallback-workers`                               | Remove the fallback worker models.                                    |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
 | `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                 |
 | `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.               |
@@ -49,10 +51,20 @@ These inputs of `factory configure` give the error code `VALIDATION`, and the co
 - `--class` together with `--clear-class`.
 - `--class` or `--clear-class` together with a flag other than `--stage`, for example `--story` or
   `--worker`.
+- `--fallback-worker` with a value that is not `provider/model`.
+- `--fallback-worker` together with `--clear-fallback-workers`.
+- `--fallback-worker` or `--clear-fallback-workers` together with `--stage`, `--story` or
+  `--clear-worker`.
 - An unknown Stage key.
 
 An unknown Story ID gives `NOT_FOUND`. For the order of priority of the overrides, see
-[pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
+[pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides). For the fallback worker
+models, see [pi-runtime-and-auth.md](pi-runtime-and-auth.md#fallback-worker-models).
+
+`--fallback-worker` writes `factory.fallbackWorkerModels`. Each `--fallback-worker` adds one model to
+the new list. The new list replaces the full list. The command validates each model with
+`validateModelChoice` before the config changes, as `--worker` does. `--clear-fallback-workers`
+removes the key. The other keys of `rowbly.config.json` do not change.
 
 `factory run` and `factory watchdog` are hidden commands. `factory start` starts a detached
 `factory watchdog`, and the watchdog starts `factory run` as its child. See

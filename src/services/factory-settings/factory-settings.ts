@@ -14,6 +14,13 @@ import {
 } from "./check-settings.js";
 import { type Dependencies, type DependencyInput, dependencyChange, validDependencies } from "./dependency-settings.js";
 import {
+  checkFallbackInput,
+  chooseFallbacks,
+  type FallbackInput,
+  fallbackChange,
+  hasFallbackInput,
+} from "./fallback-workers.js";
+import {
   type GitInput,
   type GitSettings,
   type GitSync,
@@ -25,7 +32,14 @@ import {
   parseAuthor,
   validGit,
 } from "./git-settings.js";
-import { isRecord, type ModelChoice, parseChoice, validModel, validOverrides } from "./model-settings.js";
+import {
+  isRecord,
+  type ModelChoice,
+  parseChoice,
+  validFallbacks,
+  validModel,
+  validOverrides,
+} from "./model-settings.js";
 import {
   DEFAULT_PLACEMENT,
   type PlacementInput,
@@ -70,6 +84,8 @@ export interface FactorySettings {
   stageWorkerModels?: StageWorkerModels;
   /** Worker model overrides by Story ID, then by Stage key. */
   storyWorkerModels?: StoryWorkerModels;
+  /** The worker models, in order, that the manager uses when the provider of the selected model is paused. */
+  fallbackWorkerModels?: readonly ModelChoice[];
   git?: GitSettings;
   checks?: CheckSettings;
   dependencies?: Dependencies;
@@ -82,7 +98,7 @@ export interface FactorySettings {
 /** The changes of an update. The `git` keys merge into the current `git` section. */
 export type FactorySettingsInput = Partial<FactorySettings>;
 
-interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput, StageClassInput {
+interface ConfigureInput extends GitInput, CheckInput, DependencyInput, PlacementInput, FallbackInput, StageClassInput {
   maxWorkers?: number;
   supervisor?: string;
   worker?: string;
@@ -114,6 +130,7 @@ function validSettings(settings: FactorySettings): boolean {
     (settings.supervisorModel === undefined || validModel(settings.supervisorModel)) &&
     (settings.workerModel === undefined || validModel(settings.workerModel)) &&
     validOverrides(settings) &&
+    validFallbacks(settings.fallbackWorkerModels) &&
     (settings.git === undefined || validGit(settings.git)) &&
     (settings.checks === undefined || validChecks(settings.checks)) &&
     validDependencies(settings.dependencies) &&
@@ -253,7 +270,8 @@ function overrideProblem(input: ConfigureInput): string | undefined {
     hasGitInput(input) ||
     hasCheckInput(input) ||
     input.pullUpstream !== undefined ||
-    input.placement !== undefined
+    input.placement !== undefined ||
+    hasFallbackInput(input)
   ) {
     return "A Stage override sets only the worker model";
   }
@@ -367,10 +385,12 @@ export async function configureFactory(
   }
 
   checkGitInput(input);
+  checkFallbackInput(input);
 
   const auth = await import("../agent-auth/agent-auth.js");
   const supervisor = await chooseRole(auth, "supervisor", input, runtime);
   const worker = await chooseRole(auth, "worker", input, supervisor.runtime);
+  const fallbacks = await chooseFallbacks(auth, input, worker.runtime);
 
   return writeSettings(
     (current) => ({
@@ -382,6 +402,7 @@ export async function configureFactory(
       ...(hasCheckInput(input) ? { checks: mergeChecks(current.checks, input) } : {}),
       ...dependencyChange(current.dependencies, input),
       ...placementChange(input),
+      ...fallbackChange(input, fallbacks.choices),
     }),
     ctx,
   );

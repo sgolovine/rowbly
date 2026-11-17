@@ -51,6 +51,11 @@ export function validOverrides(settings: OverrideValues): boolean {
   );
 }
 
+/** Tells if the fallback worker models are absent or a list of valid model choices. */
+export function validFallbacks(value: unknown): boolean {
+  return value === undefined || (Array.isArray(value) && value.every(validModel));
+}
+
 /** Parses `provider/model`. The provider and the model must not be empty. */
 export function parseChoice(value: string, thinkingLevel: ModelChoice["thinkingLevel"]): ModelChoice {
   const slash = value.indexOf("/");

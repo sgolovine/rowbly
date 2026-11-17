@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { checkQueueStatus } from "../check-queue/check-queue.js";
 import { evaluateScan, HOST_SYNC_REASON, storyHash } from "../factory-policy/factory-policy.js";
 import { stageClassOf } from "../factory-settings/stage-classes.js";
-import { resolveWorkerModel } from "../factory-settings/worker-overrides.js";
+import { selectWorkerModel, type WorkerSelection } from "../factory-settings/worker-overrides.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
@@ -18,6 +18,7 @@ import {
   type Attention,
   getState,
   type Hold,
+  isProviderPaused,
   type Manager,
   type ManagerState,
   notify,
@@ -30,12 +31,23 @@ import { managerCapacity, managerSlots } from "./worker-placement.js";
 /** The skip reason of a Story whose worker Thread waits for its provider, to resume after a network pause. */
 export const NETWORK_WAIT_REASON = "waiting for network resume";
 
+/** The skip reason of a Story whose worker model and fallback models all have a paused provider. */
+const PROVIDER_PAUSED_REASON = "provider paused";
+
 /** Policy reasons for Stories that wait for no worker. The status file leaves them out of its queue. */
 const QUIET_REASONS = new Set(["hold stage", "stage unavailable"]);
 
 type CancelledStories = Record<string, { stage: string; hash: string }>;
 type ScanResult = ReturnType<typeof evaluateScan>;
 type Decision = ScanResult["decisions"][number];
+
+/** The Stories of a reservation that `scan` does not skip for a reason that the reservation checks itself. */
+export interface ScanExemptions {
+  /** The Thread of a resume: its Story is not skipped to wait for the network resume. */
+  readonly resumeThreadId?: string;
+  /** The Story of a reservation: the reservation checks the pause of its own model. */
+  readonly reservedStory?: string;
+}
 
 /** The part of the state that a new manager restores from the previous status file. */
 export type StoredStatus = Partial<
@@ -127,15 +139,32 @@ async function networkWaitStories(manager: Manager, stories: readonly Story[], r
   return new Set(waiting.filter((t) => t.id !== resumeThreadId).map((t) => t.storyId as string));
 }
 
+/** Selects the worker model of a decision from the settings only, because `scan` does not know the supervisor model. */
+function decisionModel(manager: Manager, decision: Decision): WorkerSelection {
+  const target = { storyId: decision.story, stage: decision.stage };
+
+  return selectWorkerModel(getState(manager).settings, target, (provider) => isProviderPaused(manager, provider));
+}
+
+/** Gives `provider paused` for a start or a retry when no worker model of the Story has a provider that is not paused. */
+function pausedReason(manager: Manager, decision: Decision, exempt: ScanExemptions): string | undefined {
+  if (!["start", "retry"].includes(decision.action) || decision.story === exempt.reservedStory) {
+    return undefined;
+  }
+
+  return decisionModel(manager, decision).paused ? PROVIDER_PAUSED_REASON : undefined;
+}
+
 /**
- * Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds, and Stories whose
- * network Thread can resume. `resumeThreadId` is the Thread of a resume: its Story is not skipped for it. A Story
- * whose remote Thread is not synchronized keeps the reason `waiting for host sync`, because that rule comes first.
+ * Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds, Stories whose network
+ * Thread can resume, and Stories whose worker providers are all paused. The exemptions of a reservation keep its
+ * Story. A Story whose remote Thread is not synchronized keeps the reason `waiting for host sync`, because that rule
+ * comes first.
  */
 export async function scan(
   manager: Manager,
   maxActive = managerCapacity(getState(manager)),
-  resumeThreadId?: string,
+  exempt: ScanExemptions = {},
 ): Promise<ScanResult> {
   const stories = await searchStories({}, manager.ctx);
   const stages = await classifiedStages(manager);
@@ -144,7 +173,7 @@ export async function scan(
   const { holds, hostSync } = getState(manager);
   const policy = evaluateScan(state, { stories, stages, maxActive, hostSync: [...hostSync] });
   const cancelled = (state.nativeCancelled ?? {}) as CancelledStories;
-  const networkWaits = await networkWaitStories(manager, stories, resumeThreadId);
+  const networkWaits = await networkWaitStories(manager, stories, exempt.resumeThreadId);
 
   const decisions = policy.decisions.map((decision) => {
     if (decision.reason === HOST_SYNC_REASON) {
@@ -154,7 +183,8 @@ export async function scan(
     const story = stories.find((s) => s.id === decision.story);
     const reason =
       skipReason(decision, story, cancelled, holds.get(decision.story)) ??
-      (networkWaits.has(decision.story) ? NETWORK_WAIT_REASON : undefined);
+      (networkWaits.has(decision.story) ? NETWORK_WAIT_REASON : undefined) ??
+      pausedReason(manager, decision, exempt);
 
     return reason ? { ...decision, action: "skip" as const, reason } : decision;
   });
@@ -224,9 +254,9 @@ function nextDeadline(state: Readonly<ManagerState>, decisions: readonly Decisio
   return deadlines.length ? Math.min(...deadlines) : undefined;
 }
 
-/** One queue entry of the status file, with the provider of the worker model of its Story when one resolves. */
-function queueEntry(state: Readonly<ManagerState>, d: Decision) {
-  const provider = resolveWorkerModel(state.settings, d.story, d.stage)?.provider;
+/** One queue entry of the status file, with the provider of the selected worker model, with the fallback. */
+function queueEntry(manager: Manager, d: Decision) {
+  const provider = decisionModel(manager, d).choice?.provider;
 
   return {
     story: d.story,
@@ -256,7 +286,7 @@ export async function persistStatus(manager: Manager): Promise<void> {
   const queue = policy.decisions
     .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
     .slice(0, 50)
-    .map((d) => queueEntry(getState(manager), d));
+    .map((d) => queueEntry(manager, d));
   const status = { ...(await buildSnapshot(manager)), queue };
 
   await writeFileAtomic(await runtimePath(manager.paths, "status.json"), `${JSON.stringify(status)}\n`, {

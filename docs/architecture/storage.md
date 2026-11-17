@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,stageClasses,git,checks,dependencies,placement}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,supervisorModel,workerModel,stageWorkerModels,storyWorkerModels,fallbackWorkerModels,stageClasses,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: the supervisor and all workers get it
   prompts/SUPERVISOR.md # the Supervisor prompt: only the supervisor gets it
   prompts/WORKER.md   # the Worker prompt: all workers get it
@@ -81,18 +81,19 @@ display options, the installed skills and the factory settings. The `config` ser
 The optional `factory` key of `rowbly.config.json` holds the settings of the native factory. The
 `factory-settings` service reads, checks and writes it. All keys are optional:
 
-| Key                 | Type    | Default            | Effect                                                 |
-| ------------------- | ------- | ------------------ | ------------------------------------------------------ |
-| `maxWorkers`        | integer | `4`                | The maximum number of workers. The minimum is 1.       |
-| `supervisorModel`   | object  | Pi selects a model | The model choice of the supervisor.                    |
-| `workerModel`       | object  | Pi selects a model | The model choice of the workers.                       |
-| `stageWorkerModels` | object  | none               | The worker model overrides for each Stage key.         |
-| `storyWorkerModels` | object  | none               | The worker model overrides for each Story ID.          |
-| `stageClasses`      | object  | none               | The class of a Stage key: `work` or `hold`. See below. |
-| `git`               | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
-| `checks`            | object  | none               | The check queue and the named checks of the workers.   |
-| `dependencies`      | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
-| `placement`         | string  | `prefer-local`     | The machine of a new worker. See below.                |
+| Key                    | Type    | Default            | Effect                                                 |
+| ---------------------- | ------- | ------------------ | ------------------------------------------------------ |
+| `maxWorkers`           | integer | `4`                | The maximum number of workers. The minimum is 1.       |
+| `supervisorModel`      | object  | Pi selects a model | The model choice of the supervisor.                    |
+| `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
+| `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
+| `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
+| `fallbackWorkerModels` | array   | none               | The worker models to use when a provider is paused.    |
+| `stageClasses`         | object  | none               | The class of a Stage key: `work` or `hold`. See below. |
+| `git`                  | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
+| `checks`               | object  | none               | The check queue and the named checks of the workers.   |
+| `dependencies`         | object  | `pullUpstream` off | `pullUpstream` moves stuck upstream Stories (boolean). |
+| `placement`            | string  | `prefer-local`     | The machine of a new worker. See below.                |
 
 `placement` is `prefer-local`, `most-free` or `prefer-remote`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
@@ -107,8 +108,16 @@ but the board continues to work. `rowbly doctor` shows the problem as an error.
 
 The factory settings can hold worker model overrides. `stageWorkerModels` maps a Stage key to a model
 choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
-priority is the Story override, then the Stage override, then `workerModel`. See
+priority is the Story override, then the Stage override, then the model of the supervisor, then
+`workerModel`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
+
+`fallbackWorkerModels` is an ordered list of model choices. When the provider of the selected worker
+model is paused, the manager uses the first model of the list whose provider is not paused. If the key
+is absent, there is no fallback. If the value is not an array, or an entry is not a valid model choice,
+the section is not valid, and `rowbly doctor` shows an error. `rowbly factory configure
+--fallback-worker <provider/model>` (repeat) replaces the list. `--clear-fallback-workers` removes the
+key. See [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#fallback-worker-models).
 
 `stageClasses` maps a Stage key to `work` or `hold`. It has priority over the class rule of the
 manager. A different value is not valid, and the settings read gives a `VALIDATION` error. A key for a
@@ -728,11 +737,33 @@ The main machine keeps the files of each host in `runtime/hosts/<host>/`. The fo
   conflicts/            # <sha256>.png: the file of each attachment.add conflict, for recovery
   threads/<thread-id>/
     base.json           # the copy that the main machine sent last to the host for the Thread
+  held/<thread-id>/     # the held entries of an abandoned remote Thread
+    entries.jsonl       # one held outbox entry on each line, in seq order
+    blobs/<sha256>.png  # the file of each held attachment.add entry
 ```
 
 `base.json` is `{ version, threadId, host, sentAt, files, attachments }` with mode `0600`. The remote
 executor writes it after each `host prepare`. See
 [native-factory/README.md](native-factory/README.md#dispatch-to-a-worker-host).
+
+### Held entries of an abandoned Thread
+
+When the user cancels a remote Thread while its host is offline, the Thread file gets the `abandoned`
+note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. `appliedSeq` is the last applied `seq`
+of the host at the time of the cancel. `reason` can also be `release` for a later release action.
+After the final run frame arrives, the Thread file also gets `remoteOutcome`:
+`{ endReason, endedAt?, result?, failure? }`. The status of the Thread stays `cancelled`.
+
+- The outbox apply holds each entry of an abandoned Thread with a `seq` greater than `appliedSeq`. It
+  does not apply the entry. It adds the entry to `held/<thread-id>/entries.jsonl` and the file of an
+  `attachment.add` entry to `held/<thread-id>/blobs/<sha256>.png`. Then it records the `seq` in
+  `outbox-applied.json` as for each other entry.
+- An entry with the same `seq` goes in the file one time.
+- The files have mode `0600`, and the folders have mode `0700`. The files change only under the
+  Project write lock.
+- `rowbly thread held <id> --apply` applies the held entries with the same compare-and-set as the
+  apply. An entry with a conflict stays in the file. When no entry stays, the folder is removed.
+  `--discard` removes the folder. See [cli.md](cli.md).
 
 ### Attachment cache of a host
 

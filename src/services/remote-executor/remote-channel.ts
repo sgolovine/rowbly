@@ -30,6 +30,23 @@ function dispatchAttachmentRequest(env: RemoteEnv, host: string, value: unknown)
   }
 }
 
+/** Gives a run frame to the open run of its Thread, else to the hook of the other runs, for example an abandoned one. */
+function dispatchRunFrame(env: RemoteEnv, host: string, hooks: RunHooks, frame: HostRunState): void {
+  const run = env.state.current.runs.get(frame.threadId);
+
+  if (run && run.host !== host) {
+    return;
+  }
+
+  if (run && !run.store.current.closed) {
+    takeRunFrame(run, frame, hooks);
+
+    return;
+  }
+
+  hooks.otherRun?.(host, frame);
+}
+
 /** Gives a `session` frame to the mirror of its Thread, when the Thread is an active run of the host. */
 function dispatchSessionFrame(env: RemoteEnv, host: string, value: unknown): void {
   if (!isSessionFrame(value)) {
@@ -63,11 +80,7 @@ function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unk
   }
 
   if (frame.type === "run" && frame.run) {
-    const run = env.state.current.runs.get(frame.run.threadId);
-
-    if (run?.host === host) {
-      takeRunFrame(run, frame.run, hooks);
-    }
+    dispatchRunFrame(env, host, hooks, frame.run);
 
     return;
   }

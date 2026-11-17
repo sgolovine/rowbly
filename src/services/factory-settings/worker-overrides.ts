@@ -25,9 +25,33 @@ export function workerOverride(settings: FactorySettings, storyId: string, stage
   return settings.storyWorkerModels?.[storyId]?.[stage] ?? settings.stageWorkerModels?.[stage];
 }
 
-/** Gives the worker model of a Story in a Stage: the Story override, the Stage override, then `workerModel`. */
-export function resolveWorkerModel(settings: FactorySettings, storyId: string, stage: string): ModelChoice | undefined {
-  return workerOverride(settings, storyId, stage) ?? settings.workerModel;
+/** The worker model that the manager selects for a Story. */
+export interface WorkerSelection {
+  /** The selected model. Without a model, Pi selects one. */
+  readonly choice?: ModelChoice;
+  /** True when the provider of the selected model and of each fallback model is paused. */
+  readonly paused: boolean;
+}
+
+/**
+ * Selects the worker model of a Story in a Stage: the Story override, the Stage override, the model of the
+ * supervisor, then `workerModel`. When the provider of that model is paused, the first fallback model whose provider
+ * is not paused applies. Without a model, Pi selects one, so the manager cannot check a pause.
+ */
+export function selectWorkerModel(
+  settings: FactorySettings,
+  target: { readonly storyId: string; readonly stage: string; readonly model?: ModelChoice },
+  isPaused: (provider: string) => boolean,
+): WorkerSelection {
+  const resolved = workerOverride(settings, target.storyId, target.stage) ?? target.model ?? settings.workerModel;
+
+  if (!resolved || !isPaused(resolved.provider)) {
+    return { choice: resolved, paused: false };
+  }
+
+  const fallback = settings.fallbackWorkerModels?.find((choice) => !isPaused(choice.provider));
+
+  return fallback ? { choice: fallback, paused: false } : { choice: resolved, paused: true };
 }
 
 /** Tells if the settings have the override of the target. */
