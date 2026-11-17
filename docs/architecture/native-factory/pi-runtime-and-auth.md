@@ -84,7 +84,7 @@ keys and the screen stay responsive.
 ## Factory settings
 
 The `factory-settings/` service reads and writes the optional `factory` key of
-`.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
+`.rowbly/rowbly.config.json`: `maxWorkers`, `workerModel`, `stageWorkerModels`,
 `storyWorkerModels`, `fallbackWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
 
 - Without the `factory` key, the worker limit is four and Pi selects default models.
@@ -97,8 +97,9 @@ The `factory-settings/` service reads and writes the optional `factory` key of
 - An explicit model choice must be available and must support the selected thinking level.
 - The thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh` and `max`. A model
   supports only some of them.
-- `rowbly factory configure` sets `--max-workers`, `--supervisor`, `--worker`,
-  `--supervisor-thinking`, `--worker-thinking` and `--fallback-worker`.
+- `rowbly factory configure` sets `--max-workers`, `--worker`, `--worker-thinking` and
+  `--fallback-worker`. It has no flag for a supervisor model. An old `supervisorModel` key stays
+  valid, and the factory ignores it. `rowbly doctor --fix` removes it.
 - The `git` section has `commitMessage`, `authorName` and `authorEmail`. They set the canonical
   commits of the factory. See [runtime-and-locks.md](runtime-and-locks.md#git-and-the-runtime-files).
 - `rowbly factory configure --commit-message "<text>"` sets `git.commitMessage`.
@@ -180,8 +181,8 @@ An override changes the worker model for one Stage, or for one Story in one Stag
 - `rowbly factory configure --stage <key> [--story <id>] --clear-worker` removes the override. If the
   Story has no other overrides, its key goes out of `storyWorkerModels`. If the override does not
   exist, the command succeeds and the config does not change.
-- `--stage` sets only the worker model. If you use `--stage` together with `--supervisor`,
-  `--supervisor-thinking`, `--max-workers` or a Git flag, the command gives a `VALIDATION` error. The
+- `--stage` sets only the worker model. If you use `--stage` together with `--max-workers` or a Git
+  flag, the command gives a `VALIDATION` error. The
   command does not ignore these flags.
 - The service validates the model of an override with `validateModelChoice` before the config changes.
 - An override for a deleted or renamed Story or Stage stays in the config. The factory ignores it.

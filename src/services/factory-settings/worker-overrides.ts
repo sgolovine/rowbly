@@ -34,8 +34,8 @@ export interface WorkerSelection {
 }
 
 /**
- * Selects the worker model of a Story in a Stage: the Story override, the Stage override, the model of the
- * supervisor, then `workerModel`. When the provider of that model is paused, the first fallback model whose provider
+ * Selects the worker model of a Story in a Stage: the Story override, the Stage override, the requested model,
+ * then `workerModel`. When the provider of that model is paused, the first fallback model whose provider
  * is not paused applies. Without a model, Pi selects one, so the manager cannot check a pause.
  */
 export function selectWorkerModel(

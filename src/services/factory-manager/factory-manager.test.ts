@@ -129,7 +129,7 @@ describe("foreground factory", () => {
       refreshOnCreate: false,
       allowModelNetwork: false,
     });
-    // A second worker provider, for the tests of model overrides and pauses. No supervisor provider exists.
+    // A second worker provider, for the tests of model overrides and pauses.
     const spare = fauxProvider({ provider: "spare", api: "spare-faux", tokenSize: { min: 1000, max: 1000 } });
     const worker = fauxProvider({ provider: "worker", api: "worker-faux", tokenSize: { min: 1000, max: 1000 } });
     runtime.registerNativeProvider(spare.provider);

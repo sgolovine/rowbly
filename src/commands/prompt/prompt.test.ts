@@ -9,16 +9,17 @@ describe("rowbly prompt", () => {
   const project = useTestProject();
   const cli = (...args: string[]) => runCli(args, project.ctx.cwd);
 
-  it("lists the three user prompts and their state", async () => {
+  it("lists the two user prompts and their state", async () => {
     await project.write("prompts/WORKER.md", "Use pnpm.\n");
-    await rm(join(project.paths.promptsDir, "SUPERVISOR.md"));
+    await project.write("prompts/SUPERVISOR.md", "Old text.\n");
 
     const { stdout, exitCode } = await cli("prompt", "list");
 
     expect(exitCode).toBe(0);
-    expect(stdout).toMatch(/^system\s+empty\s+The supervisor and all workers\./m);
-    expect(stdout).toMatch(/^supervisor\s+missing\s+/m);
+    expect(stdout.split("\n")).toHaveLength(2);
+    expect(stdout).toMatch(/^system\s+empty\s+All workers\. The Worker prompt has priority over it\./m);
     expect(stdout).toMatch(/^worker\s+1 lines\s+All workers, in all Stages\./m);
+    expect(stdout).not.toMatch(/supervisor/i);
   });
 
   it("prints the text of a prompt", async () => {
@@ -32,14 +33,32 @@ describe("rowbly prompt", () => {
   });
 
   it("prints the prompt as JSON with --json", async () => {
-    await project.write("prompts/SUPERVISOR.md", "Start one worker.\n");
-    expect(JSON.parse((await cli("prompt", "get", "supervisor", "--json")).stdout)).toEqual({
-      name: "supervisor",
-      label: "Supervisor",
-      path: join(project.paths.promptsDir, "SUPERVISOR.md"),
+    await project.write("prompts/WORKER.md", "Use pnpm.\n");
+    expect(JSON.parse((await cli("prompt", "get", "worker", "--json")).stdout)).toEqual({
+      name: "worker",
+      label: "Worker",
+      path: join(project.paths.promptsDir, "WORKER.md"),
       exists: true,
-      text: "Start one worker.",
+      text: "Use pnpm.",
     });
+  });
+
+  it("gives a VALIDATION error with a hint for the old supervisor prompt", async () => {
+    await project.write("prompts/SUPERVISOR.md", "Old text.\n");
+
+    const get = await cli("prompt", "get", "supervisor", "--json");
+    const set = await cli("--json", "prompt", "set", "supervisor", "--text", "New text.");
+
+    for (const result of [get, set]) {
+      expect(result.exitCode).toBe(1);
+      expect(JSON.parse(result.stderr).error).toMatchObject({
+        code: "VALIDATION",
+        message: "Rowbly no longer uses a Supervisor prompt",
+        hint: expect.stringContaining("system, worker"),
+      });
+    }
+    expect((await cli("prompt", "set", "supervisor")).exitCode).toBe(1);
+    expect(await project.read("prompts/SUPERVISOR.md")).toBe("Old text.\n");
   });
 
   it("sets a prompt from --text and creates a missing folder", async () => {

@@ -47,6 +47,7 @@ This file records the changes to Rowbly that users can see.
 - Added: When the Project has tags, the left sidebar of the TUI has a new "Tags" Panel below the "Stages" Panel. Select a tag in it to show only the Stories with that tag, together with the Stage filter. (ROW-138)
 - Changed: An idle TUI now renders less often. The run time of a running Thread updates each second only while the Factory view, the Thread pane or the Threads tab shows it, and the 5 s factory status poll causes no render when the status did not change. (ROW-129)
 - Changed: The TUI and the factory now watch only the Story, attachment, Spec, Stage and prompt folders and the state files of `.rowbly/`, and share one watch for each folder. A write of session data or logs in `.rowbly/runtime/` no longer wakes the TUI or the factory. (ROW-136)
+- Removed: The supervisor model setting, the `--supervisor` and `--supervisor-thinking` flags of `rowbly factory configure`, the Supervisor prompt, the live supervisor view of the Factory modal and the supervisor model of the AI settings. `rowbly prompt get supervisor` and `rowbly prompt set supervisor` give a `VALIDATION` error, `rowbly init` no longer creates `.rowbly/prompts/SUPERVISOR.md`, and `rowbly doctor` shows a warning for an old `factory.supervisorModel` key (`--fix` removes it) and for an old `SUPERVISOR.md` file. (ROW-125)
 
 ### 0.19.0
 

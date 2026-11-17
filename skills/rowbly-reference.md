@@ -31,7 +31,7 @@ Rowbly tracks the work of a software factory. It keeps the data in Markdown and 
 | Story        | One item of work. It has a title, a description, custom field values, tags and one Stage. |
 | Stage        | A step of the workflow. Each Stage can have a prompt.                               |
 | Stage prompt | Instructions that tell agents what to do with a Story in that Stage.                |
-| User prompts | The Project prompt, the Supervisor prompt and the Worker prompt in `.rowbly/prompts/`. |
+| User prompts | The Project prompt and the Worker prompt in `.rowbly/prompts/`.                     |
 | Custom field | A field that you define one time. It applies to all Stories of the Project.         |
 | Tag          | A value and a label that you define one time. A Story can have zero or more tags.   |
 | Spec         | A Markdown document that describes work. It links to one or more Stories.           |
@@ -142,8 +142,8 @@ A Story with a Stage that is not in the config is in `stories` only.
 
 | Command                                                         | JSON result     | Notes                                                    |
 | --------------------------------------------------------------- | --------------- | -------------------------------------------------------- |
-| `rowbly prompt list`                                            | Array of Prompt | Shows the three user prompts.                            |
-| `rowbly prompt get <system\|supervisor\|worker>`                | Prompt          | Works if the file does not exist.                        |
+| `rowbly prompt list`                                            | Array of Prompt | Shows the two user prompts.                              |
+| `rowbly prompt get <system\|worker>`                            | Prompt          | Works if the file does not exist.                        |
 | `rowbly prompt set <name> --text <md>`                          | Prompt          | Replaces the full prompt. An empty value clears it.      |
 | `rowbly prompt set <name> --file <path\|->`                     | Prompt          | Reads the text from a file. `-` reads stdin.             |
 
@@ -503,14 +503,13 @@ or a person moves it.
 
 ## 7. Prompts
 
-A Project has three user prompts in `.rowbly/prompts/`. They operate as a `CLAUDE.md` or `AGENTS.md`
+A Project has two user prompts in `.rowbly/prompts/`. They operate as a `CLAUDE.md` or `AGENTS.md`
 file does. Rowbly does not parse or enforce their text.
 
-| File            | Prompt            | Who gets it                    | Command                   |
-| --------------- | ----------------- | ------------------------------ | ------------------------- |
-| `SYSTEM.md`     | Project prompt    | The supervisor and all workers | `rowbly prompt get system` |
-| `SUPERVISOR.md` | Supervisor prompt | The supervisor only            | `rowbly prompt get supervisor` |
-| `WORKER.md`     | Worker prompt     | All workers, in all Stages     | `rowbly prompt get worker` |
+| File        | Prompt         | Who gets it                | Command                    |
+| ----------- | -------------- | -------------------------- | -------------------------- |
+| `SYSTEM.md` | Project prompt | All workers                | `rowbly prompt get system` |
+| `WORKER.md` | Worker prompt  | All workers, in all Stages | `rowbly prompt get worker` |
 
 The Stage prompt in `.rowbly/stages/<KEY>.md` goes only to the workers of that Stage. Rowbly also has
 system prompts in its package. A user cannot change them.
@@ -522,6 +521,8 @@ system prompts in its package. A user cannot change them.
 - **Skills.** The user prompts have priority over the steps of a skill.
 - **Limits.** A user prompt does not remove the rules in section 1.
 - **Changes.** Change a prompt only if the user tells you to do it.
+- **Old Supervisor prompt.** Rowbly does not use `.rowbly/prompts/SUPERVISOR.md`. `rowbly prompt get supervisor`
+  gives a `VALIDATION` error. Do not delete the file. The user can delete it.
 
 Older versions of Rowbly kept the instructions in `.rowbly/ROWBLY.md`. Rowbly does not read this file now.
 
@@ -532,8 +533,7 @@ Read these files if a command does not give the data. Users can edit these files
 ```
 .rowbly/
   rowbly.config.json   # Project name and key, custom fields, tags, Stages, features, installed skills, factory settings
-  prompts/SYSTEM.md    # the Project prompt, for the supervisor and all workers
-  prompts/SUPERVISOR.md # the Supervisor prompt, for the supervisor only
+  prompts/SYSTEM.md    # the Project prompt, for all workers
   prompts/WORKER.md    # the Worker prompt, for all workers
   stories/BACKLOG/APP-01.md # stories/<Stage key>/<ID>.md; frontmatter: title, stage, uid, dependsOn, tags, createdAt, updatedAt, one key for each custom field
   stages/BACKLOG.md    # the full file is the Stage prompt

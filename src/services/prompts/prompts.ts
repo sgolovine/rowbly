@@ -10,28 +10,25 @@ import { findProject, type ProjectPaths, type ServiceContext } from "../workspac
  * The prompt layers. Each name has a system prompt in `src/config/prompts/` of the Rowbly package, and a
  * user prompt in `.rowbly/prompts/` of the project. The Stage prompts in `.rowbly/stages/` are a separate layer.
  */
-export const PROMPT_NAMES = ["system", "supervisor", "worker"] as const;
+export const PROMPT_NAMES = ["system", "worker"] as const;
 
 export type PromptName = (typeof PROMPT_NAMES)[number];
 
 /** The file name of each prompt, in `src/config/prompts/` and in `.rowbly/prompts/`. */
 const PROMPT_FILES: Record<PromptName, string> = {
   system: "SYSTEM.md",
-  supervisor: "SUPERVISOR.md",
   worker: "WORKER.md",
 };
 
 /** The name of each user prompt in the UI and in a message. */
 const PROMPT_LABELS: Record<PromptName, string> = {
   system: "Project",
-  supervisor: "Supervisor",
   worker: "Worker",
 };
 
 /** The agents that get each prompt. */
 export const PROMPT_AUDIENCE: Record<PromptName, string> = {
-  system: "The supervisor and all workers.",
-  supervisor: "The supervisor only.",
+  system: "All workers. The Worker prompt has priority over it.",
   worker: "All workers, in all Stages.",
 };
 
@@ -60,7 +57,7 @@ export async function systemPromptPath(name: PromptName): Promise<string> {
   return join(await packageDir(), "src", "config", "prompts", PROMPT_FILES[name]);
 }
 
-/** Reads a system prompt. The Rowbly package always has the three files. */
+/** Reads a system prompt. The Rowbly package always has the two files. */
 export async function readSystemPrompt(name: PromptName): Promise<string> {
   return (await readFile(await systemPromptPath(name), "utf8")).trim();
 }
@@ -98,7 +95,19 @@ export async function createUserPrompts(paths: ProjectPaths): Promise<void> {
   });
 }
 
+/** The name of the old Supervisor prompt. Rowbly does not use it, and its file in `.rowbly/prompts/` stays. */
+const OLD_SUPERVISOR = "supervisor";
+
+/** The file name of the old Supervisor prompt in `.rowbly/prompts/`. Rowbly does not read or delete it. */
+export const OLD_SUPERVISOR_FILE = "SUPERVISOR.md";
+
 function checkName(name: string): PromptName {
+  if (name === OLD_SUPERVISOR) {
+    throw new ValidationError("Rowbly no longer uses a Supervisor prompt", {
+      hint: `The factory starts the workers itself. Use one of: ${PROMPT_NAMES.join(", ")}.`,
+    });
+  }
+
   if (!isPromptName(name)) {
     throw new NotFoundError(`No prompt named "${name}"`, { hint: `Use one of: ${PROMPT_NAMES.join(", ")}.` });
   }
@@ -106,7 +115,7 @@ function checkName(name: string): PromptName {
   return name;
 }
 
-/** Gives the three user prompts of the project. */
+/** Gives the two user prompts of the project. */
 export async function listPrompts(ctx: ServiceContext = {}): Promise<UserPrompt[]> {
   const paths = await findProject(ctx);
 

@@ -3,9 +3,6 @@ import type { CheckSpec, FactorySettings, ModelChoice } from "../../../services/
 import type { Stage } from "../../../services/stage/stage.js";
 import type { KeyHint } from "../../keymap.js";
 
-/** The factory role of a model choice. */
-export type Role = "supervisor" | "worker";
-
 /** An AI provider of Pi with its sign-in methods and its status. */
 export type AiProvider = Awaited<ReturnType<typeof getAuthStatus>>[number];
 
@@ -13,7 +10,7 @@ export type AiProvider = Awaited<ReturnType<typeof getAuthStatus>>[number];
 export type AiTask =
   | { readonly kind: "signIn" }
   | { readonly kind: "signOut" }
-  | { readonly kind: "model"; readonly role: Role }
+  | { readonly kind: "model" }
   | { readonly kind: "stageModel"; readonly stage: Stage }
   | { readonly kind: "limit" }
   | { readonly kind: "checkLimits" }
@@ -160,12 +157,7 @@ function addProviderHints(can: AiAbilities): KeyHint[] {
 
 function modelsHints(can: AiAbilities): KeyHint[] {
   return [
-    ...(can.ready
-      ? [
-          { key: "s", description: "change supervisor model" },
-          { key: "w", description: "change worker model" },
-        ]
-      : []),
+    ...(can.ready ? [{ key: "w", description: "change worker model" }] : []),
     ...(can.ready && can.stages
       ? [
           { key: "↑/↓", description: "select Stage" },

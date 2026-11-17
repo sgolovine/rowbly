@@ -31,7 +31,7 @@ export interface ProjectPaths {
   root: string;
   dir: string;
   configFile: string;
-  /** The user prompts: `SYSTEM.md`, `SUPERVISOR.md` and `WORKER.md`. */
+  /** The user prompts: `SYSTEM.md` and `WORKER.md`. */
   promptsDir: string;
   /** The old place of the Project prompt. `rowbly doctor --fix` moves it to `prompts/SYSTEM.md`. */
   legacyInstructionsFile: string;
