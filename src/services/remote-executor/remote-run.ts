@@ -13,6 +13,7 @@ import { finalActivity, hasEnded, newFacts, type RunFact, receiptFailure, runEnd
 export function newRemoteRun(thread: ThreadRecord, host: string, events: WorkerEvents): RemoteRun {
   return {
     threadId: thread.id,
+    storyId: thread.storyId,
     host,
     events,
     store: new Store<RemoteRunState>({ sent: {}, sessionOpened: false, closed: false, chain: Promise.resolve() }),

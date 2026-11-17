@@ -2,6 +2,7 @@
 
 import { mapInOrder } from "../in-order/in-order.js";
 import { hostRuns } from "./remote-channel.js";
+import { updateRuns } from "./remote-inbound.js";
 import { endSyncedRuns, waitsForSync } from "./remote-run.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
 
@@ -15,7 +16,10 @@ export function openRuns(env: RemoteEnv, host: string): RemoteRun[] {
   return hostRuns(env, host).filter((run) => !run.store.current.closed);
 }
 
-/** Applies the outbox of one host, then ends the runs that waited for the sync. Gives the problem of a failure. */
+/**
+ * Applies the outbox of one host, then makes and sends the inbound updates of the runs that did not end, and ends the
+ * runs that waited for the sync. Gives the problem of a failure.
+ */
 export async function syncHost(env: RemoteEnv, host: string): Promise<[string, string | undefined]> {
   const runs = openRuns(env, host);
 
@@ -31,9 +35,16 @@ export async function syncHost(env: RemoteEnv, host: string): Promise<[string, s
     return [host, problemText(error)];
   }
 
+  // The outbox goes first: a change of the worker that is on the main machine now gives an update with no effect.
+  const problem = await updateRuns(
+    env,
+    host,
+    runs.filter((run) => !waitsForSync(run)),
+  );
+
   await endSyncedRuns(waiting);
 
-  return [host, undefined];
+  return [host, problem];
 }
 
 /** Applies the outbox of each host with an active remote run. Gives the problem of each host whose sync failed. */

@@ -1,14 +1,18 @@
-// The reconnect of a worker host after its heartbeat succeeded again: the queued commands, a new `host attach`
-// channel for the active runs, then the outbox sync. The run state stays across channels; only the channel is new.
+// The reconnect of a worker host after its heartbeat succeeded again: the queued commands, the waiting inbound
+// updates, a new `host attach` channel for the active runs, then the outbox sync. The run state stays across channels; only the channel is new.
 
 import { withEntry, withoutEntry } from "../store/store.js";
 import { ensureLink, linkOpen } from "./remote-channel.js";
 import { hooksOf, queuedCommands, sendQueued, targetOf } from "./remote-commands.js";
+import { hasBase, hasWaitingInbound, sendInboundAll } from "./remote-inbound.js";
 import { waitsForSync } from "./remote-run.js";
 import { openRuns, problemText, syncHost } from "./remote-sync.js";
 import type { RemoteEnv } from "./remote-types.js";
 
-/** True when the host has work for a reconnect: queued commands, a run without a channel, or a run after its end. */
+/**
+ * True when the host has work for a reconnect: queued commands, waiting inbound updates, a run without a channel, or
+ * a run after its end.
+ */
 async function needsReconnect(env: RemoteEnv, host: string): Promise<boolean> {
   const runs = openRuns(env, host);
 
@@ -16,7 +20,7 @@ async function needsReconnect(env: RemoteEnv, host: string): Promise<boolean> {
     return true;
   }
 
-  return (await queuedCommands(env, host)).length > 0;
+  return (await queuedCommands(env, host)).length > 0 || (await hasWaitingInbound(env, host, runs.filter(hasBase)));
 }
 
 /** Opens the channel again when the host still has an active run without a channel. */
@@ -36,6 +40,8 @@ async function runReconnect(env: RemoteEnv, host: string): Promise<string | unde
 
     // The stop and cancel commands go first, so that the host gets them before it sends the run states again.
     await sendQueued(env, await targetOf(env, host), host);
+    // The inbound updates go after the queued commands and before the channel and the outbox sync.
+    await sendInboundAll(env, host, openRuns(env, host).filter(hasBase));
     await reopenLink(env, host);
 
     return (await syncHost(env, host))[1];

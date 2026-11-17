@@ -83,6 +83,10 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/remote-reconnect.js")).resolves.toHaveProperty("reconnectHost");
     await expect(import("../remote-executor/remote-stop.js")).resolves.toHaveProperty("shutdownRemote");
     await expect(import("../remote-executor/remote-sync.js")).resolves.toHaveProperty("syncHosts");
+    await expect(import("../remote-executor/remote-inbound.js")).resolves.toHaveProperty("updateRuns");
+    await expect(import("../remote-executor/inbound-queue.js")).resolves.toHaveProperty("queueInboundUpdates");
+    await expect(import("../inbound/inbound-diff.js")).resolves.toHaveProperty("inboundDiff");
+    await expect(import("../inbound/inbound-types.js")).resolves.toHaveProperty("INBOUND_TYPES");
     await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
     await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
@@ -91,6 +95,7 @@ describe("Pi import boundary", () => {
 
   it("imports the outbox apply and the host outbox commands without loading Pi", async () => {
     await expect(import("../outbox/outbox-compare.js")).resolves.toHaveProperty("compareChange");
+    await expect(import("../outbox/outbox-decision.js")).resolves.toHaveProperty("decide");
     await expect(import("../outbox/outbox-host.js")).resolves.toHaveProperty("hostOutboxEntries");
     await expect(import("../outbox-apply/outbox-apply.js")).resolves.toHaveProperty("syncOutbox");
     await expect(import("../outbox-apply/outbox-source.js")).resolves.toHaveProperty("transportOutboxSource");
@@ -145,6 +150,8 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-agent-cache.js")).resolves.toHaveProperty("hostCachePut");
     await expect(import("../host-agent/host-agent-input.js")).resolves.toHaveProperty("readBoundedInput");
     await expect(import("../host-agent/host-agent-prepare.js")).resolves.toHaveProperty("prepareHostThread");
+    await expect(import("../host-agent/host-inbound.js")).resolves.toHaveProperty("applyHostInbound");
+    await expect(import("../inbound/inbound-apply.js")).resolves.toHaveProperty("applyInboundUpdate");
     await expect(import("../host-agent/host-clone-update.js")).resolves.toHaveProperty("updateClone");
     await expect(import("../host-agent/host-run-events.js")).resolves.toHaveProperty("runEvents");
     await expect(import("../host-agent/host-run-state.js")).resolves.toHaveProperty("readHostRun");

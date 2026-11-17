@@ -36,6 +36,7 @@ const resources = {
     "cache-put",
     "run-paths",
     "prepare",
+    "inbound",
     "ping",
     "attach",
   ],
@@ -55,6 +56,7 @@ const hidden = [
   "cache-put",
   "run-paths",
   "prepare",
+  "inbound",
   "ping",
 ];
 
