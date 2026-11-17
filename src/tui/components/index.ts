@@ -5,6 +5,7 @@ export * from "./conversation-entry/index.js";
 export * from "./conversation-notice/index.js";
 export * from "./conversation-view/index.js";
 export * from "./detail-view/index.js";
+export * from "./entity-form-modal/index.js";
 export * from "./expand-button/index.js";
 export * from "./footer/index.js";
 export * from "./form/index.js";
