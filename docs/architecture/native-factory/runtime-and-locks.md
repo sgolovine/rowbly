@@ -32,6 +32,8 @@ take or change a lock.
     hosts/<host>/outbox-applied.json # the last applied outbox seq of a worker host
     hosts/<host>/commands.json # queued stop, cancel, launch or resume commands for a worker host (mode 0600)
     hosts/<host>/threads/<id>/base.json # the copy that the main machine sent last to the host
+    hosts/<host>/held/<id>/entries.jsonl # the held outbox entries of an abandoned remote Thread (mode 0600)
+    hosts/<host>/held/<id>/blobs/<sha256>.png # the file of each held attachment.add entry (mode 0600)
     hosts/<host>/threads/<id>/inbound.json # the inbound updates that wait for the host (mode 0600)
 ```
 
@@ -54,6 +56,11 @@ take or change a lock.
 - `hosts/<host>/threads/<id>/inbound.json` is the durable queue of the inbound updates of a remote
   Thread: `{ "version": 1, "nextSeq": <n>, "updates": [{ seq, type, … }] }`. The file has mode 0600,
   and its folders have mode 0700. See [README.md](README.md#inbound-updates).
+- `hosts/<host>/held/<id>/` holds the outbox entries of an abandoned remote Thread. The outbox apply
+  writes it, and `rowbly thread held <id> --apply` or `--discard` changes or removes it. These changes
+  occur only under the Project write lock, never under the state lock. The folders have mode 0700.
+  The Thread file has the `abandoned` note: `{ at, reason, appliedSeq }`. See
+  [README.md](README.md#abandoned-threads).
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
   `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
   `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is

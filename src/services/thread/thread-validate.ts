@@ -1,7 +1,7 @@
 import { isAbsolute } from "node:path";
 import { ValidationError } from "../errors/errors.js";
 import { validModel } from "../factory-settings/factory-settings.js";
-import type { ThreadRecord, ThreadRun, ThreadStatus, WorkerResult } from "./thread-types.js";
+import type { RemoteOutcome, ThreadRecord, ThreadRun, ThreadStatus, WorkerResult } from "./thread-types.js";
 
 const STATUSES: readonly ThreadStatus[] = ["pending", "running", "completed", "failed", "cancelled", "interrupted"];
 const ROLES: readonly string[] = ["worker", "supervisor"];
@@ -105,6 +105,43 @@ function validChecks(checks: ThreadRecord["checks"]): boolean {
   );
 }
 
+const ABANDON_REASONS: readonly string[] = ["cancel", "release"];
+const END_REASONS: readonly string[] = ["completed", "failed", "stopped", "cancelled"];
+
+function validAbandon(abandoned: ThreadRecord["abandoned"]): boolean {
+  if (abandoned === undefined) {
+    return true;
+  }
+
+  return (
+    !!abandoned &&
+    ABANDON_REASONS.includes(abandoned.reason) &&
+    Number.isFinite(Date.parse(abandoned.at)) &&
+    Number.isSafeInteger(abandoned.appliedSeq) &&
+    abandoned.appliedSeq >= 0
+  );
+}
+
+function validFailure(failure: RemoteOutcome["failure"]): boolean {
+  return (
+    failure === undefined || (!!failure && typeof failure.code === "string" && typeof failure.message === "string")
+  );
+}
+
+function validOutcome(outcome: ThreadRecord["remoteOutcome"]): boolean {
+  if (outcome === undefined) {
+    return true;
+  }
+
+  return (
+    !!outcome &&
+    END_REASONS.includes(outcome.endReason) &&
+    optionalDate(outcome.endedAt) &&
+    validFailure(outcome.failure) &&
+    validResult(outcome.result)
+  );
+}
+
 function validSession(t: ThreadRecord): boolean {
   return !!t.session && t.session.id === t.id && (t.session.file === null || typeof t.session.file === "string");
 }
@@ -142,6 +179,8 @@ function validMetadata(t: ThreadRecord): boolean {
     validChecks(t.checks) &&
     validSession(t) &&
     validRuns(t) &&
+    validAbandon(t.abandoned) &&
+    validOutcome(t.remoteOutcome) &&
     (t.model === undefined || validModel(t.model))
   );
 }

@@ -1,8 +1,10 @@
 // The reconnect of a worker host after its heartbeat succeeded again: the queued commands, the waiting inbound
-// updates, a new `host attach` channel for the active runs, then the outbox sync. The run state stays across channels; only the channel is new.
+// updates, a new `host attach` channel for the active runs and the abandoned Threads, then the outbox sync. The run
+// state stays across channels; only the channel is new.
 
 import { mapInOrder } from "../in-order/in-order.js";
 import { withEntry, withoutEntry } from "../store/store.js";
+import { abandonedOf, hasPendingOutcome } from "./remote-abandoned.js";
 import { ensureLink, linkOpen } from "./remote-channel.js";
 import { hooksOf, queuedCommands, sendQueued, targetOf } from "./remote-commands.js";
 import { hasBase, hasWaitingInbound, sendInboundAll } from "./remote-inbound.js";
@@ -12,22 +14,31 @@ import type { RemoteEnv } from "./remote-types.js";
 import { catchUpRun } from "./session-mirror.js";
 
 /**
- * True when the host has work for a reconnect: queued commands, waiting inbound updates, a run without a channel, or
- * a run after its end.
+ * True when the host has work for a reconnect: queued commands, waiting inbound updates, a run without a channel, a
+ * run after its end, an abandoned Thread without a channel, or the end of an abandoned Thread that waits for the sync.
  */
 async function needsReconnect(env: RemoteEnv, host: string): Promise<boolean> {
   const runs = openRuns(env, host);
+  const open = linkOpen(env, host);
 
-  if (runs.some(waitsForSync) || (runs.length > 0 && !linkOpen(env, host))) {
+  if (runs.some(waitsForSync) || (runs.length > 0 && !open) || hasPendingOutcome(env, host)) {
+    return true;
+  }
+
+  if (!open && (await abandonedOf(env, host)).length > 0) {
     return true;
   }
 
   return (await queuedCommands(env, host)).length > 0 || (await hasWaitingInbound(env, host, runs.filter(hasBase)));
 }
 
-/** Opens the channel again when the host still has an active run without a channel. */
+/** Opens the channel again when the host still has an active run or an abandoned Thread without a channel. */
 async function reopenLink(env: RemoteEnv, host: string): Promise<void> {
-  if (openRuns(env, host).length === 0 || linkOpen(env, host)) {
+  if (linkOpen(env, host)) {
+    return;
+  }
+
+  if (openRuns(env, host).length === 0 && (await abandonedOf(env, host)).length === 0) {
     return;
   }
 
