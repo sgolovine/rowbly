@@ -18,6 +18,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The Custom Field, Tag, Prompt and Stage forms of the TUI now use one shared form component. Their titles, fields and messages do not change. (ROW-155)
 - Changed: The status line and the result line of a Thread in the Threads tab of a Story and in the Factory view now use shared TUI components. The text, the colours and the layout do not change. (ROW-152)
 - Changed: The rows of the Tags, Custom Fields, Prompts, Stages, AI checks and AI models sections of the TUI Settings now use one shared row component. Their look and their click actions do not change. (ROW-150)
+- Changed: The Stage headings of the Story list and the section headings of the Factory view now use one shared TUI component. The count of a selected Stage heading now uses the muted colour, as in the Factory view. (ROW-149)
 
 ### 0.20.0
 
