@@ -16,6 +16,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The `✕` icon of a Modal and the `⤢`, `⤡` and `✕` icons of the Story sidebar now use one shared TUI component. Their look and their click actions do not change. (ROW-154)
 - Changed: The TUI uses one tab component for the Story modal tabs and the `View` and `Edit` tabs of the full screen editor. The tabs look the same as before. (ROW-153)
 - Changed: The Custom Field, Tag, Prompt and Stage forms of the TUI now use one shared form component. Their titles, fields and messages do not change. (ROW-155)
+- Changed: The status line and the result line of a Thread in the Threads tab of a Story and in the Factory view now use shared TUI components. The text, the colours and the layout do not change. (ROW-152)
 - Changed: The Threads tab of the Story modal and the Story sidebar of the Factory view now use one shared TUI component for the Thread details, the conversation and the steering input. Their look and their keys do not change. (ROW-151)
 
 ### 0.20.0

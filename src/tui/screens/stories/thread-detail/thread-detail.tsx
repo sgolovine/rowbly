@@ -3,15 +3,9 @@ import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ThreadConnection } from "../../../../services/thread-connection/thread-connection.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
-import { abandonedText, lostText } from "../thread-host-view.js";
-import {
-  THREAD_GLYPHS,
-  threadDuration,
-  threadModel,
-  threadOutcome,
-  threadResumable,
-  threadWaitsForNetwork,
-} from "../thread-text.js";
+import { ThreadOutcomeText } from "../thread-outcome-text/index.js";
+import { ThreadStatusText } from "../thread-status-text/index.js";
+import { threadDuration, threadModel, threadOutcome, threadResumable } from "../thread-text.js";
 
 /** The rows of the full detail, for the height check of the caller. */
 export const THREAD_DETAIL_ROWS = 6;
@@ -68,29 +62,13 @@ export function ThreadDetail({
   /** The number of held entries of an abandoned thread, when the caller read it. */
   held?: number;
 }) {
-  const { glyph, color } = THREAD_GLYPHS[thread.status];
   const outcome = threadOutcome(thread);
   const duration = threadDuration(thread, now);
-  const abandoned = abandonedText(thread, held);
-  const lost = lostText(connection, now);
 
   const status = (
-    <Text wrap="truncate-end">
-      <Text color={color}>{glyph} </Text>
-      <Text color={thread.status === "failed" ? theme.danger : theme.ink}>{thread.status}</Text>
-      <Text color={theme.inkMuted}>{runsNote(thread)}</Text>
-      {threadWaitsForNetwork(thread) && <Text color={theme.stageBoard}> · waiting for network</Text>}
-      {abandoned && <Text color={theme.stageBoard}>{abandoned}</Text>}
-      {lost && <Text color={theme.danger}>{lost}</Text>}
-    </Text>
+    <ThreadStatusText thread={thread} now={now} held={held} connection={connection} extra={runsNote(thread)} />
   );
-  const result = outcome ? (
-    <Text wrap="truncate-end" color={outcome.error ? theme.danger : theme.ink}>
-      {outcome.text}
-    </Text>
-  ) : (
-    "—"
-  );
+  const result = outcome ? <ThreadOutcomeText outcome={outcome} color={theme.ink} /> : "—";
 
   if (compact) {
     return (
