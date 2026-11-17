@@ -2,7 +2,7 @@ import type { Stage } from "../../../services/stage/stage.js";
 import { withMember, withoutMember } from "../../../services/store/store.js";
 import type { Story } from "../../../services/story/story.js";
 import { stageRowId } from "../../screens/stories/index.js";
-import { ALL_STAGES, type ShellEnv } from "./shell-state.js";
+import { ALL_STAGES, ALL_TAGS, type ShellEnv } from "./shell-state.js";
 import { clearMarks } from "./story-marks.js";
 import { editStory, listPane, showStoryPane } from "./story-pane.js";
 
@@ -16,10 +16,14 @@ export function fold(env: ShellEnv, key: string, folded: boolean): void {
   env.setCollapsed((current) => (folded ? withMember(current, key) : withoutMember(current, key)));
 }
 
-/** Shows the Story `story` in the list: it leaves a Stage filter that hides it and expands its section. */
+/** Shows the Story `story` in the list: it leaves a Stage or tag filter that hides it and expands its section. */
 function reveal(env: ShellEnv, story: Story): void {
   if (env.stageKey !== null && story.stage !== env.stageKey) {
     env.setStageKey(null);
+  }
+
+  if (env.tagKey !== null && !story.tags.includes(env.tagKey)) {
+    env.setTagKey(null);
   }
 
   fold(env, story.stage, false);
@@ -39,6 +43,16 @@ export function selectStage(env: ShellEnv, index: number): void {
 /** Selects the sidebar entry `id`. */
 export function filterStage(env: ShellEnv, id: string): void {
   env.setStageKey(id === ALL_STAGES ? null : id);
+}
+
+/** Selects the entry at `index` of the tag sidebar. Entry 0 is All Tags. */
+export function selectTag(env: ShellEnv, index: number): void {
+  env.setTagKey(env.view.tags[index - 1]?.value ?? null);
+}
+
+/** Selects the entry `id` of the tag sidebar. */
+export function filterTag(env: ShellEnv, id: string): void {
+  env.setTagKey(id === ALL_TAGS ? null : id);
 }
 
 /** Opens the Story at `index` for editing, or expands or collapses the section of the heading at `index`. */
@@ -77,7 +91,7 @@ export function toggleMode(env: ShellEnv): void {
   env.setMode((mode) => (mode === "stories" ? "threads" : "stories"));
 }
 
-/** Hides or shows the Stage sidebar. A hidden sidebar gives the focus to the list. */
+/** Hides or shows the Stage sidebar and the tag sidebar. A hidden sidebar gives the focus to the list. */
 export function toggleSidebar(env: ShellEnv): void {
   if (env.sidebarShown) {
     env.setPane(listPane(env));
@@ -144,6 +158,7 @@ export function switchProject(env: ShellEnv, path: string): void {
   env.setCtx({ ...env.ctx, cwd: path });
   showStoryPane(env, null);
   env.setStageKey(null);
+  env.setTagKey(null);
   env.setSelectedId(null);
   env.setCollapsed(new Set());
   clearMarks(env);

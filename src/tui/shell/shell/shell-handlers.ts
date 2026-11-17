@@ -10,6 +10,7 @@ import {
   closeOverlay,
   editStageByKey,
   filterStage,
+  filterTag,
   openFoundStory,
   openThreadStory,
   pointRow,
@@ -59,6 +60,14 @@ function stageHandlers(envRef: RefObject<ShellEnv>) {
     // A drop on All Stages moves the Stage to position 1.
     moveStage: (id: string, index: number) => moveStage(envRef.current, id, index),
     openNewStage: () => envRef.current.setOverlay({ kind: "newStage" }),
+  };
+}
+
+/** The handlers of the tag sidebar. */
+function tagHandlers(envRef: RefObject<ShellEnv>) {
+  return {
+    focusTags: () => envRef.current.setPane("tags"),
+    filterTag: (id: string) => filterTag(envRef.current, id),
   };
 }
 
@@ -118,6 +127,7 @@ export function shellHandlers(envRef: RefObject<ShellEnv>) {
   return {
     ...headerHandlers(envRef),
     ...stageHandlers(envRef),
+    ...tagHandlers(envRef),
     ...panelHandlers(envRef),
     ...storyHandlers(envRef),
     overlay: overlayHandlers(envRef),

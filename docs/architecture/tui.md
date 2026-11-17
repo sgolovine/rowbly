@@ -436,9 +436,9 @@ visible.
   or Thread in an open Story sidebar keeps the current state. Settings › Display shows the option,
   and `w` or a click on the value selects the next value.
 - `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the
-  Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
+  tag sidebar (when it shows), the Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
   it the focus. While the Story sidebar is expanded, `tab` and `shift+tab` do not go to the Story
-  list, and `esc` in the Stage sidebar gives the focus to the Story sidebar.
+  list, and `esc` in the Stage sidebar or the tag sidebar gives the focus to the Story sidebar.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
   form keeps its draft. An expanded Story sidebar collapses before the Story list gets the focus. In
   the Story list, `esc` closes the Story sidebar.
@@ -535,6 +535,40 @@ the components show.
   `ink-muted`, in the order of the Story. A value that is not a tag of the Project shows as its
   value. If the row is narrow, the tag slot is cut before the title. A Story without tags has no tag
   slot.
+
+## The tag sidebar
+
+When the Project has one or more tags, the left sidebar has two Panels in one column. The Stage
+sidebar ("Stages") is at the top. The tag sidebar ("Tags") is below it. When the Project has no
+tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
+
+- **The entries.** The first entry is "All Tags". Then each tag of `projectTags` shows with its
+  label, in config order. The tag sidebar has no button. Add, edit and remove the tags in Settings.
+- **The filter.** The shell keeps the value of the selected tag in `tagKey` (`null` for All Tags).
+  "All Tags" is selected at the start. `shellRows` shows only the Stories whose `tags` include the
+  value. The tag filter and the Stage filter apply together. The Factory view ignores the tag
+  filter.
+- **The title.** While a tag is selected, the title of the Story panel is
+  `<project> › <Stage label or All Stages> › <tag label>`. An empty list shows
+  `No Stories with the tag <label>.`, or `No Stories in <Stage> with the tag <label>.`
+- **The keys.** `tab` moves the focus in this order: the Stage sidebar, the tag sidebar, the Story
+  list, the Story sidebar. `shift+tab` goes in the opposite order. In the tag sidebar, `↑/↓` and
+  `j/k` select the previous or next entry, and `esc` gives the focus to the Story list. The Stage
+  keys (`n`, `e`, `shift+↑/↓`) do nothing in the tag sidebar. `[`/`]` change the Stage filter from
+  all panes. The footer and the help Modal show the keys of the tag sidebar.
+- **The mouse.** A click in the tag sidebar gives it the focus. A click on an entry selects it. When
+  the entries do not fit, the wheel selects.
+- **The size.** The tag sidebar has the width of the Stage sidebar. A drag of the right edge of the
+  Stage sidebar changes the width of the two sidebars. Beside the list, the tag sidebar gets the
+  rows for all its entries, but not more than half of the main area. The Stage sidebar gets the
+  other rows. In a narrow terminal, the two sidebars go above the Story list, one above the other,
+  and the Story list keeps at least half of the main area. `ctrl+b` hides and shows the two
+  sidebars together.
+- **Changes.** When the selected tag is removed in Settings, the filter acts as "All Tags". When the
+  last tag is removed, the tag sidebar does not show, and the Story list gets the focus. When a
+  Story opens from the Story finder, from a Thread or from a dependency link, or after a save, a tag
+  filter that hides the Story goes back to "All Tags". A Project switch resets the filter to
+  "All Tags". A new Story does not get the selected tag.
 
 ## Worker model overrides
 
