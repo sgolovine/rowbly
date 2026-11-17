@@ -14,6 +14,8 @@ export const STACKED_BELOW_WIDTH = 100;
 export const STACKED_MIN_HEIGHT = 12;
 /** Lines of a sidebar that are not entries: its top edge, its bottom edge and its button. */
 export const SIDEBAR_CHROME_HEIGHT = 3;
+/** The fewest lines that a drag can give a sidebar: its chrome and one entry. */
+export const SIDEBAR_MIN_HEIGHT = SIDEBAR_CHROME_HEIGHT + 1;
 /** Lines of a Panel that are not content: its top edge and its bottom edge. */
 export const PANEL_FRAME_HEIGHT = 2;
 /** Columns of a Panel that are not content: its border and its padding on each side. */

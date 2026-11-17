@@ -20,6 +20,7 @@ export type Overlay =
   | { readonly kind: "deleteStory"; readonly story: Story }
   | { readonly kind: "newStage" }
   | { readonly kind: "editStage"; readonly stage: Stage }
+  | { readonly kind: "newTag" }
   | { readonly kind: "factory" }
   /** The checks in the queue of the live factory. */
   | { readonly kind: "checks" };
@@ -43,6 +44,8 @@ export interface OverlayHandlers {
   /** The delete of a Story was confirmed. */
   removeStory(story: Story): void;
   stageSaved(stage: Stage): void;
+  /** The New Tag Modal added a tag. */
+  tagSaved(): void;
   openAiSettings(): void;
   switchProject(path: string): void;
   reload(): void;

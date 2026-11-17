@@ -16,6 +16,7 @@ import {
   pointRow,
   showSavedStage,
   showSavedStory,
+  showSavedTag,
   switchProject,
   toggleMode,
 } from "./shell-selection.js";
@@ -68,6 +69,8 @@ function tagHandlers(envRef: RefObject<ShellEnv>) {
   return {
     focusTags: () => envRef.current.setPane("tags"),
     filterTag: (id: string) => filterTag(envRef.current, id),
+    resizeTags: (height: number) => envRef.current.setTagsHeight(height),
+    openNewTag: () => envRef.current.setOverlay({ kind: "newTag" }),
   };
 }
 
@@ -112,6 +115,7 @@ function overlayHandlers(envRef: RefObject<ShellEnv>): OverlayHandlers {
     discardStory: (next: SidePane | null) => discardStory(envRef.current, next),
     removeStory: (story: Story) => removeStory(envRef.current, story),
     stageSaved: (stage: Stage) => showSavedStage(envRef.current, stage),
+    tagSaved: () => showSavedTag(envRef.current),
     openAiSettings: () => envRef.current.setOverlay({ kind: "settings", section: "ai" }),
     switchProject: (path: string) => switchProject(envRef.current, path),
     reload: () => envRef.current.reload(),

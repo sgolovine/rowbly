@@ -135,6 +135,8 @@ export interface ShellEnv {
   readonly setPane: Dispatch<SetStateAction<Pane>>;
   readonly setSidebarWidth: Dispatch<SetStateAction<number>>;
   readonly setSidebarShown: Dispatch<SetStateAction<boolean>>;
+  /** The rows of the tag sidebar after a drag of its top edge, or `null` for the default height. */
+  readonly setTagsHeight: Dispatch<SetStateAction<number | null>>;
   readonly setStoryPane: Dispatch<SetStateAction<SidePane | null>>;
   /** The width of the Story sidebar after a drag, or `null` for the default width. */
   readonly setStoryWidth: Dispatch<SetStateAction<number | null>>;
