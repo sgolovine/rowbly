@@ -2,7 +2,7 @@ import type { Key } from "ink";
 import type { Dispatch, SetStateAction } from "react";
 import { type FactorySettings, updateFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
 import { placementChange } from "../../../../services/factory-settings/placement-settings.js";
-import { updateHost } from "../../../../services/host/host.js";
+import { addHost, updateHost } from "../../../../services/host/host.js";
 import { checkHost, type HostCheck } from "../../../../services/host-check/host-check.js";
 // `useHost` is a service, not a React hook. The other name keeps the hook rules of Biome off it.
 import { useHost as turnOnHost, unuseHost } from "../../../../services/host-project/host-project.js";
@@ -56,6 +56,44 @@ export async function saveWorkers(env: HostsEnv, row: HostRow, values: FormValue
   finishChange(env, `Saved the worker limit of ${host.id}: ${host.maxWorkers}`);
 }
 
+/** Shows a warning and gives true while remote work runs on a host. */
+function warnBusy(env: HostsEnv): boolean {
+  if (env.busy) {
+    showToast(env.toast, "warning", `Wait for the work on ${env.busy.hostId} to end`);
+  }
+
+  return env.busy !== null;
+}
+
+function textValue(values: FormValues, name: string): string {
+  const value = values[name];
+
+  return typeof value === "string" ? value : "";
+}
+
+/**
+ * Adds a worker host with the values of the form. The form stays busy while the service installs the build and runs
+ * the check. A `VALIDATION` error shows under the fields; a different error shows a toast, and the list does not change.
+ */
+export async function saveNewHost(env: HostsEnv, values: FormValues): Promise<void> {
+  const value = values.maxWorkers;
+  const maxWorkers = typeof value === "number" ? value : Number.NaN;
+
+  const added = await addHost({ id: textValue(values, "id"), ssh: textValue(values, "ssh"), maxWorkers }, env.ctx);
+
+  finishChange(env, `Added ${added.id}: ${added.check.ready ? "ready" : "not ready"}`);
+  env.setCheck(added.check);
+}
+
+/** Opens the form of a new host, when no remote work runs. */
+export function openAddHost(env: HostsEnv): void {
+  if (warnBusy(env)) {
+    return;
+  }
+
+  env.setTask({ kind: "add" });
+}
+
 /** Turns the selected host on or off for all Projects. A failure shows a toast. */
 export function toggleEnabled(env: HostsEnv, row: HostRow): void {
   const enabled = !row.host.enabled;
@@ -81,9 +119,7 @@ function remoteFailed(env: HostsEnv, error: unknown): void {
 
 /** Starts remote work on a host, when no other remote work runs. */
 function startRemote(env: HostsEnv, busy: HostBusy, work: () => Promise<string>): void {
-  if (env.busy) {
-    showToast(env.toast, "warning", `Wait for the work on ${env.busy.hostId} to end`);
-
+  if (warnBusy(env)) {
     return;
   }
 
@@ -136,7 +172,7 @@ export function runCheck(env: HostsEnv, row: HostRow): void {
   startRemote(env, { hostId: row.host.id, kind: "check" }, () => checkOnHost(env, row.host.id));
 }
 
-/** The keys of the section: `p` placement, then `u`, `e`, `w` and `c` on the selected host. */
+/** The keys of the section: `p` placement and `a` add host, then `u`, `e`, `w` and `c` on the selected host. */
 export function handleHostsKey(env: HostsEnv, input: string, key: Key): void {
   if (key.ctrl || key.meta) {
     return;
@@ -144,6 +180,12 @@ export function handleHostsKey(env: HostsEnv, input: string, key: Key): void {
 
   if (input === "p") {
     env.setTask({ kind: "placement" });
+
+    return;
+  }
+
+  if (input === "a") {
+    openAddHost(env);
 
     return;
   }

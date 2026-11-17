@@ -27,7 +27,7 @@ interface HostsSectionModel {
 }
 
 /**
- * The state, the keys and the handlers of the Hosts section. It reads only local files. Only the use and the check
+ * The state, the keys and the handlers of the Hosts section. It reads only local files. Only the add, the use and the check
  * actions open SSH. It does not load Pi.
  */
 export function useHostsSection({ ctx, onChange }: HostsSectionInput): HostsSectionModel {
