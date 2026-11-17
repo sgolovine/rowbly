@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: In the main view of the Factory controls (`f`), `↑/↓` and the mouse wheel scroll the `Attention` list, and a `↑ n more` row shows the hidden rows above. The new `Dismiss all` button (`d`) dismisses all warnings that you can dismiss, after a confirmation. (ROW-143)
+
 ### 0.20.0
 
 - Added: The new Hosts section in the Factory group of the TUI Settings shows the worker hosts and their last check, and sets the placement of new workers. It turns a host on or off for this Project or for all Projects, changes the worker limit and runs the check, and the new `rowbly host update <id> [--max-workers <n>] [--enable | --disable]` command changes a host from the CLI. (ROW-103)
