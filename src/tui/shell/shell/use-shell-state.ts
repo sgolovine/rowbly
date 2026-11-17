@@ -4,6 +4,14 @@ import type { KeyHint } from "../../keymap.js";
 import type { Overlay, SidePane } from "../overlay.js";
 import type { Pane, ViewMode } from "./shell-state.js";
 
+/** The filters of the Story list: the key of the Stage and the value of the tag, or `null` for All Stages and All Tags. */
+function useFilterState() {
+  const [stageKey, setStageKey] = useState<string | null>(null);
+  const [tagKey, setTagKey] = useState<string | null>(null);
+
+  return { values: { stageKey, tagKey }, setters: { setStageKey, setTagKey } };
+}
+
 /** The state of the shell that lasts until Rowbly quits: the overlay, the focus, the panes and the selection. */
 export function useShellState() {
   const [overlay, setOverlay] = useState<Overlay | null>(null);
@@ -21,7 +29,7 @@ export function useShellState() {
   // The Story sidebar takes the columns of the Story list. With the `remember` option, it is also the last selection.
   const [storyExpanded, setStoryExpanded] = useState(false);
   const [storyHints, setStoryHints] = useState<readonly KeyHint[]>([]);
-  const [stageKey, setStageKey] = useState<string | null>(null);
+  const filters = useFilterState();
   // The id of the selected row: a Story id, or the `stageRowId` of a section heading.
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // The Stage sections that are collapsed in All Stages.
@@ -43,7 +51,7 @@ export function useShellState() {
       storyWidth,
       storyExpanded,
       storyHints,
-      stageKey,
+      ...filters.values,
       selectedId,
       collapsed,
       marked,
@@ -61,7 +69,7 @@ export function useShellState() {
       setStoryWidth,
       setStoryExpanded,
       setStoryHints,
-      setStageKey,
+      ...filters.setters,
       setSelectedId,
       setCollapsed,
       setMarked,

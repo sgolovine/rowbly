@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import type { TagConfig } from "../../../services/config/config.js";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { FactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import type { Project } from "../../../services/project/project.js";
@@ -13,8 +14,14 @@ import type { Overlay, SidePane } from "../overlay.js";
 /** The id of the first sidebar entry, which shows the Stories of every Stage. */
 export const ALL_STAGES = "*";
 
-/** The region that has the focus: the Stage sidebar, the list, or the sidebar on the right (a Story or a Thread). */
-export type Pane = "stages" | "stories" | "story";
+/** The id of the first entry of the tag sidebar, which shows the Stories with any tag or no tag. */
+export const ALL_TAGS = "*";
+
+/**
+ * The region that has the focus: the Stage sidebar, the tag sidebar, the list, or the sidebar on the right (a Story
+ * or a Thread).
+ */
+export type Pane = "stages" | "tags" | "stories" | "story";
 
 /** What the right Panel shows: the Story list, or the worker Threads of the Factory view. */
 export type ViewMode = "stories" | "threads";
@@ -53,6 +60,12 @@ export interface ShellView {
   readonly cursorStage: string | undefined;
   /** The selected sidebar entry. Entry 0 is All Stages. */
   readonly stageIndex: number;
+  /** The tags of the Project, in config order. */
+  readonly tags: readonly TagConfig[];
+  /** The tag of the filter. A tag that is not in the config gives `undefined`, and the list shows every Story again. */
+  readonly tag: TagConfig | undefined;
+  /** The selected entry of the tag sidebar. Entry 0 is All Tags. */
+  readonly tagIndex: number;
   /**
    * The IDs of the Stories of the multi-selection that exist. In the range mode, the Story rows from the anchor to
    * the cursor.
@@ -73,7 +86,11 @@ export interface ShellView {
   /** The shell has the keys: no overlay is open, and the Story sidebar does not have the focus. */
   readonly shellKeys: boolean;
   readonly sidebar: boolean;
+  /** The Stage sidebar has the focus. */
   readonly sidebarFocused: boolean;
+  /** The tag sidebar shows: the sidebar shows, and the Project has one or more tags. */
+  readonly tagSidebar: boolean;
+  readonly tagSidebarFocused: boolean;
   readonly listFocused: boolean;
   readonly storyFocused: boolean;
 }
@@ -84,6 +101,8 @@ export interface ShellEnv {
   readonly ctx: ServiceContext;
   readonly view: ShellView;
   readonly stageKey: string | null;
+  /** The value of the tag of the filter, or `null` for All Tags. */
+  readonly tagKey: string | null;
   readonly sidebarShown: boolean;
   /** The Story sidebar is beside the Story list, so `ctrl+o` and its button can expand or collapse it. */
   readonly storyExpandable: boolean;
@@ -98,6 +117,13 @@ export interface ShellEnv {
   readonly exit: () => void;
   /** Reads the board again. */
   readonly reload: () => void;
+  /**
+   * Puts a Story that a write returned on the board in memory, at the top of its Stage, with no read. The watcher
+   * echo of the write reads the board again, and also applies the changes of the write to other Stories.
+   */
+  readonly putOnBoard: (story: Story) => void;
+  /** Removes the Story `id` from the board in memory, with no read. The watcher echo of the delete reads the board. */
+  readonly takeFromBoard: (id: string) => void;
 
   // The state setters.
   readonly setCtx: Dispatch<SetStateAction<ServiceContext>>;
@@ -116,6 +142,7 @@ export interface ShellEnv {
   readonly setStoryExpanded: Dispatch<SetStateAction<boolean>>;
   readonly setStoryHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
   readonly setStageKey: Dispatch<SetStateAction<string | null>>;
+  readonly setTagKey: Dispatch<SetStateAction<string | null>>;
   readonly setSelectedId: Dispatch<SetStateAction<string | null>>;
   readonly setCollapsed: Dispatch<SetStateAction<ReadonlySet<string>>>;
   /** Replaces the IDs of the Stories of the multi-selection. */
