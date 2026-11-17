@@ -4,7 +4,14 @@ import { placementPolicy } from "../factory-settings/placement-settings.js";
 import type { Story } from "../story/story.js";
 import { LOCAL_HOST, type ThreadRecord } from "../thread/thread-types.js";
 import { readWorktreeFacts } from "../worker-worktree/worker-worktree.js";
-import { countByHost, type HostSlots, hostSlots, placementCapacity, type WorkerHostView } from "./host-slots.js";
+import {
+  countByHost,
+  type HostSlots,
+  hostSlots,
+  placementCapacity,
+  type WorkerHostView,
+  withHeartbeatStates,
+} from "./host-slots.js";
 import { getState, type Manager, type ManagerState, setState } from "./manager-state.js";
 import { placeWorker, type StoryPlacementFacts } from "./placement.js";
 
@@ -26,14 +33,23 @@ export async function refreshHosts(manager: Manager): Promise<readonly WorkerHos
   return hosts;
 }
 
+/** Gives the worker hosts with the state that the manager uses: the state of the list and of the heartbeat. */
+function managerHosts(state: Readonly<ManagerState>): WorkerHostView[] {
+  return withHeartbeatStates(state.hosts, state.hostHealth);
+}
+
 /** Gives the slots of `local` and of each worker host, from the active workers of the manager. */
 export function managerSlots(state: Readonly<ManagerState>): HostSlots[] {
-  return hostSlots(state.limit, state.hosts, countByHost([...state.active.values()].map((worker) => worker.host)));
+  return hostSlots(
+    state.limit,
+    managerHosts(state),
+    countByHost([...state.active.values()].map((worker) => worker.host)),
+  );
 }
 
 /** Gives the policy limit: the total slots of the hosts that can take work. */
 export function managerCapacity(state: Readonly<ManagerState>): number {
-  return placementCapacity(state.limit, state.hosts);
+  return placementCapacity(state.limit, managerHosts(state));
 }
 
 /** Counts the workers of each host: the larger of the active entries and the active Thread records. */
@@ -81,7 +97,7 @@ export async function placeStory(manager: Manager, request: PlacementRequest): P
 
   const placement = placeWorker({
     policy: placementPolicy(state.settings),
-    hosts: hostSlots(state.limit, state.hosts, usedSlots(state, active)),
+    hosts: hostSlots(state.limit, managerHosts(state), usedSlots(state, active)),
     providers: knownProviders(state.hosts),
     provider: request.choice?.provider,
     story,

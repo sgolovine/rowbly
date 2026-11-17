@@ -129,7 +129,7 @@ describe("worker hosts", () => {
     expect((await hosts.workerHosts())[0]?.state).toBe("connected");
   });
 
-  it("is wrong-version when the version stays different after the install", async () => {
+  it("is version-mismatch when the version stays different after the install", async () => {
     const mini = outdatedHost(false);
     await writeHosts([used("mini")]);
     const { hosts } = source({ "user@mini.lan": mini.transport });
@@ -138,7 +138,7 @@ describe("worker hosts", () => {
     await hosts.settled();
 
     expect(mini.commands.map(answerKey)).toContain("npm");
-    expect(await hosts.workerHosts()).toEqual([{ id: "mini", maxWorkers: 2, state: "wrong-version" }]);
+    expect(await hosts.workerHosts()).toEqual([{ id: "mini", maxWorkers: 2, state: "version-mismatch" }]);
   });
 
   it("is disconnected when the transport cannot connect, and does not throw", async () => {

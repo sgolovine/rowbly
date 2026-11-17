@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { HostUnreachableError } from "../host-transport/host-errors.js";
 import type { Story } from "../story/story.js";
 import type { ThreadRecord } from "../thread/thread.js";
 import { networkWaitingThreads, resumableNetworkThreads, workerFailure } from "./network-wait.js";
@@ -85,6 +86,15 @@ describe("workerFailure", () => {
     expect(workerFailure(new Error("fetch failed"), { launched: false, stopping: true })).toMatchObject({
       class: "launch",
       code: "WORKER_FAILED",
+    });
+  });
+
+  it("keeps the code of a host connection error and never gives NETWORK for it", () => {
+    const error = new HostUnreachableError("Cannot reach mini: ECONNREFUSED fetch failed");
+    expect(workerFailure(error, { launched: false, stopping: false })).toEqual({
+      class: "launch",
+      code: "HOST_UNREACHABLE",
+      message: error.message,
     });
   });
 });

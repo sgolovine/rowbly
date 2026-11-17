@@ -57,6 +57,17 @@ describe("placeWorker", () => {
     expect(placeWorker(input({ hosts, providers: withC }))).toEqual({ host: "c" });
   });
 
+  it.each(["degraded", "disconnected", "version-mismatch", "auth-failed", "not-ready"] as const)(
+    "gives no new worker to a %s host",
+    (state) => {
+      const hosts = [slot("local", 1, 1), slot("a", 4, 0, state)];
+      const placement = placeWorker(input({ hosts }));
+      expect(placement.host).toBeUndefined();
+      expect(placement.reason).toContain(`host a is ${state}`);
+      expect(placeWorker(input({ hosts, requested: "a" })).host).toBeUndefined();
+    },
+  );
+
   it("does not send a worker to a host without a known provider list or without a known model provider", () => {
     const hosts = [slot("local", 1, 1), slot("a", 2)];
     expect(placeWorker(input({ hosts, providers: new Map() })).reason).toContain("no host can take work");

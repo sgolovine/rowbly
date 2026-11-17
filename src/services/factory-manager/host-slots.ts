@@ -1,7 +1,10 @@
 import { LOCAL_HOST } from "../thread/thread-types.js";
 
-/** The state of a host. Only a `connected` host gets new work. Later Stories add more states. */
-type HostState = "connected" | "disconnected" | "not-ready" | "wrong-version";
+/**
+ * The state of a host. Only a `connected` host gets new work. The heartbeat gives `connected`, `degraded`,
+ * `disconnected`, `version-mismatch` and `auth-failed`. `not-ready` comes only from the list of worker hosts.
+ */
+export type HostState = "connected" | "degraded" | "disconnected" | "version-mismatch" | "auth-failed" | "not-ready";
 
 /** One worker host that the manager can use, as the manager dependency `workerHosts` gives it. */
 export interface WorkerHostView {
@@ -50,4 +53,17 @@ export function hostSlots(
 /** Gives the total slots of the hosts that can take work. Without worker hosts, it is the local limit. */
 export function placementCapacity(localMax: number, hosts: readonly WorkerHostView[]): number {
   return hosts.filter((host) => host.state === "connected").reduce((total, host) => total + host.maxWorkers, localMax);
+}
+
+/**
+ * Gives the hosts with the state that the manager uses: the state of the list when it is not `connected`, else the
+ * heartbeat state of the host. Before the first heartbeat of a host, the state of the list.
+ */
+export function withHeartbeatStates(
+  hosts: readonly WorkerHostView[],
+  heartbeat: ReadonlyMap<string, { readonly state: HostState }>,
+): WorkerHostView[] {
+  return hosts.map((host) =>
+    host.state === "connected" ? { ...host, state: heartbeat.get(host.id)?.state ?? host.state } : host,
+  );
 }

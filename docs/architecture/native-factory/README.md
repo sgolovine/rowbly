@@ -209,7 +209,7 @@ gives them to the manager. The service only reads the file. It does not record `
   current Project. `maxWorkers` comes from the registry.
 - **Check.** The check of a host runs in the background. It does these steps:
   1. `ensureHostVersion` installs the exact Rowbly build when the host has a different version. If
-     the version stays different, the state is `wrong-version`.
+     the version stays different, the state is `version-mismatch`.
   2. `quickHostCheck` checks the version and the Pi providers. If the host is ready, the state is
      `connected` with the providers of the check. Otherwise, the state is `not-ready`.
   3. A transport failure or a different error gives `disconnected`.
@@ -268,9 +268,11 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
 - **Sync failure.** When the sync after the end fails, the Thread does not complete. The next scan
   applies the entries and completes the Thread.
 - **Disconnect.** When the channel closes before the run ends, the launch waits without an event.
-  The Thread keeps its last status. A `stop` or a `cancel` while the channel is closed ends the wait
-  without an event. ROW-97 adds the reconnect.
-- **Controls.** `stop` submits `stop-thread`, and `cancel` submits `cancel-thread`. A remote worker
+  The Thread keeps its last status. It does not become `failed` or `interrupted`. See
+  [Disconnects and reconnects](#disconnects-and-reconnects).
+- **Controls.** `stop` submits `stop-thread`, and `cancel` submits `cancel-thread`. When the host has
+  no open channel, or the submit fails in the transport, the command goes in the queue of the host. A
+  remote worker
   cannot get a steering message: `steer` gives a `ConflictError`. The manager keeps the control on the
   active worker from the start of the launch, so that a stop reaches the host also before the session
   opens.
@@ -282,6 +284,69 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
   `runtime/hosts/<host>/threads/<thread-id>/base.json`: `{ version, threadId, host, sentAt, files,
   attachments }`. The file has mode 0600, and its folders have mode 0700. ROW-98 uses it for the
   inbound updates.
+
+## Disconnects and reconnects
+
+The factory continues when a worker host disconnects and connects again while the daemon runs. See
+the Spec `remote-worker-hosts`, section "Disconnects".
+
+- **Heartbeat.** The manager sends a heartbeat to each worker host of `workerHosts` with the state
+  `connected`. A heartbeat is one `rowbly host ping <project-id>` request. The host gives its versions
+  and the status values of its agent. The manager starts the heartbeat only when it has
+  `hostConnection` and `workerHosts`. The heartbeat has its own timer
+  (`factory-manager/host-heartbeat.ts`), not the supervisor loop. It takes no Project write lock and no
+  state lock. `stopFactory` stops it. The defaults are: interval 15 seconds, request time limit 10
+  seconds, latency limit 5 seconds. Tests give the interval and the clock with the dependency
+  `hostHeartbeat`.
+- **Host states.** The pure function `nextHostState` in `remote-executor/remote-heartbeat.ts` gives
+  the state after each heartbeat:
+
+  | State              | Condition                                                            |
+  | ------------------ | -------------------------------------------------------------------- |
+  | `connected`        | The heartbeat succeeded with a latency of 5 seconds or less.         |
+  | `degraded`         | One or two failed heartbeats in a row, or a latency above 5 seconds. |
+  | `disconnected`     | Three or more failed heartbeats in a row.                            |
+  | `version-mismatch` | A `HostVersionMismatchError`, or the host gives different versions.  |
+  | `auth-failed`      | A `HostAuthFailedError`.                                             |
+
+  The manager keeps the state, `lastSeenAt` and the latency of each host in `hostHealth` of the
+  manager state. The state that the manager uses is the state of `workerHosts` when it is not
+  `connected`, else the heartbeat state. Before the first heartbeat, it is the state of `workerHosts`.
+  `workerHosts` can also give `not-ready`. Only a `connected` host gets new work.
+- **No failure on a disconnect.** A disconnect does not change the status of a remote Thread. The
+  launch waits, and the Story keeps the reason `waiting for host sync`.
+- **Cut during the launch.** A transport error before the `launch` or `resume` command has a request
+  id fails the launch with the error code of the host, for example `HOST_UNREACHABLE`. It is never
+  `NETWORK`, and it does not pause the provider of the model. After the request id is set, a transport
+  error of the submit does not fail the run. The same command, with the same request id, goes in the
+  queue, and the run waits. The host agent gives one effect for a request id that arrives two times.
+- **Command queue.** A command that cannot go to the host waits in
+  `runtime/hosts/<host>/commands.json` (`remote-executor/host-command-queue.ts`). Each command keeps
+  its request id. A command leaves the queue only after the host gave its receipt for the submit. A
+  stop or a cancel of a Thread removes the queued `launch` or `resume` of that Thread. Then the wait of
+  that run ends, because the main machine cannot know if the run started.
+- **Stop and cancel.** A `stop` while the host is disconnected goes in the queue, and the run keeps its
+  wait until the reconnect. A `cancel` while the host is disconnected goes in the queue, and the wait
+  ends. The Thread keeps its last status.
+- **Reconnect.** When the heartbeat of a host gives `connected`, the manager calls `reconnect(host)` of
+  the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands, an
+  active run without a channel, or a run that waits for the sync, the executor does these steps:
+  1. It submits each queued `stop-thread` and `cancel-thread`, in the order of arrival. Then it
+     submits the other queued commands.
+  2. It opens the `host attach` channel again for the active runs. The host sends the status, each
+     receipt and the run state of each Thread again. The run state stays across channels, so a value
+     that was sent before sends no event.
+  3. It applies the outbox of the host with `syncHosts`.
+
+  Thus a run that ended on the host while it was offline completes one time.
+- **Factory stop.** `stopFactory` calls `shutdown` of the remote executor before it waits for the
+  active workers. For each active remote run, a host with an open channel gets `stop-thread`, and the
+  run ends as usual, with the outbox sync. For a host without a channel, `stop-thread` goes in the
+  queue and the wait of the run ends at once. The wait has a time limit of 60 seconds (the dependency
+  `remoteStopTimeoutMs`). After the limit, the wait of each run ends. A stop is not an abandon: the
+  outbox entries that the host wrote before the stop are applied as usual.
+- **Not in this Story.** The recovery after a restart of the daemon, the resume of a remote Thread
+  only on its own host and the network resume of remote Threads come with ROW-117.
 
 ## Prerequisites and limits
 

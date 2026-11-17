@@ -1,6 +1,7 @@
 import { stopCheckQueue } from "../check-queue/check-queue.js";
 import { releaseFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import { getThread } from "../thread/thread.js";
+import { LOCAL_HOST } from "../thread/thread-types.js";
 import { changeThread, getState, isActiveStatus, type Manager, serial, setState } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
 
@@ -25,17 +26,24 @@ async function stopFactory(manager: Manager): Promise<void> {
   state.unwatch?.();
   clearInterval(state.timer);
   clearInterval(state.heartbeat);
+  clearInterval(state.hostHeartbeat);
   clearTimeout(state.deadlineTimer);
   state.wake?.();
 
-  const workers = [...state.active.values()];
+  // The remote executor stops the workers of the worker hosts. It waits for each run on a connected host.
+  const workers = [...state.active.values()].filter((worker) => worker.host === LOCAL_HOST);
 
-  await Promise.all([state.supervisor?.session.abort(), ...workers.map((a) => a.control?.stop())]);
+  await Promise.all([
+    state.supervisor?.session.abort(),
+    ...workers.map((a) => a.control?.stop()),
+    manager.remote?.shutdown(manager.deps.remoteStopTimeoutMs),
+  ]);
   // No check process stays alive after a stop.
   await stopCheckQueue(manager.checks);
   await getState(manager).loopDone;
   // A Git merge or push must complete before the write lock goes away with this process.
   await getState(manager).syncTask;
+  await getState(manager).heartbeatTask;
   await Promise.all([...getState(manager).active.values()].map((a) => a.task));
   await getState(manager).supervisor?.close();
 

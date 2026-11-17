@@ -13,30 +13,32 @@ import {
   type CallTarget,
   cacheMissing,
   cachePut,
+  isTransportError,
   newCommandId,
   prepare,
   runPaths,
   serve,
   submit,
 } from "./remote-calls.js";
-import { closeIdleLink, ensureLink, hostRuns, linkOpen } from "./remote-channel.js";
-import {
-  endSyncedRuns,
-  endWait,
-  failRun,
-  newRemoteRun,
-  type RunHooks,
-  takeReceipt,
-  waitForAbort,
-  waitsForSync,
-} from "./remote-run.js";
+import { closeIdleLink, ensureLink } from "./remote-channel.js";
+import { enqueueCommand, hooksOf, targetOf } from "./remote-commands.js";
+import { reconnectHost } from "./remote-reconnect.js";
+import { failRun, newRemoteRun, takeReceipt, waitForAbort } from "./remote-run.js";
+import { shutdownRemote, stopRemote } from "./remote-stop.js";
+import { syncHosts } from "./remote-sync.js";
 import type { RemoteEnv, RemoteExecutor, RemoteExecutorInput, RemoteRun, RemoteState } from "./remote-types.js";
 
 export type { HostConnection, RemoteExecutor, RemoteExecutorInput } from "./remote-types.js";
 
 /** Makes the executor that runs each worker of a worker host in the host agent of that host. */
 export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor {
-  const env: RemoteEnv = { input, state: new Store<RemoteState>({ runs: new Map(), links: new Map() }) };
+  const state = new Store<RemoteState>({
+    runs: new Map(),
+    links: new Map(),
+    queueChain: Promise.resolve(),
+    reconnects: new Map(),
+  });
+  const env: RemoteEnv = { input, state };
 
   return {
     launch: (launch, events) => launchRemote(env, launch, events),
@@ -44,15 +46,9 @@ export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor
     cancel: (threadId) => stopRemote(env, threadId, "cancel"),
     steer: () => Promise.reject(new ConflictError("A worker on a worker host cannot get a steering message")),
     syncHosts: () => syncHosts(env),
+    reconnect: (host) => reconnectHost(env, host),
+    shutdown: (timeoutMs) => shutdownRemote(env, timeoutMs),
   };
-}
-
-function hooksOf(env: RemoteEnv): RunHooks {
-  return { sync: env.input.sync, stopHost: (run) => stopOnHost(env, run, "stop-thread") };
-}
-
-async function targetOf(env: RemoteEnv, host: string): Promise<CallTarget> {
-  return { connection: await env.input.connect(host), projectId: env.input.projectId };
 }
 
 /** Runs one remote worker. Resolves when the run ended and its outbox is applied, or when the wait ends. */
@@ -108,7 +104,7 @@ async function startRemote(env: RemoteEnv, run: RemoteRun, launch: WorkerLaunch)
   await writeBase(env, run, copy);
   await serve(target, env.input.maxWorkers(run.host));
   await ensureLink(env, run.host, target.connection, hooksOf(env));
-  await submitLaunch(target, run, launch);
+  await submitLaunch(env, target, run, launch);
 }
 
 async function writeBase(env: RemoteEnv, run: RemoteRun, copy: ThreadCopy): Promise<void> {
@@ -138,8 +134,12 @@ async function uploadAttachment(env: RemoteEnv, target: CallTarget, attachment: 
   await cachePut(target, attachment.id, await readFile(join(dir, attachment.file)));
 }
 
-/** Submits the `launch` command, or `resume` for a Thread with more than one run. One launch submits one command. */
-async function submitLaunch(target: CallTarget, run: RemoteRun, launch: WorkerLaunch): Promise<void> {
+/**
+ * Submits the `launch` command, or `resume` for a Thread with more than one run. One launch submits one command. When
+ * the submit fails in the transport, the host can have the command or not. The same command, with the same id, goes
+ * in the queue of the host, and the run waits for the reconnect.
+ */
+async function submitLaunch(env: RemoteEnv, target: CallTarget, run: RemoteRun, launch: WorkerLaunch): Promise<void> {
   if (run.store.current.stopRequested) {
     throw new ConflictError(`The worker was stopped before the launch on host ${run.host}`);
   }
@@ -149,72 +149,18 @@ async function submitLaunch(target: CallTarget, run: RemoteRun, launch: WorkerLa
 
   run.store.update(() => ({ commandId }));
 
-  const receipt = await submit(target, kind, run.threadId, commandId);
-
-  if (receipt) {
-    takeReceipt(run, receipt);
-  }
-}
-
-/** Submits `stop-thread` or `cancel-thread` for the run. */
-async function stopOnHost(env: RemoteEnv, run: RemoteRun, type: "stop-thread" | "cancel-thread"): Promise<void> {
-  await submit(await targetOf(env, run.host), type, run.threadId);
-}
-
-/**
- * Stops a remote run. With an open channel, the host stops the run and sends its end. Without a channel, the wait of
- * the launch ends without an event, so that the Thread keeps its last status.
- */
-async function stopRemote(env: RemoteEnv, threadId: string, kind: "stop" | "cancel"): Promise<void> {
-  const run = env.state.current.runs.get(threadId);
-
-  if (!run || run.store.current.closed) {
-    return;
-  }
-
-  run.store.update((state) => ({ stopRequested: state.stopRequested ?? kind }));
-
-  if (!run.store.current.commandId) {
-    return;
-  }
-
-  if (!linkOpen(env, run.host)) {
-    endWait(run);
-    return;
-  }
-
-  await stopOnHost(env, run, kind === "stop" ? "stop-thread" : "cancel-thread").catch(() => endWait(run));
-}
-
-/** True when the outbox of the host can be applied now. A run before its session waits for its session first. */
-function canSync(runs: readonly RemoteRun[]): boolean {
-  return runs.some(waitsForSync) || runs.every((run) => run.store.current.sessionOpened);
-}
-
-/** Applies the outbox of one host, then ends the runs that waited for the sync. Gives the problem of a failure. */
-async function syncHost(env: RemoteEnv, host: string): Promise<[string, string | undefined]> {
-  const runs = hostRuns(env, host).filter((run) => !run.store.current.closed);
-
-  if (runs.length === 0 || !canSync(runs)) {
-    return [host, undefined];
-  }
-
-  const waiting = runs.filter(waitsForSync);
-
   try {
-    await env.input.sync(host);
+    const receipt = await submit(target, kind, run.threadId, commandId);
+
+    if (receipt) {
+      takeReceipt(run, receipt);
+    }
   } catch (error) {
-    return [host, error instanceof Error ? error.message : String(error)];
+    if (!isTransportError(error)) {
+      throw error;
+    }
+
+    run.store.update(() => ({ launchQueued: true }));
+    await enqueueCommand(env, run.host, { type: kind, threadId: run.threadId, id: commandId });
   }
-
-  await endSyncedRuns(waiting);
-
-  return [host, undefined];
-}
-
-async function syncHosts(env: RemoteEnv): Promise<ReadonlyMap<string, string>> {
-  const hosts = [...new Set([...env.state.current.runs.values()].map((run) => run.host))];
-  const results = await mapInOrder(hosts, (host) => syncHost(env, host));
-
-  return new Map(results.filter((result): result is [string, string] => result[1] !== undefined));
 }
