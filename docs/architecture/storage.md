@@ -563,7 +563,8 @@ its rules, in the order of the check:
 
 A remote worker writes to a copy of the Project on its host. With `ROWBLY_OUTBOX`, the CLI records
 each Story write and each attachment write in the outbox folder of the host. The main machine applies the entries to the board
-later. The folder is not in `.rowbly/`.
+later. The folder is not in `.rowbly/`. See
+[native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 
 ```
 $ROWBLY_OUTBOX/
@@ -798,7 +799,8 @@ apply in one place.
 - `hosts` is the list of the worker hosts of the user. `rowbly host` changes it. A missing key is an
   empty list. If the value is not an array, or an entry does not have the four fields with the
   correct types, the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
-  A write keeps the other keys of each entry.
+  A write keeps the other keys of each entry. See
+  [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 - `projects` of a host entry is the list of the Projects that the host uses:
   `[{ "root": string, "path": string, "managed": boolean }]`. `rowbly host use` adds a record and
   `rowbly host unuse` removes it. A missing key is an empty list.
