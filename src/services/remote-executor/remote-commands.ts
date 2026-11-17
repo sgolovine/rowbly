@@ -11,6 +11,7 @@ import {
 } from "./host-command-queue.js";
 import { type CallTarget, type CommandType, isTransportError, newCommandId, submit } from "./remote-calls.js";
 import { failRun, type RunHooks, takeReceipt } from "./remote-run.js";
+import { takeOtherRun } from "./remote-sync.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
 import { catchUpRun } from "./session-mirror.js";
 
@@ -29,12 +30,13 @@ export function hooksOf(env: RemoteEnv): RunHooks {
   return {
     sync: env.input.sync,
     stopHost: (run) => stopOnHost(env, run, "stop-thread"),
+    otherRun: (host, frame) => takeOtherRun(env, host, frame),
     catchUp: (run) => catchUpRun(env, run),
   };
 }
 
 /** Runs a change of a queue file after the earlier changes, so that two changes do not lose a command. */
-function withQueueLock<T>(env: RemoteEnv, action: () => Promise<T>): Promise<T> {
+export function withQueueLock<T>(env: RemoteEnv, action: () => Promise<T>): Promise<T> {
   const next = env.state.current.queueChain.then(action);
 
   env.state.update(() => ({

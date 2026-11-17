@@ -7,6 +7,7 @@ import type { HostRunPaths } from "../host-agent/host-agent-paths.js";
 import type { HostPrepareInput, HostPrepareResult } from "../host-agent/host-agent-prepare.js";
 import { HostProtocolError } from "../host-transport/host-errors.js";
 import type { HostVersions, RemoteCommand } from "../host-transport/host-transport.js";
+import type { InboundUpdate } from "../inbound/inbound-types.js";
 import type { HostConnection } from "./remote-types.js";
 
 /** The host and the project id of the calls. */
@@ -89,6 +90,35 @@ export async function runPaths(target: CallTarget, threadId: string, storyId: st
 /** Writes the copy and the launch data of the Thread on the host. */
 export function prepare(target: CallTarget, input: HostPrepareInput): Promise<HostPrepareResult> {
   return request<HostPrepareResult>(target, command(target, "prepare"), input, PREPARE_TIMEOUT_MS);
+}
+
+/** The text of the error of a Thread that is not prepared on the host. */
+const NOT_PREPARED = "is not prepared on this host";
+
+/** Sends the inbound updates of the Thread to the host. Gives the last applied `seq` of the Thread on the host. */
+export async function inbound(
+  target: CallTarget,
+  threadId: string,
+  updates: readonly InboundUpdate[],
+): Promise<number> {
+  const answer = await request<{ appliedSeq?: unknown } | null>(
+    target,
+    command(target, "inbound"),
+    { threadId, updates },
+    PREPARE_TIMEOUT_MS,
+  );
+  const seq = answer?.appliedSeq;
+
+  if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < 0) {
+    throw new HostProtocolError("The answer of `rowbly host inbound` has no applied seq");
+  }
+
+  return seq;
+}
+
+/** True when the host refused a call because the Thread is not prepared on it. */
+export function isNotPrepared(error: unknown): boolean {
+  return error instanceof HostProtocolError && error.message.includes(NOT_PREPARED);
 }
 
 /** Starts the host agent of the Project, unless a live agent runs. */

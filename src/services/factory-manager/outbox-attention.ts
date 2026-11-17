@@ -1,7 +1,14 @@
 // The supervisor step that applies the outbox of one worker host and sets an attention entry for each conflict.
 
-import { type OutboxConflict, type SyncOutboxResult, syncOutbox } from "../outbox-apply/outbox-apply.js";
+import {
+  type OutboxConflict,
+  type RunInOrder,
+  type SyncOutboxResult,
+  syncOutbox,
+} from "../outbox-apply/outbox-apply.js";
 import type { OutboxSource } from "../outbox-apply/outbox-source.js";
+import { heldAttention } from "./abandoned-attention.js";
+import { abandonedHolds, type ManagerHold } from "./abandoned-threads.js";
 import { type Attention, type Manager, serial, setState } from "./manager-state.js";
 
 const VALUE_LIMIT = 200;
@@ -63,14 +70,28 @@ function withAttention(
 }
 
 /**
- * Applies the outbox of one worker host under the Project write lock, in the lifecycle order of the manager. Then,
- * after the lock is free, it sets the attention entry `outbox:<storyId>` for each Story with a conflict.
+ * Applies the outbox of one worker host under the Project write lock, in the lifecycle order of the manager. The apply
+ * holds the later entries of each abandoned Thread of the host. Then, after the lock is free, it sets the attention
+ * entry `outbox:<storyId>` for each Story with a conflict, and `abandoned:<threadId>` for each Thread with new held
+ * entries.
  */
 export async function syncHostOutbox(manager: Manager, host: string, source: OutboxSource): Promise<SyncOutboxResult> {
-  const result = await syncOutbox({ host, source, inOrder: (call) => serial(manager, call) }, manager.ctx);
-  const entries = outboxAttention(result.conflicts);
+  const abandoned = await abandonedHolds(manager, host);
+  const result = await syncOutbox({ host, source, inOrder: inLifecycle(manager), abandoned }, manager.ctx);
+  const held = await heldAttention(manager.paths, host, result.held ?? [], (id) => storyOfHold(abandoned, id));
+  const entries = new Map([...outboxAttention(result.conflicts), ...held]);
 
   setState(manager, (state) => ({ attention: withAttention(state.attention, entries) }));
 
   return result;
+}
+
+/** Gives the call that runs the locked apply in the lifecycle order of the manager. */
+function inLifecycle(manager: Manager): RunInOrder {
+  return (call) => serial(manager, call);
+}
+
+/** Gives the Story of the abandoned Thread. */
+function storyOfHold(holds: readonly ManagerHold[], threadId: string): string | undefined {
+  return holds.find((hold) => hold.threadId === threadId)?.storyId;
 }
