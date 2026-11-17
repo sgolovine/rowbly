@@ -2,10 +2,10 @@ import { Box } from "ink";
 import { useIsActive, useLayout } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import { ConfirmDialog } from "../confirm-dialog/index.js";
-import { EditorModeTab } from "../editor-mode-tab/index.js";
 import { MarkdownView } from "../markdown-view/index.js";
 import { Modal, modalSize } from "../modal/index.js";
 import { SaveStatus } from "../save-status/index.js";
+import { Tab } from "../tab/index.js";
 import { TextArea } from "../text-area/index.js";
 import { type EditorMode, useEditorState } from "./use-editor-state.js";
 
@@ -72,8 +72,20 @@ export function FullScreenEditor({
       onClose={editor.confirming ? undefined : editor.close}
     >
       <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
-        <EditorModeTab label="View" selected={mode === "view"} active={keys} onClick={() => editor.setMode("view")} />
-        <EditorModeTab label="Edit" selected={mode === "edit"} active={keys} onClick={() => editor.setMode("edit")} />
+        <Tab
+          variant="subtle"
+          label="View"
+          selected={mode === "view"}
+          active={keys}
+          onClick={() => editor.setMode("view")}
+        />
+        <Tab
+          variant="subtle"
+          label="Edit"
+          selected={mode === "edit"}
+          active={keys}
+          onClick={() => editor.setMode("edit")}
+        />
         <SaveStatus save={editor.save} dirty={editor.dirty} />
       </Box>
       {mode === "view" ? (
