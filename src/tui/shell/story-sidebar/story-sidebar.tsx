@@ -151,9 +151,9 @@ export const StorySidebar = memo(function StorySidebar(props: StorySidebarProps)
           <ResizeEdge
             target={ref}
             side="left"
-            width={width}
-            minWidth={STORY_SIDEBAR_MIN_WIDTH}
-            maxWidth={props.maxWidth}
+            size={width}
+            minSize={STORY_SIDEBAR_MIN_WIDTH}
+            maxSize={props.maxWidth}
             active={mouse}
             onResize={props.onResize}
           />

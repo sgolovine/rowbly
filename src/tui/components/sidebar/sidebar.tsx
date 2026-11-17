@@ -5,7 +5,7 @@ import { theme } from "../../theme.js";
 import { Button, type ButtonProps } from "../button/index.js";
 import { Panel } from "../panel/index.js";
 import { ResizeEdge } from "../resize-edge/index.js";
-import { SIDEBAR_CHROME_HEIGHT, SIDEBAR_MIN_WIDTH } from "../shell-layout.js";
+import { SIDEBAR_CHROME_HEIGHT, SIDEBAR_MIN_HEIGHT, SIDEBAR_MIN_WIDTH } from "../shell-layout.js";
 import { type SidebarEntry, SidebarRow, type SidebarRowEnv } from "../sidebar-row/index.js";
 
 interface SidebarProps {
@@ -18,6 +18,10 @@ interface SidebarProps {
   width: number;
   maxWidth: number;
   onResize?(width: number): void;
+  /** The most rows that a drag of the top edge can give the sidebar. */
+  maxHeight?: number;
+  /** A drag of the top edge calls it with the new height. Without it, the top edge does not drag. */
+  onResizeHeight?(height: number): void;
   focused: boolean;
   clickable: boolean;
   onFocus(): void;
@@ -52,7 +56,8 @@ function moreText(arrow: string, count: number): string {
  * shows the `1`–`9` keys that pick a Board. A click in it calls `onFocus`; while `focused`, its border
  * lights up and the shell gives it `↑`/`↓` and `n`, which the button shows. Dragging its right edge
  * calls `onResize` with the new width, no wider than `maxWidth` nor narrower than `SIDEBAR_MIN_WIDTH`;
- * without `onResize`, the edge does not drag. When there are more entries than `height` fits, the sidebar
+ * without `onResize`, the edge does not drag. In the same way, dragging its top edge calls `onResizeHeight` with
+ * the new height, between `SIDEBAR_MIN_HEIGHT` and `maxHeight`. When there are more entries than `height` fits, the sidebar
  * shows the entries around `current` and says how many more are above and below, and the wheel selects.
  * A click on the `✎` of an `editable` entry focuses the sidebar and calls `onEdit`. A `movable` entry
  * dropped on another row focuses the sidebar and calls `onMove` with the index of that row.
@@ -67,6 +72,8 @@ export const Sidebar = memo(function Sidebar({
   width,
   maxWidth,
   onResize,
+  maxHeight,
+  onResizeHeight,
   focused,
   clickable,
   onFocus,
@@ -122,11 +129,22 @@ export const Sidebar = memo(function Sidebar({
         <ResizeEdge
           target={ref}
           side="right"
-          width={width}
-          minWidth={SIDEBAR_MIN_WIDTH}
-          maxWidth={maxWidth}
+          size={width}
+          minSize={SIDEBAR_MIN_WIDTH}
+          maxSize={maxWidth}
           active={clickable}
           onResize={onResize}
+        />
+      )}
+      {onResizeHeight && height !== undefined && (
+        <ResizeEdge
+          target={ref}
+          side="top"
+          size={height}
+          minSize={SIDEBAR_MIN_HEIGHT}
+          maxSize={maxHeight ?? height}
+          active={clickable}
+          onResize={onResizeHeight}
         />
       )}
     </Box>
