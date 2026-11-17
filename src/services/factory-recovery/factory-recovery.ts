@@ -11,7 +11,13 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { getStory } from "../story/story.js";
-import { listThreads, projectNativeAttempt, type ThreadRecord, transitionThread } from "../thread/thread.js";
+import {
+  LOCAL_HOST,
+  listThreads,
+  projectNativeAttempt,
+  type ThreadRecord,
+  transitionThread,
+} from "../thread/thread.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 /** Marks the adopted external attempts interrupted. All other attempts stay the same. */
@@ -55,7 +61,15 @@ async function interruptThread(paths: ProjectPaths, thread: ThreadRecord, ctx: S
   );
 }
 
-/** Checks the ownership again, interrupts the Thread of a dead owner and repairs its projection. */
+/** True when the Thread runs on a worker host. Its run can continue on the host after the owner died. */
+function isRemote(thread: ThreadRecord): boolean {
+  return !!thread.host && thread.host !== LOCAL_HOST;
+}
+
+/**
+ * Checks the ownership again, interrupts the Thread of a dead owner and repairs its projection. A Thread on a worker
+ * host keeps its status: the new manager adopts its run.
+ */
 async function recoverThread(
   paths: ProjectPaths,
   token: string,
@@ -64,7 +78,7 @@ async function recoverThread(
 ): Promise<void> {
   await assertFactoryOwnership(paths, token);
 
-  if (["pending", "running"].includes(thread.status) && thread.runs.at(-1)?.ownerToken !== token) {
+  if (["pending", "running"].includes(thread.status) && thread.runs.at(-1)?.ownerToken !== token && !isRemote(thread)) {
     await interruptThread(paths, thread, ctx);
   }
 

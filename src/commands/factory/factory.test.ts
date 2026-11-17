@@ -193,6 +193,62 @@ describe("factory commands", () => {
     expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
     expect(await project.read("rowbly.config.json")).toBe(before);
   });
+  describe("configure fallback worker models", () => {
+    const cli = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);
+    const seed = { maxWorkers: 2, workerModel: { provider: "faux", modelId: "test" }, git: { push: true } };
+
+    it("replaces the list in order, keeps the other keys, and clears it", async () => {
+      vi.spyOn(agentAuth, "authRuntime").mockResolvedValue({} as agentAuth.AuthRuntime);
+      const validate = vi
+        .spyOn(agentAuth, "validateModelChoice")
+        .mockImplementation(async (_runtime, choice) => choice);
+      await writeFactory(JSON.stringify(seed));
+      const config = JSON.parse(await project.read("rowbly.config.json"));
+      const set = await cli("--fallback-worker", "a/x", "--fallback-worker", "b/y");
+      expect(set.exitCode).toBe(0);
+      expect(validate).toHaveBeenCalledTimes(2);
+      const written = JSON.parse(await project.read("rowbly.config.json"));
+      expect(written).toEqual({
+        ...config,
+        factory: {
+          ...seed,
+          fallbackWorkerModels: [
+            { provider: "a", modelId: "x" },
+            { provider: "b", modelId: "y" },
+          ],
+        },
+      });
+      expect((await cli("--fallback-worker", "c/z")).exitCode).toBe(0);
+      expect((await readFactory()).fallbackWorkerModels).toEqual([{ provider: "c", modelId: "z" }]);
+      const cleared = await cli("--clear-fallback-workers");
+      expect(cleared.exitCode).toBe(0);
+      expect(await readFactory()).toEqual(seed);
+      expect(JSON.parse(cleared.stdout)).not.toHaveProperty("fallbackWorkerModels");
+    });
+    it("rejects invalid values and flag sets without a write", async () => {
+      vi.spyOn(agentAuth, "authRuntime").mockResolvedValue({} as agentAuth.AuthRuntime);
+      vi.spyOn(agentAuth, "validateModelChoice").mockImplementation(async (_runtime, choice) => choice);
+      await writeFactory(JSON.stringify(seed));
+      const before = await project.read("rowbly.config.json");
+      const invalid = [
+        ["--fallback-worker", "a/x", "--fallback-worker", "nomodel"],
+        ["--fallback-worker", "/x"],
+        ["--fallback-worker", "a/"],
+        ["--fallback-worker", "a/x", "--clear-fallback-workers"],
+        ["--stage", "BACKLOG", "--worker", "a/b", "--fallback-worker", "a/x"],
+        ["--stage", "BACKLOG", "--clear-worker", "--clear-fallback-workers"],
+        ["--story", "ROW-1", "--fallback-worker", "a/x"],
+        ["--clear-worker", "--clear-fallback-workers"],
+        ["--clear-worker", "--fallback-worker", "a/x"],
+      ];
+      for (const args of invalid) {
+        const result = await cli(...args);
+        expect(result.exitCode, args.join(" ")).toBe(1);
+        expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+      }
+      expect(await project.read("rowbly.config.json")).toBe(before);
+    });
+  });
   describe("configure Git settings", () => {
     const readSettings = readFactory;
     const configure = (...args: string[]) => runCli(["--json", "factory", "configure", ...args], project.paths.root);

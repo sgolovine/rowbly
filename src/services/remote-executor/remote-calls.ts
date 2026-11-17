@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import type { HostReceipt } from "../host-agent/host-agent-control.js";
 import type { HostRunPaths } from "../host-agent/host-agent-paths.js";
 import type { HostPrepareInput, HostPrepareResult } from "../host-agent/host-agent-prepare.js";
+import type { HostRunState } from "../host-agent/host-run-state.js";
 import { HostProtocolError } from "../host-transport/host-errors.js";
 import type { HostVersions, RemoteCommand } from "../host-transport/host-transport.js";
 import type { InboundUpdate } from "../inbound/inbound-types.js";
@@ -152,6 +153,19 @@ export async function ping(target: CallTarget, timeoutMs: number): Promise<HostV
   }
 
   return { protocol: answer.protocol, rowbly: answer.rowbly };
+}
+
+/** Gives the run state of each requested Thread that has one on the host. */
+export async function runStates(target: CallTarget, threadIds: readonly string[]): Promise<readonly HostRunState[]> {
+  const answer = await request<{ runs?: unknown } | null>(target, command(target, "runs"), { threadIds });
+
+  if (!Array.isArray(answer?.runs)) {
+    throw new HostProtocolError("The answer of `rowbly host runs` has no list of runs");
+  }
+
+  return answer.runs.filter(
+    (run): run is HostRunState => typeof run?.threadId === "string" && typeof run.requestId === "string",
+  );
 }
 
 /**

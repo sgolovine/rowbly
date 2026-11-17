@@ -2,7 +2,7 @@ import { stat } from "node:fs/promises";
 import { isHostTransportError } from "../host-transport/host-errors.js";
 import { RemoteRunError } from "../remote-executor/run-frames.js";
 import type { Story } from "../story/story.js";
-import type { ThreadRecord } from "../thread/thread.js";
+import { LOCAL_HOST, type ThreadRecord } from "../thread/thread.js";
 import { isConnectivityError } from "./connectivity.js";
 
 /** The error code of a worker Thread that failed because the connection to its provider failed. */
@@ -88,6 +88,15 @@ function isDirectory(path: string | undefined): Promise<boolean> {
   );
 }
 
+/** Tells if the worktree of a local Thread exists. The worktree of a Thread on a worker host is on that host. */
+function worktreePresent(thread: ThreadRecord): Promise<boolean> {
+  if ((thread.host ?? LOCAL_HOST) !== LOCAL_HOST) {
+    return Promise.resolve(true);
+  }
+
+  return isDirectory(thread.worktree);
+}
+
 /**
  * Gives the network Threads that the manager can resume, also after a check of the worktree. The policy starts
  * no new Thread for their Stories. A Thread that cannot resume lets the normal policy retry start.
@@ -97,7 +106,7 @@ export async function networkWaitingThreads(
   stories: readonly Story[],
 ): Promise<ThreadRecord[]> {
   const candidates = resumableNetworkThreads(threads, stories);
-  const present = await Promise.all(candidates.map((thread) => isDirectory(thread.worktree)));
+  const present = await Promise.all(candidates.map((thread) => worktreePresent(thread)));
 
   return candidates.filter((_, index) => present[index]);
 }

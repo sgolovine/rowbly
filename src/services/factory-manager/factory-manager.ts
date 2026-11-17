@@ -36,6 +36,7 @@ import {
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
 import { createManagerRemote } from "./remote-dispatch.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
+import { adoptRemoteThreads } from "./worker-adopt.js";
 import { openCheckQueue } from "./worker-checks.js";
 import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
 import { steerWorker } from "./worker-steer.js";
@@ -89,6 +90,8 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 
+  // Before the first supervisor turn, so that the remote runs of a previous daemon count and are not started again.
+  await adoptRemoteThreads(manager);
   startHostHeartbeat(manager);
 
   return {

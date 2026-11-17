@@ -38,6 +38,7 @@ const resources = {
     "prepare",
     "inbound",
     "ping",
+    "runs",
     "session-bytes",
     "attach",
   ],
@@ -59,6 +60,7 @@ const hidden = [
   "prepare",
   "inbound",
   "ping",
+  "runs",
   "session-bytes",
 ];
 

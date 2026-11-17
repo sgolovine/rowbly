@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RemoteCommand } from "../host-transport/host-transport.js";
 import { createFakeHostTransport } from "../test-project/fake-host-transport.js";
-import { cacheMissing, cachePut, runPaths, serve, submit } from "./remote-calls.js";
+import { cacheMissing, cachePut, runPaths, runStates, serve, submit } from "./remote-calls.js";
 
 const ROWBLY = "/opt/rowbly/bin/rowbly";
 
@@ -52,5 +52,21 @@ describe("remote calls", () => {
     });
     await expect(runPaths(target, "t1", "ROW-1")).rejects.toMatchObject({ code: "HOST_PROTOCOL" });
     await expect(cachePut(target, "a1", Buffer.from("x"))).rejects.toMatchObject({ code: "HOST_PROTOCOL" });
+  });
+
+  it("asks the host for the run states of Threads, and refuses an answer without a list", async () => {
+    const calls: [RemoteCommand, unknown][] = [];
+    const answers = [{ runs: [{ threadId: "t1", requestId: "c1" }, { threadId: 3 }] }, {}];
+    const transport = createFakeHostTransport({
+      request: (command, input) => {
+        calls.push([command, input]);
+        return { exitCode: 0, value: answers.shift(), stderr: "" };
+      },
+    });
+    const target = { connection: { transport, rowbly: ROWBLY, clone: "repo" }, projectId: "p1" };
+
+    expect(await runStates(target, ["t1", "t2"])).toEqual([{ threadId: "t1", requestId: "c1" }]);
+    expect(calls).toEqual([[[ROWBLY, "host", "runs", "p1"], { threadIds: ["t1", "t2"] }]]);
+    await expect(runStates(target, ["t1"])).rejects.toMatchObject({ code: "HOST_PROTOCOL" });
   });
 });
