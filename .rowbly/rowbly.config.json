@@ -17,6 +17,10 @@
     {
       "value": "performance",
       "label": "Performance"
+    },
+    {
+      "value": "deterministic-supervisor",
+      "label": "Deterministic Supervisor"
     }
   ],
   "stages": [
