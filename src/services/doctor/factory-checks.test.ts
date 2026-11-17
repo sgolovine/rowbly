@@ -159,4 +159,32 @@ describe("doctor factory checks", () => {
     expect(config.factory).toEqual(MOVED);
     expect(await doctor({}, project.ctx)).toMatchObject({ issues: [], ok: true });
   });
+
+  it("warns about an old factory.supervisorModel key, and --fix removes only that key", async () => {
+    const model = { provider: "faux", modelId: "test" };
+    const config = JSON.parse(await project.read("rowbly.config.json"));
+    await project.write(
+      "rowbly.config.json",
+      JSON.stringify({ ...config, skills: [], factory: { maxWorkers: 2, supervisorModel: "any", workerModel: model } }),
+    );
+
+    expect((await getFactorySettings(project.ctx)).workerModel).toEqual(model);
+    expect(await factoryIssues()).toEqual([
+      {
+        severity: "warning",
+        message: "factory.supervisorModel is no longer used. The factory ignores it",
+        file: configFile,
+        fix: "Remove the key",
+        fixed: false,
+      },
+    ]);
+
+    expect(await factoryIssues(true)).toEqual([expect.objectContaining({ fixed: true })]);
+    expect(JSON.parse(await project.read("rowbly.config.json"))).toEqual({
+      ...config,
+      skills: [],
+      factory: { maxWorkers: 2, workerModel: model },
+    });
+    expect(await factoryIssues()).toEqual([]);
+  });
 });

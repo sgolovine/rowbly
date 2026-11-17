@@ -15,7 +15,7 @@ import type { ServiceContext } from "../../../../services/workspace/workspace.js
 import type { FormValues } from "../../../components/index.js";
 import { type AsyncState, showToast, type ToastStore } from "../../../hooks/index.js";
 import { moveDelta } from "../../../keymap.js";
-import { type AiPage, type AiProvider, type AiStatus, type AiTask, modelText, nextTab, type Role } from "../ai-view.js";
+import { type AiPage, type AiProvider, type AiStatus, type AiTask, modelText, nextTab } from "../ai-view.js";
 
 /** What the handlers of the AI settings read and change. */
 export interface AiEnv {
@@ -84,10 +84,10 @@ export function finishSignIn(env: AiEnv, signedIn: boolean): void {
   }
 }
 
-/** Saves the model of a role. `null` clears it, so that Pi selects its default. */
-export async function saveModel(env: AiEnv, role: Role, choice: ModelChoice | null): Promise<void> {
-  await updateFactorySettings({ [`${role}Model`]: choice ?? undefined }, env.ctx);
-  showToast(env.toast, "info", `Saved the ${role} model: ${modelText(choice ?? undefined)}`);
+/** Saves the worker model. `null` clears it, so that Pi selects its default. */
+export async function saveModel(env: AiEnv, choice: ModelChoice | null): Promise<void> {
+  await updateFactorySettings({ workerModel: choice ?? undefined }, env.ctx);
+  showToast(env.toast, "info", `Saved the worker model: ${modelText(choice ?? undefined)}`);
   finishTask(env, true);
 }
 
@@ -189,7 +189,7 @@ export function pickProvider(env: AiEnv, id: string): void {
 }
 
 /**
- * The keys of the AI settings. `←/→` change the tab. `s`, `w` and `l` work on each page, so that the keys of
+ * The keys of the AI settings. `←/→` change the tab. `w` and `l` work on each page, so that the keys of
  * the earlier screen stay. On the Limits tab, `u` switches the move of stuck upstream Stories. The list of the sign-in page takes `enter`: its `onSelect` starts the sign-in.
  */
 export function handleAiKey(env: AiEnv, input: string, key: Key): void {
@@ -203,8 +203,8 @@ export function handleAiKey(env: AiEnv, input: string, key: Key): void {
     return;
   }
 
-  if ((input === "s" || input === "w") && env.ready) {
-    env.setTask({ kind: "model", role: input === "s" ? "supervisor" : "worker" });
+  if (input === "w" && env.ready) {
+    env.setTask({ kind: "model" });
 
     return;
   }

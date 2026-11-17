@@ -23,8 +23,8 @@ The Project is the top-level concept. Rowbly keeps all of its data in a Project.
 level" is data at the Project level. Each Project has a configuration that sets how the Project
 operates. The configuration contains the custom fields, the tags and the Stages of the Project.
 
-A Project also has user prompts in `.rowbly/prompts/`. The Project prompt goes to all agents of the
-factory. The Supervisor prompt and the Worker prompt go to one role. See [prompts.md](prompts.md).
+A Project also has user prompts in `.rowbly/prompts/`. The Project prompt and the Worker prompt go to all
+workers of the factory. See [prompts.md](prompts.md).
 
 ## Story
 
@@ -85,7 +85,7 @@ tab between the General tab and the Attachments tab.
 ## Factory
 
 The native factory runs independent Pi workers in a separate daemon. The manager starts the workers
-from the decisions of the policy, with no supervisor session. The manager controls ownership, worker
+from the decisions of the policy. The manager controls ownership, worker
 slots, worktrees, sessions, commands and recovery.
 
 Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
@@ -107,8 +107,8 @@ See [native-factory/threads-and-history.md](native-factory/threads-and-history.m
 ## Factory activity
 
 The factory activity shows the workers in `.rowbly/state.json` for the current Stage of each Story.
-The native factory writes this file under the state lock. An old external supervisor can also write
-it. The activity reader does not examine if a worker is alive. The native factory controls examine
+The native factory writes this file under the state lock. An old copy of the external `factory` skill can
+also write it. The activity reader does not examine if a worker is alive. The native factory controls examine
 daemon ownership separately.
 
 See [native-factory/factory-activity.md](native-factory/factory-activity.md).

@@ -8,6 +8,7 @@ import {
   fold,
   selectStage,
   selectStory,
+  selectTag,
   toggleMode,
   toggleSidebar,
 } from "./shell-selection.js";
@@ -63,6 +64,15 @@ function sidebarKey(env: ShellEnv, input: string, delta: number, shift: -1 | 0 |
     env.setOverlay({ kind: "newStage" });
   } else if (input === "e") {
     editStage(env);
+  }
+}
+
+/** The keys of the tag sidebar: `↑/↓` select the previous or next entry. */
+function tagSidebarKey(env: ShellEnv, delta: number): void {
+  const { tagIndex, tags } = env.view;
+
+  if (delta) {
+    selectTag(env, Math.max(0, Math.min(tags.length, tagIndex + delta)));
   }
 }
 
@@ -126,19 +136,28 @@ function listKey(env: ShellEnv, input: string, key: Key, delta: number, shift: -
 }
 
 /**
- * The panes that can take the focus, in the order of `tab`: the Stage sidebar, the Story list, the Story sidebar.
- * The Story list does not show while the Story sidebar is expanded, so it cannot take the focus.
+ * The panes that can take the focus, in the order of `tab`: the Stage sidebar, the tag sidebar, the Story list, the
+ * Story sidebar. The Story list does not show while the Story sidebar is expanded, so it cannot take the focus.
  */
 function paneOrder(view: ShellView, expanded: boolean): readonly Pane[] {
   const list = expanded && view.storyPane ? [] : (["stories"] as const);
 
-  return [...(view.sidebar ? (["stages"] as const) : []), ...list, ...(view.storyPane ? (["story"] as const) : [])];
+  return [
+    ...(view.sidebar ? (["stages"] as const) : []),
+    ...(view.tagSidebar ? (["tags"] as const) : []),
+    ...list,
+    ...(view.storyPane ? (["story"] as const) : []),
+  ];
 }
 
 /** The pane in focus. The Story list has the focus when no other pane has it. */
 function focusedPane(view: ShellView): Pane {
   if (view.storyFocused) {
     return "story";
+  }
+
+  if (view.tagSidebarFocused) {
+    return "tags";
   }
 
   return view.sidebarFocused ? "stages" : "stories";
@@ -153,12 +172,12 @@ export function cyclePane(view: ShellView, step: 1 | -1, expanded = false): Pane
 }
 
 /**
- * `esc` gives the focus from the Stage sidebar to the Story list, or to an expanded Story sidebar that covers the
+ * `esc` gives the focus from the Stage sidebar or the tag sidebar to the Story list, or to an expanded Story sidebar that covers the
  * list. In the Story list, it ends the range mode or clears the multi-selection first. Then it closes the Story
  * sidebar.
  */
 function escapeKey(env: ShellEnv): void {
-  if (env.view.sidebarFocused) {
+  if (env.view.sidebarFocused || env.view.tagSidebarFocused) {
     env.setPane(listPane(env));
   } else if (env.view.mode === "stories" && hasMarks(env)) {
     clearMarks(env);
@@ -169,7 +188,7 @@ function escapeKey(env: ShellEnv): void {
 
 /** The keys of the panes of an open Project: the focus, the Stage filter, then the keys of the pane in focus. */
 function paneKey(env: ShellEnv, input: string, key: Key): void {
-  const { sidebarFocused, stageIndex, stages } = env.view;
+  const { sidebarFocused, tagSidebarFocused, stageIndex, stages } = env.view;
   const delta = moveDelta(input, key);
   const shift = reorderDelta(input, key);
 
@@ -181,6 +200,8 @@ function paneKey(env: ShellEnv, input: string, key: Key): void {
     selectStage(env, (stageIndex + (input === "[" ? -1 : 1) + stages.length + 1) % (stages.length + 1));
   } else if (sidebarFocused) {
     sidebarKey(env, input, delta, shift);
+  } else if (tagSidebarFocused) {
+    tagSidebarKey(env, delta);
   } else if (env.view.mode === "stories") {
     // The Factory view takes its own keys.
     listKey(env, input, key, delta, shift);

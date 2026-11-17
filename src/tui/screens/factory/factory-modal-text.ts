@@ -2,8 +2,6 @@ import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../services/thread/thread.js";
 import type { KeyHint } from "../../keymap.js";
 
-type ThreadModel = ThreadRecord["model"];
-
 type Workers = FactoryStatus["workers"];
 type Checks = NonNullable<FactoryStatus["checks"]>;
 
@@ -21,14 +19,12 @@ export const PHASES: Readonly<Record<FactoryStatus["phase"], string>> = {
 export function factoryHints(can: {
   readonly start: boolean;
   readonly stop: boolean;
-  readonly inspect: boolean;
   readonly warnings: boolean;
   readonly aiSettings: boolean;
 }): KeyHint[] {
   return [
     ...(can.start ? [{ key: "s", description: "start" }] : []),
     ...(can.stop ? [{ key: "x", description: "stop" }] : []),
-    ...(can.inspect ? [{ key: "enter", description: "supervisor" }] : []),
     ...(can.warnings ? [{ key: "w", description: "warnings" }] : []),
     { key: "h", description: "history" },
     ...(can.aiSettings ? [{ key: "a", description: "AI settings" }] : []),
@@ -58,15 +54,6 @@ export function problemHints(can: {
   ];
 }
 
-/** The model of the supervisor. A live factory without a choice uses the Pi default. */
-export function supervisorText(model: ThreadModel, live: boolean): string {
-  if (model) {
-    return `${model.provider}/${model.modelId}`;
-  }
-
-  return live ? "Pi default" : "—";
-}
-
 /** The worker counts of a live factory, or only the limit when the factory is off. */
 export function workersText(live: boolean, workers: Workers, limit: number | undefined): string {
   if (live && workers) {
@@ -83,7 +70,7 @@ export function checksText(checks: Checks): string {
   return `${checks.running} running · ${checks.queued} queued · limit ${checks.maxConcurrent}${memory}`;
 }
 
-/** The model of a supervisor Thread in the history list. */
+/** The model of an old supervisor Thread in the history list. */
 export function historyModel(thread: ThreadRecord): string {
   return thread.model ? `${thread.model.provider}/${thread.model.modelId}` : "Pi default";
 }

@@ -10,13 +10,11 @@ export interface FactoryButtonsProps {
   readonly busy: "start" | "stop" | null;
   readonly canStart: boolean;
   readonly canStop: boolean;
-  readonly canInspect: boolean;
   /** The live factory has warnings. */
   readonly canWarnings?: boolean;
   /** False while a dialog or a different view has the keys; then the buttons do not take a click. */
   readonly idle: boolean;
   readonly onStart: () => void;
-  readonly onInspect: () => void;
   readonly onHistory: () => void;
   readonly onWarnings?: () => void;
   readonly onStop: () => void;
@@ -25,7 +23,7 @@ export interface FactoryButtonsProps {
 
 /** The buttons of the Factory controls. Each button has the key that the Modal shows in its hints. */
 export function FactoryButtons(props: FactoryButtonsProps) {
-  const { live, canLaunch, stopping, busy, canStart, canStop, canInspect, idle } = props;
+  const { live, canLaunch, stopping, busy, canStart, canStop, idle } = props;
 
   return (
     <Box flexWrap="wrap" gap={1}>
@@ -39,7 +37,6 @@ export function FactoryButtons(props: FactoryButtonsProps) {
           onClick={props.onStart}
         />
       )}
-      {canInspect && <Button label="Supervisor" keyName="enter" compact clickable={idle} onClick={props.onInspect} />}
       {props.canWarnings && props.onWarnings && (
         <Button label="Warnings" keyName="w" compact clickable={idle} onClick={props.onWarnings} />
       )}

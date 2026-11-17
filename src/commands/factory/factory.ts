@@ -18,9 +18,7 @@ import { registerCheckCommands } from "./factory-check.js";
 
 interface ConfigureOptions {
   maxWorkers?: number;
-  supervisor?: string;
   worker?: string;
-  supervisorThinking?: ModelChoice["thinkingLevel"];
   workerThinking?: ModelChoice["thinkingLevel"];
   stage?: string;
   story?: string;
@@ -183,12 +181,10 @@ function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set factory models, fallback worker models, worker limit, worker model overrides, tag worker models, Stage classes, Git commit settings, Git sync, check limits, pull-upstream and placement",
+      "Set the worker model, fallback worker models, worker limit, worker model overrides, tag worker models, Stage classes, Git commit settings, Git sync, check limits, pull-upstream and placement",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
-    .option("--supervisor <model>", "provider/model")
     .option("--worker <model>", "provider/model")
-    .option("--supervisor-thinking <level>", "supported thinking level")
     .option("--worker-thinking <level>", "supported thinking level")
     .option("--stage <key>", "select the Stage of a worker model override or of a class")
     .option("--story <id>", "with --stage, set the override of this Story in the Stage")

@@ -175,6 +175,7 @@ describe("factory messages", () => {
   it("gives a worker the system prompts, the user prompts, the Stage prompt and the run, in this order", async () => {
     await project.write("prompts/SYSTEM.md", "Use pnpm.\n");
     await project.write("prompts/WORKER.md", "Write small commits.\n");
+    // An old Supervisor prompt file stays on disk, but no message has its text.
     await project.write("prompts/SUPERVISOR.md", "Not for workers.\n");
 
     const message = await workerMessage(project.paths, run);
@@ -193,7 +194,6 @@ describe("factory messages", () => {
     expect(message).toContain("# Worker prompt\n\nWrite small commits.");
     expect(message).toContain("Story: WEB-42");
     expect(message).not.toContain("Not for workers.");
-    expect(message).not.toContain(await readSystemPrompt("supervisor"));
   });
 
   it("gives a worker the check rules when the Project has checks", async () => {

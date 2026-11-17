@@ -60,7 +60,7 @@ export function ThreadPane(props: ThreadPaneProps) {
   const { ctx, onHints, onOpenStory, stages } = props;
   const { active, steering, setSteering, full, current, now, layout } = useThreadPane(props);
   const live = current.status === "running";
-  // Only a worker takes a steering message. The supervisor is not in scope.
+  // Only a live worker takes a steering message. An old supervisor Thread does not.
   const steerable = live && current.role === "worker";
   const compact = layout.height !== undefined && layout.height < FULL_DETAIL_MIN_HEIGHT;
 

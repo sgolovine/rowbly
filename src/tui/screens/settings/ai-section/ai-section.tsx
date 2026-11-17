@@ -9,7 +9,7 @@ import { AiLimitsPage, type AiLimitsPageProps } from "../ai-limits-page/index.js
 import { AiModelsPage } from "../ai-models-page/index.js";
 import { AiProvidersPage } from "../ai-providers-page/index.js";
 import { AiTaskView } from "../ai-task/index.js";
-import { AI_TABS, type Role, tabIndex } from "../ai-view.js";
+import { AI_TABS, tabIndex } from "../ai-view.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
 import {
   type AiEnv,
@@ -32,7 +32,7 @@ function taskHandlers(env: AiEnv) {
   return {
     onSignInDone: (signedIn: boolean) => finishSignIn(env, signedIn),
     onSignOut: (id: string) => signOut(env, id),
-    onSaveModel: (role: Role, choice: ModelChoice | null) => saveModel(env, role, choice),
+    onSaveModel: (choice: ModelChoice | null) => saveModel(env, choice),
     onSaveStageModel: (stage: Stage, choice: ModelChoice | null) => saveStageModel(env, stage, choice),
     onSaveLimit: (values: FormValues) => saveLimit(env, values),
     onSaveCheckLimits: (values: FormValues) => saveCheckLimits(env, values),
@@ -68,8 +68,8 @@ function checksPageProps(env: AiEnv, idle: boolean): AiChecksPageProps {
  * The AI settings of the factory, in four tabs. `←/→` or a click changes the tab.
  * - Providers: the signed-in providers of Pi. `d` asks before it signs out, and `n` opens the page that signs in
  *   to another provider. On that page, `enter` signs in and `esc` goes back.
- * - Models: the models of the supervisor and of the workers. `s` and `w` change them. Under them, `↑/↓` select a
- *   Stage, and `enter` or a click changes the worker model override of the Stage.
+ * - Models: the model of the workers. `w` changes it. Under it, `↑/↓` select a Stage, and `enter` or a click
+ *   changes the worker model override of the Stage.
  * - Limits: the worker limit and the move of stuck upstream Stories. `l` changes the limit, and `u` switches the
  *   move.
  * - Checks: the check limits and the checks that the factory runs for its workers. `c` changes the limits, `n` adds
@@ -132,7 +132,7 @@ export function AiSection({
           settings={settings.data}
           ready={ready}
           idle={idle}
-          onModel={(role) => env.setTask({ kind: "model", role })}
+          onModel={() => env.setTask({ kind: "model" })}
           stages={model.stages.data}
           stageCursor={env.stageCursor}
           onStage={(index) => openStageModel(env, index)}

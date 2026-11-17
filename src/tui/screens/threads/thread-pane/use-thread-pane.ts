@@ -3,7 +3,16 @@ import { useEffect, useState } from "react";
 import { getThread, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { type FullScreenConversationControl, useFullScreenConversation } from "../../../components/index.js";
-import { type Layout, useAsync, useEscape, useIsActive, useLayout, useThreadChanges } from "../../../hooks/index.js";
+import {
+  type Layout,
+  useAsync,
+  useClock,
+  useEscape,
+  useIsActive,
+  useLayout,
+  useOverlayOpen,
+  useThreadChanges,
+} from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { threadName } from "../../stories/index.js";
 
@@ -42,23 +51,6 @@ export interface ThreadPaneModel {
   readonly current: ThreadRecord;
   readonly now: number;
   readonly layout: Layout;
-}
-
-/** The time that counts up each second while the Thread runs, for its run time. */
-function useNow(running: boolean): number {
-  const [now, setNow] = useState(Date.now);
-
-  useEffect(() => {
-    if (!running) {
-      return;
-    }
-
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-
-    return () => clearInterval(timer);
-  }, [running]);
-
-  return now;
 }
 
 /** The handlers of the keys of the pane that are not the keys of the conversation. */
@@ -121,6 +113,7 @@ function useSteerReset(steerable: boolean, steering: boolean, setSteering: (stee
 export function useThreadPane(props: ThreadPaneProps): ThreadPaneModel {
   const { ctx, root, thread, stages, onBack, onTab, onOpenStory } = props;
   const focused = useIsActive();
+  const covered = useOverlayOpen();
   const layout = useLayout();
   const fresh = useAsync(() => getThread(thread.id, ctx), [ctx, thread.id]);
   const [steeringState, setSteering] = useState(false);
@@ -131,6 +124,8 @@ export function useThreadPane(props: ThreadPaneProps): ThreadPaneModel {
   const steerable = live && current.role === "worker";
   const steering = active && steerable && steeringState;
   const paneKeys = active && !steering;
+  // The clock stops while a full-screen view covers the pane.
+  const now = useClock(live && !full.isOpen && !covered);
 
   // The worker writes its Thread file from another process.
   useThreadChanges(root, fresh.refresh);
@@ -140,5 +135,5 @@ export function useThreadPane(props: ThreadPaneProps): ThreadPaneModel {
     isActive: paneKeys,
   });
 
-  return { active, steering, setSteering, full, current, now: useNow(live), layout };
+  return { active, steering, setSteering, full, current, now, layout };
 }

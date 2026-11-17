@@ -120,12 +120,48 @@ async function legacyIssues(run: DoctorRun, config: ProjectConfig): Promise<Doct
   return [await legacyIssue(run, config, settings)];
 }
 
+/** Removes only the old `supervisorModel` key from the `factory` section. It reads the config again first. */
+async function removeSupervisorModel(run: DoctorRun): Promise<void> {
+  const config = await readConfig(run.paths);
+
+  if (!isRecord(config.factory)) {
+    return;
+  }
+
+  await writeConfig(run.paths, { ...config, factory: withoutKey(config.factory, "supervisorModel") });
+}
+
+/** An old `factory.supervisorModel` key is a warning, because the factory ignores it. The fix removes only this key. */
+async function supervisorModelIssues(run: DoctorRun): Promise<DoctorIssue[]> {
+  const { factory } = await readConfig(run.paths);
+
+  if (!isRecord(factory) || !Object.hasOwn(factory, "supervisorModel")) {
+    return [];
+  }
+
+  return [
+    await report(
+      run,
+      {
+        severity: "warning",
+        message: "factory.supervisorModel is no longer used. The factory ignores it",
+        file: rel(run, run.paths.configFile),
+        fix: "Remove the key",
+      },
+      () => removeSupervisorModel(run),
+    ),
+  ];
+}
+
 /**
- * Checks the `factory` section of the config and an old `factory.json`. Run it after the stage checks: a stage fix
- * writes the config, so this check reads the config again from disk.
+ * Checks the `factory` section of the config, an old `factory.json` and an old `factory.supervisorModel` key. Run it
+ * after the stage checks: a stage fix writes the config, so this check reads the config again from disk.
  */
 export async function checkFactory(run: DoctorRun): Promise<DoctorIssue[]> {
   const config = await readConfig(run.paths);
+  const section = sectionIssues(run, config);
+  const legacy = await legacyIssues(run, config);
+  const supervisorModel = await supervisorModelIssues(run);
 
-  return [...sectionIssues(run, config), ...staleTagIssues(run, config), ...(await legacyIssues(run, config))];
+  return [...section, ...staleTagIssues(run, config), ...legacy, ...supervisorModel];
 }

@@ -44,7 +44,7 @@ function threadStage(thread: ThreadRecord, stages: StageNames = {}): string {
   return thread.stage ? (stages[thread.stage] ?? thread.stage) : "—";
 }
 
-/** The name of a thread for people: `#2 In Review` for a worker, `Supervisor` for the supervisor. */
+/** The name of a thread for people: `#2 In Review` for a worker, `Supervisor` for an old supervisor Thread. */
 export function threadName(thread: ThreadRecord, stages: StageNames = {}): string {
   if (thread.role === "supervisor") {
     return "Supervisor";

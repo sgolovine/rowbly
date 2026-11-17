@@ -50,10 +50,9 @@ describe("networkPauseDelay", () => {
 describe("connectivityOf", () => {
   const settings: FactorySettings = {
     maxWorkers: 1,
-    supervisorModel: { provider: "anthropic", modelId: "a" },
     workerModel: { provider: "anthropic", modelId: "b" },
     stageWorkerModels: { WORK: { provider: "openai", modelId: "c" } },
-  } as FactorySettings;
+  };
 
   it("lists each configured provider once", () => {
     expect(configuredProviders(settings)).toEqual(["anthropic", "openai"]);

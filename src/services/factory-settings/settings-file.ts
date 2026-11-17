@@ -22,7 +22,6 @@ function validSettings(settings: FactorySettings): boolean {
   return (
     Number.isSafeInteger(settings.maxWorkers) &&
     settings.maxWorkers >= 1 &&
-    (settings.supervisorModel === undefined || validModel(settings.supervisorModel)) &&
     (settings.workerModel === undefined || validModel(settings.workerModel)) &&
     validOverrides(settings) &&
     validFallbacks(settings.fallbackWorkerModels) &&

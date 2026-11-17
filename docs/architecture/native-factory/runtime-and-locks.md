@@ -11,7 +11,7 @@ take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts
 
 ```
 .rowbly/
-  rowbly.config.json  # the optional factory key: maxWorkers, supervisorModel, workerModel, stageWorkerModels, storyWorkerModels, fallbackWorkerModels, stageClasses, git, checks
+  rowbly.config.json  # the optional factory key: maxWorkers, workerModel, stageWorkerModels, storyWorkerModels, fallbackWorkerModels, stageClasses, git, checks
   .gitignore          # /state.json* and /runtime/; existing text stays
   state.json          # v1 policy state; the native factory writes it
   runtime/            # private, ignored; directories use mode 0700

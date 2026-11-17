@@ -2,15 +2,15 @@
  * The only place that makes the messages of the factory agents. Each message is a list of sections, in this order:
  *
  * 1. The global system prompt (`src/config/prompts/SYSTEM.md`).
- * 2. The system prompt of the role (`SUPERVISOR.md` or `WORKER.md`).
+ * 2. The worker system prompt (`src/config/prompts/WORKER.md`).
  * 3. The Project prompt (`.rowbly/prompts/SYSTEM.md`).
- * 4. The user prompt of the role (`.rowbly/prompts/SUPERVISOR.md` or `WORKER.md`).
- * 5. Workers only: the Stage prompt (`.rowbly/stages/<STAGE>.md`).
+ * 4. The Worker prompt (`.rowbly/prompts/WORKER.md`).
+ * 5. The Stage prompt (`.rowbly/stages/<STAGE>.md`).
  * 6. The data of the turn: the run of the worker.
  *
  * A user prompt or a Stage prompt with no text gives no section. A missing user prompt file has no text.
  */
-import { type PromptName, readSystemPrompt, readUserPrompt } from "../prompts/prompts.js";
+import { readSystemPrompt, readUserPrompt } from "../prompts/prompts.js";
 import type { Story } from "../story/story.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 
@@ -31,21 +31,20 @@ export function composeMessage(sections: readonly MessageSection[]): string {
     .join("\n\n");
 }
 
-/** The four prompt sections of a role: the two system prompts, then the two user prompts. */
-async function promptSections(paths: ProjectPaths, role: Exclude<PromptName, "system">): Promise<MessageSection[]> {
-  const label = role === "supervisor" ? "Supervisor" : "Worker";
-  const [system, roleSystem, project, roleUser] = await Promise.all([
+/** The four prompt sections of a worker: the two system prompts, then the two user prompts. */
+async function promptSections(paths: ProjectPaths): Promise<MessageSection[]> {
+  const [system, workerSystem, project, workerUser] = await Promise.all([
     readSystemPrompt("system"),
-    readSystemPrompt(role),
+    readSystemPrompt("worker"),
     readUserPrompt(paths, "system"),
-    readUserPrompt(paths, role),
+    readUserPrompt(paths, "worker"),
   ]);
 
   return [
     { title: "Rowbly system prompt", text: system },
-    { title: `Rowbly ${role} system prompt`, text: roleSystem },
+    { title: "Rowbly worker system prompt", text: workerSystem },
     { title: "Project prompt", text: project.text.slice(0, USER_PROMPT_LIMIT) },
-    { title: `${label} prompt`, text: roleUser.text.slice(0, USER_PROMPT_LIMIT) },
+    { title: "Worker prompt", text: workerUser.text.slice(0, USER_PROMPT_LIMIT) },
   ];
 }
 
@@ -181,7 +180,7 @@ export function runSection(run: WorkerRun): string {
 
 /** The first message of a worker. */
 export async function workerMessage(paths: ProjectPaths, run: WorkerRun): Promise<string> {
-  const [system, roleSystem, ...user] = await promptSections(paths, "worker");
+  const [system, roleSystem, ...user] = await promptSections(paths);
   const blocks = { checks: !!run.checks?.length, upstream: !!run.upstream?.length };
 
   return composeMessage([

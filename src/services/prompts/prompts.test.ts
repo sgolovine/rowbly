@@ -1,7 +1,7 @@
 import { readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { NotFoundError } from "../errors/errors.js";
+import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { useTestProject } from "../test-project/test-project.js";
 import {
   createUserPrompts,
@@ -23,7 +23,6 @@ describe("prompts", () => {
 
     expect(prompts.map((prompt) => [prompt.name, prompt.exists, prompt.text])).toEqual([
       ["system", true, ""],
-      ["supervisor", true, ""],
       ["worker", true, ""],
     ]);
     expect(prompts[0]?.path).toBe(join(project.paths.promptsDir, "SYSTEM.md"));
@@ -42,10 +41,10 @@ describe("prompts", () => {
   });
 
   it("setPrompt writes the trimmed text with a final newline", async () => {
-    await setPrompt({ name: "supervisor", text: "  Start one worker.  \n\n" }, project.ctx);
+    await setPrompt({ name: "worker", text: "  Use pnpm.  \n\n" }, project.ctx);
 
-    expect(await readFile(userPromptPath(project.paths, "supervisor"), "utf8")).toBe("Start one worker.\n");
-    expect((await getPrompt("supervisor", project.ctx)).text).toBe("Start one worker.");
+    expect(await readFile(userPromptPath(project.paths, "worker"), "utf8")).toBe("Use pnpm.\n");
+    expect((await getPrompt("worker", project.ctx)).text).toBe("Use pnpm.");
   });
 
   it("setPrompt with no text gives an empty file", async () => {
@@ -58,6 +57,17 @@ describe("prompts", () => {
   it("rejects an unknown prompt name", async () => {
     await expect(getPrompt("stage", project.ctx)).rejects.toBeInstanceOf(NotFoundError);
     await expect(setPrompt({ name: "ROWBLY", text: "x" }, project.ctx)).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("rejects the old supervisor prompt name with a hint, and keeps its file", async () => {
+    await project.write("prompts/SUPERVISOR.md", "Old text.\n");
+
+    await expect(getPrompt("supervisor", project.ctx)).rejects.toBeInstanceOf(ValidationError);
+    await expect(setPrompt({ name: "supervisor", text: "x" }, project.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+      hint: expect.stringContaining("system, worker"),
+    });
+    expect(await project.read("prompts/SUPERVISOR.md")).toBe("Old text.\n");
   });
 
   it("createUserPrompts keeps the text of existing prompts", async () => {
