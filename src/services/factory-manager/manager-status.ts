@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { checkQueueStatus } from "../check-queue/check-queue.js";
-import { evaluateScan, HOST_SYNC_REASON, storyHash } from "../factory-policy/factory-policy.js";
+import { evaluateScan, HOST_SYNC_REASON, promptHash, storyHash } from "../factory-policy/factory-policy.js";
 import { stageClassOf } from "../factory-settings/stage-classes.js";
 import { selectWorkerModel, type WorkerSelection } from "../factory-settings/worker-overrides.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
@@ -8,7 +8,6 @@ import { writeFileAtomic } from "../files/files.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { listStages } from "../stage/stage.js";
 import { type Story, searchStories } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { listThreads } from "../thread/thread.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 import { connectivityOf } from "./connectivity.js";
@@ -17,7 +16,6 @@ import { withContactFacts } from "./host-slots.js";
 import {
   type Attention,
   getState,
-  type Hold,
   isProviderPaused,
   type Manager,
   type ManagerState,
@@ -50,21 +48,12 @@ export interface ScanExemptions {
 }
 
 /** The part of the state that a new manager restores from the previous status file. */
-export type StoredStatus = Partial<
-  Pick<
-    ManagerState,
-    | "attention"
-    | "deliveredReportIds"
-    | "attemptedHash"
-    | "unanswered"
-    | "nextWakeAt"
-    | "holds"
-    | "providers"
-    | "networkFailures"
-  >
->;
+export type StoredStatus = Partial<Pick<ManagerState, "attention" | "providers" | "networkFailures">>;
 
-/** Reads the delivery and hold state of the previous status file. An absent or invalid file gives no state. */
+/**
+ * Reads the attention entries and the provider pauses of the previous status file. An absent or invalid file gives no
+ * state. The keys of an old supervisor, for example `holds`, `deliveredReportIds` or `nextWakeAt`, have no effect.
+ */
 export async function loadStoredStatus(paths: ProjectPaths): Promise<StoredStatus> {
   try {
     const stored = JSON.parse(await readFile(await runtimePath(paths, "status.json"), "utf8"));
@@ -75,17 +64,9 @@ export async function loadStoredStatus(paths: ProjectPaths): Promise<StoredStatu
             Array.isArray(entry) && typeof entry[0] === "string" && typeof entry[1]?.text === "string",
         )
       : [];
-    const deliveredReportIds: string[] = Array.isArray(stored.deliveredReportIds)
-      ? stored.deliveredReportIds.filter((id: unknown) => typeof id === "string").slice(-100)
-      : [];
 
     return {
       attention: new Map(attention),
-      deliveredReportIds,
-      attemptedHash: typeof stored.lastDigestHash === "string" ? stored.lastDigestHash : undefined,
-      unanswered: Number.isSafeInteger(stored.unanswered) ? Math.min(6, Math.max(0, stored.unanswered)) : 0,
-      nextWakeAt: typeof stored.nextWakeAt === "number" ? stored.nextWakeAt : 0,
-      holds: new Map(Object.entries(stored.holds ?? {}) as [string, Hold][]),
       providers: new Map(Object.entries(stored.providers ?? {}) as [string, ProviderPause][]),
       networkFailures: new Map(storedCounts(stored.networkFailures)),
     };
@@ -113,17 +94,8 @@ export async function classifiedStages(manager: Manager) {
   }));
 }
 
-/** Gives the reason to skip a Story that the user cancelled or the supervisor holds, or undefined. */
-function skipReason(
-  decision: Decision,
-  story: Story | undefined,
-  cancelled: CancelledStories,
-  hold: Hold | undefined,
-): string | undefined {
-  if (hold && hold.stage === decision.stage && Date.parse(hold.reconsiderAt) > Date.now()) {
-    return `held: ${hold.reason}`;
-  }
-
+/** Gives the reason to skip a Story that the user cancelled, or undefined. */
+function cancelledReason(story: Story | undefined, cancelled: CancelledStories): string | undefined {
   if (story && cancelled[story.id]?.stage === story.stage && cancelled[story.id]?.hash === storyHash(story)) {
     return "cancelled by user";
   }
@@ -139,7 +111,7 @@ async function networkWaitStories(manager: Manager, stories: readonly Story[], r
   return new Set(waiting.filter((t) => t.id !== resumeThreadId).map((t) => t.storyId as string));
 }
 
-/** Selects the worker model of a decision from the settings only, because `scan` does not know the supervisor model. */
+/** Selects the worker model of a decision from the factory settings. */
 function decisionModel(manager: Manager, decision: Decision): WorkerSelection {
   const target = { storyId: decision.story, stage: decision.stage };
 
@@ -156,7 +128,7 @@ function pausedReason(manager: Manager, decision: Decision, exempt: ScanExemptio
 }
 
 /**
- * Evaluates the policy, then skips Stories that the user cancelled or the supervisor holds, Stories whose network
+ * Evaluates the policy, then skips Stories that the user cancelled, Stories whose network
  * Thread can resume, and Stories whose worker providers are all paused. The exemptions of a reservation keep its
  * Story. A Story whose remote Thread is not synchronized keeps the reason `waiting for host sync`, because that rule
  * comes first.
@@ -170,7 +142,7 @@ export async function scan(
   const stages = await classifiedStages(manager);
   const state = await readFactoryState(manager.paths.root, manager.ctx);
 
-  const { holds, hostSync } = getState(manager);
+  const { hostSync } = getState(manager);
   const policy = evaluateScan(state, { stories, stages, maxActive, hostSync: [...hostSync] });
   const cancelled = (state.nativeCancelled ?? {}) as CancelledStories;
   const networkWaits = await networkWaitStories(manager, stories, exempt.resumeThreadId);
@@ -182,7 +154,7 @@ export async function scan(
 
     const story = stories.find((s) => s.id === decision.story);
     const reason =
-      skipReason(decision, story, cancelled, holds.get(decision.story)) ??
+      cancelledReason(story, cancelled) ??
       (networkWaits.has(decision.story) ? NETWORK_WAIT_REASON : undefined) ??
       pausedReason(manager, decision, exempt);
 
@@ -200,7 +172,7 @@ async function withDependencies(manager: Manager, decisions: readonly Decision[]
   return decisions.map((decision) => ({ ...decision, ...dependencyLists(stories, stages, decision.story) }));
 }
 
-/** Builds one page of the factory status for the supervisor tool and the status file. */
+/** Builds one page of the factory status for the status file. */
 export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12) {
   const policy = await scan(manager);
   const { threads, issues } = await listThreads({}, manager.ctx);
@@ -216,7 +188,6 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     phase: state.phase,
     revision: state.revision,
     heartbeatAt: new Date().toISOString(),
-    supervisorThreadId: state.supervisorId,
     workers: {
       running: workers.filter((t) => t.status === "running").length,
       pending: workers.filter((t) => t.status === "pending").length,
@@ -230,11 +201,6 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     providers: Object.fromEntries(state.providers),
     networkFailures: Object.fromEntries(state.networkFailures),
     connectivity: connectivityOf(state.settings, state.providers),
-    holds: Object.fromEntries(state.holds),
-    deliveredReportIds: state.deliveredReportIds.slice(-100),
-    nextWakeAt: state.nextWakeAt,
-    lastDigestHash: state.attemptedHash,
-    unanswered: state.unanswered,
     ...(state.settings.checks ? { checks: checkQueueStatus(manager.checks) } : {}),
     threads: threads
       .slice(-12)
@@ -242,11 +208,9 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
   };
 }
 
-/** Gives the next hold, pause, retry or wake deadline in the future, or undefined. */
+/** Gives the next pause or retry deadline in the future, or undefined. */
 function nextDeadline(state: Readonly<ManagerState>, decisions: readonly Decision[]): number | undefined {
   const deadlines = [
-    state.nextWakeAt,
-    ...[...state.holds.values()].map((h) => Date.parse(h.reconsiderAt)),
     ...[...state.providers.values()].map((p) => Date.parse(p.retryAt ?? "")),
     ...decisions.map((d) => Date.parse(d.retryAt ?? "")),
   ].filter((t) => Number.isFinite(t) && t > Date.now());
@@ -268,7 +232,7 @@ function queueEntry(manager: Manager, d: Decision) {
   };
 }
 
-/** Writes status.json and sets a timer for the next hold, pause or retry deadline. */
+/** Writes status.json and sets a timer for the next pause or retry deadline. */
 export async function persistStatus(manager: Manager): Promise<void> {
   clearTimeout(getState(manager).deadlineTimer);
 
@@ -282,7 +246,7 @@ export async function persistStatus(manager: Manager): Promise<void> {
     setState(manager, () => ({ deadlineTimer }));
   }
 
-  // The TUI shows the queued work and its reasons. The supervisor reads decisions through its paged tool.
+  // The TUI shows the queued work and its reasons.
   const queue = policy.decisions
     .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
     .slice(0, 50)

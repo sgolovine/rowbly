@@ -14,7 +14,7 @@
 # Rowbly
 
 Rowbly keeps a Kanban board in Markdown and JSON files in your repository.
-Its native factory runs a Pi supervisor and independent workers. Each worker has a Story, a worktree and a separate conversation.
+Its native factory starts independent Pi workers from fixed policy rules, with no supervisor model. Each worker has a Story, a worktree and a separate conversation.
 The terminal UI and CLI use the same services.
 
 ## Prerequisites
@@ -102,7 +102,7 @@ rowbly factory restart
 
 Use `rowbly factory start --foreground` to run in the current terminal.
 Native execution must use a Git repository. Workers preserve existing branch work and dirty worktrees.
-The supervisor receives bounded worker summaries. It reads transcript excerpts only through explicit inspection.
+The factory makes no model call when no worker runs. Use `rowbly factory release <story-id>` to release a parked Story.
 
 A Project without `state.json` remains valid and shows no activity status line below the Story list.
 
@@ -172,7 +172,7 @@ Thread history stays after a Story is deleted.
 
 Press `x` in Factory controls and confirm to stop. The CLI equivalent is `rowbly factory stop`.
 Normal stop aborts Pi sessions and preserves histories and worktrees.
-Start again to let the supervisor select eligible interrupted Threads. A start does not automatically resume every Thread.
+Start again to let the factory start new workers for eligible Stories. A start does not automatically resume every Thread.
 
 Before an explicit resume, make sure that these conditions apply:
 
@@ -196,7 +196,7 @@ See [runtime files and locks](docs/architecture/native-factory/runtime-and-locks
 
 ## Remote worker hosts
 
-The factory can run workers on other Linux machines over SSH. The supervisor and the board stay on your machine.
+The factory can run workers on other Linux machines over SSH. The factory manager and the board stay on your machine.
 A remote worker writes its Story changes to a copy. Your machine applies them to the board.
 
 Each worker host must have these items:

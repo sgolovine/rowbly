@@ -1,4 +1,4 @@
-// The dependency facts that the supervisor reads. This module does no I/O.
+// The dependency facts of the factory status. This module does no I/O.
 import {
   blocksOf,
   type DependencyStage,
@@ -37,15 +37,4 @@ export function dependencyLists(
 /** The keys of the Stages with the prompt class `work`. */
 export function workStageKeys(stages: readonly ClassifiedStage[]): ReadonlySet<string> {
   return new Set(stages.filter((stage) => stage.promptClass === "work").map((stage) => stage.key));
-}
-
-/** One digest item for each blocked Story in a `work` Stage, for example `ROW-03 waits for ROW-01, ROW-02`. */
-export function blockedItems(stories: readonly DependencyStory[], stages: readonly ClassifiedStage[]): string[] {
-  const work = workStageKeys(stages);
-
-  return stories
-    .filter((story) => work.has(story.stage))
-    .map((story) => ({ id: story.id, upstream: waitingFor(stories, stages, story.id) }))
-    .filter(({ upstream }) => upstream.length > 0)
-    .map(({ id, upstream }) => `${id} waits for ${upstream.join(", ")}`);
 }

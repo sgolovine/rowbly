@@ -1,8 +1,7 @@
 import { stopCheckQueue } from "../check-queue/check-queue.js";
 import { releaseFactoryOwnership } from "../factory-ownership/factory-ownership.js";
-import { getThread } from "../thread/thread.js";
 import { LOCAL_HOST } from "../thread/thread-types.js";
-import { changeThread, getState, isActiveStatus, type Manager, serial, setState } from "./manager-state.js";
+import { getState, type Manager, serial, setState } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
 
 /** Stops the factory one time. Later calls get the same task. */
@@ -34,7 +33,6 @@ async function stopFactory(manager: Manager): Promise<void> {
   const workers = [...state.active.values()].filter((worker) => worker.host === LOCAL_HOST);
 
   await Promise.all([
-    state.supervisor?.session.abort(),
     ...workers.map((a) => a.control?.stop()),
     manager.remote?.shutdown(manager.deps.remoteStopTimeoutMs),
   ]);
@@ -45,28 +43,12 @@ async function stopFactory(manager: Manager): Promise<void> {
   await getState(manager).syncTask;
   await getState(manager).heartbeatTask;
   await Promise.all([...getState(manager).active.values()].map((a) => a.task));
-  await getState(manager).supervisor?.close();
 
   await serial(manager, async () => {
-    await interruptSupervisor(manager);
     setState(manager, () => ({ phase: "stopped" }));
     await persistStatus(manager);
   });
 
   await manager.deps.runtime.settleCredentialWrites();
   await releaseFactoryOwnership(manager.paths, manager.owner.token);
-}
-
-async function interruptSupervisor(manager: Manager): Promise<void> {
-  const { supervisorId } = getState(manager);
-
-  if (!supervisorId) {
-    return;
-  }
-
-  const thread = await getThread(supervisorId, manager.ctx);
-
-  if (isActiveStatus(thread.status)) {
-    await changeThread(manager, thread.id, "interrupted", { resumable: !!thread.session.file });
-  }
 }

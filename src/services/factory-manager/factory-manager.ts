@@ -35,6 +35,7 @@ import {
 } from "./manager-state.js";
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
 import { createManagerRemote } from "./remote-dispatch.js";
+import { releaseParkedStory } from "./story-release.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { adoptRemoteThreads } from "./worker-adopt.js";
 import { openCheckQueue } from "./worker-checks.js";
@@ -96,7 +97,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     store: new Store(initialState(recovered, authStamp, stored)),
   };
 
-  // Before the first supervisor turn, so that the remote runs of a previous daemon count and are not started again.
+  // Before the first factory pass, so that the remote runs of a previous daemon count and are not started again.
   await adoptRemoteThreads(manager);
   startHostHeartbeat(manager);
 
@@ -112,6 +113,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
       steerWorker(manager, id, expectedRunId, message),
     retryProvider: (provider: string) => retryProvider(manager, provider),
     dismissAttention: (key: string) => dismissAttention(manager, key),
+    releaseStory: (storyId: string) => releaseParkedStory(manager, storyId),
     snapshot: () => serial(manager, () => buildSnapshot(manager)),
     reconcile: () => reconcilePolicy(manager),
     shutdown: () => shutdownFactory(manager),
@@ -152,15 +154,6 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     requests: new Map(),
     hostSync: new Set(),
 
-    supervisorBorn: Date.now(),
-    wakeCount: 0,
-
-    nextWakeAt: stored.nextWakeAt ?? 0,
-    unanswered: stored.unanswered ?? 0,
-    attemptedHash: stored.attemptedHash,
-    deliveredReportIds: stored.deliveredReportIds ?? [],
-
-    holds: stored.holds ?? new Map(),
     attention: new Map([...external, ...(stored.attention ?? [])]),
     providers: stored.providers ?? new Map(),
     networkFailures: stored.networkFailures ?? new Map(),
@@ -232,11 +225,7 @@ async function recoverAndConfigure(
 
 function retryProvider(manager: Manager, provider: string): Promise<void> {
   return serial(manager, async () => {
-    setState(manager, (state) => ({
-      providers: withoutEntry(state.providers, provider),
-      nextWakeAt: 0,
-      attemptedHash: undefined,
-    }));
+    setState(manager, (state) => ({ providers: withoutEntry(state.providers, provider) }));
     await persistStatus(manager);
     notify(manager);
   });

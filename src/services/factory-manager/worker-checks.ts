@@ -6,12 +6,10 @@ import type { FactorySettings } from "../factory-settings/factory-settings.js";
 import { type CheckCall, createCheckTool } from "../factory-worker/check-tool.js";
 import { workerShellEnv } from "../factory-worker/worker-env.js";
 import { listStages } from "../stage/stage.js";
-import { getThread, type ThreadCheck, type ThreadRecord } from "../thread/thread.js";
+import { getThread, type ThreadRecord } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import { changeThread, getState, type Manager, serial } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
-
-const SHORT_HEAD = 12;
 
 type CheckTool = ReturnType<typeof createCheckTool>;
 
@@ -30,12 +28,6 @@ export interface CheckToolInput {
   readonly settings: () => FactorySettings;
   /** Extra variables of the check shell, as in the worker shell. A remote worker gives its outbox variables. */
   readonly env?: Readonly<Record<string, string>>;
-}
-
-/** The last result of one check key and scope, for the supervisor digest. */
-interface CheckResult {
-  readonly status: string;
-  readonly head?: string;
 }
 
 /** Makes the check queue of a manager. The manager gives the settings and gets each change. */
@@ -118,21 +110,4 @@ async function writeThreadCheck(manager: Manager, job: CheckJob): Promise<void> 
 /** Writes a job change to the Thread metadata and to `status.json`. A failed write waits for the next change. */
 function recordCheck(manager: Manager, job: CheckJob): void {
   void serial(manager, () => writeThreadCheck(manager, job)).catch(() => {});
-}
-
-function lastResult(checks: readonly ThreadCheck[], scope: ThreadCheck["scope"]): CheckResult | undefined {
-  const last = checks.filter((check) => check.scope === scope).at(-1);
-
-  return last ? { status: last.status, ...(last.head ? { head: last.head.slice(0, SHORT_HEAD) } : {}) } : undefined;
-}
-
-/** Gives the check history of a worker for the digest: the last full and narrow result of each check key. */
-export function checkHistory(checks: readonly ThreadCheck[]) {
-  const keys = [...new Set(checks.map((check) => check.key))];
-
-  return keys.map((key) => {
-    const ofKey = checks.filter((check) => check.key === key);
-
-    return { key, full: lastResult(ofKey, "full"), narrow: lastResult(ofKey, "narrow") };
-  });
 }

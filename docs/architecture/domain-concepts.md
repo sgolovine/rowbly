@@ -10,7 +10,7 @@ relate.
 
 ```
 Project ── configuration: custom field definitions, tags, stages (each with an optional prompt)
-  ├── Factory ── native supervisor and independent workers
+  ├── Factory ── native manager and independent workers
   │     └── Thread ── one Pi session, with one or more runs
   └── Story ── custom field values, tags, exactly one stage, optional file attachments, upstream Stories
         ├── Thread ── the history of one worker attempt
@@ -84,8 +84,9 @@ tab between the General tab and the Attachments tab.
 
 ## Factory
 
-The native factory runs a Pi supervisor and independent Pi workers in a separate daemon. The manager
-controls ownership, worker slots, worktrees, sessions, commands and recovery.
+The native factory runs independent Pi workers in a separate daemon. The manager starts the workers
+from the decisions of the policy, with no supervisor session. The manager controls ownership, worker
+slots, worktrees, sessions, commands and recovery.
 
 Rowbly does not bundle an external factory skill now. A Project can still have an old installed copy
 of the `factory` skill. Never run that copy and the native factory together.
@@ -98,7 +99,7 @@ A Thread holds the metadata of one Pi session.
 
 - A worker Thread belongs to one Story and one Stage attempt.
 - A resume adds a run to the same Thread. A retry creates a new Thread.
-- Supervisor Threads belong to the Factory.
+- Old supervisor Threads belong to the Factory. The factory does not create new ones.
 - The history of a Thread stays after its Story is deleted.
 
 See [native-factory/threads-and-history.md](native-factory/threads-and-history.md).

@@ -1,4 +1,4 @@
-// The pure assignment policy of the factory supervisor. This module does no I/O.
+// The pure assignment policy of the factory manager. This module does no I/O.
 import { matchStoryRef } from "../story/story-ref.js";
 import { type DependencyStory, waitingFor } from "../story-dependency/story-dependency.js";
 import { dependencyStories, downstreamCount } from "./policy-dependencies.js";
@@ -32,9 +32,8 @@ import type {
 
 export {
   DEFAULT_LIMITS,
-  markReported,
   normalizeStatus,
-  pendingReports,
+  promptHash,
   recordLaunchFailure,
   recordStart,
   releaseStory,
@@ -43,6 +42,9 @@ export {
 export type * from "./policy-types.js";
 
 type ScanWorker = PolicyWorker & { status: AttemptStatus };
+
+/** The skip reason of a Story whose worker stop the scan confirmed. The next scan can start its next worker. */
+export const STOP_CONFIRMED_REASON = "stop confirmed this scan";
 
 /** The skip reason of a Story whose remote worker Thread has outbox entries that are not applied, or no final status. */
 export const HOST_SYNC_REASON = "waiting for host sync";
@@ -167,7 +169,7 @@ function planAttempts(state: PolicyState, story: PolicyStory, facts: ScanFacts):
 
   // The scan that first confirms a stop only records it. The Story can still show its move on the next scan.
   if (sameStay && last.stoppedScan === facts.count) {
-    return { state, decision: makeDecision(story, "skip", "stop confirmed this scan") };
+    return { state, decision: makeDecision(story, "skip", STOP_CONFIRMED_REASON) };
   }
 
   if (finished.length >= facts.limits.attempts) {
@@ -240,7 +242,7 @@ function planStory(previous: PolicyState, story: PolicyStory, facts: ScanFacts):
     return { state, decision: makeDecision(story, "skip", waiting, { waitingFor: upstream }) };
   }
 
-  // The harness list must include workers from other supervisors in this Project.
+  // The harness list must include the workers of other factories in this Project.
   if (facts.workers.some((worker) => worker.story === story.id && !STOPPED_STATUSES.has(worker.status))) {
     return { state, decision: makeDecision(story, "skip", "active or unknown harness worker") };
   }
