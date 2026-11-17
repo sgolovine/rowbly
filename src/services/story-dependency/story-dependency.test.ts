@@ -4,7 +4,10 @@ import {
   type DependencyStory,
   dependencyCandidates,
   dependencyError,
+  dependencyIndex,
   findCycle,
+  indexedIsBlocked,
+  indexedWaitingFor,
   isBlocked,
   isComplete,
   waitingFor,
@@ -118,6 +121,26 @@ describe("blocksOf, waitingFor and isBlocked", () => {
     expect(isBlocked(stories, STAGES, "ROW-03")).toBe(true);
     expect(isBlocked(stories, STAGES, "ROW-04")).toBe(false);
     expect(isBlocked(stories, STAGES, "ROW-01")).toBe(false);
+  });
+
+  it("dependencyIndex gives each story by its ID", () => {
+    const index = dependencyIndex(stories);
+
+    expect([...index.byId.keys()]).toEqual(["ROW-01", "ROW-02", "ROW-03", "ROW-04", "ROW-05"]);
+    expect(index.byId.get("ROW-03")?.dependsOn).toEqual(["ROW-01", "ROW-02"]);
+  });
+
+  it("the indexed forms give the same results as waitingFor and isBlocked", () => {
+    const index = dependencyIndex(stories);
+
+    // A waiting upstream story, a complete upstream story, an unknown upstream ID and an unknown story ID.
+    for (const id of ["ROW-03", "ROW-04", "ROW-05", "ROW-77", "ROW-01"]) {
+      expect(indexedWaitingFor(index, STAGES, id)).toEqual(waitingFor(stories, STAGES, id));
+      expect(indexedIsBlocked(index, STAGES, id)).toBe(isBlocked(stories, STAGES, id));
+    }
+
+    expect(indexedWaitingFor(index, STAGES, "ROW-03")).toEqual(["ROW-02"]);
+    expect(indexedWaitingFor(index, STAGES, "ROW-05")).toEqual([]);
   });
 });
 

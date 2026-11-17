@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { FactoryLaunch, FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
@@ -27,7 +28,15 @@ function stageLabels(board: OverlayBoard): Record<string, string> {
 }
 
 /** The overlay of the shell that is open, if there is one. */
-export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on }: ShellOverlaysProps) {
+export const ShellOverlays = memo(function ShellOverlays({
+  overlay,
+  board,
+  ctx,
+  launch,
+  factory,
+  hints,
+  on,
+}: ShellOverlaysProps) {
   return (
     <>
       {board && <StoryOverlays overlay={overlay} board={board} on={on} />}
@@ -70,4 +79,4 @@ export function ShellOverlays({ overlay, board, ctx, launch, factory, hints, on 
       {overlay?.kind === "help" && <HelpModal hints={hints} onClose={on.close} />}
     </>
   );
-}
+});
