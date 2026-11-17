@@ -1,6 +1,6 @@
-import { chmod, mkdir, readFile, stat } from "node:fs/promises";
+import { chmod, mkdir, readFile, rm, stat, utimes } from "node:fs/promises";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
 import { getFactoryActivity } from "./factory-activity.js";
 
@@ -234,5 +234,94 @@ describe("getFactoryActivity", () => {
       await chmod(path(), 0o600);
     }
     expect(await readFile(path(), "utf8")).toBe("{ nope");
+  });
+
+  describe("cache of the state file", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    /** Counts the parses of the state file only, because other reads also use `JSON.parse`. */
+    const countParses = (content: string) => {
+      const parse = vi.spyOn(JSON, "parse");
+
+      return () => parse.mock.calls.filter(([text]) => text === content).length;
+    };
+
+    it("parses an unchanged file only one time", async () => {
+      const content = state([attempt({})]);
+      await project.write("state.json", content);
+      const parses = countParses(content);
+      const first = await read();
+      const second = await read();
+      expect(parses()).toBe(1);
+      expect(second).toEqual(first);
+      expect(second.stories).toEqual({ "ROW-01": { kind: "active", label: "claude-opus", host: "local" } });
+    });
+
+    it("gives the activity of the new content after the file changes", async () => {
+      await project.write("state.json", state([attempt({})]));
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "claude-opus", host: "local" } });
+      await project.write("state.json", state([attempt({ status: "completed" }), attempt({ status: "failed" })]));
+      expect(await activity()).toEqual({});
+    });
+
+    it("reads the file again when only the modification time changes", async () => {
+      await project.write("state.json", state([attempt({ model: "model-a" })]));
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "model-a", host: "local" } });
+      const before = await stat(path());
+      await project.write("state.json", state([attempt({ model: "model-b" })]));
+      await utimes(path(), before.atime, new Date(before.mtimeMs + 5000));
+      expect((await stat(path())).size).toBe(before.size);
+      expect(await activity()).toEqual({ "ROW-01": { kind: "active", label: "model-b", host: "local" } });
+    });
+
+    it("gives missing after the file is removed", async () => {
+      await project.write("state.json", state([attempt({})]));
+      expect((await read()).status).toBe("ok");
+      await rm(path());
+      expect(await read()).toEqual({ path: path(), status: "missing", stories: {} });
+    });
+
+    it("gives ok after an invalid file becomes valid", async () => {
+      await project.write("state.json", "{ nope");
+      expect((await read()).status).toBe("unavailable");
+      await project.write("state.json", state([attempt({})]));
+      expect(await read()).toEqual({
+        path: path(),
+        status: "ok",
+        stories: { "ROW-01": { kind: "active", label: "claude-opus", host: "local" } },
+      });
+    });
+
+    it("keeps the file order of the attempts of a Story between the attempts of other Stories", async () => {
+      await project.write(
+        "state.json",
+        state([
+          attempt({ workerId: "old" }),
+          attempt({ story: "ROW-02", stage: "IN_REVIEW", status: "completed" }),
+          attempt({ story: "ROW-00", stage: "IN_REVIEW" }),
+          attempt({ workerId: "new", status: "completed" }),
+          attempt({ story: "ROW-02", stage: "IN_REVIEW", workerId: "w2" }),
+        ]),
+      );
+      expect(await activity()).toEqual({
+        "ROW-01": { kind: "conflict" },
+        "ROW-02": { kind: "active", label: "claude-opus", host: "local" },
+      });
+    });
+
+    it("gives the activity of each Story list from one unchanged file", async () => {
+      const content = state([attempt({}), attempt({ story: "ROW-02", stage: "IN_REVIEW", workerId: "w2" })]);
+      await project.write("state.json", content);
+      const parses = countParses(content);
+      const first = await getFactoryActivity({ stories: [{ id: "ROW-01", stage: "IN_DEVELOPMENT" }] }, project.ctx);
+      const second = await getFactoryActivity({ stories: [{ id: "ROW-02", stage: "IN_REVIEW" }] }, project.ctx);
+      const moved = await getFactoryActivity({ stories: [{ id: "ROW-01", stage: "IN_REVIEW" }] }, project.ctx);
+      expect(parses()).toBe(1);
+      expect(first.stories).toEqual({ "ROW-01": { kind: "active", label: "claude-opus", host: "local" } });
+      expect(second.stories).toEqual({ "ROW-02": { kind: "active", label: "claude-opus", host: "local" } });
+      expect(moved.stories).toEqual({});
+    });
   });
 });
