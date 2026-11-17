@@ -1,6 +1,6 @@
-import { Box, Text } from "ink";
+import { Text } from "ink";
 import type { CustomField } from "../../../../services/config/config.js";
-import { SelectionRow } from "../../../components/index.js";
+import { ColumnRow, subtleColor } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 
 /** The props of `CustomFieldRow`. */
@@ -23,20 +23,28 @@ function describeType(field: CustomField): string {
 /** One Custom Field in the settings list: its name, its key and its type. */
 export function CustomFieldRow({ field, selected, active, labelWidth, keyWidth, onClick }: CustomFieldRowProps) {
   return (
-    <SelectionRow selected={selected} active={active} onClick={onClick}>
-      <Box>
-        <Box width={labelWidth} flexShrink={0}>
-          <Text color={theme.ink} bold={selected}>
-            {field.label}
-          </Text>
-        </Box>
-        <Box width={keyWidth} flexShrink={0}>
-          <Text color={selected ? theme.inkMuted : theme.inkFaint}>{field.key}</Text>
-        </Box>
-        <Text color={theme.inkMuted} wrap="truncate-end">
-          {describeType(field)}
-        </Text>
-      </Box>
-    </SelectionRow>
+    <ColumnRow
+      selected={selected}
+      active={active}
+      onClick={onClick}
+      columns={[
+        {
+          width: labelWidth,
+          content: (
+            <Text color={theme.ink} bold={selected}>
+              {field.label}
+            </Text>
+          ),
+        },
+        { width: keyWidth, content: <Text color={subtleColor(selected)}>{field.key}</Text> },
+        {
+          content: (
+            <Text color={theme.inkMuted} wrap="truncate-end">
+              {describeType(field)}
+            </Text>
+          ),
+        },
+      ]}
+    />
   );
 }
