@@ -720,6 +720,20 @@ shows (`preloadPiSdk`). Node writes a second `.cpuprofile` for this thread. The 
 for 0.80 s in production mode and 0.71 s in dev mode. The new session was about 15.5 s long, because
 each `agentic-tui` call takes about 0.5 s.
 
+ROW-140 turns on the compile cache in the Pi worker thread. The worker thread values of this table are
+from 2026-11-17, with 140 Stories, a 140x38 terminal, Node 24.22.1, Linux x86_64, production mode and
+a warm cache. The values are for the median run of three runs. The value before is for the same build
+without the cache call in the worker.
+
+| Pi worker thread                                   | Before ROW-140 | After ROW-140 |
+| -------------------------------------------------- | -------------- | ------------- |
+| Busy time                                          | 871 ms         | 716 ms        |
+| `loadPi` and `createFactoryRuntime` inclusive time | 539 ms         | 448 ms        |
+| `compileSourceTextModule` inclusive time           | 160 ms         | 87 ms         |
+
+Most of the remaining time in the worker thread is module resolution (`realpathSync`, `resolveSync`).
+The compile cache does not decrease this time.
+
 The inclusive CPU time of the median production run, main thread, is in this table. A sample can be in
 more than one group, for example a Rowbly component that React calls. Thus, the sum of the groups is
 more than the busy time.
@@ -744,8 +758,8 @@ In dev mode, React was 940 ms, Ink was 686 ms, Yoga was 162 ms and Rowbly was 53
 
 - `loadInProductionMode` in `src/cli-main.ts`: 138 ms on the main thread at launch. Most of this time
   is the module compile of the TUI bundle, Ink and React. See ROW-139.
-- `loadPi` and `createFactoryRuntime` in the Pi worker thread: 518 ms. This time does not block the
-  render thread. See ROW-140.
+- `loadPi` and `createFactoryRuntime` in the Pi worker thread: 518 ms before ROW-140. After ROW-140,
+  the time is 448 ms with a warm compile cache. This time does not block the render thread.
 
 No render path or key handler used more than 100 ms. The largest app function after the launch was
 `readStoryFile` with 51 ms for the first board load.

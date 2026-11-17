@@ -5,6 +5,10 @@ vi.mock("@earendil-works/pi-coding-agent", () => {
   throw new Error("Pi loaded during command registration");
 });
 
+const compileCache = vi.hoisted(() => ({ enable: vi.fn() }));
+
+vi.mock("../compile-cache/compile-cache.js", () => ({ enableRowblyCompileCache: compileCache.enable }));
+
 describe("Pi import boundary", () => {
   const project = useTestProject();
   const home = useTempDir();
@@ -28,6 +32,11 @@ describe("Pi import boundary", () => {
   it("imports the Pi worker client without loading Pi or starting a worker", async () => {
     const client = await import("./pi-worker-client.js");
     expect(client.piWorkerSource()).toHaveProperty("listAvailableModels");
+  });
+
+  it("imports the Pi worker without loading Pi, serving requests or turning on the compile cache", async () => {
+    await expect(import("./pi-worker.js")).resolves.toHaveProperty("startPiWorker");
+    expect(compileCache.enable).not.toHaveBeenCalled();
   });
 
   it("reads factory status without loading Pi or credentials", async () => {
