@@ -4,6 +4,7 @@ import {
   HEADER_HEIGHT,
   MAIN_MIN_WIDTH,
   SIDEBAR_CHROME_HEIGHT,
+  SIDEBAR_MIN_HEIGHT,
   SIDEBAR_MIN_WIDTH,
   STACKED_BELOW_WIDTH,
   STACKED_MIN_HEIGHT,
@@ -26,6 +27,8 @@ export interface ShellFrame {
   readonly stagesHeight: number | undefined;
   /** The rows of the tag sidebar below the Stage sidebar, or `0` when it does not show. */
   readonly tagsHeight: number | undefined;
+  /** The most rows that a drag of its top edge can give the tag sidebar, or `0` when the edge does not drag. */
+  readonly tagsRoom: number;
   /** The column between the sidebar and the list. */
   readonly gap: number;
   /** The most columns the sidebar can take. */
@@ -107,26 +110,40 @@ function tagsHeightOf(need: number, height: number, stagesNeed: number): number 
   return Math.min(need, Math.max(Math.floor(height / 2), height - stagesNeed));
 }
 
+/**
+ * The rows of the tag sidebar beside the list. Without a drag, it fits its entries, and the Stage sidebar keeps at
+ * least half of the rows. A dragged height stays between the limits: each sidebar keeps `SIDEBAR_MIN_HEIGHT` rows.
+ */
+function besideTagsHeightOf(need: number, height: number, room: number, dragged: number | null): number {
+  if (dragged === null) {
+    return Math.min(need, Math.floor(height / 2));
+  }
+
+  return Math.max(1, Math.min(room, Math.max(SIDEBAR_MIN_HEIGHT, dragged)));
+}
+
 /** The rows of the Stage sidebar and of the tag sidebar: beside the list, or stacked above it. */
 function sidebarHeightsOf(
   view: ShellView,
   stacked: boolean,
   stackedHeight: number,
   mainHeight: number | undefined,
-): Pick<ShellFrame, "stagesHeight" | "tagsHeight"> {
+  dragged: number | null,
+): Pick<ShellFrame, "stagesHeight" | "tagsHeight" | "tagsRoom"> {
   const height = stacked ? stackedHeight || undefined : mainHeight;
   const need = tagsNeed(view);
 
   if (height === undefined || need === 0) {
-    return { stagesHeight: height, tagsHeight: need === 0 ? 0 : undefined };
+    return { stagesHeight: height, tagsHeight: need === 0 ? 0 : undefined, tagsRoom: 0 };
   }
 
-  // Beside the list, the Stage sidebar keeps at least half of the rows.
+  // A drag works only beside the list, and the Stage sidebar keeps its smallest height.
+  const tagsRoom = stacked ? 0 : height - SIDEBAR_MIN_HEIGHT;
   const tagsHeight = stacked
     ? tagsHeightOf(need, height, entriesHeight(view.stages.length))
-    : Math.min(need, Math.floor(height / 2));
+    : besideTagsHeightOf(need, height, tagsRoom, dragged);
 
-  return { stagesHeight: height - tagsHeight, tagsHeight };
+  return { stagesHeight: height - tagsHeight, tagsHeight, tagsRoom };
 }
 
 /** The sidebar can grow until the Story list is narrower than `MAIN_MIN_WIDTH`. */
@@ -197,6 +214,7 @@ function coverFrame(layout: Layout, view: ShellView, story: StoryFrame): ShellFr
     stackedHeight: 0,
     stagesHeight: undefined,
     tagsHeight: 0,
+    tagsRoom: 0,
     gap: 0,
     room: 0,
     shownWidth: 0,
@@ -245,7 +263,8 @@ function sideStory(
 /**
  * Sizes the regions of the shell in `layout`, with a sidebar of `sidebarWidth` columns and a Story sidebar of
  * `storyWidth` columns (`null` for the default width). An `expanded` Story sidebar beside the list takes the columns
- * of the Story list. It has no effect when the Story sidebar covers the main area.
+ * of the Story list. It has no effect when the Story sidebar covers the main area. `tagsHeight` is the dragged height
+ * of the tag sidebar beside the list (`null` for the default height). It has no effect when the sidebars are stacked.
  */
 export function shellFrame(
   layout: Layout,
@@ -253,6 +272,7 @@ export function shellFrame(
   sidebarWidth: number,
   storyWidth: number | null = null,
   expanded = false,
+  tagsHeight: number | null = null,
 ): ShellFrame {
   const mainHeight = mainHeightOf(layout);
   const storyMode = storyModeOf(view, layout);
@@ -292,7 +312,7 @@ export function shellFrame(
     mainHeight,
     stacked,
     stackedHeight,
-    ...sidebarHeightsOf(view, stacked, stackedHeight, mainHeight),
+    ...sidebarHeightsOf(view, stacked, stackedHeight, mainHeight, tagsHeight),
     gap,
     room,
     shownWidth,

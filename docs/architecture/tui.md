@@ -602,7 +602,10 @@ sidebar ("Stages") is at the top. The tag sidebar ("Tags") is below it. When the
 tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
 
 - **The entries.** The first entry is "All Tags". Then each tag of `projectTags` shows with its
-  label, in config order. The tag sidebar has no button. Add, edit and remove the tags in Settings.
+  label, in config order. The `+ New Tag` button is at the bottom of the tag sidebar. It opens the
+  New Tag Modal (`TagFormModal`), the same Modal that Settings uses. After a save, the shell shows
+  the "Added <label>" toast, closes the Modal and reads the board again. Then the new tag shows in
+  the tag sidebar. The tag filter does not change. Edit and remove the tags in Settings.
 - **The filter.** The shell keeps the value of the selected tag in `tagKey` (`null` for All Tags).
   "All Tags" is selected at the start. `shellRows` shows only the Stories whose `tags` include the
   value. The tag filter and the Stage filter apply together. The Factory view ignores the tag
@@ -612,16 +615,22 @@ tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
   `No Stories with the tag <label>.`, or `No Stories in <Stage> with the tag <label>.`
 - **The keys.** `tab` moves the focus in this order: the Stage sidebar, the tag sidebar, the Story
   list, the Story sidebar. `shift+tab` goes in the opposite order. In the tag sidebar, `↑/↓` and
-  `j/k` select the previous or next entry, and `esc` gives the focus to the Story list. The Stage
-  keys (`n`, `e`, `shift+↑/↓`) do nothing in the tag sidebar. `[`/`]` change the Stage filter from
-  all panes. The footer and the help Modal show the keys of the tag sidebar.
+  `j/k` select the previous or next entry, `n` opens the New Tag Modal, and `esc` gives the focus
+  to the Story list. While the tag sidebar has the focus, the button shows the `n` key. The other
+  Stage keys (`e`, `shift+↑/↓`) do nothing in the tag sidebar. `[`/`]` change the Stage filter from
+  all panes. The footer and the help Modal show the keys of the tag sidebar, with `n` "new tag".
 - **The mouse.** A click in the tag sidebar gives it the focus. A click on an entry selects it. When
-  the entries do not fit, the wheel selects.
+  the entries do not fit, the wheel selects. A click on `+ New Tag` opens the New Tag Modal.
 - **The size.** The tag sidebar has the width of the Stage sidebar. A drag of the right edge of the
   Stage sidebar changes the width of the two sidebars. Beside the list, the tag sidebar gets the
   rows for all its entries, but not more than half of the main area. The Stage sidebar gets the
-  other rows. In a narrow terminal, the two sidebars go above the Story list, one above the other,
-  and the Story list keeps at least half of the main area. `ctrl+b` hides and shows the two
+  other rows. Beside the list, a drag of the top edge of the tag sidebar (the border between the
+  two Panels) up or down changes the rows of the tag sidebar (`ResizeEdge` with `side="top"`). The
+  Stage sidebar gets the other rows. Each sidebar keeps at least `SIDEBAR_MIN_HEIGHT` rows (its
+  chrome and one entry). The shell keeps the dragged height in `tagsHeight` until Rowbly quits, and
+  `shellFrame` applies the limits. In a narrow terminal, the two sidebars go above the Story list, one above the other,
+  and the Story list keeps at least half of the main area. There, the height does not drag, and a
+  dragged height has no effect. `ctrl+b` hides and shows the two
   sidebars together.
 - **Changes.** When the selected tag is removed in Settings, the filter acts as "All Tags". When the
   last tag is removed, the tag sidebar does not show, and the Story list gets the focus. When a
