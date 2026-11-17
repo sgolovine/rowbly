@@ -1,5 +1,5 @@
 import { useApp, useInput } from "ink";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import {
@@ -18,7 +18,7 @@ import { type ShellHandlers, shellHandlers } from "./shell-handlers.js";
 import { shellHints } from "./shell-hints.js";
 import { handleShellKey } from "./shell-keys.js";
 import type { ShellEnv } from "./shell-state.js";
-import { shellView } from "./shell-view.js";
+import { shellRows, shellView } from "./shell-view.js";
 import { useShellData } from "./use-shell-data.js";
 import { useShellState } from "./use-shell-state.js";
 import { useStageDefaults } from "./use-stage-defaults.js";
@@ -47,12 +47,14 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   const layout = useLayout();
   const { data, factory, reload } = useShellData(ctx, preloadPi);
   const { values, setters } = useShellState();
-  const { overlay, sidebarShown, stageKey } = values;
+  const { overlay, sidebarShown, stageKey, collapsed } = values;
   const toast = useToast();
 
   useStageDefaults(data.data, setters.setCollapsed);
 
-  const view = shellView({ data, active, ...values });
+  // Only a change of the board, the Stage filter or the collapsed Stages builds the rows again, not a cursor move.
+  const rows = useMemo(() => shellRows(data.data, stageKey, collapsed), [data.data, stageKey, collapsed]);
+  const view = shellView({ data, active, ...values, rows });
   const frame = shellFrame(layout, view, values.sidebarWidth, values.storyWidth, values.storyExpanded);
   const env: ShellEnv = {
     ctx,
