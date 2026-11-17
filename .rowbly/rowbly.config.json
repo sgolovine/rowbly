@@ -79,7 +79,8 @@
     }
   ],
   "display": {
-    "compactThreads": true
+    "compactThreads": true,
+    "storySidebar": "regular"
   },
   "factory": {
     "maxWorkers": 4,
