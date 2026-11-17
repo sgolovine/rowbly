@@ -26,6 +26,10 @@ describe("fake host agent", () => {
     const unknown = await host.transport.request([rowbly, "host", "nothing", "p1"], {});
     expect(unknown.exitCode).toBe(1);
 
+    // The inbound updates go to the real host service, which refuses a Thread that is not prepared.
+    const inbound = await host.transport.request([rowbly, "host", "inbound", "p1"], { threadId: "t1", updates: [] });
+    expect(inbound).toMatchObject({ exitCode: 1, stderr: expect.stringContaining("is not prepared on this host") });
+
     expect(await host.transport.request([rowbly, "host", "outbox", "p1"], { afterSeq: 0 })).toMatchObject({
       exitCode: 0,
       value: { entries: [] },
@@ -34,7 +38,7 @@ describe("fake host agent", () => {
     await expect(host.transport.request([rowbly, "host", "outbox", "p1"], { afterSeq: 0 })).rejects.toMatchObject({
       code: "HOST_UNREACHABLE",
     });
-    expect(host.calls.map((call) => call[2])).toEqual(["run-paths", "nothing", "outbox", "outbox"]);
+    expect(host.calls.map((call) => call[2])).toEqual(["run-paths", "nothing", "inbound", "outbox", "outbox"]);
     await host.stop();
   });
 });
