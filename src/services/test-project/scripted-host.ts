@@ -3,6 +3,7 @@
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import {
+  type BytesResult,
   type HostVersions,
   helloFrame,
   localVersions,
@@ -39,6 +40,8 @@ export interface ScriptedHostOptions {
    * unreachable error of the transport.
    */
   readonly loseAnswer?: (command: ScriptedCommand, host: ScriptedHost) => boolean;
+  /** Answers each bytes call, for example `session-bytes`. The default is no bytes. */
+  readonly bytes?: (command: RemoteCommand, input: unknown) => BytesResult | Promise<BytesResult>;
 }
 
 export interface ScriptedHost {
@@ -200,6 +203,7 @@ export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedH
   };
   const transport = createFakeHostTransport({
     request: (command, input) => answer(scripted, command, input),
+    ...(options.bytes ? { bytes: options.bytes } : {}),
     channel: (_command, remote) => openChannel(scripted, remote),
   });
   const host: ScriptedHost = {
