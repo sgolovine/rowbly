@@ -13,6 +13,7 @@ This file records the changes to Rowbly that users can see.
 - Added: In the Hosts section of the TUI Settings, push `a` or click the "Add host" button to add a worker host with a form for the ID, the SSH target and the worker limit. Rowbly installs the build on the host, runs the check and shows the new host in the list. (ROW-141)
 - Added: In the main view of the Factory controls (`f`), `↑/↓` and the mouse wheel scroll the `Attention` list, and a `↑ n more` row shows the hidden rows above. The new `Dismiss all` button (`d`) dismisses all warnings that you can dismiss, after a confirmation. (ROW-143)
 - Added: In the TUI, drag the border between the Stage sidebar and the tag sidebar up or down to change the height of the tag sidebar. The tag sidebar has a new `+ New Tag` button, and `n` in the tag sidebar opens the New Tag form. (ROW-144)
+- Changed: The TUI uses one tab component for the Story modal tabs and the `View` and `Edit` tabs of the full screen editor. The tabs look the same as before. (ROW-153)
 
 ### 0.20.0
 
