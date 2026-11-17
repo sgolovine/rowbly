@@ -38,6 +38,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The TUI now loads React in production mode, so the board renders faster. When you set `NODE_ENV`, Rowbly keeps your value, and the processes that Rowbly starts do not get a changed `NODE_ENV`. (ROW-126)
 - Added: The new `rowbly thread release <id>` command stops a worker on a worker host as a cancel, but the Story does not wait for you or for that host, so the factory can start a new worker for the Story, for example on the main machine. When the host is offline, the Thread becomes abandoned with the reason `release`, and its later changes are held as for a cancel. (ROW-119)
 - Changed: The README has a new "Remote worker hosts" section that tells how to add, log in, use and check a worker host with `rowbly host` and how to set the placement with `rowbly factory configure --placement`, and the README no longer says that more than one machine is not supported. The contributor documentation has a new overview page of the remote worker hosts. (ROW-105)
+- Changed: The `Depends on` field of the new Story form and the edit Story form now opens faster on a large board, because the TUI finds the Stories that you can select in one pass and only when the Stories change. (ROW-132)
 
 ### 0.19.0
 
