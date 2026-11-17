@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Changed: The factory start is faster. Recovery of the Threads now writes `.rowbly/state.json` a maximum of one time, and does not write it when no attempt changed. (ROW-142)
+
 ### 0.20.0
 
 - Added: The new Hosts section in the Factory group of the TUI Settings shows the worker hosts and their last check, and sets the placement of new workers. It turns a host on or off for this Project or for all Projects, changes the worker limit and runs the check, and the new `rowbly host update <id> [--max-workers <n>] [--enable | --disable]` command changes a host from the CLI. (ROW-103)
