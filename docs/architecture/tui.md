@@ -480,7 +480,7 @@ visible.
   sidebar also shows a Thread of the Factory view. See [The Factory view](#the-factory-view).
 - The top border shows `New Story` or `Edit <story-id>`, and a `✕` at its right end. The border is
   `accent` when the Story sidebar has the focus.
-- The top border also shows an expand button (`ExpandButton`) at the left of the `✕`: `⤢` when the
+- The top border also shows an expand button (a `BorderIcon`) at the left of the `✕`: `⤢` when the
   Story sidebar has the regular width, and `⤡` when it is expanded. A click on the button and
   `ctrl+o` expand or collapse the Story sidebar. `ctrl+o` works in the Story list and in the Story
   sidebar while the Story sidebar is open.
