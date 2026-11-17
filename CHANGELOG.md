@@ -14,6 +14,8 @@ This file records the changes to Rowbly that users can see.
 - Added: In the main view of the Factory controls (`f`), `↑/↓` and the mouse wheel scroll the `Attention` list, and a `↑ n more` row shows the hidden rows above. The new `Dismiss all` button (`d`) dismisses all warnings that you can dismiss, after a confirmation. (ROW-143)
 - Added: In the TUI, drag the border between the Stage sidebar and the tag sidebar up or down to change the height of the tag sidebar. The tag sidebar has a new `+ New Tag` button, and `n` in the tag sidebar opens the New Tag form. (ROW-144)
 - Changed: The `✕` icon of a Modal and the `⤢`, `⤡` and `✕` icons of the Story sidebar now use one shared TUI component. Their look and their click actions do not change. (ROW-154)
+- Changed: The TUI uses one tab component for the Story modal tabs and the `View` and `Edit` tabs of the full screen editor. The tabs look the same as before. (ROW-153)
+- Changed: The Custom Field, Tag, Prompt and Stage forms of the TUI now use one shared form component. Their titles, fields and messages do not change. (ROW-155)
 
 ### 0.20.0
 
