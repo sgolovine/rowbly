@@ -32,6 +32,7 @@ take or change a lock.
     hosts/<host>/outbox-applied.json # the last applied outbox seq of a worker host
     hosts/<host>/commands.json # queued stop, cancel, launch or resume commands for a worker host (mode 0600)
     hosts/<host>/threads/<id>/base.json # the copy that the main machine sent last to the host
+    hosts/<host>/threads/<id>/inbound.json # the inbound updates that wait for the host (mode 0600)
 ```
 
 - `runtimePaths()` in `src/services/workspace/` gives each path. `runtime-files/` creates the private
@@ -50,6 +51,9 @@ take or change a lock.
 - `hosts/<host>/commands.json` is the durable command queue of a worker host:
   `{ "version": 1, "commands": [{ id, type, threadId, queuedAt }] }`. The file has mode 0600, and its
   folders have mode 0700. See [README.md](README.md#disconnects-and-reconnects).
+- `hosts/<host>/threads/<id>/inbound.json` is the durable queue of the inbound updates of a remote
+  Thread: `{ "version": 1, "nextSeq": <n>, "updates": [{ seq, type, … }] }`. The file has mode 0600,
+  and its folders have mode 0700. See [README.md](README.md#inbound-updates).
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
   `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
   `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is

@@ -32,6 +32,11 @@ export interface RemoteExecutorInput {
   readonly model: (launch: WorkerLaunch) => ModelChoice | undefined;
   /** Applies all outbox entries of the host to the canonical files. Throws when the apply cannot complete. */
   readonly sync: (host: string) => Promise<void>;
+  /**
+   * Runs a read of the canonical files for the inbound updates under the Project write lock, in the order of the
+   * manager. It does not take the state lock. The default takes only the Project write lock.
+   */
+  readonly readLocked?: <T>(read: () => Promise<T>) => Promise<T>;
   /** The time that a channel waits for the hello frame of the host. */
   readonly helloTimeoutMs?: number;
 }
@@ -77,6 +82,8 @@ export interface RemoteRunState {
 /** One remote run. `done` aborts when the launch can resolve. */
 export interface RemoteRun {
   readonly threadId: string;
+  /** The Story of a worker Thread. */
+  readonly storyId?: string;
   readonly host: string;
   readonly events: WorkerEvents;
   readonly store: Store<RemoteRunState>;

@@ -5,15 +5,30 @@ import { hostCacheMissing, hostCachePut } from "../../services/host-agent/host-a
 import { parseJsonInput, readBoundedInput } from "../../services/host-agent/host-agent-input.js";
 import { hostAgentPaths, hostRunPathsAnswer } from "../../services/host-agent/host-agent-paths.js";
 import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
+import { applyHostInbound } from "../../services/host-agent/host-inbound.js";
 import { hostPing } from "../../services/host-agent/host-ping.js";
 import { hostSessionBytes } from "../../services/host-agent/host-session-bytes.js";
 import { runBytes, runWithoutContext } from "../output/output.js";
 
-/**
- * Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths, the prepare step
- * the heartbeat and the session bytes of the session mirror.
- */
-export function registerHostRunCommands(program: Command): void {
+/** Registers the hidden request call that applies the inbound updates of a Thread to its copy on the host. */
+function registerInboundCommand(program: Command): void {
+  program
+    .command("inbound <project-id>", { hidden: true })
+    .action((projectId: string, _opts: unknown, command: Command) =>
+      runWithoutContext(
+        command,
+        async () =>
+          applyHostInbound(
+            hostAgentPaths(projectId),
+            parseJsonInput(await readBoundedInput(process.stdin, HOST_PREPARE_LIMIT)),
+          ),
+        (answer) => JSON.stringify(answer),
+      ),
+    );
+}
+
+/** Registers the hidden calls of the attachment cache of the host. */
+function registerCacheCommands(program: Command): void {
   program
     .command("cache-missing <project-id>", { hidden: true })
     .action((projectId: string, _opts: unknown, command: Command) =>
@@ -39,6 +54,14 @@ export function registerHostRunCommands(program: Command): void {
         (answer) => JSON.stringify(answer),
       ),
     );
+}
+
+/**
+ * Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths, the prepare step,
+ * the inbound updates, the heartbeat and the session bytes of the session mirror.
+ */
+export function registerHostRunCommands(program: Command): void {
+  registerCacheCommands(program);
 
   program
     .command("run-paths <project-id>", { hidden: true })
@@ -64,6 +87,8 @@ export function registerHostRunCommands(program: Command): void {
         (answer) => JSON.stringify(answer),
       ),
     );
+
+  registerInboundCommand(program);
 
   program.command("ping <project-id>", { hidden: true }).action((projectId: string, _opts: unknown, command: Command) =>
     runWithoutContext(

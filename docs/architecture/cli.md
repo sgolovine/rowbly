@@ -215,9 +215,10 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
-- `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host cache-missing`,
-  `host cache-put`, `host ping` and `host session-bytes` are hidden. The main machine runs them on a worker host over
-  SSH. The data goes on stdin. The output is JSON, but `host session-bytes` writes raw bytes. See [native-factory/host-agent.md](native-factory/host-agent.md).
+- `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host inbound`,
+  `host cache-missing`, `host cache-put`, `host ping` and `host session-bytes` are hidden. The main machine runs them on
+  a worker host over SSH. The data goes on stdin. The output is JSON, but `host session-bytes` writes raw bytes. See
+  [native-factory/host-agent.md](native-factory/host-agent.md).
   - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
     limit and starts a detached host agent, if no live agent holds the claim. It writes
     `{ "started": boolean, "owner": <Owner> }`.
@@ -233,6 +234,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - `host prepare <project-id>` reads the copy and the launch data of one Thread (32 MiB or less).
     It writes the copy to the Thread folder and writes `{ threadId, copy, files, attachments }`.
     It gives `CONFLICT` while the Thread has active work.
+  - `host inbound <project-id>` reads `{ "threadId": "<id>", "updates": [...] }` (32 MiB or less). It
+    applies the inbound updates to the copy of the Thread in `seq` order and writes
+    `{ threadId, appliedSeq }`. A Thread that is not prepared gives `NOT_FOUND`.
   - `host cache-missing <project-id>` reads `{ "ids": [<attachment id>, …] }`. It writes
     `{ "missing": [<id>, …] }` with the ids that are not in the attachment cache.
   - `host cache-put <project-id> <attachment-id>` reads the bytes of an attachment file of any

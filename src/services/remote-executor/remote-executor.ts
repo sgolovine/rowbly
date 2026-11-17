@@ -22,6 +22,7 @@ import {
 } from "./remote-calls.js";
 import { closeIdleLink, ensureLink } from "./remote-channel.js";
 import { enqueueCommand, hooksOf, targetOf } from "./remote-commands.js";
+import { dropInbound } from "./remote-inbound.js";
 import { reconnectHost } from "./remote-reconnect.js";
 import { failRun, newRemoteRun, takeReceipt, waitForAbort } from "./remote-run.js";
 import { shutdownRemote, stopRemote } from "./remote-stop.js";
@@ -74,6 +75,7 @@ async function launchRemote(env: RemoteEnv, launch: WorkerLaunch, events: Worker
   } finally {
     env.state.update((state) => ({ runs: withoutEntry(state.runs, run.threadId) }));
     closeIdleLink(env, host);
+    await dropInbound(env, host, run.threadId);
     await dropMirror(env, run.threadId);
   }
 }
@@ -110,7 +112,9 @@ async function startRemote(env: RemoteEnv, run: RemoteRun, launch: WorkerLaunch)
   await submitLaunch(env, target, run, launch);
 }
 
+/** Writes the base of the new copy. The waiting updates of an earlier run leave the queue, but its `seq` stays. */
 async function writeBase(env: RemoteEnv, run: RemoteRun, copy: ThreadCopy): Promise<void> {
+  await dropInbound(env, run.host, run.threadId);
   await writeCopyBase(env.input.paths, run.host, run.threadId, copy);
 }
 

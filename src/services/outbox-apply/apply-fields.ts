@@ -1,71 +1,15 @@
 // The apply of one field entry: a compare-and-set for each change, then one Story write.
 
-import type { FieldChange, OutboxEntry, StoryWrite } from "../outbox/outbox.js";
-import { type ChangeAction, compareChange, storyValue } from "../outbox/outbox-compare.js";
-import { type Story, type UpdateStoryInput, updateStory } from "../story/story.js";
+import type { OutboxEntry, StoryWrite } from "../outbox/outbox.js";
+import { type Decision, decide, updateInput } from "../outbox/outbox-decision.js";
+import { type Story, updateStory } from "../story/story.js";
 import { type ApplyEnv, findStory, type OutboxConflict, rowblyProblem } from "./apply-state.js";
 
 /** A field entry, with the values of the outbox. */
 type FieldEntry = OutboxEntry & StoryWrite;
 
-/** The decision for one change. */
-interface Decision {
-  readonly change: FieldChange;
-  readonly action: ChangeAction;
-  readonly current: unknown;
-  readonly reason: string;
-}
-
-const FIELD_PREFIX = "fields.";
-const TEXT_PATHS = ["title", "stage", "description"];
-const LIST_PATHS = ["tags", "dependsOn"];
-
-function isTextList(value: unknown): boolean {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
-
-/** Tells if `after` has a form that the Story write can take for the path. */
-function hasWritableForm(change: FieldChange): boolean {
-  if (TEXT_PATHS.includes(change.path)) {
-    return typeof change.after === "string";
-  }
-
-  if (LIST_PATHS.includes(change.path)) {
-    return isTextList(change.after);
-  }
-
-  return change.path.startsWith(FIELD_PREFIX);
-}
-
-/** The compare-and-set decision for one change on the Story. */
-function decide(story: Story, change: FieldChange): Decision {
-  const current = storyValue(story, change.path);
-
-  if (!current.found) {
-    return { change, action: "conflict", current: undefined, reason: `Unknown path ${change.path}` };
-  }
-
-  const action = compareChange(current.value, change);
-
-  if (action === "write" && !hasWritableForm(change)) {
-    return { change, action: "conflict", current: current.value, reason: "The new value has a bad form" };
-  }
-
-  return { change, action, current: current.value, reason: "The value on the main machine is different" };
-}
-
-/** The Story write for the changes to write. */
-function updateInput(id: string, changes: readonly FieldChange[]): UpdateStoryInput {
-  const fieldChanges = changes.filter((change) => change.path.startsWith(FIELD_PREFIX));
-  const named = Object.fromEntries(
-    changes.filter((change) => !change.path.startsWith(FIELD_PREFIX)).map((change) => [change.path, change.after]),
-  );
-  const fields = Object.fromEntries(
-    fieldChanges.map((change) => [change.path.slice(FIELD_PREFIX.length), change.after]),
-  );
-
-  return { ...named, id, ...(fieldChanges.length > 0 ? { fields } : {}) };
-}
+/** The reason of a conflict when the value on the main machine is not `before` or `after`. */
+const DIFFERENT = "The value on the main machine is different";
 
 function toConflict(env: ApplyEnv, entry: FieldEntry, decision: Decision): OutboxConflict {
   const { change } = decision;
@@ -121,7 +65,7 @@ export async function applyFieldEntry(env: ApplyEnv, entry: FieldEntry): Promise
   }
 
   const { story } = found;
-  const decisions = entry.changes.map((change) => decide(story, change));
+  const decisions = entry.changes.map((change) => decide(story, change, DIFFERENT));
   const refused = await writeChanges(
     env,
     story,

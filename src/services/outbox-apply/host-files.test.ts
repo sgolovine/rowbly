@@ -1,8 +1,8 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
-import { writeCopyBase } from "./host-files.js";
+import { readCopyBase, writeCopyBase } from "./host-files.js";
 
 describe("writeCopyBase", () => {
   const project = useTestProject();
@@ -40,5 +40,20 @@ describe("writeCopyBase", () => {
     await expect(writeCopyBase(project.paths, "mini", "../t", { files: [], attachments: [] })).rejects.toMatchObject({
       code: "VALIDATION",
     });
+  });
+});
+
+describe("readCopyBase", () => {
+  const project = useTestProject();
+
+  it("gives the base that writeCopyBase wrote, and undefined for a missing or bad file", async () => {
+    const copy = { files: [{ path: ".rowbly/a.md", content: "a\n" }], attachments: [] };
+
+    expect(await readCopyBase(project.paths, "mini", "t1")).toBeUndefined();
+    const file = await writeCopyBase(project.paths, "mini", "t1", copy);
+    expect(await readCopyBase(project.paths, "mini", "t1")).toMatchObject({ threadId: "t1", ...copy });
+
+    await writeFile(file, "not json");
+    expect(await readCopyBase(project.paths, "mini", "t1")).toBeUndefined();
   });
 });
