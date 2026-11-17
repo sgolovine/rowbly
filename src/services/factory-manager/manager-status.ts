@@ -12,6 +12,7 @@ import { listThreads } from "../thread/thread.js";
 import type { ProjectPaths } from "../workspace/workspace.js";
 import { connectivityOf } from "./connectivity.js";
 import { dependencyLists } from "./dependency-facts.js";
+import { withContactFacts } from "./host-slots.js";
 import {
   type Attention,
   getState,
@@ -212,7 +213,7 @@ export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12
     decisions,
     nextCursor: policy.decisions.length > pageEnd ? pageEnd : null,
     attention: [...issues, ...state.attention.entries()].slice(0, 12),
-    hosts: managerSlots(state),
+    hosts: withContactFacts(managerSlots(state), state.hostHealth),
     providers: Object.fromEntries(state.providers),
     networkFailures: Object.fromEntries(state.networkFailures),
     connectivity: connectivityOf(state.settings, state.providers),

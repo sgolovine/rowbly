@@ -3,6 +3,7 @@ import { type FactoryStatus, getFactoryStatus } from "../factory/factory.js";
 import { readStoryFiles, type StoryFile } from "../story-files/story-files.js";
 import { listThreads } from "../thread/thread-list.js";
 import type { ThreadRecord } from "../thread/thread-types.js";
+import { type LostConnection, liveHosts, lostConnections } from "../thread-connection/thread-connection.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 
 export interface StageSummary {
@@ -20,6 +21,8 @@ export interface ProjectStatus {
   readonly stages: readonly StageSummary[];
   /** All Stories, also the Stories whose Stage is not in the config. */
   readonly stories: number;
+  /** The remote Threads whose worker host lost its connection. The list is absent when no Thread lost it. */
+  readonly connectionLost?: readonly LostConnection[];
 }
 
 function storyStage(file: StoryFile): unknown {
@@ -43,11 +46,13 @@ export async function getProjectStatus(ctx: ServiceContext = {}): Promise<Projec
   const files = await readStoryFiles(paths);
   const { threads } = await listThreads({}, ctx);
   const factory = await getFactoryStatus(ctx);
+  const lost = lostConnections(threads, liveHosts(factory), Date.now());
 
   return {
     factory: { phase: factory.phase },
     threads: { running: countStatus(threads, "running"), pending: countStatus(threads, "pending") },
     stages: config.stages.map((stage) => stageSummary(stage, files)),
     stories: files.length,
+    ...(lost.length ? { connectionLost: lost } : {}),
   };
 }
