@@ -135,6 +135,30 @@ describe("thread", () => {
     expect(done.exitCode).toBe(0);
     expect(JSON.parse(done.stdout)).toMatchObject({ status: "completed", threadId: t.id });
   });
+  it("releases a Thread through the live daemon and shows the command in the help", async () => {
+    const help = await runCli(["thread", "release", "--help"], p.paths.root);
+    expect(help.stdout).toContain("release [options] <id>");
+    expect(help.stdout).toContain("release a worker on a worker host");
+    expect((await runCli(["thread", "--help"], p.paths.root)).stdout).toContain("release");
+    await prepareRuntime(p.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(p.paths, owner);
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: owner.token, host: "mini" },
+      p.ctx,
+    );
+    const execute = vi.fn(async () => {});
+    const result = runCli(["thread", "release", t.id, "--json"], p.paths.root);
+    await vi.waitFor(async () => {
+      await processCommands(p.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "release", threadId: t.id, expectedRunId: t.runs.at(-1)?.id }),
+      );
+    });
+    const done = await result;
+    expect(done.exitCode).toBe(0);
+    expect(JSON.parse(done.stdout)).toMatchObject({ status: "completed", threadId: t.id });
+  });
   it("lists, applies and discards the held entries of an abandoned remote Thread without a factory", async () => {
     const t = await createThread(
       { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test", host: "mini" },

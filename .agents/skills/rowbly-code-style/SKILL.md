@@ -79,7 +79,7 @@ The plugins use GritQL. They find patterns in the syntax, not in the types. Thus
 Example from `supervisor-loop.ts`:
 
 ```ts
-async function superviseOnce(manager: Manager, contract: string): Promise<void> {
+async function passOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
   await refreshSettings(manager);
   await clearProviderPauses(manager);
@@ -130,7 +130,7 @@ Keep a `while` or `for` loop with `await` only when a condition, not a list, end
   `src/services/conversation/session-index.ts`.
 - A search that stops at the first match.
 
-A pure helper takes values, not the store. For example, `shouldSkipDigest(state, delivery)` takes the
+A pure helper takes values, not the store. For example, `nextDeadline(state, decisions)` takes the
 state that the caller read.
 
 A service from a different module can change a file or a different object. That is I/O, not a change of
@@ -291,6 +291,9 @@ the only `lint/plugin` exceptions:
 - `writeRef` in `src/tui/hooks/refs.ts`: a React ref changes in place.
 - `src/services/conversation/session-scanner.ts`: the scan of each byte of a large file changes its
   own state. One `biome-ignore-start` and `biome-ignore-end` range covers the two scanner classes.
+- `dependentsOf` and `reachingIds` in `src/services/story-dependency/story-dependency.ts`: the search
+  for the dependency picker candidates must be linear. The two functions fill their own local Map, Set
+  and queue. One `biome-ignore-start` and `biome-ignore-end` range covers the two functions.
 - `showToast` in `src/tui/hooks/toasts.ts`: `ToastStore.push` has the name of an array method, but
   the store makes a new list.
 - `setExitCode` in `src/commands/output/output.ts`: `process.exitCode` is the Node API for the exit

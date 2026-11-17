@@ -88,19 +88,10 @@ export interface PolicyDecision {
   waitingFor?: string[];
 }
 
-export interface PolicyReport {
-  story: string;
-  event: "started" | "stopped" | "parked";
-  workerId?: string;
-  result?: unknown;
-  stage?: string;
-  reason?: string;
-}
-
 /**
  * - `attempts`: the workers that can finish for one Story in one Stage before the factory parks the Story.
  * - `retryMinutes`, `retryCapMinutes`: the delay after the second failure in a row, and its maximum. It doubles each time.
- * - `stallMinutes`: the run time after which the supervisor examines a worker.
+ * - `stallMinutes`: the run time after which the policy reports a stalled worker.
  */
 export interface PolicyLimits {
   attempts: number;

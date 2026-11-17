@@ -17,7 +17,7 @@ separate daemon process that uses the same services and the Pi SDK.
                └──────────────►  src/services/  ◄────────┘
                                     │        │
                     .rowbly/ files ◄┘        └► native factory daemon
-                    (Stories, Stages,            (Pi supervisor and workers,
+                    (Stories, Stages,            (Pi workers,
                      Specs, prompts, config)      .rowbly/runtime/, state.json)
 ```
 
@@ -34,7 +34,7 @@ separate daemon process that uses the same services and the Pi SDK.
 - **Story**: one work item, with custom field values and exactly one Stage.
 - **Stage**: a step of the board, with an optional prompt for agents.
 - **Spec**: an optional Markdown document, linked to one or more Stories.
-- **Factory**: the native daemon that runs a Pi supervisor and Pi workers on Stories.
+- **Factory**: the native daemon that runs Pi workers on Stories.
 - **Thread**: the metadata and history of one Pi session.
 
 See [domain-concepts.md](domain-concepts.md) for the full definitions.

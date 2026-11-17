@@ -41,6 +41,13 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 The files of `runtime/` and `state.json` belong to the native factory. See
 [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md).
 
+- `runtime/status.json` has no supervisor fields: no `supervisorThreadId`, `holds`,
+  `deliveredReportIds`, `lastDigestHash`, `unanswered` or `nextWakeAt`. A start reads only `attention`,
+  `providers` and `networkFailures` from the old file. An old file with the supervisor fields does not
+  fail the start.
+- An old `state.json` with `notes`, `parked[*].reported`, or the attempt flags `reported` and
+  `startReported`, stays valid. The validator keeps these keys, and the manager does not use them.
+
 ## Config
 
 `rowbly.config.json` holds the Project name and key, the custom fields, the tags, the Stages, the features, the
@@ -84,7 +91,7 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | Key                    | Type    | Default            | Effect                                                 |
 | ---------------------- | ------- | ------------------ | ------------------------------------------------------ |
 | `maxWorkers`           | integer | `4`                | The maximum number of workers. The minimum is 1.       |
-| `supervisorModel`      | object  | Pi selects a model | The model choice of the supervisor.                    |
+| `supervisorModel`      | object  | Pi selects a model | Not used now. The factory opens no supervisor session. |
 | `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
 | `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
@@ -108,8 +115,7 @@ but the board continues to work. `rowbly doctor` shows the problem as an error.
 
 The factory settings can hold worker model overrides. `stageWorkerModels` maps a Stage key to a model
 choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
-priority is the Story override, then the Stage override, then the model of the supervisor, then
-`workerModel`. See
+priority is the Story override, then the Stage override, then `workerModel`. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
 
 `fallbackWorkerModels` is an ordered list of model choices. When the provider of the selected worker
@@ -563,7 +569,8 @@ its rules, in the order of the check:
 
 A remote worker writes to a copy of the Project on its host. With `ROWBLY_OUTBOX`, the CLI records
 each Story write and each attachment write in the outbox folder of the host. The main machine applies the entries to the board
-later. The folder is not in `.rowbly/`.
+later. The folder is not in `.rowbly/`. See
+[native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 
 ```
 $ROWBLY_OUTBOX/
@@ -748,9 +755,10 @@ executor writes it after each `host prepare`. See
 
 ### Held entries of an abandoned Thread
 
-When the user cancels a remote Thread while its host is offline, the Thread file gets the `abandoned`
-note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. `appliedSeq` is the last applied `seq`
-of the host at the time of the cancel. `reason` can also be `release` for a later release action.
+When the user cancels or releases a remote Thread while its host is offline, the Thread file gets the
+`abandoned` note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. The reason of a release
+(`rowbly thread release <id>`) is `release`. `appliedSeq` is the last applied `seq` of the host at the
+time of the cancel or the release.
 After the final run frame arrives, the Thread file also gets `remoteOutcome`:
 `{ endReason, endedAt?, result?, failure? }`. The status of the Thread stays `cancelled`.
 
@@ -797,7 +805,8 @@ apply in one place.
 - `hosts` is the list of the worker hosts of the user. `rowbly host` changes it. A missing key is an
   empty list. If the value is not an array, or an entry does not have the four fields with the
   correct types, the full `hosts` value is invalid. Then each `host` command gives `VALIDATION`.
-  A write keeps the other keys of each entry.
+  A write keeps the other keys of each entry. See
+  [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 - `projects` of a host entry is the list of the Projects that the host uses:
   `[{ "root": string, "path": string, "managed": boolean }]`. `rowbly host use` adds a record and
   `rowbly host unuse` removes it. A missing key is an empty list.

@@ -21,7 +21,7 @@ export function failureText(label: string, error: unknown): string {
 }
 
 /**
- * Runs the steps of a pass that the digest does not need. A failure in one step records an attention
+ * Runs the side steps of a pass. A failure in one step records an attention
  * entry, and the pass continues. A step without a problem removes its entry.
  */
 export async function runSideSteps(manager: Manager): Promise<void> {

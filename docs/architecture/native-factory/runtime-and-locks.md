@@ -5,7 +5,7 @@ The native factory keeps private runtime files in `.rowbly/runtime/` and shared 
 and the ownership rules prevent two owners, lost writes and deadlocks.
 
 Read this when you read or write a runtime file, `state.json` or the factory settings, or when you
-take or change a lock.
+take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts.md) first.
 
 ## Factory files in `.rowbly/`
 
@@ -17,11 +17,11 @@ take or change a lock.
   runtime/            # private, ignored; directories use mode 0700
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
-    status.json       # heartbeat, workers, queue, holds, provider pauses, connectivity, attention and checks
+    status.json       # heartbeat, workers, queue, provider pauses, connectivity, attention and checks
     watchdog.json     # watchdog phase, process identity, crashes in a row, last crash, last exit and last log
     watchdog.lock     # watchdog claim: the identity of the one watchdog that can start a daemon
     watchdog.guard    # short exclusive gate for changes of the watchdog claim
-    control/<id>.json # immutable stop, cancel, resume or dismiss request
+    control/<id>.json # immutable stop, cancel, resume, dismiss, steer or release request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
     sessions/<id>/<pi-name>.jsonl # native Pi history, or the session mirror of a remote Thread; file reference starts as null
@@ -30,6 +30,7 @@ take or change a lock.
     checks/jobs.json  # the records of the last 500 check jobs, with process group and start ticks
     checks/<id>.log   # the full output of one check job
     hosts/<host>/outbox-applied.json # the last applied outbox seq of a worker host
+    hosts/<host>/conflicts/<sha256>.png # the file of an attachment.add entry with a conflict, for recovery (mode 0600)
     hosts/<host>/commands.json # queued stop, cancel, launch or resume commands for a worker host (mode 0600)
     hosts/<host>/threads/<id>/base.json # the copy that the main machine sent last to the host
     hosts/<host>/held/<id>/entries.jsonl # the held outbox entries of an abandoned remote Thread (mode 0600)
@@ -50,6 +51,11 @@ take or change a lock.
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 - `placement` selects the machine of a new worker: `prefer-local` (the default), `most-free` or
   `prefer-remote`. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#placement).
+- `outbox-apply/host-files.ts`, `outbox-apply/held-entries.ts`, `remote-executor/host-command-queue.ts`
+  and `remote-executor/inbound-queue.ts` write the files in `hosts/<host>/`. Each folder has mode 0700.
+- The outbox apply writes `outbox-applied.json`, `conflicts/` and `held/`. It holds the Project write
+  lock while it applies the entries. It does not take the state lock. See
+  [../storage.md](../storage.md#apply-on-the-main-machine).
 - `hosts/<host>/commands.json` is the durable command queue of a worker host:
   `{ "version": 1, "commands": [{ id, type, threadId, queuedAt }] }`. The file has mode 0600, and its
   folders have mode 0700. See [README.md](README.md#disconnects-and-reconnects).
@@ -61,6 +67,13 @@ take or change a lock.
   occur only under the Project write lock, never under the state lock. The folders have mode 0700.
   The Thread file has the `abandoned` note: `{ at, reason, appliedSeq }`. See
   [README.md](README.md#abandoned-threads).
+- `status.json` has no supervisor fields. It has no `supervisorThreadId`, `holds`,
+  `deliveredReportIds`, `lastDigestHash`, `unanswered` or `nextWakeAt`. When the manager starts, it reads
+  only `attention`, `providers` and `networkFailures` from the old file. Thus an old file with the
+  supervisor fields does not fail the start, and the fields have no effect.
+- `state.json` can have keys of an old supervisor: `notes`, `parked[*].reported` and the attempt flags
+  `reported` and `startReported`. The validator of `factory-state/state-file.ts` keeps them, and the
+  manager does not use them.
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
   `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
   `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is
@@ -68,7 +81,7 @@ take or change a lock.
   See [README.md](README.md#placement) and [README.md](README.md#disconnects-and-reconnects).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
-  priority over the `start_worker` model and `workerModel`. See
+  priority over `workerModel`. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
 ## Git and the runtime files
@@ -116,7 +129,7 @@ The native factory can pull the upstream branch and push the canonical branch at
   `skipped`. Else it runs `git push`. It never uses force.
 - The sync does not rebase, stash or change uncommitted files. It does not sync worker worktrees or
   Story branches. The `.gitignore` rules keep `state.json*` and `runtime/` out of the merge.
-- The supervisor loop starts a sync after the canonical commit of a scan. The first sync runs at the
+- The factory loop starts a sync after the canonical commit of a scan. The first sync runs at the
   first scan after start. The next sync runs at the first scan after `syncIntervalSeconds`. The loop
   reads the interval again at each scan. A scan occurs at least each 30 seconds.
 - Only one sync runs at a time. The sync runs outside the serial queue, so a slow network does not
@@ -199,6 +212,8 @@ See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart r
 ## Lock rules
 
 - Never take the Project write lock while you hold the state lock.
+- The outbox apply of a worker host and `rowbly thread held --apply` or `--discard` hold the Project
+  write lock. They do not hold the state lock.
 - No kernel lock spans a model request.
 - Existing human CLI and TUI writes keep their previous concurrency limits. They do not take the
   Project write lock.
@@ -209,5 +224,6 @@ See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart r
 ## Related
 
 - [recovery.md](recovery.md): what happens after an owner dies.
+- [remote-hosts.md](remote-hosts.md): the overview of the worker hosts.
 - [../storage.md](../storage.md): the other files in `.rowbly/`.
 - [../service-layer.md](../service-layer.md#native-factory): the factory services.
