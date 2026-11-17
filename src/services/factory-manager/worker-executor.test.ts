@@ -20,7 +20,7 @@ const usage = { input: 10, output: 20, cacheRead: 1, cacheWrite: 2, cost: 0.5 };
 
 interface FakeExecutor extends WorkerExecutor {
   readonly messages: string[];
-  readonly release: () => void;
+  readonly unblock: () => void;
 }
 
 /** Emits each event of a worker run. With `wait`, the run stays open until a stop or a cancel. */
@@ -32,7 +32,7 @@ function fakeExecutor(root: string, wait = false): FakeExecutor {
   });
   const executor: FakeExecutor = {
     messages,
-    release: () => release(),
+    unblock: () => release(),
     launch: vi.fn(async (launch: WorkerLaunch, events: WorkerEvents) => {
       try {
         const worktree = join(root, "..", "worktrees", launch.story.id);
@@ -163,6 +163,6 @@ describe("worker executor", () => {
     expect(executor.steer).toHaveBeenCalledOnce();
     expect(vi.mocked(executor.steer).mock.calls[0]?.[0]).toBe(threadId);
     expect(vi.mocked(executor.steer).mock.calls[0]?.[1]).toContain("Use the new API");
-    executor.release();
+    executor.unblock();
   });
 });

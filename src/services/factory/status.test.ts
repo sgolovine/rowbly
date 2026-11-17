@@ -67,7 +67,7 @@ describe("factory story release", () => {
     const sent = releaseFactoryStory("TST-1", { timeoutMs: 5000 }, project.ctx);
     await vi.waitFor(async () => {
       await processCommands(project.paths, owner.token, execute);
-      expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "release", storyId: "TST-1" }));
+      expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "release-story", storyId: "TST-1" }));
     });
     await expect(sent).resolves.toMatchObject({ status: "completed", storyId: "TST-1" });
   });

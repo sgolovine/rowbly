@@ -18,15 +18,15 @@ export interface FactoryCommand {
   attentionKey?: string;
   /** The text that a `steer` gives to the worker. */
   message?: string;
-  /** The Story that a `release` releases. */
+  /** The Story that a `release-story` releases. */
   storyId?: string;
   createdAt: string;
 }
 
 /** The kinds of request that the daemon runs. */
-export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss" | "steer" | "release";
+export type FactoryCommandType = "stop" | "cancel" | "release" | "release-story" | "resume" | "dismiss" | "steer";
 
-const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss", "steer", "release"];
+const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "release", "release-story", "resume", "dismiss", "steer"];
 
 /** The maximum number of characters in a steering message, after trim. */
 const STEER_MESSAGE_LIMIT = 4000;
@@ -176,7 +176,7 @@ function acceptedCommand(loaded: LoadedCommand, id: string, token: string): Fact
     assertSteerMessage(command.message);
   }
 
-  if (command.type === "release" && !validStoryId(command.storyId)) {
+  if (command.type === "release-story" && !validStoryId(command.storyId)) {
     throw new ValidationError("A Story ID of 1 to 128 characters is necessary");
   }
 

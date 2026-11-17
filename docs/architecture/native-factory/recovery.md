@@ -120,7 +120,7 @@ A cancellation holds the Story and the Stage until one of these events:
 ## Release a parked Story
 
 The policy parks a Story after the attempt limit. `rowbly factory release <story-id>` releases it.
-`releaseFactoryStory(storyId)` in `src/services/factory/factory.ts` sends the command `release` to the
+`releaseFactoryStory(storyId)` in `src/services/factory/factory.ts` sends the command `release-story` to the
 live daemon and waits for the receipt. It does not load Pi. Without a live daemon, it gives `CONFLICT`
 with the text `Factory is not running`.
 

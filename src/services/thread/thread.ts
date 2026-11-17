@@ -5,6 +5,7 @@ export { groupThreads, type ThreadGroups } from "./thread-groups.js";
 export { listThreads } from "./thread-list.js";
 export { projectNativeAttempt } from "./thread-projection.js";
 export {
+  type AbandonReason,
   isAbandoned,
   LOCAL_HOST,
   type RemoteOutcome,

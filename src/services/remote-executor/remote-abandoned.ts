@@ -4,6 +4,7 @@
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { withEntry, withoutEntry } from "../store/store.js";
+import type { AbandonReason } from "../thread/thread.js";
 import { closeIdleLink, linkOpen } from "./remote-channel.js";
 import type { AbandonedThread, RemoteEnv, RemoteRun } from "./remote-types.js";
 
@@ -73,7 +74,10 @@ export async function flushOutcomes(env: RemoteEnv, host: string): Promise<void>
   }
 }
 
-/** Records that the cancel of the run did not reach its host. The Thread becomes abandoned. A failure is ignored. */
-export async function abandonRun(env: RemoteEnv, run: RemoteRun): Promise<void> {
-  await env.input.abandon?.(run.threadId, run.host).catch(() => undefined);
+/**
+ * Records that the cancel or the release of the run did not reach its host. The Thread becomes abandoned with the
+ * reason. A failure is ignored.
+ */
+export async function abandonRun(env: RemoteEnv, run: RemoteRun, reason: AbandonReason): Promise<void> {
+  await env.input.abandon?.(run.threadId, run.host, reason).catch(() => undefined);
 }

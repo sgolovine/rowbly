@@ -28,6 +28,7 @@ import {
 } from "./manager-state.js";
 import { classifiedStages, persistStatus, scan } from "./manager-status.js";
 import { canResume } from "./network-wait.js";
+import type { WorkerControl } from "./worker-executor.js";
 import { launchWorker } from "./worker-launch.js";
 import { placeStory, resumeHost } from "./worker-placement.js";
 
@@ -260,43 +261,87 @@ function startWorkerTask(manager: Manager, threadId: string, host: string): void
   setState(manager, (state) => ({ active: withEntry(state.active, threadId, { task, host }) }));
 }
 
+/**
+ * Gives the Thread of the expected run of an active worker, or `undefined` when the Thread is already cancelled.
+ * Throws when the run changed or the worker is not active.
+ */
+async function activeWorkerRun(manager: Manager, id: string, expectedRunId: string): Promise<ThreadRecord | undefined> {
+  const thread = await getThread(id, manager.ctx);
+  const lastRun = thread.runs.at(-1);
+
+  if (lastRun?.id !== expectedRunId || lastRun?.ownerToken !== manager.owner.token) {
+    throw new ConflictError("Worker run changed");
+  }
+
+  if (thread.status === "cancelled") {
+    return undefined;
+  }
+
+  if (!getState(manager).active.has(id) || !isActiveStatus(thread.status)) {
+    throw new ConflictError("Worker is not active");
+  }
+
+  return thread;
+}
+
+/** Holds the Story of the Thread in its current Stage, so that the scan gives `cancelled by user`. */
+async function holdCancelledStory(manager: Manager, thread: ThreadRecord): Promise<void> {
+  const story = await getStory({ id: thread.storyId as string }, manager.ctx);
+
+  await updateFactoryState(
+    manager.paths.root,
+    (state) => ({
+      ...state,
+      nativeCancelled: {
+        ...((state.nativeCancelled as object) ?? {}),
+        [story.id]: { stage: story.stage, hash: storyHash(story) },
+      },
+    }),
+    manager.ctx,
+  );
+}
+
+/** Makes the Thread `cancelled`, and gives the control of its worker run. */
+async function markCancelled(manager: Manager, thread: ThreadRecord): Promise<WorkerControl | undefined> {
+  await changeThread(manager, thread.id, "cancelled", { resumable: !!thread.session.file });
+
+  return getState(manager).active.get(thread.id)?.control;
+}
+
 /** Cancels the expected run of an active worker and holds its Story in the current Stage. */
 export async function cancelWorker(manager: Manager, id: string, expectedRunId: string): Promise<void> {
   const control = await serial(manager, async () => {
-    const thread = await getThread(id, manager.ctx);
-    const lastRun = thread.runs.at(-1);
+    const thread = await activeWorkerRun(manager, id, expectedRunId);
 
-    if (lastRun?.id !== expectedRunId || lastRun?.ownerToken !== manager.owner.token) {
-      throw new ConflictError("Worker run changed");
-    }
-
-    if (thread.status === "cancelled") {
+    if (!thread) {
       return undefined;
     }
 
-    if (!getState(manager).active.has(id) || !isActiveStatus(thread.status)) {
-      throw new ConflictError("Worker is not active");
-    }
+    await holdCancelledStory(manager, thread);
 
-    const story = await getStory({ id: thread.storyId as string }, manager.ctx);
-
-    await updateFactoryState(
-      manager.paths.root,
-      (state) => ({
-        ...state,
-        nativeCancelled: {
-          ...((state.nativeCancelled as object) ?? {}),
-          [story.id]: { stage: story.stage, hash: storyHash(story) },
-        },
-      }),
-      manager.ctx,
-    );
-    await changeThread(manager, id, "cancelled", { resumable: !!thread.session.file });
-
-    return getState(manager).active.get(id)?.control;
+    return markCancelled(manager, thread);
   });
 
   await Promise.all([control?.cancel(), cancelThreadChecks(manager.checks, id)]);
+}
+
+/**
+ * Releases the expected run of an active remote worker. The worker stops as for a cancel, but the Story is not held
+ * for the user. When the host is offline, the Thread becomes abandoned with the reason `release`, and the placement
+ * does not hold the Story for that host. Thus the policy can start a new worker on a different host.
+ */
+export async function releaseWorker(manager: Manager, id: string, expectedRunId: string): Promise<void> {
+  const control = await serial(manager, async () => {
+    if (!isRemoteThread(await getThread(id, manager.ctx))) {
+      throw new ConflictError("Only a Thread on a worker host can be released", { details: { threadId: id } });
+    }
+
+    const thread = await activeWorkerRun(manager, id, expectedRunId);
+
+    return thread ? markCancelled(manager, thread) : undefined;
+  });
+
+  await Promise.all([control?.release?.(), cancelThreadChecks(manager.checks, id)]);
 }
 
 /** Resumes a Thread with a new run. A repeated request for the same run does nothing. */

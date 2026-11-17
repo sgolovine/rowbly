@@ -754,9 +754,10 @@ executor writes it after each `host prepare`. See
 
 ### Held entries of an abandoned Thread
 
-When the user cancels a remote Thread while its host is offline, the Thread file gets the `abandoned`
-note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. `appliedSeq` is the last applied `seq`
-of the host at the time of the cancel. `reason` can also be `release` for a later release action.
+When the user cancels or releases a remote Thread while its host is offline, the Thread file gets the
+`abandoned` note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. The reason of a release
+(`rowbly thread release <id>`) is `release`. `appliedSeq` is the last applied `seq` of the host at the
+time of the cancel or the release.
 After the final run frame arrives, the Thread file also gets `remoteOutcome`:
 `{ endReason, endedAt?, result?, failure? }`. The status of the Thread stays `cancelled`.
 

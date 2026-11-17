@@ -263,7 +263,7 @@ export async function releaseFactoryStory(
     throw new ValidationError("A Story ID of 1 to 128 characters is necessary");
   }
 
-  const receipt = await sendFactoryCommand("release", { ...input, storyId }, ctx);
+  const receipt = await sendFactoryCommand("release-story", { ...input, storyId }, ctx);
 
   return { ...receipt, storyId };
 }

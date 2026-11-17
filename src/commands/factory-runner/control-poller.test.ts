@@ -8,6 +8,7 @@ function fakeManager() {
   return {
     shutdown: vi.fn(async () => {}),
     cancelWorker: vi.fn(async () => {}),
+    releaseWorker: vi.fn(async () => {}),
     resumeWorker: vi.fn(async () => {}),
     steerWorker: vi.fn(async () => {}),
     dismissAttention: vi.fn(async () => {}),
@@ -45,6 +46,28 @@ describe("control poller", () => {
     });
   });
 
+  it("gives a release with its Thread and run to the manager", async () => {
+    await prepareRuntime(project.paths);
+    const manager = fakeManager();
+    const release = await publishCommand(project.paths, {
+      targetOwnerToken: "owner",
+      type: "release",
+      threadId: "thread",
+      expectedRunId: "run",
+    });
+    const noRun = await publishCommand(project.paths, { targetOwnerToken: "owner", type: "release", threadId: "x" });
+    const poller = createControlPoller(project.paths, "owner", manager as unknown as ControlTarget);
+
+    pollControl(poller);
+    await settledControl(poller);
+
+    expect(manager.releaseWorker).toHaveBeenCalledTimes(1);
+    expect(manager.releaseWorker).toHaveBeenCalledWith("thread", "run");
+    expect(manager.cancelWorker).not.toHaveBeenCalled();
+    expect((await readReceipt(project.paths, release.id))?.status).toBe("completed");
+    expect((await readReceipt(project.paths, noRun.id))?.status).toBe("rejected");
+  });
+
   it("gives a dismiss with its attention key to the manager", async () => {
     await prepareRuntime(project.paths);
     const manager = fakeManager();
@@ -65,15 +88,15 @@ describe("control poller", () => {
     expect((await readReceipt(project.paths, missing.id))?.status).toBe("rejected");
   });
 
-  it("gives a release with its Story ID to the manager, and rejects a release without a Story ID", async () => {
+  it("gives a Story release with its Story ID to the manager, and rejects a Story release without a Story ID", async () => {
     await prepareRuntime(project.paths);
     const manager = fakeManager();
     const release = await publishCommand(project.paths, {
       targetOwnerToken: "owner",
-      type: "release",
+      type: "release-story",
       storyId: "TST-1",
     });
-    const missing = await publishCommand(project.paths, { targetOwnerToken: "owner", type: "release" });
+    const missing = await publishCommand(project.paths, { targetOwnerToken: "owner", type: "release-story" });
     const poller = createControlPoller(project.paths, "owner", manager as unknown as ControlTarget);
 
     pollControl(poller);

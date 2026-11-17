@@ -9,6 +9,7 @@ import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import { listAttachments } from "../attachment/attachment.js";
 import { HOST_SYNC_REASON } from "../factory-policy/factory-policy.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
+import { readFactoryState } from "../factory-state/factory-state.js";
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import { heldAction } from "../outbox-apply/held-actions.js";
 import { readHeldEntries } from "../outbox-apply/held-entries.js";
@@ -19,7 +20,7 @@ import { createStage } from "../stage/stage.js";
 import { createStory, getStory } from "../story/story.js";
 import { createScriptedHost, type ScriptedCommand, type ScriptedHost } from "../test-project/scripted-host.js";
 import { useTempDir } from "../test-project/test-project.js";
-import { getThread, type ThreadRecord } from "../thread/thread.js";
+import { createThread, getThread, type ThreadRecord } from "../thread/thread.js";
 import { findProject } from "../workspace/workspace.js";
 import { checkAbandonedResume, outcomeOf } from "./abandoned-threads.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
@@ -284,5 +285,115 @@ describe("factory manager with an abandoned remote Thread", () => {
       interval: 20,
     });
     expect(host.commands.map((command) => command.type)).toEqual(["launch", "cancel-thread"]);
+  }, 60_000);
+  async function hostOffline(f: FactoryManager) {
+    await vi.waitFor(async () => expect((await f.snapshot()).hosts[1]?.state).not.toBe("connected"), {
+      timeout: 10_000,
+      interval: 20,
+    });
+  }
+
+  async function nativeCancelled(): Promise<Record<string, unknown>> {
+    return ((await readFactoryState(root)).nativeCancelled ?? {}) as Record<string, unknown>;
+  }
+
+  it("releases a Thread while its host is offline: no user hold, a local worker starts, later entries are held", async () => {
+    const host = createScriptedHost({ onSubmit: (command, h) => command.type === "launch" && running(command, h) });
+    const f = await fixture(host);
+    const story = await createStory({ title: "Remote", stage: "WORK" }, { cwd: root });
+    const thread = await runningThread(f, story.id);
+
+    host.transport.disconnect();
+    await vi.waitFor(() => expect(host.transport.openChannels).toBe(0));
+    await f.releaseWorker(thread.id, thread.runs.at(-1)?.id ?? "");
+    await freeSlot(f);
+
+    const released = await getThread(thread.id, { cwd: root });
+    expect(released.status).toBe("cancelled");
+    expect(released.resumable).toBe(true);
+    expect(released.abandoned).toEqual({ at: expect.any(String), reason: "release", appliedSeq: 0 });
+    const queue = JSON.parse(await readFile(join(root, ".rowbly/runtime/hosts/mini/commands.json"), "utf8"));
+    expect(queue.commands).toEqual([expect.objectContaining({ type: "cancel-thread", threadId: thread.id })]);
+
+    // No user hold: the scan does not give "cancelled by user" or the host sync, and the state has no entry.
+    const reason = (await f.reconcile()).find((d) => d.story === story.id)?.reason;
+    expect(reason).not.toBe("cancelled by user");
+    expect(reason).not.toBe(HOST_SYNC_REASON);
+    expect(await nativeCancelled()).not.toHaveProperty(story.id);
+
+    // While mini stays disconnected, the placement selects the local host for a new worker.
+    await hostOffline(f);
+    const next = await f.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "after-release" });
+    expect((await getThread(next.threadId, { cwd: root })).host).toBe("local");
+    await vi.waitFor(async () => expect((await f.snapshot()).hosts[0]).toMatchObject({ id: "local", used: 0 }), {
+      timeout: 10_000,
+      interval: 20,
+    });
+
+    // After the reconnect, the later outbox entries of the released Thread are held as for a cancel.
+    host.addOutbox(titleEntry(1, thread.id, story.id, "Remote", "Late"));
+    const mark = host.events.length;
+    host.transport.reconnect();
+    await vi.waitFor(() => expect(host.events.slice(mark)).toContain("attach"), { timeout: 10_000, interval: 20 });
+    host.sendRun(thread.id, { phase: "ended", endReason: "cancelled", result: LATE });
+    await vi.waitFor(async () => expect((await getThread(thread.id, { cwd: root })).remoteOutcome).toBeDefined(), {
+      timeout: 10_000,
+      interval: 20,
+    });
+    const steps = host.events.slice(mark).filter((event) => event !== "ping");
+    expect(steps.slice(0, 3)).toEqual(["submit:cancel-thread", "attach", "outbox"]);
+    const projectPaths = await findProject({ cwd: root });
+    expect((await readHeldEntries(projectPaths, "mini", thread.id)).map((entry) => entry.seq)).toEqual([1]);
+    expect((await getStory({ id: story.id }, { cwd: root })).title).toBe("Remote");
+  }, 60_000);
+
+  it("keeps a cancelled Story on its offline host: the placement waits for the host", async () => {
+    const host = createScriptedHost({ onSubmit: (command, h) => command.type === "launch" && running(command, h) });
+    const f = await fixture(host);
+    const story = await createStory({ title: "Remote", stage: "WORK" }, { cwd: root });
+    const thread = await runningThread(f, story.id);
+
+    host.transport.disconnect();
+    await vi.waitFor(() => expect(host.transport.openChannels).toBe(0));
+    await f.cancelWorker(thread.id, thread.runs.at(-1)?.id ?? "");
+    await freeSlot(f);
+    await hostOffline(f);
+
+    await expect(
+      f.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "after-cancel" }),
+    ).rejects.toMatchObject({ code: "CONFLICT", message: expect.stringContaining("the Story waits for host mini") });
+  }, 60_000);
+
+  it("releases a Thread whose host has an open channel without an abandoned note or a user hold", async () => {
+    const host = createScriptedHost({ onSubmit: (command, h) => running(command, h) });
+    const f = await fixture(host);
+    const story = await createStory({ title: "Remote", stage: "WORK" }, { cwd: root });
+    const thread = await runningThread(f, story.id);
+
+    await f.releaseWorker(thread.id, thread.runs.at(-1)?.id ?? "");
+    await freeSlot(f);
+
+    const released = await getThread(thread.id, { cwd: root });
+    expect(released.status).toBe("cancelled");
+    expect(released.abandoned).toBeUndefined();
+    expect(host.commands.map((command) => command.type)).toEqual(["launch", "cancel-thread"]);
+    expect(await nativeCancelled()).not.toHaveProperty(story.id);
+    expect((await f.reconcile()).find((d) => d.story === story.id)?.reason).not.toBe("cancelled by user");
+  }, 60_000);
+
+  it("refuses the release of a local Thread", async () => {
+    const host = createScriptedHost({});
+    const f = await fixture(host);
+    const story = await createStory({ title: "Local", stage: "WORK" }, { cwd: root });
+    const local = await createThread(
+      { role: "worker", storyId: story.id, stage: "WORK", cwd: root, ownerToken: f.owner.token },
+      { cwd: root },
+    );
+
+    await expect(f.releaseWorker(local.id, local.runs.at(-1)?.id ?? "")).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: expect.stringContaining("worker host"),
+    });
+    expect((await getThread(local.id, { cwd: root })).status).toBe("pending");
   }, 60_000);
 });

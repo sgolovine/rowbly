@@ -39,7 +39,13 @@ import { releaseParkedStory } from "./story-release.js";
 import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { adoptRemoteThreads } from "./worker-adopt.js";
 import { openCheckQueue } from "./worker-checks.js";
-import { cancelWorker, type ReserveWorkerInput, reserveWorker, resumeWorker } from "./worker-reservation.js";
+import {
+  cancelWorker,
+  type ReserveWorkerInput,
+  releaseWorker,
+  reserveWorker,
+  resumeWorker,
+} from "./worker-reservation.js";
 import { steerWorker } from "./worker-steer.js";
 
 export type { FactoryDependencies } from "./manager-state.js";
@@ -100,6 +106,7 @@ export async function createFactoryManager(deps: FactoryDependencies, context: S
     run: () => runFactory(manager),
     reserveWorker: (input: ReserveWorkerInput) => reserveWorker(manager, input),
     cancelWorker: (id: string, expectedRunId: string) => cancelWorker(manager, id, expectedRunId),
+    releaseWorker: (id: string, expectedRunId: string) => releaseWorker(manager, id, expectedRunId),
     resumeWorker: (id: string, expectedRunId: string, requestId: string) =>
       resumeWorker(manager, id, expectedRunId, requestId),
     steerWorker: (id: string, expectedRunId: string, message: string) =>

@@ -1,4 +1,4 @@
-// The release of a parked Story, for the control command `release`.
+// The release of a parked Story, for the control command `release-story`.
 import { releaseStory } from "../factory-policy/factory-policy.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { getStory, listStoryRefs, type StoryRef, storyUidField } from "../story/story.js";

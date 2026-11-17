@@ -131,13 +131,15 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 ### The release command
 
 `rowbly factory release <story-id>` releases a parked Story, so that the next pass of the live factory
-can start a worker for it. The command sends the control command `release` to the daemon and waits for
+can start a worker for it. The command sends the control command `release-story` to the daemon and waits for
 the receipt. The JSON output is the receipt with `storyId`.
 
 - A Story that is not parked gives a success with no change.
 - Without a live daemon, the command gives `CONFLICT` with the text `Factory is not running`.
 - A Story ID that is empty or longer than 128 characters gives `VALIDATION`.
 - The command does not load Pi. The TUI has no key for it.
+- The control command `release-story` is not the control command `release`. `rowbly thread release <id>`
+  sends `release` with a Thread ID. See [README.md](README.md#abandoned-threads).
 
 See [recovery.md](recovery.md#release-a-parked-story).
 
