@@ -10,7 +10,13 @@ import {
 import { NotFoundError } from "../errors/errors.js";
 import { type FieldValue, fieldValueError } from "../fields/fields.js";
 import { lookupStage, unknownStageIssues } from "../stage/stage.js";
-import { blocksOf, isBlocked, waitingFor } from "../story-dependency/story-dependency.js";
+import {
+  blocksOf,
+  type DependencyIndex,
+  dependencyIndex,
+  indexedIsBlocked,
+  waitingFor,
+} from "../story-dependency/story-dependency.js";
 import {
   dependsOnOf,
   formatStoryId,
@@ -311,12 +317,12 @@ function matchesFilter(story: Story, filter: SearchFilter): boolean {
 
 /** Whether the story agrees with the dependency filter. Without a filter, each story agrees. */
 function matchesDependency(
-  stories: readonly Story[],
+  index: DependencyIndex,
   stages: readonly StageConfig[],
   story: Story,
   dependency: SearchStoriesInput["dependency"],
 ): boolean {
-  return dependency === undefined || isBlocked(stories, stages, story.id) === (dependency === "blocked");
+  return dependency === undefined || indexedIsBlocked(index, stages, story.id) === (dependency === "blocked");
 }
 
 /** Gives the filter of a search, with values of the field types. Throws when a field, a value or a tag is invalid. */
@@ -341,8 +347,9 @@ export async function searchStories(input: SearchStoriesInput = {}, ctx: Service
   const sorted = sortStoryFiles(files).toSorted((a, b) => stageIndex(config, a) - stageIndex(config, b));
   const positions = stagePositions(sorted);
   const stories = sorted.map((file) => toStory(config, file, positions.get(file.id)));
+  const index = dependencyIndex(stories);
   const filtered = stories.filter(
-    (story) => matchesFilter(story, filter) && matchesDependency(stories, config.stages, story, input.dependency),
+    (story) => matchesFilter(story, filter) && matchesDependency(index, config.stages, story, input.dependency),
   );
   const owners = new Set(await attachmentOwners(paths));
   const found = await Promise.all(filtered.map((story) => withAttachmentNames(paths, owners, story)));

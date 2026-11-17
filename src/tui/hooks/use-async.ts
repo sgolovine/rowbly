@@ -5,6 +5,7 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -111,5 +112,6 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
   const reload = useCallback(() => setRun((n) => n + 1), []);
   const refresh = useCallback(() => refreshRun(background, setRun), []);
 
-  return { ...state, reload, refresh };
+  // The same object while nothing changes, so a context or a memo child that gets it does not render again.
+  return useMemo(() => ({ ...state, reload, refresh }), [state, reload, refresh]);
 }
