@@ -9,6 +9,8 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Added: In the Hosts section of the TUI Settings, push `a` or click the "Add host" button to add a worker host with a form for the ID, the SSH target and the worker limit. Rowbly installs the build on the host, runs the check and shows the new host in the list. (ROW-141)
+
 ### 0.20.0
 
 - Added: The new Hosts section in the Factory group of the TUI Settings shows the worker hosts and their last check, and sets the placement of new workers. It turns a host on or off for this Project or for all Projects, changes the worker limit and runs the check, and the new `rowbly host update <id> [--max-workers <n>] [--enable | --disable]` command changes a host from the CLI. (ROW-103)
