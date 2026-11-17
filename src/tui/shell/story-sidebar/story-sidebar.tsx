@@ -1,5 +1,5 @@
 import { Box, type DOMElement, type Key, useInput } from "ink";
-import { useMemo, useRef, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import type { Story } from "../../../services/story/story.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import {
@@ -96,7 +96,7 @@ function formKey(ctx: ServiceContext, pane: SidePane): string {
  * of the `✕` and `ctrl+o` expand it over the Story list and collapse it again. A drag of its left edge changes its
  * width. The confirmations of the form show over its body. Its keys go to the footer.
  */
-export function StorySidebar(props: StorySidebarProps) {
+export const StorySidebar = memo(function StorySidebar(props: StorySidebarProps) {
   const { pane, width, height, shown, focused, clickable } = props;
   const ref = useRef<DOMElement>(null);
   const layers = useModalLayers();
@@ -162,4 +162,4 @@ export function StorySidebar(props: StorySidebarProps) {
       </ActiveContext.Provider>
     </Box>
   );
-}
+});

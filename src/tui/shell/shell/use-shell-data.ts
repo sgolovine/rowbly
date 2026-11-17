@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 import { type FactoryStatus, getFactoryStatus } from "../../../services/factory/factory.js";
 import { type FactoryActivity, getFactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import { recordProject } from "../../../services/known-project/known-project.js";
@@ -164,5 +164,10 @@ export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void
 
   usePiPreload(showsProject(data), preloadPi);
 
-  return { data: { ...data, data: withActivity(data.data, activity.data) }, factory, reload: () => bump(setVersion) };
+  // The same board and the same data while the board and the activity do not change, so the memo children skip a render.
+  const board = useMemo(() => withActivity(data.data, activity.data), [data.data, activity.data]);
+  const shown = useMemo(() => ({ ...data, data: board }), [data, board]);
+  const reload = useCallback(() => bump(setVersion), []);
+
+  return { data: shown, factory, reload };
 }
