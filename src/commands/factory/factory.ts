@@ -24,6 +24,8 @@ interface ConfigureOptions {
   stage?: string;
   story?: string;
   clearWorker?: boolean;
+  fallbackWorker?: string[];
+  clearFallbackWorkers?: boolean;
   commitMessage?: string;
   commitAuthor?: string;
   gitPush?: boolean;
@@ -150,11 +152,21 @@ function registerStart(program: Command, launch: LaunchDescriptor): void {
     );
 }
 
+/** Adds the value of a repeated option to the list of the earlier values. */
+function collect(value: string, previous: string[] = []): string[] {
+  return [...previous, value];
+}
+
+/** Gives the service input of the configure options. The repeated flag has a singular name. */
+function configureInput({ fallbackWorker, ...opts }: ConfigureOptions) {
+  return { ...opts, ...(fallbackWorker ? { fallbackWorkers: fallbackWorker } : {}) };
+}
+
 function registerConfigure(program: Command): void {
   program
     .command("configure")
     .description(
-      "Set factory models, worker limit, worker model overrides, Git commit settings, Git sync, check limits, pull-upstream and placement",
+      "Set factory models, fallback worker models, worker limit, worker model overrides, Git commit settings, Git sync, check limits, pull-upstream and placement",
     )
     .option("--max-workers <n>", "worker limit", parsePosition)
     .option("--supervisor <model>", "provider/model")
@@ -164,6 +176,12 @@ function registerConfigure(program: Command): void {
     .option("--stage <key>", "set the worker model override of this Stage")
     .option("--story <id>", "with --stage, set the override of this Story in the Stage")
     .option("--clear-worker", "with --stage, remove the worker model override")
+    .option(
+      "--fallback-worker <model>",
+      "provider/model to use when the worker provider is paused (repeat; replaces the list)",
+      collect,
+    )
+    .option("--clear-fallback-workers", "remove the fallback worker models")
     .option("--commit-message <text>", 'subject of the canonical commits ("" clears it)')
     .option("--commit-author <identity>", 'Name <email> of the canonical commits ("" clears it)')
     .option("--git-push", "push the canonical branch at each sync")
@@ -178,7 +196,7 @@ function registerConfigure(program: Command): void {
     .action((opts: ConfigureOptions, cmd: Command) =>
       run(
         cmd,
-        (ctx) => configureFactory(opts, ctx),
+        (ctx) => configureFactory(configureInput(opts), ctx),
         (settings) => JSON.stringify(settings, null, 2),
       ),
     );

@@ -299,6 +299,17 @@ describe("factorySettings", () => {
     );
     expect(await p.read("rowbly.config.json")).toBe(before);
   });
+  it("validates the fallback worker models in the config", async () => {
+    const model = { provider: "a", modelId: "x" };
+    expect(validFactorySettings({ fallbackWorkerModels: [model, { ...model, thinkingLevel: "high" }] })).toBe(true);
+    expect(validFactorySettings({ fallbackWorkerModels: [] })).toBe(true);
+    expect(validFactorySettings({ fallbackWorkerModels: model })).toBe(false);
+    expect(validFactorySettings({ fallbackWorkerModels: "a/x" })).toBe(false);
+    expect(validFactorySettings({ fallbackWorkerModels: [model, { provider: "a" }] })).toBe(false);
+    expect(validFactorySettings({ fallbackWorkerModels: [{ ...model, thinkingLevel: "huge" }] })).toBe(false);
+    await writeFactory(p, JSON.stringify({ fallbackWorkerModels: ["a/x"] }));
+    await expect(getFactorySettings(p.ctx)).rejects.toThrow("Invalid factory settings");
+  });
   it("does not write an invalid sync interval", async () => {
     await updateFactorySettings({ git: { pull: true } }, p.ctx);
     const before = await p.read("rowbly.config.json");
