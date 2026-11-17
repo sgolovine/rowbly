@@ -27,6 +27,8 @@ export interface HintsInput {
   readonly count: number;
   /** The thread region shows the conversation, so that `ctrl+f` can open it full screen. */
   readonly conversation: boolean;
+  /** The selected thread is abandoned and has held entries, so that `a` and `d` act. */
+  readonly held: boolean;
 }
 
 /** The sizes and the visible regions of the tab. */
@@ -40,6 +42,20 @@ export interface ThreadsLayout {
   readonly conversationHeight: number | undefined;
 }
 
+/** The keys that act on the selected thread: interrupt, resume, and apply or discard its held entries. */
+function threadActionHints(current: ThreadRecord | undefined, held: boolean): KeyHint[] {
+  return [
+    ...(current && threadActive(current) ? [{ key: "x", description: "interrupt" }] : []),
+    ...(current && threadResumable(current) ? [{ key: "r", description: "resume" }] : []),
+    ...(held
+      ? [
+          { key: "a", description: "apply held" },
+          { key: "d", description: "discard held" },
+        ]
+      : []),
+  ];
+}
+
 /** The keys of the tab: none while another region has the keys, else the keys of the list or the thread. */
 export function threadsHints({
   keysOwn,
@@ -48,11 +64,9 @@ export function threadsHints({
   current,
   count,
   conversation,
+  held,
 }: HintsInput): readonly KeyHint[] {
-  const actionHints: KeyHint[] = [
-    ...(current && threadActive(current) ? [{ key: "x", description: "interrupt" }] : []),
-    ...(current && threadResumable(current) ? [{ key: "r", description: "resume" }] : []),
-  ];
+  const actionHints = threadActionHints(current, held);
 
   if (!keysOwn) {
     return [];

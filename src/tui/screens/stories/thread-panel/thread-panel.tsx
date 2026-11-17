@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
+import type { ThreadConnection } from "../../../../services/thread-connection/thread-connection.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { ConversationView, Panel } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
@@ -13,6 +14,10 @@ export interface ThreadPanelProps {
   /** The names of the Stages by key. */
   readonly stages?: StageNames;
   readonly current: ThreadRecord | undefined;
+  /** The lost connection of the selected thread. */
+  readonly connection?: ThreadConnection;
+  /** The number of held entries of the selected thread, when it is abandoned. */
+  readonly held?: number;
   /** The time for the run time of a running thread. */
   readonly now: number;
   /** The thread shows only its status and outcome rows. */
@@ -55,6 +60,8 @@ export function ThreadPanel({
   storyId,
   stages,
   current,
+  connection,
+  held,
   now,
   compact,
   selected,
@@ -83,7 +90,7 @@ export function ThreadPanel({
     >
       {current ? (
         <>
-          <ThreadDetail thread={current} now={now} compact={compact} />
+          <ThreadDetail thread={current} now={now} compact={compact} connection={connection} held={held} />
           {selected && shownId === current.id && (
             <Box marginTop={1}>
               <ConversationView
