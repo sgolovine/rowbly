@@ -9,6 +9,7 @@ import { mapInOrder } from "../in-order/in-order.js";
 import { writeCopyBase } from "../outbox-apply/host-files.js";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { buildThreadCopy, type CopyAttachment, type ThreadCopy } from "../thread-copy/thread-copy.js";
+import { adoptedRunState } from "./remote-adopt.js";
 import {
   type CallTarget,
   cacheMissing,
@@ -52,6 +53,7 @@ export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor
     syncHosts: () => syncHosts(env),
     reconnect: (host) => reconnectHost(env, host),
     shutdown: (timeoutMs) => shutdownRemote(env, timeoutMs),
+    adopt: (launch, events) => adoptRemote(env, launch, events),
   };
 }
 
@@ -78,6 +80,35 @@ async function launchRemote(env: RemoteEnv, launch: WorkerLaunch, events: Worker
     closeIdleLink(env, host);
     await dropInbound(env, host, run.threadId);
     await dropMirror(env, run.threadId);
+  }
+}
+
+/**
+ * Follows a run that a previous daemon started. It sends no command: the reconnect of the host gives the run its
+ * command id and its last state. Resolves when the run ended and its outbox is applied, or when the wait ends.
+ */
+async function adoptRemote(env: RemoteEnv, launch: WorkerLaunch, events: WorkerEvents): Promise<void> {
+  const host = launch.thread.host;
+
+  if (!host) {
+    await events.failed({ error: new ConflictError("The Thread has no worker host"), sessionOpened: false });
+    return;
+  }
+
+  const run = newRemoteRun(launch.thread, host, events);
+
+  try {
+    const start = await adoptedRunState(env, host, launch.thread);
+
+    run.store.update(() => start);
+    env.state.update((state) => ({ runs: withEntry(state.runs, run.threadId, run) }));
+    void reconnectHost(env, host);
+    await waitForAbort(run.done.signal);
+  } catch (error) {
+    await failRun(run, { error, sessionOpened: false });
+  } finally {
+    env.state.update((state) => ({ runs: withoutEntry(state.runs, run.threadId) }));
+    closeIdleLink(env, host);
   }
 }
 

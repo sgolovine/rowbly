@@ -7,6 +7,7 @@ import { hostAgentPaths, hostRunPathsAnswer } from "../../services/host-agent/ho
 import { HOST_PREPARE_LIMIT, prepareHostThread } from "../../services/host-agent/host-agent-prepare.js";
 import { applyHostInbound } from "../../services/host-agent/host-inbound.js";
 import { hostPing } from "../../services/host-agent/host-ping.js";
+import { hostRuns } from "../../services/host-agent/host-runs.js";
 import { hostSessionBytes } from "../../services/host-agent/host-session-bytes.js";
 import { runBytes, runWithoutContext } from "../output/output.js";
 
@@ -58,7 +59,7 @@ function registerCacheCommands(program: Command): void {
 
 /**
  * Registers the hidden request and upload calls of a remote run: the attachment cache, the run paths, the prepare step,
- * the inbound updates, the heartbeat and the session bytes of the session mirror.
+ * the inbound updates, the heartbeat, the run states of the Threads and the session bytes of the session mirror.
  */
 export function registerHostRunCommands(program: Command): void {
   registerCacheCommands(program);
@@ -98,7 +99,19 @@ export function registerHostRunCommands(program: Command): void {
     ),
   );
 
+  registerRunsCommand(program);
   registerSessionBytesCommand(program);
+}
+
+/** Registers the hidden request call that gives the run states of the Threads after a restart of the daemon. */
+function registerRunsCommand(program: Command): void {
+  program.command("runs <project-id>", { hidden: true }).action((projectId: string, _opts: unknown, command: Command) =>
+    runWithoutContext(
+      command,
+      async () => hostRuns(hostAgentPaths(projectId), parseJsonInput(await readBoundedInput(process.stdin, 1_048_576))),
+      (answer) => JSON.stringify(answer),
+    ),
+  );
 }
 
 /** Registers the hidden bytes call that gives the session lines of a Thread to the session mirror. */

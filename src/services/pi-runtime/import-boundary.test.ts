@@ -106,6 +106,9 @@ describe("Pi import boundary", () => {
     await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
     await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
+    await expect(import("../remote-executor/remote-adopt.js")).resolves.toHaveProperty("askAdoptedRuns");
+    await expect(import("../host-agent/host-runs.js")).resolves.toHaveProperty("hostRuns");
+    await expect(import("../factory-manager/worker-adopt.js")).resolves.toHaveProperty("adoptRemoteThreads");
     await expect(import("../test-project/scripted-host.js")).resolves.toHaveProperty("createScriptedHost");
   });
 
