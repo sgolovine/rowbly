@@ -1,6 +1,6 @@
 import type { Key } from "ink";
 import { groupDelta, moveDelta, reorderDelta } from "../../keymap.js";
-import { liveChecks } from "../../screens/factory/index.js";
+import { liveChecks } from "../../screens/factory/check-jobs.js";
 import type { Overlay } from "../overlay.js";
 import {
   collapseStory,

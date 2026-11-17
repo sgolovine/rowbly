@@ -1,7 +1,7 @@
 import { Text } from "ink";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button } from "../../components/index.js";
-import { connectivityWord, factoryProblems, factoryState } from "../../screens/factory/index.js";
+import { connectivityWord, factoryProblems, factoryState } from "../../screens/factory/factory-status.js";
 import { theme } from "../../theme.js";
 
 const LABEL = "Factory";

@@ -1,14 +1,14 @@
 import { Box, Text } from "ink";
-import { type ComponentProps, memo } from "react";
+import { type ComponentProps, memo, Suspense } from "react";
 import type { FactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import { Loading, Panel } from "../../components/index.js";
 import { ActiveContext, type Layout, LayoutContext } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
-import { Onboarding } from "../../screens/onboarding/index.js";
 import { FactoryStatusLine, StoryList } from "../../screens/stories/index.js";
 import { FactoryView } from "../../screens/threads/index.js";
 import { theme } from "../../theme.js";
+import { LazyOnboarding } from "../lazy-screens.js";
 
 /**
  * What the Story panel shows: the first load, the Stories of a Project, the worker Threads of the Factory view,
@@ -74,7 +74,9 @@ export const StoryPanel = memo(function StoryPanel({ title, focused, height, inn
         {body.kind === "threads" && <FactoryView {...body.view} />}
         {body.kind === "onboarding" && (
           <ActiveContext.Provider value={body.active}>
-            <Onboarding ctx={body.ctx} onHints={body.onHints} onCreated={body.onCreated} />
+            <Suspense fallback={<Loading label="Loading…" />}>
+              <LazyOnboarding ctx={body.ctx} onHints={body.onHints} onCreated={body.onCreated} />
+            </Suspense>
           </ActiveContext.Provider>
         )}
         {body.kind === "error" && <Text color={theme.danger}>Rowbly could not read the project.</Text>}

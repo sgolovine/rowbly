@@ -3,7 +3,7 @@ import type { FactoryQueueEntry, FactoryStatus } from "../../../../services/fact
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { Panel, ScrollBody } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
-import { queueReason } from "../../factory/index.js";
+import { queueReason } from "../../factory/factory-status.js";
 import { type ThreadHostView, threadHostProps } from "../thread-host-view.js";
 import { ThreadRow } from "../thread-row/index.js";
 import type { StageNames } from "../thread-text.js";

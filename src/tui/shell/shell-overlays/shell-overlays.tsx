@@ -1,11 +1,10 @@
-import { memo } from "react";
+import { memo, Suspense } from "react";
 import type { FactoryLaunch, FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
-import { ChecksModal, FactoryModal } from "../../screens/factory/index.js";
-import { SettingsModal } from "../../screens/settings/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
 import { HelpModal } from "../help-modal/index.js";
+import { LazyChecksModal, LazyFactoryModal, LazySettingsModal } from "../lazy-screens.js";
 import type { Overlay, OverlayBoard, OverlayHandlers } from "../overlay.js";
 import { ProjectSwitcher } from "../project-switcher/index.js";
 import { StoryOverlays } from "../story-overlays/index.js";
@@ -48,31 +47,34 @@ export const ShellOverlays = memo(function ShellOverlays({
           onSaved={on.stageSaved}
         />
       )}
-      {board && overlay?.kind === "settings" && (
-        <SettingsModal
-          ctx={ctx}
-          projectName={board.project.projectName}
-          section={overlay.section}
-          onChange={on.reload}
-          onClose={on.close}
-        />
-      )}
-      {board && overlay?.kind === "factory" && (
-        <FactoryModal
-          ctx={ctx}
-          status={factory}
-          stages={stageLabels(board)}
-          launch={launch}
-          onClose={on.close}
-          onAiSettings={on.openAiSettings}
-          stories={board.stories}
-          onOpenStory={on.openStory}
-          onOpenThread={on.openThread}
-        />
-      )}
-      {board && overlay?.kind === "checks" && (
-        <ChecksModal status={factory} stages={stageLabels(board)} onClose={on.close} />
-      )}
+      {/* The lazy Modals show an empty frame while their chunk loads. */}
+      <Suspense fallback={null}>
+        {board && overlay?.kind === "settings" && (
+          <LazySettingsModal
+            ctx={ctx}
+            projectName={board.project.projectName}
+            section={overlay.section}
+            onChange={on.reload}
+            onClose={on.close}
+          />
+        )}
+        {board && overlay?.kind === "factory" && (
+          <LazyFactoryModal
+            ctx={ctx}
+            status={factory}
+            stages={stageLabels(board)}
+            launch={launch}
+            onClose={on.close}
+            onAiSettings={on.openAiSettings}
+            stories={board.stories}
+            onOpenStory={on.openStory}
+            onOpenThread={on.openThread}
+          />
+        )}
+        {board && overlay?.kind === "checks" && (
+          <LazyChecksModal status={factory} stages={stageLabels(board)} onClose={on.close} />
+        )}
+      </Suspense>
       {overlay?.kind === "projects" && (
         <ProjectSwitcher ctx={ctx} current={board?.project.root} onSelect={on.switchProject} onClose={on.close} />
       )}
