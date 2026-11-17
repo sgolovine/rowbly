@@ -65,13 +65,15 @@ If a check fails and you cannot repair the problem, tell the user.
 
 The factory agents get prompts at two levels. See [prompts.md](docs/architecture/prompts.md) for the full rules.
 
-- **System prompts** are in `src/config/prompts/` of the package: `SYSTEM.md` (the supervisor and all
-  workers), `SUPERVISOR.md` (the supervisor only) and `WORKER.md` (all workers). Users cannot change them.
-- **User prompts** are in `.rowbly/prompts/` of each Project, with the same three file names. They are
-  the Project prompt, the Supervisor prompt and the Worker prompt.
+- **System prompts** are in `src/config/prompts/` of the package: `SYSTEM.md` and `WORKER.md`. All
+  workers get them. Users cannot change them.
+- **User prompts** are in `.rowbly/prompts/` of each Project, with the same two file names. They are
+  the Project prompt and the Worker prompt.
 - **Stage prompts** are in `.rowbly/stages/<KEY>.md`. Only the workers of that Stage get them.
 - **Priority.** The system prompts come first. A user prompt cannot remove a system rule. Then the
-  Stage prompt, the Supervisor or Worker prompt, and the Project prompt follow, in this order.
+  Stage prompt, the Worker prompt and the Project prompt follow, in this order.
+- Rowbly does not use an old `.rowbly/prompts/SUPERVISOR.md`. `rowbly doctor` shows a warning for it.
+  Rowbly never deletes it.
 - `src/services/messages/messages.ts` is the only place that builds the messages of the factory agents.
   Do not build a message in a different module.
 - Never assume that a user prompt exists. A missing file has no text. `rowbly doctor` shows a warning

@@ -9,8 +9,8 @@ machine sends commands to the agent and reads the state of the agent on a channe
 continues when the SSH session stops.
 
 The host agent is not the factory daemon. It does not take the Project write lock or the state lock.
-It does not read or write a canonical `.rowbly/` folder, also not `<clone>/.rowbly/`. It never runs
-a supervisor. Only the start of a run loads Pi.
+It does not read or write a canonical `.rowbly/` folder, also not `<clone>/.rowbly/`. It runs only
+workers. Only the start of a run loads Pi.
 
 ## Modules
 

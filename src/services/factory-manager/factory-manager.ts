@@ -18,6 +18,7 @@ import {
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { Store, withoutEntry } from "../store/store.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
+import { reconcilePolicy, runFactory } from "./factory-loop.js";
 import { shutdownFactory } from "./factory-shutdown.js";
 import { startHostHeartbeat } from "./host-heartbeat.js";
 import type { WorkerHostView } from "./host-slots.js";
@@ -36,7 +37,6 @@ import {
 import { buildSnapshot, loadStoredStatus, persistStatus, type StoredStatus } from "./manager-status.js";
 import { createManagerRemote } from "./remote-dispatch.js";
 import { releaseParkedStory } from "./story-release.js";
-import { reconcilePolicy, runFactory } from "./supervisor-loop.js";
 import { adoptRemoteThreads } from "./worker-adopt.js";
 import { openCheckQueue } from "./worker-checks.js";
 import {

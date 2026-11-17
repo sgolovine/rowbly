@@ -1,18 +1,16 @@
 import { Text } from "ink";
 import type { FactoryStatus } from "../../../../services/factory/factory.js";
-import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
 import { hostRow, workerHosts } from "../factory-hosts.js";
 import { FactoryList } from "../factory-list/index.js";
-import { checksText, PHASES, providerNotice, supervisorText, workersText } from "../factory-modal-text.js";
+import { checksText, PHASES, providerNotice, workersText } from "../factory-modal-text.js";
 import { factoryProblems, queueReason, restartText } from "../factory-status.js";
 
 /** The props of `FactoryOverview`. */
 export interface FactoryOverviewProps {
   readonly status: FactoryStatus | undefined;
   readonly live: boolean;
-  readonly supervisor: ThreadRecord | undefined;
   /** The worker limit to show when the factory is off. */
   readonly limit: number | undefined;
   /** False after a start found no AI provider with credentials. */
@@ -40,13 +38,11 @@ function restartRows(status: FactoryStatus | undefined): { label: string; value:
 }
 
 /**
- * The state of the factory and its supervisor, the hosts of a live factory with a worker host, the problems and the
- * queued Stories.
+ * The state of the factory, the hosts of a live factory with a worker host, the problems and the queued Stories.
  */
 export function FactoryOverview({
   status,
   live,
-  supervisor,
   limit,
   provider,
   canLaunch,
@@ -72,7 +68,6 @@ export function FactoryOverview({
               </Text>
             ),
           },
-          { label: "Supervisor", value: supervisorText(supervisor?.model, live) },
           { label: "Workers", value: workersText(live, status?.workers, limit) },
           ...(live && status?.checks ? [{ label: "Checks", value: checksText(status.checks) }] : []),
           ...(live && status?.owner ? [{ label: "Started", value: formatDateTime(status.owner.startedAt) }] : []),

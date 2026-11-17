@@ -52,7 +52,7 @@ vi.mock("../outbox-apply/outbox-apply.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../outbox-apply/outbox-apply.js")>();
   return { ...actual, syncOutbox: vi.fn(actual.syncOutbox) };
 });
-// Keeps each manager that starts its heartbeat, so that a test can call a step of the supervisor pass.
+// Keeps each manager that starts its heartbeat, so that a test can call a step of the factory pass.
 vi.mock("./host-heartbeat.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./host-heartbeat.js")>();
   return {

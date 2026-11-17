@@ -79,6 +79,14 @@ describe("factorySettings", () => {
     await addCustomField({ label: "Owner", type: "string" }, p.ctx);
     expect(await readFactory(p)).toEqual({ maxWorkers: 2, workerModel: model });
   });
+  it("accepts an old supervisorModel key with any value and keeps it on a write", async () => {
+    for (const old of [model, "bad", { provider: "" }]) {
+      await writeFactory(p, JSON.stringify({ maxWorkers: 2, supervisorModel: old }));
+      expect((await getFactorySettings(p.ctx)).maxWorkers).toBe(2);
+    }
+    await updateFactorySettings({ maxWorkers: 3 }, p.ctx);
+    expect(await readFactory(p)).toEqual({ maxWorkers: 3, supervisorModel: { provider: "" } });
+  });
   it("validates limits and model choices", async () => {
     await expect(updateFactorySettings({ maxWorkers: 0 }, p.ctx)).rejects.toThrow("Invalid");
     await expect(updateFactorySettings({ workerModel: { provider: "", modelId: "test" } }, p.ctx)).rejects.toThrow(
@@ -110,8 +118,6 @@ describe("factorySettings", () => {
       { story: story.id, worker: "faux/test" },
       { clearWorker: true },
       { stage: "BACKLOG", clearWorker: true, worker: "faux/test" },
-      { stage: "BACKLOG", worker: "faux/test", supervisor: "faux/test" },
-      { stage: "BACKLOG", worker: "faux/test", supervisorThinking: "low" as const },
       { stage: "BACKLOG", worker: "faux/test", maxWorkers: 3 },
       { stage: "BACKLOG", worker: "faux/test", commitAuthor: "Bot <bot@example.com>" },
       { stage: "BACKLOG", clearWorker: true, gitPull: true },

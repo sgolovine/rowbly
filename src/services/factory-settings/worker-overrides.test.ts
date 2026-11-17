@@ -36,8 +36,8 @@ describe("selectWorkerModel without a paused provider", () => {
   it("gives undefined without an override or a settings model", () => {
     expect(resolve({ maxWorkers: 4 }, "ROW-1", "BACKLOG")).toBeUndefined();
   });
-  it("gives the supervisor model after the overrides and before workerModel", () => {
-    const model = { provider: "supervisor-pick", modelId: "m" };
+  it("gives the requested model after the overrides and before workerModel", () => {
+    const model = { provider: "requested-pick", modelId: "m" };
     expect(selectWorkerModel(settings, { storyId: "ROW-1", stage: "BACKLOG", model }, () => false).choice).toEqual(
       model,
     );
@@ -66,9 +66,9 @@ describe("selectWorkerModel with a paused provider", () => {
       selectWorkerModel(withFallback, { storyId: "ROW-1", stage: "BACKLOG" }, pausedOf("base", "fallback-a")),
     ).toEqual({ choice: fallbackB, paused: false });
   });
-  it("applies the fallback to a Story override, a Stage override and a supervisor model", () => {
-    const model = { provider: "supervisor-pick", modelId: "m" };
-    const isPaused = pausedOf("story", "stage", "supervisor-pick");
+  it("applies the fallback to a Story override, a Stage override and a requested model", () => {
+    const model = { provider: "requested-pick", modelId: "m" };
+    const isPaused = pausedOf("story", "stage", "requested-pick");
     expect(selectWorkerModel(withFallback, { storyId: "ROW-1", stage: "IN_DEVELOPMENT" }, isPaused).choice).toEqual(
       fallbackA,
     );

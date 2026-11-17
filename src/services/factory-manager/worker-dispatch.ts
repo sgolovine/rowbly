@@ -5,9 +5,9 @@ import type { PolicyDecision } from "../factory-policy/factory-policy.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { withoutEntry } from "../store/store.js";
 import { getThread } from "../thread/thread.js";
+import { failureText, type StepResult } from "./factory-steps.js";
 import { getState, isActiveStatus, type Manager, serial, setState } from "./manager-state.js";
 import { scan } from "./manager-status.js";
-import { failureText, type StepResult } from "./supervisor-steps.js";
 import { reserveWorker } from "./worker-reservation.js";
 
 /** The label of the attention entry `dispatch`. */

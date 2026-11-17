@@ -38,7 +38,7 @@ prompts" row points to `.rowbly/prompts/`, Settings › Prompts and `rowbly prom
 - The custom fields of the skills (`worktree`, `pull_request`) are added with the skills that use them.
 - If a skill install fails, `applyOnboarding()` removes the new Project and the skills that it
   installed.
-- Initialization creates `.rowbly/.gitignore` and the three user prompts in `.rowbly/prompts/`, with no
+- Initialization creates `.rowbly/.gitignore` and the two user prompts in `.rowbly/prompts/`, with no
   text. See [storage.md](storage.md) and [prompts.md](prompts.md).
 
 ## `rowbly init` input

@@ -7,7 +7,7 @@ import type {
 import type { Stage } from "../../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import { ConfirmDialog, FormModal, type FormValues } from "../../../components/index.js";
-import type { AiProvider, AiStatus, AiTask, Role } from "../ai-view.js";
+import type { AiProvider, AiStatus, AiTask } from "../ai-view.js";
 import { AuthFlow } from "../auth-flow/index.js";
 import { CheckTaskView } from "../check-task/index.js";
 import { ModelPickerModal, NO_OVERRIDE_LABEL } from "../model-picker-modal/index.js";
@@ -24,7 +24,7 @@ export interface AiTaskViewProps {
   /** The sign-in ended: `true` when it completed. */
   readonly onSignInDone: (signedIn: boolean) => void;
   readonly onSignOut: (id: string) => void;
-  readonly onSaveModel: (role: Role, choice: ModelChoice | null) => Promise<void>;
+  readonly onSaveModel: (choice: ModelChoice | null) => Promise<void>;
   /** `null` removes the override of the Stage. */
   readonly onSaveStageModel: (stage: Stage, choice: ModelChoice | null) => Promise<void>;
   readonly onSaveLimit: (values: FormValues) => Promise<void>;
@@ -61,10 +61,10 @@ export function AiTaskView({ task, ctx, runtime, provider, status, settings, ...
       )}
       {task?.kind === "model" && status && (
         <ModelPickerModal
-          title={`AI › ${task.role === "supervisor" ? "Supervisor" : "Worker"} model`}
+          title="AI › Worker model"
           models={status.models}
-          current={task.role === "supervisor" ? settings?.supervisorModel : settings?.workerModel}
-          onSave={(choice) => on.onSaveModel(task.role, choice)}
+          current={settings?.workerModel}
+          onSave={(choice) => on.onSaveModel(choice)}
           onClose={on.onCancel}
         />
       )}

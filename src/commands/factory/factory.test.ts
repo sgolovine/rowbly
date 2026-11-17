@@ -214,8 +214,6 @@ describe("factory commands", () => {
       ["--story", "ROW-1", "--worker", "a/b"],
       ["--clear-worker"],
       ["--stage", "BACKLOG", "--clear-worker", "--worker", "a/b"],
-      ["--stage", "BACKLOG", "--worker", "a/b", "--supervisor", "a/b"],
-      ["--stage", "BACKLOG", "--worker", "a/b", "--supervisor-thinking", "low"],
       ["--stage", "BACKLOG", "--worker", "a/b", "--max-workers", "3"],
       ["--stage", "BACKLOG", "--worker", "a/b", "--commit-message", "chore: sync"],
       ["--stage", "BACKLOG", "--clear-worker", "--git-push"],
@@ -230,6 +228,16 @@ describe("factory commands", () => {
     const missing = await cli("--stage", "BACKLOG", "--story", "ROW-99", "--clear-worker");
     expect(missing.exitCode).toBe(1);
     expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
+    expect(await project.read("rowbly.config.json")).toBe(before);
+  });
+  it("rejects the old supervisor flags as unknown options", async () => {
+    await writeFactory(JSON.stringify({ maxWorkers: 2 }));
+    const before = await project.read("rowbly.config.json");
+    for (const flag of ["--supervisor", "--supervisor-thinking"]) {
+      const result = await runCli(["--json", "factory", "configure", flag, "x/y"], project.paths.root);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain(`unknown option '${flag}'`);
+    }
     expect(await project.read("rowbly.config.json")).toBe(before);
   });
   describe("configure fallback worker models", () => {

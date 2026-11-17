@@ -221,7 +221,7 @@ export function queueReason(entry: FactoryQueueEntry, providers?: ProviderPauses
   }
 
   if (entry.action !== "skip") {
-    return "waiting for the supervisor";
+    return "waiting for a worker start";
   }
 
   if (entry.reason === "worker limit") {

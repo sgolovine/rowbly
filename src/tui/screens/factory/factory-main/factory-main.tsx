@@ -24,7 +24,6 @@ export function FactoryMain({ model, status, canLaunch, stages, onAiSettings }: 
       <FactoryOverview
         status={status}
         live={live}
-        supervisor={model.supervisor}
         limit={model.limit}
         provider={model.provider}
         canLaunch={canLaunch}
@@ -40,11 +39,9 @@ export function FactoryMain({ model, status, canLaunch, stages, onAiSettings }: 
         busy={busy}
         canStart={can.start}
         canStop={can.stop}
-        canInspect={can.inspect}
         canWarnings={can.warnings}
         idle={idle}
         onStart={actions.start}
-        onInspect={actions.openSupervisor}
         onWarnings={attention.actions.openList}
         onHistory={actions.openHistory}
         onStop={actions.askStop}

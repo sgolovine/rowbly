@@ -29,7 +29,7 @@ describe("initProject", () => {
     const paths = projectPaths(dir.path);
     expect(await readdir(paths.stagesDir)).toEqual(["BACKLOG.md", "DONE.md"]);
     expect(await readdir(paths.storiesDir)).toEqual([]);
-    expect(await readdir(paths.promptsDir)).toEqual(["SUPERVISOR.md", "SYSTEM.md", "WORKER.md"]);
+    expect(await readdir(paths.promptsDir)).toEqual(["SYSTEM.md", "WORKER.md"]);
     expect(await readFile(join(paths.promptsDir, "SYSTEM.md"), "utf8")).toBe("");
   });
 
