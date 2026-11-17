@@ -1,13 +1,13 @@
 ---
 title: Hold the changes of abandoned remote Threads
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 18
 uid: 44146b02-a32e-4d9a-b59a-97620af46408
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:12.293Z
-updatedAt: 2026-11-17T00:26:38.883Z
+updatedAt: 2026-11-17T00:30:42.072Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-99
 pull_request: https://github.com/sgolovine/rowbly/pull/300
 ---
