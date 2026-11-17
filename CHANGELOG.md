@@ -31,6 +31,7 @@ This file records the changes to Rowbly that users can see.
 - Added: When a worker reports blockers or problems, or fails with an error that is not a network error, the factory shows the attention entry `worker:<ID>` with the Stage, the Thread, the outcome and the first blockers and problems. A later worker of the Story that ends without problems removes the entry, and the factory also removes it when the Story leaves that Stage or is deleted. (ROW-122)
 - Changed: New end-to-end tests run the factory with worker hosts in the test process. They check a full remote run, a cancel while a host is offline, the changes of the board that go to a running remote Thread, the placement of workers and the attachments in the two directions. (ROW-104)
 - Added: The TUI shows the worker hosts and the remote Threads. Factory controls show a `Hosts` list with the state, the used slots and the last contact of each worker host, the `▶` marker and the Thread rows show the host of a remote worker and `connection lost` when the host is not connected, and in the Threads tab of a Story, `a` applies and `d` discards the held changes of an abandoned Thread. (ROW-102)
+- Changed: The TUI renders fewer parts of the screen on each key. For example, an arrow key on the board renders only the Story list and the footer again, and not the header, the Stage sidebar or the overlays. (ROW-130)
 
 ### 0.19.0
 
