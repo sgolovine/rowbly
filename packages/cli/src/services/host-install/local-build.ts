@@ -55,9 +55,12 @@ export function devBuildId(version: string, bytes: Buffer): string {
   return `${version}-dev-${createHash("sha256").update(bytes).digest("hex").slice(0, HASH_LENGTH)}`;
 }
 
-/** An unreleased build has a `.git` entry in the package folder, or runs from `src/`. A package from npm has neither. */
+/**
+ * An unreleased build has its sources (`src/cli.ts`), or runs from `src/`.
+ * A package from npm has only `src/config/prompts/`.
+ */
 async function isUnreleased(dir: string, modulePath: string): Promise<boolean> {
-  return (await pathExists(join(dir, ".git"))) || relative(dir, modulePath).startsWith(`src${sep}`);
+  return (await pathExists(join(dir, "src", "cli.ts"))) || relative(dir, modulePath).startsWith(`src${sep}`);
 }
 
 async function assertBuilt(dir: string): Promise<void> {
