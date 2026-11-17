@@ -12,6 +12,21 @@ function useFilterState() {
   return { values: { stageKey, tagKey }, setters: { setStageKey, setTagKey } };
 }
 
+/**
+ * The sizes after a drag with the mouse: the width of the sidebars, the rows of the tag sidebar and the width of the
+ * Story sidebar. `null` is the default size.
+ */
+function useSizeState() {
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
+  const [tagsHeight, setTagsHeight] = useState<number | null>(null);
+  const [storyWidth, setStoryWidth] = useState<number | null>(null);
+
+  return {
+    values: { sidebarWidth, tagsHeight, storyWidth },
+    setters: { setSidebarWidth, setTagsHeight, setStoryWidth },
+  };
+}
+
 /** The state of the shell that lasts until Rowbly quits: the overlay, the focus, the panes and the selection. */
 export function useShellState() {
   const [overlay, setOverlay] = useState<Overlay | null>(null);
@@ -20,12 +35,11 @@ export function useShellState() {
   const [pane, setPane] = useState<Pane>("stories");
   // The Switch in the header and `t` change it.
   const [mode, setMode] = useState<ViewMode>("stories");
-  // Dragged with the mouse and toggled with `ctrl+b`.
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
+  // Toggled with `ctrl+b`.
   const [sidebarShown, setSidebarShown] = useState(true);
-  // What the Story sidebar shows, and its width after a drag (`null` for the default width).
+  const sizes = useSizeState();
+  // What the Story sidebar shows.
   const [storyPane, setStoryPane] = useState<SidePane | null>(null);
-  const [storyWidth, setStoryWidth] = useState<number | null>(null);
   // The Story sidebar takes the columns of the Story list. With the `remember` option, it is also the last selection.
   const [storyExpanded, setStoryExpanded] = useState(false);
   const [storyHints, setStoryHints] = useState<readonly KeyHint[]>([]);
@@ -45,10 +59,9 @@ export function useShellState() {
       threadHints,
       pane,
       mode,
-      sidebarWidth,
       sidebarShown,
+      ...sizes.values,
       storyPane,
-      storyWidth,
       storyExpanded,
       storyHints,
       ...filters.values,
@@ -63,10 +76,9 @@ export function useShellState() {
       setThreadHints,
       setMode,
       setPane,
-      setSidebarWidth,
       setSidebarShown,
+      ...sizes.setters,
       setStoryPane,
-      setStoryWidth,
       setStoryExpanded,
       setStoryHints,
       ...filters.setters,

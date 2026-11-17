@@ -21,6 +21,10 @@
     {
       "value": "deterministic-supervisor",
       "label": "Deterministic Supervisor"
+    },
+    {
+      "value": "refactoring",
+      "label": "Refactoring"
     }
   ],
   "stages": [

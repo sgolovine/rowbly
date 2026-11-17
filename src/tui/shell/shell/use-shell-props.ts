@@ -59,12 +59,13 @@ function useStageSidebarProps(handlers: ShellHandlers, view: ShellView, frame: S
   return stageSidebarProps(handlers, view, frame, { entries, button });
 }
 
-/** The entries keep their reference while the tags of the Project do not change. */
+/** The entries keep their reference while the tags of the Project do not change, and the button keeps its reference. */
 function useTagSidebarProps(handlers: ShellHandlers, view: ShellView, frame: ShellFrame) {
   const { tags } = view;
   const entries = useMemo(() => tagEntries(tags), [tags]);
+  const button = useMemo(() => ({ label: "+ New Tag", onClick: handlers.openNewTag }), [handlers]);
 
-  return tagSidebarProps(handlers, view, frame, entries);
+  return tagSidebarProps(handlers, view, frame, { entries, button });
 }
 
 /** The body keeps its reference while its values do not change. */

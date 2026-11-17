@@ -58,7 +58,14 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
     [data.data, stageKey, tagKey, collapsed],
   );
   const view = shellView({ data, active, ...values, rows });
-  const frame = shellFrame(layout, view, values.sidebarWidth, values.storyWidth, values.storyExpanded);
+  const frame = shellFrame(
+    layout,
+    view,
+    values.sidebarWidth,
+    values.storyWidth,
+    values.storyExpanded,
+    values.tagsHeight,
+  );
   const env: ShellEnv = {
     ctx,
     view,
