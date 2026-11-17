@@ -28,6 +28,7 @@ This file records the changes to Rowbly that users can see.
 - Added: When you cancel a remote Thread while its worker host is offline, the factory stops the worker first on reconnect and holds the later changes of that Thread in `.rowbly/runtime/hosts/<host>/held/<thread>/`, and does not apply them to the board. An attention entry shows the held changes, and the new `rowbly thread held <id> [--apply | --discard]` command lists, applies or deletes them. (ROW-99)
 - Added: The new `factory.fallbackWorkerModels` setting gives an ordered list of worker models, and `rowbly factory configure --fallback-worker <provider/model>` (repeat the flag) sets it and `--clear-fallback-workers` removes it. When the provider of the worker model is paused, the factory starts the worker with the first model of the list whose provider is not paused, or skips the Story with `provider paused`. (ROW-121)
 - Fixed: After a restart of the factory, remote Threads keep their status, and the new factory follows their runs on the worker host with the new hidden `rowbly host runs` command. A remote Thread now resumes only on its own worker host, and a resume gives `CONFLICT` when that host is not connected or has no free slot. (ROW-117)
+- Changed: New end-to-end tests run the factory with worker hosts in the test process. They check a full remote run, a cancel while a host is offline, the changes of the board that go to a running remote Thread, the placement of workers and the attachments in the two directions. (ROW-104)
 
 ### 0.19.0
 
