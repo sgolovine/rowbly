@@ -52,7 +52,7 @@ export function canResume(thread: ThreadRecord, story: Story): boolean {
 }
 
 /** Gives the last worker Thread of each Story, by Story ID. */
-function lastWorkerThreads(threads: readonly ThreadRecord[]): Map<string, ThreadRecord> {
+export function lastWorkerThreads(threads: readonly ThreadRecord[]): Map<string, ThreadRecord> {
   const workers = threads
     .filter((t) => t.role === "worker" && !!t.storyId)
     .toSorted((first, second) => first.createdAt.localeCompare(second.createdAt));

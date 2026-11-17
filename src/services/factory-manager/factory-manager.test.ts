@@ -14,7 +14,7 @@ import { initProject } from "../project/project.js";
 import { commitCanonicalProject } from "../project-write/project-write.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { createStage } from "../stage/stage.js";
-import { createStory, getStory, updateStory } from "../story/story.js";
+import { createStory, deleteStory, getStory, updateStory } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
@@ -393,6 +393,10 @@ describe("foreground factory", () => {
     expect(worker?.status).toBe("failed");
     expect(await readFile(join(worker?.worktree as string, "dirty.txt"), "utf8")).toBe("preserve me");
     await vi.waitFor(async () => expect((await readFactoryState(root)).attempts[0]?.status).toBe("failed"));
+    const entry = (await attentionOf(f)).get(`worker:${story.id}`) as { text: string; storyId?: string };
+    expect(entry.storyId).toBe(story.id);
+    expect(entry.text).toContain(`worker ${worker?.id} failed`);
+    expect(entry.text).toContain("offline simulated failure");
   });
   it("resumes the exact session and v1 attempt with a new run", async () => {
     const story = await createStory({ title: "Resume", stage: "WORK" }, { cwd: root });
@@ -832,6 +836,7 @@ describe("foreground factory", () => {
     expect(Date.parse(snapshot.providers.worker?.retryAt ?? "") - Date.now()).toBeLessThanOrEqual(60_000);
     expect(previous?.error?.retryAt).toBe(snapshot.providers.worker?.retryAt);
     expect(snapshot.connectivity).toBe("degraded");
+    expect(snapshot.attention).toEqual([]);
 
     // The pause stops each new worker on the provider, and the policy waits for the resume of the Thread.
     await f.manager.reconcile();
@@ -902,6 +907,95 @@ describe("foreground factory", () => {
     manager = undefined;
     const again = await fixture();
     expect(keys((await again.manager.snapshot()).attention)).toEqual(["check"]);
+  });
+  async function workerEnded(storyId: string) {
+    await vi.waitFor(
+      async () => {
+        const thread = (await listThreads({ story: storyId }, { cwd: root })).threads[0];
+        expect(["completed", "failed"]).toContain(thread?.status);
+      },
+      { timeout: 10000, interval: 20 },
+    );
+    await vi.waitFor(async () => expect((await manager?.snapshot())?.hosts.every((h) => h.used === 0)).toBe(true));
+    return (await listThreads({ story: storyId }, { cwd: root })).threads[0];
+  }
+  async function reportRun(
+    f: Awaited<ReturnType<typeof fixture>>,
+    storyId: string,
+    report: { blockers: string[]; problems: string[] },
+  ) {
+    f.worker.setResponses([
+      tool("report_result", { outcome: "blocked", summary: "Report", ...report }),
+      fauxAssistantMessage("Done"),
+    ]);
+    await f.manager.reserveWorker({ storyId, stage: "WORK", requestId: `report-${storyId}` });
+    return workerEnded(storyId);
+  }
+  async function seedAttention(entries: [string, { text: string; storyId?: string }][]) {
+    const paths = projectPaths(root);
+    await prepareRuntime(paths);
+    await writeFile(
+      await runtimePath(paths, "status.json"),
+      JSON.stringify({ version: 1, phase: "stopped", attention: entries }),
+    );
+  }
+  it("raises worker attention for a reported blocker, with the Story, the Stage, the Thread and the blocker", async () => {
+    const story = await createStory({ title: "Blocked", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    const thread = await reportRun(f, story.id, { blockers: ["Needs an API key"], problems: [] });
+    const entry = (await attentionOf(f)).get(`worker:${story.id}`) as { text: string; storyId?: string };
+    expect(entry.storyId).toBe(story.id);
+    expect(entry.text).toContain(story.id);
+    expect(entry.text).toContain("WORK");
+    expect(entry.text).toContain(thread?.id);
+    expect(entry.text).toContain("Needs an API key");
+  });
+  it("raises worker attention for a reported problem without blockers", async () => {
+    const story = await createStory({ title: "Problem", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    await reportRun(f, story.id, { blockers: [], problems: ["CI suite is flaky"] });
+    const entry = (await attentionOf(f)).get(`worker:${story.id}`);
+    expect(entry?.text).toContain("CI suite is flaky");
+    expect(entry?.text).not.toContain("Story remains in the assigned Stage");
+  });
+  it("removes the worker attention entry after a result without blockers and problems", async () => {
+    const story = await createStory({ title: "Clean", stage: "WORK" }, { cwd: root });
+    await seedAttention([
+      [`worker:${story.id}`, { text: "Old problem", storyId: story.id }],
+      ["check", { text: "Check is pending" }],
+    ]);
+    const f = await fixture();
+    expect((await attentionOf(f)).has(`worker:${story.id}`)).toBe(true);
+    const thread = await reportRun(f, story.id, { blockers: [], problems: [] });
+    // The manager adds a problem because the Story did not move. It is not a reported problem.
+    expect(thread?.result?.problems).toEqual(["Story remains in the assigned Stage"]);
+    expect([...(await attentionOf(f)).keys()]).toEqual(["check"]);
+  });
+  it("removes the worker attention entry when the Story leaves the Stage or is deleted", async () => {
+    const moved = await createStory({ title: "Moved", stage: "WORK" }, { cwd: root });
+    const deleted = await createStory({ title: "Deleted", stage: "WORK" }, { cwd: root });
+    const kept = await createStory({ title: "Kept", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    for (const story of [moved, deleted, kept]) await reportRun(f, story.id, { blockers: ["Blocked"], problems: [] });
+    const workerKeys = async () => [...(await attentionOf(f)).keys()].filter((key) => key.startsWith("worker:"));
+    expect(await workerKeys()).toEqual([`worker:${moved.id}`, `worker:${deleted.id}`, `worker:${kept.id}`]);
+    f.supervisor.setResponses(Array.from({ length: 5 }, () => fauxAssistantMessage("Wait")));
+    await updateStory({ id: moved.id, stage: "DONE" }, { cwd: root });
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(async () => expect(await workerKeys()).toEqual([`worker:${deleted.id}`, `worker:${kept.id}`]), {
+        timeout: 10000,
+        interval: 20,
+      });
+      await deleteStory({ id: deleted.id }, { cwd: root });
+      await vi.waitFor(async () => expect(await workerKeys()).toEqual([`worker:${kept.id}`]), {
+        timeout: 10000,
+        interval: 20,
+      });
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
   });
   it("holds a candidate and saves notes and attention through real Pi tools", async () => {
     const story = await createStory({ title: "Hold", stage: "WORK" }, { cwd: root });
