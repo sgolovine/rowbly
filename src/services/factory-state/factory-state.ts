@@ -17,3 +17,25 @@ export async function updateFactoryState(
 ): Promise<PolicyState> {
   return withStateLock(root, async () => writeState(root, await update(await readState(root))));
 }
+
+/**
+ * Runs a short state transaction that writes only when the update gives a new state. An `undefined` result keeps the
+ * file and its `updatedAt`. Do not call Git, models or projectWrite inside this callback.
+ */
+export async function updateFactoryStateIfChanged(
+  root: string,
+  update: (state: PolicyState) => PolicyState | undefined | Promise<PolicyState | undefined>,
+  _ctx: ServiceContext = {},
+): Promise<boolean> {
+  return withStateLock(root, async () => {
+    const next = await update(await readState(root));
+
+    if (next === undefined) {
+      return false;
+    }
+
+    await writeState(root, next);
+
+    return true;
+  });
+}

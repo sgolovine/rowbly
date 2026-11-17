@@ -9,6 +9,7 @@ This file records the changes to Rowbly that users can see.
 
 ### Pre Release
 
+- Changed: The factory start is faster. Recovery of the Threads now writes `.rowbly/state.json` a maximum of one time, and does not write it when no attempt changed. (ROW-142)
 - Added: In the main view of the Factory controls (`f`), `↑/↓` and the mouse wheel scroll the `Attention` list, and a `↑ n more` row shows the hidden rows above. The new `Dismiss all` button (`d`) dismisses all warnings that you can dismiss, after a confirmation. (ROW-143)
 
 ### 0.20.0

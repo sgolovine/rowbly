@@ -6,18 +6,12 @@ import { ConflictError } from "../errors/errors.js";
 import { assertFactoryOwnership } from "../factory-ownership/factory-ownership.js";
 import type { PolicyAttempt, PolicyState } from "../factory-policy/factory-policy.js";
 import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
-import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
+import { readFactoryState, updateFactoryStateIfChanged } from "../factory-state/factory-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
 import { getStory } from "../story/story.js";
-import {
-  LOCAL_HOST,
-  listThreads,
-  projectNativeAttempt,
-  type ThreadRecord,
-  transitionThread,
-} from "../thread/thread.js";
+import { LOCAL_HOST, listThreads, projectAttempts, type ThreadRecord, transitionThread } from "../thread/thread.js";
 import { findProject, type ProjectPaths, type ServiceContext } from "../workspace/workspace.js";
 
 /** Marks the adopted external attempts interrupted. All other attempts stay the same. */
@@ -43,11 +37,11 @@ async function sessionFileExists(paths: ProjectPaths, thread: ThreadRecord): Pro
 }
 
 /** Interrupts an active Thread of a dead owner. Only a worker with its session and Stage can resume. */
-async function interruptThread(paths: ProjectPaths, thread: ThreadRecord, ctx: ServiceContext): Promise<void> {
+async function interruptThread(paths: ProjectPaths, thread: ThreadRecord, ctx: ServiceContext): Promise<ThreadRecord> {
   const story = thread.storyId ? await getStory({ id: thread.storyId }, ctx).catch(() => undefined) : undefined;
   const exists = await sessionFileExists(paths, thread);
 
-  await transitionThread(
+  return transitionThread(
     thread.id,
     {
       expectedRevision: thread.revision,
@@ -66,23 +60,64 @@ function isRemote(thread: ThreadRecord): boolean {
   return !!thread.host && thread.host !== LOCAL_HOST;
 }
 
+/** True when the Thread is an active local run of a different owner. */
+function isOrphan(token: string, thread: ThreadRecord): boolean {
+  return (
+    ["pending", "running"].includes(thread.status) && thread.runs.at(-1)?.ownerToken !== token && !isRemote(thread)
+  );
+}
+
 /**
- * Checks the ownership again, interrupts the Thread of a dead owner and repairs its projection. A Thread on a worker
- * host keeps its status: the new manager adopts its run.
+ * Checks the ownership again and interrupts the Thread of a dead owner. Gives the current record of the Thread. A
+ * Thread on a worker host keeps its status: the new manager adopts its run.
  */
 async function recoverThread(
   paths: ProjectPaths,
   token: string,
   thread: ThreadRecord,
   ctx: ServiceContext,
-): Promise<void> {
-  await assertFactoryOwnership(paths, token);
-
-  if (["pending", "running"].includes(thread.status) && thread.runs.at(-1)?.ownerToken !== token && !isRemote(thread)) {
-    await interruptThread(paths, thread, ctx);
+): Promise<ThreadRecord> {
+  if (!isOrphan(token, thread)) {
+    return thread;
   }
 
-  await projectNativeAttempt(thread.id, ctx);
+  await assertFactoryOwnership(paths, token);
+
+  return interruptThread(paths, thread, ctx);
+}
+
+/** Gives the recovered state, or `undefined` when no attempt changed. */
+function recoveredState(
+  state: PolicyState,
+  threads: readonly ThreadRecord[],
+  external: readonly PolicyAttempt[],
+): PolicyState | undefined {
+  const adopted = external.length ? interruptExternal(state, external) : state;
+  const projected = projectAttempts(adopted, threads);
+
+  return projected.changed || adopted !== state ? projected.state : undefined;
+}
+
+/**
+ * Repairs the projections of all Threads and adopts the external attempts in one state write. The ownership check is
+ * under the state lock. When no attempt changes, the file stays the same.
+ */
+async function writeRecoveredState(
+  paths: ProjectPaths,
+  token: string,
+  threads: readonly ThreadRecord[],
+  external: readonly PolicyAttempt[],
+  ctx: ServiceContext,
+): Promise<boolean> {
+  return updateFactoryStateIfChanged(
+    paths.root,
+    async (state) => {
+      await assertFactoryOwnership(paths, token);
+
+      return recoveredState(state, threads, external);
+    },
+    ctx,
+  );
 }
 
 /** Recovery runs only under new ownership, before the first factory pass. */
@@ -102,13 +137,11 @@ export async function recoverFactory(
     (a) => ["preparing", "running"].includes(a.status) && !threads.some((t) => t.id === a.threadId),
   );
 
-  if (external.length && adoptExternal) {
-    await updateFactoryState(paths.root, (current) => interruptExternal(current, external), ctx);
-  }
-
   // Exclusive ownership proves that all other native generations are abandoned.
-  // Each durable transition and projection can repeat after another crash.
-  await mapInOrder(threads, (thread) => recoverThread(paths, token, thread, ctx));
+  // Each durable transition and the one atomic projection write can repeat after another crash.
+  const recovered = await mapInOrder(threads, (thread) => recoverThread(paths, token, thread, ctx));
+
+  await writeRecoveredState(paths, token, recovered, adoptExternal ? external : [], ctx);
   await stopOrphanChecks(paths, token);
 
   return { externalActive: adoptExternal ? 0 : external.length };
