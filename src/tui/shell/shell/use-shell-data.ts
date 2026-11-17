@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { type FactoryStatus, getFactoryStatus } from "../../../services/factory/factory.js";
+import { type FactoryStatus, getFactoryStatus, sameFactoryStatus } from "../../../services/factory/factory.js";
 import { type FactoryActivity, getFactoryActivity } from "../../../services/factory-activity/factory-activity.js";
 import { recordProject } from "../../../services/known-project/known-project.js";
 import { getProject } from "../../../services/project/project.js";
@@ -222,7 +222,8 @@ export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void
   // The factory writes its state file frequently.
   useFactoryStateChanges(projectRoot, activity.refresh);
 
-  const factory = useAsync(() => loadFactoryStatus(ctx, projectRoot), [projectRoot]);
+  // A poll that reads the same status changes no state, so the shell does not render again.
+  const factory = useAsync(() => loadFactoryStatus(ctx, projectRoot), [projectRoot], { isEqual: sameFactoryStatus });
 
   useFactoryChanges(projectRoot, factory.refresh);
   // biome-ignore lint/correctness/useExhaustiveDependencies: record only when another Project opens or the name changes.

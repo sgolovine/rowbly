@@ -10,7 +10,12 @@ function boardlessHints(view: ShellView, onboardingHints: readonly KeyHint[]): K
   ];
 }
 
-function sidebarHints(stage: Stage | undefined): KeyHint[] {
+/** The name of the sidebars in the `ctrl+b` hint: the Stages, and also the tags when the Project has tags. */
+function sidebarName(view: ShellView): string {
+  return view.tags.length > 0 ? "sidebar" : "Stages";
+}
+
+function sidebarHints(view: ShellView, stage: Stage | undefined): KeyHint[] {
   return [
     { key: "↑/↓", description: "select Stage" },
     { key: "n", description: "new Stage" },
@@ -20,8 +25,20 @@ function sidebarHints(stage: Stage | undefined): KeyHint[] {
           { key: "shift+↑/↓", description: "move Stage" },
         ]
       : []),
+    { key: "tab", description: view.tagSidebar ? "Tags" : "Stories" },
+    { key: "ctrl+b", description: `hide ${sidebarName(view)}` },
+    { key: "p", description: "switch Project", secondary: true },
+  ];
+}
+
+/** The keys of the tag sidebar. */
+function tagSidebarHints(view: ShellView): KeyHint[] {
+  return [
+    { key: "↑/↓", description: "filter by tag" },
     { key: "tab", description: "Stories" },
-    { key: "ctrl+b", description: "hide Stages" },
+    { key: "shift+tab", description: "Stages", secondary: true },
+    { key: "esc", description: "Stories" },
+    { key: "ctrl+b", description: `hide ${sidebarName(view)}` },
     { key: "p", description: "switch Project", secondary: true },
   ];
 }
@@ -64,7 +81,8 @@ function markHints(view: ShellView): KeyHint[] {
 }
 
 /**
- * `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `esc` closes the Story sidebar, but not
+ * `tab` goes to the Story sidebar when it is open, else to the Stage sidebar. `shift+tab` goes to the tag sidebar
+ * when it shows, else to the Stage sidebar. `esc` closes the Story sidebar, but not
  * while `esc` clears a multi-selection (`marks`). The hints name what the Story sidebar shows: a Story, or a Thread.
  */
 function focusHints(view: ShellView, marks = false): KeyHint[] {
@@ -73,7 +91,9 @@ function focusHints(view: ShellView, marks = false): KeyHint[] {
 
     return [
       { key: "tab", description: shown },
-      ...(view.sidebar ? [{ key: "shift+tab", description: "Stages", secondary: true }] : []),
+      ...(view.sidebar
+        ? [{ key: "shift+tab", description: view.tagSidebar ? "Tags" : "Stages", secondary: true }]
+        : []),
       ...(marks ? [] : [{ key: "esc", description: `close ${shown}` }]),
     ];
   }
@@ -95,7 +115,7 @@ function listHints(view: ShellView, sidebarShown: boolean): KeyHint[] {
     { key: "p", description: "switch Project", secondary: true },
     { key: "f", description: "factory", secondary: true },
     { key: ",", description: "settings", secondary: true },
-    { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
+    { key: "ctrl+b", description: `${sidebarShown ? "hide" : "show"} ${sidebarName(view)}` },
     ...(view.stage ? [] : [{ key: "←/→", description: "collapse/expand", secondary: true }]),
   ];
 }
@@ -110,7 +130,7 @@ function factoryViewHints(view: ShellView, sidebarShown: boolean, threadHints: r
     { key: "p", description: "switch Project", secondary: true },
     { key: "f", description: "factory", secondary: true },
     { key: ",", description: "settings", secondary: true },
-    { key: "ctrl+b", description: sidebarShown ? "hide Stages" : "show Stages" },
+    { key: "ctrl+b", description: `${sidebarShown ? "hide" : "show"} ${sidebarName(view)}` },
   ];
 }
 
@@ -131,7 +151,11 @@ export function shellHints(
   }
 
   if (view.sidebarFocused) {
-    return sidebarHints(view.stage);
+    return sidebarHints(view, view.stage);
+  }
+
+  if (view.tagSidebarFocused) {
+    return tagSidebarHints(view);
   }
 
   return view.mode === "threads" ? factoryViewHints(view, sidebarShown, threadHints) : listHints(view, sidebarShown);

@@ -11,9 +11,10 @@ export interface KeyHint {
 /** The keys the shell handles on every screen, as the help overlay lists them. */
 export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "↑/↓", description: "move" },
-  { key: "tab", description: "focus the next pane: Stages, Story list, Story sidebar" },
+  { key: "tab", description: "focus the next pane: Stages, Tags, Story list, Story sidebar" },
   { key: "shift+tab", description: "focus the previous pane (in the Story list)" },
   { key: "[/]", description: "previous/next Stage" },
+  { key: "↑/↓", description: "filter the Story list by tag (in the tag sidebar)" },
   { key: "enter", description: "expand or collapse the Stage section (in All Stages)" },
   { key: "←/→", description: "collapse/expand the Stage section (in All Stages)" },
   { key: "n", description: "new Story, or new Stage in the Stage sidebar" },
@@ -31,7 +32,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "ctrl+d", description: "delete the Story (in an open Story)" },
   { key: "ctrl+p", description: "find Stories" },
   { key: "p", description: "switch Project" },
-  { key: "ctrl+b", description: "show or hide the Stage sidebar" },
+  { key: "ctrl+b", description: "show or hide the Stage sidebar and the tag sidebar" },
   { key: "ctrl+o", description: "expand or collapse the Story sidebar (while it is open)" },
   { key: "f", description: "factory controls" },
   { key: "t", description: "show the Stories or the Threads of the factory" },
@@ -39,6 +40,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: ",", description: "settings" },
   { key: "ctrl+f", description: "edit a text field full screen, or show the Thread conversation full screen" },
   { key: "esc", description: "back" },
+  { key: "esc", description: "focus the Story list (in the Stage sidebar or the tag sidebar)" },
   { key: "esc", description: "collapse the Story sidebar and focus the Story list (in the Story sidebar)" },
   { key: "esc", description: "cancel the range mode or clear the selection (in the Story list)" },
   { key: "esc", description: "close the Story sidebar (in the Story list)" },
