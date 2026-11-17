@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ThreadRecord } from "../thread/thread-types.js";
-import { connectionLostText, lostConnections, threadConnection } from "./connection-lost.js";
+import { connectionLostText, hostLost, lostConnections, threadConnection } from "./connection-lost.js";
 
 const NOW = Date.parse("2026-11-16T10:05:00.000Z");
 const SEEN = "2026-11-16T10:03:20.000Z";
@@ -63,5 +63,21 @@ describe("connectionLostText", () => {
     expect(connectionLostText({ state: "lost", host: "auth", hostState: "auth-failed" }, NOW)).toBe(
       "connection lost (no contact)",
     );
+  });
+});
+
+describe("hostLost", () => {
+  it("is true for a worker host that does not answer a heartbeat or is not in the list", () => {
+    expect(hostLost("off", hosts)).toBe(true);
+    expect(hostLost("auth", hosts)).toBe(true);
+    expect(hostLost("gone", hosts)).toBe(true);
+  });
+
+  it("is false for a live host, for local and without a hosts list", () => {
+    expect(hostLost("good", hosts)).toBe(false);
+    expect(hostLost("slow", hosts)).toBe(false);
+    expect(hostLost("local", hosts)).toBe(false);
+    expect(hostLost("local", [])).toBe(false);
+    expect(hostLost("off", undefined)).toBe(false);
   });
 });
