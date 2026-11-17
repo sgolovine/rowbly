@@ -1,8 +1,7 @@
 import { Text } from "ink";
-import { Loading, ScrollBody } from "../../../components/index.js";
+import { Loading, ScrollBody, SectionHeadingRow } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { ThreadRow, threadHostProps } from "../../stories/index.js";
-import { ThreadSectionRow } from "../thread-section-row/index.js";
 import { clickRow } from "./factory-view-actions.js";
 import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
 
@@ -33,11 +32,12 @@ export function FactoryView(props: FactoryViewProps) {
     <ScrollBody active={active} wheel={clickable} height={layout.height}>
       {rows.map((row, index) =>
         row.kind === "section" ? (
-          <ThreadSectionRow
+          <SectionHeadingRow
             key={row.id}
             label={row.label}
             count={row.count}
             collapsed={row.collapsed}
+            emptyText="No Threads"
             spaced={index > 0}
             selected={index === env.cursor}
             clickable={clickable}
