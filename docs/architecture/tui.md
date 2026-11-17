@@ -673,6 +673,110 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
 
 If a CLI command also uses a part of the logic, put that logic in the service, not in the component.
 
+## Performance
+
+This section gives the method and the results of the TUI profile. Do the profile again after a change
+that can make the TUI slower. Different hardware or a different load changes the numbers. Thus, the
+comparison with an earlier run is approximate.
+
+### Results
+
+The baseline is from 2026-11-16, with 125 Stories and a 140x38 terminal. The new run is from
+2026-11-16 (after ROW-126 to ROW-136), with 138 Stories, a 140x38 terminal, Node 24.22.1 and Linux
+x86_64 with 16 cores.
+
+| Scenario                                             | Baseline | After ROW-126 to ROW-136 |
+| ---------------------------------------------------- | -------- | ------------------------ |
+| `rowbly --help`                                      | 0.14 s   | 0.14 s                   |
+| `rowbly story search --json`                         | 0.22 s   | 0.24 s                   |
+| `rowbly status --json`                               | 0.35 s   | 0.23 s                   |
+| TUI launch to first Story row                        | 1.5 s    | 1.28 s                   |
+| CPU busy in a 12 s board session (dev React)         | 8.1 s    | 1.48 s                   |
+| CPU busy in the same session (`NODE_ENV=production`) | 6.6 s    | 1.01 s                   |
+
+The CPU busy values are for the main thread. The TUI also starts a Pi worker thread after the board
+shows (`preloadPiSdk`). Node writes a second `.cpuprofile` for this thread. The worker thread was busy
+for 0.80 s in production mode and 0.71 s in dev mode. The new session was about 15.5 s long, because
+each `agentic-tui` call takes about 0.5 s.
+
+The inclusive CPU time of the median production run, main thread, is in this table. A sample can be in
+more than one group, for example a Rowbly component that React calls. Thus, the sum of the groups is
+more than the busy time.
+
+| Group                                            | Inclusive CPU time |
+| ------------------------------------------------ | ------------------ |
+| React (`react`, `react-reconciler`, `scheduler`) | 489 ms             |
+| Ink renderer (`ink`)                             | 470 ms             |
+| Yoga layout (`yoga-layout`)                      | 148 ms             |
+| Rowbly app functions (`dist/*.js`)               | 405 ms             |
+| Idle (`(idle)`)                                  | 14,773 ms          |
+| Profile duration                                 | 15,778 ms          |
+
+In dev mode, React was 940 ms, Ink was 686 ms, Yoga was 162 ms and Rowbly was 538 ms.
+
+**Idle check.** The idle window on the board was 5.1 s long, between `Escape` and `q`. In all six runs
+(three production, three dev), the window had zero samples in `commitRoot` and zero samples in Ink
+`onRender`. Thus, the idle board committed no React render. The busy time in the window was 0 ms to
+4 ms. `t wait --stable --timeout 5000` also passed on the board in all runs.
+
+**Hot spots.** These Rowbly functions used more than 100 ms of inclusive CPU time:
+
+- `loadInProductionMode` in `src/cli-main.ts`: 138 ms on the main thread at launch. Most of this time
+  is the module compile of the TUI bundle, Ink and React. See ROW-139.
+- `loadPi` and `createFactoryRuntime` in the Pi worker thread: 518 ms. This time does not block the
+  render thread. See ROW-140.
+
+No render path or key handler used more than 100 ms. The largest app function after the launch was
+`readStoryFile` with 51 ms for the first board load.
+
+### Method
+
+Do these steps from the root of the repository. Keep all temporary files and scripts in a temporary
+folder outside the repository.
+
+1. Run `pnpm build`. The built CLI is `dist/cli.js`. It loads React in production mode when
+   `NODE_ENV` is not set.
+2. Make a copy of the Project in a temporary folder. Run `git init` in the folder. Copy
+   `.rowbly/rowbly.config.json`, `.rowbly/stories/`, `.rowbly/specs/`, `.rowbly/stages/` and
+   `.rowbly/prompts/`. Do not copy `.rowbly/state.json*` or `.rowbly/runtime/`. Count the Stories.
+3. Measure the CLI commands. Run `node dist/cli.js --help`, `node dist/cli.js -C <copy> story search
+   --json` and `node dist/cli.js -C <copy> status --json` 7 times each. Record the median wall time.
+   Use `hyperfine` if it is installed. Else, use `date +%s%N` before and after each run.
+4. Set up the PTY as the
+   [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md) tells you: an
+   `AGENTIC_TUI_STATE_DIR` of its own, `HOME` in an empty temporary folder and absolute paths. To
+   make each call faster, call `node_modules/.bin/agentic-tui` directly, not through `pnpm exec`.
+5. Start the TUI with a CPU profile:
+
+   ```sh
+   t run node "$repo/dist/cli.js" --cwd "$copy" --cols 140 --rows 38 --env HOME="$out/home" \
+     --env NODE_OPTIONS="--cpu-prof --cpu-prof-dir=$out/prof-prod-1"
+   ```
+
+   For the dev React row, also add `--env NODE_ENV=development`.
+6. Record the wall time before `t run` and after `t wait "ROW-137" --timeout 10000`. Use the ID of the
+   first Story row of the board. The difference is the launch time.
+7. Send the keys: 8 × `t press Down`, 2 × `t press Up`, `t press Enter`, a 0.5 s pause and
+   `t press Escape`. In the run above, `Enter` was on a Stage header row and collapsed that Stage.
+8. Run `t wait --stable --timeout 2000`. Record the time as the start of the idle window. Run
+   `t wait --stable --timeout 5000` and wait 5 s more. Record the time as the end of the idle window.
+9. Run `t press q`. Node writes the `.cpuprofile` files when the process stops. Wait 2 s.
+10. Do steps 5 to 9 three times for each mode. Use the run with the median busy time.
+11. At the end, run `t kill` and `t daemon stop` for this state folder only.
+
+Summarize each `.cpuprofile` with a temporary Node script:
+
+- The profile duration is `endTime - startTime`. Add the `timeDeltas` of the samples on the
+  `(idle)` node to get the idle time. CPU busy is the duration minus the idle time.
+- For each sample that is not idle, go from the leaf node to the root through the parent nodes.
+  Add the time of the sample one time to each group that has a call frame on the stack. The
+  `url` of the call frame gives the group: `react-reconciler`, `react` or `scheduler` for React,
+  `ink` for Ink, `yoga` for Yoga, and the files in `dist/` for Rowbly.
+- Do the same for each function name and `url`, to find the inclusive time of each function.
+- For the idle check, use the time of each sample from `startTime` plus the sum of the `timeDeltas`.
+  Shrink the idle window by 0.5 s at each end, because the profile starts a short time after
+  `t run`. Count the samples in the window that have `commitRoot` or `onRender` on the stack.
+
 ## Related
 
 - [native-factory/controls.md](native-factory/controls.md): the keys of the Factory controls, the
