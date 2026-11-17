@@ -12,6 +12,7 @@ export * from "./form-modal/index.js";
 export { FormNavigationContext } from "./form-navigation.js";
 export * from "./full-screen-conversation/index.js";
 export * from "./full-screen-editor/index.js";
+export * from "./fuzzy-picker/index.js";
 export { fuzzySearch } from "./fuzzy-search.js";
 export * from "./help-overlay/index.js";
 export * from "./key-hints/index.js";
