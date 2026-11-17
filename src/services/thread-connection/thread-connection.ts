@@ -10,9 +10,13 @@ import { type HostFacts, type ThreadConnection, threadConnection } from "./conne
 export {
   connectionLostText,
   contactText,
+  type HostFacts,
+  hostLost,
   type LostConnection,
+  lastContactMs,
   lostConnections,
   type ThreadConnection,
+  threadConnection,
 } from "./connection-lost.js";
 
 /** A Thread with its lost connection. A Thread without a lost connection has no `connection` field. */

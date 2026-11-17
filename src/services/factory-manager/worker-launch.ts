@@ -16,23 +16,20 @@ import {
   type Manager,
   type ManagerState,
   notify,
-  pauseProvider,
   providerSucceeded,
   serial,
   setState,
 } from "./manager-state.js";
 import { persistStatus } from "./manager-status.js";
-import { workerFailure } from "./network-wait.js";
 import { executorFor, hostSynced, waitForHostSync } from "./remote-dispatch.js";
 import { configuredChecks } from "./worker-checks.js";
+import { completeWorker, failWorker } from "./worker-end.js";
 import {
   type RunLocation,
-  type RunStop,
   type WorkerActivity,
   type WorkerControl,
   type WorkerEvents,
   type WorkerExecutor,
-  type WorkerFailure,
   type WorkerLaunch,
   type WorkerSession,
   type WorkerWorktree,
@@ -314,80 +311,6 @@ async function persistFinalActivity(manager: Manager, id: string, activity: Work
   const thread = await getThread(id, manager.ctx);
 
   await changeThread(manager, id, thread.status, activity);
-}
-
-/** The end of one worker run. `stop` is set when a stop or a cancel on a worker host ended the run. */
-interface Completion {
-  readonly id: string;
-  readonly intent: ThreadRecord;
-  readonly storyId: string;
-  readonly result: WorkerResult | undefined;
-  readonly stop?: RunStop;
-}
-
-async function completeWorker(manager: Manager, completion: Completion): Promise<void> {
-  const { id, intent, storyId, result: reported, stop } = completion;
-  const thread = await getThread(id, manager.ctx);
-
-  if (["interrupted", "cancelled"].includes(thread.status)) {
-    return;
-  }
-
-  if (stop) {
-    await stopWorkerThread(manager, thread, reported, stop);
-    return;
-  }
-
-  const fresh = await getStory({ id: storyId }, manager.ctx).catch(() => undefined);
-  const result = reported ?? {
-    outcome: "unknown",
-    summary: "Worker stopped without a result",
-    blockers: [],
-    problems: [],
-  };
-  const problems =
-    fresh?.stage === intent.stage
-      ? [...result.problems.slice(0, 9), "Story remains in the assigned Stage"]
-      : result.problems;
-  const { stopping } = getState(manager);
-
-  await changeThread(manager, id, stopping ? "interrupted" : "completed", {
-    result: { ...result, problems },
-    resumable: stopping,
-  });
-}
-
-/** A run that a stop ends is `interrupted`, and a run that a cancel ends is `cancelled`. Both can resume. */
-async function stopWorkerThread(
-  manager: Manager,
-  thread: ThreadRecord,
-  result: WorkerResult | undefined,
-  stop: RunStop,
-): Promise<void> {
-  await changeThread(manager, thread.id, stop === "cancelled" ? "cancelled" : "interrupted", {
-    resumable: !!thread.session.file,
-    ...(result ? { result } : {}),
-  });
-}
-
-async function failWorker(manager: Manager, launch: LaunchState, failure: WorkerFailure): Promise<void> {
-  await serial(manager, async () => {
-    const thread = await getThread(launch.id, manager.ctx);
-    const provider = launch.provider ?? thread.model?.provider;
-    const { providers } = setState(manager, (state) => pauseProvider(state, provider, failure.error));
-
-    if (!isActiveStatus(thread.status)) {
-      return;
-    }
-
-    const { stopping } = getState(manager);
-    const pause = provider ? providers.get(provider) : undefined;
-
-    await changeThread(manager, launch.id, stopping ? "interrupted" : "failed", {
-      resumable: !!thread.session.file,
-      error: workerFailure(failure.error, { launched: failure.sessionOpened, stopping, retryAt: pause?.retryAt }),
-    });
-  });
 }
 
 /** Frees the slot of the worker after the executor closed its session. */

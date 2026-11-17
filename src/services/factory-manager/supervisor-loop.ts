@@ -28,6 +28,7 @@ import { failureText, runSideSteps, runStep } from "./supervisor-steps.js";
 import { createSupervisorTools } from "./supervisor-tools.js";
 import { upstreamAttention, withUpstreamAttention } from "./upstream-attention.js";
 import { pullUpstreamStories } from "./upstream-pull-step.js";
+import { withoutStaleWorkerAttention } from "./worker-attention.js";
 import { checkHistory } from "./worker-checks.js";
 import { managerSlots } from "./worker-placement.js";
 
@@ -128,6 +129,7 @@ async function superviseOnce(manager: Manager): Promise<void> {
   await reconcilePolicy(manager);
   await runStep(manager, "pull-upstream", "Upstream Story move failed", () => pullUpstreamStories(manager));
   await refreshUpstreamAttention(manager);
+  await removeStaleWorkerAttention(manager);
   setState(manager, (state) => ({ attention: withoutEntry(state.attention, "reconcile") }));
   await runSideSteps(manager);
   // After the provider pause check, so that a pause that ended lets its network Threads resume.
@@ -182,6 +184,16 @@ async function refreshUpstreamAttention(manager: Manager): Promise<void> {
   const entries = upstreamAttention(stories, stages, state.parked ?? {});
 
   setState(manager, (current) => ({ attention: withUpstreamAttention(current.attention, entries) }));
+}
+
+/** Removes the `worker:` attention entries of the Stories that are deleted or that left the Stage of their worker. */
+async function removeStaleWorkerAttention(manager: Manager): Promise<void> {
+  const stories = await searchStories({}, manager.ctx);
+  const { threads } = await listThreads({ role: "worker" }, manager.ctx);
+
+  setState(manager, (current) => ({
+    attention: withoutStaleWorkerAttention(current.attention, stories, threads),
+  }));
 }
 
 /** Builds the bounded supervisor digest from the policy, the workers, the reports and the notes. */

@@ -4,11 +4,16 @@ import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { Panel, ScrollBody } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { queueReason } from "../../factory/index.js";
+import { type ThreadHostView, threadHostProps } from "../thread-host-view.js";
 import { ThreadRow } from "../thread-row/index.js";
 import type { StageNames } from "../thread-text.js";
 
 export interface ThreadListPanelProps {
   readonly threads: readonly ThreadRecord[];
+  /** The live hosts and the host column of the list. */
+  readonly hostView: ThreadHostView;
+  /** The number of held entries of each abandoned thread, by thread id. */
+  readonly held: Readonly<Record<string, number>>;
   /** The names of the Stages by key. */
   readonly stages?: StageNames;
   /** The time for the run time of a running thread. */
@@ -46,6 +51,8 @@ function scrollHeight(innerHeight: number | undefined, waiting: FactoryQueueEntr
 /** The list of the threads of a Story in the Threads tab, with the queue note above it. */
 export function ThreadListPanel({
   threads,
+  hostView,
+  held,
   stages,
   now,
   cursor,
@@ -86,6 +93,8 @@ export function ThreadListPanel({
             selected={i === cursor}
             clickable={listing || viewing}
             compact={compactThreads}
+            held={held[thread.id]}
+            {...threadHostProps(hostView, thread)}
             onClick={() => onClickRow(i)}
           />
         ))}

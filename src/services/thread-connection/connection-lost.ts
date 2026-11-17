@@ -34,6 +34,20 @@ export interface LostConnection {
 /** The host states that answer a heartbeat. A remote Thread on such a host keeps its connection. */
 const LIVE_STATES: ReadonlySet<HostState> = new Set(["connected", "degraded"]);
 
+/**
+ * True when `host` is a worker host with a lost connection: its state in `hosts` does not answer a heartbeat, or `hosts`
+ * does not have it. Without a `hosts` list (no running factory), no host is lost. `local` is never lost.
+ */
+export function hostLost(host: string, hosts: readonly HostFacts[] | undefined): boolean {
+  if (!hosts || host === LOCAL_HOST) {
+    return false;
+  }
+
+  const facts = hosts.find((entry) => entry.id === host);
+
+  return !(facts && LIVE_STATES.has(facts.state));
+}
+
 /** True for a Thread on a worker host that is `running` or `pending`. */
 function isActiveRemote(thread: ThreadRecord): boolean {
   return (thread.host ?? LOCAL_HOST) !== LOCAL_HOST && ["running", "pending"].includes(thread.status);
@@ -47,16 +61,13 @@ export function threadConnection(
   thread: ThreadRecord,
   hosts: readonly HostFacts[] | undefined,
 ): ThreadConnection | undefined {
-  if (!hosts || !isActiveRemote(thread)) {
-    return undefined;
-  }
-
   const host = thread.host ?? LOCAL_HOST;
-  const facts = hosts.find((entry) => entry.id === host);
 
-  if (facts && LIVE_STATES.has(facts.state)) {
+  if (!isActiveRemote(thread) || !hostLost(host, hosts)) {
     return undefined;
   }
+
+  const facts = hosts?.find((entry) => entry.id === host);
 
   return {
     state: "lost",

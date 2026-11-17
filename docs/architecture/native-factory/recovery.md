@@ -76,8 +76,15 @@ The manager keeps the attention entries in its state. `raise_attention` and the 
 them. The supervisor loop uses the keys `reconcile`, `settings`, `providers`, `commit`, `sync`,
 `supervisor`, `network-resume`, `pull`, `push` and `upstream-stuck:<ID>`. A successful Git pull removes the `pull` entry, and a successful push
 removes the `push` entry. A pass removes an `upstream-stuck:` entry when its Story can progress. If
-you dismiss an `upstream-stuck:` entry and the Story still cannot progress, the next pass adds it again. A
-`dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
+you dismiss an `upstream-stuck:` entry and the Story still cannot progress, the next pass adds it again.
+
+The manager sets the key `worker:<ID>` when a worker Thread of the Story reports blockers or
+problems, or fails without a network error. A later clean result of the Story removes the entry. A
+pass removes the entry when the Story is deleted or is not in the Stage of its last worker Thread.
+A dismissed `worker:` entry comes back only when a new Thread of the Story ends with blockers,
+problems or a failure. See [Worker attention](README.md#worker-attention).
+
+A `dismiss` removes the entry with that key, then the manager writes `status.json`. A key that
 does not exist is not an error. The manager loads the attention entries from `status.json` when it
 starts, so a dismissed entry does not come back after a restart. If the factory records the same key
 again, the entry comes back.

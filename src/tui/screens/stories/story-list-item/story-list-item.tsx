@@ -11,6 +11,8 @@ export interface StoryListItemProps {
   readonly row: StoryListRow;
   /** The factory activity of the Story of the row. */
   readonly activity: StoryActivity | undefined;
+  /** The worker host of the active agent of the Story has a lost connection. */
+  readonly hostLost?: boolean;
   /** The tags of the project, for the labels of the tags of the Story. */
   readonly tags: readonly TagConfig[];
   readonly selected: boolean;
@@ -28,6 +30,7 @@ export interface StoryListItemProps {
 export function StoryListItem({
   row,
   activity,
+  hostLost = false,
   tags,
   selected,
   clickable,
@@ -50,6 +53,7 @@ export function StoryListItem({
     <StoryRow
       story={row.story}
       activity={activity}
+      hostLost={hostLost}
       stage={row.stage}
       waitingFor={row.waitingFor}
       tagLabels={tagLabels(row.story.tags, tags)}

@@ -1,9 +1,10 @@
 import { Box } from "ink";
-import { ConfirmDialog, Loading } from "../../../components/index.js";
+import { Loading } from "../../../components/index.js";
+import { threadHostProps } from "../thread-host-view.js";
 import { ThreadListPanel } from "../thread-list-panel/index.js";
 import { ThreadPanel } from "../thread-panel/index.js";
-import { threadName } from "../thread-text.js";
-import { clickRow, confirmInterrupt } from "./threads-tab-actions.js";
+import { clickRow } from "./threads-tab-actions.js";
+import { ThreadsTabDialogs } from "./threads-tab-dialogs.js";
 import { GAP, LIST_WIDTH, threadsLayout } from "./threads-tab-view.js";
 import { type ThreadsTabProps, useThreadsTab } from "./use-threads-tab.js";
 
@@ -14,14 +15,16 @@ import { type ThreadsTabProps, useThreadsTab } from "./use-threads-tab.js";
  * tab is selected the first time. It reads again when the threads or the factory status change. Only the
  * selected thread opens its conversation (a peek, which starts no agent), and it closes when the selection or
  * the tab changes. `ctrl+f` shows the conversation over the whole terminal. `x` asks before it interrupts an active
- * thread, and `r` resumes a resumable thread. The two keys send a command to the running factory. A running thread
+ * thread, and `r` resumes a resumable thread. The two keys send a command to the running factory. On an abandoned
+ * remote thread with held entries, `a` applies the entries and `d` asks before it discards them. A list with a remote
+ * thread shows the host of each thread, and a remote thread with a lost connection shows `connection lost`. A running thread
  * shows a steering input under its conversation: `m` or a click focuses it, and `enter` sends its text to the agent.
  * A note tells when the Story waits for a worker slot.
  */
 export function ThreadsTab(props: ThreadsTabProps) {
   const { ctx, storyId, stages, selected, compactThreads } = props;
   const tab = useThreadsTab(props);
-  const { env, layout, confirm } = tab;
+  const { env, layout, confirm, discard } = tab;
   const view = threadsLayout(layout, tab.focus, env.current);
 
   if (!tab.data.data) {
@@ -33,6 +36,8 @@ export function ThreadsTab(props: ThreadsTabProps) {
       {view.showList && (
         <ThreadListPanel
           threads={tab.threads}
+          hostView={tab.hostView}
+          held={env.held}
           stages={stages}
           now={tab.now}
           cursor={env.cursor}
@@ -54,6 +59,8 @@ export function ThreadsTab(props: ThreadsTabProps) {
           storyId={storyId}
           stages={stages}
           current={env.current}
+          connection={env.current && threadHostProps(tab.hostView, env.current).connection}
+          held={env.current && env.held[env.current.id]}
           now={tab.now}
           compact={view.compact}
           selected={selected}
@@ -70,17 +77,7 @@ export function ThreadsTab(props: ThreadsTabProps) {
           onLeaveSteer={() => env.setFocus("thread")}
         />
       )}
-      {confirm && (
-        <ConfirmDialog
-          title={`${storyId} › Threads › Interrupt`}
-          message={`Interrupt ${threadName(confirm, stages)}? The worker stops. Rowbly keeps its session and worktree, and r can resume it later.`}
-          confirmLabel="Interrupt"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => confirmInterrupt(env, confirm)}
-          onCancel={() => env.setConfirm(null)}
-        />
-      )}
+      <ThreadsTabDialogs env={env} storyId={storyId} stages={stages} confirm={confirm} discard={discard} />
       {/* Outside the shell there is nothing to cover, so the full-screen view shows here. */}
       {tab.full.inline}
     </Box>

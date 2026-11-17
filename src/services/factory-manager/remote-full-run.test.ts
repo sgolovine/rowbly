@@ -188,6 +188,30 @@ describe("factory manager with a host agent", () => {
     expect((await stat(base)).mode & 0o777).toBe(0o600);
   }, 60_000);
 
+  it("raises the worker attention entry for a blocker that a remote worker reports", async () => {
+    const f = await fixture();
+    const story = await createStory({ title: "Remote blocker", stage: "WORK" }, { cwd: root });
+    f.worker.setResponses([
+      tool("report_result", { outcome: "blocked", summary: "Blocked", blockers: ["Needs a key"], problems: [] }),
+      fauxAssistantMessage("Done"),
+    ]);
+
+    const { threadId } = await f.manager.reserveWorker({
+      storyId: story.id,
+      stage: "WORK",
+      requestId: "r",
+      host: "mini",
+    });
+    await completed(threadId);
+    await freeSlot(f);
+
+    const attention = new Map((await f.manager.snapshot()).attention as [string, { text: string; storyId?: string }][]);
+    const entry = attention.get(`worker:${story.id}`);
+    expect(entry?.storyId).toBe(story.id);
+    expect(entry?.text).toContain(`${story.id} in WORK: worker ${threadId}`);
+    expect(entry?.text).toContain("Needs a key");
+  }, 60_000);
+
   it("waits for the host sync after a failed outbox apply, and the next scan applies it and completes the Thread", async () => {
     const f = await fixture();
     const story = await createStory({ title: "Remote", stage: "WORK" }, { cwd: root });

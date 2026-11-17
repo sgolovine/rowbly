@@ -3,6 +3,7 @@ import type { FactoryStatus } from "../../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
+import { hostRow, workerHosts } from "../factory-hosts.js";
 import { FactoryList } from "../factory-list/index.js";
 import { checksText, PHASES, providerNotice, supervisorText, workersText } from "../factory-modal-text.js";
 import { factoryProblems, queueReason, restartText } from "../factory-status.js";
@@ -38,7 +39,10 @@ function restartRows(status: FactoryStatus | undefined): { label: string; value:
   return text === undefined ? [] : [{ label: "Restarts", value: text }];
 }
 
-/** The state of the factory and its supervisor, the problems and the queued Stories. */
+/**
+ * The state of the factory and its supervisor, the hosts of a live factory with a worker host, the problems and the
+ * queued Stories.
+ */
 export function FactoryOverview({
   status,
   live,
@@ -52,6 +56,8 @@ export function FactoryOverview({
   onProblem,
 }: FactoryOverviewProps) {
   const queue = live ? (status?.queue ?? []) : [];
+  const hosts = workerHosts(status, live);
+  const now = Date.now();
 
   return (
     <>
@@ -83,6 +89,7 @@ export function FactoryOverview({
           Run rowbly factory start to start the factory.
         </Text>
       )}
+      <FactoryList title="Hosts" rows={hosts.map((host) => ({ key: host.id, node: hostRow(host, hosts, now) }))} />
       <FactoryList
         title="Attention"
         clickable={clickable}

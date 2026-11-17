@@ -1,7 +1,8 @@
 import { useInput } from "ink";
 import { useEffect, useRef, useState } from "react";
 import { type FactoryQueueEntry, type FactoryStatus, getFactoryStatus } from "../../../../services/factory/factory.js";
-import { listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
+import { listHeldEntries } from "../../../../services/outbox-apply/held-actions.js";
+import { isAbandoned, listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   type FullScreenConversationControl,
@@ -24,10 +25,15 @@ import {
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
 import { queueEntry } from "../../factory/index.js";
+import { type ThreadHostView, threadHostView } from "../thread-host-view.js";
 import { threadPanelTitle } from "../thread-panel/index.js";
 import { type StageNames, sortThreads } from "../thread-text.js";
 import { handleListKey, handleThreadKey, type ThreadsTabEnv } from "./threads-tab-actions.js";
+import { hasHeld } from "./threads-tab-held.js";
 import { type Focus, type HintsInput, threadsHints } from "./threads-tab-view.js";
+
+/** No abandoned thread has held entries. */
+const NO_HELD: Readonly<Record<string, number>> = {};
 
 /** The conversation of a thread opens after the selection stays on the thread for this time. */
 const OPEN_DELAY_MS = 200;
@@ -49,6 +55,8 @@ export interface ThreadsTabProps {
 
 interface ThreadsData {
   readonly threads: readonly ThreadRecord[];
+  /** The number of held entries of each abandoned thread, by thread id. */
+  readonly held: Readonly<Record<string, number>>;
 }
 
 /** The state of the Threads tab that its render reads. */
@@ -60,6 +68,10 @@ export interface ThreadsTabState {
   readonly threads: readonly ThreadRecord[];
   readonly focus: Focus;
   readonly confirm: ThreadRecord | null;
+  /** The thread of the open discard confirmation. */
+  readonly discard: ThreadRecord | null;
+  /** The live hosts and the host column of the list. */
+  readonly hostView: ThreadHostView;
   readonly listing: boolean;
   readonly viewing: boolean;
   /** The steering input of the thread region takes the keys. */
@@ -81,7 +93,25 @@ async function loadThreads(ctx: ServiceContext, storyId: string, opened: boolean
 
   const list = await listThreads({ story: storyId }, ctx);
 
-  return { threads: sortThreads(list.threads) };
+  return { threads: sortThreads(list.threads), held: await heldCounts(ctx, list.threads) };
+}
+
+/** Reads the number of held entries of each abandoned thread. A read that fails gives no number. */
+async function heldCounts(
+  ctx: ServiceContext,
+  threads: readonly ThreadRecord[],
+): Promise<Readonly<Record<string, number>>> {
+  const abandoned = threads.filter((thread) => isAbandoned(thread));
+  const counts = await Promise.all(
+    abandoned.map((thread) =>
+      listHeldEntries({ id: thread.id }, ctx).then(
+        (list) => [thread.id, list.entries.length] as const,
+        () => undefined,
+      ),
+    ),
+  );
+
+  return Object.fromEntries(counts.filter((entry) => entry !== undefined));
 }
 
 /** Reads the factory status of the tab itself, only when no shell shares its status read. */
@@ -226,6 +256,36 @@ function useThreadFullScreen(
   });
 }
 
+/** The selected thread, its conversation and the time of the run times. */
+function useTabSelection(props: ThreadsTabProps, threads: readonly ThreadRecord[], listing: boolean) {
+  const [cursor, setCursor] = useCursor(threads.length, listing);
+  const current = threads[cursor];
+  const running = threads.some((thread) => thread.status === "running");
+  const shownId = useShownId(current?.id);
+  const now = useNow(props.selected, running);
+  const conversation = props.selected && current !== undefined && shownId === current.id;
+  const full = useThreadFullScreen(props, current);
+
+  return { cursor, setCursor, current, shownId, now, conversation, full };
+}
+
+/** The confirmations of the tab: the interrupt and the discard of the held entries. */
+function useTabDialogs() {
+  const [confirm, setConfirm] = useState<ThreadRecord | null>(null);
+  const [discard, setDiscard] = useState<ThreadRecord | null>(null);
+
+  return { confirm, setConfirm, discard, setDiscard, open: confirm !== null || discard !== null };
+}
+
+/** The parts of the tab state that come from the factory status. */
+function statusView(status: FactoryStatus | undefined, threads: readonly ThreadRecord[], storyId: string) {
+  return {
+    hostView: threadHostView(threads, status),
+    waiting: queueEntry(status, storyId),
+    providers: status?.providers,
+  };
+}
+
 /** The state, the effects and the keys of the Threads tab. */
 export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const { ctx, storyId, stages, selected, onHints } = props;
@@ -234,22 +294,17 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   const layout = useLayout();
   const toast = useToast();
   const [focus, setFocus] = useState<Focus>("list");
-  const [confirm, setConfirm] = useState<ThreadRecord | null>(null);
+  const dialogs = useTabDialogs();
   const sending = useRef(false);
 
   const { data, opened } = useThreadList(ctx, storyId, selected);
   const status = useTabStatus(ctx, selected, opened);
   const threads = data.data?.threads ?? [];
-  const keysOwn = active && selected && !covered && confirm === null;
+  const held = data.data?.held ?? NO_HELD;
+  const keysOwn = active && selected && !covered && !dialogs.open;
   // The full-screen view opens only from the thread region, so the list never takes the keys while it is open.
   const listing = keysOwn && focus === "list" && data.data !== undefined;
-  const [cursor, setCursor] = useCursor(threads.length, listing);
-  const current = threads[cursor];
-  const running = threads.some((thread) => thread.status === "running");
-  const shownId = useShownId(current?.id);
-  const now = useNow(selected, running);
-  const conversation = selected && current !== undefined && shownId === current.id;
-  const full = useThreadFullScreen(props, current);
+  const { cursor, setCursor, current, shownId, now, conversation, full } = useTabSelection(props, threads, listing);
   const viewing = keysOwn && focus !== "list" && !full.isOpen;
   const steering = viewing && focus === "steer";
 
@@ -263,7 +318,9 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     sending,
     refresh: data.refresh,
     setFocus,
-    setConfirm,
+    setConfirm: dialogs.setConfirm,
+    held,
+    setDiscard: dialogs.setDiscard,
     setCursor,
     openFullScreen: conversation ? full.open : undefined,
   };
@@ -271,7 +328,11 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
   useParentReports(props, data.data, viewing || full.isOpen);
   useFocusReset(current, focus, setFocus);
   useTabKeys(env, { viewing, steering, listing });
-  useTabHints(onHints, { keysOwn, viewing, steering, current, count: threads.length, conversation }, full.isOpen);
+  useTabHints(
+    onHints,
+    { keysOwn, viewing, steering, current, count: threads.length, conversation, held: hasHeld(current, held) },
+    full.isOpen,
+  );
 
   return {
     env,
@@ -280,12 +341,12 @@ export function useThreadsTab(props: ThreadsTabProps): ThreadsTabState {
     layout,
     threads,
     focus,
-    confirm,
+    confirm: dialogs.confirm,
+    discard: dialogs.discard,
     listing,
     viewing,
     steering,
-    waiting: queueEntry(status, storyId),
-    providers: status?.providers,
+    ...statusView(status, threads, storyId),
     now,
     shownId,
     full,

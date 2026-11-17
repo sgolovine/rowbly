@@ -36,6 +36,8 @@ Read this page when you start a task on the factory. Then read only the sub-page
   `factory_snapshot`, `story_get`, `start_worker`, `stop_worker`,
   `hold_candidate`, `release_story`, `inspect_worker`, `save_note` and `raise_attention`. It receives
   bounded worker summaries (`supervisor-digest/`), not transcripts.
+- **Worker problems.** The manager shows the problems that a worker reports as the attention entry
+  `worker:<ID>`. See [Worker attention](#worker-attention).
 - **Stage classes.** The manager gives each Stage the class `work`, `hold` or `invalid` with a fixed
   rule (`factory-settings/stage-classes.ts`). Only `work` Stages get workers. The rule has this order:
   1. The class of the Stage in the setting `factory.stageClasses` (`work` or `hold`).
@@ -100,6 +102,29 @@ Read this page when you start a task on the factory. Then read only the sub-page
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
 - **Prompts.** Each message contains the Rowbly system prompts and the user prompts of the Project.
   Only a worker gets the Stage prompt. See [../prompts.md](../prompts.md).
+
+## Worker attention
+
+The manager makes the attention entry `worker:<ID>` from the end of a worker Thread. `<ID>` is the
+Story ID. The entry has `storyId`. The rules are in `factory-manager/worker-attention.ts`, and
+`factory-manager/worker-end.ts` applies them. These rules apply to a local worker and to a remote worker.
+
+- **Reported problems.** A Thread ends as `completed`, and its `report_result` has one or more
+  `blockers` or `problems`. The manager sets the entry. The text gives the Story ID, the Stage, the
+  Thread ID, the outcome, and the first three blockers and the first three problems.
+- **Failure.** A Thread ends as `failed`. The manager sets the entry with the error code and the error
+  message. A failure with the code `NETWORK` does not set the entry, because the network resume
+  continues the Thread.
+- **Limit.** The text has a maximum of 1000 characters, the same limit as `raise_attention`.
+- **Added problem.** The manager adds the problem `Story remains in the assigned Stage` when the
+  Story did not move. This problem does not set the entry. Only the result that the worker reported
+  counts.
+- **No report.** A Thread that ends without `report_result` and without a failure does not change
+  the entry.
+- **Stop and cancel.** A Thread that ends as `interrupted` or `cancelled` does not change the entry.
+- **Removal.** A later worker Thread of the Story that ends as `completed` without blockers and
+  without problems removes the entry. Each supervisor pass also removes the entry when the Story is
+  deleted, or when the Story is not in the Stage of its last worker Thread.
 
 ## Story references
 
@@ -185,7 +210,8 @@ interface lets a different executor, for example a remote executor, run a worker
   `Factory is stopping`, stops the launch.
 - **Manager side.** `factory-manager/worker-launch.ts` keeps the decisions: the `pending`, `stopping`
   and Stage checks, the prompt-claim check, the provider pause, the worker message and the release of
-  the slot. Only the manager changes the Thread record.
+  the slot. `factory-manager/worker-end.ts` records the end of the run: the final Thread status and
+  the attention entry `worker:<ID>`. Only the manager changes the Thread record.
 - **Control.** When the session opens, the manager keeps a `WorkerControl` on the active worker.
   Cancel, stop, steer and shutdown use the control. They do not use a Pi session.
 - **Local executor.** `factory-manager/local-executor.ts` runs each worker in a Pi session of the
