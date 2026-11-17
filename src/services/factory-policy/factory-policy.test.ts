@@ -3,14 +3,12 @@ import {
   DEFAULT_LIMITS,
   evaluateScan,
   HOST_SYNC_REASON,
-  markReported,
   normalizeStatus,
   type PolicyDecision,
   type PolicyStage,
   type PolicyState,
   type PolicyStory,
   type PolicyWorker,
-  pendingReports,
   recordLaunchFailure,
   recordStart,
   releaseStory,
@@ -166,7 +164,6 @@ describe("a worker that stops without a Stage move", () => {
   it("treats the legacy blocked status as a stop without a move", () => {
     const state = running();
     const blocked: PolicyState = { ...state, attempts: state.attempts.map((item) => ({ ...item, status: "blocked" })) };
-    expect(pendingReports(blocked)[0]?.event).toBe("stopped");
     expect(action(evaluateScan(blocked, facts()))).toBe("retry");
   });
 });
@@ -192,20 +189,6 @@ describe("a parked Story", () => {
     const plan = evaluateScan(state, facts([], [story], { now: new Date(START + 600 * MINUTE) }));
     expect(action(plan)).toBe("retry");
     expect(plan.state.parked).toEqual({});
-  });
-
-  it("is reported one time", () => {
-    const { state } = park();
-    const parked = (current: PolicyState) => pendingReports(current).filter((report) => report.event === "parked");
-    const [report] = parked(state);
-    if (!report) throw new Error("Missing report");
-    expect(report).toEqual({
-      story: story.id,
-      event: "parked",
-      stage: story.stage,
-      reason: state.parked?.[story.id]?.reason,
-    });
-    expect(parked(restart(markReported(state, report)))).toEqual([]);
   });
 
   it("gets a worker again after a person changes the Story", () => {
@@ -323,7 +306,6 @@ describe("assignment guards", () => {
     expect(action(stoppedAgain)).toBe("skip");
     expect(lastAttempt(stoppedAgain.state)?.stoppedScan).toBe(5);
     expect(action(evaluateScan(stoppedAgain.state, facts()))).toBe("retry");
-    expect(pendingReports(stoppedAgain.state)).toHaveLength(1);
   });
 
   it("ignores an agentLock on a Story record", () => {
@@ -504,46 +486,23 @@ describe("version 1 state", () => {
   });
 });
 
-describe("reports per attempt", () => {
-  it("reports each failure and retry once across saved-state restarts", () => {
-    let state = evaluateScan(running(), facts([stopped("failed")])).state;
-    const [failure] = pendingReports(state);
-    if (!failure) throw new Error("Missing failure report");
-    expect(failure.result).toBe("failed");
-    state = restart(markReported(state, failure));
-    expect(pendingReports(state)).toEqual([]);
-    state = recordStart(evaluateScan(state, facts()).state, story.id, story.stage, { threadId: "retry-1" });
-    const [retry] = pendingReports(state);
-    if (!retry) throw new Error("Missing retry report");
-    expect(retry).toEqual({ story: story.id, workerId: "retry-1", event: "started" });
-    state = restart(markReported(state, retry));
-    expect(pendingReports(state)).toEqual([]);
-    state = evaluateScan(state, facts([{ ...stopped("interrupted"), threadId: "retry-1" }])).state;
-    expect(pendingReports(state)).toEqual([
-      { story: story.id, workerId: "retry-1", event: "stopped", result: "interrupted" },
-    ]);
-    expect(state.attempts[0]?.reported).toBe(true);
+describe("old report flags", () => {
+  it("keeps the report flags of an old state file and does not use them", () => {
+    const base = evaluateScan(running(), facts([stopped("failed")])).state;
+    const old: PolicyState = {
+      ...base,
+      notes: ["Old note"],
+      attempts: base.attempts.map((attempt) => ({ ...attempt, reported: true, startReported: true })),
+    };
+    const plan = evaluateScan(old, facts());
+    expect(action(plan)).toBe("retry");
+    expect(plan.state.notes).toEqual(["Old note"]);
+    expect(plan.state.attempts[0]?.reported).toBe(true);
   });
 
-  it("marks the attempt that still has the report when two attempts have the same worker ID", () => {
-    let state = evaluateScan(running(), facts([stopped("failed")])).state;
-    state = markReported(state, pendingReports(state)[0] as NonNullable<ReturnType<typeof pendingReports>[0]>);
-    state = recordStart(state, story.id, story.stage, { threadId: "worker-1", startReported: true });
-    state = { ...state, attempts: state.attempts.map((attempt) => ({ ...attempt, startReported: true })) };
-    state = evaluateScan(state, facts([stopped("failed")])).state;
-    const [report] = pendingReports(state);
-    if (!report) throw new Error("Missing report");
-    expect(report.event).toBe("stopped");
-    expect(pendingReports(markReported(state, report))).toEqual([]);
-  });
-
-  it("preserves an unsent result report when it archives an attempt", () => {
+  it("refuses a start without a worker ID", () => {
     const plan = evaluateScan(running(), facts([stopped("failed")]));
-    const next = recordStart(plan.state, story.id, story.stage, { taskId: "retry-task" });
-    expect(pendingReports(next)).toHaveLength(2);
-    const saved = pendingReports(next).reduce(markReported, next);
-    expect(pendingReports(restart(saved))).toEqual([]);
-    expect(() => recordStart(saved, story.id, story.stage, {})).toThrow(/worker ID/);
+    expect(() => recordStart(plan.state, story.id, story.stage, {})).toThrow(/worker ID/);
   });
 });
 

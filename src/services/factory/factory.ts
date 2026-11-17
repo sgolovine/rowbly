@@ -6,6 +6,7 @@ import {
   publishCommand,
   readReceipt,
   validAttentionKey,
+  validStoryId,
 } from "../factory-control/factory-control.js";
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
@@ -182,7 +183,7 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
 /** Publishes a command to the live daemon and waits for its receipt. A stop also waits for the owner release. */
 export async function sendFactoryCommand(
   type: FactoryCommandType,
-  input: { threadId?: string; attentionKey?: string; message?: string; timeoutMs?: number } = {},
+  input: { threadId?: string; attentionKey?: string; message?: string; storyId?: string; timeoutMs?: number } = {},
   ctx: ServiceContext = {},
 ) {
   const message = type === "steer" ? steerText(input.message) : undefined;
@@ -203,6 +204,7 @@ export async function sendFactoryCommand(
     expectedRunId: thread?.runs.at(-1)?.id,
     attentionKey: input.attentionKey,
     message,
+    storyId: input.storyId,
   });
   const deadline = Date.now() + (input.timeoutMs ?? 30_000);
 
@@ -254,6 +256,24 @@ export async function dismissFactoryAttention(
   }
 
   return sendFactoryCommand("dismiss", { ...input, attentionKey: key }, ctx);
+}
+
+/**
+ * Asks the live daemon to release the policy parking of a Story, so that the next pass can start a worker for it.
+ * A Story that is not parked gives a success with no change.
+ */
+export async function releaseFactoryStory(
+  storyId: string,
+  input: { timeoutMs?: number } = {},
+  ctx: ServiceContext = {},
+) {
+  if (!validStoryId(storyId)) {
+    throw new ValidationError("A Story ID of 1 to 128 characters is necessary");
+  }
+
+  const receipt = await sendFactoryCommand("release-story", { ...input, storyId }, ctx);
+
+  return { ...receipt, storyId };
 }
 
 /**

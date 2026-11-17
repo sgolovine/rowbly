@@ -26,11 +26,13 @@ The CLI and the TUI send guarded commands to the daemon. `factory-control/` writ
 immutable file in `runtime/control/`. The daemon writes a receipt in `runtime/receipts/`: accepted,
 completed or rejected.
 
-The command types are `stop`, `cancel`, `resume`, `dismiss` and `steer`:
+The command types are `stop`, `cancel`, `resume`, `dismiss`, `steer` and `release`:
 
 - `cancel`, `resume` and `steer` must have a `threadId` and an `expectedRunId`.
 - `dismiss` must have an `attentionKey` of 1 to 128 characters. If the key is missing, the daemon
   rejects the command.
+- `release` must have a `storyId` of 1 to 128 characters. If the Story ID is missing, the daemon
+  rejects the command. See [Release a parked Story](#release-a-parked-story).
 - `steer` must have a `message` of 1 to 4000 characters after trim. If the message is missing, empty
   or too long, the daemon rejects the command.
 - A command file is at most 32768 bytes. A `steer` message of 4000 characters fits after JSON
@@ -55,39 +57,42 @@ exists, the function gives `CONFLICT` with the text `Factory is not running`.
    Pi gives the message to the agent after its current tool calls. The session history keeps the
    message as a user message, so Peek shows it in the conversation.
 
-The supervisor Thread does not take steering messages. A Thread that does not run does not take
+An old supervisor Thread does not take steering messages. A Thread that does not run does not take
 steering messages. Use resume for such a Thread.
 
-## Failures in the supervisor loop
+## Failures in the factory loop
 
-Each pass of the supervisor loop does these steps in this order:
+Each pass of the factory loop does these steps in this order:
 
 1. The scan (`reconcilePolicy`). It writes the policy decisions to the factory state.
    Then the manager sets the `upstream-stuck:<ID>` entries for the upstream Stories that cannot
    progress, and removes the other `upstream-stuck:` entries.
-2. The steps that the digest does not need: the settings refresh (`settings`), the provider pause
-   check (`providers`), the canonical commit (`commit`) and the start of the Git sync (`sync`).
+2. The side steps: the settings refresh (`settings`), the worker host refresh (`hosts`), the provider
+   pause check (`providers`), the canonical commit (`commit`) and the start of the Git sync (`sync`).
 3. The automatic resume of the Threads that wait for the network (`network-resume`). See
    [Network failures](#network-failures).
-4. The digest and its delivery to the supervisor.
+4. The dispatch of the workers (`dispatch`). See [Factory pass](README.md#factory-pass).
 
 If the scan fails, the pass stops. The loop sets the `reconcile` attention entry, and the next scan
 tries again. A scan occurs at least each 30 seconds. A pass with a successful scan removes the
 `reconcile` entry.
 
 If a step of item 2 or item 3 fails, the loop sets the attention entry of that step, and the pass continues
-to the digest. Thus a step that fails on each pass cannot stop the digests. For example, the
-supervisor continues to get the candidate Stories. A step that does not fail removes its entry. A
-failed settings refresh keeps the current settings. While a Git sync runs, the commit does not run,
-and its entry does not change.
+to the dispatch. Thus a step that fails on each pass cannot stop the workers. A step that does not fail
+removes its entry. A failed settings refresh keeps the current settings. While a Git sync runs, the
+commit does not run, and its entry does not change.
+
+A dispatch error that is not a `ConflictError` sets the `dispatch` entry, and the dispatch continues
+with the next Story. A `ConflictError`, for example a full host, skips only its Story and sets no entry.
 
 The text of each entry has the error message, limited to 500 characters.
 
 ## Dismiss an attention entry
 
-The manager keeps the attention entries in its state. `raise_attention` and the supervisor loop add
-them. The supervisor loop uses the keys `reconcile`, `settings`, `providers`, `commit`, `sync`,
-`supervisor`, `network-resume`, `pull`, `push` and `upstream-stuck:<ID>`. A successful Git pull removes the `pull` entry, and a successful push
+The manager keeps the attention entries in its state. The factory loop adds them. The factory loop uses
+the keys `reconcile`, `settings`, `hosts`, `providers`, `commit`, `sync`, `network-resume`, `dispatch`,
+`pull`, `push` and `upstream-stuck:<ID>`. An old status file can have the key `supervisor`. The manager
+keeps it until you dismiss it. A successful Git pull removes the `pull` entry, and a successful push
 removes the `push` entry. A pass removes an `upstream-stuck:` entry when its Story can progress. If
 you dismiss an `upstream-stuck:` entry and the Story still cannot progress, the next pass adds it again.
 
@@ -122,9 +127,24 @@ A cancel also cancels the queued and running checks of the worker.
 
 A cancellation holds the Story and the Stage until one of these events:
 
-- a release,
 - an explicit resume,
 - a material change of the Story.
+
+## Release a parked Story
+
+The policy parks a Story after the attempt limit. `rowbly factory release <story-id>` releases it.
+`releaseFactoryStory(storyId)` in `src/services/factory/factory.ts` sends the command `release-story` to the
+live daemon and waits for the receipt. It does not load Pi. Without a live daemon, it gives `CONFLICT`
+with the text `Factory is not running`.
+
+`releaseParkedStory` in `src/services/factory-manager/story-release.ts` does the work in the daemon:
+
+1. In `serial`, it reads `state.json`. A Story that is not parked gives a success with no change.
+2. It calls `releaseStory` of the policy through `updateFactoryState`. The release takes only the state
+   lock. It removes the parked record and gives the Story a new attempt budget.
+3. It calls `notify`, so that the next pass can start a worker for the Story.
+
+A Stage move or a change of the Story also releases a parked Story, with no command.
 
 ## Resume and retry
 
@@ -148,8 +168,9 @@ get the resume.
 
 Each Thread has at most three runs. A resume adds a run to the same Thread. A retry uses a new Thread.
 
-A later start lets the supervisor select eligible interrupted Threads. It does not resume all Threads
-automatically.
+A later start does not resume the interrupted Threads automatically. The policy gives a `retry`
+decision, and the dispatch starts a new Thread. Only the network resume and the control command
+`resume` add a run to an old Thread.
 
 ## Network failures
 
@@ -167,7 +188,7 @@ The error is a connectivity error when it contains one of these texts: `fetch fa
 
 ### The network pause
 
-When a worker or the supervisor fails with a connectivity error, `pausedProviders()` gives the
+When a worker fails with a connectivity error, `pausedProviders()` gives the
 provider a pause with the reason `network`:
 
 - The first network pause of a provider has a retry time of now plus 1 minute.
@@ -179,8 +200,8 @@ provider a pause with the reason `network`:
   after a daemon restart.
 - A successful prompt of the provider removes its count. The next pause starts at 1 minute again.
 
-While the pause holds, the manager starts no new worker on the provider, and the supervisor sends no
-digest if the pause is on its provider. Workers on other providers continue. The problem list of the
+While the pause holds, the manager starts no new worker on the provider. Workers on other providers
+continue. The problem list of the
 factory controls shows `Provider <id> is paused (network) until <time>.`
 
 ### The failed Thread
@@ -198,8 +219,7 @@ park a Story.
 On each pass, after the provider pause check, the manager resumes each `NETWORK` Thread when the
 pause of its provider has ended. The Thread must be the last worker Thread of its Story, and it must
 agree with the conditions of [Resume and retry](#resume-and-retry). The resume adds a new run to the
-same Thread and the same Pi session. It uses a generated request ID. It does not wait for the
-supervisor, and it does not need a person. If the resume cannot start now, for example because all
+same Thread and the same Pi session. It uses a generated request ID. It does not need a person. If the resume cannot start now, for example because all
 worker slots are full, the next pass tries again.
 
 A remote `NETWORK` Thread resumes on its own host, only while that host is `connected`. While the host
@@ -298,7 +318,7 @@ live daemon.
 
 ## Adopt remote Threads at start
 
-A remote run continues on its worker host while the daemon is off. Before the first supervisor turn,
+A remote run continues on its worker host while the daemon is off. Before the first factory pass,
 the new daemon adopts each worker Thread with the status `pending` or `running` on a worker host
 (`factory-manager/worker-adopt.ts`). For each Thread, it does these steps:
 

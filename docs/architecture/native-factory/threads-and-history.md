@@ -8,7 +8,9 @@ Read this when you change Thread metadata, runs, the Threads tab, Peek or the co
 ## Threads and runs
 
 - A worker Thread belongs to one Story and one Stage attempt.
-- Supervisor Threads belong to the Factory.
+- The factory does not create supervisor Threads now. Old supervisor Threads belong to the Factory.
+  They stay valid, and `rowbly thread list`, the history and the TUI show them.
+- A new worker Thread has no parent Thread.
 - A Thread has one or more runs. A resume adds a run to the same Thread. A retry creates a new
   Thread. Each Thread has at most three runs.
 - A Thread status is `pending`, `running`, `completed`, `failed`, `cancelled` or `interrupted`.
@@ -64,12 +66,6 @@ Peek.
 - A watch polls every 500 ms. If the `stat` of the Thread file and of the session file did not change
   since the last successful poll, the poll stops before it reads the Thread or a page.
 - `rowbly thread log <id> --tail <n>` reads a bounded tail: default 20, maximum 100 entries.
-
-## The supervisor digest
-
-The supervisor does not read worker transcripts in each turn. `supervisor-digest/` gives it bounded
-operational facts. The supervisor reads transcript excerpts only through explicit inspection
-(`inspect_worker`).
 
 ## Related
 

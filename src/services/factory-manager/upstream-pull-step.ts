@@ -1,4 +1,4 @@
-// The supervisor step that moves stuck upstream Stories out of the first Stage, when the setting is on.
+// The factory step that moves stuck upstream Stories out of the first Stage, when the setting is on.
 
 import { pullUpstream } from "../factory-settings/factory-settings.js";
 import { formatAuthor } from "../factory-settings/git-settings.js";

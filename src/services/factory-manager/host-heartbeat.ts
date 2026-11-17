@@ -1,4 +1,4 @@
-// The heartbeat loop of the worker hosts. It runs on its own timer, not in the supervisor loop. It takes no Project
+// The heartbeat loop of the worker hosts. It runs on its own timer, not in the factory loop. It takes no Project
 // write lock and no state lock; only the reconnect of a host applies its outbox.
 
 import { hostProjectId } from "../host-project/host-paths.js";
