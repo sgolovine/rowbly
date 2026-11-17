@@ -15,6 +15,7 @@ import { commitCanonicalProject } from "../project-write/project-write.js";
 import { prepareRuntime, runtimePath } from "../runtime-files/runtime-files.js";
 import { createStage } from "../stage/stage.js";
 import { createStory, deleteStory, getStory, updateStory } from "../story/story.js";
+import { addTag } from "../tag/tag.js";
 import { useTempDir } from "../test-project/test-project.js";
 import { listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
@@ -840,6 +841,39 @@ describe("foreground factory", () => {
       const thread = (await listThreads({ story: pinned.id }, { cwd: root })).threads[0];
       expect(thread?.model).toEqual({ provider: "worker", modelId: "faux-1" });
       expect(["completed", "failed"]).toContain(thread?.status);
+    });
+  });
+  it("uses the rule of the first tag of the Story before the Stage override", async () => {
+    await addTag({ label: "Bug", value: "bug" }, { cwd: root });
+    await addTag({ label: "UI", value: "ui" }, { cwd: root });
+    const tagged = await createStory({ title: "Tagged", stage: "WORK", tags: ["ui", "bug"] }, { cwd: root });
+    const queued = await createStory({ title: "Queued", stage: "WORK", tags: ["ui"] }, { cwd: root });
+    const plain = await createStory({ title: "Plain", stage: "WORK" }, { cwd: root });
+    await updateFactorySettings(
+      {
+        stageWorkerModels: { WORK: { provider: "worker", modelId: "faux-1" } },
+        tagWorkerModels: {
+          bug: { provider: "worker", modelId: "faux-1" },
+          ui: { provider: "supervisor", modelId: "faux-1" },
+        },
+      },
+      { cwd: root },
+    );
+    const f = await fixture();
+    f.supervisor.setResponses([fauxAssistantMessage("RESULT: complete")]);
+    await f.manager.reserveWorker({
+      storyId: tagged.id,
+      stage: "WORK",
+      requestId: "tag-rule",
+      model: { provider: f.worker.getModel().provider, modelId: f.worker.getModel().id },
+    });
+    expect((await settled())?.model).toEqual({ provider: "supervisor", modelId: "faux-1" });
+    await idle(f.manager);
+    await vi.waitFor(async () => {
+      const status = JSON.parse(await readFile(await runtimePath(projectPaths(root), "status.json"), "utf8"));
+      const providerOf = (id: string) => status.queue.find((entry: { story: string }) => entry.story === id)?.provider;
+      expect(providerOf(queued.id)).toBe("supervisor");
+      expect(providerOf(plain.id)).toBe("worker");
     });
   });
   it("quota pause does not block a worker with another provider", async () => {

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { readConfig } from "../config/config.js";
 import { getFactorySettings } from "../factory-settings/factory-settings.js";
 import { pathExists } from "../files/files.js";
+import { addTag } from "../tag/tag.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { doctor } from "./doctor.js";
 
@@ -121,6 +122,29 @@ describe("doctor factory checks", () => {
     ]);
     expect(await pathExists(project.paths.legacyFactorySettingsFile)).toBe(true);
     expect((await readConfig(project.paths)).factory).toEqual({ maxWorkers: "two" });
+  });
+
+  it("warns for each tag worker model rule of a tag that the Project does not have, without a fix", async () => {
+    const model = { provider: "faux", modelId: "test" };
+    await addTag({ label: "Bug", value: "bug" }, project.ctx);
+    const factory = { maxWorkers: 2, tagWorkerModels: { bug: model, gone: model, old: model } };
+    await setFactory(factory);
+
+    const issues = await factoryIssues(true);
+
+    expect(issues).toEqual([
+      expect.objectContaining({ severity: "warning", file: configFile, fixed: false }),
+      expect.objectContaining({ severity: "warning", file: configFile, fixed: false }),
+    ]);
+    expect(issues.map((issue) => issue.fix)).toEqual([undefined, undefined]);
+    expect(issues[0]?.message).toContain('"gone"');
+    expect(issues[1]?.message).toContain('"old"');
+    expect((await doctor({}, project.ctx)).ok).toBe(true);
+    expect((await readConfig(project.paths)).factory).toEqual(factory);
+
+    await setFactory({ maxWorkers: 2, tagWorkerModels: { bug: model } });
+
+    expect(await factoryIssues()).toEqual([]);
   });
 
   it("keeps the moved settings and the new stage when one run fixes both", async () => {

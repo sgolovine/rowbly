@@ -26,6 +26,11 @@ describe("project items", () => {
       }),
     ).toEqual([opus, gpt]);
     expect(workerModels({ maxWorkers: 1 })).toEqual([]);
+    const sol = { provider: "openai", modelId: "gpt-sol" };
+    expect(workerModels({ maxWorkers: 1, workerModel: opus, tagWorkerModels: { bug: sol, ui: opus } })).toEqual([
+      opus,
+      sol,
+    ]);
   });
 
   it("gives a fail for an error of the clone finder", async () => {

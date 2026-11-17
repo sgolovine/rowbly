@@ -85,7 +85,7 @@ keys and the screen stay responsive.
 
 The `factory-settings/` service reads and writes the optional `factory` key of
 `.rowbly/rowbly.config.json`: `maxWorkers`, `supervisorModel`, `workerModel`, `stageWorkerModels`,
-`storyWorkerModels`, `fallbackWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
+`storyWorkerModels`, `tagWorkerModels`, `fallbackWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
 
 - Without the `factory` key, the worker limit is four and Pi selects default models.
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
@@ -167,10 +167,12 @@ worker. The machine is the main machine (`local`) or a worker host. See
 
 ### Worker model overrides
 
-An override changes the worker model for one Stage, or for one Story in one Stage.
+An override changes the worker model for one Stage, for one Story in one Stage, or for the Stories
+with one tag.
 
 - `stageWorkerModels` is a map from a Stage key to a model choice.
 - `storyWorkerModels` is a map from a Story ID to a map from a Stage key to a model choice.
+- `tagWorkerModels` is a map from a tag value to a model choice. A tag rule applies in all Stages.
 - A model choice has `provider`, `modelId` and an optional `thinkingLevel`. It is the same shape as
   `workerModel`. If an entry is not a valid model choice, `getFactorySettings` gives a
   `ValidationError`.
@@ -186,12 +188,30 @@ An override changes the worker model for one Stage, or for one Story in one Stag
 - The service validates the model of an override with `validateModelChoice` before the config changes.
 - An override for a deleted or renamed Story or Stage stays in the config. The factory ignores it.
 
+Use these commands for a tag rule:
+
+- `rowbly factory configure --tag <value> --worker <provider/model> [--worker-thinking <level>]` sets
+  the rule of the tag. The tag must be a tag of the Project. If it is not, the command gives a
+  `VALIDATION` error, and the config does not change. The model gets the same check as the model of a
+  Stage override.
+- `rowbly factory configure --tag <value> --clear-worker` removes the rule. If the map has no other
+  rules, the `tagWorkerModels` key goes out of the config. If the rule does not exist, the command
+  succeeds and the config does not change. The clear does not check the tag, thus you can remove the
+  rule of a tag that the Project does not have now.
+- `--tag` sets only the worker model. If you use `--tag` together with `--stage`, `--story` or a
+  different settings flag, for example `--max-workers`, the command gives a `VALIDATION` error.
+- `rowbly tag remove` does not remove the rule of the tag. `rowbly doctor` shows a warning for each
+  rule of a tag that is not in the Project config. The warning has no `--fix`, because a fix can delete
+  a setting that the user wants. The factory ignores a rule of a tag that no Story has.
+
 When the factory reserves a worker, it uses the first model in this list:
 
 1. The Story override for the Stage of the Story.
-2. The Stage override.
-3. The `model` argument of the supervisor tool `start_worker`.
-4. `workerModel`.
+2. The tag rule. When the Story has more than one tag with a rule, the rule of the first such tag in
+   the `tags` list of the Story applies.
+3. The Stage override.
+4. The `model` argument of the supervisor tool `start_worker`.
+5. `workerModel`.
 
 The pure function `selectWorkerModel(settings, target, isPaused)` in `worker-overrides.ts` gives the
 model. It also applies the fallback worker models. The reservation uses the selected model for the
@@ -207,13 +227,14 @@ Without the key, there is no fallback.
 
 - The manager first selects the model from the list above. If the provider of that model is paused,
   the manager uses the first fallback model whose provider is not paused.
-- The fallback applies also when the selected model is a Story override, a Stage override or the model
-  of the supervisor.
+- The fallback applies also when the selected model is a Story override, a tag rule, a Stage override
+  or the model of the supervisor.
 - If the provider of the selected model and the providers of all fallback models are paused, the
   reservation gives the `ConflictError` `Worker provider is paused`. The `scan` of the manager changes
   each `start` and `retry` decision of the Story to `skip` with the reason `provider paused`. The
   status file, `rowbly factory status` and the supervisor tool `factory_snapshot` show this reason.
-- `scan` does not know the model of the supervisor. Thus it uses only the overrides and `workerModel`.
+- `scan` does not know the model of the supervisor. Thus it uses only the overrides, the tag rules of
+  the tags of the Story and `workerModel`.
   The `provider` of each queue entry of the status file is the provider of this selection, with the
   fallback.
 - If no model resolves, Pi selects the model. The manager does not check a pause and does not use the

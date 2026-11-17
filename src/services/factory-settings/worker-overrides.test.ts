@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { FactorySettings } from "./factory-settings.js";
-import { hasWorkerOverride, selectWorkerModel, withWorkerOverride, workerOverride } from "./worker-overrides.js";
+import {
+  hasWorkerOverride,
+  selectWorkerModel,
+  tagWorkerModel,
+  withWorkerOverride,
+  workerOverride,
+} from "./worker-overrides.js";
 
 const base = { provider: "base", modelId: "default" };
 const stage = { provider: "stage", modelId: "refine" };
@@ -31,7 +37,7 @@ describe("selectWorkerModel without a paused provider", () => {
   });
   it("gives the settings model without an override", () => {
     expect(resolve(settings, "ROW-1", "BACKLOG")).toEqual(base);
-    expect(workerOverride(settings, "ROW-1", "BACKLOG")).toBeUndefined();
+    expect(workerOverride(settings, { storyId: "ROW-1", stage: "BACKLOG" })).toBeUndefined();
   });
   it("gives undefined without an override or a settings model", () => {
     expect(resolve({ maxWorkers: 4 }, "ROW-1", "BACKLOG")).toBeUndefined();
@@ -93,6 +99,51 @@ describe("selectWorkerModel with a paused provider", () => {
       choice: undefined,
       paused: false,
     });
+  });
+});
+
+describe("selectWorkerModel with tag rules", () => {
+  const bug = { provider: "bug", modelId: "fix" };
+  const ui = { provider: "ui", modelId: "design" };
+  const tagged: FactorySettings = { ...settings, tagWorkerModels: { bug, ui } };
+  const select = (storyId: string, stageKey: string, tags: string[], isPaused = (_: string) => false) =>
+    selectWorkerModel(tagged, { storyId, stage: stageKey, tags }, isPaused);
+
+  it("gives the rule of the tag of the Story", () => {
+    expect(select("ROW-2", "BACKLOG", ["bug"]).choice).toEqual(bug);
+    expect(select("ROW-2", "BACKLOG", ["other"]).choice).toEqual(base);
+    expect(select("ROW-2", "BACKLOG", []).choice).toEqual(base);
+  });
+  it("gives the Story override before the tag rule", () => {
+    expect(select("ROW-1", "IN_DEVELOPMENT", ["bug"]).choice).toEqual(story);
+  });
+  it("gives the tag rule before the Stage override, the supervisor model and workerModel", () => {
+    const model = { provider: "supervisor-pick", modelId: "m" };
+    expect(select("ROW-2", "IN_DEVELOPMENT", ["bug"]).choice).toEqual(bug);
+    expect(select("ROW-1", "IN_REFINEMENT", ["bug"]).choice).toEqual(bug);
+    expect(
+      selectWorkerModel(tagged, { storyId: "ROW-2", stage: "BACKLOG", tags: ["bug"], model }, () => false).choice,
+    ).toEqual(bug);
+  });
+  it("gives the rule of the first tag of the Story that has a rule", () => {
+    expect(select("ROW-2", "BACKLOG", ["ui", "bug"]).choice).toEqual(ui);
+    expect(select("ROW-2", "BACKLOG", ["other", "bug", "ui"]).choice).toEqual(bug);
+    expect(tagWorkerModel(tagged, ["other"])).toBeUndefined();
+    expect(tagWorkerModel(tagged, ["toString"])).toBeUndefined();
+    expect(tagWorkerModel(settings, ["bug"])).toBeUndefined();
+  });
+  it("applies the fallback when the provider of the tag model is paused", () => {
+    const withFallback: FactorySettings = { ...tagged, fallbackWorkerModels: [fallbackA, fallbackB] };
+    expect(
+      selectWorkerModel(withFallback, { storyId: "ROW-2", stage: "BACKLOG", tags: ["bug"] }, pausedOf("bug")),
+    ).toEqual({ choice: fallbackA, paused: false });
+    expect(
+      selectWorkerModel(
+        withFallback,
+        { storyId: "ROW-2", stage: "BACKLOG", tags: ["bug"] },
+        pausedOf("bug", "fallback-a"),
+      ),
+    ).toEqual({ choice: fallbackB, paused: false });
   });
 });
 

@@ -59,6 +59,11 @@ describe("connectivityOf", () => {
     expect(configuredProviders(settings)).toEqual(["anthropic", "openai"]);
   });
 
+  it("lists the providers of the tag rules", () => {
+    const tagged = { ...settings, tagWorkerModels: { bug: { provider: "google", modelId: "g" } } };
+    expect(configuredProviders(tagged)).toEqual(["anthropic", "openai", "google"]);
+  });
+
   it("is online without a network pause", () => {
     expect(connectivityOf(settings, new Map())).toBe("online");
     expect(connectivityOf(settings, new Map([["anthropic", { reason: "quota" }]]))).toBe("online");

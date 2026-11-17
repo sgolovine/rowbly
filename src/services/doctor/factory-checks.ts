@@ -1,6 +1,6 @@
 import { readFile, rm } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
-import { type ProjectConfig, readConfig, writeConfig } from "../config/config.js";
+import { type ProjectConfig, projectTags, readConfig, writeConfig } from "../config/config.js";
 import { validFactorySettings } from "../factory-settings/factory-settings.js";
 import { pathExists } from "../files/files.js";
 import { type DoctorIssue, type DoctorRun, noted, rel, report, withoutKey } from "./doctor-run.js";
@@ -36,6 +36,31 @@ function sectionIssues(run: DoctorRun, config: ProjectConfig): DoctorIssue[] {
       file: rel(run, run.paths.configFile),
     }),
   ];
+}
+
+/**
+ * Gives a warning for each tag worker model rule of a tag that the Project does not have. The rule does not apply to
+ * a Story. It has no fix, because a removal can delete a rule that the user wants for a tag that comes back.
+ */
+function staleTagIssues(run: DoctorRun, config: ProjectConfig): DoctorIssue[] {
+  const factory = config.factory;
+
+  if (!isRecord(factory) || !validFactorySettings(factory) || !isRecord(factory.tagWorkerModels)) {
+    return [];
+  }
+
+  const known = new Set(projectTags(config).map((tag) => tag.value));
+  const file = rel(run, run.paths.configFile);
+
+  return Object.keys(factory.tagWorkerModels)
+    .filter((tag) => !known.has(tag))
+    .map((tag) =>
+      noted({
+        severity: "warning",
+        message: `factory.tagWorkerModels: The Project has no tag "${tag}". Add the tag, or remove the rule with rowbly factory configure --tag ${tag} --clear-worker`,
+        file,
+      }),
+    );
 }
 
 /** Writes the settings of the old file to the config, then deletes the file. It reads the config again first. */
@@ -102,5 +127,5 @@ async function legacyIssues(run: DoctorRun, config: ProjectConfig): Promise<Doct
 export async function checkFactory(run: DoctorRun): Promise<DoctorIssue[]> {
   const config = await readConfig(run.paths);
 
-  return [...sectionIssues(run, config), ...(await legacyIssues(run, config))];
+  return [...sectionIssues(run, config), ...staleTagIssues(run, config), ...(await legacyIssues(run, config))];
 }
