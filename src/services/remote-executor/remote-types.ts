@@ -5,6 +5,7 @@ import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import type { HostRunState } from "../host-agent/host-run-state.js";
 import type { HostChannel, HostTransport } from "../host-transport/host-transport.js";
 import type { Store } from "../store/store.js";
+import type { AbandonReason } from "../thread/thread.js";
 import type { ProjectPaths, ServiceContext } from "../workspace/workspace.js";
 import type { SentValues } from "./run-frames.js";
 
@@ -41,8 +42,11 @@ export interface RemoteExecutorInput {
   readonly helloTimeoutMs?: number;
 
   // Abandoned Threads
-  /** Records that a cancel of the Thread did not reach its host. The manager makes the Thread abandoned. */
-  readonly abandon?: (threadId: string, host: string) => Promise<void>;
+  /**
+   * Records that a cancel or a release of the Thread did not reach its host. The manager makes the Thread abandoned
+   * with the reason.
+   */
+  readonly abandon?: (threadId: string, host: string, reason: AbandonReason) => Promise<void>;
   /** Gives the abandoned remote Threads that have no remote outcome. */
   readonly abandoned?: () => Promise<readonly AbandonedThread[]>;
   /** Writes the remote outcome of an abandoned Thread from the last run frame. The status of the Thread stays. */
@@ -85,6 +89,9 @@ export interface AdoptedFacts {
   readonly session: boolean;
 }
 
+/** The kind of a stop of the manager. A release is a cancel that does not hold the Story for the user. */
+export type StopKind = "stop" | AbandonReason;
+
 /** The short-lived state of one remote run, from the launch to the end of its wait. */
 export interface RemoteRunState {
   /** The id of the `launch` or `resume` command. Only the frames of this command belong to the run. */
@@ -94,8 +101,8 @@ export interface RemoteRunState {
   readonly sessionOpened: boolean;
   /** The last run frame, after the run ended on the host. The run waits for the outbox sync. */
   readonly ended?: HostRunState;
-  /** A stop or a cancel of the manager. The launch command does not go to the host after it. */
-  readonly stopRequested?: "stop" | "cancel";
+  /** A stop, a cancel or a release of the manager. The launch command does not go to the host after it. */
+  readonly stopRequested?: StopKind;
   /** The `launch` or `resume` command is in the queue of the host, because its submit failed in the transport. */
   readonly launchQueued?: boolean;
   /** A previous daemon started the run. Until the run has a command id, the reconnect asks the host for its run. */

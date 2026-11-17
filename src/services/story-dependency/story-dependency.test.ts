@@ -174,4 +174,67 @@ describe("dependencyCandidates", () => {
   it("gives a story in the last stage", () => {
     expect(dependencyCandidates(stories, "ROW-04", [])).toContain("ROW-05");
   });
+
+  /** The old rule: each Story that is a valid new entry of the list. */
+  function oldRule(all: DependencyStory[], id: string, dependsOn: string[]): string[] {
+    return all
+      .filter((s) => s.id !== id && !dependsOn.includes(s.id))
+      .filter((s) => dependencyError(all, id, [...dependsOn, s.id]) === undefined)
+      .map((s) => s.id);
+  }
+
+  // A chain (ROW-03 → ROW-02 → ROW-01), a branch (ROW-04 and ROW-05 → ROW-01, ROW-06 → ROW-04 and ROW-05),
+  // a cycle (ROW-07 ↔ ROW-08, with ROW-09 → ROW-07), a free Story and a Story of a different Project.
+  const graph = [
+    story("ROW-01"),
+    story("ROW-02", ["ROW-01"]),
+    story("ROW-03", ["ROW-02"]),
+    story("ROW-04", ["ROW-01"]),
+    story("ROW-05", ["ROW-01"]),
+    story("ROW-06", ["ROW-04", "ROW-05"]),
+    story("ROW-07", ["ROW-08"]),
+    story("ROW-08", ["ROW-07"]),
+    story("ROW-09", ["ROW-07"]),
+    story("ROW-10"),
+    story("OTH-01"),
+  ];
+
+  it("gives the same list as the old rule for each story of a chain, a branch and a cycle", () => {
+    const ids = ["ROW-01", "ROW-02", "ROW-03", "ROW-04", "ROW-05", "ROW-06", "ROW-09", "ROW-10"];
+
+    for (const id of ids) {
+      const dependsOn = graph.find((s) => s.id === id)?.dependsOn ?? [];
+
+      expect(dependencyCandidates(graph, id, [...dependsOn])).toEqual(oldRule(graph, id, [...dependsOn]));
+      expect(dependencyCandidates(graph, id, [])).toEqual(oldRule(graph, id, []));
+    }
+
+    expect(dependencyCandidates(graph, "ROW-01", [])).toEqual(["ROW-07", "ROW-08", "ROW-09", "ROW-10"]);
+  });
+
+  it("gives the same list as the old rule for a story that is not in the list of stories", () => {
+    expect(dependencyCandidates(graph, "ROW-99", ["ROW-03"])).toEqual(oldRule(graph, "ROW-99", ["ROW-03"]));
+  });
+
+  it("gives an empty list when the current list already has a problem", () => {
+    const cyclic = [...graph.filter((s) => s.id !== "ROW-01"), story("ROW-01", ["ROW-03"])];
+
+    expect(dependencyCandidates(graph, "ROW-01", ["ROW-99"])).toEqual([]);
+    expect(oldRule(graph, "ROW-01", ["ROW-99"])).toEqual([]);
+    expect(dependencyCandidates(graph, "ROW-01", ["ROW-03"])).toEqual([]);
+    expect(oldRule(graph, "ROW-01", ["ROW-03"])).toEqual([]);
+    expect(dependencyCandidates(cyclic, "ROW-01", ["ROW-03"])).toEqual([]);
+    expect(dependencyCandidates(graph, "ROW-01", ["OTH-01"])).toEqual([]);
+    expect(dependencyCandidates(graph, "ROW-01", ["ROW-01"])).toEqual([]);
+  });
+
+  it("gives the correct candidates for the ends of a chain of 125 stories", () => {
+    const ids = Array.from({ length: 125 }, (_, i) => `ROW-${String(i + 1).padStart(3, "0")}`);
+    // Each story depends on the story before it: ROW-002 → ROW-001, …, ROW-125 → ROW-124.
+    const chain = ids.map((id, i) => story(id, i === 0 ? [] : [ids[i - 1] as string]));
+
+    expect(dependencyCandidates(chain, "ROW-001", [])).toEqual([]);
+    expect(dependencyCandidates(chain, "ROW-125", ["ROW-124"])).toEqual(ids.slice(0, 123));
+    expect(dependencyCandidates(chain, "ROW-125", ["ROW-124"])).toEqual(oldRule(chain, "ROW-125", ["ROW-124"]));
+  });
 });

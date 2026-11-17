@@ -1,4 +1,4 @@
-// The supervisor step that applies the outbox of one worker host and sets an attention entry for each conflict.
+// The factory step that applies the outbox of one worker host and sets an attention entry for each conflict.
 
 import {
   type OutboxConflict,

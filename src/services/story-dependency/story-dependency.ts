@@ -193,13 +193,77 @@ export function dependencyCandidates(
   id: string | undefined,
   dependsOn: readonly string[],
 ): string[] {
-  const others = stories.filter((story) => story.id !== id && !dependsOn.includes(story.id));
+  const listed = new Set(dependsOn);
+  const others = stories.filter((story) => story.id !== id && !listed.has(story.id));
 
   if (id === undefined) {
     return others.map((story) => story.id);
   }
 
-  return others
-    .filter((story) => dependencyError(stories, id, [...dependsOn, story.id]) === undefined)
-    .map((story) => story.id);
+  if (dependencyError(stories, id, dependsOn) !== undefined) {
+    return [];
+  }
+
+  const reaching = reachingIds(stories, id);
+  const key = keyOf(id);
+
+  return others.filter((story) => isCandidate(story.id, key, reaching)).map((story) => story.id);
 }
+
+/**
+ * Whether a Story that is not in the list and is not the Story itself is a valid candidate: it has no path to the
+ * Story, so it does not make a cycle, and it is not a Story of a different Project.
+ */
+function isCandidate(candidate: string, key: string | undefined, reaching: ReadonlySet<string>): boolean {
+  const candidateKey = keyOf(candidate);
+
+  return !reaching.has(candidate) && (candidateKey === undefined || candidateKey === key);
+}
+
+// The candidates of a dependency picker must be found in linear time on a large board. A new Map, array or Set for
+// each Story or each edge makes the search quadratic, so the two functions below build their own local collections in
+// place. No other code sees these collections before the functions return.
+// biome-ignore-start lint/plugin: the linear graph search builds its own local collections in place.
+
+/** The reverse graph: the downstream Story IDs of each Story ID. It has no edges out of `root`. */
+function dependentsOf(stories: readonly DependencyStory[], root: string): ReadonlyMap<string, readonly string[]> {
+  const dependents = new Map<string, string[]>();
+  const edges = stories
+    .filter((story) => story.id !== root)
+    .flatMap((story) => story.dependsOn.map((dep): [string, string] => [dep, story.id]));
+
+  for (const [dep, downstream] of edges) {
+    const list = dependents.get(dep);
+
+    if (list === undefined) {
+      dependents.set(dep, [downstream]);
+    } else {
+      list.push(downstream);
+    }
+  }
+
+  return dependents;
+}
+
+/** The IDs of the Stories that have a path to `root`, with one breadth-first search on the reverse graph. */
+function reachingIds(stories: readonly DependencyStory[], root: string): ReadonlySet<string> {
+  const dependents = dependentsOf(stories, root);
+  const found = new Set<string>([root]);
+  const queue = [root];
+
+  // The loop also visits each node that the loop adds to the end of the queue.
+  for (const node of queue) {
+    for (const next of dependents.get(node) ?? []) {
+      if (!found.has(next)) {
+        found.add(next);
+        queue.push(next);
+      }
+    }
+  }
+
+  found.delete(root);
+
+  return found;
+}
+
+// biome-ignore-end lint/plugin: the linear graph search ends here.

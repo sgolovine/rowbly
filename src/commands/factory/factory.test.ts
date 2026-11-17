@@ -48,6 +48,20 @@ describe("factory commands", () => {
     expect(status.attention[0][1].text).toContain("code 9");
     expect(status.attention[0][1].text).toContain("/logs/last.jsonl");
   });
+  it("fails to release a Story without a live daemon", async () => {
+    const result = await runCli(["--json", "factory", "release", "TST-1"], project.paths.root);
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout + result.stderr).toContain("Factory is not running");
+  });
+  it("releases a Story through the live daemon", async () => {
+    const release = vi
+      .spyOn(factory, "releaseFactoryStory")
+      .mockResolvedValue({ version: 1, id: "cmd", ownerToken: "owner", status: "completed", storyId: "TST-1" });
+    const result = await runCli(["--json", "factory", "release", "TST-1"], project.paths.root);
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ status: "completed", storyId: "TST-1" });
+    expect(release).toHaveBeenCalledWith("TST-1", {}, expect.anything());
+  });
   it("hides the watchdog command from the help", async () => {
     const result = await runCli(["factory", "--help"], project.paths.root);
     expect(result.stdout).not.toContain("watchdog");

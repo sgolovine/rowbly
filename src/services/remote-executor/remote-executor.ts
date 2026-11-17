@@ -49,6 +49,7 @@ export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor
     launch: (launch, events) => launchRemote(env, launch, events),
     stop: (threadId) => stopRemote(env, threadId, "stop"),
     cancel: (threadId) => stopRemote(env, threadId, "cancel"),
+    release: (threadId) => stopRemote(env, threadId, "release"),
     steer: () => Promise.reject(new ConflictError("A worker on a worker host cannot get a steering message")),
     syncHosts: () => syncHosts(env),
     reconnect: (host) => reconnectHost(env, host),
