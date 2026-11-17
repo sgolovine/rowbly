@@ -722,11 +722,33 @@ The main machine keeps the files of each host in `runtime/hosts/<host>/`. The fo
   conflicts/            # <sha256>.png: the file of each attachment.add conflict, for recovery
   threads/<thread-id>/
     base.json           # the copy that the main machine sent last to the host for the Thread
+  held/<thread-id>/     # the held entries of an abandoned remote Thread
+    entries.jsonl       # one held outbox entry on each line, in seq order
+    blobs/<sha256>.png  # the file of each held attachment.add entry
 ```
 
 `base.json` is `{ version, threadId, host, sentAt, files, attachments }` with mode `0600`. The remote
 executor writes it after each `host prepare`. See
 [native-factory/README.md](native-factory/README.md#dispatch-to-a-worker-host).
+
+### Held entries of an abandoned Thread
+
+When the user cancels a remote Thread while its host is offline, the Thread file gets the `abandoned`
+note: `{ "at": <time>, "reason": "cancel", "appliedSeq": <n> }`. `appliedSeq` is the last applied `seq`
+of the host at the time of the cancel. `reason` can also be `release` for a later release action.
+After the final run frame arrives, the Thread file also gets `remoteOutcome`:
+`{ endReason, endedAt?, result?, failure? }`. The status of the Thread stays `cancelled`.
+
+- The outbox apply holds each entry of an abandoned Thread with a `seq` greater than `appliedSeq`. It
+  does not apply the entry. It adds the entry to `held/<thread-id>/entries.jsonl` and the file of an
+  `attachment.add` entry to `held/<thread-id>/blobs/<sha256>.png`. Then it records the `seq` in
+  `outbox-applied.json` as for each other entry.
+- An entry with the same `seq` goes in the file one time.
+- The files have mode `0600`, and the folders have mode `0700`. The files change only under the
+  Project write lock.
+- `rowbly thread held <id> --apply` applies the held entries with the same compare-and-set as the
+  apply. An entry with a conflict stays in the file. When no entry stays, the folder is removed.
+  `--discard` removes the folder. See [cli.md](cli.md).
 
 ### Attachment cache of a host
 

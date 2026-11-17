@@ -30,7 +30,7 @@ import { syncHosts } from "./remote-sync.js";
 import type { RemoteEnv, RemoteExecutor, RemoteExecutorInput, RemoteRun, RemoteState } from "./remote-types.js";
 import { dropMirror } from "./session-mirror.js";
 
-export type { HostConnection, RemoteExecutor, RemoteExecutorInput } from "./remote-types.js";
+export type { AbandonedThread, HostConnection, RemoteExecutor, RemoteExecutorInput } from "./remote-types.js";
 
 /** Makes the executor that runs each worker of a worker host in the host agent of that host. */
 export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor {
@@ -39,6 +39,7 @@ export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor
     links: new Map(),
     queueChain: Promise.resolve(),
     reconnects: new Map(),
+    outcomes: new Map(),
     mirrors: new Map(),
   });
   const env: RemoteEnv = { input, state };

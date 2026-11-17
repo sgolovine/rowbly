@@ -30,6 +30,13 @@ export interface OutboxConflict {
   readonly png?: string;
 }
 
+/** The abandoned Thread of a host whose later entries the apply holds. */
+export interface AbandonedHold {
+  readonly threadId: string;
+  /** Only the entries with a greater `seq` are held. */
+  readonly appliedSeq: number;
+}
+
 /** The fixed environment of one apply. */
 export interface ApplyEnv {
   readonly host: string;
@@ -37,6 +44,8 @@ export interface ApplyEnv {
   /** The context of the services, without a recorder. */
   readonly ctx: ServiceContext;
   readonly source: Pick<OutboxSource, "blob">;
+  /** The abandoned Threads of the host. The apply holds their later entries and does not apply them. */
+  readonly abandoned?: readonly AbandonedHold[];
 }
 
 /** The Story of an entry, or the reason why the main machine cannot use it. */

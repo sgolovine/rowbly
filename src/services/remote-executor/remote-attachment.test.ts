@@ -32,6 +32,7 @@ describe("remote attachment requests", () => {
         links: new Map(),
         queueChain: Promise.resolve(),
         reconnects: new Map(),
+        outcomes: new Map(),
         mirrors: new Map(),
       }),
     };

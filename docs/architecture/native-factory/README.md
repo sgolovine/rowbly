@@ -419,17 +419,17 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   that run ends, because the main machine cannot know if the run started.
 - **Stop and cancel.** A `stop` while the host is disconnected goes in the queue, and the run keeps its
   wait until the reconnect. A `cancel` while the host is disconnected goes in the queue, and the wait
-  ends. The Thread keeps its last status.
+  ends. The Thread becomes `cancelled` and abandoned. See [Abandoned Threads](#abandoned-threads).
 - **Reconnect.** When the heartbeat of a host gives `connected`, the manager calls `reconnect(host)` of
   the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands,
-  waiting inbound updates, an active run without a channel, or a run that waits for the sync, the
-  executor does these steps:
+  waiting inbound updates, an active run without a channel, a run that waits for the sync, or an
+  abandoned Thread without a remote outcome, the executor does these steps:
   1. It submits each queued `stop-thread` and `cancel-thread`, in the order of arrival. Then it
      submits the other queued commands.
   2. It sends the waiting inbound updates of each active run. See [Inbound updates](#inbound-updates).
-  3. It opens the `host attach` channel again for the active runs. The host sends the status, each
-     receipt and the run state of each Thread again. The run state stays across channels, so a value
-     that was sent before sends no event.
+  3. It opens the `host attach` channel again for the active runs and the abandoned Threads. The host
+     sends the status, each receipt and the run state of each Thread again. The run state stays across
+     channels, so a value that was sent before sends no event.
   4. It reads the session lines that the host wrote while it was offline, for each open run with a
      session (see [Session mirror](#session-mirror)). A failure does not stop the next step.
   5. It applies the outbox of the host with `syncHosts`.
@@ -443,6 +443,54 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   outbox entries that the host wrote before the stop are applied as usual.
 - **Not in this Story.** The recovery after a restart of the daemon, the resume of a remote Thread
   only on its own host and the network resume of remote Threads come with ROW-117.
+
+## Abandoned Threads
+
+When the user cancels a remote Thread while its host is offline, the late changes of that Thread never
+go to the board automatically. The main machine holds them. See the Spec `remote-worker-hosts`,
+section "Abandoned Threads".
+
+- **Abandon.** A cancel of a remote Thread makes the Thread abandoned when the `cancel-thread` command
+  cannot reach the host now: the host has no open channel, or the submit fails in the transport. The
+  remote executor calls the `abandon` callback of `RemoteExecutorInput`. The manager
+  (`factory-manager/abandoned-threads.ts`) writes the `abandoned` note on the `cancelled` Thread:
+  `{ at, reason: "cancel", appliedSeq }`. `appliedSeq` is the last applied `seq` of the host at the
+  time of the cancel. A cancel while the host has an open channel does not abandon the Thread.
+- **The stop goes first.** The `cancel-thread` command stays in `runtime/hosts/<host>/commands.json`.
+  On reconnect, it goes before the `host attach` channel and before the outbox sync.
+- **No host sync wait.** The wait of the launch ends at once. Thus the Story does not wait on
+  `waiting for host sync`. The usual cancel rules apply: `nativeCancelled` and `cancelled by user`.
+- **Held entries.** Each outbox sync of the host (the scan sync, the end-of-run sync and the reconnect
+  sync) holds each entry of an abandoned Thread with a `seq` greater than the `appliedSeq` of the
+  note. The apply does not apply a held entry. It writes the entry to
+  `runtime/hosts/<host>/held/<threadId>/entries.jsonl`, and the file of an `attachment.add` entry to
+  `held/<threadId>/blobs/<sha256>.png`. Then it records the `seq` as applied, and the sync sends the
+  acknowledgement. A transport failure of `host blob` stops the apply before the record of the
+  `seq`. A bad file keeps the entry held without its file.
+- **Reconnect.** The reconnect also runs for a host with an abandoned Thread without a
+  `remoteOutcome`, also when the host has no other open run. The scan sync also applies the outbox of
+  a host with an abandoned Thread and an open channel.
+- **Remote outcome.** When the final run frame (`phase: "ended"`) of an abandoned Thread arrives on
+  the channel, the executor keeps it and applies the outbox of the host. After the sync, the manager
+  writes `remoteOutcome` on the Thread: `{ endReason, endedAt?, result?, failure? }`. The Thread stays
+  `cancelled`. Its status, `resultReported` and `completed` do not change, and the Story does not
+  move. When the sync fails, the frame waits for the next sync. After the last remote outcome of a
+  host, the executor closes the idle channel.
+- **Attention.** When a sync holds new entries of a Thread, the manager sets the attention entry
+  `abandoned:<threadId>`, after the Project write lock is free. The entry has the Story of the Thread
+  and a summary: the host, the number of held entries, and the paths and attachment ids that they
+  change. A dismiss removes only the attention entry. A new hold sets the entry again.
+- **Held actions.** `rowbly thread held <id>` lists, applies (`--apply`) or deletes (`--discard`) the
+  held entries (`outbox-apply/held-actions.ts`). The apply uses the same compare-and-set as the outbox
+  apply. An entry with a conflict stays held, and the other entries leave the folder. The command
+  does not need a running factory. See [cli.md](../cli.md).
+- **Resume gate.** A resume of an abandoned Thread gives a `ConflictError` while the Thread has held
+  entries, or while its host is not `connected`. A resume removes the `abandoned` note and the
+  `remoteOutcome` from the Thread.
+- **Inbound updates.** `isAbandoned(thread)` in `thread/thread-types.ts` tells if a Thread is
+  abandoned. ROW-98 uses it to drop the inbound updates of an abandoned Thread.
+- **Locks.** The hold and `--apply` hold the Project write lock and never the state lock.
+- **Not in this Story.** The release of a remote Thread (ROW-119) and the TUI key (ROW-102).
 
 ## Prerequisites and limits
 
