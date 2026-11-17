@@ -29,6 +29,7 @@ This file records the changes to Rowbly that users can see.
 - Added: The new `factory.fallbackWorkerModels` setting gives an ordered list of worker models, and `rowbly factory configure --fallback-worker <provider/model>` (repeat the flag) sets it and `--clear-fallback-workers` removes it. When the provider of the worker model is paused, the factory starts the worker with the first model of the list whose provider is not paused, or skips the Story with `provider paused`. (ROW-121)
 - Fixed: After a restart of the factory, remote Threads keep their status, and the new factory follows their runs on the worker host with the new hidden `rowbly host runs` command. A remote Thread now resumes only on its own worker host, and a resume gives `CONFLICT` when that host is not connected or has no free slot. (ROW-117)
 - Added: When a worker reports blockers or problems, or fails with an error that is not a network error, the factory shows the attention entry `worker:<ID>` with the Stage, the Thread, the outcome and the first blockers and problems. A later worker of the Story that ends without problems removes the entry, and the factory also removes it when the Story leaves that Stage or is deleted. (ROW-122)
+- Changed: New end-to-end tests run the factory with worker hosts in the test process. They check a full remote run, a cancel while a host is offline, the changes of the board that go to a running remote Thread, the placement of workers and the attachments in the two directions. (ROW-104)
 
 ### 0.19.0
 
