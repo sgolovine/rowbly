@@ -13,6 +13,7 @@ import { finalActivity, hasEnded, newFacts, type RunFact, receiptFailure, runEnd
 export function newRemoteRun(thread: ThreadRecord, host: string, events: WorkerEvents): RemoteRun {
   return {
     threadId: thread.id,
+    storyId: thread.storyId,
     host,
     events,
     store: new Store<RemoteRunState>({ sent: {}, sessionOpened: false, closed: false, chain: Promise.resolve() }),
@@ -151,6 +152,8 @@ async function applyRunFrame(run: RemoteRun, frame: HostRunState, hooks: RunHook
 export interface RunHooks {
   readonly sync: (host: string) => Promise<void>;
   readonly stopHost: (run: RemoteRun) => Promise<void>;
+  /** Takes a run frame of a Thread without an active run, for example the end of an abandoned Thread. */
+  readonly otherRun?: (host: string, frame: HostRunState) => void;
   /** Reads the session lines of the run that the mirror does not have. A failure does not throw. */
   readonly catchUp: (run: RemoteRun) => Promise<void>;
 }

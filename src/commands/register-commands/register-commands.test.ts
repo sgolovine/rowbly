@@ -17,7 +17,7 @@ const resources = {
   factory: ["status", "run", "watchdog", "stop", "restart", "logs", "start", "configure", "check"],
   auth: ["providers", "status", "login", "logout"],
   model: ["list"],
-  thread: ["cancel", "resume", "steer", "log", "list", "show"],
+  thread: ["cancel", "resume", "steer", "log", "list", "show", "held"],
   host: [
     "add",
     "check",
@@ -36,6 +36,7 @@ const resources = {
     "cache-put",
     "run-paths",
     "prepare",
+    "inbound",
     "ping",
     "session-bytes",
     "attach",
@@ -56,6 +57,7 @@ const hidden = [
   "cache-put",
   "run-paths",
   "prepare",
+  "inbound",
   "ping",
   "session-bytes",
 ];
