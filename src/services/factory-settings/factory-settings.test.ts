@@ -98,6 +98,7 @@ describe("factorySettings", () => {
       maxWorkers: 4,
       stageWorkerModels: { BACKLOG: model },
       storyWorkerModels: { "ROW-1": { BACKLOG: { ...model, thinkingLevel: "high" } } },
+      tagWorkerModels: { bug: model },
     };
     await writeFactory(p, JSON.stringify(settings));
     expect(await getFactorySettings(p.ctx)).toEqual({ ...settings, git, placement: "prefer-local" });
@@ -106,7 +107,12 @@ describe("factorySettings", () => {
       { stageWorkerModels: [model] },
       { storyWorkerModels: { "ROW-1": model } },
       { storyWorkerModels: { "ROW-1": { BACKLOG: { ...model, thinkingLevel: "huge" } } } },
+      { tagWorkerModels: { bug: { provider: "faux" } } },
+      { tagWorkerModels: [model] },
+      { tagWorkerModels: { bug: { ...model, thinkingLevel: "huge" } } },
+      { tagWorkerModels: "bug" },
     ]) {
+      expect(validFactorySettings({ maxWorkers: 4, ...bad })).toBe(false);
       await writeFactory(p, JSON.stringify({ maxWorkers: 4, ...bad }));
       await expect(getFactorySettings(p.ctx)).rejects.toThrow("Invalid factory settings");
     }

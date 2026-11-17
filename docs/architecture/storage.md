@@ -23,7 +23,7 @@ Rowbly keeps a Project in `.rowbly/`, in the directory where Rowbly runs.
 
 ```
 .rowbly/
-  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,workerModel,stageWorkerModels,storyWorkerModels,fallbackWorkerModels,stageClasses,git,checks,dependencies,placement}
+  rowbly.config.json  # projectName, projectKey, customFields [{key,label,type,options?}], tags? [{value,label}], stages [{key,label,enabled,expandedByDefault?}], features? {specs}, display? {compactThreads,timeZone,storySidebar}, skills? [{name,harnesses}], factory? {maxWorkers,workerModel,stageWorkerModels,storyWorkerModels,tagWorkerModels,fallbackWorkerModels,stageClasses,git,checks,dependencies,placement}
   prompts/SYSTEM.md   # the Project prompt: all workers get it
   prompts/WORKER.md   # the Worker prompt: all workers get it
   stories/BACKLOG/ROW-01.md # stories/<stage key>/<projectKey>-<n>.md; frontmatter: title, stage, uid?, dependsOn?, tags?, createdAt?, updatedAt?, one key per custom field (null = unset); the body is the description
@@ -93,6 +93,7 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
 | `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
+| `tagWorkerModels`      | object  | none               | The worker model rules for each tag value.             |
 | `fallbackWorkerModels` | array   | none               | The worker models to use when a provider is paused.    |
 | `stageClasses`         | object  | none               | The class of a Stage key: `work` or `hold`. See below. |
 | `git`                  | object  | the sync defaults  | The canonical commits and the Git sync of the factory. |
@@ -116,8 +117,12 @@ service examines all keys. Thus a `factory` section that is not valid stops the 
 but the board continues to work. `rowbly doctor` shows the problem as an error.
 
 The factory settings can hold worker model overrides. `stageWorkerModels` maps a Stage key to a model
-choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice. The order of
-priority is the Story override, then the Stage override, then `workerModel`. See
+choice. `storyWorkerModels` maps a Story ID to a map from a Stage key to a model choice.
+`tagWorkerModels` maps a tag value to a model choice. A tag rule applies in all Stages. The order of
+priority is the Story override, then the tag rule, then the Stage override, then `workerModel`. When a
+Story has more than one tag with a rule, the rule of the first such tag in the `tags` list of the
+Story applies. A tag rule must name a tag of the Project. `rowbly doctor` shows a warning for a rule
+of a tag that is not in the Project. See
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#worker-model-overrides).
 
 `fallbackWorkerModels` is an ordered list of model choices. When the provider of the selected worker

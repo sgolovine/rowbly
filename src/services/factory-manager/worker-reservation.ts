@@ -190,12 +190,12 @@ async function releaseForResume(manager: Manager, previous: ThreadRecord, story:
 }
 
 /**
- * A Story or Stage override in the factory settings has priority over the requested model. When the provider
- * of the model is paused, the first fallback model whose provider is not paused applies.
+ * A Story override, a tag rule or a Stage override in the factory settings has priority over the requested model.
+ * When the provider of the model is paused, the first fallback model whose provider is not paused applies.
  */
 function workerModelFor(manager: Manager, story: Story, model: ModelChoice | undefined): ModelChoice | undefined {
   const { settings } = getState(manager);
-  const target = { storyId: story.id, stage: story.stage, model };
+  const target = { storyId: story.id, stage: story.stage, tags: story.tags, model };
 
   return selectWorkerModel(settings, target, (provider) => isProviderPaused(manager, provider)).choice;
 }
