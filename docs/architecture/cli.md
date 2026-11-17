@@ -42,7 +42,7 @@ test.
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt.                |
 | `model/`                                               | `model list`.                                                                                   |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.                            |
-| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`, `held`.                                       |
+| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `release`, `resume`, `held`.                            |
 | `host/`                                                | `host add`, `check`, `login`, `list`, `update`, `remove`, `use`, `unuse`, hidden commands.      |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
@@ -138,7 +138,8 @@ than one `--tag`, a Story must have all of the tags.
 that runs factory workers only. The hosts belong to the user, not to a Project. Thus the commands do
 not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. Only `host use`
 and `host unuse` need a Project. The `host-project` service does their work. See
-[storage.md](storage.md#rowblyrcjson).
+[storage.md](storage.md#rowblyrcjson). For an overview of the worker hosts, see
+[native-factory/remote-hosts.md](native-factory/remote-hosts.md).
 
 - `host add <id> --ssh <target> --max-workers <n>` checks Node 22.19.0 or later on the host, and
   installs the exact Rowbly build of the main machine in a private folder on the host. Then it adds
@@ -202,10 +203,16 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   file does not change.
 - `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
-  [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
+  [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure)
+  and [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 - `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
   `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
   [native-factory/controls.md](native-factory/controls.md#cli-commands).
+- `rowbly factory status --json` has a `hosts` list with the state and the slots of each machine.
+  See [native-factory/README.md](native-factory/README.md#placement) and
+  [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md#factory-files-in-rowbly).
+- `rowbly thread held <id>` lists, applies or discards the held entries of an abandoned remote
+  Thread. See [Held entries](#held-entries).
 - `host blob <sha256> [project-id]` is hidden. It does not show in `rowbly host --help`. The main
   machine runs it on a worker host to get the file of an `attachment.add` entry. With a project id,
   the command reads the outbox folder of the host agent of that Project. Without it, the command
@@ -269,6 +276,22 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.
     See [storage.md](storage.md#apply-on-the-main-machine).
+
+### Release a remote Thread
+
+`rowbly thread release <id>` releases a worker that runs on a worker host. The command sends the
+factory command `release` with `sendFactoryCommand`, as `rowbly thread cancel <id>` sends `cancel`.
+The command needs a running factory. `--json` gives the receipt of the command.
+
+- The manager action is `releaseWorker` in `src/services/factory-manager/worker-reservation.ts`. It
+  does the same run checks as a cancel: `Worker run changed` and `Worker is not active`.
+- A release stops the worker as a cancel. The Thread becomes `cancelled`, and the host gets
+  `cancel-thread`.
+- A release does not hold the Story for the user. The scan does not give `cancelled by user`. Thus the
+  policy can start a new worker for the Story.
+- When the host is offline, the Thread becomes abandoned with the reason `release`, and the Story does
+  not wait for that host. See [native-factory/README.md](native-factory/README.md#abandoned-threads).
+- A Thread on the main machine (`host` is `local`) gives a `CONFLICT` error.
 
 ### Held entries
 

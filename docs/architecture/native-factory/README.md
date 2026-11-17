@@ -146,6 +146,8 @@ when the number of the Story changes. See [../storage.md](../storage.md).
 
 ## Placement
 
+For an overview of the worker hosts, read [remote-hosts.md](remote-hosts.md) first.
+
 The manager places each new worker on a machine: the main machine (`local`) or a worker host. The pure
 function `placeWorker` in `factory-manager/placement.ts` selects the host. The slots of each host come
 from `factory-manager/host-slots.ts`. These modules do no I/O.
@@ -457,8 +459,8 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   stop or a cancel of a Thread removes the queued `launch` or `resume` of that Thread. Then the wait of
   that run ends, because the main machine cannot know if the run started.
 - **Stop and cancel.** A `stop` while the host is disconnected goes in the queue, and the run keeps its
-  wait until the reconnect. A `cancel` while the host is disconnected goes in the queue, and the wait
-  ends. The Thread becomes `cancelled` and abandoned. See [Abandoned Threads](#abandoned-threads).
+  wait until the reconnect. A `cancel` or a `release` while the host is disconnected goes in the queue
+  as `cancel-thread`, and the wait ends. The Thread becomes `cancelled` and abandoned. See [Abandoned Threads](#abandoned-threads).
 - **Reconnect.** When the heartbeat of a host gives `connected`, the manager calls `reconnect(host)` of
   the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands,
   waiting inbound updates, an active run without a channel, an adopted run without a request id, a run
@@ -489,8 +491,8 @@ the Spec `remote-worker-hosts`, section "Disconnects".
 
 ## Abandoned Threads
 
-When the user cancels a remote Thread while its host is offline, the late changes of that Thread never
-go to the board automatically. The main machine holds them. See the Spec `remote-worker-hosts`,
+When the user cancels or releases a remote Thread while its host is offline, the late changes of that
+Thread never go to the board automatically. The main machine holds them. See the Spec `remote-worker-hosts`,
 section "Abandoned Threads".
 
 - **Abandon.** A cancel of a remote Thread makes the Thread abandoned when the `cancel-thread` command
@@ -499,10 +501,26 @@ section "Abandoned Threads".
   (`factory-manager/abandoned-threads.ts`) writes the `abandoned` note on the `cancelled` Thread:
   `{ at, reason: "cancel", appliedSeq }`. `appliedSeq` is the last applied `seq` of the host at the
   time of the cancel. A cancel while the host has an open channel does not abandon the Thread.
+- **Release.** `rowbly thread release <id>` sends the factory command `release`. The manager action
+  `releaseWorker` (`factory-manager/worker-reservation.ts`) accepts only a remote Thread. A Thread on
+  the main machine gives a `ConflictError`. A release is a cancel with these differences:
+  - The release does not add the Story to `nativeCancelled`. Thus the scan does not give
+    `cancelled by user`, and the policy counts the Thread as an `interrupted` attempt.
+  - The executor gets a stop of the kind `release` (`stopRemote` in `remote-executor/remote-stop.ts`).
+    The host gets `cancel-thread`, as for a cancel.
+  - When the stop cannot reach the host, the note is `{ at, reason: "release", appliedSeq }`.
+  - When the reason of the note of the last worker Thread of the Story is `release`, the Story has no
+    `lastHost` for the placement (`storyFacts` in `factory-manager/worker-placement.ts`). Thus the
+    Story does not wait for the old host, and the placement selects a host from the eligible hosts,
+    for example the main machine.
+
+  A release while the host has an open channel does not abandon the Thread. All other steps of this
+  section apply to a released Thread without change.
 - **The stop goes first.** The `cancel-thread` command stays in `runtime/hosts/<host>/commands.json`.
   On reconnect, it goes before the `host attach` channel and before the outbox sync.
 - **No host sync wait.** The wait of the launch ends at once. Thus the Story does not wait on
   `waiting for host sync`. The usual cancel rules apply: `nativeCancelled` and `cancelled by user`.
+  A release does not apply these rules.
 - **Held entries.** Each outbox sync of the host (the scan sync, the end-of-run sync and the reconnect
   sync) holds each entry of an abandoned Thread with a `seq` greater than the `appliedSeq` of the
   note. The apply does not apply a held entry. It writes the entry to
@@ -533,13 +551,20 @@ section "Abandoned Threads".
 - **Inbound updates.** `isAbandoned(thread)` in `thread/thread-types.ts` tells if a Thread is
   abandoned. ROW-98 uses it to drop the inbound updates of an abandoned Thread.
 - **Locks.** The hold and `--apply` hold the Project write lock and never the state lock.
-- **Not in this Story.** The release of a remote Thread (ROW-119) and the TUI key (ROW-102).
+- **Not in this Story.** The TUI key for a cancel or a release (ROW-102).
 
 ## Prerequisites and limits
 
-- Native execution must have Linux, Git, local files and util-linux `flock`.
+- Native execution on the main machine must have Linux, Git, local files and util-linux `flock`.
 - The board, metadata and Peek stay separate from these prerequisites.
-- There is no ownership guarantee across hosts, NFS, PID namespaces or copied runtime directories.
+- Each worker host must have these items:
+  - Linux, Git and util-linux `flock`.
+  - Node 22.19.0 or later.
+  - SSH access from the main machine with a key and without a password.
+  - Its own logins: Pi, `gh`, Git push access and the Git identity. SSH agent forwarding is not
+    sufficient, because the work continues after a disconnect.
+- The daemon ownership has no guarantee across machines, NFS, PID namespaces or copied runtime
+  folders. Worker hosts are supported only through the host agent. See [remote-hosts.md](remote-hosts.md).
 - Existing Projects do not change. There is no migration of Stories, Stages, Specs or config.
 - Do not assume exactly-once shell effects. Dirty worktrees and malformed runtime files stay on disk.
 
@@ -563,6 +588,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [remote-hosts.md](remote-hosts.md)               | You start a task on worker hosts. It links to each host page.                 |
 | [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 | [host-install.md](host-install.md)               | You change the Node check or the install of Rowbly on a worker host.          |
 | [host-check.md](host-check.md)                   | You change `rowbly host check`, the short check or `rowbly host login`.       |

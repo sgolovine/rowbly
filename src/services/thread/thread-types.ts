@@ -37,7 +37,7 @@ export interface ThreadCheck {
 }
 
 /** Why a remote Thread became abandoned: a cancel while its host was offline, or a release. */
-type AbandonReason = "cancel" | "release";
+export type AbandonReason = "cancel" | "release";
 
 /**
  * The note of a remote Thread that the user cancelled or released while its host was offline. The main machine holds

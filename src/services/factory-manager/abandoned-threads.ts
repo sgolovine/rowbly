@@ -8,6 +8,7 @@ import { readAppliedSeq } from "../outbox-apply/host-files.js";
 import type { AbandonedHold } from "../outbox-apply/outbox-apply.js";
 import type { AbandonedThread } from "../remote-executor/remote-executor.js";
 import {
+  type AbandonReason,
   getThread,
   isAbandoned,
   LOCAL_HOST,
@@ -26,8 +27,11 @@ async function abandonedRecords(manager: Manager): Promise<ThreadRecord[]> {
   return threads.filter((thread) => isAbandoned(thread) && thread.host && thread.host !== LOCAL_HOST);
 }
 
-/** Writes the abandoned note on a cancelled remote Thread. The note keeps the last applied `seq` of the host. */
-async function writeAbandon(manager: Manager, threadId: string, host: string): Promise<void> {
+/**
+ * Writes the abandoned note on a cancelled remote Thread, with the reason: a cancel or a release. The note keeps the
+ * last applied `seq` of the host.
+ */
+async function writeAbandon(manager: Manager, threadId: string, host: string, reason: AbandonReason): Promise<void> {
   const thread = await getThread(threadId, manager.ctx);
 
   if (thread.status !== "cancelled" || thread.abandoned) {
@@ -37,12 +41,12 @@ async function writeAbandon(manager: Manager, threadId: string, host: string): P
   const appliedSeq = await readAppliedSeq(manager.paths, host);
   const at = (manager.ctx.now?.() ?? new Date()).toISOString();
 
-  await changeThread(manager, threadId, "cancelled", { abandoned: { at, reason: "cancel", appliedSeq } });
+  await changeThread(manager, threadId, "cancelled", { abandoned: { at, reason, appliedSeq } });
 }
 
-/** Makes the cancelled remote Thread abandoned, because its cancel cannot reach the host now. */
-export function abandonThread(manager: Manager, threadId: string, host: string): Promise<void> {
-  return serial(manager, () => writeAbandon(manager, threadId, host));
+/** Makes the cancelled remote Thread abandoned, because its cancel or its release cannot reach the host now. */
+export function abandonThread(manager: Manager, threadId: string, host: string, reason: AbandonReason): Promise<void> {
+  return serial(manager, () => writeAbandon(manager, threadId, host, reason));
 }
 
 /** Gives the abandoned remote Threads that have no remote outcome. */
