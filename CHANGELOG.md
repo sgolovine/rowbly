@@ -19,6 +19,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The status line and the result line of a Thread in the Threads tab of a Story and in the Factory view now use shared TUI components. The text, the colours and the layout do not change. (ROW-152)
 - Changed: The rows of the Tags, Custom Fields, Prompts, Stages, AI checks and AI models sections of the TUI Settings now use one shared row component. Their look and their click actions do not change. (ROW-150)
 - Changed: The Threads tab of the Story modal and the Story sidebar of the Factory view now use one shared TUI component for the Thread details, the conversation and the steering input. Their look and their keys do not change. (ROW-151)
+- Changed: The searchable select field and the searchable multi-select field of the TUI forms now use one shared code path to open the picker. Their keys, hints and modal titles do not change. (ROW-148)
 
 ### 0.20.0
 
