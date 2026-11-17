@@ -1,14 +1,23 @@
 import { Box, Text } from "ink";
 import type { FactorySettings } from "../../../../services/factory-settings/factory-settings.js";
-import { FormModal } from "../../../components/index.js";
+import { Button, FormModal, type FormValues } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { AiSettingCard } from "../ai-setting-card/index.js";
 import { HostActionsBar } from "../host-actions-bar/index.js";
 import { HostCheckItems } from "../host-check-items/index.js";
 import { HostList } from "../host-list/index.js";
 import type { SettingsSectionProps } from "../settings-sections.js";
-import { type HostsEnv, runCheck, savePlacement, saveWorkers, toggleEnabled, toggleProject } from "./hosts-actions.js";
-import { ADD_HOST_COMMAND, type HostsTask, placementForm, placementText, workersForm } from "./hosts-view.js";
+import {
+  type HostsEnv,
+  openAddHost,
+  runCheck,
+  saveNewHost,
+  savePlacement,
+  saveWorkers,
+  toggleEnabled,
+  toggleProject,
+} from "./hosts-actions.js";
+import { ADD_HOST_COMMAND, type HostsTask, placementText, taskForm } from "./hosts-view.js";
 import { useHostsSection } from "./use-hosts-section.js";
 
 /** The props of `HostsTaskView`. */
@@ -18,19 +27,26 @@ interface HostsTaskViewProps {
   readonly settings: FactorySettings | undefined;
 }
 
-/** The form on top of the Hosts section: the placement or the worker limit of one host. */
+/** Saves the values of the form of a task. */
+function submitTask(env: HostsEnv, task: NonNullable<HostsTask>, values: FormValues): Promise<void> {
+  if (task.kind === "placement") {
+    return savePlacement(env, values);
+  }
+
+  return task.kind === "workers" ? saveWorkers(env, task.row, values) : saveNewHost(env, values);
+}
+
+/** The form on top of the Hosts section: the placement, the worker limit of one host, or a new host. */
 function HostsTaskView({ task, env, settings }: HostsTaskViewProps) {
-  const form = task.kind === "placement" ? placementForm(settings) : workersForm(task.row);
+  const form = taskForm(task, settings);
 
   return (
     <FormModal
       title={form.title}
-      fields={[form.field]}
-      initialValues={{ [form.field.name]: form.initial }}
-      submitOnEnter
-      onSubmit={(values) =>
-        task.kind === "placement" ? savePlacement(env, values) : saveWorkers(env, task.row, values)
-      }
+      fields={form.fields}
+      initialValues={form.initial}
+      submitOnEnter={task.kind !== "add"}
+      onSubmit={(values) => submitTask(env, task, values)}
       onClose={() => env.setTask(null)}
     >
       <Text color={theme.inkFaint} wrap="wrap">
@@ -40,22 +56,22 @@ function HostsTaskView({ task, env, settings }: HostsTaskViewProps) {
   );
 }
 
-/** The text without hosts. The TUI does not add hosts; the CLI does. */
+/** The text without hosts. `a` adds a host; the CLI command also does. */
 function NoHosts() {
   return (
     <Box flexDirection="column">
       <Text color={theme.inkFaint}>No worker hosts.</Text>
       <Text color={theme.inkFaint} wrap="wrap">
-        To add a worker host, run {ADD_HOST_COMMAND}
+        To add a worker host, push a. You can also run {ADD_HOST_COMMAND}
       </Text>
     </Box>
   );
 }
 
 /**
- * The worker hosts and the placement of the factory. `p` edits the placement. On the selected host, `u` turns it on
- * or off for this Project, `e` for all Projects, `w` edits the worker limit and `c` runs the check. The section calls
- * only services. Only the use and the check open SSH.
+ * The worker hosts and the placement of the factory. `p` edits the placement and `a` adds a host. On the selected
+ * host, `u` turns it on or off for this Project, `e` for all Projects, `w` edits the worker limit and `c` runs the
+ * check. The section calls only services. Only the add, the use and the check open SSH.
  */
 export function HostsSection({ ctx, onChange }: SettingsSectionProps) {
   const { env, task, cursor, setCursor, check, idle } = useHostsSection({ ctx, onChange });
@@ -88,6 +104,9 @@ export function HostsSection({ ctx, onChange }: SettingsSectionProps) {
           ) : (
             <NoHosts />
           )}
+        </Box>
+        <Box marginTop={1}>
+          <Button label="Add host" keyName="a" compact clickable={idle} onClick={() => openAddHost(env)} />
         </Box>
       </Box>
       {row && (
