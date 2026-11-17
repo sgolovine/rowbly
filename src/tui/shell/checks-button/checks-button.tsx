@@ -1,7 +1,7 @@
 import { Text } from "ink";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button } from "../../components/index.js";
-import { checksCount } from "../../screens/factory/index.js";
+import { checksCount } from "../../screens/factory/check-jobs.js";
 import { theme } from "../../theme.js";
 
 const LABEL = "Checks";

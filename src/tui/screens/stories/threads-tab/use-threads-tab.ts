@@ -31,7 +31,7 @@ import {
   useToast,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
-import { queueEntry } from "../../factory/index.js";
+import { queueEntry } from "../../factory/factory-status.js";
 import { type ThreadHostView, threadHostView } from "../thread-host-view.js";
 import { threadPanelTitle } from "../thread-panel/index.js";
 import { type StageNames, sortThreads } from "../thread-text.js";

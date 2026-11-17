@@ -3,7 +3,7 @@ import { memo } from "react";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import { Button, Panel } from "../../components/index.js";
 import { useLayout } from "../../hooks/index.js";
-import { liveChecks } from "../../screens/factory/index.js";
+import { liveChecks } from "../../screens/factory/check-jobs.js";
 import { theme } from "../../theme.js";
 import { ChecksButton } from "../checks-button/index.js";
 import { FactoryButton } from "../factory-button/index.js";
