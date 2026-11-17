@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAIN_MIN_WIDTH, STORY_SIDEBAR_MIN_WIDTH } from "../../components/index.js";
+import { MAIN_MIN_WIDTH, SIDEBAR_CHROME_HEIGHT, STORY_SIDEBAR_MIN_WIDTH } from "../../components/index.js";
 import { shellFrame } from "./shell-frame.js";
 import type { ShellView } from "./shell-state.js";
 
@@ -139,5 +139,50 @@ describe("shellFrame", () => {
     expect(frame.stackedHeight).toBe(1 + 3 + 2 + 3);
     expect(frame.tagsHeight).toBe(2 + 3);
     expect(frame.stagesHeight).toBe(1 + 3);
+  });
+
+  describe("with a dragged tag sidebar height", () => {
+    const tags = [
+      { value: "a", label: "A" },
+      { value: "b", label: "B" },
+    ];
+    const tagView = view({ storyPane: null, storyActive: false, tags, tagSidebar: true });
+    const least = SIDEBAR_CHROME_HEIGHT + 1;
+
+    it("gives the same frame as before without a dragged height", () => {
+      expect(shellFrame(LAYOUT, tagView, SIDEBAR, null, false, null)).toEqual(shellFrame(LAYOUT, tagView, SIDEBAR));
+    });
+
+    it("uses the dragged height beside the list, and gives the other rows to the Stage sidebar", () => {
+      const frame = shellFrame(LAYOUT, tagView, SIDEBAR, null, false, 20);
+
+      expect(frame.tagsHeight).toBe(20);
+      expect((frame.stagesHeight ?? 0) + (frame.tagsHeight ?? 0)).toBe(frame.mainHeight);
+      expect(frame.tagsRoom).toBe((frame.mainHeight ?? 0) - least);
+    });
+
+    it("keeps the smallest height of the tag sidebar", () => {
+      const frame = shellFrame(LAYOUT, tagView, SIDEBAR, null, false, 1);
+
+      expect(frame.tagsHeight).toBe(least);
+      expect((frame.stagesHeight ?? 0) + (frame.tagsHeight ?? 0)).toBe(frame.mainHeight);
+    });
+
+    it("keeps the smallest height of the Stage sidebar", () => {
+      const frame = shellFrame(LAYOUT, tagView, SIDEBAR, null, false, 500);
+
+      expect(frame.stagesHeight).toBe(least);
+      expect(frame.tagsHeight).toBe((frame.mainHeight ?? 0) - least);
+    });
+
+    it("ignores the dragged height when the sidebars are stacked", () => {
+      const narrow = { width: 80, height: 50 };
+      const frame = shellFrame(narrow, tagView, SIDEBAR, null, false, 20);
+
+      expect(frame.stacked).toBe(true);
+      expect(frame).toEqual(shellFrame(narrow, tagView, SIDEBAR));
+      expect(frame.tagsHeight).toBe(tags.length + 1 + 3);
+      expect(frame.tagsRoom).toBe(0);
+    });
   });
 });

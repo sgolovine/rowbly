@@ -147,6 +147,12 @@ export function showSavedStage(env: ShellEnv, stage: Stage): void {
   env.reload();
 }
 
+/** Closes the New Tag Modal and reads the board again, so the tag sidebar shows the new tag. */
+export function showSavedTag(env: ShellEnv): void {
+  closeOverlay(env);
+  env.reload();
+}
+
 /** Opens the Project at `path`, with no filter or selection from the Project that was open. */
 export function switchProject(env: ShellEnv, path: string): void {
   closeOverlay(env);
