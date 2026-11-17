@@ -291,6 +291,9 @@ the only `lint/plugin` exceptions:
 - `writeRef` in `src/tui/hooks/refs.ts`: a React ref changes in place.
 - `src/services/conversation/session-scanner.ts`: the scan of each byte of a large file changes its
   own state. One `biome-ignore-start` and `biome-ignore-end` range covers the two scanner classes.
+- `dependentsOf` and `reachingIds` in `src/services/story-dependency/story-dependency.ts`: the search
+  for the dependency picker candidates must be linear. The two functions fill their own local Map, Set
+  and queue. One `biome-ignore-start` and `biome-ignore-end` range covers the two functions.
 - `showToast` in `src/tui/hooks/toasts.ts`: `ToastStore.push` has the name of an array method, but
   the store makes a new list.
 - `setExitCode` in `src/commands/output/output.ts`: `process.exitCode` is the Node API for the exit
