@@ -1,7 +1,7 @@
 import { Box } from "ink";
 import { LayoutContext } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
-import { CloseButton } from "../close-button/index.js";
+import { BorderIcon } from "../border-icon/index.js";
 import { LayerOutlet } from "../layer-outlet/index.js";
 import type { ModalProps } from "../modal/index.js";
 import { ModalBody } from "../modal-body/index.js";
@@ -34,7 +34,7 @@ export function ModalFrame(props: ModalProps) {
     <Panel
       title={title}
       paddingX={0}
-      aside={onClose && top && <CloseButton onClick={onClose} />}
+      aside={onClose && top && <BorderIcon glyph="✕" onClick={onClose} />}
       focused={top}
       backgroundColor={overlay ? theme.overlay : undefined}
       // A screen modal keeps its size; a generic one fits its content between the bounds.

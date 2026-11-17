@@ -71,7 +71,7 @@ The library also contains other code that has no guideline of its own:
 | `MarkdownView`, `markdown.ts` | Markdown that is rendered for the terminal (`marked-terminal`), in a viewport that scrolls. |
 | `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. `active` controls the keys. `wheel` controls the wheel, and its default is `active`. |
 | `Spinner`, `Loading` | The braille spinner, alone or with a label. |
-| `CloseButton` | The clickable `✕` in the top edge of a Modal. |
+| `BorderIcon` | A clickable glyph in the top edge of a Modal or Panel, for example `✕`, `⤢` or `⤡`. |
 | `OverlayHost` | Supplies `useMainOverlay()`, and draws the items that it opens. `TuiProviders` contains it. |
 | `shell-layout.ts` | The sizes of the sidebar, the header and the footer. |
 
