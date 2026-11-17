@@ -1,6 +1,6 @@
 # Remote worker hosts
 
-The native factory can run workers on worker hosts over SSH. The supervisor, the board and the
+The native factory can run workers on worker hosts over SSH. The manager, the board and the
 canonical `.rowbly/` files stay on the main machine. A remote worker writes to a copy of the Project
 files, and the main machine applies its changes from an outbox. This page is an overview. The
 details are on the pages in "Where to find the details".
@@ -12,9 +12,9 @@ for your task.
 
 These terms come from the Spec `remote-worker-hosts`.
 
-- **Main machine.** The machine that runs the daemon, the supervisor and the board. It has the host
+- **Main machine.** The machine that runs the daemon, the manager and the board. It has the host
   id `local`.
-- **Worker host.** A remote machine that runs workers only. It never runs a supervisor.
+- **Worker host.** A remote machine that runs workers only. It never runs the manager.
 - **Host agent.** The `rowbly host serve` process on a worker host. It runs the remote workers of one
   Project.
 - **Copy.** The copy of the canonical `.rowbly/` files that a remote Thread uses.
@@ -51,7 +51,7 @@ These terms come from the Spec `remote-worker-hosts`.
 
 ## Limits of version 1
 
-- The supervisor runs only on the main machine. The factory does not continue while the main
+- The manager runs only on the main machine. The factory does not continue while the main
   machine is off.
 - A worker host must be a Linux machine. macOS and Windows worker hosts are not supported.
 - A remote worker can only change the fields of a Story, move a Story to a different Stage, and add

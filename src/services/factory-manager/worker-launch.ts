@@ -1,12 +1,12 @@
 import { readConfig } from "../config/config.js";
 import { ConflictError } from "../errors/errors.js";
+import { promptHash } from "../factory-policy/factory-policy.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
 import { type RunUpstream, upstreamOf, workerMessage } from "../messages/messages.js";
 import { projectWrite, projectWriteLockPath } from "../project-write/project-write.js";
 import { listStages } from "../stage/stage.js";
 import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { getStory, type Story, searchStories, updateStory } from "../story/story.js";
-import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { getThread, LOCAL_HOST, type ThreadRecord, type WorkerResult } from "../thread/thread.js";
 import {
   changeThread,

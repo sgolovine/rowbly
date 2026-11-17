@@ -4,6 +4,7 @@ import { ConflictError } from "../../services/errors/errors.js";
 import {
   getFactoryLogs,
   getFactoryStatus,
+  releaseFactoryStory,
   restartFactory,
   startFactory,
   stopFactory,
@@ -106,6 +107,19 @@ function registerStop(program: Command): void {
         command,
         (ctx) => stopFactory({}, ctx),
         () => "Factory stopped.",
+      ),
+    );
+}
+
+function registerRelease(program: Command): void {
+  program
+    .command("release <story-id>")
+    .description("Release a parked Story in the live factory, so that the next pass can start a worker for it")
+    .action((storyId: string, _opts: unknown, command: Command) =>
+      run(
+        command,
+        (ctx) => releaseFactoryStory(storyId, {}, ctx),
+        (result) => `Released ${result.storyId}.`,
       ),
     );
 }
@@ -219,6 +233,7 @@ export function registerFactoryCommands(program: Command): void {
   registerRun(program);
   registerWatchdog(program, launch);
   registerStop(program);
+  registerRelease(program);
   registerRestart(program, launch);
   registerLogs(program);
   registerStart(program, launch);

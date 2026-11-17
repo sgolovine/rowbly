@@ -27,15 +27,18 @@ interface ShellProps {
 
 /**
  * The frame of the app: the header with the Story finder and **+ New Story**, the Stage sidebar, the
- * Story list and the footer. The sidebar filters the list by Stage. Drag its right edge to change its
- * width, and press `ctrl+b` to hide or show it. In a narrow terminal, the sidebar goes above the list. With All Stages, the list has one section for each Stage:
+ * Story list and the footer. The sidebar filters the list by Stage. When the Project has tags, the tag sidebar
+ * shows below the Stage sidebar, in the same column. It filters the list by tag, together with the Stage filter.
+ * Drag the right edge of the Stage sidebar to change the width of the two sidebars, and press `ctrl+b` to hide or
+ * show them. In a narrow terminal, the sidebars go above the list. With All Stages, the list has one section for each Stage:
  * `enter` or a click on a selected heading expands or collapses it, and `←/→` collapse and expand. `enter`
  * or a click on a Story opens it for editing, and so does a pick in the Story finder. `shift+↑/↓` moves the
  * selected Story up or down its Stage, and past either end into the next Stage. `ctrl+shift+↑/↓` moves it
  * to the previous or next Stage. A drag of a Story to another row moves it there. `d` asks before it
  * deletes the selected Story. `n`, **+ New Story**, `enter` and a click on a Story open the new Story form or
  * the edit form in the Story sidebar on the right of the list. `tab` moves the focus from the Stage sidebar to
- * the list and then to the Story sidebar. In the Story sidebar, `esc` gives the focus back to the list and keeps
+ * the tag sidebar, to the list and then to the Story sidebar. In the tag sidebar, `↑/↓` select a tag and `esc` gives
+ * the focus to the list. In the Story sidebar, `esc` gives the focus back to the list and keeps
  * the draft. In the list, `esc` and the `✕` close the Story sidebar, and ask first about unsaved changes. Drag
  * the left edge of the Story sidebar to change its width. `ctrl+o` and the button at the left of the `✕` expand the
  * Story sidebar over the Story list, and collapse it again. In a narrow terminal, the Story sidebar takes the full
@@ -60,7 +63,14 @@ export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) 
         <Header {...props.header} />
         <Box flexGrow={1} flexDirection="column">
           <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
-            {view.sidebar && !cover && <Sidebar {...props.sidebar} />}
+            {view.sidebar && !cover && !props.tags && <Sidebar {...props.sidebar} />}
+            {view.sidebar && !cover && props.tags && (
+              // The Stage sidebar and the tag sidebar share one column. Only the Stage sidebar drags its width.
+              <Box flexDirection="column" flexShrink={0}>
+                <Sidebar {...props.sidebar} />
+                <Sidebar {...props.tags} />
+              </Box>
+            )}
             {!cover && frame.listShown && <StoryPanel {...props.panel} />}
             {props.story && <StorySidebar {...props.story} />}
           </Box>

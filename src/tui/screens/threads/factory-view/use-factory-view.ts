@@ -1,12 +1,14 @@
 import { useInput } from "ink";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { groupThreads, listThreads, type ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
 import {
   type AsyncState,
   type Layout,
   useAsync,
+  useClock,
   useLayout,
+  useOverlayOpen,
   useReportHints,
   useSharedFactoryStatus,
   useThreadChanges,
@@ -54,23 +56,6 @@ async function loadThreads(ctx: ServiceContext): Promise<readonly ThreadRecord[]
   return (await listThreads({ role: "worker" }, ctx)).threads;
 }
 
-/** The time that counts up each second while a Thread runs, for its run time. */
-function useNow(running: boolean): number {
-  const [now, setNow] = useState(Date.now);
-
-  useEffect(() => {
-    if (!running) {
-      return;
-    }
-
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-
-    return () => clearInterval(timer);
-  }, [running]);
-
-  return now;
-}
-
 /** The data, the selection, the sections and the keys of the Factory view. */
 export function useFactoryView(props: FactoryViewProps): FactoryViewModel {
   const { ctx, root, stage, active, onOpen, onHints } = props;
@@ -80,6 +65,7 @@ export function useFactoryView(props: FactoryViewProps): FactoryViewModel {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const data = useAsync(() => loadThreads(ctx), [ctx]);
   const status = useSharedFactoryStatus();
+  const covered = useOverlayOpen();
 
   // The factory writes the Thread files from another process.
   useThreadChanges(root, data.refresh);
@@ -87,7 +73,7 @@ export function useFactoryView(props: FactoryViewProps): FactoryViewModel {
   const groups = groupThreads(data.data ?? [], stage);
   const rows = factoryViewRows(groups, collapsed);
   const cursor = factoryViewCursor(rows, selectedId);
-  const now = useNow(groups.active.some((thread) => thread.status === "running"));
+  const now = useClock(!covered && groups.active.some((thread) => thread.status === "running"));
   const env: FactoryViewEnv = { rows, cursor, setSelectedId, setCollapsed, onOpen };
 
   useInput((input, key) => handleFactoryViewKey(env, input, key), { isActive: active });

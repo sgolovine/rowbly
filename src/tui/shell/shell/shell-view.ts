@@ -1,3 +1,4 @@
+import { projectTags, type TagConfig } from "../../../services/config/config.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { Story } from "../../../services/story/story.js";
 import { rowStage, storyListRows } from "../../screens/stories/index.js";
@@ -14,6 +15,7 @@ export interface ShellViewInput {
   readonly mode: ViewMode;
   readonly sidebarShown: boolean;
   readonly stageKey: string | null;
+  readonly tagKey: string | null;
   readonly selectedId: string | null;
   readonly collapsed: ReadonlySet<string>;
   readonly marked: ReadonlySet<string>;
@@ -22,24 +24,38 @@ export interface ShellViewInput {
   readonly rows: readonly StoryListRow[];
 }
 
-function visibleStories(stories: readonly Story[], stage: Stage | undefined): readonly Story[] {
+function stageStories(stories: readonly Story[], stage: Stage | undefined): readonly Story[] {
   return stage ? stories.filter((story) => story.stage === stage.key) : stories;
+}
+
+function tagStories(stories: readonly Story[], tag: TagConfig | undefined): readonly Story[] {
+  return tag ? stories.filter((story) => story.tags.includes(tag.value)) : stories;
+}
+
+/** The tags of the Project of `board`, in config order. */
+function boardTags(board: Board | null | undefined): readonly TagConfig[] {
+  return board ? projectTags(board.project) : [];
 }
 
 /**
  * The rows of the Story list of `board`. With a Stage filter, the list shows only the Stories of that Stage, without
- * headings. The caller memoizes the result, so that a key that only moves the cursor does not build the rows again.
+ * headings. With a tag filter, the list shows only the Stories with that tag. A tag that is not in the config does not
+ * filter. The caller memoizes the result, so that a key that only moves the cursor does not build the rows again.
  */
 export function shellRows(
   board: Board | null | undefined,
   stageKey: string | null,
+  tagKey: string | null,
   collapsed: ReadonlySet<string>,
 ): readonly StoryListRow[] {
   const stages = board?.stages ?? [];
   const stories = board?.stories ?? [];
   const stage = stages.find((s) => s.key === stageKey);
+  const tag = boardTags(board).find((t) => t.value === tagKey);
+  const visible = tagStories(stageStories(stories, stage), tag);
 
-  return storyListRows(stages, visibleStories(stories, stage), stage ? undefined : collapsed, stories);
+  // All Stories go to the dependency index, also the Stories that a filter hides.
+  return storyListRows(stages, visible, stage ? undefined : collapsed, stories);
 }
 
 /** The row of the selection. Without a selection, the cursor starts on the first Story, not on a heading. */
@@ -84,6 +100,27 @@ function newStoryStage(
   return stages.find((s) => s.key === (stage?.key ?? rowStage(row)))?.key;
 }
 
+/** The values of the tag filter and of the tag sidebar. */
+function tagView(
+  board: Board | undefined,
+  input: ShellViewInput,
+  sidebar: boolean,
+  idle: boolean,
+): Pick<ShellView, "tags" | "tag" | "tagIndex" | "tagSidebar" | "tagSidebarFocused"> {
+  const tags = boardTags(board);
+  const tag = tags.find((t) => t.value === input.tagKey);
+  const tagSidebar = sidebar && tags.length > 0;
+
+  // When the last tag goes, the tag sidebar does not show, and the Story list has the focus.
+  return {
+    tags,
+    tag,
+    tagIndex: tag ? tags.indexOf(tag) + 1 : 0,
+    tagSidebar,
+    tagSidebarFocused: idle && tagSidebar && input.pane === "tags",
+  };
+}
+
 /** Derives the values of one render of the shell. */
 export function shellView(input: ShellViewInput): ShellView {
   const board = input.data.data ?? undefined;
@@ -97,6 +134,7 @@ export function shellView(input: ShellViewInput): ShellView {
   const idle = input.active && input.overlay === null;
   const sidebar = board !== undefined && input.sidebarShown;
   const sidebarFocused = idle && sidebar && input.pane === "stages";
+  const tagged = tagView(board, input, sidebar, idle);
   const storyPane = board ? input.storyPane : null;
   const storyActive = storyPane !== null && input.pane === "story";
   const storyFocused = idle && storyActive;
@@ -114,6 +152,7 @@ export function shellView(input: ShellViewInput): ShellView {
     row,
     cursorStage: newStoryStage(stages, stage, row),
     stageIndex: stage ? stages.indexOf(stage) + 1 : 0,
+    ...tagged,
     marked: shownMarks(rows, stories, input, cursor),
     ranging: input.anchor !== null,
     storyPane,
@@ -122,7 +161,7 @@ export function shellView(input: ShellViewInput): ShellView {
     shellKeys: idle && !storyFocused,
     sidebar,
     sidebarFocused,
-    listFocused: idle && !sidebarFocused && !storyFocused,
+    listFocused: idle && !sidebarFocused && !tagged.tagSidebarFocused && !storyFocused,
     storyFocused,
   };
 }

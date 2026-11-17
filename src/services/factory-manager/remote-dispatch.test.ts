@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
-import { fauxAssistantMessage, fauxProvider, fauxToolCall, InMemoryCredentialStore } from "@earendil-works/pi-ai";
+import { fauxProvider, InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
 import { HOST_SYNC_REASON } from "../factory-policy/factory-policy.js";
@@ -24,8 +24,6 @@ const PROMPT = "Move this Story to Done. Report complete.";
 const ROWBLY = "/opt/rowbly/bin/rowbly";
 const HOSTS = [{ id: "mini", maxWorkers: 2, state: "connected" as const, providers: ["worker"] }];
 const RESULT = { outcome: "complete", summary: "Done on mini", blockers: [], problems: [] };
-const tool = (name: string, args: Parameters<typeof fauxToolCall>[1]) =>
-  fauxAssistantMessage(fauxToolCall(name, args), { stopReason: "toolUse" });
 
 describe("withSyncAttention", () => {
   it("sets one entry for each host whose sync failed, and removes the entries of the other hosts", () => {
@@ -82,14 +80,11 @@ describe("factory manager with a scripted worker host", () => {
       refreshOnCreate: false,
       allowModelNetwork: false,
     });
-    const supervisor = fauxProvider({ provider: "supervisor", api: "supervisor-faux" });
     const worker = fauxProvider({ provider: "worker", api: "worker-faux" });
-    runtime.registerNativeProvider(supervisor.provider);
     runtime.registerNativeProvider(worker.provider);
     await updateFactorySettings(
       {
         maxWorkers: 1,
-        supervisorModel: { provider: "supervisor", modelId: supervisor.getModel().id },
         workerModel: { provider: "worker", modelId: worker.getModel().id },
         ...(checks ? { checks: { items: [{ key: "test", command: "pnpm test" }] } } : {}),
       },
@@ -114,7 +109,7 @@ describe("factory manager with a scripted worker host", () => {
       },
       { cwd: root },
     );
-    return { manager, supervisor, worker };
+    return { manager, worker };
   }
 
   async function ended(id: string): Promise<ThreadRecord> {
@@ -237,7 +232,7 @@ describe("factory manager with a scripted worker host", () => {
     expect((await f.manager.reconcile()).find((d) => d.story === story.id)?.reason).toBe("cancelled by user");
   });
 
-  it("submits cancel-thread for cancelWorker and stop-thread for stop_worker, and refuses a steering message", async () => {
+  it("submits cancel-thread for cancelWorker and stop-thread at a factory stop, and refuses a steering message", async () => {
     const host = createScriptedHost({
       onSubmit: (command, h) => {
         running(command, h);
@@ -269,25 +264,11 @@ describe("factory manager with a scripted worker host", () => {
 
     const stopped = await f.manager.reserveWorker({ storyId: second.id, stage: "WORK", requestId: "b", host: "mini" });
     await isRunning(stopped.threadId);
-    const stopRun = (await getThread(stopped.threadId, { cwd: root })).runs.at(-1)?.id ?? "";
-    f.supervisor.setResponses([
-      tool("stop_worker", { threadId: stopped.threadId, expectedRunId: stopRun, reason: "test" }),
-      fauxAssistantMessage("Done"),
+    await f.manager.shutdown();
+    expect((await ended(stopped.threadId)).status).toBe("interrupted");
+    expect(host.commands.filter((c) => c.threadId === stopped.threadId).map((c) => c.type)).toEqual([
+      "launch",
+      "stop-thread",
     ]);
-    const loop = f.manager.run();
-    try {
-      expect((await ended(stopped.threadId)).status).toBe("interrupted");
-      await vi.waitFor(
-        () =>
-          expect(host.commands.filter((c) => c.threadId === stopped.threadId).map((c) => c.type)).toEqual([
-            "launch",
-            "stop-thread",
-          ]),
-        { timeout: 10_000, interval: 20 },
-      );
-    } finally {
-      await f.manager.shutdown();
-      await loop;
-    }
   });
 });

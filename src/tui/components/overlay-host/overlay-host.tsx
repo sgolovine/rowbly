@@ -1,6 +1,12 @@
 import { useWindowSize } from "ink";
 import { type ReactNode, useContext, useMemo, useState } from "react";
-import { ActiveContext, LayoutContext, type MainOverlay, MainOverlayContext } from "../../hooks/index.js";
+import {
+  ActiveContext,
+  LayoutContext,
+  type MainOverlay,
+  MainOverlayContext,
+  OverlayOpenContext,
+} from "../../hooks/index.js";
 
 /**
  * Hosts what is drawn over everything: a node opened with `useMainOverlay()` (a `FullScreenEditor`,
@@ -22,7 +28,9 @@ export function OverlayHost({ fullscreen = true, children }: { fullscreen?: bool
 
   return (
     <MainOverlayContext.Provider value={mainOverlay}>
-      <ActiveContext.Provider value={active && overlay === null}>{children}</ActiveContext.Provider>
+      <OverlayOpenContext.Provider value={overlay !== null}>
+        <ActiveContext.Provider value={active && overlay === null}>{children}</ActiveContext.Provider>
+      </OverlayOpenContext.Provider>
       {overlay && (
         // Over the whole terminal; the Modal inside keeps its margin to the edges.
         <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>

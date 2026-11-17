@@ -11,7 +11,8 @@ tool, the bash gate or the check records.
 
 - Only the workers of the native factory (`rowbly factory run`) and the remote workers of a host
   agent use a queue. The CLI, the board and the agent sessions outside the factory do not change.
-- The supervisor does not run checks and does not decide about them. The queue has no model work.
+- The factory manager does not run checks for itself and does not decide about them. The queue has no
+  model work.
 - The memory rules use `/proc`. The native factory runs only on Linux.
 - Without a `checks` key in the factory settings, or without items, the factory works as before. The
   workers get no `run_check` tool, and the bash gate rejects nothing.
@@ -62,7 +63,7 @@ named checks. `factory-settings/check-settings.ts` reads and validates it.
   A write keeps the other keys of the `factory` section and of the config.
 - `factory-settings/check-items.ts` adds, changes, removes and lists the items. `setCheckLimits`
   sets the limits. These functions do not load Pi.
-- The supervisor loop reads the factory settings again on each turn. A changed setting applies to the next
+- The factory loop reads the factory settings again on each pass. A changed setting applies to the next
   admission. A restart is not necessary.
 
 ## The `run_check` tool
@@ -146,7 +147,7 @@ runs if the command contains the `command` text or a `block` text of a configure
 - The gate compares text. A worker that runs a check through a script file is not stopped. The rule
   in the worker system prompt covers this case.
 
-## Prompts and the digest
+## Prompts
 
 - `src/config/prompts/WORKER.md` has the check rules between `<!-- checks -->` and
   `<!-- /checks -->`. `workerMessage` keeps this text only when the Project has checks.
@@ -154,8 +155,6 @@ runs if the command contains the `command` text or a `block` text of a configure
   to run each full check one time before `report_result`, after the last change.
 - The worker system prompt has priority over the Stage prompt and the user prompts.
 - `runSection` in `src/services/messages/messages.ts` lists the checks: key, label and the narrow form.
-- `buildDigest` in `factory-manager/supervisor-loop.ts` adds `checks` to each worker that has
-  checks: the last full result, the last narrow result and the commit of each check key.
 - The factory does not refuse a result without a full check. It records and shows the history.
 
 ## Records

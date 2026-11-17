@@ -7,12 +7,18 @@ import { promisify } from "node:util";
 import { build } from "tsup";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { newOwner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
-import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { initProject } from "../project/project.js";
 import { createThread, getThread, listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
-import { getFactoryStatus, restartFactory, startFactory, stopFactory } from "./factory.js";
+import {
+  type FactoryStatus,
+  getFactoryStatus,
+  restartFactory,
+  sameFactoryStatus,
+  startFactory,
+  stopFactory,
+} from "./factory.js";
 
 const exec = promisify(execFile);
 const repo = resolve(".");
@@ -104,7 +110,6 @@ describe("detached factory with offline Pi", () => {
       root = join(dir, `${mode} project with spaces`);
       await mkdir(root);
       await initProject({ name: "Daemon", key: "D" }, { cwd: root });
-      await updateFactorySettings({ supervisorModel: { provider: "faux", modelId: "faux-1" } }, { cwd: root });
       await exec("git", ["init", root]);
       await exec("git", ["-C", root, "add", ".rowbly"]);
       await exec("git", [
@@ -132,7 +137,8 @@ describe("detached factory with offline Pi", () => {
       for (const s of initial) pids.add(s.owner.pid);
       expect(new Set(initial.map((s) => s.owner.token)).size).toBe(1);
       await Promise.all(Array.from({ length: 17 }, () => startFactory({ launch }, ctx)));
-      expect((await listThreads({ role: "supervisor" }, ctx)).threads).toHaveLength(1);
+      // The factory opens no supervisor session, and no Story has work, so no Thread exists.
+      expect((await listThreads({}, ctx)).threads).toEqual([]);
       const first = initial[0];
       // The CLI client exits while its detached daemon remains ready.
       const result = await exec(
@@ -151,6 +157,8 @@ describe("detached factory with offline Pi", () => {
         { role: "worker", storyId: "D-99", stage: "BACKLOG", cwd: root, ownerToken: "older-dead-generation" },
         ctx,
       );
+      // An old supervisor Thread that a dead daemon left open.
+      const oldSupervisor = await createThread({ role: "supervisor", cwd: root, ownerToken: first.owner.token }, ctx);
       // The watchdog starts the daemon again after the back-off. The start waits for it and launches nothing.
       const restarted = await startFactory({ launch }, ctx);
       expect((await getThread(abandoned.id, ctx)).status).toBe("interrupted");
@@ -158,8 +166,7 @@ describe("detached factory with offline Pi", () => {
       expect((await readWatchdogState(projectPaths(root)))?.lastExit).toBe("signal SIGKILL");
       pids.add(restarted.owner.pid);
       expect(restarted.owner.token).not.toBe(first.owner.token);
-      const old = (await listThreads({ role: "supervisor" }, ctx)).threads[0];
-      expect(old.status).toBe("interrupted");
+      expect((await getThread(oldSupervisor.id, ctx)).status).toBe("interrupted");
       const final = await restartFactory({ launch }, ctx);
       pids.add(final.owner.pid);
       expect(final.phase).toBe("ready");
@@ -217,5 +224,45 @@ describe("detached factory with offline Pi", () => {
     } finally {
       await releaseFactoryOwnership(projectPaths(root), owner.token);
     }
+  });
+});
+
+describe("sameFactoryStatus", () => {
+  const owner = {
+    pid: 1,
+    token: "a",
+    host: "h",
+    startedAt: "2026-01-01T00:00:00.000Z",
+  } as unknown as FactoryStatus["owner"];
+  const base = (): FactoryStatus =>
+    ({
+      version: 1,
+      phase: "ready",
+      owner,
+      heartbeatAt: "2026-01-01T00:00:00.000Z",
+      attention: [["a", { text: "one" }]],
+    }) as unknown as FactoryStatus;
+
+  it("is true for two equal statuses and for two undefined values", () => {
+    expect(sameFactoryStatus(base(), base())).toBe(true);
+    expect(sameFactoryStatus(undefined, undefined)).toBe(true);
+  });
+
+  it("is false when a field changes", () => {
+    expect(sameFactoryStatus(base(), { ...base(), phase: "stopped" })).toBe(false);
+    expect(sameFactoryStatus(base(), { ...base(), heartbeatAt: "2026-01-01T00:00:05.000Z" } as FactoryStatus)).toBe(
+      false,
+    );
+    expect(sameFactoryStatus(base(), { ...base(), owner: { ...owner, token: "b" } as FactoryStatus["owner"] })).toBe(
+      false,
+    );
+    expect(
+      sameFactoryStatus(base(), { ...base(), attention: [["b", { text: "two" }]] } as unknown as FactoryStatus),
+    ).toBe(false);
+  });
+
+  it("is false for undefined against a status", () => {
+    expect(sameFactoryStatus(undefined, base())).toBe(false);
+    expect(sameFactoryStatus(base(), undefined)).toBe(false);
   });
 });

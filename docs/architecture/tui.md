@@ -71,7 +71,8 @@ Modal has these views:
 - **Warning detail.** `Factory › Attention › <title>` shows the full text with wrap, the kind, the
   Story and the related Thread. `o` opens the Story, `t` opens the Thread and `d` dismisses an
   attention entry. `esc` goes back.
-- **Supervisor** and **History.** The conversation and the history of the supervisor.
+- **Supervisor** and **History.** The conversation and the history of the old supervisor Threads.
+  The factory does not create supervisor Threads now. Without one, the views have no Thread.
 
 `factoryProblems` in `factory-status.ts` makes the warnings. Each warning has a kind: `heartbeat`,
 `attention`, `issue` or `provider`. Only an `attention` warning can be dismissed. The shell gives the
@@ -192,8 +193,8 @@ step. The shell keeps the selection as a set of Story IDs, and the range anchor 
   move sets `updatedAt`, so each Story goes to the top of its new Stage. A Story in the last Stage
   (for `shift+↓`) or in the first Stage (for `shift+↑`) does not move. The shell calls `updateStory`
   for one Story at a time, in the reverse list order. Thus each Story gets a later `updatedAt` than
-  the Story below it, and the Stories keep their relative order. Then the shell reloads the board
-  one time. The target sections expand, and a Stage filter follows the first moved Story.
+  the Story below it, and the Stories keep their relative order. Then the shell puts the moved
+  Stories on the board in memory, in the order of the writes. The target sections expand, and a Stage filter follows the first moved Story.
   The Stories stay selected, so the next `shift+↓` moves them one more Stage. If a move fails, the
   TUI shows the error as a toast and reloads the board. The Stories that moved stay moved.
 - **No selection.** `shift+↑/↓` and `K/J` move the Story of the cursor to a different Stage, as before.
@@ -351,31 +352,47 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   [`rowbly-code-style` skill](../../.agents/skills/rowbly-code-style/SKILL.md#react-components):
   top-level handlers, one `env` object, and refs only through `src/tui/hooks/refs.ts`.
 
-| File in `hooks/`            | Exports                                                                                            |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                             |
-| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.                |
-| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                           |
-| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.           |
-| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useKeyCapture`, `useDirty`, `useKeyHints` and more. |
-| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.               |
-| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                          |
-| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                   |
-| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                                  |
-| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.                  |
-| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                   |
-| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                          |
-| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.         |
-| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
-| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
+| File in `hooks/`            | Exports                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                          |
+| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.             |
+| `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                        |
+| `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.        |
+| `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useOverlayOpen`, `useKeyCapture`, `useKeyHints`. |
+| `stop-on-abort.ts`          | `stopOnAbort`: stops a watch when the effect ends, also when the watch starts later.            |
+| `toasts.ts`                 | `createToastStore`, `showToast`, `useToast`, `useToasts`.                                       |
+| `use-async.ts`              | `useAsync`: the loading, error and data states of a service call, and `refresh`.                |
+| `use-clock.ts`              | `useClock`: the time, which counts up each second only while it is enabled, for the run times.  |
+| `use-cursor.ts`             | `useCursor`: a cursor over rows, with the arrow keys and `j`/`k`.                               |
+| `use-escape.ts`             | `useEscape`: `esc` cancels the open form or dialog and does not close the screen.               |
+| `use-report-hints.ts`       | `useReportHints`: gives the key hints of a child to its parent when they change.                |
+| `use-story-changes.ts`      | `useStoryChanges`: calls a function when the files of the Stories change.                       |
+| `use-story-paste.ts`        | `useStoryPaste`, `PASTE_HINT`: pastes a copied file or an image into the draft of a Story.      |
+| `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.   |
+| `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.     |
+
+The mouse registry measures only the boxes that want an event. It keeps each measured box in a cache.
+`runFullScreen` emits `layout` on the mouse source after each frame that Ink draws. `useMouseSource`
+then calls `registry.invalidate()`, and the registry clears the cache. A target that registers or
+unregisters also clears the cache.
 
 ## Board load
 
-`useShellData` loads the board. Before it reads the Stories, it calls `repairDuplicateStoryIds`. This
-service gives the newer Story of each duplicate Story ID the next free number. The shell shows one info
-toast for each change, for example `ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast
-shows and the board loads. The repair runs again each time that `useStoryChanges` reloads the board.
-See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+`useShellData` loads the board. On the first load for a `ServiceContext`, before it reads the Stories, it
+calls `repairDuplicateStoryIds`. The first load is the load after the start, after a Project switch, or
+after the onboarding creates the Project. This service gives the newer Story of each duplicate Story ID
+the next free number. The shell shows one info toast for each change, for example
+`ROW-77 → ROW-79: duplicate ID`. If the repair fails, an error toast shows and the board loads. A reload
+or a `useStoryChanges` refresh of the same Project does not repair. `rowbly doctor` reports a duplicate
+ID that a different process makes later. See [Duplicate Story IDs](storage.md#duplicate-story-ids).
+
+A Story action does not read the board. After a Story move, a move of the multi-selection, a delete or
+a save in the Story sidebar, the shell changes the board in memory with `putOnBoard` or `takeFromBoard`.
+These functions use `withStory` and `withoutStory` from `src/services/story/story-order.ts`. The moved
+or saved Story goes to the top of its Stage, the same as after a full read. The watcher echo of the
+write then reads the board one time. This read replaces the change in memory and also shows the changes
+of the write to other Stories, for example the `dependsOn` cleanup of a delete. A Stage change and a
+failed move of the multi-selection still read the board again with `reload`.
 
 ## Factory status
 
@@ -435,9 +452,9 @@ visible.
   or Thread in an open Story sidebar keeps the current state. Settings › Display shows the option,
   and `w` or a click on the value selects the next value.
 - `tab` in the Story list moves the focus to the Story sidebar. The order is the Stage sidebar, the
-  Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
+  tag sidebar (when it shows), the Story list, then the Story sidebar. `shift+tab` in the Story list goes back. A click on a pane gives
   it the focus. While the Story sidebar is expanded, `tab` and `shift+tab` do not go to the Story
-  list, and `esc` in the Stage sidebar gives the focus to the Story sidebar.
+  list, and `esc` in the Stage sidebar or the tag sidebar gives the focus to the Story sidebar.
 - In the Story sidebar, the form keeps its own keys. `esc` moves the focus to the Story list, and the
   form keeps its draft. An expanded Story sidebar collapses before the Story list gets the focus. In
   the Story list, `esc` closes the Story sidebar.
@@ -535,6 +552,40 @@ the components show.
   value. If the row is narrow, the tag slot is cut before the title. A Story without tags has no tag
   slot.
 
+## The tag sidebar
+
+When the Project has one or more tags, the left sidebar has two Panels in one column. The Stage
+sidebar ("Stages") is at the top. The tag sidebar ("Tags") is below it. When the Project has no
+tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
+
+- **The entries.** The first entry is "All Tags". Then each tag of `projectTags` shows with its
+  label, in config order. The tag sidebar has no button. Add, edit and remove the tags in Settings.
+- **The filter.** The shell keeps the value of the selected tag in `tagKey` (`null` for All Tags).
+  "All Tags" is selected at the start. `shellRows` shows only the Stories whose `tags` include the
+  value. The tag filter and the Stage filter apply together. The Factory view ignores the tag
+  filter.
+- **The title.** While a tag is selected, the title of the Story panel is
+  `<project> › <Stage label or All Stages> › <tag label>`. An empty list shows
+  `No Stories with the tag <label>.`, or `No Stories in <Stage> with the tag <label>.`
+- **The keys.** `tab` moves the focus in this order: the Stage sidebar, the tag sidebar, the Story
+  list, the Story sidebar. `shift+tab` goes in the opposite order. In the tag sidebar, `↑/↓` and
+  `j/k` select the previous or next entry, and `esc` gives the focus to the Story list. The Stage
+  keys (`n`, `e`, `shift+↑/↓`) do nothing in the tag sidebar. `[`/`]` change the Stage filter from
+  all panes. The footer and the help Modal show the keys of the tag sidebar.
+- **The mouse.** A click in the tag sidebar gives it the focus. A click on an entry selects it. When
+  the entries do not fit, the wheel selects.
+- **The size.** The tag sidebar has the width of the Stage sidebar. A drag of the right edge of the
+  Stage sidebar changes the width of the two sidebars. Beside the list, the tag sidebar gets the
+  rows for all its entries, but not more than half of the main area. The Stage sidebar gets the
+  other rows. In a narrow terminal, the two sidebars go above the Story list, one above the other,
+  and the Story list keeps at least half of the main area. `ctrl+b` hides and shows the two
+  sidebars together.
+- **Changes.** When the selected tag is removed in Settings, the filter acts as "All Tags". When the
+  last tag is removed, the tag sidebar does not show, and the Story list gets the focus. When a
+  Story opens from the Story finder, from a Thread or from a dependency link, or after a save, a tag
+  filter that hides the Story goes back to "All Tags". A Project switch resets the filter to
+  "All Tags". A new Story does not get the selected tag.
+
 ## Worker model overrides
 
 A person can see, set and remove the worker model overrides of the factory settings in the TUI. The
@@ -611,10 +662,13 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    and data states, and shows a toast if a call fails. Keep the loading, error and result states in
    the component.
 4. For a change that comes from outside the TUI, use `refresh` from `useAsync`. It does not show a
-   loading state or a toast. `useStoryChanges` and `useThreadChanges` call a function when the files
-   change.
-5. Declare the keys with `useKeyHints`.
-6. Examine the layout in a real terminal with the
+   loading state or a toast, and it does not render when it starts. `useStoryChanges` and
+   `useThreadChanges` call a function when the files change. For a poll, give `useAsync` an `isEqual`
+   option. Then a read that gives the same data does not render again.
+5. For a run time that counts up, use `useClock(enabled)`. Enable it only while the view shows a
+   running Thread and no full-screen view, Modal or main overlay (`useOverlayOpen()`) covers it.
+6. Declare the keys with `useKeyHints`.
+7. Examine the layout in a real terminal with the
    [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md).
 
 If a CLI command also uses a part of the logic, put that logic in the service, not in the component.

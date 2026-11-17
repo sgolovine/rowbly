@@ -14,6 +14,8 @@ import {
   stageEntries,
   stageSidebarProps,
   storySidebarProps,
+  tagEntries,
+  tagSidebarProps,
 } from "./shell-props.js";
 import type { ShellEnv, ShellView } from "./shell-state.js";
 
@@ -21,6 +23,8 @@ import type { ShellEnv, ShellView } from "./shell-state.js";
 export interface ShellChildProps {
   readonly header: ComponentProps<typeof Header>;
   readonly sidebar: ComponentProps<typeof Sidebar>;
+  /** The tag sidebar, or `undefined` when it does not show. */
+  readonly tags: ComponentProps<typeof Sidebar> | undefined;
   readonly panel: ComponentProps<typeof StoryPanel>;
   /** `undefined` while the Story sidebar is closed. */
   readonly story: StorySidebarProps | undefined;
@@ -34,11 +38,11 @@ function useHeaderProps(
   view: ShellView,
   factory: FactoryStatus | undefined,
 ): ComponentProps<typeof Header> {
-  const { board, idle, loading, sidebarFocused, storyFocused, mode } = view;
+  const { board, idle, loading, sidebarFocused, tagSidebarFocused, storyFocused, mode } = view;
   const name = board?.project.projectName ?? (loading ? "Loading…" : "No Project");
   const open = board !== undefined;
   const threads = mode === "threads";
-  const showKey = !sidebarFocused && !storyFocused && mode === "stories";
+  const showKey = !sidebarFocused && !tagSidebarFocused && !storyFocused && mode === "stories";
 
   return useMemo(
     () => headerProps(handlers, { name, open, factory, threads, showKey, clickable: idle }),
@@ -55,10 +59,18 @@ function useStageSidebarProps(handlers: ShellHandlers, view: ShellView, frame: S
   return stageSidebarProps(handlers, view, frame, { entries, button });
 }
 
+/** The entries keep their reference while the tags of the Project do not change. */
+function useTagSidebarProps(handlers: ShellHandlers, view: ShellView, frame: ShellFrame) {
+  const { tags } = view;
+  const entries = useMemo(() => tagEntries(tags), [tags]);
+
+  return tagSidebarProps(handlers, view, frame, entries);
+}
+
 /** The body keeps its reference while its values do not change. */
 function usePanelBody(handlers: ShellHandlers, env: ShellEnv, frame: ShellFrame): StoryPanelBody {
   const { ctx } = env;
-  const { board, loading, noProject, mode, stage, rows, cursor, marked, idle, listFocused } = env.view;
+  const { board, loading, noProject, mode, stage, tag, rows, cursor, marked, idle, listFocused } = env.view;
   const { statusLine, listInnerHeight } = frame;
 
   return useMemo(
@@ -70,6 +82,7 @@ function usePanelBody(handlers: ShellHandlers, env: ShellEnv, frame: ShellFrame)
         noProject,
         mode,
         stage,
+        tag,
         rows,
         cursor,
         marked,
@@ -86,6 +99,7 @@ function usePanelBody(handlers: ShellHandlers, env: ShellEnv, frame: ShellFrame)
       noProject,
       mode,
       stage,
+      tag,
       rows,
       cursor,
       marked,
@@ -144,6 +158,7 @@ export function useShellProps(
   return {
     header: useHeaderProps(handlers, env.view, factory),
     sidebar: useStageSidebarProps(handlers, env.view, frame),
+    tags: useTagSidebarProps(handlers, env.view, frame),
     panel: useStoryPanelProps(handlers, env, frame),
     story: useStorySidebarProps(handlers, env, frame),
     overlayLayout: useMemo(() => ({ width: overlayWidth, height: overlayHeight }), [overlayWidth, overlayHeight]),
