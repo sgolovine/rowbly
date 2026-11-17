@@ -114,25 +114,26 @@ Each module is a folder in `src/services/`. This index gives the function of eac
 
 ### Project data
 
-| Module              | Function                                                                                             |
-| ------------------- | ---------------------------------------------------------------------------------------------------- |
-| `workspace/`        | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`.               |
-| `config/`           | `ProjectConfig` types, checks, key rules, and read and write of the config.                          |
-| `project/`          | `initProject()`, `getProject()`, `updateProject()`.                                                  |
-| `story/`            | Create, update, delete, get and search Stories, and their places in the Stages.                      |
-| `stage/`            | List, create, update, delete and get Stages and their prompts.                                       |
-| `custom-field/`     | Add, update and remove custom fields.                                                                |
-| `spec/`             | Specs and their links to Stories.                                                                    |
-| `attachment/`       | File attachments of a Story.                                                                         |
-| `doctor/`           | Compare the files with the config, and repair problems.                                              |
-| `onboarding/`       | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.                          |
-| `skill/`            | Install, list and remove the bundled skills for each harness.                                        |
-| `prompts/`          | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`.               |
-| `known-project/`    | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.                     |
-| `host/`             | `addHost()`, `listHosts()`, `removeHost()`: the worker hosts in `~/.rowblyrc.json`.                  |
-| `user-rc/`          | `readRc()`, `writeRc()`: the shared safe read and write of `~/.rowblyrc.json`.                       |
-| `story-watch/`      | `watchStories()`: calls a function when the files of `stories/` change.                              |
-| `pi-catalog-cache/` | `readPiCatalog()`, `refreshPiCatalog()`, `piProviderReady()`: the model cache in `~/.cache/rowbly/`. |
+| Module              | Function                                                                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `workspace/`        | `findProject()`, `hasProject()`, `projectPaths()`, `runtimePaths()`, `ServiceContext`.                                                                                   |
+| `config/`           | `ProjectConfig` types, checks, key rules, and read and write of the config.                                                                                              |
+| `project/`          | `initProject()`, `getProject()`, `updateProject()`.                                                                                                                      |
+| `story/`            | Create, update, delete, get and search Stories, and their places in the Stages.                                                                                          |
+| `stage/`            | List, create, update, delete and get Stages and their prompts.                                                                                                           |
+| `custom-field/`     | Add, update and remove custom fields.                                                                                                                                    |
+| `spec/`             | Specs and their links to Stories.                                                                                                                                        |
+| `attachment/`       | File attachments of a Story.                                                                                                                                             |
+| `doctor/`           | Compare the files with the config, and repair problems.                                                                                                                  |
+| `onboarding/`       | `planOnboarding()`, `applyOnboarding()`: the shared setup of a new Project.                                                                                              |
+| `skill/`            | Install, list and remove the bundled skills for each harness.                                                                                                            |
+| `prompts/`          | `listPrompts()`, `getPrompt()`, `setPrompt()`: the user prompts in `.rowbly/prompts/`.                                                                                   |
+| `known-project/`    | `listKnownProjects()`, `recordProject()`, `forgetProject()`: `~/.rowblyrc.json`.                                                                                         |
+| `host/`             | `addHost()`, `listHosts()`, `removeHost()`: the worker hosts in `~/.rowblyrc.json`.                                                                                      |
+| `user-rc/`          | `readRc()`, `writeRc()`: the shared safe read and write of `~/.rowblyrc.json`.                                                                                           |
+| `story-watch/`      | `watchStories()`, `watchFactoryState()`: call a function when Story files or `state.json` change. They watch only the Story folders and the state files, not `runtime/`. |
+| `project-watch/`    | `watchRoutes()`: the shared watches of the process. Each watched path has one handle for all subscribers.                                                                |
+| `pi-catalog-cache/` | `readPiCatalog()`, `refreshPiCatalog()`, `piProviderReady()`: the model cache in `~/.cache/rowbly/`.                                                                     |
 
 ### Shared helpers
 

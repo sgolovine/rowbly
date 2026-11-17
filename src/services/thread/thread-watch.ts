@@ -1,29 +1,31 @@
-import { watch } from "node:fs";
-import { Store } from "../store/store.js";
-import { findProject, type ServiceContext } from "../workspace/workspace.js";
+import { type WatchRoute, watchRoutes } from "../project-watch/project-watch.js";
+import { findProject, type ProjectPaths, runtimePaths, type ServiceContext } from "../workspace/workspace.js";
 
-interface WatchEnv {
-  readonly onChange: () => void;
-  readonly factory: boolean;
-  readonly debounce: Store<{ timer?: NodeJS.Timeout }>;
+/** Tells if this name in `.rowbly/runtime/` is the factory status or the factory owner. */
+function isFactoryFile(filename: string | null): boolean {
+  return filename === "status.json" || filename === "factory.lock";
 }
 
-const QUIET_MS = 100;
-
-function isFactoryFile(name: string): boolean {
-  return name === "runtime/status.json" || name === "runtime/factory.lock" || name === "runtime";
+function acceptAll(): boolean {
+  return true;
 }
 
-/** Calls `onChange` after 100 ms without a further change of a watched file. */
-function onFileChange(env: WatchEnv, file: string | Buffer | null): void {
-  const name = file?.toString() ?? "";
+/**
+ * The watches of thread metadata. The watches of `.rowbly/` and `runtime/` see the creation of `runtime/` and
+ * `threads/`. Session histories and logs are in other folders of `runtime/`, so no watch sees them.
+ */
+function threadRoutes(paths: ProjectPaths, factory: boolean): readonly WatchRoute[] {
+  const runtime = runtimePaths(paths);
 
-  if (!name.startsWith("runtime/threads") && !(env.factory && isFactoryFile(name))) {
-    return;
-  }
-
-  clearTimeout(env.debounce.current.timer);
-  env.debounce.update(() => ({ timer: setTimeout(env.onChange, QUIET_MS) }));
+  return [
+    { path: paths.dir, recursive: false, accept: (filename) => factory && filename === "runtime" },
+    {
+      path: paths.runtimeDir,
+      recursive: false,
+      accept: (filename) => filename === "threads" || (factory && isFactoryFile(filename)),
+    },
+    { path: runtime.threadsDir, recursive: false, accept: acceptAll },
+  ];
 }
 
 /**
@@ -37,15 +39,6 @@ export async function watchThreads(
   options: { factory?: boolean } = {},
 ): Promise<() => void> {
   const paths = await findProject(ctx);
-  const env: WatchEnv = { onChange, factory: !!options.factory, debounce: new Store({}) };
 
-  // Watch the Project too, so the first runtime directory is observable without writes.
-  const watcher = watch(paths.dir, { persistent: false, recursive: true }, (_event, file) => onFileChange(env, file));
-
-  watcher.on("error", () => watcher.close());
-
-  return () => {
-    clearTimeout(env.debounce.current.timer);
-    watcher.close();
-  };
+  return watchRoutes(threadRoutes(paths, !!options.factory), onChange);
 }
