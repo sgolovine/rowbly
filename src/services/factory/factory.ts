@@ -55,6 +55,14 @@ export interface FactoryQueueEntry {
   provider?: string;
 }
 
+/**
+ * True when two status reads are the same. `getFactoryStatus` builds each status in a fixed key order, so the JSON
+ * text compares the values. A live factory changes `heartbeatAt`, so its statuses are not the same.
+ */
+export function sameFactoryStatus(a: FactoryStatus | undefined, b: FactoryStatus | undefined): boolean {
+  return a === b || JSON.stringify(a) === JSON.stringify(b);
+}
+
 interface StartFactoryInput extends DaemonOptions {
   readonly timeoutMs?: number;
 }

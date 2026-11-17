@@ -12,7 +12,14 @@ import { readWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { initProject } from "../project/project.js";
 import { createThread, getThread, listThreads } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
-import { getFactoryStatus, restartFactory, startFactory, stopFactory } from "./factory.js";
+import {
+  type FactoryStatus,
+  getFactoryStatus,
+  restartFactory,
+  sameFactoryStatus,
+  startFactory,
+  stopFactory,
+} from "./factory.js";
 
 const exec = promisify(execFile);
 const repo = resolve(".");
@@ -217,5 +224,45 @@ describe("detached factory with offline Pi", () => {
     } finally {
       await releaseFactoryOwnership(projectPaths(root), owner.token);
     }
+  });
+});
+
+describe("sameFactoryStatus", () => {
+  const owner = {
+    pid: 1,
+    token: "a",
+    host: "h",
+    startedAt: "2026-01-01T00:00:00.000Z",
+  } as unknown as FactoryStatus["owner"];
+  const base = (): FactoryStatus =>
+    ({
+      version: 1,
+      phase: "ready",
+      owner,
+      heartbeatAt: "2026-01-01T00:00:00.000Z",
+      attention: [["a", { text: "one" }]],
+    }) as unknown as FactoryStatus;
+
+  it("is true for two equal statuses and for two undefined values", () => {
+    expect(sameFactoryStatus(base(), base())).toBe(true);
+    expect(sameFactoryStatus(undefined, undefined)).toBe(true);
+  });
+
+  it("is false when a field changes", () => {
+    expect(sameFactoryStatus(base(), { ...base(), phase: "stopped" })).toBe(false);
+    expect(sameFactoryStatus(base(), { ...base(), heartbeatAt: "2026-01-01T00:00:05.000Z" } as FactoryStatus)).toBe(
+      false,
+    );
+    expect(sameFactoryStatus(base(), { ...base(), owner: { ...owner, token: "b" } as FactoryStatus["owner"] })).toBe(
+      false,
+    );
+    expect(
+      sameFactoryStatus(base(), { ...base(), attention: [["b", { text: "two" }]] } as unknown as FactoryStatus),
+    ).toBe(false);
+  });
+
+  it("is false for undefined against a status", () => {
+    expect(sameFactoryStatus(undefined, base())).toBe(false);
+    expect(sameFactoryStatus(base(), undefined)).toBe(false);
   });
 });

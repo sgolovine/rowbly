@@ -142,6 +142,14 @@ export function useMainOverlay(): MainOverlay | null {
   return useContext(MainOverlayContext);
 }
 
+/** True while the main overlay covers the screens. `false` outside the shell. */
+export const OverlayOpenContext = createContext(false);
+
+/** True while the main overlay covers the screens, so that a covered view can stop its clock. */
+export function useOverlayOpen(): boolean {
+  return useContext(OverlayOpenContext);
+}
+
 /** The router-stack depth of the screen being rendered; `-1` outside any screen. */
 export const ScreenDepthContext = createContext(-1);
 
