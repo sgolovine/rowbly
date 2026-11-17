@@ -7,9 +7,9 @@ dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:12.293Z
-updatedAt: 2026-11-17T00:01:05.826Z
+updatedAt: 2026-11-17T00:20:26.907Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-99
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/300
 ---
 
 ## Goal
@@ -78,3 +78,24 @@ Not in scope:
 - `--apply` keeps an entry with a conflict in the held folder and removes the other entries. Reason: then a second apply has no new effect and the user does not lose a change. The resume gate then needs a discard.
 - The attention entry is set when a hold adds entries, and the dismiss removes only the entry. Reason: the Spec says that a dismiss does not remove the held entries.
 - `rowbly thread held` runs without the factory. Reason: the held files are on the main machine and the apply needs only the Project write lock.
+
+## Review findings
+
+The Changelog Stage cannot merge `origin/main` (`d6b2ea8f`) into `story/ROW-99`. These files have merge conflicts with the base branch:
+
+- `docs/architecture/cli.md`
+- `docs/architecture/native-factory/README.md`
+- `src/commands/thread/thread.ts`
+- `src/services/attachment/get-attachment.test.ts`
+- `src/services/pi-runtime/import-boundary.test.ts`
+- `src/services/remote-executor/remote-attachment.test.ts`
+- `src/services/remote-executor/remote-channel.test.ts`
+- `src/services/remote-executor/remote-channel.ts`
+- `src/services/remote-executor/remote-commands.ts`
+- `src/services/remote-executor/remote-executor.ts`
+- `src/services/remote-executor/remote-run.ts`
+- `src/services/remote-executor/remote-sync.ts`
+- `src/services/remote-executor/remote-types.ts`
+- `src/services/test-project/scripted-host.ts`
+
+Merge `origin/main` into the branch, repair the conflicts, and make sure that `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
