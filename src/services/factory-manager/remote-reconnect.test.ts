@@ -12,6 +12,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeCliShim } from "../../commands/factory-runner/cli-shim.js";
 import { createCliShim } from "../../commands/factory-runner/factory-runner.js";
+import { getThreadLog } from "../conversation/conversation.js";
 import { HOST_SYNC_REASON } from "../factory-policy/factory-policy.js";
 import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { updateFactoryState } from "../factory-state/factory-state.js";
@@ -32,7 +33,8 @@ import { createFakeHostAgent, type FakeHostAgent } from "../test-project/fake-ho
 import { useTempDir } from "../test-project/test-project.js";
 import { getThread, type ThreadRecord } from "../thread/thread.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
-import { changeThread } from "./manager-state.js";
+import { changeThread, type Manager } from "./manager-state.js";
+import { createSupervisorTools } from "./supervisor-tools.js";
 
 vi.mock("./manager-state.js", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./manager-state.js")>();
@@ -58,7 +60,15 @@ const tool = (name: string, args: Parameters<typeof fauxToolCall>[1]) =>
   fauxAssistantMessage(fauxToolCall(name, args), { stopReason: "toolUse" });
 
 /** The step of a run at which the test cuts the connection. */
-type Cut = "launch-submit" | "after-launch" | "worktree" | "session" | "result" | "end" | "outbox-sync";
+type Cut =
+  | "launch-submit"
+  | "after-launch"
+  | "worktree"
+  | "session"
+  | "session-lines"
+  | "result"
+  | "end"
+  | "outbox-sync";
 
 interface RunFrame {
   readonly type?: string;
@@ -68,6 +78,7 @@ interface RunFrame {
 /** True when the frame is the first frame of the step. */
 function frameStep(frame: RunFrame, cut: Cut): boolean {
   const run = frame.run;
+  if (cut === "session-lines") return frame.type === "session";
   if (frame.type !== "run" || !run) return false;
   if (cut === "worktree") return !!run.worktree;
   if (cut === "session") return !!run.session;
@@ -323,6 +334,56 @@ describe("factory manager with a worker host that disconnects", () => {
     },
     90_000,
   );
+
+  it("mirrors the session for Peek and inspect_worker across a disconnect and a reconnect", async () => {
+    const f = await fixture("session-lines");
+    const story = await createStory({ title: "Remote", stage: "WORK" }, { cwd: root });
+    moveAndReport(f.worker, story.id);
+
+    const threadId = await reserve(f, story.id);
+    await vi.waitFor(() => expect(f.host.transport.connected).toBe(false), { timeout: 45_000, interval: 20 });
+    const sessionFile = await vi.waitFor(
+      async () => {
+        const file = (await getThread(threadId, { cwd: root })).session.file;
+        expect(file).toMatch(new RegExp(`^sessions/${threadId}/.+\\.jsonl$`));
+        return file as string;
+      },
+      { timeout: 10_000, interval: 20 },
+    );
+    const mirror = join(root, ".rowbly/runtime", sessionFile);
+    const hostSession = join(f.host.paths.runtime, sessionFile);
+    await vi.waitFor(async () => expect((await readFile(mirror)).length).toBeGreaterThan(0), {
+      timeout: 10_000,
+      interval: 20,
+    });
+    await hostRunEnded(f, threadId);
+
+    // While the host is offline, the mirror has the lines that arrived before the cut, and the host has more.
+    const offline = await readFile(mirror, "utf8");
+    const full = await readFile(hostSession, "utf8");
+    expect(full.startsWith(offline)).toBe(true);
+    expect(full.length).toBeGreaterThan(offline.length);
+    const log = await getThreadLog(threadId, { tail: 20 }, { cwd: root });
+    expect(log.status).toBe("ok");
+    expect(log.entries.length).toBeGreaterThan(0);
+    const inspect = createSupervisorTools({ ctx: { cwd: root } } as unknown as Manager).find(
+      (tool) => tool.name === "inspect_worker",
+    );
+    const inspected = await inspect?.execute("call", { threadId, history: true } as never);
+    const answer = JSON.parse(inspected?.content[0]?.text ?? "{}");
+    expect(answer.thread.id).toBe(threadId);
+    expect(answer.history).toContain('"status":"ok"');
+    expect(answer.history).toContain('"entries":[{');
+
+    f.host.transport.reconnect();
+    await finalThread(threadId, "completed");
+
+    // After the reconnect, the mirror equals the session file of the host, with no duplicate line and no gap.
+    expect(await readFile(mirror, "utf8")).toBe(await readFile(hostSession, "utf8"));
+    const after = await getThreadLog(threadId, { tail: 50 }, { cwd: root });
+    expect(after.entries.length).toBeGreaterThan(log.entries.length);
+    expect(f.host.calls.some((call) => call[2] === "session-bytes")).toBe(true);
+  }, 90_000);
 
   it("fails the Thread one time with the host error code when the cut comes before the launch submit", async () => {
     const f = await fixture("before-submit");

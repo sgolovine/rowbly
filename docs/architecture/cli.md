@@ -216,8 +216,8 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
 - `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host cache-missing`,
-  `host cache-put` and `host ping` are hidden. The main machine runs them on a worker host over SSH. The data goes on
-  stdin. The output is JSON. See [native-factory/host-agent.md](native-factory/host-agent.md).
+  `host cache-put`, `host ping` and `host session-bytes` are hidden. The main machine runs them on a worker host over
+  SSH. The data goes on stdin. The output is JSON, but `host session-bytes` writes raw bytes. See [native-factory/host-agent.md](native-factory/host-agent.md).
   - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
     limit and starts a detached host agent, if no live agent holds the claim. It writes
     `{ "started": boolean, "owner": <Owner> }`.
@@ -240,6 +240,11 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - `host ping <project-id>` is the heartbeat of the main machine. It writes
     `{ protocol, rowbly, agent, slots, pending }`: the versions of the host, and the status values of
     the host agent. It does not start the agent.
+  - `host session-bytes <project-id>` reads `{ "threadId": "<id>", "file": "sessions/<thread-id>/<name>.jsonl",
+    "offset": <n> }`. It writes the complete session lines of the Thread from `offset` to stdout, a maximum of
+    4 MiB. A window without a newline in a file that continues gives the full window. A `file` that is absolute,
+    that has a `..` part or that is not below `sessions/<thread-id>/` gives `VALIDATION`. A missing file gives
+    `NOT_FOUND`. The main machine uses it to fill a gap of the session mirror of a remote Thread.
   - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox [project-id]` and `host outbox-ack [project-id]` are hidden. The main machine runs them
   on a worker host to apply the outbox. Each command reads one JSON object on stdin. With a project

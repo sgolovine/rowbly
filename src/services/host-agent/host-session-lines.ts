@@ -4,7 +4,7 @@ import { encodeFrame } from "../host-transport/json-lines.js";
 import { Store } from "../store/store.js";
 
 /** The maximum number of bytes that one poll reads from one session file: 4 MiB. */
-const MAX_SESSION_READ_BYTES = 4 * 1024 * 1024;
+export const MAX_SESSION_READ_BYTES = 4 * 1024 * 1024;
 
 const NEWLINE = 0x0a;
 
@@ -87,7 +87,7 @@ interface Packing {
  * Gives the absolute path of a session file below the runtime folder, or undefined. An absolute path, a `..` part or
  * a path outside the runtime folder is refused.
  */
-function sessionPath(runtime: string, file: unknown): string | undefined {
+export function sessionPath(runtime: string, file: unknown): string | undefined {
   if (typeof file !== "string" || file === "" || isAbsolute(file) || file.split(/[\\/]/).includes("..")) {
     return undefined;
   }

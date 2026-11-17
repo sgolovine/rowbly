@@ -37,6 +37,7 @@ const resources = {
     "run-paths",
     "prepare",
     "ping",
+    "session-bytes",
     "attach",
   ],
 };
@@ -56,6 +57,7 @@ const hidden = [
   "run-paths",
   "prepare",
   "ping",
+  "session-bytes",
 ];
 
 describe("registerCommands", () => {
