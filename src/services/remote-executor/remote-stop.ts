@@ -2,6 +2,7 @@
 
 import { setTimeout as sleep } from "node:timers/promises";
 import { mapInOrder } from "../in-order/in-order.js";
+import { abandonRun } from "./remote-abandoned.js";
 import { isTransportError } from "./remote-calls.js";
 import { linkOpen } from "./remote-channel.js";
 import { enqueueCommand, stopOnHost } from "./remote-commands.js";
@@ -68,7 +69,7 @@ function requestStop(run: RemoteRun, kind: "stop" | "cancel"): boolean {
 /**
  * Stops or cancels a remote run. With an open channel, the host stops the run and sends its end. Without a channel,
  * the command goes in the queue of the host. A stopped run waits for the reconnect; the wait of a cancelled run ends,
- * and the Thread keeps its last status.
+ * the Thread keeps its last status, and it becomes abandoned.
  */
 export async function stopRemote(env: RemoteEnv, threadId: string, kind: "stop" | "cancel"): Promise<void> {
   const run = env.state.current.runs.get(threadId);
@@ -81,6 +82,11 @@ export async function stopRemote(env: RemoteEnv, threadId: string, kind: "stop" 
 
   if (await submitStop(env, run, type)) {
     return;
+  }
+
+  // A cancel that cannot reach the host abandons the Thread: its later outbox entries are held.
+  if (kind === "cancel") {
+    await abandonRun(env, run);
   }
 
   await queueStop(env, run, type);

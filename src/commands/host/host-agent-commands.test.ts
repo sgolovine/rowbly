@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
@@ -6,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { processExists } from "../../services/factory-ownership/ownership-lock.js";
 import { readHostReceipt } from "../../services/host-agent/host-agent-control.js";
 import { hostAgentPaths } from "../../services/host-agent/host-agent-paths.js";
+import { MAX_SESSION_READ_BYTES } from "../../services/host-agent/host-session-lines.js";
 import { checkHello } from "../../services/host-transport/host-handshake.js";
 import { useTempDir } from "../../services/test-project/test-project.js";
 
@@ -16,6 +18,7 @@ interface Exit {
   readonly code: number | null;
   readonly stdout: string;
   readonly stderr: string;
+  readonly bytes: Buffer;
 }
 
 /** Runs `rowbly <args>` in a child process with the input on stdin, as SSH does on a worker host. */
@@ -32,7 +35,12 @@ function rowbly(home: string, args: string[], input: string | Buffer): Promise<E
   child.stdin.end(input);
   return new Promise((done) =>
     child.on("close", (code) =>
-      done({ code, stdout: Buffer.concat(out).toString(), stderr: Buffer.concat(err).toString() }),
+      done({
+        code,
+        stdout: Buffer.concat(out).toString(),
+        stderr: Buffer.concat(err).toString(),
+        bytes: Buffer.concat(out),
+      }),
     ),
   );
 }
@@ -116,5 +124,39 @@ describe("hidden host agent commands", () => {
       expect(result.code).toBe(1);
       expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
     }
+  }, 60_000);
+
+  it("host session-bytes gives complete lines, at most 4 MiB, and refuses a bad file with VALIDATION", async () => {
+    const file = "sessions/t1/s.jsonl";
+    const path = join(hostAgentPaths("p1", home.path).runtime, file);
+    const long = "x".repeat(MAX_SESSION_READ_BYTES + 5);
+    await mkdir(join(path, ".."), { recursive: true });
+    await writeFile(path, `{"a":1}\n${long}\n{"part":`);
+    const input = (offset: number, name = file) => JSON.stringify({ threadId: "t1", file: name, offset });
+
+    const first = await rowbly(home.path, ["host", "session-bytes", "p1"], input(0));
+    expect(first.code).toBe(0);
+    expect(first.bytes.toString()).toBe('{"a":1}\n');
+
+    const window = await rowbly(home.path, ["host", "session-bytes", "p1"], input(8));
+    expect(window.code).toBe(0);
+    expect(window.bytes.length).toBe(MAX_SESSION_READ_BYTES);
+
+    const rest = await rowbly(home.path, ["host", "session-bytes", "p1"], input(8 + MAX_SESSION_READ_BYTES));
+    expect(rest.bytes.toString()).toBe("xxxxx\n");
+
+    const end = await rowbly(home.path, ["host", "session-bytes", "p1"], input(8 + MAX_SESSION_READ_BYTES + 6));
+    expect(end).toMatchObject({ code: 0, stdout: "" });
+
+    for (const name of [path, "sessions/t1/../t2/s.jsonl", "sessions/t2/s.jsonl", "threads/t1.json"]) {
+      const result = await rowbly(home.path, ["--json", "host", "session-bytes", "p1"], input(0, name));
+      expect(result.code).toBe(1);
+      expect(result.stdout).toBe("");
+      expect(JSON.parse(result.stderr).error.code).toBe("VALIDATION");
+    }
+
+    const missing = await rowbly(home.path, ["--json", "host", "session-bytes", "p1"], input(0, "sessions/t1/x.jsonl"));
+    expect(missing.code).toBe(1);
+    expect(JSON.parse(missing.stderr).error.code).toBe("NOT_FOUND");
   }, 60_000);
 });

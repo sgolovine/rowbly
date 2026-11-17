@@ -7,12 +7,20 @@ import { Store } from "../store/store.js";
 import { findProject, type ServiceContext } from "../workspace/workspace.js";
 import { applyAttachmentAdd, applyAttachmentRemove } from "./apply-attachments.js";
 import { applyFieldEntry } from "./apply-fields.js";
-import { type ApplyEnv, isTransportFailure, type OutboxConflict, rowblyProblem } from "./apply-state.js";
+import {
+  type AbandonedHold,
+  type ApplyEnv,
+  isTransportFailure,
+  type OutboxConflict,
+  rowblyProblem,
+} from "./apply-state.js";
+import { type HeldRef, holdEntry, holdingThread } from "./held-entries.js";
 import { readAppliedSeq, writeAppliedSeq } from "./host-files.js";
 import { checkEntry, entrySeq, entryStoryId } from "./outbox-shape.js";
 import type { OutboxSource } from "./outbox-source.js";
 
-export type { OutboxConflict } from "./apply-state.js";
+export type { AbandonedHold, OutboxConflict } from "./apply-state.js";
+export type { HeldRef } from "./held-entries.js";
 
 /** The entries of one worker host, and the source of their attachment files. */
 export interface ApplyOutboxInput {
@@ -21,6 +29,8 @@ export interface ApplyOutboxInput {
   /** The entries, from the source or from the live channel. The apply checks the shape of each one. */
   readonly entries: readonly unknown[];
   readonly source: Pick<OutboxSource, "blob">;
+  /** The abandoned Threads of the host. Their entries after the `appliedSeq` of the note are held, not applied. */
+  readonly abandoned?: readonly AbandonedHold[];
 }
 
 export interface ApplyOutboxResult {
@@ -29,12 +39,16 @@ export interface ApplyOutboxResult {
   /** The `seq` of each entry that this apply examined. An entry that was applied before is not in the list. */
   readonly applied: readonly number[];
   readonly conflicts: readonly OutboxConflict[];
+  /** The entries that this apply held for abandoned Threads. Absent when the apply held no entry. */
+  readonly held?: readonly HeldRef[];
 }
 
 /** The result of one entry, or `undefined` for an entry that was applied before. */
 interface EntryResult {
   readonly seq: number;
   readonly conflicts: readonly OutboxConflict[];
+  /** The abandoned Thread that holds the entry. */
+  readonly heldBy?: string;
 }
 
 /** Runs a call in the order of the caller, for example one lifecycle change at a time. */
@@ -57,7 +71,7 @@ function entryConflict(env: ApplyEnv, value: unknown, reason: string): OutboxCon
 }
 
 /** Applies one entry and gives its conflicts. A connection failure stops the apply. */
-async function entryConflicts(env: ApplyEnv, value: unknown): Promise<OutboxConflict[]> {
+export async function entryConflicts(env: ApplyEnv, value: unknown): Promise<OutboxConflict[]> {
   const checked = checkEntry(value);
 
   if (!checked.entry) {
@@ -90,14 +104,32 @@ async function applyOne(
     return undefined;
   }
 
-  const conflicts = await entryConflicts(env, value);
+  const result = await decideEntry(env, value);
 
   if (seq !== 0) {
     await writeAppliedSeq(env.paths, env.host, seq);
     applied.update(() => ({ seq }));
   }
 
-  return { seq, conflicts };
+  return { seq, ...result };
+}
+
+/** Holds an entry of an abandoned Thread, or applies each other entry. */
+async function decideEntry(env: ApplyEnv, value: unknown): Promise<Omit<EntryResult, "seq">> {
+  const held = holdingThread(env.abandoned, value);
+
+  if (!held) {
+    return { conflicts: await entryConflicts(env, value) };
+  }
+
+  await holdEntry(env, held);
+
+  return { conflicts: [], heldBy: held.threadId };
+}
+
+/** Gives the held entries of the results. */
+function heldRefs(done: readonly EntryResult[]): HeldRef[] {
+  return done.flatMap((result) => (result.heldBy ? [{ threadId: result.heldBy, seq: result.seq }] : []));
 }
 
 /**
@@ -109,17 +141,25 @@ export async function applyOutboxEntries(
   ctx: ServiceContext = {},
 ): Promise<ApplyOutboxResult> {
   const paths = await findProject(ctx);
-  const env: ApplyEnv = { host: input.host, paths, ctx: { ...ctx, recorder: undefined }, source: input.source };
+  const env: ApplyEnv = {
+    host: input.host,
+    paths,
+    ctx: { ...ctx, recorder: undefined },
+    source: input.source,
+    abandoned: input.abandoned,
+  };
   const applied = new Store({ seq: await readAppliedSeq(paths, input.host) });
 
   const ordered = input.entries.toSorted((a, b) => entrySeq(a) - entrySeq(b));
   const results = await mapInOrder(ordered, (value) => applyOne(env, applied, value));
   const done = results.filter((result): result is EntryResult => result !== undefined);
+  const held = heldRefs(done);
 
   return {
     appliedSeq: applied.current.seq,
     applied: done.map((result) => result.seq),
     conflicts: done.flatMap((result) => result.conflicts),
+    ...(held.length > 0 ? { held } : {}),
   };
 }
 
@@ -140,6 +180,8 @@ export interface SyncOutboxInput {
   readonly source: OutboxSource;
   /** Runs the locked apply in the order of the caller, for example the lifecycle queue of the factory manager. */
   readonly inOrder?: RunInOrder;
+  /** The abandoned Threads of the host, whose later entries the apply holds. */
+  readonly abandoned?: readonly AbandonedHold[];
 }
 
 export interface SyncOutboxResult extends ApplyOutboxResult {
@@ -169,7 +211,11 @@ async function acknowledge(source: OutboxSource, seq: number): Promise<string | 
 export async function syncOutbox(input: SyncOutboxInput, ctx: ServiceContext = {}): Promise<SyncOutboxResult> {
   const paths = await findProject(ctx);
   const entries = await input.source.entriesAfter(await readAppliedSeq(paths, input.host));
-  const result = await applyOutbox({ host: input.host, entries, source: input.source }, ctx, input.inOrder);
+  const result = await applyOutbox(
+    { host: input.host, entries, source: input.source, abandoned: input.abandoned },
+    ctx,
+    input.inOrder,
+  );
 
   // A crash before the acknowledgement is safe: the next sync skips the applied entries and sends it again.
   const acknowledgeProblem = await acknowledge(input.source, result.appliedSeq);

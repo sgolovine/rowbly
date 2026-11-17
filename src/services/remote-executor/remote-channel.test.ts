@@ -17,6 +17,8 @@ function env(): RemoteEnv {
       links: new Map(),
       queueChain: Promise.resolve(),
       reconnects: new Map(),
+      outcomes: new Map(),
+      mirrors: new Map(),
     }),
   };
 }
@@ -29,7 +31,7 @@ describe("remote channel", () => {
     run.store.update(() => ({ commandId: "c1" }));
     e.state.update(() => ({ runs: new Map([["t1", run]]) }));
     const connection = { transport: host.transport, rowbly: "/r/rowbly", clone: "repo" };
-    const hooks = { sync: async () => undefined, stopHost: async () => undefined };
+    const hooks = { sync: async () => undefined, stopHost: async () => undefined, catchUp: async () => undefined };
 
     await ensureLink(e, "mini", connection, hooks);
     await ensureLink(e, "mini", connection, hooks);
@@ -53,7 +55,7 @@ describe("remote channel", () => {
     const host = createScriptedHost();
     const e = env();
     const connection = { transport: host.transport, rowbly: "/r/rowbly", clone: "repo" };
-    const hooks = { sync: async () => undefined, stopHost: async () => undefined };
+    const hooks = { sync: async () => undefined, stopHost: async () => undefined, catchUp: async () => undefined };
 
     await ensureLink(e, "mini", connection, hooks);
     host.closeChannels();

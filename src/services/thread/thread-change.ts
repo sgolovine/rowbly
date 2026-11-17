@@ -159,7 +159,8 @@ export async function transitionThread(
 }
 
 function resumed(t: ThreadRecord, input: ResumeInput, now: string): ThreadRecord {
-  const { error, result, completedAt: _completedAt, ...rest } = t;
+  // A resume of an abandoned Thread starts a normal run: the note and the remote outcome of the old run go away.
+  const { error, result, completedAt: _completedAt, abandoned: _abandoned, remoteOutcome: _outcome, ...rest } = t;
   const previous = t.runs.map((run, index) =>
     index === t.runs.length - 1 ? { ...run, reason: run.reason ?? error?.message ?? result?.summary } : run,
   );

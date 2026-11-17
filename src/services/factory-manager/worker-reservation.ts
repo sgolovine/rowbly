@@ -16,6 +16,7 @@ import {
   projectNativeAttempt,
   type ThreadRecord,
 } from "../thread/thread.js";
+import { checkAbandonedResume, hostStateOf } from "./abandoned-threads.js";
 import {
   changeThread,
   getState,
@@ -153,11 +154,16 @@ async function assertResumeWorktree(thread: ThreadRecord): Promise<void> {
   }
 }
 
-/** Checks a resume, then releases the policy parking and the user cancellation of the Story. */
+/**
+ * Checks a resume, then releases the policy parking and the user cancellation of the Story. An abandoned Thread needs
+ * a connected host and no held entries.
+ */
 async function releaseForResume(manager: Manager, previous: ThreadRecord, story: Story): Promise<void> {
   if (!canResume(previous, story)) {
     throw new ConflictError("Thread cannot resume in this Stage");
   }
+
+  await checkAbandonedResume(manager.paths, previous, hostStateOf(manager, previous.host));
 
   await assertResumeWorktree(previous);
 

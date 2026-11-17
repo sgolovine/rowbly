@@ -61,6 +61,28 @@ describe("thread validation", () => {
     }
   });
 
+  it("checks the abandoned note and the remote outcome of a remote Thread", () => {
+    const abandoned = { at: "2026-11-13T00:00:00.000Z", reason: "cancel", appliedSeq: 4 };
+    const remoteOutcome = {
+      endReason: "failed",
+      endedAt: "2026-11-13T01:00:00.000Z",
+      failure: { code: "X", message: "y" },
+    };
+
+    expect(validateThread(record({ abandoned, remoteOutcome }))).toMatchObject({ abandoned, remoteOutcome });
+    for (const value of [
+      record({ abandoned: { ...abandoned, reason: "other" } }),
+      record({ abandoned: { ...abandoned, at: "never" } }),
+      record({ abandoned: { ...abandoned, appliedSeq: -1 } }),
+      record({ abandoned: null }),
+      record({ remoteOutcome: { endReason: "gone" } }),
+      record({ remoteOutcome: { endReason: "failed", failure: { code: 1 } } }),
+      record({ remoteOutcome: { endReason: "completed", result: { outcome: "x" } } }),
+    ]) {
+      expect(() => validateThread(value)).toThrow("Invalid thread metadata");
+    }
+  });
+
   it("rejects an invalid worker result after valid metadata", () => {
     const result = { outcome: "done", summary: "ok", blockers: [], problems: [] };
 

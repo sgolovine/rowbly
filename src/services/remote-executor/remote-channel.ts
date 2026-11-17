@@ -7,6 +7,7 @@ import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { takeAttachmentRequest } from "./remote-attachment.js";
 import { type RunHooks, takeReceipt, takeRunFrame } from "./remote-run.js";
 import type { HostConnection, HostLink, RemoteEnv, RemoteRun } from "./remote-types.js";
+import { isSessionFrame, takeSessionFrame } from "./session-mirror.js";
 
 /** A frame of the channel after the hello frame. */
 interface ChannelFrame {
@@ -29,9 +30,39 @@ function dispatchAttachmentRequest(env: RemoteEnv, host: string, value: unknown)
   }
 }
 
+/** Gives a run frame to the open run of its Thread, else to the hook of the other runs, for example an abandoned one. */
+function dispatchRunFrame(env: RemoteEnv, host: string, hooks: RunHooks, frame: HostRunState): void {
+  const run = env.state.current.runs.get(frame.threadId);
+
+  if (run && run.host !== host) {
+    return;
+  }
+
+  if (run && !run.store.current.closed) {
+    takeRunFrame(run, frame, hooks);
+
+    return;
+  }
+
+  hooks.otherRun?.(host, frame);
+}
+
+/** Gives a `session` frame to the mirror of its Thread, when the Thread is an active run of the host. */
+function dispatchSessionFrame(env: RemoteEnv, host: string, value: unknown): void {
+  if (!isSessionFrame(value)) {
+    return;
+  }
+
+  const run = env.state.current.runs.get(value.threadId);
+
+  if (run?.host === host) {
+    void takeSessionFrame(env, host, value);
+  }
+}
+
 /**
- * Gives each frame to the run of its Thread or of its command, or to the attachment handler. A frame of a different
- * Thread is ignored.
+ * Gives each frame to the run of its Thread or of its command, to the session mirror, or to the attachment handler. A
+ * frame of a different Thread is ignored.
  */
 function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unknown): void {
   const frame = (value ?? {}) as ChannelFrame;
@@ -42,12 +73,14 @@ function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unk
     return;
   }
 
-  if (frame.type === "run" && frame.run) {
-    const run = env.state.current.runs.get(frame.run.threadId);
+  if (frame.type === "session") {
+    dispatchSessionFrame(env, host, value);
 
-    if (run?.host === host) {
-      takeRunFrame(run, frame.run, hooks);
-    }
+    return;
+  }
+
+  if (frame.type === "run" && frame.run) {
+    dispatchRunFrame(env, host, hooks, frame.run);
 
     return;
   }

@@ -32,8 +32,27 @@ export interface RemoteExecutorInput {
   readonly model: (launch: WorkerLaunch) => ModelChoice | undefined;
   /** Applies all outbox entries of the host to the canonical files. Throws when the apply cannot complete. */
   readonly sync: (host: string) => Promise<void>;
+  /**
+   * Runs a read of the canonical files for the inbound updates under the Project write lock, in the order of the
+   * manager. It does not take the state lock. The default takes only the Project write lock.
+   */
+  readonly readLocked?: <T>(read: () => Promise<T>) => Promise<T>;
   /** The time that a channel waits for the hello frame of the host. */
   readonly helloTimeoutMs?: number;
+
+  // Abandoned Threads
+  /** Records that a cancel of the Thread did not reach its host. The manager makes the Thread abandoned. */
+  readonly abandon?: (threadId: string, host: string) => Promise<void>;
+  /** Gives the abandoned remote Threads that have no remote outcome. */
+  readonly abandoned?: () => Promise<readonly AbandonedThread[]>;
+  /** Writes the remote outcome of an abandoned Thread from the last run frame. The status of the Thread stays. */
+  readonly outcome?: (threadId: string, run: HostRunState) => Promise<void>;
+}
+
+/** One abandoned remote Thread that waits for its remote outcome. */
+export interface AbandonedThread {
+  readonly threadId: string;
+  readonly host: string;
 }
 
 /** The remote executor. The manager also calls `syncHosts` at each scan. */
@@ -90,6 +109,8 @@ export interface RemoteRunState {
 /** One remote run. `done` aborts when the launch can resolve. */
 export interface RemoteRun {
   readonly threadId: string;
+  /** The Story of a worker Thread. */
+  readonly storyId?: string;
   readonly host: string;
   readonly events: WorkerEvents;
   readonly store: Store<RemoteRunState>;
@@ -114,6 +135,10 @@ export interface RemoteState {
   readonly queueChain: Promise<void>;
   /** The reconnect of each host that runs now. */
   readonly reconnects: ReadonlyMap<string, Promise<string | undefined>>;
+  /** The last run frame of each abandoned Thread, until the outbox sync of its host. The key is the Thread id. */
+  readonly outcomes: ReadonlyMap<string, { readonly host: string; readonly frame: HostRunState }>;
+  /** The last write of the session mirror of each Thread. The writes of one Thread run one at a time. */
+  readonly mirrors: ReadonlyMap<string, Promise<void>>;
 }
 
 /** The fixed environment of the remote executor, and the store of its runs and channels. */

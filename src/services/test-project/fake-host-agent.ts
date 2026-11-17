@@ -12,6 +12,7 @@ import type { HostWorkRunner } from "../host-agent/host-agent-work.js";
 import { runHostAttach } from "../host-agent/host-attach.js";
 import { hostPing } from "../host-agent/host-ping.js";
 import { hostRuns } from "../host-agent/host-runs.js";
+import { hostSessionBytes } from "../host-agent/host-session-bytes.js";
 import { writeSlotLimit } from "../host-agent/host-slots.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import type { BytesResult, RemoteCommand, RequestResult, UploadResult } from "../host-transport/host-transport.js";
@@ -141,17 +142,22 @@ async function request(fake: FakeAgent, command: RemoteCommand, input: unknown):
   }
 }
 
-async function bytes(fake: FakeAgent, command: RemoteCommand): Promise<BytesResult> {
+/** Gives the output of a bytes command: the session bytes of a Thread, or an outbox blob. */
+function readBytes(fake: FakeAgent, command: RemoteCommand, input: unknown): Promise<Buffer> {
+  if (command[2] === "session-bytes") {
+    return hostSessionBytes(fake.paths, input);
+  }
+
+  checkOutbox(fake);
+
+  return readOutboxBlob({ dir: fake.paths.outbox, sha256: command[3] ?? "" });
+}
+
+async function bytes(fake: FakeAgent, command: RemoteCommand, input: unknown): Promise<BytesResult> {
   record(fake, command);
 
   try {
-    checkOutbox(fake);
-
-    return {
-      exitCode: 0,
-      bytes: await readOutboxBlob({ dir: fake.paths.outbox, sha256: command[3] ?? "" }),
-      stderr: "",
-    };
+    return { exitCode: 0, bytes: await readBytes(fake, command, input), stderr: "" };
   } catch (error) {
     return { ...failedCall(error), bytes: Buffer.alloc(0) };
   }
@@ -216,7 +222,7 @@ export function createFakeHostAgent(options: FakeHostAgentOptions): FakeHostAgen
   };
   const transport = createFakeHostTransport({
     request: (command, input) => request(fake, command, input),
-    bytes: (command) => bytes(fake, command),
+    bytes: (command, input) => bytes(fake, command, input),
     upload: (command, data) => upload(fake, command, data),
     channel: (command, remote) => attach(fake, command, remote),
   });

@@ -1,15 +1,15 @@
 ---
 title: Hold the changes of abandoned remote Threads
-stage: IN_DEVELOPMENT
+stage: IN_REVIEW
 position: 18
 uid: 44146b02-a32e-4d9a-b59a-97620af46408
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:12.293Z
-updatedAt: 2026-11-17T00:01:05.826Z
+updatedAt: 2026-11-17T00:31:31.809Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-99
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/300
 ---
 
 ## Goal
@@ -78,3 +78,25 @@ Not in scope:
 - `--apply` keeps an entry with a conflict in the held folder and removes the other entries. Reason: then a second apply has no new effect and the user does not lose a change. The resume gate then needs a discard.
 - The attention entry is set when a hold adds entries, and the dismiss removes only the entry. Reason: the Spec says that a dismiss does not remove the held entries.
 - `rowbly thread held` runs without the factory. Reason: the held files are on the main machine and the apply needs only the Project write lock.
+
+## Review findings
+
+The code satisfies the acceptance criteria. Local `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass, and CI passes on `a73aa963`. The earlier finding (conflicts with `d6b2ea8f`) is repaired.
+
+Blocking findings:
+
+1. The pull request has merge conflicts with `origin/main` (`98223572`, the merge of ROW-98, pull request #299). GitHub refuses the merge. These files have conflicts:
+   - `CHANGELOG.md`
+   - `docs/architecture/native-factory/README.md`
+   - `docs/architecture/native-factory/runtime-and-locks.md`
+   - `src/services/factory-manager/remote-dispatch.ts`
+   - `src/services/pi-runtime/import-boundary.test.ts`
+   - `src/services/remote-executor/remote-reconnect.ts`
+   - `src/services/remote-executor/remote-sync.ts`
+
+   Fix: merge `origin/main` into `story/ROW-99`. Keep the inbound update steps of ROW-98 and the abandoned Thread steps of this Story in `remote-reconnect.ts`, `remote-sync.ts` and `remote-dispatch.ts`. Keep the `(ROW-99)` line in the `### Pre Release` section of `CHANGELOG.md`. Then make sure that `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.
+
+Non-blocking notes (also in a comment on the pull request):
+
+- `abandonedHolds` and `pendingAbandoned` read all worker Threads at each sync. This can become slow with many Threads.
+- A resume removes the `abandoned` note and `remoteOutcome`. The documentation can say this.

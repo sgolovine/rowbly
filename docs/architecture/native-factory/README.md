@@ -265,7 +265,7 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
 - **Events.** The executor maps the fields of each `run` frame to the events of the manager:
   `worktree` to `worktreeReady`, `session` to `sessionOpened`, `activity` to `activity` and `result`
   to `resultReported`. A frame that repeats a value sends no event. The end has these events:
-  1. The outbox sync of the host.
+  1. The outbox sync of the host, then the catch-up of the session mirror.
   2. `completed` for the end reasons `completed`, `stopped` and `cancelled`, or `failed` with the code
      and the message of the host. The Thread error keeps the code of the host.
   3. `finished` with the final usage, when the session opened.
@@ -292,8 +292,89 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
   Story. The manager removes the Story from the set when the launch of the remote executor ends.
 - **Base of the copy.** For each remote Thread, the main machine keeps the copy that it sent last in
   `runtime/hosts/<host>/threads/<thread-id>/base.json`: `{ version, threadId, host, sentAt, files,
-  attachments }`. The file has mode 0600, and its folders have mode 0700. ROW-98 uses it for the
-  inbound updates.
+  attachments }`. The file has mode 0600, and its folders have mode 0700. The inbound updates use it.
+- **Session mirror.** The main machine keeps a copy of the session file of each remote Thread. See
+  [Session mirror](#session-mirror).
+
+## Session mirror
+
+The main machine keeps a byte-exact copy of the complete lines of the session file of each remote
+Thread (`remote-executor/session-mirror.ts`). See the Spec `remote-worker-hosts`, section "Session
+mirror".
+
+- **Path.** The mirror path is the `session.file` value of the Thread
+  (`sessions/<thread-id>/<name>.jsonl`), below the local runtime folder. Thus the `conversation/`
+  service, `rowbly thread log`, `inspect_worker` and Peek read the mirror as a local session file. They
+  work also while the host is offline, with the lines that arrived before the cut.
+- **Live lines.** The channel gives each `session` frame to the mirror of its Thread, but only when the
+  Thread is an active run of the same host. The pure function `frameStep(size, frame)` compares the
+  frame with the size of the mirror file:
+  - When `end` is at or before the mirror end, the mirror skips the frame. Thus a line that arrives two
+    times is in the mirror one time.
+  - When the frame starts at or before the mirror end, the mirror adds only the bytes after the mirror
+    end. The lines are UTF-8, each with a newline. The offsets are byte offsets.
+  - When the frame starts after the mirror end, or it is a gap frame of a long line (`lines: []`), the
+    mirror does a catch-up first. Then it applies the frame again. When the catch-up fails, the mirror
+    drops the frame. The mirror never has a gap.
+- **Catch-up.** The mirror reads the bytes after its end from the host with
+  `rowbly host session-bytes`, one window at a time, until the answer is empty (see
+  [host-agent.md](host-agent.md#session-bytes)). The executor does a catch-up for a gap, after a
+  reconnect for each open run with a session, and before the end event of a run. Thus the last lines
+  of a run are in the mirror when the Thread completes. A catch-up failure does not stop the reconnect,
+  the outbox sync or the end of the run. A later catch-up adds the bytes.
+- **One write at a time.** The executor keeps one chain of writes for each Thread (`mirrors` in the
+  state of the executor). Thus a live frame and a catch-up never write at the same time.
+- **Files.** The mirror files have mode 0600, and their folders have mode 0700. The mirror appends to
+  the file. It does not write a full copy for each frame. A mirror write takes no Project write lock
+  and no state lock. A new session file of the Thread gets a new mirror file, and the old file stays.
+  The mirror files stay after the Thread ends.
+- **Pi.** The mirror and `host session-bytes` do not load Pi.
+
+## Inbound updates
+
+A remote worker works on a copy of the canonical `.rowbly/` files. The main machine sends each later
+change of the canonical files to the copy of each running remote Thread as an inbound update. See
+the Spec `remote-worker-hosts`, section "The copy and inbound updates", and
+[host-agent.md](host-agent.md#inbound-updates) for the apply on the host.
+
+- **Diff.** In `syncHosts` (`remote-executor/remote-sync.ts`), after the outbox sync of a host, the
+  executor compares the canonical files with the base of each open run (`remote-inbound.ts`). It
+  reads the canonical files with `buildThreadCopy` under the Project write lock, through the input
+  function `readLocked`. The manager runs it in its lifecycle order. It does not take the state lock.
+  The outbox goes first, so a change of the worker that is on the main machine now gives an update
+  with no effect.
+- **Update types.** The pure function `inboundDiff` (`inbound/inbound-diff.ts`) gives the updates. A
+  Story is identified by its ID, not by its path, because a Stage move changes the path.
+
+  | Type                | Body                              | Source of the update                                     |
+  | ------------------- | --------------------------------- | -------------------------------------------------------- |
+  | `story.update`      | `{ storyId, storyUid?, changes }` | `storyChanges()` of the base and the canonical Story.    |
+  | `story.create`      | `{ storyId, path, content }`      | A Story that is not in the base.                         |
+  | `story.delete`      | `{ storyId }`                     | A Story that is not in the canonical files.              |
+  | `attachment.add`    | `{ storyId, attachment, file? }`  | A record that is not in the base manifest.               |
+  | `attachment.remove` | `{ storyId, id }`                 | A record that is not in the canonical manifest.          |
+  | `file.put`          | `{ path, content }`               | Each other text file of the copy, new or changed.        |
+  | `file.delete`       | `{ path }`                        | Each other text file that is not in the canonical files. |
+
+  The order is: the other files (the config can add a field or a Stage), new Stories, changed
+  Stories, attachments, deleted Stories. An `attachment.add` of the Story of the Thread or of an
+  upstream Story has `file`. Before the send, the executor uploads that file with `cache-missing`,
+  then `cache-put` for a missing id.
+- **Queue.** The updates of a Thread go in
+  `runtime/hosts/<host>/threads/<thread-id>/inbound.json` first:
+  `{ version: 1, nextSeq, updates: [{ seq, type, ...body }] }`. Then the base gets the current values.
+  A crash between the two writes makes the same updates again with new `seq` values, and they have no
+  effect. The file has mode 0600, and its folders have mode 0700 (`remote-executor/inbound-queue.ts`).
+- **Sequence numbers.** The inbound `seq` of each Thread is separate from the outbox `seq`. It starts
+  at 1 and only increases. A new `prepare` of the Thread removes the waiting updates, but `nextSeq`
+  stays. The end of a run also removes its waiting updates.
+- **Send and acknowledgement.** The executor sends the waiting updates with `host inbound`. The
+  answer is the last applied `seq` of the host. The updates with that `seq` or less leave the queue.
+  When an answer is lost, the next send gives the same updates again, and the host skips them. A
+  Thread that is not prepared on the host (`NOT_FOUND`) loses its waiting updates.
+- **Failures.** A transport error keeps the updates in the queue and gives no problem. The heartbeat
+  and the reconnect send them later. A refusal of the host (`HostProtocolError`) keeps the updates and
+  gives the problem of the host, so that the manager sets `host-sync:<host>`.
 
 ## Disconnects and reconnects
 
@@ -344,19 +425,22 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   that run ends, because the main machine cannot know if the run started.
 - **Stop and cancel.** A `stop` while the host is disconnected goes in the queue, and the run keeps its
   wait until the reconnect. A `cancel` while the host is disconnected goes in the queue, and the wait
-  ends. The Thread keeps its last status.
+  ends. The Thread becomes `cancelled` and abandoned. See [Abandoned Threads](#abandoned-threads).
 - **Reconnect.** When the heartbeat of a host gives `connected`, the manager calls `reconnect(host)` of
-  the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands, an
-  active run without a channel, an adopted run without a request id, or a run that waits for the sync,
-  the executor does these steps:
+  the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands,
+  waiting inbound updates, an active run without a channel, an adopted run without a request id, a run
+  that waits for the sync, or an abandoned Thread without a remote outcome, the executor does these steps:
   1. It submits each queued `stop-thread` and `cancel-thread`, in the order of arrival. Then it
      submits the other queued commands.
   2. For each adopted run without a request id, it gets the run state with `host runs`. See
      [host-agent.md](host-agent.md#reconnect-of-adopted-runs).
-  3. It opens the `host attach` channel again for the active runs. The host sends the status, each
-     receipt and the run state of each Thread again. The run state stays across channels, so a value
-     that was sent before sends no event.
-  4. It applies the outbox of the host with `syncHosts`.
+  3. It sends the waiting inbound updates of each active run. See [Inbound updates](#inbound-updates).
+  4. It opens the `host attach` channel again for the active runs and the abandoned Threads. The host
+     sends the status, each receipt and the run state of each Thread again. The run state stays across
+     channels, so a value that was sent before sends no event.
+  5. It reads the session lines that the host wrote while it was offline, for each open run with a
+     session (see [Session mirror](#session-mirror)). A failure does not stop the next step.
+  6. It applies the outbox of the host with `syncHosts`.
 
   Thus a run that ended on the host while it was offline completes one time.
 - **Factory stop.** `stopFactory` calls `shutdown` of the remote executor before it waits for the
@@ -369,6 +453,54 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   run. See [recovery.md](recovery.md#adopt-remote-threads-at-start).
 - **Resume.** A remote Thread resumes only on its own host, also after a `NETWORK` failure. The
   network resume waits while the host is not `connected`.
+
+## Abandoned Threads
+
+When the user cancels a remote Thread while its host is offline, the late changes of that Thread never
+go to the board automatically. The main machine holds them. See the Spec `remote-worker-hosts`,
+section "Abandoned Threads".
+
+- **Abandon.** A cancel of a remote Thread makes the Thread abandoned when the `cancel-thread` command
+  cannot reach the host now: the host has no open channel, or the submit fails in the transport. The
+  remote executor calls the `abandon` callback of `RemoteExecutorInput`. The manager
+  (`factory-manager/abandoned-threads.ts`) writes the `abandoned` note on the `cancelled` Thread:
+  `{ at, reason: "cancel", appliedSeq }`. `appliedSeq` is the last applied `seq` of the host at the
+  time of the cancel. A cancel while the host has an open channel does not abandon the Thread.
+- **The stop goes first.** The `cancel-thread` command stays in `runtime/hosts/<host>/commands.json`.
+  On reconnect, it goes before the `host attach` channel and before the outbox sync.
+- **No host sync wait.** The wait of the launch ends at once. Thus the Story does not wait on
+  `waiting for host sync`. The usual cancel rules apply: `nativeCancelled` and `cancelled by user`.
+- **Held entries.** Each outbox sync of the host (the scan sync, the end-of-run sync and the reconnect
+  sync) holds each entry of an abandoned Thread with a `seq` greater than the `appliedSeq` of the
+  note. The apply does not apply a held entry. It writes the entry to
+  `runtime/hosts/<host>/held/<threadId>/entries.jsonl`, and the file of an `attachment.add` entry to
+  `held/<threadId>/blobs/<sha256>.png`. Then it records the `seq` as applied, and the sync sends the
+  acknowledgement. A transport failure of `host blob` stops the apply before the record of the
+  `seq`. A bad file keeps the entry held without its file.
+- **Reconnect.** The reconnect also runs for a host with an abandoned Thread without a
+  `remoteOutcome`, also when the host has no other open run. The scan sync also applies the outbox of
+  a host with an abandoned Thread and an open channel.
+- **Remote outcome.** When the final run frame (`phase: "ended"`) of an abandoned Thread arrives on
+  the channel, the executor keeps it and applies the outbox of the host. After the sync, the manager
+  writes `remoteOutcome` on the Thread: `{ endReason, endedAt?, result?, failure? }`. The Thread stays
+  `cancelled`. Its status, `resultReported` and `completed` do not change, and the Story does not
+  move. When the sync fails, the frame waits for the next sync. After the last remote outcome of a
+  host, the executor closes the idle channel.
+- **Attention.** When a sync holds new entries of a Thread, the manager sets the attention entry
+  `abandoned:<threadId>`, after the Project write lock is free. The entry has the Story of the Thread
+  and a summary: the host, the number of held entries, and the paths and attachment ids that they
+  change. A dismiss removes only the attention entry. A new hold sets the entry again.
+- **Held actions.** `rowbly thread held <id>` lists, applies (`--apply`) or deletes (`--discard`) the
+  held entries (`outbox-apply/held-actions.ts`). The apply uses the same compare-and-set as the outbox
+  apply. An entry with a conflict stays held, and the other entries leave the folder. The command
+  does not need a running factory. See [cli.md](../cli.md).
+- **Resume gate.** A resume of an abandoned Thread gives a `ConflictError` while the Thread has held
+  entries, or while its host is not `connected`. A resume removes the `abandoned` note and the
+  `remoteOutcome` from the Thread.
+- **Inbound updates.** `isAbandoned(thread)` in `thread/thread-types.ts` tells if a Thread is
+  abandoned. ROW-98 uses it to drop the inbound updates of an abandoned Thread.
+- **Locks.** The hold and `--apply` hold the Project write lock and never the state lock.
+- **Not in this Story.** The release of a remote Thread (ROW-119) and the TUI key (ROW-102).
 
 ## Prerequisites and limits
 

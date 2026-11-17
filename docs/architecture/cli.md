@@ -42,7 +42,7 @@ test.
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt.                |
 | `model/`                                               | `model list`.                                                                                   |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.                            |
-| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`.                                               |
+| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`, `held`.                                       |
 | `host/`                                                | `host add`, `check`, `login`, `list`, `update`, `remove`, `use`, `unuse`, hidden commands.      |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
@@ -215,9 +215,10 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - A hash without a file gives `NOT_FOUND`.
   - An error writes nothing to stdout. The error output is the usual output, also with `--json`.
     See [storage.md](storage.md#outbox-of-a-remote-worker).
-- `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host cache-missing`,
-  `host cache-put`, `host ping` and `host runs` are hidden. The main machine runs them on a worker host over SSH. The data goes on
-  stdin. The output is JSON. See [native-factory/host-agent.md](native-factory/host-agent.md).
+- `host serve`, `host submit`, `host attach`, `host run-paths`, `host prepare`, `host inbound`,
+  `host cache-missing`, `host cache-put`, `host ping`, `host runs` and `host session-bytes` are hidden. The main
+  machine runs them on a worker host over SSH. The data goes on stdin. The output is JSON, but `host session-bytes`
+  writes raw bytes. See [native-factory/host-agent.md](native-factory/host-agent.md).
   - `host serve --detach` reads `{ "projectId": "<id>", "maxWorkers": <n> }`. It writes the machine
     limit and starts a detached host agent, if no live agent holds the claim. It writes
     `{ "started": boolean, "owner": <Owner> }`.
@@ -233,6 +234,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - `host prepare <project-id>` reads the copy and the launch data of one Thread (32 MiB or less).
     It writes the copy to the Thread folder and writes `{ threadId, copy, files, attachments }`.
     It gives `CONFLICT` while the Thread has active work.
+  - `host inbound <project-id>` reads `{ "threadId": "<id>", "updates": [...] }` (32 MiB or less). It
+    applies the inbound updates to the copy of the Thread in `seq` order and writes
+    `{ threadId, appliedSeq }`. A Thread that is not prepared gives `NOT_FOUND`.
   - `host cache-missing <project-id>` reads `{ "ids": [<attachment id>, …] }`. It writes
     `{ "missing": [<id>, …] }` with the ids that are not in the attachment cache.
   - `host cache-put <project-id> <attachment-id>` reads the bytes of an attachment file of any
@@ -244,6 +248,11 @@ and `host unuse` need a Project. The `host-project` service does their work. See
     `{ "runs": [<run state>, …] }`: the `run.json` of each requested Thread that has one on the host. A
     Thread without `run.json` is not in the list. The main machine uses it after a restart of the
     daemon. It does not start the agent.
+  - `host session-bytes <project-id>` reads `{ "threadId": "<id>", "file": "sessions/<thread-id>/<name>.jsonl",
+    "offset": <n> }`. It writes the complete session lines of the Thread from `offset` to stdout, a maximum of
+    4 MiB. A window without a newline in a file that continues gives the full window. A `file` that is absolute,
+    that has a `..` part or that is not below `sessions/<thread-id>/` gives `VALIDATION`. A missing file gives
+    `NOT_FOUND`. The main machine uses it to fill a gap of the session mirror of a remote Thread.
   - A bad project id, a bad input or bad JSON gives `VALIDATION`.
 - `host outbox [project-id]` and `host outbox-ack [project-id]` are hidden. The main machine runs them
   on a worker host to apply the outbox. Each command reads one JSON object on stdin. With a project
@@ -257,6 +266,24 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.
     See [storage.md](storage.md#apply-on-the-main-machine).
+
+### Held entries
+
+`rowbly thread held <id> [--apply | --discard]` shows or changes the held outbox entries of an
+abandoned remote Thread. The command does not need a running factory. The service is
+`heldAction` in `src/services/outbox-apply/held-actions.ts`. See
+[native-factory/README.md](native-factory/README.md#abandoned-threads).
+
+- Without an option, the command lists the held entries: the `seq`, the Story, and the paths or the
+  attachment id of each entry. A Thread without held entries gives an empty list.
+- `--apply` applies the held entries under the Project write lock, with the same compare-and-set as
+  the outbox apply. The applied entries leave the held folder. An entry with a conflict stays held,
+  and the result lists the conflict. A second `--apply` has no new effect and gives no error.
+- `--discard` deletes the held folder of the Thread under the Project write lock. The canonical
+  Story does not change.
+- `--apply` and `--discard` together give a `VALIDATION` error.
+- `--json` gives `{ action, threadId, host, ... }`: `entries` for a list, `applied` and `conflicts`
+  for an apply, and `discarded` for a discard. `host` is `null` for a Thread of the main machine.
 
 ### Connection lost
 
