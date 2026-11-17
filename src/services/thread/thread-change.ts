@@ -187,7 +187,10 @@ async function saveNewRun(
     throw new ConflictError("Thread cannot resume");
   }
 
-  await stat(await runtimePath(paths, t.session.file));
+  // The session file of a Thread on a worker host is on that host. The host refuses a resume without it.
+  if ((t.host ?? LOCAL_HOST) === LOCAL_HOST) {
+    await stat(await runtimePath(paths, t.session.file));
+  }
 
   return saveThread(resumed(t, input, nowText(ctx)), ctx);
 }
@@ -197,4 +200,37 @@ export async function appendThreadRun(id: string, input: ResumeInput, ctx: Servi
   const paths = await findProject(ctx);
 
   return withStateLock(paths.root, () => saveNewRun(paths, id, input, ctx));
+}
+
+interface AdoptInput {
+  expectedRevision: number;
+  ownerToken: string;
+}
+
+/** Gives the owner token to the last run of an active Thread. The caller holds the state lock. */
+async function saveAdoptedRun(id: string, input: AdoptInput, ctx: ServiceContext): Promise<ThreadRecord> {
+  const t = await getThread(id, ctx);
+  const last = t.runs.at(-1);
+
+  if (t.revision !== input.expectedRevision) {
+    throw new ConflictError("Thread revision changed");
+  }
+
+  if (!last || isTerminal(t.status)) {
+    throw new ConflictError("Thread cannot be adopted");
+  }
+
+  const runs = [...t.runs.slice(0, -1), { ...last, ownerToken: input.ownerToken }];
+
+  return saveThread({ ...t, runs, revision: t.revision + 1 }, ctx);
+}
+
+/**
+ * Gives the last run of an active Thread to a new factory owner. It adds no run, because a new run is a resume. The
+ * new daemon uses it to follow a run that continues on a worker host.
+ */
+export async function adoptThreadRun(id: string, input: AdoptInput, ctx: ServiceContext = {}): Promise<ThreadRecord> {
+  const paths = await findProject(ctx);
+
+  return withStateLock(paths.root, () => saveAdoptedRun(id, input, ctx));
 }

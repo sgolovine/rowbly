@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { useTestProject } from "../test-project/test-project.js";
-import { appendThreadRun, createThread, transitionThread } from "./thread-change.js";
+import { adoptThreadRun, appendThreadRun, createThread, transitionThread } from "./thread-change.js";
 
 describe("thread change", () => {
   const p = useTestProject();
@@ -80,6 +80,49 @@ describe("thread change", () => {
 
     expect(failures).toHaveLength(1);
     expect(failures[0]).toContain("Thread revision changed");
+  });
+
+  it("gives the last run of an active Thread to a new owner, without a new run", async () => {
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "old", host: "mini" },
+      p.ctx,
+    );
+    const running = await transitionThread(t.id, { expectedRevision: t.revision, status: "running" }, p.ctx);
+
+    const adopted = await adoptThreadRun(t.id, { expectedRevision: running.revision, ownerToken: "new" }, p.ctx);
+
+    expect(adopted.status).toBe("running");
+    expect(adopted.revision).toBe(running.revision + 1);
+    expect(adopted.runs).toHaveLength(1);
+    expect(adopted.runs[0]).toMatchObject({ id: running.runs[0]?.id, ownerToken: "new", status: "running" });
+    await expect(adoptThreadRun(t.id, { expectedRevision: running.revision, ownerToken: "x" }, p.ctx)).rejects.toThrow(
+      "revision changed",
+    );
+    const failed = await transitionThread(t.id, { expectedRevision: adopted.revision, status: "failed" }, p.ctx);
+    await expect(adoptThreadRun(t.id, { expectedRevision: failed.revision, ownerToken: "x" }, p.ctx)).rejects.toThrow(
+      "cannot be adopted",
+    );
+  });
+
+  it("resumes a Thread on a worker host without a local session file", async () => {
+    const t = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "old", host: "mini" },
+      p.ctx,
+    );
+    const failed = await transitionThread(
+      t.id,
+      {
+        expectedRevision: t.revision,
+        status: "failed",
+        patch: { resumable: true, session: { id: t.id, file: `sessions/${t.id}/pi.jsonl` } },
+      },
+      p.ctx,
+    );
+
+    const resumed = await appendThreadRun(t.id, { expectedRevision: failed.revision, ownerToken: "new" }, p.ctx);
+
+    expect(resumed.status).toBe("pending");
+    expect(resumed.runs).toHaveLength(2);
   });
 
   it("refuses to resume a Thread without a session file", async () => {
