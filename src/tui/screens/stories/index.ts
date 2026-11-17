@@ -16,6 +16,7 @@ export { rowStage, stageRowId, storyListRows } from "./story-list-rows.js";
 export * from "./story-modal-body/index.js";
 export * from "./story-row/index.js";
 export * from "./story-tab-panes/index.js";
+export * from "./thread-body/index.js";
 export * from "./thread-detail/index.js";
 export { type ThreadHostView, threadHostProps, threadHostView } from "./thread-host-view.js";
 export * from "./thread-list-panel/index.js";
