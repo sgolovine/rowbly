@@ -48,6 +48,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: An idle TUI now renders less often. The run time of a running Thread updates each second only while the Factory view, the Thread pane or the Threads tab shows it, and the 5 s factory status poll causes no render when the status did not change. (ROW-129)
 - Changed: The TUI and the factory now watch only the Story, attachment, Spec, Stage and prompt folders and the state files of `.rowbly/`, and share one watch for each folder. A write of session data or logs in `.rowbly/runtime/` no longer wakes the TUI or the factory. (ROW-136)
 - Removed: The supervisor model setting, the `--supervisor` and `--supervisor-thinking` flags of `rowbly factory configure`, the Supervisor prompt, the live supervisor view of the Factory modal and the supervisor model of the AI settings. `rowbly prompt get supervisor` and `rowbly prompt set supervisor` give a `VALIDATION` error, `rowbly init` no longer creates `.rowbly/prompts/SUPERVISOR.md`, and `rowbly doctor` shows a warning for an old `factory.supervisorModel` key (`--fix` removes it) and for an old `SUPERVISOR.md` file. (ROW-125)
+- Changed: The TUI page of the contributor documentation has a new Performance section. It gives the method to profile the TUI again, and the numbers before and after the performance changes, for example 1.0 s of CPU time in place of 6.6 s in a 12 s board session. (ROW-137)
 
 ### 0.19.0
 
