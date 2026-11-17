@@ -203,6 +203,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
 - `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
   [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
+- `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
+  `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
+  [native-factory/controls.md](native-factory/controls.md#cli-commands).
 - `host blob <sha256> [project-id]` is hidden. It does not show in `rowbly host --help`. The main
   machine runs it on a worker host to get the file of an `attachment.add` entry. With a project id,
   the command reads the outbox folder of the host agent of that Project. Without it, the command

@@ -8,7 +8,7 @@ import { getStory, getStoryDetails, listStoryRefs, type StoryRef, storyUidField 
 import { getThread } from "../thread/thread.js";
 import { toolParameters } from "../tool-schema/tool-schema.js";
 import { changeThread, getState, type Manager, notify, serial, setState } from "./manager-state.js";
-import { buildSnapshot, classifiedStages, persistStatus } from "./manager-status.js";
+import { buildSnapshot, persistStatus } from "./manager-status.js";
 import { type ReserveWorkerInput, reserveWorker } from "./worker-reservation.js";
 
 const MODEL_CHOICE_SCHEMA = z.object({
@@ -74,13 +74,6 @@ function readTools(manager: Manager) {
       parameters: toolParameters(z.object({ storyId: z.string() })),
       execute: async (_id: string, args: { storyId: string }) => textResult(await boundedStory(manager, args.storyId)),
     },
-    {
-      name: "stage_get",
-      label: "Read Stage",
-      description: "Read the prompt and its current hash",
-      parameters: toolParameters(z.object({ stage: z.string() })),
-      execute: async (_id: string, args: { stage: string }) => textResult(await readStage(manager, args.stage)),
-    },
   ];
 }
 
@@ -134,23 +127,9 @@ function workerTools(manager: Manager) {
   ];
 }
 
-/** Tools that classify Stages, and hold or release Stories. */
+/** Tools that hold or release Stories. */
 function policyTools(manager: Manager) {
   return [
-    {
-      name: "classify_stage",
-      label: "Classify Stage",
-      description: "Classify only the current prompt hash",
-      parameters: toolParameters(
-        z.object({
-          stage: z.string(),
-          promptHash: z.string(),
-          class: z.enum(["work", "hold", "invalid"]),
-        }),
-      ),
-      execute: async (_id: string, args: { stage: string; promptHash: string; class: string }) =>
-        textResult(await serial(manager, () => classifyStage(manager, args))),
-    },
     {
       name: "release_story",
       label: "Release Story",
@@ -222,39 +201,6 @@ async function inspectWorker(manager: Manager, args: { threadId: string; history
   const log = await getThreadLog(args.threadId, { tail: args.limit ?? 20 }, manager.ctx);
 
   return { thread, history: JSON.stringify(log).slice(0, 4096) };
-}
-
-async function readStage(manager: Manager, key: string) {
-  const stage = (await classifiedStages(manager)).find((s) => s.key === key);
-
-  if (!stage) {
-    return null;
-  }
-
-  return { ...stage, prompt: stage.prompt.slice(0, 8192), truncated: stage.prompt.length > 8192 };
-}
-
-async function classifyStage(manager: Manager, args: { stage: string; promptHash: string; class: string }) {
-  const stage = (await classifiedStages(manager)).find((s) => s.key === args.stage);
-
-  if (!stage?.enabled || stage.promptHash !== args.promptHash) {
-    throw new ConflictError("Stage prompt changed");
-  }
-
-  await updateFactoryState(
-    manager.paths.root,
-    (state) => ({
-      ...state,
-      prompts: {
-        ...((state.prompts as object) ?? {}),
-        [args.stage]: { hash: args.promptHash, class: args.class },
-      },
-    }),
-    manager.ctx,
-  );
-  notify(manager);
-
-  return { classified: args.stage };
 }
 
 /** The ID and the `uid` of the Story. A Story that cannot be read gives only the ID. */

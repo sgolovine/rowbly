@@ -1,11 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { checkQueueStatus } from "../check-queue/check-queue.js";
 import { evaluateScan, HOST_SYNC_REASON, storyHash } from "../factory-policy/factory-policy.js";
+import { stageClassOf } from "../factory-settings/stage-classes.js";
 import { selectWorkerModel, type WorkerSelection } from "../factory-settings/worker-overrides.js";
 import { readFactoryState } from "../factory-state/factory-state.js";
 import { writeFileAtomic } from "../files/files.js";
 import { runtimePath } from "../runtime-files/runtime-files.js";
-import { listStages, type Stage } from "../stage/stage.js";
+import { listStages } from "../stage/stage.js";
 import { type Story, searchStories } from "../story/story.js";
 import { promptHash } from "../supervisor-digest/supervisor-digest.js";
 import { listThreads } from "../thread/thread.js";
@@ -36,7 +37,6 @@ const PROVIDER_PAUSED_REASON = "provider paused";
 /** Policy reasons for Stories that wait for no worker. The status file leaves them out of its queue. */
 const QUIET_REASONS = new Set(["hold stage", "stage unavailable"]);
 
-type StoredPrompts = Record<string, { hash: string; class: string }>;
 type CancelledStories = Record<string, { stage: string; hash: string }>;
 type ScanResult = ReturnType<typeof evaluateScan>;
 type Decision = ScanResult["decisions"][number];
@@ -101,32 +101,15 @@ function storedCounts(value: unknown): [string, number][] {
   return entries.filter((entry): entry is [string, number] => Number.isSafeInteger(entry[1]) && entry[1] > 0);
 }
 
-function classifyPrompt(stage: Stage, prompts: StoredPrompts): string {
-  if (!stage.prompt.trim()) {
-    return "invalid";
-  }
-
-  if (["BACKLOG", "DONE"].includes(stage.key)) {
-    return "hold";
-  }
-
-  if (prompts[stage.key]?.hash === promptHash(stage.prompt)) {
-    return prompts[stage.key].class;
-  }
-
-  return "unclassified";
-}
-
-/** Lists the Stages with the hash and the stored class of each prompt. */
+/** Lists the Stages in board order with the hash and the class of each prompt. The class comes from the rule. */
 export async function classifiedStages(manager: Manager) {
-  const state = await readFactoryState(manager.paths.root, manager.ctx);
-  const prompts = (state.prompts ?? {}) as StoredPrompts;
   const stages = await listStages(manager.ctx);
+  const { stageClasses } = getState(manager).settings;
 
-  return stages.map((stage) => ({
+  return stages.map((stage, index) => ({
     ...stage,
     promptHash: promptHash(stage.prompt),
-    promptClass: classifyPrompt(stage, prompts),
+    promptClass: stageClassOf(stages, index, stageClasses),
   }));
 }
 
