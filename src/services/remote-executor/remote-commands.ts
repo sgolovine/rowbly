@@ -13,6 +13,7 @@ import { type CallTarget, type CommandType, isTransportError, newCommandId, subm
 import { failRun, type RunHooks, takeReceipt } from "./remote-run.js";
 import { takeOtherRun } from "./remote-sync.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
+import { catchUpRun } from "./session-mirror.js";
 
 /** Gives the target of the calls to a host. */
 export async function targetOf(env: RemoteEnv, host: string): Promise<CallTarget> {
@@ -30,6 +31,7 @@ export function hooksOf(env: RemoteEnv): RunHooks {
     sync: env.input.sync,
     stopHost: (run) => stopOnHost(env, run, "stop-thread"),
     otherRun: (host, frame) => takeOtherRun(env, host, frame),
+    catchUp: (run) => catchUpRun(env, run),
   };
 }
 

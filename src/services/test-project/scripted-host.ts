@@ -40,6 +40,8 @@ export interface ScriptedHostOptions {
    * unreachable error of the transport.
    */
   readonly loseAnswer?: (command: ScriptedCommand, host: ScriptedHost) => boolean;
+  /** Answers each bytes call, for example `session-bytes`. The default is no bytes. */
+  readonly bytes?: (command: RemoteCommand, input: unknown) => BytesResult | Promise<BytesResult>;
 }
 
 export interface ScriptedHost {
@@ -176,6 +178,10 @@ function acknowledge(scripted: Scripted, input: unknown): RequestResult {
   return ok({ removed: outbox.length - kept.length, blobs: [] });
 }
 
+function noBytes(): BytesResult {
+  return { exitCode: 0, bytes: Buffer.alloc(0), stderr: "" };
+}
+
 function blobAnswer(scripted: Scripted, command: RemoteCommand): BytesResult {
   const bytes = scripted.state.current.blobs.get(command[3] ?? "");
 
@@ -240,7 +246,8 @@ export function createScriptedHost(options: ScriptedHostOptions = {}): ScriptedH
   };
   const transport = createFakeHostTransport({
     request: (command, input) => answer(scripted, command, input),
-    bytes: (command) => blobAnswer(scripted, command),
+    bytes: (command, input) =>
+      command[2] === "blob" ? blobAnswer(scripted, command) : (options.bytes?.(command, input) ?? noBytes()),
     channel: (_command, remote) => openChannel(scripted, remote),
   });
   const host: ScriptedHost = {

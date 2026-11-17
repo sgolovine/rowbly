@@ -10,7 +10,7 @@ import { useTestProject } from "../test-project/test-project.js";
 import { ensureLink } from "./remote-channel.js";
 import type { RemoteEnv, RemoteState } from "./remote-types.js";
 
-const hooks = { sync: async () => undefined, stopHost: async () => undefined };
+const hooks = { sync: async () => undefined, stopHost: async () => undefined, catchUp: async () => undefined };
 
 describe("remote attachment requests", () => {
   const project = useTestProject();
@@ -33,6 +33,7 @@ describe("remote attachment requests", () => {
         queueChain: Promise.resolve(),
         reconnects: new Map(),
         outcomes: new Map(),
+        mirrors: new Map(),
       }),
     };
     await ensureLink(env, "mini", { transport, rowbly: "/r/rowbly", clone: "repo" }, hooks);

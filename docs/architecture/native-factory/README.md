@@ -129,6 +129,10 @@ from `factory-manager/host-slots.ts`. These modules do no I/O.
   worker hosts, it is the worker limit.
 - **Status.** `factory_snapshot`, `status.json` and the supervisor digest have a `hosts` list with the
   slots of each host. The digest shows a maximum of 12 hosts.
+- **Contact facts.** In `factory_snapshot` and `status.json`, the entry of a worker host also has
+  `lastSeenAt` (ISO text) and `latencyMs` from the heartbeat facts, when the heartbeat has them. The
+  `state` is the heartbeat state or `not-ready`. `local` has no `lastSeenAt` and no `latencyMs`. The
+  digest does not have these two fields, because they change at each heartbeat.
 
 The function applies these rules in this order:
 
@@ -255,7 +259,7 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
 - **Events.** The executor maps the fields of each `run` frame to the events of the manager:
   `worktree` to `worktreeReady`, `session` to `sessionOpened`, `activity` to `activity` and `result`
   to `resultReported`. A frame that repeats a value sends no event. The end has these events:
-  1. The outbox sync of the host.
+  1. The outbox sync of the host, then the catch-up of the session mirror.
   2. `completed` for the end reasons `completed`, `stopped` and `cancelled`, or `failed` with the code
      and the message of the host. The Thread error keeps the code of the host.
   3. `finished` with the final usage, when the session opened.
@@ -284,6 +288,42 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
   `runtime/hosts/<host>/threads/<thread-id>/base.json`: `{ version, threadId, host, sentAt, files,
   attachments }`. The file has mode 0600, and its folders have mode 0700. ROW-98 uses it for the
   inbound updates.
+- **Session mirror.** The main machine keeps a copy of the session file of each remote Thread. See
+  [Session mirror](#session-mirror).
+
+## Session mirror
+
+The main machine keeps a byte-exact copy of the complete lines of the session file of each remote
+Thread (`remote-executor/session-mirror.ts`). See the Spec `remote-worker-hosts`, section "Session
+mirror".
+
+- **Path.** The mirror path is the `session.file` value of the Thread
+  (`sessions/<thread-id>/<name>.jsonl`), below the local runtime folder. Thus the `conversation/`
+  service, `rowbly thread log`, `inspect_worker` and Peek read the mirror as a local session file. They
+  work also while the host is offline, with the lines that arrived before the cut.
+- **Live lines.** The channel gives each `session` frame to the mirror of its Thread, but only when the
+  Thread is an active run of the same host. The pure function `frameStep(size, frame)` compares the
+  frame with the size of the mirror file:
+  - When `end` is at or before the mirror end, the mirror skips the frame. Thus a line that arrives two
+    times is in the mirror one time.
+  - When the frame starts at or before the mirror end, the mirror adds only the bytes after the mirror
+    end. The lines are UTF-8, each with a newline. The offsets are byte offsets.
+  - When the frame starts after the mirror end, or it is a gap frame of a long line (`lines: []`), the
+    mirror does a catch-up first. Then it applies the frame again. When the catch-up fails, the mirror
+    drops the frame. The mirror never has a gap.
+- **Catch-up.** The mirror reads the bytes after its end from the host with
+  `rowbly host session-bytes`, one window at a time, until the answer is empty (see
+  [host-agent.md](host-agent.md#session-bytes)). The executor does a catch-up for a gap, after a
+  reconnect for each open run with a session, and before the end event of a run. Thus the last lines
+  of a run are in the mirror when the Thread completes. A catch-up failure does not stop the reconnect,
+  the outbox sync or the end of the run. A later catch-up adds the bytes.
+- **One write at a time.** The executor keeps one chain of writes for each Thread (`mirrors` in the
+  state of the executor). Thus a live frame and a catch-up never write at the same time.
+- **Files.** The mirror files have mode 0600, and their folders have mode 0700. The mirror appends to
+  the file. It does not write a full copy for each frame. A mirror write takes no Project write lock
+  and no state lock. A new session file of the Thread gets a new mirror file, and the old file stays.
+  The mirror files stay after the Thread ends.
+- **Pi.** The mirror and `host session-bytes` do not load Pi.
 
 ## Disconnects and reconnects
 
@@ -313,6 +353,13 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   manager state. The state that the manager uses is the state of `workerHosts` when it is not
   `connected`, else the heartbeat state. Before the first heartbeat, it is the state of `workerHosts`.
   `workerHosts` can also give `not-ready`. Only a `connected` host gets new work.
+- **Attention.** When the heartbeat gives a worker host the state `disconnected`, `version-mismatch`
+  or `auth-failed`, the manager sets the attention entry `host:<id>`. The text gives the host, the
+  state and the last contact time, or `never`. When the heartbeat gives the host `connected` or
+  `degraded` again, the manager removes the entry. The 5-second status timer writes the change to
+  `status.json`. An old `host:<id>` entry of a previous daemon goes away at the first good heartbeat.
+- **Connection lost.** `rowbly thread list`, `rowbly thread show` and `rowbly status` show the remote
+  Threads whose host is not `connected` or `degraded`. See [cli.md](../cli.md#connection-lost).
 - **No failure on a disconnect.** A disconnect does not change the status of a remote Thread. The
   launch waits, and the Story keeps the reason `waiting for host sync`.
 - **Cut during the launch.** A transport error before the `launch` or `resume` command has a request
@@ -337,7 +384,9 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   2. It opens the `host attach` channel again for the active runs and the abandoned Threads. The host
      sends the status, each receipt and the run state of each Thread again. The run state stays across
      channels, so a value that was sent before sends no event.
-  3. It applies the outbox of the host with `syncHosts`.
+  3. It reads the session lines that the host wrote while it was offline, for each open run with a
+     session (see [Session mirror](#session-mirror)). A failure does not stop the next step.
+  4. It applies the outbox of the host with `syncHosts`.
 
   Thus a run that ended on the host while it was offline completes one time.
 - **Factory stop.** `stopFactory` calls `shutdown` of the remote executor before it waits for the

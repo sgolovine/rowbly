@@ -19,7 +19,7 @@ const runner: HostWorkRunner = {
   },
 };
 
-const hooks = { sync: async () => undefined, stopHost: async () => undefined };
+const hooks = { sync: async () => undefined, stopHost: async () => undefined, catchUp: async () => undefined };
 
 describe("getAttachment", () => {
   const main = useTestProject();
@@ -112,6 +112,7 @@ describe("getAttachment", () => {
           queueChain: Promise.resolve(),
           reconnects: new Map(),
           outcomes: new Map(),
+          mirrors: new Map(),
         }),
       };
       await ensureLink(env, "mini", { transport: agent.transport, rowbly: "/r/rowbly", clone: "repo" }, hooks);

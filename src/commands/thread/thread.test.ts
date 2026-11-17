@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { processCommands } from "../../services/factory-control/factory-control.js";
 import { acquireFactoryOwnership, newOwner } from "../../services/factory-ownership/factory-ownership.js";
-import { prepareRuntime } from "../../services/runtime-files/runtime-files.js";
+import { prepareRuntime, runtimePath } from "../../services/runtime-files/runtime-files.js";
 import { useTestProject } from "../../services/test-project/test-project.js";
 import { createThread, transitionThread } from "../../services/thread/thread.js";
 import { runCli } from "../test-cli/test-cli.js";
@@ -35,6 +35,56 @@ describe("thread", () => {
     expect(JSON.parse(shown.stdout).host).toBe("local");
     const text = await runCli(["thread", "list"], p.paths.root);
     expect(text.stdout).toContain(`${worker.id}  ROW-1 DEVELOP pending  unresolved  local`);
+  });
+  it("shows the lost connection of a remote Thread from the hosts of the factory status", async () => {
+    const seen = new Date(Date.now() - 100_000).toISOString();
+    const remote = await createThread(
+      { role: "worker", storyId: "ROW-1", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test", host: "mini" },
+      p.ctx,
+    );
+    await transitionThread(remote.id, { expectedRevision: remote.revision, status: "running" }, p.ctx);
+    const blind = await createThread(
+      { role: "worker", storyId: "ROW-2", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test", host: "auth" },
+      p.ctx,
+    );
+    const local = await createThread(
+      { role: "worker", storyId: "ROW-3", stage: "DEVELOP", cwd: p.paths.root, ownerToken: "test" },
+      p.ctx,
+    );
+    await prepareRuntime(p.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(p.paths, owner);
+    const hosts = [
+      { id: "local", state: "connected", max: 1, used: 1, free: 0 },
+      { id: "mini", state: "disconnected", max: 1, used: 1, free: 0, lastSeenAt: seen, latencyMs: 20 },
+      { id: "auth", state: "auth-failed", max: 1, used: 0, free: 1 },
+    ];
+    const status = { version: 1, phase: "ready", owner, heartbeatAt: new Date().toISOString(), hosts };
+    await writeFile(await runtimePath(p.paths, "status.json"), JSON.stringify(status));
+
+    const text = (await runCli(["thread", "list"], p.paths.root)).stdout.split("\n");
+    expect(text.find((line) => line.startsWith(remote.id))).toMatch(
+      /ROW-1 DEVELOP running {2}unresolved {2}mini {2}connection lost \(last contact 1m4\ds ago\)$/,
+    );
+    expect(text.find((line) => line.startsWith(blind.id))).toMatch(/auth {2}connection lost \(no contact\)$/);
+    expect(text.find((line) => line.startsWith(local.id))).toMatch(/local$/);
+
+    const json = JSON.parse((await runCli(["thread", "list", "--json"], p.paths.root)).stdout);
+    const byId = (id: string) => json.threads.find((t: { id: string }) => t.id === id);
+    expect(byId(remote.id).connection).toEqual({
+      state: "lost",
+      host: "mini",
+      hostState: "disconnected",
+      lastSeenAt: seen,
+    });
+    expect(byId(blind.id).connection).toEqual({ state: "lost", host: "auth", hostState: "auth-failed" });
+    expect(byId(local.id)).not.toHaveProperty("connection");
+
+    const shown = JSON.parse((await runCli(["thread", "show", remote.id, "--json"], p.paths.root)).stdout);
+    expect(shown.connection).toEqual({ state: "lost", host: "mini", hostState: "disconnected", lastSeenAt: seen });
+    expect((await runCli(["thread", "show", remote.id], p.paths.root)).stdout).toContain('"state": "lost"');
+    const localShown = JSON.parse((await runCli(["thread", "show", local.id, "--json"], p.paths.root)).stdout);
+    expect(localShown).not.toHaveProperty("connection");
   });
   it("prints a bounded active-branch tail and rejects excessive limits", async () => {
     const t = await createThread({ role: "supervisor", cwd: p.paths.root, ownerToken: "test" }, p.ctx);

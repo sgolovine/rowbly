@@ -117,6 +117,8 @@ export interface RemoteState {
   readonly reconnects: ReadonlyMap<string, Promise<string | undefined>>;
   /** The last run frame of each abandoned Thread, until the outbox sync of its host. The key is the Thread id. */
   readonly outcomes: ReadonlyMap<string, { readonly host: string; readonly frame: HostRunState }>;
+  /** The last write of the session mirror of each Thread. The writes of one Thread run one at a time. */
+  readonly mirrors: ReadonlyMap<string, Promise<void>>;
 }
 
 /** The fixed environment of the remote executor, and the store of its runs and channels. */

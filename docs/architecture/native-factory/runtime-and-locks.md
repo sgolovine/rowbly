@@ -24,7 +24,7 @@ take or change a lock.
     control/<id>.json # immutable stop, cancel, resume or dismiss request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
-    sessions/<id>/<pi-name>.jsonl # native Pi history; file reference starts as null
+    sessions/<id>/<pi-name>.jsonl # native Pi history, or the session mirror of a remote Thread; file reference starts as null
     bin/rowbly        # exact-version CLI shim for workers
     logs/<id>.jsonl   # operational logs; no transcript bodies
     checks/jobs.json  # the records of the last 500 check jobs, with process group and start ticks
@@ -58,7 +58,10 @@ take or change a lock.
   The Thread file has the `abandoned` note: `{ at, reason, appliedSeq }`. See
   [README.md](README.md#abandoned-threads).
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
-  `id`, `state`, `max`, `used` and `free`. See [README.md](README.md#placement).
+  `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
+  `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is
+  `disconnected`, `version-mismatch` or `auth-failed`, the `attention` list has the entry `host:<id>`.
+  See [README.md](README.md#placement) and [README.md](README.md#disconnects-and-reconnects).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
   priority over the `start_worker` model and `workerModel`. See

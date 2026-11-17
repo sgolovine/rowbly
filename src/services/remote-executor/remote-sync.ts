@@ -4,6 +4,7 @@ import type { HostRunState } from "../host-agent/host-run-state.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { abandonedOf, abandonedSyncHosts, flushOutcomes, hasAbandonedWork, keepOutcome } from "./remote-abandoned.js";
 import { hostRuns } from "./remote-channel.js";
+import { hooksOf } from "./remote-commands.js";
 import { endSyncedRuns, waitsForSync } from "./remote-run.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
 import { hasEnded } from "./run-frames.js";
@@ -42,7 +43,7 @@ export async function syncHost(env: RemoteEnv, host: string): Promise<[string, s
     return [host, problemText(error)];
   }
 
-  await endSyncedRuns(waiting);
+  await endSyncedRuns(waiting, hooksOf(env));
   await flushOutcomes(env, host);
 
   return [host, undefined];

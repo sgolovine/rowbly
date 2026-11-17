@@ -7,6 +7,7 @@ import { Store, withEntry, withoutEntry } from "../store/store.js";
 import { takeAttachmentRequest } from "./remote-attachment.js";
 import { type RunHooks, takeReceipt, takeRunFrame } from "./remote-run.js";
 import type { HostConnection, HostLink, RemoteEnv, RemoteRun } from "./remote-types.js";
+import { isSessionFrame, takeSessionFrame } from "./session-mirror.js";
 
 /** A frame of the channel after the hello frame. */
 interface ChannelFrame {
@@ -46,15 +47,34 @@ function dispatchRunFrame(env: RemoteEnv, host: string, hooks: RunHooks, frame: 
   hooks.otherRun?.(host, frame);
 }
 
+/** Gives a `session` frame to the mirror of its Thread, when the Thread is an active run of the host. */
+function dispatchSessionFrame(env: RemoteEnv, host: string, value: unknown): void {
+  if (!isSessionFrame(value)) {
+    return;
+  }
+
+  const run = env.state.current.runs.get(value.threadId);
+
+  if (run?.host === host) {
+    void takeSessionFrame(env, host, value);
+  }
+}
+
 /**
- * Gives each frame to the run of its Thread or of its command, or to the attachment handler. A frame of a different
- * Thread is ignored.
+ * Gives each frame to the run of its Thread or of its command, to the session mirror, or to the attachment handler. A
+ * frame of a different Thread is ignored.
  */
 function dispatchFrame(env: RemoteEnv, host: string, hooks: RunHooks, value: unknown): void {
   const frame = (value ?? {}) as ChannelFrame;
 
   if (frame.type === "attachment-request") {
     dispatchAttachmentRequest(env, host, value);
+
+    return;
+  }
+
+  if (frame.type === "session") {
+    dispatchSessionFrame(env, host, value);
 
     return;
   }
