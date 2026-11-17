@@ -46,3 +46,4 @@ export * from "./toast-area/index.js";
 export * from "./use-full-screen-conversation.js";
 export * from "./use-full-screen-editor.js";
 export * from "./use-modal-layers.js";
+export * from "./virtual-list/index.js";
