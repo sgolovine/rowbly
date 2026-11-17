@@ -42,7 +42,7 @@ test.
 | `auth/`, `auth-wizard/`                                | `auth providers`, `status`, `login`, `logout`, and the interactive login prompt.                |
 | `model/`                                               | `model list`.                                                                                   |
 | `factory/`, `factory-runner/`                          | `factory` commands, and the foreground adapter that runs the daemon.                            |
-| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `resume`, `held`.                                       |
+| `thread/`                                              | `thread list`, `show`, `log`, `cancel`, `release`, `resume`, `held`.                            |
 | `host/`                                                | `host add`, `check`, `login`, `list`, `update`, `remove`, `use`, `unuse`, hidden commands.      |
 
 The native commands are in [native-factory/controls.md](native-factory/controls.md).
@@ -269,6 +269,22 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   - Text that is not a JSON object, a value that is not a whole number of 0 or more, or a missing
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.
     See [storage.md](storage.md#apply-on-the-main-machine).
+
+### Release a remote Thread
+
+`rowbly thread release <id>` releases a worker that runs on a worker host. The command sends the
+factory command `release` with `sendFactoryCommand`, as `rowbly thread cancel <id>` sends `cancel`.
+The command needs a running factory. `--json` gives the receipt of the command.
+
+- The manager action is `releaseWorker` in `src/services/factory-manager/worker-reservation.ts`. It
+  does the same run checks as a cancel: `Worker run changed` and `Worker is not active`.
+- A release stops the worker as a cancel. The Thread becomes `cancelled`, and the host gets
+  `cancel-thread`.
+- A release does not hold the Story for the user. The scan does not give `cancelled by user`. Thus the
+  policy can start a new worker for the Story.
+- When the host is offline, the Thread becomes abandoned with the reason `release`, and the Story does
+  not wait for that host. See [native-factory/README.md](native-factory/README.md#abandoned-threads).
+- A Thread on the main machine (`host` is `local`) gives a `CONFLICT` error.
 
 ### Held entries
 

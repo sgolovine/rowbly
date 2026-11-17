@@ -22,9 +22,9 @@ export interface FactoryCommand {
 }
 
 /** The kinds of request that the daemon runs. */
-export type FactoryCommandType = "stop" | "cancel" | "resume" | "dismiss" | "steer";
+export type FactoryCommandType = "stop" | "cancel" | "release" | "resume" | "dismiss" | "steer";
 
-const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "resume", "dismiss", "steer"];
+const COMMAND_TYPES: readonly string[] = ["stop", "cancel", "release", "resume", "dismiss", "steer"];
 
 /** The maximum number of characters in a steering message, after trim. */
 const STEER_MESSAGE_LIMIT = 4000;
