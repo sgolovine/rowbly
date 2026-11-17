@@ -208,6 +208,11 @@ and `host unuse` need a Project. The `host-project` service does their work. See
 - `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
   `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
   [native-factory/controls.md](native-factory/controls.md#cli-commands).
+- `rowbly factory release <story-id>` releases a parked Story in the live factory. It sends the
+  control command `release-story` to the daemon and waits for the receipt. A Story that is not parked gives
+  a success with no change. Without a live daemon, it gives `CONFLICT` with the text
+  `Factory is not running`. With `--json`, it prints the receipt with `storyId`. See
+  [native-factory/controls.md](native-factory/controls.md#the-release-command).
 - `rowbly factory status --json` has a `hosts` list with the state and the slots of each machine.
   See [native-factory/README.md](native-factory/README.md#placement) and
   [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md#factory-files-in-rowbly).

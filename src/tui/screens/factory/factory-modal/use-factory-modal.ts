@@ -156,10 +156,10 @@ function factoryActions(
 
 /**
  * All Threads of the Project, the oldest first: the supervisors for the history, and the Threads of the
- * warnings. They are read again when the phase or the supervisor changes, and on each Thread change.
+ * warnings. They are read again when the phase changes, and on each Thread change.
  */
 function useProjectThreads(ctx: ServiceContext, status: FactoryStatus | undefined): readonly ThreadRecord[] {
-  const threads = useAsync(() => listThreads({}, ctx), [ctx, status?.phase, status?.supervisorThreadId]);
+  const threads = useAsync(() => listThreads({}, ctx), [ctx, status?.phase]);
   const refresh = threads.refresh;
 
   useEffect(() => {
@@ -175,10 +175,10 @@ function useProjectThreads(ctx: ServiceContext, status: FactoryStatus | undefine
   return threads.data?.threads ?? [];
 }
 
-/** The supervisor Threads, and the supervisor that the person selected, or the current or the last one. */
-function supervisorOf(all: readonly ThreadRecord[], selectedId: string | undefined, status: FactoryStatus | undefined) {
+/** The old supervisor Threads, and the supervisor that the person selected, or the last one. */
+function supervisorOf(all: readonly ThreadRecord[], selectedId: string | undefined) {
   const threads = all.filter((thread) => thread.role === "supervisor");
-  const supervisorId = selectedId ?? status?.supervisorThreadId ?? threads.at(-1)?.id;
+  const supervisorId = selectedId ?? threads.at(-1)?.id;
 
   return { threads, supervisorId, supervisor: threads.find((thread) => thread.id === supervisorId) };
 }
@@ -209,7 +209,7 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
   const [provider, setProvider] = useState<boolean>();
 
   const live = factoryLive(status);
-  const { threads, supervisorId, supervisor } = supervisorOf(allThreads, selectedId, status);
+  const { threads, supervisorId, supervisor } = supervisorOf(allThreads, selectedId);
   const inspecting = inspect && supervisorId !== undefined;
   const attention = useFactoryAttention({
     ...input,

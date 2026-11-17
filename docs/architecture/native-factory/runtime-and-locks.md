@@ -17,11 +17,11 @@ take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts
   runtime/            # private, ignored; directories use mode 0700
     factory.lock      # daemon owner: token, PID, host, start time and Linux process identity
     lifecycle.guard   # short exclusive gate for ownership changes
-    status.json       # heartbeat, workers, queue, holds, provider pauses, connectivity, attention and checks
+    status.json       # heartbeat, workers, queue, provider pauses, connectivity, attention and checks
     watchdog.json     # watchdog phase, process identity, crashes in a row, last crash, last exit and last log
     watchdog.lock     # watchdog claim: the identity of the one watchdog that can start a daemon
     watchdog.guard    # short exclusive gate for changes of the watchdog claim
-    control/<id>.json # immutable stop, cancel, resume or dismiss request
+    control/<id>.json # immutable stop, cancel, resume, dismiss, steer or release request
     receipts/<id>.json # accepted, completed or rejected command result
     threads/<id>.json # small Thread metadata, with runs and exact session reference
     sessions/<id>/<pi-name>.jsonl # native Pi history, or the session mirror of a remote Thread; file reference starts as null
@@ -67,6 +67,13 @@ take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts
   occur only under the Project write lock, never under the state lock. The folders have mode 0700.
   The Thread file has the `abandoned` note: `{ at, reason, appliedSeq }`. See
   [README.md](README.md#abandoned-threads).
+- `status.json` has no supervisor fields. It has no `supervisorThreadId`, `holds`,
+  `deliveredReportIds`, `lastDigestHash`, `unanswered` or `nextWakeAt`. When the manager starts, it reads
+  only `attention`, `providers` and `networkFailures` from the old file. Thus an old file with the
+  supervisor fields does not fail the start, and the fields have no effect.
+- `state.json` can have keys of an old supervisor: `notes`, `parked[*].reported` and the attempt flags
+  `reported` and `startReported`. The validator of `factory-state/state-file.ts` keeps them, and the
+  manager does not use them.
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
   `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
   `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is
@@ -74,7 +81,7 @@ take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts
   See [README.md](README.md#placement) and [README.md](README.md#disconnects-and-reconnects).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
-  priority over the `start_worker` model and `workerModel`. See
+  priority over `workerModel`. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#worker-model-overrides).
 
 ## Git and the runtime files
@@ -122,7 +129,7 @@ The native factory can pull the upstream branch and push the canonical branch at
   `skipped`. Else it runs `git push`. It never uses force.
 - The sync does not rebase, stash or change uncommitted files. It does not sync worker worktrees or
   Story branches. The `.gitignore` rules keep `state.json*` and `runtime/` out of the merge.
-- The supervisor loop starts a sync after the canonical commit of a scan. The first sync runs at the
+- The factory loop starts a sync after the canonical commit of a scan. The first sync runs at the
   first scan after start. The next sync runs at the first scan after `syncIntervalSeconds`. The loop
   reads the interval again at each scan. A scan occurs at least each 30 seconds.
 - Only one sync runs at a time. The sync runs outside the serial queue, so a slow network does not
