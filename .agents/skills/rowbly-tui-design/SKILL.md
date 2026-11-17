@@ -64,6 +64,7 @@ The library also contains other code that has no guideline of its own:
 | --- | --- |
 | `SelectList` | A list for the keyboard and the mouse: `↑/↓`/`j/k`, `/` filter, single or multi select. Its rows are `SelectListRow`. |
 | `SelectionRow` | The `▌` bar and the `selection` fill of a highlighted row. Use them for lists that you lay out yourself. |
+| `ColumnRow`, `subtleColor` | A `SelectionRow` with cells side by side. A cell with a `width` keeps its width. The last cell has no `width`, so that it can shrink and truncate. `subtleColor` is the colour of a secondary cell: `ink-muted` when selected, else `ink-faint`. |
 | `TextInput`, `TextArea` | Text fields for one line and for many lines, with a caret and paste. `TextArea` also opens full screen with `ctrl+f`. |
 | `FullScreenEditor`, `useFullScreenEditor` | Markdown text on the full terminal, with View and Edit modes and an optional save. |
 | `FullScreenConversation`, `useFullScreenConversation` | The read-only conversation of one Thread on the full terminal. `ctrl+f`, `esc` and the `✕` close it. |
