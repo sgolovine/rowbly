@@ -1,21 +1,9 @@
-import { Box, type Key, Text, useInput } from "ink";
-import {
-  type Dispatch,
-  type ReactNode,
-  type RefObject,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useId,
-  useState,
-} from "react";
-import { useKeyCapture, useLatest, useMainOverlay } from "../../hooks/index.js";
-import type { KeyHint } from "../../keymap.js";
+import { Box, type Key, Text } from "ink";
+import { type Dispatch, type RefObject, type SetStateAction, useState } from "react";
+import { useLatest } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import type { FormField } from "../form/index.js";
-import { Modal } from "../modal/index.js";
-import { LayerWrapContext } from "../modal-layer.js";
-import { SearchableSelectPicker } from "../searchable-select-picker/index.js";
+import { usePickerField } from "../searchable-select-picker/index.js";
 import { AddOptionButton } from "./add-option-button.js";
 import { MultiSelectItem } from "./multi-select-item.js";
 
@@ -29,32 +17,17 @@ interface SearchableMultiSelectProps {
   onChange(value: string[]): void;
 }
 
-/** What the keys, the clicks and the picker use: the field, its value, the cursor and the setters. */
+/** What the keys and the clicks use: the value, the cursor and the setters. */
 interface MultiSelectEnv {
-  readonly field: FormField;
   readonly value: readonly string[];
   readonly cursor: number;
   readonly setCursor: Dispatch<SetStateAction<number>>;
-  readonly wrap: (node: ReactNode) => ReactNode;
-  readonly setPicker: Dispatch<SetStateAction<ReactNode>>;
   readonly report: RefObject<(value: string[]) => void>;
 }
-
-const PICKER_HINTS: readonly KeyHint[] = [
-  { key: "enter", description: "add" },
-  { key: "↑/↓", description: "select" },
-  { key: "ctrl+l", description: "clear query" },
-  { key: "esc", description: "cancel" },
-];
 
 /** The options that the picker shows: the options of the field that are not chosen. */
 function pickerOptions(field: FormField, value: readonly string[]): string[] {
   return (field.options ?? []).filter((option) => !value.includes(option));
-}
-
-function addOption(env: MultiSelectEnv, option: string): void {
-  env.report.current([...env.value, option]);
-  env.setPicker(null);
 }
 
 function removeOption(env: MultiSelectEnv, option: string | undefined): void {
@@ -66,47 +39,8 @@ function removeOption(env: MultiSelectEnv, option: string | undefined): void {
   env.setCursor((cursor) => Math.max(0, Math.min(cursor, env.value.length - 2)));
 }
 
-/** Opens the picker with `query` as its first query. */
-function openPicker(env: MultiSelectEnv, query: string): void {
-  const { field, setPicker } = env;
-
-  setPicker(
-    env.wrap(
-      <Modal title={`Add ${field.label}`} onClose={() => setPicker(null)} hints={PICKER_HINTS}>
-        <SearchableSelectPicker
-          options={pickerOptions(field, env.value)}
-          labels={field.optionLabels}
-          searchText={field.optionSearchText}
-          initialQuery={query}
-          value={null}
-          hideSelected
-          onSelect={(option) => addOption(env, option)}
-          onCancel={() => setPicker(null)}
-        />
-      </Modal>,
-    ),
-  );
-}
-
-/** A key that types text into the query, not a key that moves or edits. */
-function isQueryText(input: string, key: Key): boolean {
-  const moves = key.upArrow || key.downArrow || key.leftArrow || key.rightArrow;
-
-  return Boolean(input) && !key.escape && !key.tab && !moves && !key.backspace && !key.delete;
-}
-
-/** `enter` opens the picker, typed text opens it with a query, `←/→` move and `backspace` removes. */
-function multiSelectKey(env: MultiSelectEnv, input: string, key: Key): void {
-  if (key.ctrl || key.meta) {
-    return;
-  }
-
-  if (key.return) {
-    openPicker(env, "");
-
-    return;
-  }
-
+/** `←/→` move the cursor and `backspace` removes the chosen option. The picker field handles the other keys. */
+function multiSelectKey(env: MultiSelectEnv, key: Key): void {
   if (key.backspace || key.delete) {
     removeOption(env, env.value[env.cursor]);
 
@@ -115,12 +49,6 @@ function multiSelectKey(env: MultiSelectEnv, input: string, key: Key): void {
 
   if (key.leftArrow || key.rightArrow) {
     env.setCursor((cursor) => Math.max(0, Math.min(env.value.length - 1, cursor + (key.rightArrow ? 1 : -1))));
-
-    return;
-  }
-
-  if (isQueryText(input, key)) {
-    openPicker(env, input);
   }
 }
 
@@ -130,28 +58,22 @@ function multiSelectKey(env: MultiSelectEnv, input: string, key: Key): void {
  * option, and a click on `+ add` opens the picker.
  */
 export function SearchableMultiSelect({ field, value, focused, clickable, onChange }: SearchableMultiSelectProps) {
-  const overlay = useMainOverlay();
-  const wrap = useContext(LayerWrapContext);
-  const id = useId();
-  const [picker, setPicker] = useState<ReactNode>(null);
   const [cursor, setCursor] = useState(0);
   const report = useLatest(onChange);
 
   const selected = Math.min(cursor, Math.max(0, value.length - 1));
-  const env: MultiSelectEnv = { field, value, cursor: selected, setCursor, wrap, setPicker, report };
-
-  // A picker opened from a short task needs the terminal's room, not that task's clipped body.
-  useEffect(() => {
-    if (!picker || !overlay) {
-      return;
-    }
-
-    overlay.open(id, picker);
-
-    return () => overlay.close(id);
-  }, [picker, overlay, id]);
-  useKeyCapture(focused && !picker);
-  useInput((input, key) => multiSelectKey(env, input, key), { isActive: focused && !picker });
+  const env: MultiSelectEnv = { value, cursor: selected, setCursor, report };
+  const { picker, inline, open } = usePickerField({
+    field,
+    options: pickerOptions(field, value),
+    value: null,
+    title: `Add ${field.label}`,
+    verb: "add",
+    hideSelected: true,
+    focused,
+    onPick: (option) => onChange([...value, option]),
+    onOtherKey: (_input, key) => multiSelectKey(env, key),
+  });
 
   return (
     <Box flexDirection="column" flexGrow={1}>
@@ -165,8 +87,8 @@ export function SearchableMultiSelect({ field, value, focused, clickable, onChan
           onRemove={() => removeOption(env, option)}
         />
       ))}
-      <AddOptionButton clickable={clickable && !picker} onClick={() => openPicker(env, "")} />
-      {!overlay && picker}
+      <AddOptionButton clickable={clickable && !picker} onClick={() => open("")} />
+      {inline}
     </Box>
   );
 }
