@@ -3,7 +3,7 @@ export { adoptThreadRun, appendThreadRun, createThread, transitionThread } from 
 export { getThread, threadReference } from "./thread-files.js";
 export { groupThreads, type ThreadGroups } from "./thread-groups.js";
 export { listThreads } from "./thread-list.js";
-export { projectNativeAttempt } from "./thread-projection.js";
+export { projectAttempts, projectNativeAttempt } from "./thread-projection.js";
 export {
   type AbandonReason,
   isAbandoned,
