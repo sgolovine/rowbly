@@ -152,6 +152,17 @@ describe("foreground factory", () => {
     );
     return { supervisor, worker, shim, manager };
   }
+  /**
+   * Waits until no worker runs and each host slot is free. A Thread can be final before the executor releases its slot,
+   * so a check of only the Thread status races with the next reservation.
+   */
+  async function idle(target: FactoryManager) {
+    await vi.waitFor(async () => {
+      const snapshot = await target.snapshot();
+      expect(snapshot.workers.running).toBe(0);
+      expect(snapshot.hosts.every((host) => host.used === 0)).toBe(true);
+    });
+  }
   async function settled() {
     await vi.waitFor(
       async () => {
@@ -393,7 +404,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "simulated" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "first" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     await f.manager.reconcile();
     f.worker.setResponses([
       tool("report_result", { outcome: "complete", summary: "Resumed", blockers: [], problems: [] }),
@@ -834,7 +845,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
     await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
       "paused",
@@ -864,7 +875,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect((await f.manager.snapshot()).providers.worker?.reason).toBe("quota");
     expect(previous?.model).toEqual({ provider: "worker", modelId: "faux-1" });
 
@@ -897,7 +908,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "429 usage limit" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "quota" });
     await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     await expect(f.manager.reserveWorker({ storyId: other.id, stage: "WORK", requestId: "paused" })).rejects.toThrow(
       "Worker provider is paused",
     );
@@ -913,7 +924,7 @@ describe("foreground factory", () => {
     f.worker.setResponses([fauxAssistantMessage("", { stopReason: "error", errorMessage: "fetch failed" })]);
     await f.manager.reserveWorker({ storyId: story.id, stage: "WORK", requestId: "offline" });
     const previous = await settled();
-    await vi.waitFor(async () => expect((await f.manager.snapshot()).workers.running).toBe(0));
+    await idle(f.manager);
     expect(previous?.status).toBe("failed");
     expect(previous?.resumable).toBe(true);
     expect(previous?.error).toMatchObject({ class: "transient", code: "NETWORK", message: "fetch failed" });
