@@ -1,13 +1,13 @@
 ---
 title: Send board changes to running remote Threads
-stage: CHANGELOG
+stage: IN_DEVELOPMENT
 position: 17
 uid: 5e3e621e-900b-402f-bc40-4ac20d145759
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:11.252Z
-updatedAt: 2026-11-17T00:18:09.050Z
+updatedAt: 2026-11-17T00:19:04.986Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-98
 pull_request: https://github.com/sgolovine/rowbly/pull/299
 ---
@@ -91,3 +91,14 @@ Not in scope:
 - All non-Story text files of the copy (config, Stage prompts, user prompts, Specs, `.gitignore`) are replaced as full files. Reason: the copy contains them, and one rule for each file is smaller than a rule for each file type.
 - The file of a new attachment goes to the host only for the Story of the Thread and its upstream Stories. Reason: `buildThreadCopy` uses the same rule, and the worker can fetch other files on demand.
 - The host apply holds the Thread `flock` file of the worker command prefix. Reason: each worker write holds the same file, so the two cannot change the copy at the same time.
+
+## Review findings
+
+- The merge of `origin/main` (d6b2ea8f) into `story/ROW-98` has conflicts in these files. Merge `origin/main`, repair the conflicts, run the checks and push the branch:
+  - `docs/architecture/cli.md`
+  - `docs/architecture/native-factory/README.md`
+  - `src/commands/host/host-run-commands.ts`
+  - `src/services/pi-runtime/import-boundary.test.ts`
+  - `src/services/remote-executor/remote-executor.ts`
+  - `src/services/remote-executor/remote-sync.ts`
+  - `src/services/test-project/scripted-host.ts`
