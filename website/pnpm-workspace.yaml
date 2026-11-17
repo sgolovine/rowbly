@@ -1,5 +1,0 @@
-# The website is a separate pnpm workspace with its own lockfile.
-# The root package does not install or build it.
-minimumReleaseAge: 10080
-allowBuilds:
-  esbuild: true
