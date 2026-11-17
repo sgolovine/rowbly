@@ -8,9 +8,11 @@ import {
   useAsync,
   useLayout,
   useReportHints,
+  useSharedFactoryStatus,
   useThreadChanges,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
+import { type ThreadHostView, threadHostView } from "../../stories/index.js";
 import { type FactoryViewRow, factoryViewCursor, factoryViewRows } from "../factory-view-rows.js";
 import { type FactoryViewEnv, factoryViewHints, handleFactoryViewKey } from "./factory-view-actions.js";
 
@@ -43,6 +45,8 @@ export interface FactoryViewModel {
   readonly empty: boolean;
   readonly now: number;
   readonly layout: Layout;
+  /** The live hosts of the shared factory status and the host column. */
+  readonly hostView: ThreadHostView;
 }
 
 /** All worker Threads, read again when a Thread file changes. */
@@ -75,6 +79,7 @@ export function useFactoryView(props: FactoryViewProps): FactoryViewModel {
   // The collapsed sections; they last until Rowbly quits.
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const data = useAsync(() => loadThreads(ctx), [ctx]);
+  const status = useSharedFactoryStatus();
 
   // The factory writes the Thread files from another process.
   useThreadChanges(root, data.refresh);
@@ -95,5 +100,6 @@ export function useFactoryView(props: FactoryViewProps): FactoryViewModel {
     empty: groups.active.length === 0 && groups.inactive.length === 0,
     now,
     layout,
+    hostView: threadHostView(data.data ?? [], status?.data),
   };
 }

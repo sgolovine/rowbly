@@ -1,29 +1,12 @@
 import type { Key } from "ink";
-import type { Dispatch, RefObject, SetStateAction } from "react";
 import { sendFactoryCommand } from "../../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
-import type { ServiceContext } from "../../../../services/workspace/workspace.js";
-import { runExclusive, showToast, type ToastStore } from "../../../hooks/index.js";
-import { type StageNames, threadActive, threadName, threadResumable } from "../thread-text.js";
-import type { Focus } from "./threads-tab-view.js";
+import { runExclusive, showToast } from "../../../hooks/index.js";
+import { threadActive, threadName, threadResumable } from "../thread-text.js";
+import type { ThreadsTabEnv } from "./threads-tab-env.js";
+import { applyHeld, askDiscard } from "./threads-tab-held.js";
 
-/** The environment of the handlers of the Threads tab. */
-export interface ThreadsTabEnv {
-  readonly ctx: ServiceContext;
-  readonly storyId: string;
-  readonly stages: StageNames | undefined;
-  readonly toast: ToastStore;
-  readonly current: ThreadRecord | undefined;
-  readonly cursor: number;
-  /** True while a command waits for the factory, so that a second key sends no second command. */
-  readonly sending: RefObject<boolean>;
-  readonly refresh: () => void;
-  readonly setFocus: Dispatch<SetStateAction<Focus>>;
-  readonly setConfirm: Dispatch<SetStateAction<ThreadRecord | null>>;
-  readonly setCursor: (index: number) => void;
-  /** Opens the conversation full screen. `undefined` while the thread region shows no conversation. */
-  readonly openFullScreen: (() => void) | undefined;
-}
+export type { ThreadsTabEnv } from "./threads-tab-env.js";
 
 type CommandType = "cancel" | "resume";
 
@@ -68,12 +51,19 @@ function focusSteer(env: ThreadsTabEnv): void {
   }
 }
 
-/** `x` interrupts and `r` resumes, in the list and in the thread region. */
+/**
+ * `x` interrupts and `r` resumes, in the list and in the thread region. `a` applies and `d` discards the held entries
+ * of an abandoned thread.
+ */
 function handleActionKey(env: ThreadsTabEnv, input: string): void {
   if (input === "x") {
     interrupt(env);
   } else if (input === "r") {
     resume(env);
+  } else if (input === "a") {
+    applyHeld(env);
+  } else if (input === "d") {
+    askDiscard(env);
   }
 }
 

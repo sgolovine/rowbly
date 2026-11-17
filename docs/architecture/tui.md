@@ -58,6 +58,12 @@ Modal has these views:
   row shows the `▌` bar and the selection fill. A click on the selected row opens the detail view of
   that warning. A click on a different row moves the selection and does not open a warning. If the
   selected warning goes away, no row stays selected. The `Attention` list has no keys.
+  When the live factory status has a worker host (a `hosts` entry that is not `local`), a `Hosts`
+  list shows above the `Attention` list. Each row shows the host id, the connection state, the used
+  and the total slots (`<used>/<max>`) and, for a lost host, the last contact (`last contact <duration>
+  ago` or `no contact`). A lost host has a state that is not `connected` or `degraded`. Its state is
+  in `danger`. A `degraded` state is in `stage-board`. Without a worker host, the list does not show.
+  `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows.
 - **Attention.** `Factory › Attention` lists all warnings in a `SelectList` with `clickToHighlight`.
   `↑/↓` selects, `enter` opens the detail view, `/` filters and `esc` goes back. A click on a row
   that is not highlighted highlights the row. A click on the highlighted row opens the detail view.
@@ -231,6 +237,19 @@ quits.
   each Thread uses one line. A failed Thread shows `failed` in `danger` colour also in one line.
   The Threads tab of a Story uses the same setting. Settings › Display has a `Switch` for it. The Threads in a section are newest first. Only worker Threads with a Story show.
   `groupThreads` in `src/services/thread/thread-groups.ts` makes the groups.
+- **The host column.** When the list has a remote Thread (`thread.host` is not `local`), each row
+  shows the host of its Thread on the right, before the run time. Then a `local` Thread shows
+  `local`. A list without remote Threads has no host column. The Threads tab of a Story uses the
+  same rule.
+- **A lost connection.** A `running` or `pending` remote Thread whose host has a lost connection in
+  the live `hosts` list (`threadConnection`) shows `· connection lost (last contact <duration> ago)`
+  or `· connection lost (no contact)` in `danger` on row 1. When the factory is not live, no Thread
+  shows a lost connection. `threadHostView` and `threadHostProps` in
+  `src/tui/screens/stories/thread-host-view.ts` give the props of `ThreadRow`. The Factory view uses
+  the shared factory status of the shell.
+- **An abandoned Thread.** An abandoned remote Thread (`isAbandoned`) shows `· abandoned` in
+  `stage-board` on row 1. In the Threads tab of a Story, the text also gives the number of held
+  entries, for example `· abandoned (3 held)`.
 - **The filter.** The Stage sidebar stays. When you select a Stage, only the Threads with that
   `stage` show. "All Stages" shows all Threads.
 - **The keys.** `↑/↓` and `j/k` move the selection. The Story keys (`n`, `d`, `shift+↑/↓` and
@@ -359,8 +378,8 @@ See [Duplicate Story IDs](storage.md#duplicate-story-ids).
 ## Factory status
 
 The shell reads the factory status one time for all views (`useShellData`). `Shell` gives this
-status to the views in `FactoryStatusContext`. The header, the Factory controls, the Checks Modal and
-the Threads tab of a Story read the status from the shell. They do not read it again. Thus one write
+status to the views in `FactoryStatusContext`. The header, the Factory controls, the Checks Modal, the
+Factory view, the Story list and the Threads tab of a Story read the status from the shell. They do not read it again. Thus one write
 of `runtime/status.json` causes one call of `getFactoryStatus`.
 
 - `useFactoryChanges` reads the status again when `runtime/status.json` or `runtime/factory.lock`
@@ -477,7 +496,10 @@ functions into the data that the components show.
 - **The `waiting for` text.** A blocked Story in a work Stage (the `board` Stage Category) with no
   factory activity shows `waiting for ROW-01, ROW-02` in the activity slot, in `ink-muted`. The text
   shows a maximum of three IDs, then `+<count>`. If the row is narrow, the text is cut. When a worker
-  is active, the slot shows `▶ <agent>`.
+  is active, the slot shows `▶ <agent>`. A worker on a worker host shows `▶ <agent> @<host>`, for
+  example `▶ opus @ws1`. When that host has a lost connection in the live `hosts` list of the shared
+  factory status (`hostLost`), the slot adds `connection lost` in `danger`. A worker on `local` shows
+  only the agent.
 
 ## Story tags
 
