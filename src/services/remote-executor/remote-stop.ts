@@ -7,7 +7,7 @@ import { isTransportError } from "./remote-calls.js";
 import { linkOpen } from "./remote-channel.js";
 import { enqueueCommand, stopOnHost } from "./remote-commands.js";
 import { endWait, waitForAbort } from "./remote-run.js";
-import type { RemoteEnv, RemoteRun } from "./remote-types.js";
+import type { RemoteEnv, RemoteRun, StopKind } from "./remote-types.js";
 
 /** The default time that a factory stop waits for the runs of the connected hosts. */
 const SHUTDOWN_TIMEOUT_MS = 60_000;
@@ -54,7 +54,7 @@ async function queueStop(env: RemoteEnv, run: RemoteRun, type: StopType): Promis
 }
 
 /** Records the stop request, and gives true when the run has a command on the host that a stop can reach. */
-function requestStop(run: RemoteRun, kind: "stop" | "cancel"): boolean {
+function requestStop(run: RemoteRun, kind: StopKind): boolean {
   if (run.store.current.closed) {
     return false;
   }
@@ -67,11 +67,12 @@ function requestStop(run: RemoteRun, kind: "stop" | "cancel"): boolean {
 }
 
 /**
- * Stops or cancels a remote run. With an open channel, the host stops the run and sends its end. Without a channel,
- * the command goes in the queue of the host. A stopped run waits for the reconnect; the wait of a cancelled run ends,
- * the Thread keeps its last status, and it becomes abandoned.
+ * Stops, cancels or releases a remote run. A release sends the same command to the host as a cancel. With an open
+ * channel, the host stops the run and sends its end. Without a channel, the command goes in the queue of the host. A
+ * stopped run waits for the reconnect; the wait of a cancelled or released run ends, the Thread keeps its last status,
+ * and it becomes abandoned with the kind as the reason.
  */
-export async function stopRemote(env: RemoteEnv, threadId: string, kind: "stop" | "cancel"): Promise<void> {
+export async function stopRemote(env: RemoteEnv, threadId: string, kind: StopKind): Promise<void> {
   const run = env.state.current.runs.get(threadId);
 
   if (!run || !requestStop(run, kind)) {
@@ -84,14 +85,14 @@ export async function stopRemote(env: RemoteEnv, threadId: string, kind: "stop" 
     return;
   }
 
-  // A cancel that cannot reach the host abandons the Thread: its later outbox entries are held.
-  if (kind === "cancel") {
-    await abandonRun(env, run);
+  // A cancel or a release that cannot reach the host abandons the Thread: its later outbox entries are held.
+  if (kind !== "stop") {
+    await abandonRun(env, run, kind);
   }
 
   await queueStop(env, run, type);
 
-  if (kind === "cancel") {
+  if (kind !== "stop") {
     endWait(run);
   }
 }

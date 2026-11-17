@@ -7,7 +7,7 @@ import type { ProjectPaths } from "../../services/workspace/workspace.js";
 /** The parts of the manager that the control commands use. */
 export type ControlTarget = Pick<
   FactoryManager,
-  "shutdown" | "cancelWorker" | "resumeWorker" | "steerWorker" | "dismissAttention"
+  "shutdown" | "cancelWorker" | "releaseWorker" | "resumeWorker" | "steerWorker" | "dismissAttention"
 >;
 
 interface PollState {
@@ -49,6 +49,12 @@ async function executeCommand(manager: ControlTarget, command: FactoryCommand): 
 
   if (command.type === "cancel") {
     await manager.cancelWorker(command.threadId, command.expectedRunId);
+
+    return;
+  }
+
+  if (command.type === "release") {
+    await manager.releaseWorker(command.threadId, command.expectedRunId);
 
     return;
   }

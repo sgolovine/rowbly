@@ -22,6 +22,25 @@ describe("factory control receipts", () => {
     expect((await readReceipt(project.paths, current.id))?.status).toBe("completed");
     expect((await readReceipt(project.paths, stale.id))?.status).toBe("rejected");
   });
+  it("accepts the type release and rejects an unknown type", async () => {
+    await prepareRuntime(project.paths);
+    const release = await publishCommand(project.paths, {
+      targetOwnerToken: "current",
+      type: "release",
+      threadId: "one",
+      expectedRunId: "run",
+    });
+    const unknown = await publishCommand(project.paths, {
+      targetOwnerToken: "current",
+      type: "abandon" as "release",
+    });
+    const execute = vi.fn(async () => {});
+    await processCommands(project.paths, "current", execute);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "release", threadId: "one" }));
+    expect((await readReceipt(project.paths, release.id))?.status).toBe("completed");
+    expect((await readReceipt(project.paths, unknown.id))?.status).toBe("rejected");
+  });
   it("executes the commands one at a time, in the order of their file names", async () => {
     await prepareRuntime(project.paths);
     const published = await Promise.all(

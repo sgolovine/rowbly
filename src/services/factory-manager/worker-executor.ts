@@ -97,6 +97,11 @@ export interface WorkerExecutor {
   readonly stop: (threadId: string) => Promise<void>;
   /** Stops the worker. The manager makes the Thread `cancelled`. */
   readonly cancel: (threadId: string) => Promise<void>;
+  /**
+   * Stops a remote worker as a cancel, but the Thread becomes abandoned with the reason `release`. Only the remote
+   * executor has it.
+   */
+  readonly release?: (threadId: string) => Promise<void>;
   /** Gives a steering message to a worker that works now. Otherwise throws "Worker is not working now". */
   readonly steer: (threadId: string, message: string) => Promise<void>;
 }
@@ -105,6 +110,8 @@ export interface WorkerExecutor {
 export interface WorkerControl {
   readonly stop: () => Promise<void>;
   readonly cancel: () => Promise<void>;
+  /** Releases a remote worker. A control without a release cannot release its worker. */
+  readonly release?: () => Promise<void>;
   readonly steer: (message: string) => Promise<void>;
 }
 
@@ -113,6 +120,7 @@ export function workerControl(executor: WorkerExecutor, threadId: string): Worke
   return {
     stop: () => executor.stop(threadId),
     cancel: () => executor.cancel(threadId),
+    release: () => (executor.release ? executor.release(threadId) : executor.cancel(threadId)),
     steer: (message) => executor.steer(threadId, message),
   };
 }
