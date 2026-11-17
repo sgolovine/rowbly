@@ -55,6 +55,18 @@ describe("Pi import boundary", () => {
     expect(JSON.parse(result.stdout).factory.phase).toBe("stopped");
   });
 
+  it("imports the connection facts of the Threads without loading Pi, the host transport or the remote executor", async () => {
+    const { readFile } = await import("node:fs/promises");
+    await expect(import("../thread-connection/connection-lost.js")).resolves.toHaveProperty("lostConnections");
+    await expect(import("../thread-connection/thread-connection.js")).resolves.toHaveProperty(
+      "listThreadsWithConnection",
+    );
+    for (const file of ["connection-lost.ts", "thread-connection.ts"]) {
+      const source = await readFile(new URL(`../thread-connection/${file}`, import.meta.url), "utf8");
+      expect(source).not.toMatch(/host-transport|remote-executor/);
+    }
+  });
+
   it("imports the worker executor interface without loading Pi", async () => {
     await expect(import("../factory-manager/worker-executor.js")).resolves.toHaveProperty("workerControl");
   });

@@ -254,6 +254,26 @@ and `host unuse` need a Project. The `host-project` service does their work. See
     `ROWBLY_OUTBOX` gives a `VALIDATION` error.
     See [storage.md](storage.md#apply-on-the-main-machine).
 
+### Connection lost
+
+`thread list`, `thread show` and `status` show the remote Threads that lost the connection to their
+worker host. The service `thread-connection` reads only the `hosts` list of the factory status. It does
+not open SSH, and it does not load Pi.
+
+- A remote Thread has a `host` that is not `local`, and its status is `running` or `pending`. Its
+  connection is lost when the `hosts` list gives its host a state other than `connected` or
+  `degraded`, or when the list does not have its host. Then `hostState` is `unknown`.
+- Without a factory that runs, there is no `hosts` list. Then no Thread has a lost connection.
+- `thread list` adds `connection lost (last contact <duration> ago)` at the end of the line of the
+  Thread. Without `lastSeenAt` of the host, it adds `connection lost (no contact)`.
+- `thread list --json` and `thread show` give a `connection` field for each Thread with a lost
+  connection: `{ "state": "lost", "host": <id>, "hostState": <state>, "lastSeenAt"?: <ISO text> }`.
+  A Thread without a lost connection has no `connection` field.
+- `status` shows one line for each Thread with a lost connection, below the `Threads` line: the Thread
+  ID, the Story ID, the host and the time since the last contact. `status --json` gives the same
+  facts in the `connectionLost` list: `{ threadId, storyId?, host, hostState, lastSeenAt?,
+  lastContactMs? }`. The list is not there when no Thread lost its connection.
+
 ## Output and errors
 
 `run(command, call, text)` in `src/commands/output/` connects a command to a service:

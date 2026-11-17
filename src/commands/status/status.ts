@@ -4,6 +4,7 @@ import {
   type ProjectStatus,
   type StageSummary,
 } from "../../services/project-status/project-status.js";
+import { contactText, type LostConnection } from "../../services/thread-connection/thread-connection.js";
 import { run } from "../output/output.js";
 
 function stageName(stage: StageSummary): string {
@@ -20,12 +21,21 @@ function stageLines(stages: readonly StageSummary[]): string[] {
   return stages.map((stage, index) => `  ${(names[index] ?? "").padEnd(width)}   ${stage.stories}`);
 }
 
+/** One indented line for each remote Thread whose host lost its connection. */
+function lostLines(lost: readonly LostConnection[]): string[] {
+  return lost.map(
+    (entry) =>
+      `  ${entry.threadId}  ${entry.storyId ?? "Factory"}  ${entry.host}  connection lost (${contactText(entry.lastContactMs)})`,
+  );
+}
+
 function statusText(status: ProjectStatus): string {
   const { running, pending } = status.threads;
 
   return [
     `Factory: ${status.factory.phase}`,
     `Threads: ${running} running, ${pending} pending`,
+    ...lostLines(status.connectionLost ?? []),
     "",
     `Stories: ${status.stories}`,
     ...stageLines(status.stages),
