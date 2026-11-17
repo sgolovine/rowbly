@@ -17,6 +17,9 @@ function view(overrides: Partial<ShellView> = {}): ShellView {
     row: undefined,
     cursorStage: undefined,
     stageIndex: 0,
+    tags: [],
+    tag: undefined,
+    tagIndex: 0,
     marked: new Set(),
     ranging: false,
     storyPane: { kind: "new" },
@@ -25,6 +28,8 @@ function view(overrides: Partial<ShellView> = {}): ShellView {
     shellKeys: false,
     sidebar: true,
     sidebarFocused: false,
+    tagSidebar: false,
+    tagSidebarFocused: false,
     listFocused: false,
     storyFocused: true,
     ...overrides,
@@ -78,5 +83,61 @@ describe("shellFrame", () => {
 
     expect(frame.story).toMatchObject({ mode: "closed", shown: false, expanded: false });
     expect(frame.listShown).toBe(true);
+  });
+
+  it("gives the Stage sidebar all rows when the tag sidebar does not show", () => {
+    const frame = shellFrame(LAYOUT, view({ storyPane: null, storyActive: false }), SIDEBAR);
+
+    expect(frame.stagesHeight).toBe(frame.mainHeight);
+    expect(frame.tagsHeight).toBe(0);
+  });
+
+  it("puts the tag sidebar below the Stage sidebar and fits its entries", () => {
+    const tags = [
+      { value: "a", label: "A" },
+      { value: "b", label: "B" },
+    ];
+    const frame = shellFrame(LAYOUT, view({ storyPane: null, storyActive: false, tags, tagSidebar: true }), SIDEBAR);
+
+    expect(frame.tagsHeight).toBe(tags.length + 1 + 3);
+    expect(frame.stagesHeight).toBe((frame.mainHeight ?? 0) - (frame.tagsHeight ?? 0));
+  });
+
+  it("gives the tag sidebar at most half of the rows beside the list", () => {
+    const tags = Array.from({ length: 60 }, (_, i) => ({ value: `t${i}`, label: `T${i}` }));
+    const frame = shellFrame(LAYOUT, view({ storyPane: null, storyActive: false, tags, tagSidebar: true }), SIDEBAR);
+    const main = frame.mainHeight ?? 0;
+
+    expect(frame.tagsHeight).toBe(Math.floor(main / 2));
+    expect(frame.stagesHeight).toBe(main - Math.floor(main / 2));
+  });
+
+  it("stacks both sidebars above the list and keeps half of the main area for the list", () => {
+    const tags = Array.from({ length: 30 }, (_, i) => ({ value: `t${i}`, label: `T${i}` }));
+    const stages = Array.from({ length: 10 }, () => ({}) as ShellView["stages"][number]);
+    const frame = shellFrame(
+      { width: 80, height: 50 },
+      view({ storyPane: null, storyActive: false, stages, tags, tagSidebar: true }),
+      SIDEBAR,
+    );
+    const main = frame.mainHeight ?? 0;
+
+    expect(frame.stacked).toBe(true);
+    expect(frame.stackedHeight).toBe(Math.floor(main / 2));
+    expect((frame.stagesHeight ?? 0) + (frame.tagsHeight ?? 0)).toBe(frame.stackedHeight);
+    expect(frame.listHeight).toBeGreaterThanOrEqual(Math.ceil(main / 2));
+  });
+
+  it("stacks a short tag sidebar with all its entries", () => {
+    const tags = [{ value: "a", label: "A" }];
+    const frame = shellFrame(
+      { width: 80, height: 50 },
+      view({ storyPane: null, storyActive: false, tags, tagSidebar: true }),
+      SIDEBAR,
+    );
+
+    expect(frame.stackedHeight).toBe(1 + 3 + 2 + 3);
+    expect(frame.tagsHeight).toBe(2 + 3);
+    expect(frame.stagesHeight).toBe(1 + 3);
   });
 });
