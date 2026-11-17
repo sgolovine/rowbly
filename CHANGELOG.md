@@ -22,6 +22,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The searchable select field and the searchable multi-select field of the TUI forms now use one shared code path to open the picker. Their keys, hints and modal titles do not change. (ROW-148)
 - Changed: The Stage headings of the Story list and the section headings of the Factory view now use one shared TUI component. The count of a selected Stage heading now uses the muted colour, as in the Factory view. (ROW-149)
 - Changed: The Story finder of the TUI and the picker of the searchable select fields now use one shared fuzzy search component. Their keys, texts and look do not change. (ROW-147)
+- Changed: The Tags and Custom Fields sections of the TUI Settings now use one shared list component. Their text, keys and hints do not change. (ROW-146)
 
 ### 0.20.0
 
