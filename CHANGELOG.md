@@ -34,6 +34,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The factory now sets the class of each Stage by a fixed rule and not by the supervisor: a Stage with an empty prompt is `invalid`, the first and the last Stage of the board are `hold`, and all other Stages are `work`, so a new Stage with a prompt gets workers at once. A middle Stage that the supervisor classified as `hold` is now `work` until you set `factory.stageClasses` with `rowbly factory configure --stage <key> --class hold`, and `--clear-class` removes the setting. (ROW-120)
 - Changed: The TUI renders fewer parts of the screen on each key. For example, an arrow key on the board renders only the Story list and the footer again, and not the header, the Stage sidebar or the overlays. (ROW-130)
 - Changed: The Story list of the TUI now builds its rows faster on a large board, and a key that only moves the cursor does not build the rows again. (ROW-131)
+- Changed: The TUI does less work on each key in a long list or form, because only the selected row or the active field measures its size. The selected row continues to scroll into view. (ROW-127)
 
 ### 0.19.0
 
