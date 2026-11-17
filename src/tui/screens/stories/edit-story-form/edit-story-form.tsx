@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PendingImage } from "../../../../services/attachment/attachment.js";
 import type { CustomField, TagConfig } from "../../../../services/config/config.js";
 import type { Stage } from "../../../../services/stage/stage.js";
@@ -144,6 +144,10 @@ export function EditStoryForm({
 }) {
   const toast = useToast();
   const [confirming, setConfirming] = useState<StoryConfirm>(null);
+  const choices = useMemo(
+    () => dependencyChoices(stories, story.id, story.dependsOn),
+    [stories, story.id, story.dependsOn],
+  );
 
   const env: EditStoryEnv = { ctx, story, customFields, toast, onSaved, onDeleted };
   const stageNames = Object.fromEntries(stages.map((stage) => [stage.key, stage.label]));
@@ -155,12 +159,7 @@ export function EditStoryForm({
       stages={stageNames}
       specs={specs}
       compactThreads={compactThreads}
-      fields={storyFormFields(
-        stages,
-        customFields,
-        dependencyChoices(stories, story.id, story.dependsOn),
-        tagChoices(tags, story.tags),
-      )}
+      fields={storyFormFields(stages, customFields, choices, tagChoices(tags, story.tags))}
       initialValues={initialValues(story, customFields)}
       dependencies={dependencyLists(stories, stages, story.id, story.dependsOn)}
       times={{ createdAt: story.createdAt, updatedAt: story.updatedAt, timeZone }}
