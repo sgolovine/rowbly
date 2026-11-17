@@ -220,7 +220,13 @@ interface lets a different executor, for example a remote executor, run a worker
   `hostConnection`.
 - **Routing.** `executorFor(manager, host)` in `factory-manager/remote-dispatch.ts` gives the executor
   of a host: the local executor for `local`, and the remote executor for each worker host. The launch
-  uses the host of the Thread. The control of the active worker, and thus `stop`, `cancel` and `steer`,
+  uses the host of the Thread. A resume uses only the host of the Thread (`thread.host`, else
+  `local`), because the session and the worktree are only on that host. The placement rules do not
+  apply to a resume. When that host is not `connected`, or has no free slot, the resume gives a
+  `ConflictError`. See [recovery.md](recovery.md#resume-and-retry).
+- **Adopt.** The remote executor also has `adopt(launch, events)`. It follows a run that a previous
+  daemon started on the host, and sends no command. See
+  [recovery.md](recovery.md#adopt-remote-threads-at-start). The control of the active worker, and thus `stop`, `cancel` and `steer`,
   uses the host of the active entry.
 - **Message location.** `message(worktree, model, location)` has an optional location: the Project
   root of `-C`, the CLI shim, the lock of the command prefix and the checks flag. Without a location,
@@ -448,17 +454,19 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   ends. The Thread becomes `cancelled` and abandoned. See [Abandoned Threads](#abandoned-threads).
 - **Reconnect.** When the heartbeat of a host gives `connected`, the manager calls `reconnect(host)` of
   the remote executor (`remote-executor/remote-reconnect.ts`). When the host has queued commands,
-  waiting inbound updates, an active run without a channel, a run that waits for the sync, or an
-  abandoned Thread without a remote outcome, the executor does these steps:
+  waiting inbound updates, an active run without a channel, an adopted run without a request id, a run
+  that waits for the sync, or an abandoned Thread without a remote outcome, the executor does these steps:
   1. It submits each queued `stop-thread` and `cancel-thread`, in the order of arrival. Then it
      submits the other queued commands.
-  2. It sends the waiting inbound updates of each active run. See [Inbound updates](#inbound-updates).
-  3. It opens the `host attach` channel again for the active runs and the abandoned Threads. The host
+  2. For each adopted run without a request id, it gets the run state with `host runs`. See
+     [host-agent.md](host-agent.md#reconnect-of-adopted-runs).
+  3. It sends the waiting inbound updates of each active run. See [Inbound updates](#inbound-updates).
+  4. It opens the `host attach` channel again for the active runs and the abandoned Threads. The host
      sends the status, each receipt and the run state of each Thread again. The run state stays across
      channels, so a value that was sent before sends no event.
-  4. It reads the session lines that the host wrote while it was offline, for each open run with a
+  5. It reads the session lines that the host wrote while it was offline, for each open run with a
      session (see [Session mirror](#session-mirror)). A failure does not stop the next step.
-  5. It applies the outbox of the host with `syncHosts`.
+  6. It applies the outbox of the host with `syncHosts`.
 
   Thus a run that ended on the host while it was offline completes one time.
 - **Factory stop.** `stopFactory` calls `shutdown` of the remote executor before it waits for the
@@ -467,8 +475,10 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   queue and the wait of the run ends at once. The wait has a time limit of 60 seconds (the dependency
   `remoteStopTimeoutMs`). After the limit, the wait of each run ends. A stop is not an abandon: the
   outbox entries that the host wrote before the stop are applied as usual.
-- **Not in this Story.** The recovery after a restart of the daemon, the resume of a remote Thread
-  only on its own host and the network resume of remote Threads come with ROW-117.
+- **Restart of the daemon.** Recovery does not interrupt a remote Thread. The new daemon adopts its
+  run. See [recovery.md](recovery.md#adopt-remote-threads-at-start).
+- **Resume.** A remote Thread resumes only on its own host, also after a `NETWORK` failure. The
+  network resume waits while the host is not `connected`.
 
 ## Abandoned Threads
 

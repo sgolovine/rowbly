@@ -121,8 +121,17 @@ A worker can resume only when all of these conditions are true:
 - The Thread has a session file.
 - Its Story is in the original Stage.
 - The policy permits the resume.
-- The original worktree is present.
+- The original worktree is present. The main machine examines only the worktree of a local Thread.
+  The host of a remote Thread examines its own worktree and session file, and refuses a resume without
+  them.
 - The Thread is not completed.
+- The host of the Thread is `connected` and has a free slot.
+
+A Thread resumes only on its own host (`thread.host`, else `local`), because its session and its
+worktree are only on that host. The placement rules do not apply to a resume. When the host of the
+Thread is not `connected`, or has no free slot, the resume gives `CONFLICT` with the reason, and the
+Thread does not change. A later attempt can succeed. A different host with more free slots does not
+get the resume.
 
 Each Thread has at most three runs. A resume adds a run to the same Thread. A retry uses a new Thread.
 
@@ -180,6 +189,10 @@ same Thread and the same Pi session. It uses a generated request ID. It does not
 supervisor, and it does not need a person. If the resume cannot start now, for example because all
 worker slots are full, the next pass tries again.
 
+A remote `NETWORK` Thread resumes on its own host, only while that host is `connected`. While the host
+is not `connected`, the manager does not try the resume. The next pass after the host is `connected`
+again resumes it. The manager does not examine the worktree of a remote Thread on the main machine.
+
 While the manager can resume a `NETWORK` Thread, the scan skips its Story with the reason
 `waiting for network resume`. Thus the policy does not start a new Thread for the Story. If the
 Thread cannot resume (no session file, three runs, a Stage move or no worktree), the normal policy
@@ -220,8 +233,9 @@ loop is in `src/commands/factory-runner/watchdog-runner.ts`. The pure rules and 
   is live. The next `rowbly factory start` clears it.
 - The back-off, the crash limit and the stable period are constants. They are not settings.
 - Each restart uses the usual start path of `factory run`: the owner probe, the recovery after owner
-  death and the release of ownership. Thus recovery marks the active runs of the crashed daemon as
-  interrupted.
+  death and the release of ownership. Thus recovery marks the active local runs of the crashed daemon
+  as interrupted. The new daemon adopts the active remote runs. See
+  [Adopt remote Threads at start](#adopt-remote-threads-at-start).
 - Before each start, the watchdog probes the owner. If the owner is alive or uncertain, the watchdog
   does not start a daemon. It records the problem in its state file and exits.
 - The watchdog never takes ownership. The daemon is the owner in `factory.lock`.
@@ -251,8 +265,13 @@ the time of the last crash (`lastCrashAt`). During a back-off, the phase is `sta
 
 ## Recovery after owner death
 
-After definite owner death, recovery (`factory-recovery/`) marks active runs as interrupted and
+After definite owner death, recovery (`factory-recovery/`) marks active local runs as interrupted and
 repairs missing native state projections.
+
+- A local Thread becomes `interrupted` with the error code `OWNER_DIED`.
+- A worker Thread whose `host` is a worker host (not `local`) keeps its status (`pending` or
+  `running`) and gets no error. Its run can continue on the host. Recovery still repairs its
+  projection. The new daemon adopts it.
 
 - An old heartbeat does not prove death. A live or uncertain owner prevents takeover.
 - Shell descendants that a crashed daemon started are not tracked. Check processes are an exception.
@@ -263,6 +282,38 @@ repairs missing native state projections.
 
 `rowbly doctor` reports corrupt and orphan Threads. It does not repair their histories or take over a
 live daemon.
+
+## Adopt remote Threads at start
+
+A remote run continues on its worker host while the daemon is off. Before the first supervisor turn,
+the new daemon adopts each worker Thread with the status `pending` or `running` on a worker host
+(`factory-manager/worker-adopt.ts`). For each Thread, it does these steps:
+
+1. It gives the last run of the Thread to the new owner (`adoptThreadRun`). It does not add a run,
+   because a new run is a resume.
+2. It registers the active worker on the host of the Thread. The Thread uses one slot of its host,
+   and the placement of a new worker counts it.
+3. It puts the Story in the `hostSync` set. The policy skips the Story with the reason
+   `waiting for host sync`.
+4. It follows the run with `adopt` of the remote executor. It sends no new `launch` or `resume`
+   command. The reconnect of the host gets the run state with `host runs`. See
+   [host-agent.md](host-agent.md#reconnect-of-adopted-runs).
+
+The run then ends as usual: the outbox sync, then one `completed` or `failed` event. Then the manager
+frees the slot and removes the Story from the `hostSync` set. The adopted run does not send
+`worktreeReady` or `sessionOpened` again for a value that the Thread already has. A result, an
+activity and the end that arrived while the daemon was off still go to the manager.
+
+- A queued `launch` or `resume` of the Thread in `runtime/hosts/<host>/commands.json` gives the
+  request id of the adopted run. The reconnect sends it as usual.
+- When the host is offline at start, the Thread keeps its status, and its Story waits. The heartbeat
+  does the reconnect when the host is `connected` again.
+- When the host has no run for the Thread, and the queue has no `launch` or `resume` for it, the
+  Thread becomes `failed` with the error code `HOST_RUN_MISSING`. Its slot becomes free. The normal
+  retry rules apply to the Story.
+- Only a manager with remote dispatch (`hostConnection`) adopts. Without it, a remote Thread of a
+  dead owner keeps its status.
+- A Thread whose Story does not exist is not adopted. It keeps its status.
 
 ## Adopt external attempts
 
