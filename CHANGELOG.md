@@ -50,6 +50,7 @@ This file records the changes to Rowbly that users can see.
 - Removed: The supervisor model setting, the `--supervisor` and `--supervisor-thinking` flags of `rowbly factory configure`, the Supervisor prompt, the live supervisor view of the Factory modal and the supervisor model of the AI settings. `rowbly prompt get supervisor` and `rowbly prompt set supervisor` give a `VALIDATION` error, `rowbly init` no longer creates `.rowbly/prompts/SUPERVISOR.md`, and `rowbly doctor` shows a warning for an old `factory.supervisorModel` key (`--fix` removes it) and for an old `SUPERVISOR.md` file. (ROW-125)
 - Added: The new `factory.tagWorkerModels` setting selects the worker model for the Stories with a tag, in all Stages. `rowbly factory configure --tag <value> --worker <provider/model>` sets a rule and `--clear-worker` removes it, a Story override has priority over a tag rule and a tag rule has priority over a Stage override, and `rowbly doctor` shows a warning for a rule of a tag that is not in the Project. (ROW-123)
 - Changed: The TUI page of the contributor documentation has a new Performance section. It gives the method to profile the TUI again, and the numbers before and after the performance changes, for example 1.0 s of CPU time in place of 6.6 s in a 12 s board session. (ROW-137)
+- Changed: The TUI now loads the Settings Modal, the Factory Modal, the Checks Modal and the onboarding steps only when they open, so that the board shows sooner at launch. (ROW-139)
 
 ### 0.19.0
 
