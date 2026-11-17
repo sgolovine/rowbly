@@ -7,6 +7,19 @@ they never start the same work two times on purpose.
 Read this when you change stop, restart, cancel, resume, recovery or the adoption of external
 attempts.
 
+## Remote Threads
+
+A remote Thread runs on a worker host. Its recovery rules are different from the rules of a local
+Thread. See [remote-hosts.md](remote-hosts.md) for an overview.
+
+- A disconnect of a worker host is not an interruption. The Thread keeps its status and shows
+  `connection lost`.
+- Recovery after owner death does not mark remote runs interrupted. The new daemon adopts them. See
+  [Adopt remote Threads at start](#adopt-remote-threads-at-start).
+- A remote Thread resumes only on its own host, because its session and its worktree are there.
+- A cancel while the host is offline makes the Thread abandoned. See
+  [Abandoned Threads](README.md#abandoned-threads).
+
 ## Commands to the daemon
 
 The CLI and the TUI send guarded commands to the daemon. `factory-control/` writes each command as an

@@ -5,7 +5,7 @@ The native factory keeps private runtime files in `.rowbly/runtime/` and shared 
 and the ownership rules prevent two owners, lost writes and deadlocks.
 
 Read this when you read or write a runtime file, `state.json` or the factory settings, or when you
-take or change a lock.
+take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts.md) first.
 
 ## Factory files in `.rowbly/`
 
@@ -30,6 +30,7 @@ take or change a lock.
     checks/jobs.json  # the records of the last 500 check jobs, with process group and start ticks
     checks/<id>.log   # the full output of one check job
     hosts/<host>/outbox-applied.json # the last applied outbox seq of a worker host
+    hosts/<host>/conflicts/<sha256>.png # the file of an attachment.add entry with a conflict, for recovery (mode 0600)
     hosts/<host>/commands.json # queued stop, cancel, launch or resume commands for a worker host (mode 0600)
     hosts/<host>/threads/<id>/base.json # the copy that the main machine sent last to the host
     hosts/<host>/held/<id>/entries.jsonl # the held outbox entries of an abandoned remote Thread (mode 0600)
@@ -50,6 +51,11 @@ take or change a lock.
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 - `placement` selects the machine of a new worker: `prefer-local` (the default), `most-free` or
   `prefer-remote`. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#placement).
+- `outbox-apply/host-files.ts`, `outbox-apply/held-entries.ts`, `remote-executor/host-command-queue.ts`
+  and `remote-executor/inbound-queue.ts` write the files in `hosts/<host>/`. Each folder has mode 0700.
+- The outbox apply writes `outbox-applied.json`, `conflicts/` and `held/`. It holds the Project write
+  lock while it applies the entries. It does not take the state lock. See
+  [../storage.md](../storage.md#apply-on-the-main-machine).
 - `hosts/<host>/commands.json` is the durable command queue of a worker host:
   `{ "version": 1, "commands": [{ id, type, threadId, queuedAt }] }`. The file has mode 0600, and its
   folders have mode 0700. See [README.md](README.md#disconnects-and-reconnects).
@@ -199,6 +205,8 @@ See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart r
 ## Lock rules
 
 - Never take the Project write lock while you hold the state lock.
+- The outbox apply of a worker host and `rowbly thread held --apply` or `--discard` hold the Project
+  write lock. They do not hold the state lock.
 - No kernel lock spans a model request.
 - Existing human CLI and TUI writes keep their previous concurrency limits. They do not take the
   Project write lock.
@@ -209,5 +217,6 @@ See [recovery.md](recovery.md#automatic-restart-after-a-crash) for the restart r
 ## Related
 
 - [recovery.md](recovery.md): what happens after an owner dies.
+- [remote-hosts.md](remote-hosts.md): the overview of the worker hosts.
 - [../storage.md](../storage.md): the other files in `.rowbly/`.
 - [../service-layer.md](../service-layer.md#native-factory): the factory services.
