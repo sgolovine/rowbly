@@ -59,11 +59,12 @@ export function networkPauseDelay(failures: number): number {
   return minutes * MINUTE;
 }
 
-/** Gives the providers of the worker model and the worker overrides of the settings. */
+/** Gives the providers of the worker model, the worker overrides and the tag rules of the settings. */
 export function configuredProviders(settings: FactorySettings): string[] {
   const stageModels = Object.values(settings.stageWorkerModels ?? {});
   const storyModels = Object.values(settings.storyWorkerModels ?? {}).flatMap((stages) => Object.values(stages));
-  const models = [settings.workerModel, ...stageModels, ...storyModels].filter(
+  const tagModels = Object.values(settings.tagWorkerModels ?? {});
+  const models = [settings.workerModel, ...stageModels, ...storyModels, ...tagModels].filter(
     (model): model is ModelChoice => !!model,
   );
 

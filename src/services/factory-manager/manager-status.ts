@@ -111,20 +111,25 @@ async function networkWaitStories(manager: Manager, stories: readonly Story[], r
   return new Set(waiting.filter((t) => t.id !== resumeThreadId).map((t) => t.storyId as string));
 }
 
-/** Selects the worker model of a decision from the factory settings. */
-function decisionModel(manager: Manager, decision: Decision): WorkerSelection {
-  const target = { storyId: decision.story, stage: decision.stage };
+/** Selects the worker model of a decision from the factory settings and the tags of its Story. */
+function decisionModel(manager: Manager, decision: Decision, tags: readonly string[] | undefined): WorkerSelection {
+  const target = { storyId: decision.story, stage: decision.stage, tags };
 
   return selectWorkerModel(getState(manager).settings, target, (provider) => isProviderPaused(manager, provider));
 }
 
 /** Gives `provider paused` for a start or a retry when no worker model of the Story has a provider that is not paused. */
-function pausedReason(manager: Manager, decision: Decision, exempt: ScanExemptions): string | undefined {
+function pausedReason(
+  manager: Manager,
+  decision: Decision,
+  exempt: ScanExemptions,
+  story: Story | undefined,
+): string | undefined {
   if (!["start", "retry"].includes(decision.action) || decision.story === exempt.reservedStory) {
     return undefined;
   }
 
-  return decisionModel(manager, decision).paused ? PROVIDER_PAUSED_REASON : undefined;
+  return decisionModel(manager, decision, story?.tags).paused ? PROVIDER_PAUSED_REASON : undefined;
 }
 
 /**
@@ -138,6 +143,15 @@ export async function scan(
   maxActive = managerCapacity(getState(manager)),
   exempt: ScanExemptions = {},
 ): Promise<ScanResult> {
+  return (await scanStories(manager, maxActive, exempt)).policy;
+}
+
+/** Does the `scan`, and also gives the Stories that the scan read. */
+async function scanStories(
+  manager: Manager,
+  maxActive: number,
+  exempt: ScanExemptions,
+): Promise<{ readonly policy: ScanResult; readonly stories: readonly Story[] }> {
   const stories = await searchStories({}, manager.ctx);
   const stages = await classifiedStages(manager);
   const state = await readFactoryState(manager.paths.root, manager.ctx);
@@ -156,12 +170,12 @@ export async function scan(
     const reason =
       cancelledReason(story, cancelled) ??
       (networkWaits.has(decision.story) ? NETWORK_WAIT_REASON : undefined) ??
-      pausedReason(manager, decision, exempt);
+      pausedReason(manager, decision, exempt, story);
 
     return reason ? { ...decision, action: "skip" as const, reason } : decision;
   });
 
-  return { ...policy, decisions };
+  return { policy: { ...policy, decisions }, stories };
 }
 
 /** Adds the `dependsOn`, `blocks` and `waitingFor` lists of its Story to each decision. */
@@ -219,8 +233,9 @@ function nextDeadline(state: Readonly<ManagerState>, decisions: readonly Decisio
 }
 
 /** One queue entry of the status file, with the provider of the selected worker model, with the fallback. */
-function queueEntry(manager: Manager, d: Decision) {
-  const provider = decisionModel(manager, d).choice?.provider;
+function queueEntry(manager: Manager, d: Decision, stories: readonly Story[]) {
+  const tags = stories.find((story) => story.id === d.story)?.tags;
+  const provider = decisionModel(manager, d, tags).choice?.provider;
 
   return {
     story: d.story,
@@ -236,7 +251,7 @@ function queueEntry(manager: Manager, d: Decision) {
 export async function persistStatus(manager: Manager): Promise<void> {
   clearTimeout(getState(manager).deadlineTimer);
 
-  const policy = await scan(manager);
+  const { policy, stories } = await scanStories(manager, managerCapacity(getState(manager)), {});
   const deadline = nextDeadline(getState(manager), policy.decisions);
 
   if (!getState(manager).stopping && deadline !== undefined) {
@@ -250,7 +265,7 @@ export async function persistStatus(manager: Manager): Promise<void> {
   const queue = policy.decisions
     .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
     .slice(0, 50)
-    .map((d) => queueEntry(manager, d));
+    .map((d) => queueEntry(manager, d, stories));
   const status = { ...(await buildSnapshot(manager)), queue };
 
   await writeFileAtomic(await runtimePath(manager.paths, "status.json"), `${JSON.stringify(status)}\n`, {
