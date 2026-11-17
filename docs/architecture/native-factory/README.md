@@ -129,6 +129,10 @@ from `factory-manager/host-slots.ts`. These modules do no I/O.
   worker hosts, it is the worker limit.
 - **Status.** `factory_snapshot`, `status.json` and the supervisor digest have a `hosts` list with the
   slots of each host. The digest shows a maximum of 12 hosts.
+- **Contact facts.** In `factory_snapshot` and `status.json`, the entry of a worker host also has
+  `lastSeenAt` (ISO text) and `latencyMs` from the heartbeat facts, when the heartbeat has them. The
+  `state` is the heartbeat state or `not-ready`. `local` has no `lastSeenAt` and no `latencyMs`. The
+  digest does not have these two fields, because they change at each heartbeat.
 
 The function applies these rules in this order:
 
@@ -349,6 +353,13 @@ the Spec `remote-worker-hosts`, section "Disconnects".
   manager state. The state that the manager uses is the state of `workerHosts` when it is not
   `connected`, else the heartbeat state. Before the first heartbeat, it is the state of `workerHosts`.
   `workerHosts` can also give `not-ready`. Only a `connected` host gets new work.
+- **Attention.** When the heartbeat gives a worker host the state `disconnected`, `version-mismatch`
+  or `auth-failed`, the manager sets the attention entry `host:<id>`. The text gives the host, the
+  state and the last contact time, or `never`. When the heartbeat gives the host `connected` or
+  `degraded` again, the manager removes the entry. The 5-second status timer writes the change to
+  `status.json`. An old `host:<id>` entry of a previous daemon goes away at the first good heartbeat.
+- **Connection lost.** `rowbly thread list`, `rowbly thread show` and `rowbly status` show the remote
+  Threads whose host is not `connected` or `degraded`. See [cli.md](../cli.md#connection-lost).
 - **No failure on a disconnect.** A disconnect does not change the status of a remote Thread. The
   launch waits, and the Story keeps the reason `waiting for host sync`.
 - **Cut during the launch.** A transport error before the `launch` or `resume` command has a request

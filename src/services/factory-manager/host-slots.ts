@@ -22,6 +22,16 @@ export interface HostSlots {
   readonly max: number;
   readonly used: number;
   readonly free: number;
+  /** The time of the last good heartbeat of a worker host, as an ISO text. `local` has no value. */
+  readonly lastSeenAt?: string;
+  /** The latency of the last good heartbeat of a worker host, in milliseconds. `local` has no value. */
+  readonly latencyMs?: number;
+}
+
+/** The heartbeat facts of a host that the status shows. */
+export interface HostContact {
+  readonly lastSeenAt?: string;
+  readonly latencyMs?: number;
 }
 
 /** Counts the entries of each host in a list of host IDs. */
@@ -66,4 +76,19 @@ export function withHeartbeatStates(
   return hosts.map((host) =>
     host.state === "connected" ? { ...host, state: heartbeat.get(host.id)?.state ?? host.state } : host,
   );
+}
+
+/** Adds the time and the latency of the last good heartbeat to the slots of each worker host that has them. */
+export function withContactFacts(
+  slots: readonly HostSlots[],
+  heartbeat: ReadonlyMap<string, HostContact>,
+): HostSlots[] {
+  return slots.map((entry) => (entry.id === LOCAL_HOST ? entry : { ...entry, ...contactOf(heartbeat.get(entry.id)) }));
+}
+
+function contactOf(contact: HostContact | undefined): HostContact {
+  return {
+    ...(contact?.lastSeenAt === undefined ? {} : { lastSeenAt: contact.lastSeenAt }),
+    ...(contact?.latencyMs === undefined ? {} : { latencyMs: contact.latencyMs }),
+  };
 }

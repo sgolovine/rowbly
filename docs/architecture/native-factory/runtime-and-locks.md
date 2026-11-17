@@ -51,7 +51,10 @@ take or change a lock.
   `{ "version": 1, "commands": [{ id, type, threadId, queuedAt }] }`. The file has mode 0600, and its
   folders have mode 0700. See [README.md](README.md#disconnects-and-reconnects).
 - `status.json` has a `hosts` list with the worker slots of `local` and of each worker host:
-  `id`, `state`, `max`, `used` and `free`. See [README.md](README.md#placement).
+  `id`, `state`, `max`, `used` and `free`. A worker host also has `lastSeenAt` (ISO text) and
+  `latencyMs` from its last good heartbeat, when the heartbeat has them. When a worker host is
+  `disconnected`, `version-mismatch` or `auth-failed`, the `attention` list has the entry `host:<id>`.
+  See [README.md](README.md#placement) and [README.md](README.md#disconnects-and-reconnects).
 - `stageWorkerModels` and `storyWorkerModels` hold the worker model overrides of a Stage and of a
   Story in a Stage. A Story override has priority over a Stage override. A Stage override has
   priority over the `start_worker` model and `workerModel`. See
