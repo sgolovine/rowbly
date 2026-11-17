@@ -2,6 +2,11 @@ import { Box, Text } from "ink";
 import { theme } from "../../theme.js";
 import { type RowDragProps, SelectionRow } from "../selection-row/index.js";
 
+/** The lines of a `SectionHeadingRow`: the heading, and the empty line above it when it is `spaced`. */
+export function sectionHeadingRowHeight(spaced: boolean): number {
+  return spaced ? 2 : 1;
+}
+
 /**
  * The heading of a section of a list: `▾`/`▸`, the name of the section and its count of items. An empty,
  * expanded section also shows `emptyText` after the count. `spaced` puts one empty line above the heading,

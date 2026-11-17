@@ -1,11 +1,11 @@
 import { Text } from "ink";
 import type { FactoryQueueEntry, FactoryStatus } from "../../../../services/factory/factory.js";
 import type { ThreadRecord } from "../../../../services/thread/thread.js";
-import { Panel, ScrollBody } from "../../../components/index.js";
+import { Panel, VirtualList } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { queueReason } from "../../factory/factory-status.js";
 import { type ThreadHostView, threadHostProps } from "../thread-host-view.js";
-import { ThreadRow } from "../thread-row/index.js";
+import { ThreadRow, threadRowHeight } from "../thread-row/index.js";
 import type { StageNames } from "../thread-text.js";
 
 export interface ThreadListPanelProps {
@@ -83,8 +83,13 @@ export function ThreadListPanel({
         </Text>
       )}
       {threads.length === 0 && <Text color={theme.inkFaint}>No Threads</Text>}
-      <ScrollBody active={listing} height={scrollHeight(innerHeight, waiting)}>
-        {threads.map((thread, i) => (
+      <VirtualList
+        active={listing}
+        height={scrollHeight(innerHeight, waiting)}
+        cursor={cursor}
+        items={threads}
+        rowHeight={(thread) => threadRowHeight(thread, compactThreads)}
+        renderRow={(thread, i) => (
           <ThreadRow
             key={thread.id}
             thread={thread}
@@ -97,8 +102,8 @@ export function ThreadListPanel({
             {...threadHostProps(hostView, thread)}
             onClick={() => onClickRow(i)}
           />
-        ))}
-      </ScrollBody>
+        )}
+      />
     </Panel>
   );
 }

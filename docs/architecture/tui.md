@@ -352,7 +352,7 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
   and shows the conversation. Then `esc` closes only the view. The tab and the Modal stay open.
 - The mouse wheel over the Thread list scrolls the list also when the Thread has the focus. The focus
   does not move. `pgup/pgdn` scroll only the pane that has the focus. While an overlay is open, the
-  wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `ScrollBody`.
+  wheel does not scroll the list. `FactoryView` gives `wheel={clickable}` to its `VirtualList`.
 - The mouse wheel over the conversation of the Thread scrolls the conversation also when a different
   pane has the focus. The wheel gives the focus to the Story sidebar, as the wheel over the Story list
   gives the focus to the Story list. While an overlay or a confirmation covers the Story sidebar, the
@@ -695,6 +695,11 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
 - **Build from the library.** `src/tui/components/` has Panel, Button, Modal, Form, SelectList,
   TextInput, TextArea, Tabs, Sidebar, toasts, KeyHints, MarkdownView and more. Use these components
   before you write a new component. Extend a component. Do not make a fork of it.
+- **Long lists render only the rows in view.** `VirtualList` (`components/virtual-list/`) renders
+  only the rows in its height. Each row has a fixed height in lines, which a pure function next to
+  the row gives, for example `threadRowHeight`. The list scrolls by lines as `ScrollBody` does, and
+  it keeps the `cursor` row in view. The Thread list of the Threads tab and the `FactoryView` use it.
+  `ScrollBody` renders all rows. Use it only for short content.
 - **Tokens only.** Each colour comes from `theme` in `src/tui/theme.ts`. Do not write a hex value or
   an Ink colour name in a component. Do not use the `dimColor` of Ink. Use `theme.inkFaint`.
 - **Focus is the only accent.** Only one region has the focus at a time. Its frame is `accent`, and
