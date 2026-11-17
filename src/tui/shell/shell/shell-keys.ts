@@ -67,12 +67,14 @@ function sidebarKey(env: ShellEnv, input: string, delta: number, shift: -1 | 0 |
   }
 }
 
-/** The keys of the tag sidebar: `↑/↓` select the previous or next entry. */
-function tagSidebarKey(env: ShellEnv, delta: number): void {
+/** The keys of the tag sidebar: `↑/↓` select the previous or next entry, and `n` opens the New Tag Modal. */
+function tagSidebarKey(env: ShellEnv, input: string, delta: number): void {
   const { tagIndex, tags } = env.view;
 
   if (delta) {
     selectTag(env, Math.max(0, Math.min(tags.length, tagIndex + delta)));
+  } else if (input === "n") {
+    env.setOverlay({ kind: "newTag" });
   }
 }
 
@@ -201,7 +203,7 @@ function paneKey(env: ShellEnv, input: string, key: Key): void {
   } else if (sidebarFocused) {
     sidebarKey(env, input, delta, shift);
   } else if (tagSidebarFocused) {
-    tagSidebarKey(env, delta);
+    tagSidebarKey(env, input, delta);
   } else if (env.view.mode === "stories") {
     // The Factory view takes its own keys.
     listKey(env, input, key, delta, shift);

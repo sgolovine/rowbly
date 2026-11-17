@@ -35,6 +35,7 @@ function sidebarHints(view: ShellView, stage: Stage | undefined): KeyHint[] {
 function tagSidebarHints(view: ShellView): KeyHint[] {
   return [
     { key: "↑/↓", description: "filter by tag" },
+    { key: "n", description: "new tag" },
     { key: "tab", description: "Stories" },
     { key: "shift+tab", description: "Stages", secondary: true },
     { key: "esc", description: "Stories" },

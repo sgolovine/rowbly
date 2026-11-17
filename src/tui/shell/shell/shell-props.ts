@@ -104,13 +104,14 @@ export function tagEntries(tags: readonly TagConfig[]): readonly SidebarEntry[] 
 
 /**
  * The tag sidebar below the Stage sidebar, or `undefined` when it does not show. It has the width of the Stage
- * sidebar, and only the Stage sidebar changes the width. `entries` comes from the caller, which keeps its reference.
+ * sidebar, and only the Stage sidebar changes the width. A drag of its top edge changes its height beside the list.
+ * `entries` and `button` come from the caller, which keeps their references.
  */
 export function tagSidebarProps(
   handlers: ShellHandlers,
   view: ShellView,
   frame: ShellFrame,
-  entries: readonly SidebarEntry[],
+  parts: Pick<ComponentProps<typeof Sidebar>, "entries" | "button">,
 ): ComponentProps<typeof Sidebar> | undefined {
   if (!view.tagSidebar) {
     return;
@@ -118,15 +119,18 @@ export function tagSidebarProps(
 
   return {
     title: "Tags",
-    entries,
+    entries: parts.entries,
     current: view.tagIndex,
     height: frame.tagsHeight,
     width: frame.stacked ? frame.width : frame.shownWidth,
     maxWidth: frame.room,
+    maxHeight: frame.tagsRoom,
+    onResizeHeight: frame.tagsRoom > 0 ? handlers.resizeTags : undefined,
     focused: view.tagSidebarFocused,
     clickable: view.idle,
     onFocus: handlers.focusTags,
     onSelect: handlers.filterTag,
+    button: parts.button,
   };
 }
 

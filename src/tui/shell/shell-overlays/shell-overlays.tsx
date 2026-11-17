@@ -2,6 +2,7 @@ import { memo, Suspense } from "react";
 import type { FactoryLaunch, FactoryStatus } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
+import { TagFormModal } from "../../screens/settings/tag-form-modal/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
 import { HelpModal } from "../help-modal/index.js";
 import { LazyChecksModal, LazyFactoryModal, LazySettingsModal } from "../lazy-screens.js";
@@ -47,6 +48,7 @@ export const ShellOverlays = memo(function ShellOverlays({
           onSaved={on.stageSaved}
         />
       )}
+      {board && overlay?.kind === "newTag" && <TagFormModal ctx={ctx} onClose={on.close} onSaved={on.tagSaved} />}
       {/* The lazy Modals show an empty frame while their chunk loads. */}
       <Suspense fallback={null}>
         {board && overlay?.kind === "settings" && (
