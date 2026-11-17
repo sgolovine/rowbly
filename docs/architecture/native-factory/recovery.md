@@ -304,6 +304,13 @@ repairs missing native state projections.
 - A worker Thread whose `host` is a worker host (not `local`) keeps its status (`pending` or
   `running`) and gets no error. Its run can continue on the host. Recovery still repairs its
   projection. The new daemon adopts it.
+- Recovery first interrupts the local Threads of the dead owner. Then it repairs the projections of
+  all Threads in one state transaction. It reads `state.json` one time and writes it a maximum of one
+  time. If no attempt changes, recovery does not write the file, and `updatedAt` stays the same.
+- Recovery examines the owner token under the state lock, before the write. If the token changed,
+  recovery stops with a `ConflictError` and does not write `state.json`.
+- The write is atomic. After a crash, the next recovery repairs the projections again. Each attempt
+  has its Thread ID, so a repeated repair does not add a duplicate attempt.
 
 - An old heartbeat does not prove death. A live or uncertain owner prevents takeover.
 - Shell descendants that a crashed daemon started are not tracked. Check processes are an exception.
