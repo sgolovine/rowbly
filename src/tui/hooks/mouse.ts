@@ -50,6 +50,8 @@ interface Target {
 export interface MouseRegistry {
   register(target: Target): () => void;
   dispatch(event: MouseEvent): void;
+  /** Forgets the measured boxes. Call it after each layout commit. */
+  invalidate(): void;
 }
 
 /** A press on a box with a `drag` value, until the release. */
@@ -70,6 +72,8 @@ interface MouseState {
   readonly pulling: Target | null;
   /** The drop target under a drag that has moved, told on entering and leaving. */
   readonly over: Target | undefined;
+  /** The measured box of each target and clip viewport, until the next layout commit. */
+  readonly boxes: ReadonlyMap<DOMElement, Box>;
 }
 
 type MouseStore = Store<MouseState>;
@@ -102,43 +106,90 @@ function contains(box: Box, event: MouseEvent): boolean {
   return event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
 }
 
+/** The boxes of `nodes`. A node that is not in the cache is measured one time and added to the cache. */
+function boxesOf(store: MouseStore, nodes: readonly DOMElement[]): ReadonlyMap<DOMElement, Box> {
+  const { boxes } = store.current;
+  const missing = [...new Set(nodes)].filter((node) => !boxes.has(node));
+
+  if (missing.length === 0) {
+    return boxes;
+  }
+
+  return store.update((state) => ({ boxes: withMeasured(state.boxes, missing) })).boxes;
+}
+
+/** Gives a new cache with the measured box of each node in `nodes`. */
+function withMeasured(boxes: ReadonlyMap<DOMElement, Box>, nodes: readonly DOMElement[]): ReadonlyMap<DOMElement, Box> {
+  return new Map([...boxes, ...nodes.map((node) => [node, measureElement(node)] as const)]);
+}
+
+/** The hit on `target` when the pointer is in its box, or none. A node without a layout has no area. */
+function boxHit(target: Target, boxes: ReadonlyMap<DOMElement, Box>, event: MouseEvent): Hit[] {
+  const node = target.ref.current;
+  const box = node ? boxes.get(node) : undefined;
+  const area = box ? box.width * box.height : 0;
+
+  return box && area > 0 && contains(box, event) ? [{ target, area }] : [];
+}
+
 /** Whether the pointer is in the visible cells of the viewport that clips `target`. */
-function insideClip(target: Target, event: MouseEvent): boolean {
+function insideClip(target: Target, boxes: ReadonlyMap<DOMElement, Box>, event: MouseEvent): boolean {
   const viewport = target.clip?.current;
+  const box = viewport ? boxes.get(viewport) : undefined;
 
   if (!target.clip) {
     return true;
   }
 
-  return viewport ? contains(measureElement(viewport), event) : false;
+  return box ? contains(box, event) : false;
 }
 
-/** The area of `target` when the pointer is on it and it wants the event, or `0`. */
-function hitArea(target: Target, event: MouseEvent, wants: Wants): number {
-  const node = target.ref.current;
-  const box = node ? measureElement(node) : undefined;
-  const area = box ? box.width * box.height : 0;
+/**
+ * The targets under the pointer that want the event, in the order of registration. Only the targets
+ * that want the event are measured, and only the clip viewports of the targets under the pointer.
+ */
+function hits(store: MouseStore, event: MouseEvent, wants: Wants): readonly Hit[] {
+  const wanted = [...store.current.targets].filter((target) => wants(target.handlers.current));
+  const boxes = boxesOf(
+    store,
+    wanted.flatMap((target) => target.ref.current ?? []),
+  );
+  const under = wanted.flatMap((target) => boxHit(target, boxes, event));
+  const clips = boxesOf(
+    store,
+    under.flatMap((found) => found.target.clip?.current ?? []),
+  );
 
-  if (!box || area === 0 || !contains(box, event)) {
-    return 0;
-  }
-
-  return insideClip(target, event) && wants(target.handlers.current) ? area : 0;
+  return under.filter((found) => insideClip(found.target, clips, event));
 }
 
 /** Keeps the first of the smallest boxes. */
-function smallerHit(best: Hit | undefined, target: Target, area: number): Hit | undefined {
-  return area > 0 && (!best || area < best.area) ? { target, area } : best;
+function smallerHit(best: Hit | undefined, found: Hit): Hit {
+  return best && best.area <= found.area ? best : found;
+}
+
+/** The smallest of `found` that wants the event. */
+function smallest(found: readonly Hit[], wants: Wants): Target | undefined {
+  return found.filter((each) => wants(each.target.handlers.current)).reduce<Hit | undefined>(smallerHit, undefined)
+    ?.target;
 }
 
 /** The smallest box under the pointer that wants the event. */
 function hit(store: MouseStore, event: MouseEvent, wants: Wants): Target | undefined {
-  const best = [...store.current.targets].reduce<Hit | undefined>(
-    (found, target) => smallerHit(found, target, hitArea(target, event, wants)),
-    undefined,
-  );
+  return smallest(hits(store, event, wants), wants);
+}
 
-  return best?.target;
+function wantsDrop(handlers: MouseHandlers): boolean {
+  return Boolean(handlers.onDrop);
+}
+
+function wantsHover(handlers: MouseHandlers): boolean {
+  return Boolean(handlers.onEnter || handlers.onLeave);
+}
+
+/** Forgets the measured boxes, so that the next event measures the boxes of the new layout. */
+function invalidate(store: MouseStore): void {
+  store.update(() => ({ boxes: new Map() }));
 }
 
 function setOver(store: MouseStore, next: Target | undefined): void {
@@ -153,7 +204,7 @@ function setOver(store: MouseStore, next: Target | undefined): void {
 }
 
 function registerTarget(store: MouseStore, target: Target): () => void {
-  store.update((state) => ({ targets: withMember(state.targets, target) }));
+  store.update((state) => ({ targets: withMember(state.targets, target), boxes: new Map() }));
 
   return () => unregisterTarget(store, target);
 }
@@ -168,7 +219,7 @@ function unregisterTarget(store: MouseStore, target: Target): void {
     setOver(store, undefined);
   }
 
-  store.update((state) => ({ targets: withoutMember(state.targets, target) }));
+  store.update((state) => ({ targets: withoutMember(state.targets, target), boxes: new Map() }));
 }
 
 function dispatchWheel(store: MouseStore, event: MouseEvent): void {
@@ -192,35 +243,34 @@ function dispatchMove(store: MouseStore, event: MouseEvent): void {
     return;
   }
 
-  dragOver(store, event);
-  hover(store, event);
+  markMoved(store, event);
+
+  const dragging = store.current.dragging?.moved ? store.current.dragging : null;
+  const under = hits(store, event, (handlers) => wantsHover(handlers) || (dragging !== null && wantsDrop(handlers)));
+
+  if (dragging) {
+    dragOver(store, event, dragging, smallest(under, wantsDrop));
+  }
+
+  hover(store, smallest(under, wantsHover));
 }
 
-/** Tells the drop target under a drag that has moved. */
-function dragOver(store: MouseStore, event: MouseEvent): void {
+/** Marks a drag as moved when the pointer leaves the cell of the press. */
+function markMoved(store: MouseStore, event: MouseEvent): void {
   const { dragging } = store.current;
 
-  if (!dragging) {
-    return;
-  }
-
-  if (event.x !== dragging.x || event.y !== dragging.y) {
+  if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) {
     store.update(() => ({ dragging: { ...dragging, moved: true } }));
   }
+}
 
-  if (!store.current.dragging?.moved) {
-    return;
-  }
-
-  setOver(
-    store,
-    hit(store, event, (handlers) => Boolean(handlers.onDrop)),
-  );
+/** Tells the drop target `next` under a drag that has moved. */
+function dragOver(store: MouseStore, event: MouseEvent, dragging: Drag, next: Target | undefined): void {
+  setOver(store, next);
   store.current.over?.handlers.current.onDragOver?.(dragging.value, event.x, event.y);
 }
 
-function hover(store: MouseStore, event: MouseEvent): void {
-  const next = hit(store, event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
+function hover(store: MouseStore, next: Target | undefined): void {
   const { hovered } = store.current;
 
   if (next === hovered) {
@@ -285,7 +335,7 @@ function release(store: MouseStore, event: MouseEvent, drop: Drag): void {
     return;
   }
 
-  const target = hit(store, event, (handlers) => Boolean(handlers.onDrop));
+  const target = hit(store, event, wantsDrop);
 
   if (target && target !== drop.from) {
     target.handlers.current.onDrop?.(drop.value, event.x, event.y);
@@ -300,11 +350,13 @@ export function createMouseRegistry(): MouseRegistry {
     dragging: null,
     pulling: null,
     over: undefined,
+    boxes: new Map(),
   });
 
   return {
     register: (target) => registerTarget(store, target),
     dispatch: (event) => DISPATCH[event.kind](store, event),
+    invalidate: () => invalidate(store),
   };
 }
 
@@ -318,7 +370,15 @@ function mouseListener(registry: MouseRegistry): (event: MouseEvent) => void {
   return (event) => registry.dispatch(event);
 }
 
-/** Feeds the reports from a `MouseStdin` into the registry until unmounted. */
+/** Gives one listener for the `on` and the `off` of the layout commits of a mouse source. */
+function layoutListener(registry: MouseRegistry): () => void {
+  return () => registry.invalidate();
+}
+
+/**
+ * Feeds the reports from a `MouseStdin` into the registry until unmounted. A `layout` event on the
+ * source tells the registry that the layout changed, so that it measures the boxes again.
+ */
 export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
   useEffect(() => {
     if (!source) {
@@ -326,11 +386,14 @@ export function useMouseSource(registry: MouseRegistry, source: EventEmitter | u
     }
 
     const listener = mouseListener(registry);
+    const onLayout = layoutListener(registry);
 
     source.on("mouse", listener);
+    source.on("layout", onLayout);
 
     return () => {
       source.off("mouse", listener);
+      source.off("layout", onLayout);
     };
   }, [registry, source]);
 }

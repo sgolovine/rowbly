@@ -370,6 +370,11 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | `use-thread-changes.ts`     | `useThreadChanges`, `useFactoryChanges`: call a function when Thread or factory files change.      |
 | `factory-status-context.ts` | `FactoryStatusContext`, `useSharedFactoryStatus`: the one factory status read of the shell.        |
 
+The mouse registry measures only the boxes that want an event. It keeps each measured box in a cache.
+`runFullScreen` emits `layout` on the mouse source after each frame that Ink draws. `useMouseSource`
+then calls `registry.invalidate()`, and the registry clears the cache. A target that registers or
+unregisters also clears the cache.
+
 ## Board load
 
 `useShellData` loads the board. On the first load for a `ServiceContext`, before it reads the Stories, it
