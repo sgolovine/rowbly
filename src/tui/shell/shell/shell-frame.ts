@@ -20,7 +20,12 @@ export interface ShellFrame {
   readonly mainHeight: number | undefined;
   /** The sidebar goes above the list in a narrow terminal. */
   readonly stacked: boolean;
+  /** The rows of the sidebars above the list when stacked, or `0`. */
   readonly stackedHeight: number;
+  /** The rows of the Stage sidebar, or `undefined` when it grows with its content. */
+  readonly stagesHeight: number | undefined;
+  /** The rows of the tag sidebar below the Stage sidebar, or `0` when it does not show. */
+  readonly tagsHeight: number | undefined;
   /** The column between the sidebar and the list. */
   readonly gap: number;
   /** The most columns the sidebar can take. */
@@ -77,11 +82,51 @@ function isStacked(view: ShellView, layout: Layout, mainHeight: number | undefin
   );
 }
 
-/** The stacked sidebar fits its entries, and it leaves at least half of the main area to the list. */
+/** The rows that show all entries of a sidebar: the entries, the first entry (All …) and the chrome. */
+function entriesHeight(count: number): number {
+  return count + 1 + SIDEBAR_CHROME_HEIGHT;
+}
+
+/** The rows that show all entries of the tag sidebar, or `0` when it does not show. */
+function tagsNeed(view: ShellView): number {
+  return view.tagSidebar ? entriesHeight(view.tags.length) : 0;
+}
+
+/**
+ * The stacked sidebars fit their entries, and they leave at least half of the main area to the list. The tag sidebar
+ * goes below the Stage sidebar in the same rows.
+ */
 function stackedHeightOf(view: ShellView, stacked: boolean, mainHeight: number | undefined): number {
   return stacked && mainHeight !== undefined
-    ? Math.min(view.stages.length + 1 + SIDEBAR_CHROME_HEIGHT, Math.floor(mainHeight / 2))
+    ? Math.min(entriesHeight(view.stages.length) + tagsNeed(view), Math.floor(mainHeight / 2))
     : 0;
+}
+
+/** The rows of the tag sidebar in `height` rows: all its entries, but not more than its half of the rows. */
+function tagsHeightOf(need: number, height: number, stagesNeed: number): number {
+  return Math.min(need, Math.max(Math.floor(height / 2), height - stagesNeed));
+}
+
+/** The rows of the Stage sidebar and of the tag sidebar: beside the list, or stacked above it. */
+function sidebarHeightsOf(
+  view: ShellView,
+  stacked: boolean,
+  stackedHeight: number,
+  mainHeight: number | undefined,
+): Pick<ShellFrame, "stagesHeight" | "tagsHeight"> {
+  const height = stacked ? stackedHeight || undefined : mainHeight;
+  const need = tagsNeed(view);
+
+  if (height === undefined || need === 0) {
+    return { stagesHeight: height, tagsHeight: need === 0 ? 0 : undefined };
+  }
+
+  // Beside the list, the Stage sidebar keeps at least half of the rows.
+  const tagsHeight = stacked
+    ? tagsHeightOf(need, height, entriesHeight(view.stages.length))
+    : Math.min(need, Math.floor(height / 2));
+
+  return { stagesHeight: height - tagsHeight, tagsHeight };
 }
 
 /** The sidebar can grow until the Story list is narrower than `MAIN_MIN_WIDTH`. */
@@ -150,6 +195,8 @@ function coverFrame(layout: Layout, view: ShellView, story: StoryFrame): ShellFr
     mainHeight,
     stacked: false,
     stackedHeight: 0,
+    stagesHeight: undefined,
+    tagsHeight: 0,
     gap: 0,
     room: 0,
     shownWidth: 0,
@@ -245,6 +292,7 @@ export function shellFrame(
     mainHeight,
     stacked,
     stackedHeight,
+    ...sidebarHeightsOf(view, stacked, stackedHeight, mainHeight),
     gap,
     room,
     shownWidth,

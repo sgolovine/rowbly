@@ -47,19 +47,23 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   const layout = useLayout();
   const { data, factory, reload, putOnBoard, takeFromBoard } = useShellData(ctx, preloadPi);
   const { values, setters } = useShellState();
-  const { overlay, sidebarShown, stageKey, collapsed } = values;
+  const { overlay, sidebarShown, stageKey, tagKey, collapsed } = values;
   const toast = useToast();
 
   useStageDefaults(data.data, setters.setCollapsed);
 
-  // Only a change of the board, the Stage filter or the collapsed Stages builds the rows again, not a cursor move.
-  const rows = useMemo(() => shellRows(data.data, stageKey, collapsed), [data.data, stageKey, collapsed]);
+  // Only a change of the board, a filter or the collapsed Stages builds the rows again, not a cursor move.
+  const rows = useMemo(
+    () => shellRows(data.data, stageKey, tagKey, collapsed),
+    [data.data, stageKey, tagKey, collapsed],
+  );
   const view = shellView({ data, active, ...values, rows });
   const frame = shellFrame(layout, view, values.sidebarWidth, values.storyWidth, values.storyExpanded);
   const env: ShellEnv = {
     ctx,
     view,
     stageKey,
+    tagKey,
     sidebarShown,
     storyExpandable: frame.story.mode === "beside",
     storyExpanded: frame.story.expanded,

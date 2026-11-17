@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { compactThreads, projectTags } from "../../../services/config/config.js";
+import { compactThreads, projectTags, type TagConfig } from "../../../services/config/config.js";
 import type { FactoryStatus } from "../../../services/factory/factory.js";
 import type { Stage } from "../../../services/stage/stage.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
@@ -12,6 +12,7 @@ import type { ShellFrame } from "./shell-frame.js";
 import type { ShellHandlers } from "./shell-handlers.js";
 import {
   ALL_STAGES,
+  ALL_TAGS,
   type Board,
   type ShellEnv,
   type ShellView,
@@ -37,6 +38,7 @@ export interface PanelInput {
   readonly noProject: boolean;
   readonly mode: ViewMode;
   readonly stage: Stage | undefined;
+  readonly tag: TagConfig | undefined;
   readonly rows: readonly StoryListRow[];
   readonly cursor: number;
   readonly marked: ReadonlySet<string>;
@@ -81,7 +83,7 @@ export function stageSidebarProps(
     title: "Stages",
     entries: parts.entries,
     current: view.stageIndex,
-    height: frame.stacked ? frame.stackedHeight || undefined : frame.mainHeight,
+    height: frame.stagesHeight,
     width: frame.stacked ? frame.width : frame.shownWidth,
     maxWidth: frame.room,
     onResize: frame.stacked ? undefined : handlers.resizeStages,
@@ -95,9 +97,42 @@ export function stageSidebarProps(
   };
 }
 
+/** The entries of the tag sidebar: All Tags, then each tag in config order, with its label. */
+export function tagEntries(tags: readonly TagConfig[]): readonly SidebarEntry[] {
+  return [{ id: ALL_TAGS, label: "All Tags" }, ...tags.map((tag) => ({ id: tag.value, label: tag.label }))];
+}
+
+/**
+ * The tag sidebar below the Stage sidebar, or `undefined` when it does not show. It has the width of the Stage
+ * sidebar, and only the Stage sidebar changes the width. `entries` comes from the caller, which keeps its reference.
+ */
+export function tagSidebarProps(
+  handlers: ShellHandlers,
+  view: ShellView,
+  frame: ShellFrame,
+  entries: readonly SidebarEntry[],
+): ComponentProps<typeof Sidebar> | undefined {
+  if (!view.tagSidebar) {
+    return;
+  }
+
+  return {
+    title: "Tags",
+    entries,
+    current: view.tagIndex,
+    height: frame.tagsHeight,
+    width: frame.stacked ? frame.width : frame.shownWidth,
+    maxWidth: frame.room,
+    focused: view.tagSidebarFocused,
+    clickable: view.idle,
+    onFocus: handlers.focusTags,
+    onSelect: handlers.filterTag,
+  };
+}
+
 /** The title of the Story panel. */
 export function panelTitle(view: ShellView): string {
-  const { board, noProject, stage, mode } = view;
+  const { board, noProject, stage, tag, mode } = view;
   const projectName = board?.project.projectName;
 
   if (board && mode === "threads") {
@@ -105,7 +140,7 @@ export function panelTitle(view: ShellView): string {
   }
 
   if (projectName) {
-    return `${projectName} › ${stage?.label ?? "All Stages"}`;
+    return `${projectName} › ${stage?.label ?? "All Stages"}${tag ? ` › ${tag.label}` : ""}`;
   }
 
   return noProject ? "Set up Rowbly" : "Stories";
@@ -133,10 +168,19 @@ function factoryViewProps(
   };
 }
 
+/** The text of an empty Story list. It names the Stage and the tag of the filters. */
+function emptyListText(stage: Stage | undefined, tag: TagConfig | undefined): string {
+  const where = stage ? ` in ${stage.label}` : "";
+
+  if (tag) {
+    return `No Stories${where} with the tag ${tag.label}.`;
+  }
+
+  return stage ? `No Stories${where}.` : "No Stories yet. Press n to create one.";
+}
+
 /** The Story list of an open Project. */
 function boardBody(handlers: ShellHandlers, input: PanelInput, board: Board): StoryPanelBody {
-  const { stage } = input;
-
   return {
     kind: "board",
     activity: board.activity,
@@ -149,7 +193,7 @@ function boardBody(handlers: ShellHandlers, input: PanelInput, board: Board): St
       marked: input.marked,
       clickable: input.idle,
       height: input.listInnerHeight,
-      emptyText: stage ? `No Stories in ${stage.label}.` : "No Stories yet. Press n to create one.",
+      emptyText: emptyListText(input.stage, input.tag),
       onCursor: handlers.pointRow,
       onMove: handlers.dropStory,
       onActivate: handlers.clickRow,
