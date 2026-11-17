@@ -8,7 +8,6 @@ export * from "./spec-list-panel/index.js";
 export * from "./spec-panel/index.js";
 export * from "./specs-tab/index.js";
 export { stageCategory } from "./stage-category.js";
-export * from "./stage-heading-row/index.js";
 export * from "./story-confirm-dialogs/index.js";
 export * from "./story-general-tab/index.js";
 export * from "./story-list/index.js";
