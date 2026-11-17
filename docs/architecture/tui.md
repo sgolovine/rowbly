@@ -19,6 +19,26 @@ code.
 3. `App` (`app.tsx`) puts `TuiProviders` around the `Shell`. Keep `app.tsx` thin.
 4. `renderTui()` waits until the user quits.
 
+### Lazy screens
+
+The board does not show some screens at launch. `src/tui/shell/lazy-screens.ts` loads them with
+`React.lazy` and a dynamic `import()`. Thus, tsup puts each one in a separate chunk, and the TUI loads
+less code before the first render. The lazy screens are:
+
+- The Settings Modal (`LazySettingsModal`).
+- The Factory Modal (`LazyFactoryModal`) and the Checks Modal (`LazyChecksModal`).
+- The onboarding steps (`LazyOnboarding`).
+
+Obey these rules:
+
+- Render a lazy screen only inside a `Suspense` boundary. `shell-overlays.tsx` shows an empty frame
+  while a Modal loads. `story-panel.tsx` shows `Loading` while the onboarding steps load.
+- Do not import `screens/settings/index.js`, `screens/factory/index.js` or
+  `screens/onboarding/index.js` statically outside their folders. A static import of a barrel
+  puts the screen back in the main TUI chunk.
+- Import a small helper from its own file. For example, import `liveChecks` from
+  `screens/factory/check-jobs.js` and `factoryState` from `screens/factory/factory-status.js`.
+
 ## Layout of `src/tui/`
 
 ```
@@ -743,6 +763,37 @@ In dev mode, React was 940 ms, Ink was 686 ms, Yoga was 162 ms and Rowbly was 53
 
 No render path or key handler used more than 100 ms. The largest app function after the launch was
 `readStoryFile` with 51 ms for the first board load.
+
+### Lazy screens (ROW-139)
+
+This run measures the lazy screens of ROW-139. It uses steps 1 to 11 of the method below. Compare
+only runs on the same machine at the same time.
+
+The run is from 2026-11-17, with 140 Stories, a 140x38 terminal, Node 24.22.1 and Linux x86_64 with
+16 cores. Other factory workers ran on the machine at the same time (load average 2.5 to 4.7). The
+runs of the base build and of the ROW-139 build alternated. Each value is the median of 6 runs.
+
+| Measurement                                  | Cache | Base build | ROW-139 build |
+| -------------------------------------------- | ----- | ---------- | ------------- |
+| TUI launch to first Story row                | Cold  | 1.45 s     | 1.45 s        |
+| TUI launch to first Story row                | Warm  | 1.33 s     | 1.33 s        |
+| `loadInProductionMode`, inclusive CPU time   | Cold  | 210 ms     | 218 ms        |
+| `loadInProductionMode`, inclusive CPU time   | Warm  | 145 ms     | 148 ms        |
+| Code of `dist/` that the TUI loads at launch | -     | 1,198 KB   | 933 KB        |
+
+- **Cold cache.** Each run had a new empty `HOME`. Thus, the compile cache was empty.
+- **Warm cache.** One run without a profile filled the cache in the same `HOME` before the measured
+  runs.
+- **Compile cache.** The compile cache also applies to the TUI chunk and to the lazy chunks. The warm
+  cache decreased `loadInProductionMode` by approximately 65 ms. When a run opened the Settings Modal
+  and the Factory Modal, the cache got new entries for their chunks.
+- **Result.** The TUI loads 22% less code from `dist/` at launch, but the launch time did not change
+  by a measurable value. V8 compiles a function only when the code calls it. Thus, code that the TUI
+  does not call is cheap to load. Most of the launch time is in Ink, React, Yoga and the first load
+  of the board.
+- **Baseline.** The ROW-137 baseline is 1.28 s, on a machine with no other load. This run had a
+  higher load, and the base build was also slower than 1.28 s. The ROW-139 build was not slower than
+  the base build.
 
 ### Method
 
