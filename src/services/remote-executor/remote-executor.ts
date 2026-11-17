@@ -28,6 +28,7 @@ import { failRun, newRemoteRun, takeReceipt, waitForAbort } from "./remote-run.j
 import { shutdownRemote, stopRemote } from "./remote-stop.js";
 import { syncHosts } from "./remote-sync.js";
 import type { RemoteEnv, RemoteExecutor, RemoteExecutorInput, RemoteRun, RemoteState } from "./remote-types.js";
+import { dropMirror } from "./session-mirror.js";
 
 export type { HostConnection, RemoteExecutor, RemoteExecutorInput } from "./remote-types.js";
 
@@ -38,6 +39,7 @@ export function createRemoteExecutor(input: RemoteExecutorInput): RemoteExecutor
     links: new Map(),
     queueChain: Promise.resolve(),
     reconnects: new Map(),
+    mirrors: new Map(),
   });
   const env: RemoteEnv = { input, state };
 
@@ -74,6 +76,7 @@ async function launchRemote(env: RemoteEnv, launch: WorkerLaunch, events: Worker
     env.state.update((state) => ({ runs: withoutEntry(state.runs, run.threadId) }));
     closeIdleLink(env, host);
     await dropInbound(env, host, run.threadId);
+    await dropMirror(env, run.threadId);
   }
 }
 

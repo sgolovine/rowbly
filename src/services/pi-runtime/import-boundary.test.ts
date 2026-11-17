@@ -55,6 +55,18 @@ describe("Pi import boundary", () => {
     expect(JSON.parse(result.stdout).factory.phase).toBe("stopped");
   });
 
+  it("imports the connection facts of the Threads without loading Pi, the host transport or the remote executor", async () => {
+    const { readFile } = await import("node:fs/promises");
+    await expect(import("../thread-connection/connection-lost.js")).resolves.toHaveProperty("lostConnections");
+    await expect(import("../thread-connection/thread-connection.js")).resolves.toHaveProperty(
+      "listThreadsWithConnection",
+    );
+    for (const file of ["connection-lost.ts", "thread-connection.ts"]) {
+      const source = await readFile(new URL(`../thread-connection/${file}`, import.meta.url), "utf8");
+      expect(source).not.toMatch(/host-transport|remote-executor/);
+    }
+  });
+
   it("imports the worker executor interface without loading Pi", async () => {
     await expect(import("../factory-manager/worker-executor.js")).resolves.toHaveProperty("workerControl");
   });
@@ -87,6 +99,7 @@ describe("Pi import boundary", () => {
     await expect(import("../remote-executor/inbound-queue.js")).resolves.toHaveProperty("queueInboundUpdates");
     await expect(import("../inbound/inbound-diff.js")).resolves.toHaveProperty("inboundDiff");
     await expect(import("../inbound/inbound-types.js")).resolves.toHaveProperty("INBOUND_TYPES");
+    await expect(import("../remote-executor/session-mirror.js")).resolves.toHaveProperty("takeSessionFrame");
     await expect(import("../factory-manager/host-heartbeat.js")).resolves.toHaveProperty("startHostHeartbeat");
     await expect(import("../host-agent/host-ping.js")).resolves.toHaveProperty("hostPing");
     await expect(import("../factory-manager/remote-dispatch.js")).resolves.toHaveProperty("executorFor");
@@ -155,6 +168,7 @@ describe("Pi import boundary", () => {
     await expect(import("../host-agent/host-clone-update.js")).resolves.toHaveProperty("updateClone");
     await expect(import("../host-agent/host-run-events.js")).resolves.toHaveProperty("runEvents");
     await expect(import("../host-agent/host-run-state.js")).resolves.toHaveProperty("readHostRun");
+    await expect(import("../host-agent/host-session-bytes.js")).resolves.toHaveProperty("hostSessionBytes");
     await expect(import("../host-agent/host-runner.js")).resolves.toHaveProperty("createHostRunner");
     await expect(import("../host-agent/host-checks.js")).resolves.toHaveProperty("openHostChecks");
     await expect(import("../check-queue/thread-checks.js")).resolves.toHaveProperty("withCheck");

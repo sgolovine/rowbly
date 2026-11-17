@@ -2,6 +2,7 @@
 
 import { mapInOrder } from "../in-order/in-order.js";
 import { hostRuns } from "./remote-channel.js";
+import { hooksOf } from "./remote-commands.js";
 import { updateRuns } from "./remote-inbound.js";
 import { endSyncedRuns, waitsForSync } from "./remote-run.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
@@ -42,7 +43,7 @@ export async function syncHost(env: RemoteEnv, host: string): Promise<[string, s
     runs.filter((run) => !waitsForSync(run)),
   );
 
-  await endSyncedRuns(waiting);
+  await endSyncedRuns(waiting, hooksOf(env));
 
   return [host, problem];
 }

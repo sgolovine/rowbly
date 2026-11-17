@@ -87,8 +87,11 @@ async function sendEnd(run: RemoteRun, ended: HostRunState): Promise<void> {
   }
 }
 
-/** Ends a run that ended on the host and whose outbox is applied. A run that is closed does nothing. */
-export async function endRun(run: RemoteRun): Promise<void> {
+/**
+ * Ends a run that ended on the host and whose outbox is applied. A run that is closed does nothing. The session mirror
+ * gets the last lines of the host first, so that they are in the mirror when the Thread ends.
+ */
+export async function endRun(run: RemoteRun, hooks: Pick<RunHooks, "catchUp">): Promise<void> {
   const { ended, closed } = run.store.current;
 
   if (closed || !ended) {
@@ -98,6 +101,7 @@ export async function endRun(run: RemoteRun): Promise<void> {
   run.store.update(() => ({ closed: true }));
 
   try {
+    await hooks.catchUp(run).catch(() => undefined);
     await sendEnd(run, ended);
   } finally {
     run.done.abort();
@@ -108,14 +112,14 @@ export async function endRun(run: RemoteRun): Promise<void> {
  * Applies the outbox of the host, then ends the run. When the sync fails, the run waits: the next scan applies the
  * outbox and ends it.
  */
-async function syncAndEnd(run: RemoteRun, sync: (host: string) => Promise<void>): Promise<void> {
+async function syncAndEnd(run: RemoteRun, hooks: RunHooks): Promise<void> {
   try {
-    await sync(run.host);
+    await hooks.sync(run.host);
   } catch {
     return;
   }
 
-  await endRun(run);
+  await endRun(run, hooks);
 }
 
 /** Sends the new values of the frame. An event that throws fails the run, and `stopHost` stops the work on the host. */
@@ -140,7 +144,7 @@ async function applyRunFrame(run: RemoteRun, frame: HostRunState, hooks: RunHook
 
   if (hasEnded(frame)) {
     run.store.update(() => ({ ended: frame }));
-    await syncAndEnd(run, hooks.sync);
+    await syncAndEnd(run, hooks);
   }
 }
 
@@ -148,6 +152,8 @@ async function applyRunFrame(run: RemoteRun, frame: HostRunState, hooks: RunHook
 export interface RunHooks {
   readonly sync: (host: string) => Promise<void>;
   readonly stopHost: (run: RemoteRun) => Promise<void>;
+  /** Reads the session lines of the run that the mirror does not have. A failure does not throw. */
+  readonly catchUp: (run: RemoteRun) => Promise<void>;
 }
 
 /** Takes a `run` frame of the host. Only a frame of the command of the run belongs to it. */
@@ -179,6 +185,6 @@ export function waitsForSync(run: RemoteRun): boolean {
  * Ends each run of the list that waits for the sync. The caller applied the outbox after the runs ended. An event that
  * throws does not stop the end of the other runs.
  */
-export async function endSyncedRuns(runs: readonly RemoteRun[]): Promise<void> {
-  await mapInOrder(runs, (run) => endRun(run).catch(() => undefined));
+export async function endSyncedRuns(runs: readonly RemoteRun[], hooks: Pick<RunHooks, "catchUp">): Promise<void> {
+  await mapInOrder(runs, (run) => endRun(run, hooks).catch(() => undefined));
 }

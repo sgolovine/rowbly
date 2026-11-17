@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countByHost, hostSlots, placementCapacity, withHeartbeatStates } from "./host-slots.js";
+import { countByHost, hostSlots, placementCapacity, withContactFacts, withHeartbeatStates } from "./host-slots.js";
 
 describe("hostSlots", () => {
   const hosts = [
@@ -40,5 +40,45 @@ describe("withHeartbeatStates", () => {
       ["c", "not-ready"],
     ]);
     expect(placementCapacity(1, withHeartbeatStates(hosts, heartbeat))).toBe(2);
+  });
+});
+
+describe("withContactFacts", () => {
+  const seen = "2026-11-16T10:00:00.000Z";
+
+  it("adds the last contact and the latency of each worker host state, but not of local", () => {
+    const states = ["connected", "degraded", "disconnected", "version-mismatch", "auth-failed", "not-ready"] as const;
+    const hosts = states.map((state) => ({ id: state, maxWorkers: 2, state }));
+    const heartbeat = new Map([
+      ["local", { lastSeenAt: seen, latencyMs: 1 }],
+      ...states.map((state): [string, { lastSeenAt: string; latencyMs: number }] => [
+        state,
+        { lastSeenAt: seen, latencyMs: 40 },
+      ]),
+    ]);
+
+    expect(withContactFacts(hostSlots(1, hosts, countByHost(["degraded"])), heartbeat)).toEqual([
+      { id: "local", state: "connected", max: 1, used: 0, free: 1 },
+      ...states.map((state) => ({
+        id: state,
+        state,
+        max: 2,
+        used: state === "degraded" ? 1 : 0,
+        free: state === "degraded" ? 1 : 2,
+        lastSeenAt: seen,
+        latencyMs: 40,
+      })),
+    ]);
+  });
+
+  it("gives no last contact and no latency before the first heartbeat", () => {
+    const slots = withContactFacts(
+      hostSlots(1, [{ id: "new", maxWorkers: 1, state: "connected" }], new Map()),
+      new Map(),
+    );
+    const failed = withContactFacts(slots, new Map([["new", {}]]));
+
+    expect(slots[1]).toEqual({ id: "new", state: "connected", max: 1, used: 0, free: 1 });
+    expect(Object.keys(failed[1] ?? {})).toEqual(["id", "state", "max", "used", "free"]);
   });
 });

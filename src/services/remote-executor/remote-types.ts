@@ -108,6 +108,8 @@ export interface RemoteState {
   readonly queueChain: Promise<void>;
   /** The reconnect of each host that runs now. */
   readonly reconnects: ReadonlyMap<string, Promise<string | undefined>>;
+  /** The last write of the session mirror of each Thread. The writes of one Thread run one at a time. */
+  readonly mirrors: ReadonlyMap<string, Promise<void>>;
 }
 
 /** The fixed environment of the remote executor, and the store of its runs and channels. */

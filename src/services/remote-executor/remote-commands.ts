@@ -12,6 +12,7 @@ import {
 import { type CallTarget, type CommandType, isTransportError, newCommandId, submit } from "./remote-calls.js";
 import { failRun, type RunHooks, takeReceipt } from "./remote-run.js";
 import type { RemoteEnv, RemoteRun } from "./remote-types.js";
+import { catchUpRun } from "./session-mirror.js";
 
 /** Gives the target of the calls to a host. */
 export async function targetOf(env: RemoteEnv, host: string): Promise<CallTarget> {
@@ -25,7 +26,11 @@ export async function stopOnHost(env: RemoteEnv, run: RemoteRun, type: "stop-thr
 
 /** The actions of the executor that a run uses. */
 export function hooksOf(env: RemoteEnv): RunHooks {
-  return { sync: env.input.sync, stopHost: (run) => stopOnHost(env, run, "stop-thread") };
+  return {
+    sync: env.input.sync,
+    stopHost: (run) => stopOnHost(env, run, "stop-thread"),
+    catchUp: (run) => catchUpRun(env, run),
+  };
 }
 
 /** Runs a change of a queue file after the earlier changes, so that two changes do not lose a command. */

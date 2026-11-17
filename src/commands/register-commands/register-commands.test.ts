@@ -38,6 +38,7 @@ const resources = {
     "prepare",
     "inbound",
     "ping",
+    "session-bytes",
     "attach",
   ],
 };
@@ -58,6 +59,7 @@ const hidden = [
   "prepare",
   "inbound",
   "ping",
+  "session-bytes",
 ];
 
 describe("registerCommands", () => {

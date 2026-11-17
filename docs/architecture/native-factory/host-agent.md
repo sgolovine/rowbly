@@ -35,6 +35,7 @@ a supervisor. Only the start of a run loads Pi.
 | `host-attach.ts`            | `runHostAttach`: the frames of `host attach`.                                    |
 | `host-ping.ts`              | `hostPing`: the answer of the heartbeat `host ping`.                             |
 | `host-session-lines.ts`     | The read of the session files and the `session` frames of `host attach`.         |
+| `host-session-bytes.ts`     | `hostSessionBytes`: the complete session lines of `host session-bytes`.          |
 | `host-attach-fetch.ts`      | The `attachment-request` and `attachment-failed` frames of `host attach`.        |
 | `host-fetch.ts`             | The fetch request files and their failure answers.                               |
 | `host-channel-mark.ts`      | The live mark of the attach channel (`channel.json`).                            |
@@ -59,6 +60,7 @@ obeys the safe token rule of the transport. The data goes on stdin.
 | `[<remote rowbly>, "host", "run-paths", <project-id>]`       | request | `{ threadId, storyId, clone }`               | The run paths of `hostRunPaths`               |
 | `[<remote rowbly>, "host", "inbound", <project-id>]`         | request | `{ threadId, updates }` (32 MiB or less)     | `{ threadId, appliedSeq }`                    |
 | `[<remote rowbly>, "host", "ping", <project-id>]`            | request | `{}`                                         | `{ protocol, rowbly, agent, slots, pending }` |
+| `[<remote rowbly>, "host", "session-bytes", <project-id>]`   | bytes   | `{ threadId, file, offset }`                 | The session bytes (see "Session bytes")       |
 | `[<remote rowbly>, "host", "outbox", <project-id>]`          | request | `{ "afterSeq": <n> }`                        | `{ "entries": [...] }`                        |
 | `[<remote rowbly>, "host", "outbox-ack", <project-id>]`      | request | `{ "seq": <n> }`                             | `{ "removed": <n>, "blobs": [...] }`          |
 | `[<remote rowbly>, "host", "blob", <sha256>, <project-id>]`  | bytes   | None                                         | The bytes of the outbox file                  |
@@ -429,7 +431,8 @@ The channel obeys these rules:
   never cut.
 - When the channel opens, each session file that exists starts at its current size. The channel does
   not send the lines that were in the file before this time. A session file that the channel first
-  sees after it opened starts at offset 0. The main machine reads the missing lines (ROW-101).
+  sees after it opened starts at offset 0. The main machine reads the missing lines with
+  `host session-bytes` (see "Session bytes").
 - If the file becomes shorter than the sent offset, or if its inode changes, the channel starts again
   at offset 0 of the file.
 - The frames of one Thread are in offset order. The `offset` of a frame is the `end` of the frame
@@ -445,6 +448,28 @@ The channel obeys these rules:
 - A missing or unreadable session file gives no frame. It does not stop the channel.
 
 The channel keeps the read position of each file in memory. It does not write it to disk.
+
+### Session bytes
+
+`rowbly host session-bytes <project-id>` gives the bytes of the session file of one Thread from a byte
+offset. The main machine uses these bytes to fill a gap of its session mirror (see the
+[session mirror](README.md#session-mirror)). The input on stdin is
+`{ "threadId": "<id>", "file": "sessions/<thread-id>/<name>.jsonl", "offset": <n> }`. The output is
+the raw bytes on stdout, as for `host blob`.
+
+The command obeys these rules:
+
+- `file` must start with `sessions/<thread-id>/` and end with `.jsonl`. A `file` that is absolute,
+  that has a `..` part, that is for a different Thread or that is not below the runtime folder gives
+  `VALIDATION`. A bad `threadId` or a bad `offset` also gives `VALIDATION`.
+- The command reads a maximum of 4 MiB (`MAX_SESSION_READ_BYTES`) from `offset`.
+- It gives the bytes up to and including the last newline of the window. Thus it gives only complete
+  lines.
+- When the window has no newline and the file continues after the window, the command gives the full
+  window. The window is then a part of a long line. The next call continues the line.
+- When the window gets to the end of the file, a part line at the end is not in the output. It waits
+  for its newline.
+- An `offset` at or after the end of the file gives no bytes. A missing file gives `NOT_FOUND`.
 
 ## Disconnects
 
