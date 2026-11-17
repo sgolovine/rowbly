@@ -1,15 +1,15 @@
 ---
 title: Send board changes to running remote Threads
-stage: IN_DEVELOPMENT
+stage: CHANGELOG
 position: 17
 uid: 5e3e621e-900b-402f-bc40-4ac20d145759
 dependsOn:
   - ROW-94
   - ROW-97
 createdAt: 2026-11-16T19:45:11.252Z
-updatedAt: 2026-11-17T00:01:16.213Z
+updatedAt: 2026-11-17T00:18:09.050Z
 worktree: /home/sgolovine/Projects/rowbly-worktrees/ROW-98
-pull_request: null
+pull_request: https://github.com/sgolovine/rowbly/pull/299
 ---
 
 ## Goal
