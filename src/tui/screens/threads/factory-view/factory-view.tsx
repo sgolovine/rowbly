@@ -1,15 +1,14 @@
 import { Text } from "ink";
-import { Loading, VirtualList } from "../../../components/index.js";
+import { Loading, SectionHeadingRow, sectionHeadingRowHeight, VirtualList } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { ThreadRow, threadHostProps, threadRowHeight } from "../../stories/index.js";
 import type { FactoryViewRow } from "../factory-view-rows.js";
-import { ThreadSectionRow, threadSectionRowHeight } from "../thread-section-row/index.js";
 import { clickRow } from "./factory-view-actions.js";
 import { type FactoryViewProps, useFactoryView } from "./use-factory-view.js";
 
 /** The lines of a row of the Factory view. Each heading after the first has an empty line above it. */
 function factoryRowHeight(row: FactoryViewRow, index: number, compact: boolean | undefined): number {
-  return row.kind === "section" ? threadSectionRowHeight(index > 0) : threadRowHeight(row.thread, compact ?? false);
+  return row.kind === "section" ? sectionHeadingRowHeight(index > 0) : threadRowHeight(row.thread, compact ?? false);
 }
 
 /**
@@ -45,11 +44,12 @@ export function FactoryView(props: FactoryViewProps) {
       rowHeight={(row, index) => factoryRowHeight(row, index, compact)}
       renderRow={(row, index) =>
         row.kind === "section" ? (
-          <ThreadSectionRow
+          <SectionHeadingRow
             key={row.id}
             label={row.label}
             count={row.count}
             collapsed={row.collapsed}
+            emptyText="No Threads"
             spaced={index > 0}
             selected={index === env.cursor}
             clickable={clickable}

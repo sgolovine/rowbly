@@ -1,6 +1,6 @@
-import { Box, Text } from "ink";
+import { Text } from "ink";
 import { PROMPT_AUDIENCE, type UserPrompt } from "../../../../services/prompts/prompts.js";
-import { SelectionRow } from "../../../components/index.js";
+import { ColumnRow } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 
 /** The props of `PromptRow`. */
@@ -32,18 +32,24 @@ function promptState(prompt: UserPrompt): string {
 /** One user prompt in the settings list: its label, the state of its file, and the agents that get it. */
 export function PromptRow({ prompt, selected, idle, labelWidth, onClick }: PromptRowProps) {
   return (
-    <SelectionRow selected={selected} active={idle} onClick={onClick}>
-      <Box>
-        <Box width={labelWidth} flexShrink={0}>
-          <Text color={selected ? theme.ink : theme.inkMuted}>{prompt.label}</Text>
-        </Box>
-        <Box width={10} flexShrink={0}>
-          <Text color={prompt.text ? theme.inkMuted : theme.inkFaint}>{promptState(prompt)}</Text>
-        </Box>
-        <Text color={theme.inkFaint} wrap="truncate-end">
-          {PROMPT_AUDIENCE[prompt.name]}
-        </Text>
-      </Box>
-    </SelectionRow>
+    <ColumnRow
+      selected={selected}
+      active={idle}
+      onClick={onClick}
+      columns={[
+        { width: labelWidth, content: <Text color={selected ? theme.ink : theme.inkMuted}>{prompt.label}</Text> },
+        {
+          width: 10,
+          content: <Text color={prompt.text ? theme.inkMuted : theme.inkFaint}>{promptState(prompt)}</Text>,
+        },
+        {
+          content: (
+            <Text color={theme.inkFaint} wrap="truncate-end">
+              {PROMPT_AUDIENCE[prompt.name]}
+            </Text>
+          ),
+        },
+      ]}
+    />
   );
 }

@@ -64,10 +64,12 @@ The library also contains other code that has no guideline of its own:
 | --- | --- |
 | `SelectList` | A list for the keyboard and the mouse: `↑/↓`/`j/k`, `/` filter, single or multi select. Its rows are `SelectListRow`. |
 | `SelectionRow` | The `▌` bar and the `selection` fill of a highlighted row. Use them for lists that you lay out yourself. |
+| `ColumnRow`, `subtleColor` | A `SelectionRow` with cells side by side. A cell with a `width` keeps its width. The last cell has no `width`, so that it can shrink and truncate. `subtleColor` is the colour of a secondary cell: `ink-muted` when selected, else `ink-faint`. |
 | `TextInput`, `TextArea` | Text fields for one line and for many lines, with a caret and paste. `TextArea` also opens full screen with `ctrl+f`. |
 | `FullScreenEditor`, `useFullScreenEditor` | Markdown text on the full terminal, with View and Edit modes and an optional save. |
 | `FullScreenConversation`, `useFullScreenConversation` | The read-only conversation of one Thread on the full terminal. `ctrl+f`, `esc` and the `✕` close it. |
 | `SearchableSelect`, `SearchableSelectPicker`, `fuzzySearch` | The fuzzy picker that a searchable select field opens. |
+| `FuzzyPicker` | The generic fuzzy picker: a query input, an optional header and footer line, and a window of `SelectListRow` results. `↑/↓` move, `enter` chooses, `esc` cancels. `SearchableSelectPicker` and the Story finder use it. |
 | `MarkdownView`, `markdown.ts` | Markdown that is rendered for the terminal (`marked-terminal`), in a viewport that scrolls. |
 | `ScrollBody`, `useScrollFocus` | A viewport with limits. It scrolls with `pgup/pgdn` and the wheel, and it keeps the focused row in view. `active` controls the keys. `wheel` controls the wheel, and its default is `active`. |
 | `VirtualList` | A list that renders only the rows in its height. Each row has a fixed height in lines. It scrolls with `pgup/pgdn` and the wheel as `ScrollBody` does, and it keeps the `cursor` row in view. Use it for lists that can have many rows. |

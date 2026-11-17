@@ -16,6 +16,13 @@ This file records the changes to Rowbly that users can see.
 - Changed: The `✕` icon of a Modal and the `⤢`, `⤡` and `✕` icons of the Story sidebar now use one shared TUI component. Their look and their click actions do not change. (ROW-154)
 - Changed: The TUI uses one tab component for the Story modal tabs and the `View` and `Edit` tabs of the full screen editor. The tabs look the same as before. (ROW-153)
 - Changed: The Custom Field, Tag, Prompt and Stage forms of the TUI now use one shared form component. Their titles, fields and messages do not change. (ROW-155)
+- Changed: The status line and the result line of a Thread in the Threads tab of a Story and in the Factory view now use shared TUI components. The text, the colours and the layout do not change. (ROW-152)
+- Changed: The rows of the Tags, Custom Fields, Prompts, Stages, AI checks and AI models sections of the TUI Settings now use one shared row component. Their look and their click actions do not change. (ROW-150)
+- Changed: The Threads tab of the Story modal and the Story sidebar of the Factory view now use one shared TUI component for the Thread details, the conversation and the steering input. Their look and their keys do not change. (ROW-151)
+- Changed: The searchable select field and the searchable multi-select field of the TUI forms now use one shared code path to open the picker. Their keys, hints and modal titles do not change. (ROW-148)
+- Changed: The Stage headings of the Story list and the section headings of the Factory view now use one shared TUI component. The count of a selected Stage heading now uses the muted colour, as in the Factory view. (ROW-149)
+- Changed: The Story finder of the TUI and the picker of the searchable select fields now use one shared fuzzy search component. Their keys, texts and look do not change. (ROW-147)
+- Changed: The Tags and Custom Fields sections of the TUI Settings now use one shared list component. Their text, keys and hints do not change. (ROW-146)
 - Changed: The Threads screen and the Threads tab of a Story are faster with many Threads, because the TUI now shows only the Thread rows that are in view. (ROW-145)
 
 ### 0.20.0

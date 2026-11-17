@@ -3,16 +3,9 @@ import type { ThreadRecord } from "../../../../services/thread/thread.js";
 import type { ThreadConnection } from "../../../../services/thread-connection/thread-connection.js";
 import { SelectionRow } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
-import { abandonedText, lostText } from "../thread-host-view.js";
-import {
-  type StageNames,
-  THREAD_GLYPHS,
-  threadDuration,
-  threadModel,
-  threadName,
-  threadOutcome,
-  threadWaitsForNetwork,
-} from "../thread-text.js";
+import { ThreadOutcomeText } from "../thread-outcome-text/index.js";
+import { ThreadStatusText } from "../thread-status-text/index.js";
+import { type StageNames, threadDuration, threadModel, threadName, threadOutcome } from "../thread-text.js";
 
 /** The lines of a `ThreadRow`: row 1, then row 2 and the outcome row when the row is not `compact`. */
 export function threadRowHeight(thread: ThreadRecord, compact: boolean): number {
@@ -61,12 +54,9 @@ export function ThreadRow({
   held?: number;
   onClick(): void;
 }) {
-  const { glyph, color } = THREAD_GLYPHS[thread.status];
   const outcome = threadOutcome(thread);
   // `ink-faint` has too little contrast on the `selection` fill.
   const secondary = selected ? theme.inkMuted : theme.inkFaint;
-  const abandoned = abandonedText(thread, held);
-  const lost = lostText(connection, now);
 
   return (
     <SelectionRow selected={selected} active={clickable} onClick={onClick}>
@@ -78,14 +68,14 @@ export function ThreadRow({
                 {storyId}{" "}
               </Text>
             )}
-            <Text color={color}>{glyph} </Text>
-            <Text color={thread.status === "failed" ? theme.danger : theme.ink} bold={selected}>
-              {thread.status}
-            </Text>
-            <Text color={theme.inkMuted}> {threadName(thread, stages)}</Text>
-            {threadWaitsForNetwork(thread) && <Text color={theme.stageBoard}> · waiting for network</Text>}
-            {abandoned && <Text color={theme.stageBoard}>{abandoned}</Text>}
-            {lost && <Text color={theme.danger}>{lost}</Text>}
+            <ThreadStatusText
+              thread={thread}
+              now={now}
+              held={held}
+              connection={connection}
+              bold={selected}
+              extra={` ${threadName(thread, stages)}`}
+            />
           </Text>
         </Box>
         {host !== undefined && (
@@ -106,9 +96,7 @@ export function ThreadRow({
       )}
       {!compact && outcome && (
         <Box paddingLeft={2} paddingRight={1}>
-          <Text wrap="truncate-end" color={outcome.error ? theme.danger : secondary}>
-            {outcome.text}
-          </Text>
+          <ThreadOutcomeText outcome={outcome} color={secondary} />
         </Box>
       )}
     </SelectionRow>

@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import type { CheckSpec } from "../../../../services/factory-settings/factory-settings.js";
-import { SelectionRow } from "../../../components/index.js";
+import { ColumnRow } from "../../../components/index.js";
 import { theme } from "../../../theme.js";
 import { columnWidth } from "../column-width.js";
 
@@ -30,24 +30,23 @@ export function CheckList({ checks, cursor, active, onPick }: CheckListProps) {
   return (
     <Box flexDirection="column" flexShrink={0}>
       {checks.map((check, index) => (
-        <SelectionRow
+        <ColumnRow
           key={check.key}
           selected={index === cursor}
           active={active}
           onClick={active ? () => onPick(index) : undefined}
-        >
-          <Box>
-            <Box width={nameWidth} flexShrink={0}>
-              <Text color={theme.ink}>{nameText(check)}</Text>
-            </Box>
-            <Box width={scopeWidth} flexShrink={0}>
-              <Text color={theme.inkMuted}>{scopeText(check)}</Text>
-            </Box>
-            <Text color={theme.inkMuted} wrap="truncate-end">
-              {check.command}
-            </Text>
-          </Box>
-        </SelectionRow>
+          columns={[
+            { width: nameWidth, content: <Text color={theme.ink}>{nameText(check)}</Text> },
+            { width: scopeWidth, content: <Text color={theme.inkMuted}>{scopeText(check)}</Text> },
+            {
+              content: (
+                <Text color={theme.inkMuted} wrap="truncate-end">
+                  {check.command}
+                </Text>
+              ),
+            },
+          ]}
+        />
       ))}
     </Box>
   );
