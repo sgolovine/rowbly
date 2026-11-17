@@ -11,6 +11,7 @@ export interface ModelChoice {
 interface OverrideValues {
   readonly stageWorkerModels?: unknown;
   readonly storyWorkerModels?: unknown;
+  readonly tagWorkerModels?: unknown;
 }
 
 const THINKING_LEVELS: readonly unknown[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
@@ -41,12 +42,13 @@ function validModelMap(value: unknown): boolean {
   return isRecord(value) && Object.values(value).every(validModel);
 }
 
-/** Tells if the Stage and Story worker model overrides are absent or valid maps of model choices. */
+/** Tells if the Stage, Story and tag worker model overrides are absent or valid maps of model choices. */
 export function validOverrides(settings: OverrideValues): boolean {
   const stories = settings.storyWorkerModels;
 
   return (
     (settings.stageWorkerModels === undefined || validModelMap(settings.stageWorkerModels)) &&
+    (settings.tagWorkerModels === undefined || validModelMap(settings.tagWorkerModels)) &&
     (stories === undefined || (isRecord(stories) && Object.values(stories).every(validModelMap)))
   );
 }

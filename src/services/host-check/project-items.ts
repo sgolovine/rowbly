@@ -28,13 +28,14 @@ const exec = promisify(execFile);
 
 const NOT_IN_PROJECT = "Not in a Rowbly Project.";
 
-/** The worker models of the settings, without duplicates: the default, then the Stage and Story overrides. */
+/** The worker models of the settings, without duplicates: the default, the Stage and Story overrides, the tag rules. */
 export function workerModels(settings: FactorySettings): ModelChoice[] {
   const stories = Object.values(settings.storyWorkerModels ?? {}).flatMap((stages) => Object.values(stages));
   const all = [
     ...(settings.workerModel ? [settings.workerModel] : []),
     ...Object.values(settings.stageWorkerModels ?? {}),
     ...stories,
+    ...Object.values(settings.tagWorkerModels ?? {}),
   ];
   const keys = all.map((model) => `${model.provider}/${model.modelId}`);
 
