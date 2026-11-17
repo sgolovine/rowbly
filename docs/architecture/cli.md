@@ -138,7 +138,8 @@ than one `--tag`, a Story must have all of the tags.
 that runs factory workers only. The hosts belong to the user, not to a Project. Thus the commands do
 not need a Project, and they read and write the `hosts` key of `~/.rowblyrc.json`. Only `host use`
 and `host unuse` need a Project. The `host-project` service does their work. See
-[storage.md](storage.md#rowblyrcjson).
+[storage.md](storage.md#rowblyrcjson). For an overview of the worker hosts, see
+[native-factory/remote-hosts.md](native-factory/remote-hosts.md).
 
 - `host add <id> --ssh <target> --max-workers <n>` checks Node 22.19.0 or later on the host, and
   installs the exact Rowbly build of the main machine in a private folder on the host. Then it adds
@@ -202,7 +203,8 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   file does not change.
 - `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a new
   worker: `prefer-local`, `most-free` or `prefer-remote`. See
-  [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure).
+  [native-factory/controls.md](native-factory/controls.md#the-placement-flag-of-factory-configure)
+  and [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 - `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
   `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
   [native-factory/controls.md](native-factory/controls.md#cli-commands).
@@ -211,6 +213,11 @@ and `host unuse` need a Project. The `host-project` service does their work. See
   a success with no change. Without a live daemon, it gives `CONFLICT` with the text
   `Factory is not running`. With `--json`, it prints the receipt with `storyId`. See
   [native-factory/controls.md](native-factory/controls.md#the-release-command).
+- `rowbly factory status --json` has a `hosts` list with the state and the slots of each machine.
+  See [native-factory/README.md](native-factory/README.md#placement) and
+  [native-factory/runtime-and-locks.md](native-factory/runtime-and-locks.md#factory-files-in-rowbly).
+- `rowbly thread held <id>` lists, applies or discards the held entries of an abandoned remote
+  Thread. See [Held entries](#held-entries).
 - `host blob <sha256> [project-id]` is hidden. It does not show in `rowbly host --help`. The main
   machine runs it on a worker host to get the file of an `attachment.add` entry. With a project id,
   the command reads the outbox folder of the host agent of that Project. Without it, the command

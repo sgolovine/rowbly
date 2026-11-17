@@ -345,6 +345,12 @@ A Host record has this shape:
 - **Unuse.** `host unuse` removes only the record of the current Project. The clone stays on the host. It
   gives `CONFLICT` while a `pending` or `running` Thread of the Project is on the host.
 - **Bad file.** If `~/.rowblyrc.json` is not valid, each command gives `VALIDATION` and does not change the file.
+- **Placement.** `rowbly factory configure --placement <policy>` sets how the factory selects the machine of a
+  new worker. The policies are `prefer-local` (the default), `most-free` and `prefer-remote`.
+- **Remote worker.** A worker on a worker host writes to a copy of the Project. Its command prefix has
+  `-C <copy>`. Story field changes, Stage moves and attachments go through the outbox. The main machine
+  applies them to the board later. A new Story, Stage or Spec, and each config change, give `CONFLICT`
+  with the text `A remote worker cannot …`. Do not try the write again. Record the problem in the result.
 
 ### Spec
 

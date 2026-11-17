@@ -63,7 +63,8 @@ Modal has these views:
   and the total slots (`<used>/<max>`) and, for a lost host, the last contact (`last contact <duration>
   ago` or `no contact`). A lost host has a state that is not `connected` or `degraded`. Its state is
   in `danger`. A `degraded` state is in `stage-board`. Without a worker host, the list does not show.
-  `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows.
+  `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows. See
+  [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
 - **Attention.** `Factory › Attention` lists all warnings in a `SelectList` with `clickToHighlight`.
   `↑/↓` selects, `enter` opens the detail view, `/` filters and `esc` goes back. A click on a row
   that is not highlighted highlights the row. A click on the highlighted row opens the detail view.
@@ -110,7 +111,8 @@ command uses the same Git rules. The section does not load Pi or `agent-auth`.
 
 The Factory group of Settings has a Hosts section under the Git section (`HostsSection` in
 `src/tui/screens/settings/hosts-section/`). The section shows the placement of new workers and the
-worker hosts of the user.
+worker hosts of the user. See [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an
+overview of the worker hosts.
 
 - The placement card at the top shows the `placement` value of the factory settings. A config
   without the `placement` key shows `prefer-local`. `p` opens a `FormModal` with the policies of

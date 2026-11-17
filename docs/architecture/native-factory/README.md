@@ -184,6 +184,8 @@ when the number of the Story changes. See [../storage.md](../storage.md).
 
 ## Placement
 
+For an overview of the worker hosts, read [remote-hosts.md](remote-hosts.md) first.
+
 The manager places each new worker on a machine: the main machine (`local`) or a worker host. The pure
 function `placeWorker` in `factory-manager/placement.ts` selects the host. The slots of each host come
 from `factory-manager/host-slots.ts`. These modules do no I/O.
@@ -589,9 +591,16 @@ section "Abandoned Threads".
 
 ## Prerequisites and limits
 
-- Native execution must have Linux, Git, local files and util-linux `flock`.
+- Native execution on the main machine must have Linux, Git, local files and util-linux `flock`.
 - The board, metadata and Peek stay separate from these prerequisites.
-- There is no ownership guarantee across hosts, NFS, PID namespaces or copied runtime directories.
+- Each worker host must have these items:
+  - Linux, Git and util-linux `flock`.
+  - Node 22.19.0 or later.
+  - SSH access from the main machine with a key and without a password.
+  - Its own logins: Pi, `gh`, Git push access and the Git identity. SSH agent forwarding is not
+    sufficient, because the work continues after a disconnect.
+- The daemon ownership has no guarantee across machines, NFS, PID namespaces or copied runtime
+  folders. Worker hosts are supported only through the host agent. See [remote-hosts.md](remote-hosts.md).
 - Existing Projects do not change. There is no migration of Stories, Stages, Specs or config.
 - Do not assume exactly-once shell effects. Dirty worktrees and malformed runtime files stay on disk.
 
@@ -615,6 +624,7 @@ of the `factory` skill.
 | [factory-activity.md](factory-activity.md)       | You change the `▶` activity of a Story or the status line below the list.     |
 | [controls.md](controls.md)                       | You change a native CLI command or a factory key in the TUI.                  |
 | [checks.md](checks.md)                           | You change the check queue, `run_check`, the bash gate or the check settings. |
+| [remote-hosts.md](remote-hosts.md)               | You start a task on worker hosts. It links to each host page.                 |
 | [host-transport.md](host-transport.md)           | You change the SSH transport to a worker host, the handshake or its errors.   |
 | [host-install.md](host-install.md)               | You change the Node check or the install of Rowbly on a worker host.          |
 | [host-check.md](host-check.md)                   | You change `rowbly host check`, the short check or `rowbly host login`.       |
