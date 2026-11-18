@@ -220,6 +220,43 @@ export async function resolveStoryRef(ref: StoryRef, ctx: ServiceContext = {}): 
   return storyOf(paths, config, files, file);
 }
 
+/** Tells if `error` is the error of a file that does not exist. */
+function isMissingFile(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
+}
+
+/** Reads the story file at `path`. Gives `undefined` when the file does not exist. */
+async function readStoryFileIfAny(path: string): Promise<StoryFile | undefined> {
+  try {
+    return await readStoryFile(path);
+  } catch (error) {
+    if (isMissingFile(error)) {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Reads only the story file at `path`, with its count of saved images. It does not read the other stories, so the
+ * `position` is 1: the caller puts the story at its place. Gives `undefined` when the file does not exist. Throws when
+ * the story is invalid.
+ */
+export async function readStoryAt(path: string, ctx: ServiceContext = {}): Promise<Story | undefined> {
+  const paths = await findProject(ctx);
+  const config = await readConfig(paths);
+  const file = await readStoryFileIfAny(path);
+
+  if (!file) {
+    return undefined;
+  }
+
+  const story = toStory(config, file);
+
+  return { ...story, attachmentCount: await countAttachments(paths, story.id) };
+}
+
 /** Gives the ID and the `uid` of each story, for a match with `matchStoryRef`. It does not check the stories. */
 export async function listStoryRefs(ctx: ServiceContext = {}): Promise<StoryRef[]> {
   const files = await readStoryFiles(await findProject(ctx));
