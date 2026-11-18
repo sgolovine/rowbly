@@ -103,6 +103,7 @@
       "authorEmail": "rowbly@sunny.gg",
       "push": true,
       "pull": true
-    }
+    },
+    "placement": "prefer-local"
   }
 }
