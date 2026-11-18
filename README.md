@@ -17,6 +17,10 @@ Rowbly keeps a Kanban board in Markdown and JSON files in your repository.
 Its native factory starts independent Pi workers from fixed policy rules, with no supervisor model. Each worker has a Story, a worktree and a separate conversation.
 The terminal UI and CLI use the same services.
 
+<p align="center">
+  <img src="https://github.com/sgolovine/rowbly/blob/main/assets/screenshot-2.png?raw=true" alt="rowbly: a file-backed Kanban board for you and your agent, right in your terminal" width="100%">
+</p>
+
 ## Prerequisites
 
 Rowbly must run on Node >=22.19.0. Native factory execution must use Linux, Git, local files and util-linux `flock`.
