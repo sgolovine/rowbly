@@ -111,6 +111,7 @@ export async function runFullScreen(
     stderr: io.stderr as NodeJS.WriteStream,
     alternateScreen: true,
     kittyKeyboard: { mode: "auto" },
+    maxFps: 60,
     // Each drawn frame can move the boxes, so the mouse registry measures them again.
     onRender: () => stdin?.mouse.emit("layout"),
   });
