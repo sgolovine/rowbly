@@ -833,6 +833,55 @@ runs of the base build and of the ROW-139 build alternated. Each value is the me
   higher load, and the base build was also slower than 1.28 s. The ROW-139 build was not slower than
   the base build.
 
+### Keypress render work (ROW-156)
+
+This run measures the React work of one key in the Story list and in the Stage sidebar. The run is
+from 2026-11-17, with 157 Stories (a copy of this Project), a 140x38 terminal, Node 24.22.1 and
+Linux x86_64 with 16 cores. Other factory workers ran on the machine at the same time (load average
+1.2 to 13). The runs of the base build and of the ROW-156 build alternated. Each CPU value is the
+median of 6 production runs of steps 1 to 11 of the method below.
+
+| Measurement                                                | Base build | ROW-156 build |
+| ---------------------------------------------------------- | ---------- | ------------- |
+| CPU busy in the session (`NODE_ENV=production`)            | 2.16 s     | 1.76 s        |
+| React inclusive time in the session                        | 1,183 ms   | 924 ms        |
+| CPU busy in the window of the 10 arrow keys (step 7)       | 432 ms     | 340 ms        |
+| React render phase in the window of the 10 arrow keys      | 37 ms      | 15 ms         |
+| Renders of `StoryList` for one `Down` key in the list      | 1          | 1             |
+| Renders of `StoryListItem` for one `Down` key in the list  | 31         | 2             |
+| Renders of `StoryRow` for one `Down` key in the list       | 25         | 1 or 2        |
+| Renders of `SidebarRow` for one `Down` key in the sidebar  | 7          | 2             |
+| Renders of `SidebarItem` for one `Down` key in the sidebar | 7          | 2             |
+
+- **Render counts.** A temporary counter in each component wrote one line for each render. The run
+  used a development build (`NODE_ENV=development`). The list window did not scroll. The counter is
+  not in the repository. `StoryRow` renders once when the cursor moves from a Stage heading to a
+  Story, or from a Story to a heading.
+- **Key window.** The window starts before the first `Down` key of step 7 and stops when the screen
+  is stable after the second `Up` key. The script read the monotonic clock of the system. The
+  `.cpuprofile` uses the same clock.
+- **Commit time.** Most of the CPU time of a key is in the commit phase: the Ink output, the Yoga
+  layout and the write to the terminal. The memoised rows do not decrease this time, because Ink draws
+  the full frame after each commit.
+- **Load.** The load of the machine changed during the runs. Thus, compare the two builds only in this
+  table. The decrease of the render phase and of the render counts does not depend on the load.
+
+The Story list and the Stage sidebar keep the latest callbacks in a ref (`useLatest`). Each row gets
+the ref, its index and its data. The row makes its handlers from the ref. Thus, the props of a row that
+does not change stay equal, and `memo` skips the row. `StoryList` also gives one shared empty tag list,
+because the config gives a new empty list for a Project with no tags. `DropSlotRow` is not memoised. It
+shows only during a drag, and only one shows.
+
+**Key handlers.** An audit examined the 48 `useInput` calls of `src/tui/`. Each call has an
+`isActive` value. One value was not correct: the `ScrollBody` of the section list of Settings took
+`Page Up` and `Page Down` also when the section had the focus. Now it takes the keys only while the
+section list has the focus. The mouse wheel did not change.
+
+**Concurrent mode.** Concurrent mode of Ink stays off. With `concurrent: true`, the median CPU busy
+was 1.58 s in place of 1.49 s, and the CPU busy of the key window was 270 ms in place of 269 ms
+(3 runs of each build, alternated). The measurement shows no benefit. Concurrent mode also changes
+the timing of the renders.
+
 ### Method
 
 Do these steps from the root of the repository. Keep all temporary files and scripts in a temporary
