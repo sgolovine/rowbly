@@ -540,7 +540,8 @@ visible.
   different form (`discardStory` overlay).
 - A drag of the left edge changes the width (`ResizeEdge`). The default width is
   `STORY_SIDEBAR_WIDTH` of the terminal width. The minimum is `STORY_SIDEBAR_MIN_WIDTH`, and the Story
-  list keeps `MAIN_MIN_WIDTH`. The width stays until Rowbly quits.
+  list keeps `MAIN_MIN_WIDTH`. Rowbly saves the dragged width. See
+  [The saved sizes of the sidebars](#the-saved-sizes-of-the-sidebars).
 - Below `STACKED_BELOW_WIDTH`, the Story sidebar takes the full main area while it has the focus.
   The Story sidebar also takes the full main area when the narrowest Stage sidebar, Story list and
   Story sidebar do not fit. In this mode, the expand button does not show and `ctrl+o` does nothing.
@@ -665,8 +666,9 @@ tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
   other rows. Beside the list, a drag of the top edge of the tag sidebar (the border between the
   two Panels) up or down changes the rows of the tag sidebar (`ResizeEdge` with `side="top"`). The
   Stage sidebar gets the other rows. Each sidebar keeps at least `SIDEBAR_MIN_HEIGHT` rows (its
-  chrome and one entry). The shell keeps the dragged height in `tagsHeight` until Rowbly quits, and
-  `shellFrame` applies the limits. In a narrow terminal, the two sidebars go above the Story list, one above the other,
+  chrome and one entry). The shell keeps the dragged height in `tagsHeight`, and `shellFrame`
+  applies the limits. Rowbly saves the dragged width and the dragged height. See
+  [The saved sizes of the sidebars](#the-saved-sizes-of-the-sidebars). In a narrow terminal, the two sidebars go above the Story list, one above the other,
   and the Story list keeps at least half of the main area. There, the height does not drag, and a
   dragged height has no effect. `ctrl+b` hides and shows the two
   sidebars together.
@@ -675,6 +677,30 @@ tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
   Story opens from the Story finder, from a Thread or from a dependency link, or after a save, a tag
   filter that hides the Story goes back to "All Tags". A Project switch resets the filter to
   "All Tags". A new Story does not get the selected tag.
+
+## The saved sizes of the sidebars
+
+Rowbly keeps the sizes that the user drags with the mouse between launches of the TUI. The sizes are
+in the `layout` key of `~/.rowblyrc.json`. See [storage.md](storage.md#rowblyrcjson).
+
+- **The sizes.** `sidebarWidth` is the width of the Stage sidebar and of the tag sidebar (the drag of
+  the right edge). `tagsHeight` is the rows of the tag sidebar (the drag of the top edge).
+  `storyWidth` is the width of the Story sidebar (the drag of the left edge). One set of sizes
+  applies to all Projects.
+- **The read.** `useSizeState` (`src/tui/shell/shell/use-size-state.ts`) reads the sizes one time,
+  when the shell starts. A size that is not in the file has its default: `SIDEBAR_WIDTH`, or `null`
+  for the default height and the default width. A failed read uses the defaults and shows no toast.
+  A size that the user drags before the read ends stays.
+- **The limits.** Rowbly saves the size that the user dragged, not the size on the screen.
+  `shellFrame` applies the limits at each render. Thus a saved size that is too large for the
+  terminal shows at the largest size that fits. A larger terminal at a later launch shows the saved
+  size again.
+- **The write.** A drag gives a size at each step. Rowbly writes the file one time, 400 ms after the
+  last step of the drag. It writes only the dragged sizes that are different from the saved sizes.
+  A quit before the delay ends also writes the last sizes. A failed write shows an error toast, and
+  the TUI continues.
+- **Not saved.** The expanded state of the Story sidebar (`ctrl+o`) and the hidden state of the Stage
+  sidebar (`ctrl+b`) are not saved.
 
 ## Worker model overrides
 
