@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import { chmod, mkdir, mkdtemp, readdir, readFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { build } from "tsup";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -10,7 +10,8 @@ import pkg from "../package.json" with { type: "json" };
 import { initProject } from "./services/project/project.js";
 
 const exec = promisify(execFile);
-const repo = resolve(".");
+// The package root, so that the test does not depend on the working directory.
+const repo = fileURLToPath(new URL("..", import.meta.url));
 const tsxLoader = pathToFileURL(join(repo, "node_modules/tsx/dist/loader.mjs")).href;
 
 interface Entry {

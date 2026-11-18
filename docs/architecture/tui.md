@@ -838,13 +838,14 @@ runs of the base build and of the ROW-139 build alternated. Each value is the me
 Do these steps from the root of the repository. Keep all temporary files and scripts in a temporary
 folder outside the repository.
 
-1. Run `pnpm build`. The built CLI is `dist/cli.js`. It loads React in production mode when
+1. Run `pnpm build`. The built CLI is `packages/cli/dist/cli.js`. It loads React in production mode when
    `NODE_ENV` is not set.
 2. Make a copy of the Project in a temporary folder. Run `git init` in the folder. Copy
    `.rowbly/rowbly.config.json`, `.rowbly/stories/`, `.rowbly/specs/`, `.rowbly/stages/` and
    `.rowbly/prompts/`. Do not copy `.rowbly/state.json*` or `.rowbly/runtime/`. Count the Stories.
-3. Measure the CLI commands. Run `node dist/cli.js --help`, `node dist/cli.js -C <copy> story search
-   --json` and `node dist/cli.js -C <copy> status --json` 7 times each. Record the median wall time.
+3. Measure the CLI commands. Run `node packages/cli/dist/cli.js --help`,
+   `node packages/cli/dist/cli.js -C <copy> story search --json` and
+   `node packages/cli/dist/cli.js -C <copy> status --json` 7 times each. Record the median wall time.
    Use `hyperfine` if it is installed. Else, use `date +%s%N` before and after each run.
 4. Set up the PTY as the
    [`rowbly-screenshots` skill](../../.agents/skills/rowbly-screenshots/SKILL.md) tells you: an
@@ -853,7 +854,7 @@ folder outside the repository.
 5. Start the TUI with a CPU profile:
 
    ```sh
-   t run node "$repo/dist/cli.js" --cwd "$copy" --cols 140 --rows 38 --env HOME="$out/home" \
+   t run node "$repo/packages/cli/dist/cli.js" --cwd "$copy" --cols 140 --rows 38 --env HOME="$out/home" \
      --env NODE_OPTIONS="--cpu-prof --cpu-prof-dir=$out/prof-prod-1"
    ```
 

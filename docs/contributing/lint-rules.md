@@ -29,7 +29,7 @@ full steps to add a rule, with the test of the rule and the update of its rule t
 All files and folders use dash-case names. `useFilenamingConvention` of Biome and
 `scripts/check-names.mjs` examine the names.
 
-There is one exception for the TanStack Router file-based routes in `website/src/routes/`. The router
+There is one exception for the TanStack Router file-based routes in `packages/website/src/routes/`. The router
 gives a meaning to the characters `$`, `_`, `-`, `(`, `)`, `{`, `}`, `[`, `]` and `.` in these names. In
 this folder:
 
@@ -38,7 +38,7 @@ this folder:
 - `scripts/check-names.mjs` examines each name with `isGoodRouteSegment`. Each word in the name must
   be dash-case. For example, `$story-key.tsx` is correct, and `$storyKey.tsx` is an error.
 
-Do not use these forms outside `website/src/routes/`. The
+Do not use these forms outside `packages/website/src/routes/`. The
 [name check](../architecture/tooling.md#name-check) gives the list of forms.
 
 ## Related

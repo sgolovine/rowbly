@@ -1,64 +1,30 @@
 {
-  "name": "rowbly",
-  "version": "0.20.0",
-  "description": "Rowbly CLI and TUI",
-  "homepage": "https://rowbly.com",
+  "name": "rowbly-monorepo",
+  "private": true,
   "type": "module",
-  "bin": {
-    "rowbly": "./dist/cli.js"
-  },
-  "files": [
-    "dist",
-    "skills",
-    "stages",
-    "src/config/prompts",
-    "!skills/**/*.test.*"
-  ],
   "engines": {
     "node": ">=22.19.0"
   },
   "scripts": {
-    "dev": "tsx src/cli.ts",
-    "build": "tsup",
-    "start": "node dist/cli.js",
-    "typecheck": "tsc --noEmit",
+    "dev": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/cli.ts",
+    "start": "node packages/cli/dist/cli.js",
+    "build": "pnpm --filter rowbly build",
+    "typecheck": "pnpm --filter rowbly typecheck",
     "lint": "biome check . && node scripts/check-names.mjs",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "knip": "knip",
     "knip:production": "knip --production",
-    "test": "vitest run && node --test scripts/*.test.mjs",
-    "test:watch": "vitest",
-    "website:dev": "pnpm --dir website dev",
-    "website:build": "pnpm --dir website build"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@clack/prompts": "^1.8.1",
-    "@earendil-works/pi-ai": "1.5.2",
-    "@earendil-works/pi-coding-agent": "1.5.2",
-    "@mariozechner/clipboard": "0.3.9",
-    "chalk": "^6.0.1",
-    "commander": "^15.0.0",
-    "gray-matter": "^4.0.3",
-    "ink": "^8.0.0",
-    "marked": "^15.0.12",
-    "marked-terminal": "^7.3.1",
-    "react": "^19.3.1",
-    "wrap-ansi": "^10.0.2",
-    "yaml": "^2.9.1",
-    "zod": "^4.6.7"
+    "test": "pnpm --filter rowbly test && node --test scripts/*.test.mjs",
+    "test:watch": "pnpm --filter rowbly test:watch",
+    "website:dev": "pnpm --filter rowbly-website dev",
+    "website:build": "pnpm --filter rowbly-website build",
+    "website:typecheck": "pnpm --filter rowbly-website typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
     "@codebolt/agentic-tui": "0.3.2",
-    "@types/marked-terminal": "^6.1.1",
-    "@types/node": "^26.6.6",
-    "@types/react": "^19.3.0",
     "knip": "^6.44.1",
-    "tsup": "^9.0.0",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "tsx": "^4.23.15"
   }
 }

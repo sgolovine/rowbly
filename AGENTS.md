@@ -11,6 +11,16 @@ runs one CLI command (Commander.js) and stops. A native factory runs Pi agents o
 separate daemon. Start with [docs/architecture/README.md](docs/architecture/README.md) for the full
 picture.
 
+## Repository layout
+
+The repository is a pnpm workspace with two packages:
+
+- `packages/cli/` is the `rowbly` package: the CLI, the TUI and the services.
+- `packages/website/` is the marketing website at `https://rowbly.com`.
+
+In this file and in `docs/`, a path that starts with `src/`, `skills/`, `stages/` or `dist/` is
+relative to `packages/cli/`. Run the `pnpm` commands from the root of the repository.
+
 ## Rules for each task
 
 1. **Services do the work. Front ends stay thin.** The CLI (`src/commands/`) and the TUI (`src/tui/`)
@@ -45,7 +55,8 @@ Obey these rules. If you do not obey them, you can cause damage to user data or 
   The board, help, doctor, status and history paths must not load Pi.
 - Keep live credentials out of tests. Do not add a production faux-provider flag.
 - Do not read or import a file in `skills/` from the code in `src/`. The bundled skills are for users only.
-- After a change to `skills/rowbly-reference.md`, copy it to each `skills/<name>/references/rowbly-reference.md`.
+- After a change to `packages/cli/skills/rowbly-reference.md`, copy it to each
+  `packages/cli/skills/<name>/references/rowbly-reference.md`.
 - Do not change `.agents/skills/agentic-tui/`. It is an unchanged copy of an upstream skill.
 
 ## Checks before you complete a change

@@ -1,0 +1,56 @@
+{
+  "name": "rowbly",
+  "version": "0.20.0",
+  "description": "Rowbly CLI and TUI",
+  "homepage": "https://rowbly.com",
+  "type": "module",
+  "bin": {
+    "rowbly": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "stages",
+    "src/config/prompts",
+    "!skills/**/*.test.*"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "node -e \"for (const f of ['README.md', 'LICENSE.md']) require('node:fs').copyFileSync('../../' + f, f)\"",
+    "postpack": "node -e \"for (const f of ['README.md', 'LICENSE.md']) require('node:fs').rmSync(f, { force: true })\""
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^1.8.1",
+    "@earendil-works/pi-ai": "1.5.2",
+    "@earendil-works/pi-coding-agent": "1.5.2",
+    "@mariozechner/clipboard": "0.3.9",
+    "chalk": "^6.0.1",
+    "commander": "^15.0.0",
+    "gray-matter": "^4.0.3",
+    "ink": "^8.0.0",
+    "marked": "^15.0.12",
+    "marked-terminal": "^7.3.1",
+    "react": "^19.3.1",
+    "wrap-ansi": "^10.0.2",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/marked-terminal": "^6.1.1",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

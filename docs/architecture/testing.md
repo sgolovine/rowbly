@@ -25,9 +25,9 @@ set up.
 - Do not put a test in `src/tui/`.
 - Test files use only the recommended rules of Biome, not the strict style.
 - Keep live credentials out of tests.
-- `vitest.config.ts` sets `HOME` to a temporary folder. A test must not write to the real home
+- `packages/cli/vitest.config.ts` sets `HOME` to a temporary folder. A test must not write to the real home
   directory.
-- `vitest.config.ts` sets `maxWorkers` to 4. Each fork uses approximately 200 MB, and factory workers
+- `packages/cli/vitest.config.ts` sets `maxWorkers` to 4. Each fork uses approximately 200 MB, and factory workers
   can run the tests at the same time. To change the limit, set `VITEST_MAX_WORKERS` or use
   `--maxWorkers`.
 - CI runs `pnpm test`, the same tests that you run on your machine.

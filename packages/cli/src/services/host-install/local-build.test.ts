@@ -28,8 +28,22 @@ describe("local build", () => {
     expect(build.pack).not.toHaveBeenCalled();
   });
 
-  it("gives an unreleased build in a Git checkout with the hash of the package", async () => {
+  it("gives a released build for a package with only src/config/prompts", async () => {
     await writeFile(join(dir.path, ".git"), "gitdir: elsewhere\n");
+    await mkdir(join(dir.path, "src", "config", "prompts"), { recursive: true });
+    await writeFile(join(dir.path, "src", "config", "prompts", "SYSTEM.md"), "");
+    await mkdir(join(dir.path, "dist"));
+    await writeFile(join(dir.path, "dist", "cli.js"), "");
+
+    const build = deps();
+
+    await expect(localBuild(build)).resolves.toEqual({ id: "0.18.0", version: "0.18.0", released: true });
+    expect(build.pack).not.toHaveBeenCalled();
+  });
+
+  it("gives an unreleased build in a source checkout with the hash of the package", async () => {
+    await mkdir(join(dir.path, "src"));
+    await writeFile(join(dir.path, "src", "cli.ts"), "");
     await mkdir(join(dir.path, "dist"));
     await writeFile(join(dir.path, "dist", "cli.js"), "");
 
@@ -50,7 +64,8 @@ describe("local build", () => {
   });
 
   it("refuses an unreleased build without dist/cli.js", async () => {
-    await mkdir(join(dir.path, ".git"));
+    await mkdir(join(dir.path, "src"));
+    await writeFile(join(dir.path, "src", "cli.ts"), "");
     const error = await localBuild(deps()).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ValidationError);
     expect(error).toMatchObject({ hint: "Run pnpm build" });

@@ -55,6 +55,7 @@ jobs:
         run: pnpm test
 
       - name: Bump package version
+        working-directory: packages/cli
         run: npm version "${VERSION_BUMP}" --no-git-tag-version
         env:
           VERSION_BUMP: ${{ inputs.version_bump }}
@@ -62,7 +63,7 @@ jobs:
       - name: Read package version
         id: package
         run: |
-          version="$(node -p "require('./package.json').version")"
+          version="$(node -p "require('./packages/cli/package.json').version")"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "tag=v${version}" >> "${GITHUB_OUTPUT}"
 
@@ -90,7 +91,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json CHANGELOG.md
+          git add packages/cli/package.json CHANGELOG.md
           git commit -m "chore(release): ${TAG}"
           git push origin HEAD:main
           echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
@@ -138,6 +139,8 @@ jobs:
         run: pnpm build
 
       - name: Publish
+        # `prepack` copies README.md and LICENSE.md from the root into the package.
+        working-directory: packages/cli
         run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

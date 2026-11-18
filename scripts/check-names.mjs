@@ -12,13 +12,13 @@ const META_FILES = new Set(["README", "AGENTS", "CLAUDE", "SKILL", "LICENSE", "U
 // Paths that keep their names:
 // - `.agents/skills/agentic-tui/` is an unchanged copy of an upstream skill.
 // - `.rowbly/` is product data: stage keys (`IN_REVIEW.md`), story IDs (`ROW-01.md`) and prompts (`SYSTEM.md`).
-// - `stages/*.md` are the default stage prompts, and each name is a stage key (`BACKLOG.md`).
-// - `src/config/prompts/*.md` are the system prompts, with the names of the user prompts (`SYSTEM.md`).
+// - `packages/cli/stages/*.md` are the default stage prompts, and each name is a stage key (`BACKLOG.md`).
+// - `packages/cli/src/config/prompts/*.md` are the system prompts, with the names of the user prompts (`SYSTEM.md`).
 const IGNORED_PATHS = [
   /^\.agents\/skills\/agentic-tui\//,
   /^\.rowbly\//,
-  /^stages\/[^/]+\.md$/,
-  /^src\/config\/prompts\/[^/]+\.md$/,
+  /^packages\/cli\/stages\/[^/]+\.md$/,
+  /^packages\/cli\/src\/config\/prompts\/[^/]+\.md$/,
 ];
 
 /** Gives the part of a name before its first dot. A dotfile or a dotfolder loses its first dot. */
@@ -41,7 +41,7 @@ function isGoodSegment(segment, isFile) {
 
 // TanStack Router gives a meaning to some characters in the file and folder names of its file-based routes.
 // Only the paths below this prefix can use these names. Each word in them is still dash-case.
-const ROUTES_PREFIX = "website/src/routes/";
+const ROUTES_PREFIX = "packages/website/src/routes/";
 
 const WORD = "[a-z0-9]+(?:-[a-z0-9]+)*";
 
@@ -64,7 +64,7 @@ function isGoodRoutePart(part) {
 }
 
 /**
- * Tells if one segment of a path below `website/src/routes/` has a good TanStack Router name.
+ * Tells if one segment of a path below `packages/website/src/routes/` has a good TanStack Router name.
  * Only the last segment of a path is a file. The check removes the extension of a file.
  */
 export function isGoodRouteSegment(segment, isFile) {

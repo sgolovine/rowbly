@@ -48,7 +48,7 @@
     // name with a variable number of dot-separated route parts, so the rule is off only in this folder.
     // `scripts/check-names.mjs` checks these names instead: each word in them must still be dash-case.
     {
-      "includes": ["website/src/routes/**"],
+      "includes": ["packages/website/src/routes/**"],
       "linter": {
         "rules": {
           "style": {
@@ -68,7 +68,7 @@
       }
     },
     {
-      "includes": ["src/**", "!**/*.test.ts", "!**/*.test.tsx"],
+      "includes": ["packages/cli/src/**", "!**/*.test.ts", "!**/*.test.tsx"],
       "plugins": [
         "./biome-plugins/no-nested-function.grit",
         "./biome-plugins/no-let.grit",

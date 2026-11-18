@@ -319,6 +319,7 @@ Keep local changes to an installed skill in a different place. Removal deletes t
 ## Development and validation
 
 Rowbly uses TypeScript, Commander.js, Ink and the pinned Pi SDK 1.5.2. It uses pnpm as the package manager.
+The repository is a pnpm workspace: `packages/cli/` is the `rowbly` package, and `packages/website/` is the website. Run the commands below from the root of the repository.
 Pi loads on demand for authentication, model selection and native execution.
 The board, help, doctor, factory status, metadata and read-only history paths do not import Pi runtime values.
 

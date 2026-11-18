@@ -25,7 +25,10 @@ itself, and it does not load Pi.
   characters of the `sha256` of the package that `npm pack` makes. An unreleased build can have the
   same version as a released build, but different code. Thus it gets its own id.
 
-A build is unreleased when the package folder has a `.git` entry, or when the code runs from `src/`.
+A build is unreleased when the package folder has the file `src/cli.ts`, or when the code runs from
+`src/`. A package from npm has only `src/config/prompts/`, thus it does not have `src/cli.ts`. In the
+repository, the package folder is `packages/cli/`. This folder does not have a `.git` entry, thus
+Rowbly does not use `.git` to find an unreleased build.
 An unreleased build must have `dist/cli.js`. If it does not, `localBuild()` gives `VALIDATION` with
 the hint `Run pnpm build`.
 

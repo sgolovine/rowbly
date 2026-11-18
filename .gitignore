@@ -3,3 +3,7 @@ dist
 /.rowbly/state.json*
 
 /.rowbly/runtime/
+
+# `prepack` copies these files into the package, and `postpack` removes them.
+/packages/cli/README.md
+/packages/cli/LICENSE.md

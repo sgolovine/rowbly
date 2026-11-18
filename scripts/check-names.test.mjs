@@ -5,12 +5,12 @@ import { findBadNames, isGoodRouteSegment } from "./check-names.mjs";
 describe("findBadNames", () => {
   it("accepts dash-case files, folders, dotfiles and extensions", () => {
     const paths = [
-      "src/tui/components/button/button.test.tsx",
-      "src/services/factory-manager/index.ts",
-      "vitest.config.ts",
+      "packages/cli/src/tui/components/button/button.test.tsx",
+      "packages/cli/src/services/factory-manager/index.ts",
+      "packages/cli/vitest.config.ts",
       ".github/workflows/ci.yml",
       ".gitignore",
-      "skills/factory/scripts/commit-project.d.mts",
+      "packages/cli/skills/factory/scripts/commit-project.d.mts",
     ];
 
     assert.deepEqual(findBadNames(paths), []);
@@ -19,12 +19,13 @@ describe("findBadNames", () => {
   it("accepts uppercase meta files and the ignored paths", () => {
     const paths = [
       "README.md",
-      "skills/factory/SKILL.md",
+      "packages/cli/skills/factory/SKILL.md",
       "LICENSE.md",
       ".agents/skills/agentic-tui/SomeUpstreamFile.md",
       ".rowbly/stories/ROW-01.md",
-      "stages/IN_REVIEW.md",
-      "website/public/CNAME",
+      "packages/cli/stages/IN_REVIEW.md",
+      "packages/cli/src/config/prompts/SYSTEM.md",
+      "packages/website/public/CNAME",
     ];
 
     assert.deepEqual(findBadNames(paths), []);
@@ -32,18 +33,24 @@ describe("findBadNames", () => {
 
   it("rejects camelCase, PascalCase and snake_case in files and folders", () => {
     const paths = [
-      "src/tui/components/Button/index.ts",
-      "src/fooBar.ts",
-      "skills/rowbly_reference.md",
-      "src/README/index.ts",
-      "stages/nested/BACKLOG.md",
+      "packages/cli/src/tui/components/Button/index.ts",
+      "packages/cli/src/fooBar.ts",
+      "packages/cli/skills/rowbly_reference.md",
+      "packages/cli/src/README/index.ts",
+      "packages/cli/stages/nested/BACKLOG.md",
     ];
+
+    assert.deepEqual(findBadNames(paths), paths);
+  });
+
+  it("rejects the stage and prompt names outside packages/cli/", () => {
+    const paths = ["stages/IN_REVIEW.md", "src/config/prompts/SYSTEM.md", "packages/website/stages/IN_REVIEW.md"];
 
     assert.deepEqual(findBadNames(paths), paths);
   });
 });
 
-const ROUTES = "website/src/routes";
+const ROUTES = "packages/website/src/routes";
 
 // One example for each TanStack Router name form.
 const ROUTE_EXAMPLES = [
@@ -65,7 +72,7 @@ const ROUTE_EXAMPLES = [
   "{-$locale}/about.tsx",
 ];
 
-describe("findBadNames in website/src/routes/", () => {
+describe("findBadNames in packages/website/src/routes/", () => {
   it("accepts each TanStack Router name form", () => {
     const paths = [
       ...ROUTE_EXAMPLES.map((example) => `${ROUTES}/${example}`),
@@ -95,19 +102,20 @@ describe("findBadNames in website/src/routes/", () => {
   });
 
   // Dot-separated names such as `how-it-works.index.tsx` are already good outside the routes folder.
-  it("rejects the route forms outside website/src/routes/", () => {
+  it("rejects the route forms outside packages/website/src/routes/", () => {
     const paths = [
-      "src/__root.tsx",
-      "src/$story-key.tsx",
-      "src/$.tsx",
-      "src/_marketing.tsx",
-      "src/_marketing/index.tsx",
-      "src/posts_.tsx",
-      "src/-components/header.tsx",
-      "src/(legal)/terms.tsx",
-      "src/script[.]js.tsx",
-      "src/{-$locale}/about.tsx",
-      "website/src/components/__root.tsx",
+      "packages/cli/src/__root.tsx",
+      "packages/cli/src/$story-key.tsx",
+      "packages/cli/src/$.tsx",
+      "packages/cli/src/_marketing.tsx",
+      "packages/cli/src/_marketing/index.tsx",
+      "packages/cli/src/posts_.tsx",
+      "packages/cli/src/-components/header.tsx",
+      "packages/cli/src/(legal)/terms.tsx",
+      "packages/cli/src/script[.]js.tsx",
+      "packages/cli/src/{-$locale}/about.tsx",
+      "packages/website/src/components/__root.tsx",
+      "website/src/routes/$story-key.tsx",
       "routes/$story-key.tsx",
     ];
 

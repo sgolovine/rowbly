@@ -1,16 +1,21 @@
 name: Website
 
-# Builds the marketing website in `website/` and deploys it to GitHub Pages at https://rowbly.com.
+# Builds the marketing website in `packages/website/` and deploys it to GitHub Pages at https://rowbly.com.
 # A pull request only builds the site. A push to `main` or a manual run also deploys it.
+# The website is a package of the pnpm workspace. A change to the root lockfile or the workspace file also runs this workflow.
 on:
   push:
     branches: [main]
     paths:
-      - "website/**"
+      - "packages/website/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - ".github/workflows/website.yml"
   pull_request:
     paths:
-      - "website/**"
+      - "packages/website/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
       - ".github/workflows/website.yml"
   workflow_dispatch:
 
@@ -30,22 +35,21 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: website/pnpm-lock.yaml
-      - run: pnpm --dir website install --frozen-lockfile
-      - run: pnpm --dir website build
-      - run: pnpm --dir website typecheck
+      - run: pnpm install --frozen-lockfile --filter rowbly-website
+      - run: pnpm --filter rowbly-website build
+      - run: pnpm --filter rowbly-website typecheck
       - name: Check the static output
         run: |
           for file in index.html 404.html CNAME .nojekyll sitemap.xml robots.txt images/og-image.png; do
-            if [ ! -f "website/dist/client/$file" ]; then
-              echo "::error::website/dist/client/$file is missing"
+            if [ ! -f "packages/website/dist/client/$file" ]; then
+              echo "::error::packages/website/dist/client/$file is missing"
               exit 1
             fi
           done
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
-          path: website/dist/client
+          path: packages/website/dist/client
 
   deploy:
     name: Deploy

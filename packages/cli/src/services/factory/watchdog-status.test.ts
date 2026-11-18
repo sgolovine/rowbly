@@ -1,14 +1,15 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { newOwner, probeOwner } from "../factory-ownership/factory-ownership.js";
 import { readWatchdogState, writeWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { getFactoryStatus, startFactory, stopFactory } from "./factory.js";
 
-const repo = resolve(".");
+// The package root, so that the test does not depend on the working directory.
+const repo = fileURLToPath(new URL("../../..", import.meta.url));
 
 describe("factory watchdog control", () => {
   const project = useTestProject();
