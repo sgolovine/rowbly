@@ -30,6 +30,7 @@ This file records the changes to Rowbly that users can see.
 - Added: In the Story view of the TUI, a `Force assignment` button (`ctrl+r`) shows for a Story in a work Stage with no active worker while the factory runs. It makes the factory evaluate the Story for a worker again, and `rowbly factory release <story-id>` now does this for each Story, not only for a parked Story. (ROW-158)
 - Changed: The TUI is faster when you move the cursor in the Story list or in the Stage sidebar, because it draws again only the rows that changed. In Settings, `Page Up` and `Page Down` no longer scroll the section list when a section has the focus. (ROW-156)
 - Fixed: The factory now starts a worker for a Story in a work Stage without a move of the Story out of the Stage and back. When the factory cannot start the worker, `rowbly factory status` shows the reason `dispatch refused: <message>` in the queue. (ROW-161)
+- Added: The TUI keeps the width of the Stage sidebar, the height of the tag sidebar and the width of the Story sidebar that you set with the mouse. It saves them in `~/.rowblyrc.json` and uses them again at the next start. (ROW-163)
 
 ### 0.20.0
 
