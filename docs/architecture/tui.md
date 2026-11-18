@@ -586,8 +586,10 @@ the components show.
 - **Reload.** After each change, the section reads the tags again and calls `onChange()`. Then the
   Story list and the Story forms show the new tags.
 - **The `Tags` field.** The new Story form and the General tab have a `Tags` field after
-  `Depends on`. It is a `multiselect` field. Its options are the tag values, and each option shows
-  the tag label. A Story value that is not a tag of the Project shows as its value, and the user can
+  `Depends on`. It is a searchable `multiselect` field (`SearchableMultiSelect`), with the same
+  behaviour as `Depends on`. Each chosen tag shows on one line with a `✕`. The `+ add` line opens
+  the `Add Tags` picker. The fuzzy search of the picker finds a tag by its label or by its value.
+  Its options are the tag values, and each option shows the tag label. A Story value that is not a tag of the Project shows as its value, and the user can
   remove it. When the Project has no tags, the field does not show.
 - **Save.** The new Story form gives the list to `createStory` as `tags`. The edit form gives the
   full list to `updateStory` as `tags`, only when the list changes. An empty list removes the `tags`
