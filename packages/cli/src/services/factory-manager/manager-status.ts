@@ -15,6 +15,7 @@ import { dependencyLists } from "./dependency-facts.js";
 import { withContactFacts } from "./host-slots.js";
 import {
   type Attention,
+  type DispatchRefusal,
   getState,
   isProviderPaused,
   type Manager,
@@ -31,6 +32,9 @@ export const NETWORK_WAIT_REASON = "waiting for network resume";
 
 /** The skip reason of a Story whose worker model and fallback models all have a paused provider. */
 const PROVIDER_PAUSED_REASON = "provider paused";
+
+/** The start of the skip reason of a Story whose last dispatch a `ConflictError` refused. The error message follows. */
+export const DISPATCH_REFUSED_REASON = "dispatch refused";
 
 /** Policy reasons for Stories that wait for no worker. The status file leaves them out of its queue. */
 const QUIET_REASONS = new Set(["hold stage", "stage unavailable"]);
@@ -178,6 +182,28 @@ async function scanStories(
   return { policy: { ...policy, decisions }, stories };
 }
 
+/** Gives the decision as a skip with the message of its dispatch refusal, when the refusal is of the same decision. */
+function refusedDecision(refusal: DispatchRefusal | undefined, decision: Decision): Decision {
+  const same =
+    !!refusal &&
+    refusal.stage === decision.stage &&
+    refusal.action === decision.action &&
+    refusal.attempt === decision.attempt;
+
+  return same ? { ...decision, action: "skip", reason: `${DISPATCH_REFUSED_REASON}: ${refusal.message}` } : decision;
+}
+
+/**
+ * Skips each launch decision whose last dispatch was refused, with the message of the refusal as the reason. A refusal
+ * of a different Stage, action or attempt has no effect. Only the status uses this function, because the dispatch step
+ * must try the launch again on each pass.
+ */
+function withDispatchRefusals(manager: Manager, decisions: readonly Decision[]): Decision[] {
+  const refusals = getState(manager).dispatchRefusals;
+
+  return decisions.map((decision) => refusedDecision(refusals.get(decision.story), decision));
+}
+
 /** Adds the `dependsOn`, `blocks` and `waitingFor` lists of its Story to each decision. */
 async function withDependencies(manager: Manager, decisions: readonly Decision[]) {
   const stories = await searchStories({}, manager.ctx);
@@ -188,7 +214,8 @@ async function withDependencies(manager: Manager, decisions: readonly Decision[]
 
 /** Builds one page of the factory status for the status file. */
 export async function buildSnapshot(manager: Manager, cursor = 0, pageLimit = 12) {
-  const policy = await scan(manager);
+  const scanned = await scan(manager);
+  const policy = { ...scanned, decisions: withDispatchRefusals(manager, scanned.decisions) };
   const { threads, issues } = await listThreads({}, manager.ctx);
   const pageEnd = cursor + pageLimit;
   const decisions = await withDependencies(manager, policy.decisions.slice(cursor, pageEnd));
@@ -252,7 +279,8 @@ export async function persistStatus(manager: Manager): Promise<void> {
   clearTimeout(getState(manager).deadlineTimer);
 
   const { policy, stories } = await scanStories(manager, managerCapacity(getState(manager)), {});
-  const deadline = nextDeadline(getState(manager), policy.decisions);
+  const decisions = withDispatchRefusals(manager, policy.decisions);
+  const deadline = nextDeadline(getState(manager), decisions);
 
   if (!getState(manager).stopping && deadline !== undefined) {
     const deadlineTimer = setTimeout(() => notify(manager), Math.max(1, deadline - Date.now()));
@@ -262,7 +290,7 @@ export async function persistStatus(manager: Manager): Promise<void> {
   }
 
   // The TUI shows the queued work and its reasons.
-  const queue = policy.decisions
+  const queue = decisions
     .filter((d) => d.action !== "skip" || !QUIET_REASONS.has(d.reason))
     .slice(0, 50)
     .map((d) => queueEntry(manager, d, stories));

@@ -153,6 +153,7 @@ function initialState(recovered: RecoveredFactory, authStamp: number, stored: St
     promptClaims: new Map(),
     requests: new Map(),
     hostSync: new Set(),
+    dispatchRefusals: new Map(),
 
     attention: new Map([...external, ...(stored.attention ?? [])]),
     providers: stored.providers ?? new Map(),

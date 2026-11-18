@@ -1,11 +1,11 @@
 // The factory loop. Each pass reconciles the Project, runs the side steps and starts the workers.
 import { ConflictError } from "../errors/errors.js";
 import { type PolicyDecision, STOP_CONFIRMED_REASON } from "../factory-policy/factory-policy.js";
-import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
+import { readFactoryState, updateFactoryState, updateFactoryStateIfChanged } from "../factory-state/factory-state.js";
 import { withEntry, withoutEntry } from "../store/store.js";
 import { searchStories } from "../story/story.js";
 import { watchStories } from "../story-watch/story-watch.js";
-import { listThreads } from "../thread/thread.js";
+import { listThreads, projectAttempts } from "../thread/thread.js";
 import { shutdownFactory } from "./factory-shutdown.js";
 import { failureText, runSideSteps, runStep } from "./factory-steps.js";
 import { getState, type Manager, notify, serial, setState } from "./manager-state.js";
@@ -147,12 +147,32 @@ export async function reconcilePolicy(manager: Manager) {
   await syncRemoteHosts(manager);
 
   return serial(manager, async () => {
+    await projectWorkerThreads(manager);
+
     const policy = await scan(manager);
 
     await updateFactoryState(manager.paths.root, () => policy.state, manager.ctx);
 
     return policy.decisions;
   });
+}
+
+/**
+ * Projects each worker Thread into its attempt again. A Thread change projects its attempt only after the Thread file
+ * changed, so a failed projection leaves an attempt that does not stop, and its Story waits with
+ * `worker stop unconfirmed`. The Threads are read under the state lock, so that the projection uses their last status.
+ */
+async function projectWorkerThreads(manager: Manager): Promise<void> {
+  await updateFactoryStateIfChanged(
+    manager.paths.root,
+    async (state) => {
+      const { threads } = await listThreads({ role: "worker" }, manager.ctx);
+      const projected = projectAttempts(state, threads);
+
+      return projected.changed ? projected.state : undefined;
+    },
+    manager.ctx,
+  );
 }
 
 /** Replaces the `upstream-stuck:` attention entries with the upstream Stories that cannot progress now. */
