@@ -103,7 +103,7 @@ describe("control poller", () => {
     await settledControl(poller);
 
     expect(manager.releaseStory).toHaveBeenCalledExactlyOnceWith("TST-1");
-    expect((await readReceipt(project.paths, release.id))?.status).toBe("completed");
+    expect(await readReceipt(project.paths, release.id)).toMatchObject({ status: "completed", released: true });
     expect(await readReceipt(project.paths, missing.id)).toMatchObject({
       status: "rejected",
       error: { message: "A Story ID of 1 to 128 characters is necessary" },

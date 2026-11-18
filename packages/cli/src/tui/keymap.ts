@@ -30,6 +30,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   },
   { key: "d", description: "delete the Story (in the Story list)" },
   { key: "ctrl+d", description: "delete the Story (in an open Story)" },
+  { key: "ctrl+r", description: "force the factory to evaluate the Story for a worker (in an open Story)" },
   { key: "ctrl+p", description: "find Stories" },
   { key: "p", description: "switch Project" },
   { key: "ctrl+b", description: "show or hide the Stage sidebar and the tag sidebar" },

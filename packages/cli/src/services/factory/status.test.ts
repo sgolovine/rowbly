@@ -96,13 +96,25 @@ describe("factory story release", () => {
     await prepareRuntime(project.paths);
     const owner = await newOwner();
     await acquireFactoryOwnership(project.paths, owner);
-    const execute = vi.fn(async () => {});
+    const execute = vi.fn(async () => ({ released: true }));
     const sent = releaseFactoryStory("TST-1", { timeoutMs: 5000 }, project.ctx);
     await vi.waitFor(async () => {
       await processCommands(project.paths, owner.token, execute);
       expect(execute).toHaveBeenCalledWith(expect.objectContaining({ type: "release-story", storyId: "TST-1" }));
     });
-    await expect(sent).resolves.toMatchObject({ status: "completed", storyId: "TST-1" });
+    await expect(sent).resolves.toMatchObject({ status: "completed", storyId: "TST-1", released: true });
+  });
+  it("gives released false when the daemon did not change its state", async () => {
+    await prepareRuntime(project.paths);
+    const owner = await newOwner();
+    await acquireFactoryOwnership(project.paths, owner);
+    const execute = vi.fn(async () => {});
+    const sent = releaseFactoryStory("TST-2", { timeoutMs: 5000 }, project.ctx);
+    await vi.waitFor(async () => {
+      await processCommands(project.paths, owner.token, execute);
+      expect(execute).toHaveBeenCalled();
+    });
+    await expect(sent).resolves.toMatchObject({ status: "completed", storyId: "TST-2", released: false });
   });
   it("fails when the factory does not run or the Story ID is not valid", async () => {
     await expect(releaseFactoryStory("TST-1", {}, project.ctx)).rejects.toMatchObject({
@@ -110,6 +122,7 @@ describe("factory story release", () => {
       message: "Factory is not running",
     });
     await expect(releaseFactoryStory("", {}, project.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(releaseFactoryStory("x".repeat(129), {}, project.ctx)).rejects.toMatchObject({ code: "VALIDATION" });
   });
 });
 

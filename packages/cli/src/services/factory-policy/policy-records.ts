@@ -163,9 +163,20 @@ function withStory(stories: readonly StoryRef[], story: StoryRef): StoryRef[] {
   return [story, ...stories.filter((other) => other.id !== story.id || other.uid !== story.uid)];
 }
 
+/** Tells if the Story has an attempt whose worker stop is not confirmed. The rule of `releaseStory` finds the attempts. */
+export function hasUnstoppedAttempt(state: PolicyState, story: StoryRef, stories: readonly StoryRef[] = []): boolean {
+  const known = withStory(stories, story);
+
+  return (state.attempts ?? []).some(
+    (attempt) => isAttemptOf(known, story, attempt) && !STOPPED_STATUSES.has(attempt.status),
+  );
+}
+
 /**
- * Makes a Story eligible again after a request from the user. All other assignment checks still apply. The attempts
- * of the Story are found by the rule of `matchStoryRef` among `stories`, the known Stories of the Project.
+ * Makes a Story eligible again after a request from the user, as a Stage round trip does. It removes the parking, the
+ * user cancellation and the launch failures of the Story, resets its budget and marks its last stopped attempt as a
+ * Stage departure. All other assignment checks still apply. The attempts of the Story are found by the rule of
+ * `matchStoryRef` among `stories`, the known Stories of the Project.
  */
 export function releaseStory(previous: PolicyState, story: StoryRef, stories: readonly StoryRef[] = []): PolicyState {
   const cloned = structuredClone(previous);
@@ -175,6 +186,7 @@ export function releaseStory(previous: PolicyState, story: StoryRef, stories: re
     attempts: cloned.attempts ?? [],
     ...(cloned.parked ? { parked: withoutKey(cloned.parked, story.id) } : {}),
     ...(nativeCancelled ? { nativeCancelled: withoutKey(nativeCancelled, story.id) } : {}),
+    ...(cloned.launchFailures ? { launchFailures: withoutKey(cloned.launchFailures, story.id) } : {}),
   };
   const known = withStory(stories, story);
   const reset = resetBudget(state, story, known);
