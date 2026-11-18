@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { SIDEBAR_WIDTH } from "../../components/index.js";
+import type { ServiceContext } from "../../../services/workspace/workspace.js";
 import type { KeyHint } from "../../keymap.js";
 import type { Overlay, SidePane } from "../overlay.js";
 import type { Pane, ViewMode } from "./shell-state.js";
+import { useSizeState } from "./use-size-state.js";
 
 /** The filters of the Story list: the key of the Stage and the value of the tag, or `null` for All Stages and All Tags. */
 function useFilterState() {
@@ -13,22 +14,10 @@ function useFilterState() {
 }
 
 /**
- * The sizes after a drag with the mouse: the width of the sidebars, the rows of the tag sidebar and the width of the
- * Story sidebar. `null` is the default size.
+ * The state of the shell that lasts until Rowbly quits: the overlay, the focus, the panes and the selection. `ctx`
+ * gives the home directory of the saved sidebar sizes.
  */
-function useSizeState() {
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH);
-  const [tagsHeight, setTagsHeight] = useState<number | null>(null);
-  const [storyWidth, setStoryWidth] = useState<number | null>(null);
-
-  return {
-    values: { sidebarWidth, tagsHeight, storyWidth },
-    setters: { setSidebarWidth, setTagsHeight, setStoryWidth },
-  };
-}
-
-/** The state of the shell that lasts until Rowbly quits: the overlay, the focus, the panes and the selection. */
-export function useShellState() {
+export function useShellState(ctx: ServiceContext) {
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const [onboardingHints, setOnboardingHints] = useState<readonly KeyHint[]>([]);
   const [threadHints, setThreadHints] = useState<readonly KeyHint[]>([]);
@@ -37,7 +26,7 @@ export function useShellState() {
   const [mode, setMode] = useState<ViewMode>("stories");
   // Toggled with `ctrl+b`.
   const [sidebarShown, setSidebarShown] = useState(true);
-  const sizes = useSizeState();
+  const sizes = useSizeState(ctx);
   // What the Story sidebar shows.
   const [storyPane, setStoryPane] = useState<SidePane | null>(null);
   // The Story sidebar takes the columns of the Story list. With the `remember` option, it is also the last selection.

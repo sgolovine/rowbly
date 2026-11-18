@@ -70,6 +70,17 @@ describe("shellFrame", () => {
     expect(frame.listShown).toBe(false);
   });
 
+  it("fits a saved Stage sidebar width and Story sidebar width that are too large for the terminal", () => {
+    const small = { width: 120, height: 40 };
+    const frame = shellFrame(small, view(), 500, 500, false);
+
+    expect(frame.story.mode).toBe("beside");
+    expect(frame.shownWidth).toBeLessThan(small.width);
+    expect(frame.story.width).toBeGreaterThanOrEqual(STORY_SIDEBAR_MIN_WIDTH);
+    expect(frame.story.width).toBeLessThanOrEqual(frame.story.room);
+    expect(frame.shownWidth + 1 + frame.story.width + 1 + MAIN_MIN_WIDTH).toBeLessThanOrEqual(small.width);
+  });
+
   it("does not expand a Story sidebar that covers the main area of a narrow terminal", () => {
     const width = SIDEBAR + MAIN_MIN_WIDTH + STORY_SIDEBAR_MIN_WIDTH;
     const frame = shellFrame({ width, height: 50 }, view(), SIDEBAR, null, true);
