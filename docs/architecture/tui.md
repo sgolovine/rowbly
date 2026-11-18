@@ -626,7 +626,8 @@ tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
 - **The mouse.** A click in the tag sidebar gives it the focus. A click on an entry selects it. When
   the entries do not fit, the wheel selects. A click on `+ New Tag` opens the New Tag Modal.
 - **The size.** The tag sidebar has the width of the Stage sidebar. A drag of the right edge of the
-  Stage sidebar changes the width of the two sidebars. Beside the list, the tag sidebar gets the
+  Stage sidebar or of the tag sidebar changes the width of the two sidebars. The two edges use the
+  same handler. In a narrow terminal, the width does not drag. Beside the list, the tag sidebar gets the
   rows for all its entries, but not more than half of the main area. The Stage sidebar gets the
   other rows. Beside the list, a drag of the top edge of the tag sidebar (the border between the
   two Panels) up or down changes the rows of the tag sidebar (`ResizeEdge` with `side="top"`). The
@@ -724,7 +725,9 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    the component.
 4. For a change that comes from outside the TUI, use `refresh` from `useAsync`. It does not show a
    loading state or a toast, and it does not render when it starts. `useStoryChanges` and
-   `useThreadChanges` call a function when the files change. For a poll, give `useAsync` an `isEqual`
+   `useThreadChanges` call a function when the files change. `useStoryChanges` gives the changed
+   names. When only Story files change, the shell reads only these Stories with `readStoryChanges`.
+   Other changes read the full board again. For a poll, give `useAsync` an `isEqual`
    option. Then a read that gives the same data does not render again.
 5. For a run time that counts up, use `useClock(enabled)`. Enable it only while the view shows a
    running Thread and no full-screen view, Modal or main overlay (`useOverlayOpen()`) covers it.
