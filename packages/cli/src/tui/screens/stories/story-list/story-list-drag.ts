@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { RowDragProps } from "../../../components/index.js";
 import type { ClickEvent } from "../../../hooks/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
@@ -23,6 +23,8 @@ export interface StoryListEnv {
   /** A click without `shift` clears the multi-selection before it does its action. */
   readonly onClear?: () => void;
   readonly onMove?: (id: string, gap: number) => void;
+  /** A right click on the Story row at `index`, at the cell `x`, `y` of the screen. */
+  readonly onMenu?: (index: number, x: number, y: number) => void;
 }
 
 /** True when `value` is a Story that a drag of this list carries. */
@@ -73,17 +75,16 @@ export function clickRow(env: StoryListEnv, index: number, event: ClickEvent): v
   env.onCursor(index);
 }
 
-/** The drag props of the row at `index`: a Story row can be dragged, and each row takes a drop. */
-export function rowDragProps(env: StoryListEnv, row: StoryListRow, index: number): RowDragProps {
-  if (!env.onMove) {
-    return {};
-  }
-
+/**
+ * The drag props of the row at `index`: a Story row can be dragged, and each row takes a drop. The handlers read the
+ * latest environment of the list from `list`, so that a memoised row that does not render again still uses it.
+ */
+export function rowDragProps(list: RefObject<StoryListEnv>, row: StoryListRow, index: number): RowDragProps {
   return {
-    drag: row.kind === "story" ? ({ list: env.self, id: row.id } satisfies DraggedStory) : undefined,
-    onDrop: (value) => dropStory(env, value, gapAt(env, value, index)),
-    onDragOver: (value) => env.setSlot(gapAt(env, value, index)),
-    onDragLeave: () => env.setSlot(null),
+    drag: row.kind === "story" ? ({ list: list.current.self, id: row.id } satisfies DraggedStory) : undefined,
+    onDrop: (value) => dropStory(list.current, value, gapAt(list.current, value, index)),
+    onDragOver: (value) => list.current.setSlot(gapAt(list.current, value, index)),
+    onDragLeave: () => list.current.setSlot(null),
   };
 }
 

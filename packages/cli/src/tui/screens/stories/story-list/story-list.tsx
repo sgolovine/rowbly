@@ -3,12 +3,12 @@ import { useRef, useState } from "react";
 import type { TagConfig } from "../../../../services/config/config.js";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import { type HostFacts, hostLost, liveHosts } from "../../../../services/thread-connection/thread-connection.js";
-import { useMouse, useSharedFactoryStatus, WHEEL_LINES } from "../../../hooks/index.js";
+import { useLatest, useMouse, useSharedFactoryStatus, WHEEL_LINES } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { DropSlotRow } from "../drop-slot-row/index.js";
 import { StoryListItem } from "../story-list-item/index.js";
 import type { StoryListRow } from "../story-list-rows.js";
-import { clickRow, dropStory, rowDragProps, type StoryListEnv, wheelCursor } from "./story-list-drag.js";
+import { dropStory, type StoryListEnv, wheelCursor } from "./story-list-drag.js";
 import { listWindow, visibleItems } from "./story-list-window.js";
 
 /** True when the active agent of `activity` runs on a worker host with a lost connection. */
@@ -18,6 +18,17 @@ function activityLost(activity: StoryActivity | undefined, hosts: readonly HostF
 
 /** No Story is in the multi-selection. */
 const NO_MARKS: ReadonlySet<string> = new Set();
+
+/** The project has no tags. One shared list keeps the props of the memoised rows equal across renders. */
+const NO_TAGS: readonly TagConfig[] = [];
+
+/** No factory activity. */
+const NO_ACTIVITY: Readonly<Record<string, StoryActivity>> = {};
+
+/** `tags`, or the shared empty list. The config gives a new empty list each time that it has no tags. */
+function stableTags(tags: readonly TagConfig[]): readonly TagConfig[] {
+  return tags.length === 0 ? NO_TAGS : tags;
+}
 
 export interface StoryListProps {
   readonly rows: readonly StoryListRow[];
@@ -60,8 +71,8 @@ export interface StoryListProps {
  */
 export function StoryList({
   rows,
-  activity = {},
-  tags = [],
+  activity = NO_ACTIVITY,
+  tags = NO_TAGS,
   cursor,
   clickable,
   height,
@@ -83,7 +94,10 @@ export function StoryList({
 
   const view = listWindow(rows.length, height, cursor, slot);
   const sections = rows.some((row) => row.kind === "stage");
-  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onRange, onClear, onMove };
+  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onRange, onClear, onMove, onMenu };
+  // The rows read the latest environment through this ref, so their props stay equal when only the cursor moves.
+  const list = useLatest(env);
+  const rowTags = stableTags(tags);
 
   useMouse(ref, { onWheel: (direction) => wheelCursor(env, direction, WHEEL_LINES) }, clickable && view.overflow);
 
@@ -107,16 +121,17 @@ export function StoryList({
           <StoryListItem
             key={item.row.id}
             row={item.row}
+            index={item.index}
             activity={item.row.kind === "story" ? activity[item.row.story.id] : undefined}
             hostLost={item.row.kind === "story" && activityLost(activity[item.row.story.id], hosts)}
-            tags={tags}
+            tags={rowTags}
             selected={item.index === cursor}
             clickable={clickable}
             indented={sections}
             marked={marked.has(item.row.id)}
-            onClick={(event) => clickRow(env, item.index, event)}
-            onMenu={onMenu && ((x, y) => onMenu(item.index, x, y))}
-            dragProps={rowDragProps(env, item.row, item.index)}
+            movable={onMove !== undefined}
+            menu={onMenu !== undefined}
+            list={list}
           />
         ),
       )}
