@@ -2,6 +2,7 @@ export * from "./border-icon/index.js";
 export * from "./button/index.js";
 export * from "./column-row/index.js";
 export * from "./confirm-dialog/index.js";
+export * from "./context-menu/index.js";
 export * from "./conversation-entry/index.js";
 export * from "./conversation-notice/index.js";
 export * from "./conversation-view/index.js";

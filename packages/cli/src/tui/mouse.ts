@@ -10,7 +10,7 @@ export const MOUSE_OFF = "\u001B[?1006l\u001B[?1003l\u001B[?1000l";
 
 /**
  * A press or release of the left button, a pointer move, a press of the right button (`menu`, which
- * ends a drag or pull), or a notch of the wheel (`wheelUp`, `wheelDown`), at a 0-based cell.
+ * ends a drag or pull, or else opens a context menu), or a notch of the wheel (`wheelUp`, `wheelDown`), at a 0-based cell.
  */
 export interface MouseEvent {
   kind: "press" | "release" | "move" | "menu" | "wheelUp" | "wheelDown";

@@ -2,6 +2,7 @@ export * from "./attachment-list/index.js";
 export { deleteStoryMessage } from "./delete-story-message.js";
 export * from "./edit-story-form/index.js";
 export * from "./factory-status-line/index.js";
+export { useForceAssignment } from "./force-assignment/index.js";
 export * from "./new-story-form/index.js";
 export * from "./spec-dialogs/index.js";
 export * from "./spec-list-panel/index.js";

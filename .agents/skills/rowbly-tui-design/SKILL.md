@@ -38,7 +38,7 @@ library parts that its row names. Follow the guideline of the pattern.
 | --- | --- | --- | --- |
 | `Button` | A clickable label with its key next to it in a key cap. Use it for header controls and for the `+ New …` bottom of a sidebar. It has no frame. | Library · `button.tsx` | [guide](components/button.md) · [preview](previews/button.html) |
 | `ConfirmDialog` | The question and the `y`/`n` choices of a confirmation, in a `Modal`. It shows before an operation that you cannot undo. | Library · `confirm-dialog.tsx` | [guide](components/confirm-dialog.md) · [preview](previews/confirm-dialog.html) |
-| `ContextMenu` | A list of items in a frame. A right click opens it at the pointer, on top of all other content. Each item names the key that does the same operation. | Pattern · not in the library | [guide](components/context-menu.md) |
+| `ContextMenu` | A list of items in a frame. A right click opens it at the pointer, on top of all other content. Each item names the key that does the same operation. | Library · `context-menu.tsx`, `context-menu-row.tsx` | [guide](components/context-menu.md) |
 | `DetailView` | Label–value rows for a record. | Library · `detail-view.tsx` | [guide](components/detail-view.md) · [preview](previews/detail-view.html) |
 | `EntityFormModal` | A `FormModal` that creates or edits one record kind. It makes the title (`New <noun>` or `Edit <noun> › …`), calls `save`, shows the `Added`/`Updated` toast and calls `onSaved`. The caller gives the fields and the service call. | Library · `entity-form-modal.tsx` | [guide](components/form.md) |
 | `FormModal` | A generic `Modal` with one `Form`, to create or edit a record. `esc` and the `✕` close it. If the Form has changes, it asks before it discards them. | Library · `form-modal.tsx` | [guide](components/form.md) |
@@ -107,8 +107,9 @@ The library also contains other code that has no guideline of its own:
   `RowblyError` subclasses (`src/services/errors/errors.ts`). `useToast().error(err)` shows such an error
   with its hint. The `onSubmit` of a `Form` can throw a `ValidationError` with `details.issues`.
   Then the Form shows the messages under the fields.
-- **Mouse.** `useMouse(ref, { onClick, onWheel, drag, onDrop, onPull })` makes a box
-  respond to the pointer when the box is active. Every clickable control also has a key.
+- **Mouse.** `useMouse(ref, { onClick, onWheel, onMenu, drag, onDrop, onPull })` makes a box
+  respond to the pointer when the box is active. `onMenu` gets a right click. Every clickable control
+  also has a key.
 
 ## Overview
 

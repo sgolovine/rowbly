@@ -52,6 +52,8 @@ export interface StoryListProps {
   onClear?(): void;
   /** The Story `id` was dropped in the gap before the row at `gap` (`rows.length` is the end of the list). */
   onMove?(id: string, gap: number): void;
+  /** A right click on the Story row at `index`, at the cell `x`, `y` of the screen. */
+  onMenu?(index: number, x: number, y: number): void;
 }
 
 /**
@@ -65,7 +67,7 @@ export interface StoryListProps {
  * factory status shows `connection lost`. With `onMove`, the mouse can drag a Story to another place: an empty `DropSlotRow`
  * shows the gap where it lands, and the release calls `onMove`. Over a Story above the dragged Story, the gap
  * is above that Story; over a Story below it, the gap is below that Story. Over a heading, the gap is below
- * the heading, at the top of its section.
+ * the heading, at the top of its section. A right click on a Story row calls `onMenu`.
  */
 export function StoryList({
   rows,
@@ -81,6 +83,7 @@ export function StoryList({
   onRange,
   onClear,
   onMove,
+  onMenu,
 }: StoryListProps) {
   const ref = useRef<DOMElement>(null);
   const self = useRef({}).current;
@@ -91,7 +94,7 @@ export function StoryList({
 
   const view = listWindow(rows.length, height, cursor, slot);
   const sections = rows.some((row) => row.kind === "stage");
-  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onRange, onClear, onMove };
+  const env: StoryListEnv = { rows, self, cursor, setSlot, onCursor, onActivate, onRange, onClear, onMove, onMenu };
   // The rows read the latest environment through this ref, so their props stay equal when only the cursor moves.
   const list = useLatest(env);
   const rowTags = stableTags(tags);
@@ -127,6 +130,7 @@ export function StoryList({
             indented={sections}
             marked={marked.has(item.row.id)}
             movable={onMove !== undefined}
+            menu={onMenu !== undefined}
             list={list}
           />
         ),

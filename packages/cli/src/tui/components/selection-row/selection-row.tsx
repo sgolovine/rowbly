@@ -20,6 +20,7 @@ export function SelectionRow({
   selected,
   active,
   onClick,
+  onMenu,
   drag,
   onDrop,
   onDragOver,
@@ -29,6 +30,8 @@ export function SelectionRow({
   selected: boolean;
   active: boolean;
   onClick?(event: ClickEvent): void;
+  /** A right click on the row, at the cell `x`, `y` of the screen. */
+  onMenu?(x: number, y: number): void;
   children: ReactNode;
 } & RowDragProps) {
   const ref = useRef<DOMElement>(null);
@@ -36,8 +39,8 @@ export function SelectionRow({
   useScrollFocus(ref, selected && active);
   useMouse(
     ref,
-    { onClick, drag, onDrop, onDragOver, onDragLeave },
-    active && (onClick !== undefined || drag !== undefined || onDrop !== undefined),
+    { onClick, onMenu, drag, onDrop, onDragOver, onDragLeave },
+    active && (onClick !== undefined || onMenu !== undefined || drag !== undefined || onDrop !== undefined),
   );
 
   return (

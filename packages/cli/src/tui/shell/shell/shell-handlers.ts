@@ -4,6 +4,7 @@ import type { Story } from "../../../services/story/story.js";
 import type { ThreadRecord } from "../../../services/thread/thread.js";
 import type { KeyHint } from "../../keymap.js";
 import type { OverlayHandlers, SidePane } from "../overlay.js";
+import type { StoryMenuAction } from "../story-menu/index.js";
 import { cyclePane } from "./shell-keys.js";
 import {
   clickRow,
@@ -23,6 +24,7 @@ import {
 import type { ShellEnv } from "./shell-state.js";
 import { afterDelete, dropStory, moveStage, removeStory } from "./story-changes.js";
 import { clearMarks, markRange } from "./story-marks.js";
+import { openStoryMenu, runStoryAction } from "./story-menu-actions.js";
 import {
   discardStory,
   leaveStoryPane,
@@ -83,6 +85,7 @@ function panelHandlers(envRef: RefObject<ShellEnv>) {
     clickRow: (index: number) => clickRow(envRef.current, index),
     markRange: (index: number) => markRange(envRef.current, index),
     clearMarks: () => clearMarks(envRef.current),
+    openStoryMenu: (index: number, x: number, y: number) => openStoryMenu(envRef.current, index, x, y),
     openThread: (thread: ThreadRecord) => openThread(envRef.current, thread),
     threadHints: (hints: readonly KeyHint[]) => envRef.current.setThreadHints(hints),
     onboardingHints: (hints: readonly KeyHint[]) => envRef.current.setOnboardingHints(hints),
@@ -114,6 +117,7 @@ function overlayHandlers(envRef: RefObject<ShellEnv>): OverlayHandlers {
     openThread: (thread: ThreadRecord) => openOverlayThread(envRef.current, thread),
     discardStory: (next: SidePane | null) => discardStory(envRef.current, next),
     removeStory: (story: Story) => removeStory(envRef.current, story),
+    storyAction: (action: StoryMenuAction, story: Story) => runStoryAction(envRef.current, action, story),
     stageSaved: (stage: Stage) => showSavedStage(envRef.current, stage),
     tagSaved: () => showSavedTag(envRef.current),
     openAiSettings: () => envRef.current.setOverlay({ kind: "settings", section: "ai" }),

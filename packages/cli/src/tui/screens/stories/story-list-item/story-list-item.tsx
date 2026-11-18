@@ -28,6 +28,8 @@ export interface StoryListItemProps {
   readonly marked: boolean;
   /** The list has `onMove`, so the mouse can drag the row and drop a Story on it. */
   readonly movable: boolean;
+  /** The list has `onMenu`, so a right click on a Story row opens its menu. A Stage heading has no menu. */
+  readonly menu: boolean;
   /**
    * The latest environment of the list. The ref keeps its identity, so a cursor move does not render the rows that
    * did not change, and the handlers of a row still read the latest cursor, rows and callbacks.
@@ -47,6 +49,7 @@ export const StoryListItem = memo(function StoryListItem({
   indented,
   marked,
   movable,
+  menu,
   list,
 }: StoryListItemProps) {
   const dragProps = movable ? rowDragProps(list, row, index) : NO_DRAG;
@@ -75,6 +78,7 @@ export const StoryListItem = memo(function StoryListItem({
       indented={indented}
       marked={marked}
       onClick={(event) => clickRow(list.current, index, event)}
+      onMenu={menu ? (x, y) => list.current.onMenu?.(index, x, y) : undefined}
       {...dragProps}
     />
   );
