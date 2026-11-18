@@ -13,12 +13,13 @@ import { type FactoryActivity, getFactoryActivity } from "../../../services/fact
 import { recordProject } from "../../../services/known-project/known-project.js";
 import { getProject } from "../../../services/project/project.js";
 import { listStages } from "../../../services/stage/stage.js";
-import { type Story, searchStories, withoutStory, withStory } from "../../../services/story/story.js";
+import { type Story, searchStories, withoutStory, withStory, withStoryReads } from "../../../services/story/story.js";
 import {
   copyNotice,
   renumberNotice,
   repairDuplicateStoryIds,
 } from "../../../services/story-renumber/story-renumber.js";
+import { readStoryChanges, type WatchChange } from "../../../services/story-watch/story-watch.js";
 import { hasProject, type ServiceContext } from "../../../services/workspace/workspace.js";
 import {
   type AsyncState,
@@ -30,7 +31,7 @@ import {
   useStoryChanges,
   useToast,
 } from "../../hooks/index.js";
-import { useLatest, writeRef } from "../../hooks/refs.js";
+import { writeRef } from "../../hooks/refs.js";
 import type { Board } from "./shell-state.js";
 import { usePiPreload } from "./use-pi-preload.js";
 
@@ -52,6 +53,18 @@ interface LocalBoard {
   readonly base: Board;
   readonly board: Board;
 }
+
+/**
+ * The changed names of the Story watch since `board` showed, for the `ctx` of that board. A run of the board reads
+ * only the changed Stories while `board` is the board on screen. A `null` name makes the run read the full board.
+ */
+interface PendingChanges {
+  readonly ctx: ServiceContext | undefined;
+  readonly board: Board | null | undefined;
+  readonly changes: readonly WatchChange[];
+}
+
+const NO_CHANGES: PendingChanges = { ctx: undefined, board: undefined, changes: [] };
 
 /**
  * Removes the old copies of each Story, then gives the newer Story of each duplicate Story ID a new number. It shows
@@ -99,6 +112,72 @@ async function loadBoard(
   const activity = await getFactoryActivity({ stories }, ctx);
 
   return { project, stages, stories, activity };
+}
+
+/**
+ * Reads only the changed Stories of `pending`, and puts them on `board`. Then it reads the factory activity again for
+ * the new Stories. Gives `undefined` when the board must be read in full: when `pending` is not for the board on
+ * screen and for `ctx`, when a change is not a Story file, or when the read of one Story fails.
+ */
+async function loadChangedStories(
+  ctx: ServiceContext,
+  pending: PendingChanges,
+  board: Board | null | undefined,
+): Promise<Board | undefined> {
+  if (!board || pending.board !== board || pending.ctx !== ctx) {
+    return undefined;
+  }
+
+  const reads = await readStoryChanges(pending.changes, ctx);
+
+  if (reads === undefined) {
+    return undefined;
+  }
+
+  if (reads.length === 0) {
+    return board;
+  }
+
+  const stories = withStoryReads(board.stories, board.stages, reads);
+  const activity = await getFactoryActivity({ stories }, ctx);
+
+  return { ...board, stories, activity };
+}
+
+/** What a run of the board reads. */
+interface BoardEnv {
+  readonly ctx: ServiceContext;
+  readonly toast: ToastStore;
+  readonly repaired: RefObject<ServiceContext | undefined>;
+  readonly pending: RefObject<PendingChanges>;
+  /** The board on screen. */
+  readonly base: RefObject<Board | null | undefined>;
+}
+
+/** Reads only the changed Stories when it can. Otherwise it reads the full board. */
+async function loadShellBoard(env: BoardEnv): Promise<Board | null> {
+  const changed = await loadChangedStories(env.ctx, env.pending.current, env.base.current);
+
+  return changed ?? loadBoard(env.ctx, env.toast, env.repaired);
+}
+
+/**
+ * Adds the changed names of the Story watch to the pending changes of the board on screen, and reads the board in the
+ * background. Changes for an older board go out: the board on screen already has them.
+ */
+function onStoryChanges(env: BoardEnv, refresh: () => void, changes: readonly WatchChange[]): void {
+  const pending = env.pending.current;
+  const board = env.base.current;
+  const earlier = pending.board === board && pending.ctx === env.ctx ? pending.changes : [];
+
+  writeRef(env.pending, { ctx: env.ctx, board, changes: [...earlier, ...changes] });
+  refresh();
+}
+
+/** Makes the next run of the board read the full board, also when a change of the Story watch comes first. */
+function reloadBoard(env: BoardEnv, setVersion: Dispatch<SetStateAction<number>>): void {
+  writeRef(env.pending, { ctx: env.ctx, board: env.base.current, changes: [null] });
+  bump(setVersion);
 }
 
 /** The factory activity that Rowbly read again after a change of the state file, and the Stories that it is for. */
@@ -207,18 +286,27 @@ export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void
   const toast = useToast();
   const [version, setVersion] = useState(0);
   const repaired = useRef<ServiceContext | undefined>(undefined);
-  const data = useAsync(() => loadBoard(ctx, toast, repaired), [ctx, version]);
+  const pending = useRef<PendingChanges>(NO_CHANGES);
+  const base = useRef<Board | null | undefined>(undefined);
+  const env: BoardEnv = { ctx, toast, repaired, pending, base };
+  const data = useAsync(() => loadShellBoard(env), [ctx, version]);
+
+  writeRef(base, data.data);
   // A Story action changes the board in memory. The next read (the watcher echo of the write) replaces the change.
   const [local, setLocal] = useState<LocalBoard>();
-  const base = useLatest(data.data);
   const projectRoot = data.data?.project.root;
   const projectName = data.data?.project.projectName;
 
   // A change of the state file reads only the activity again. The first run has no board, so it reads nothing.
   const activity = useAsync(() => loadActivity(ctx, data.data), []);
 
-  // Agents change Stories from other processes.
-  useStoryChanges(projectRoot, data.refresh);
+  // Agents change Stories from other processes. A change of Story files reads only those Stories.
+  const storyChanges = useCallback(
+    (changes: readonly WatchChange[]) => onStoryChanges({ ctx, toast, repaired, pending, base }, data.refresh, changes),
+    [ctx, toast, data.refresh],
+  );
+
+  useStoryChanges(projectRoot, storyChanges);
   // The factory writes its state file frequently.
   useFactoryStateChanges(projectRoot, activity.refresh);
 
@@ -237,14 +325,14 @@ export function useShellData(ctx: ServiceContext, preloadPi?: () => Promise<void
   const loaded = shownBoard(local, data.data);
   const board = useMemo(() => withActivity(loaded, data.data, activity.data), [loaded, data.data, activity.data]);
   const shown = useMemo(() => ({ ...data, data: board }), [data, board]);
-  const reload = useCallback(() => bump(setVersion), []);
+  const reload = useCallback(() => reloadBoard({ ctx, toast, repaired, pending, base }, setVersion), [ctx, toast]);
   const putOnBoard = useCallback(
     (story: Story) => setLocal((prev) => patchBoard(prev, base.current, (b) => boardWithStory(b, story))),
-    [base],
+    [],
   );
   const takeFromBoard = useCallback(
     (id: string) => setLocal((prev) => patchBoard(prev, base.current, (b) => boardWithoutStory(b, id))),
-    [base],
+    [],
   );
 
   return { data: shown, factory, reload, putOnBoard, takeFromBoard };

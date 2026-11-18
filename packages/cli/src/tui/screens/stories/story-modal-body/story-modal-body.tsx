@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import { Tabs } from "../../../components/index.js";
+import { Button, Tabs } from "../../../components/index.js";
 import { LayoutContext } from "../../../hooks/index.js";
 import { theme } from "../../../theme.js";
 import { StoryConfirmDialogs } from "../story-confirm-dialogs/index.js";
@@ -11,7 +11,9 @@ import { type StoryModalBodyProps, useStoryModalBody } from "./use-story-modal-b
 /**
  * The edit form of a Story in the Story sidebar. `shift+tab` or a click changes the tab. The tabs stay mounted, so that a
  * change of tab keeps the text that is not saved. The Threads tab reads its data only after it is selected.
- * The Delete Button and `ctrl+d` of the General tab ask before they delete the Story.
+ * The Delete Button and `ctrl+d` of the General tab ask before they delete the Story. The `Force assignment` Button at
+ * the top and `ctrl+r` ask the live factory to evaluate the Story for a worker again. The Button shows only for a
+ * Story in the factory queue without a pending or running Thread.
  */
 export function StoryModalBody(props: StoryModalBodyProps) {
   const { ctx, storyId, stages, specs = true, confirming, onConfirming } = props;
@@ -22,6 +24,18 @@ export function StoryModalBody(props: StoryModalBodyProps) {
 
   return (
     <Box flexDirection="column" height={body.layout.height}>
+      {body.force.shown && (
+        <Box paddingX={STORY_PADDING_X} paddingTop={1} flexShrink={0}>
+          <Button
+            label={body.force.busy ? "Force assignment…" : "Force assignment"}
+            keyName="ctrl+r"
+            busy={body.force.busy}
+            compact
+            clickable={idle && !body.force.busy}
+            onClick={body.force.send}
+          />
+        </Box>
+      )}
       <Box paddingX={STORY_PADDING_X} paddingTop={1} flexShrink={0}>
         <Tabs
           tabs={body.labels}

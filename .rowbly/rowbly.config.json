@@ -87,7 +87,7 @@
     "storySidebar": "regular"
   },
   "factory": {
-    "maxWorkers": 4,
+    "maxWorkers": 6,
     "supervisorModel": {
       "provider": "anthropic",
       "modelId": "claude-opus-5-5",
@@ -103,6 +103,7 @@
       "authorEmail": "rowbly@sunny.gg",
       "push": true,
       "pull": true
-    }
+    },
+    "placement": "prefer-local"
   }
 }

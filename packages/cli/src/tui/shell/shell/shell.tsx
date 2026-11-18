@@ -66,7 +66,7 @@ export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) 
           <Box flexGrow={1} columnGap={frame.gap} flexDirection={frame.stacked ? "column" : "row"}>
             {view.sidebar && !cover && !props.tags && <Sidebar {...props.sidebar} />}
             {view.sidebar && !cover && props.tags && (
-              // The Stage sidebar and the tag sidebar share one column. Only the Stage sidebar drags its width.
+              // The Stage sidebar and the tag sidebar share one column. A drag of the right edge of either sidebar changes the width of the two.
               <Box flexDirection="column" flexShrink={0}>
                 <Sidebar {...props.sidebar} />
                 <Sidebar {...props.tags} />

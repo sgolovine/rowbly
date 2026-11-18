@@ -3,6 +3,7 @@ import {
   DEFAULT_LIMITS,
   evaluateScan,
   HOST_SYNC_REASON,
+  hasUnstoppedAttempt,
   normalizeStatus,
   type PolicyDecision,
   type PolicyStage,
@@ -422,6 +423,70 @@ describe("a launch that failed", () => {
     const state = recordLaunchFailure(empty(), story.id, "usage limit", new Date(START));
     const plan = evaluateScan(state, facts([], [story, { id: "ROW-02", stage: "IN_REVIEW" }]));
     expect(plan.decisions.map((decision) => decision.action)).toEqual(["skip", "start"]);
+  });
+});
+
+describe("a forced assignment", () => {
+  const twoFailures = () => {
+    const state = stopWithoutMove(stopWithoutMove(empty(), "a", "failed", "failed"), "b", "failed", "failed");
+    return evaluateScan(state, facts()).state;
+  };
+  const cases: [string, () => PolicyState, string][] = [
+    [
+      "a parked Story",
+      () => {
+        let state = empty();
+        for (let index = 1; index <= DEFAULT_LIMITS.attempts; index += 1) state = stopWithoutMove(state, `w-${index}`);
+        return evaluateScan(state, facts()).state;
+      },
+      "parked",
+    ],
+    ["a Story in retry delay", twoFailures, "retry delay"],
+    [
+      "a Story in launch delay",
+      () => recordLaunchFailure(empty(), story.id, "usage limit", new Date(START)),
+      "launch delay",
+    ],
+  ];
+
+  it.each(cases)("starts %s in a new Stage stay on the next scan", (_name, prepare, before) => {
+    const state = prepare();
+    expect(reason(evaluateScan(state, facts()))).toBe(before);
+    const plan = evaluateScan(releaseStory(state, story), facts());
+    expect(action(plan)).toBe("start");
+    expect(reason(plan)).toBe("new stage stay");
+    expect(first(plan).attempt).toBe(1);
+    expect(plan.state.parked).toEqual({});
+    expect(plan.state.launchFailures ?? {}).toEqual({});
+  });
+
+  it("removes the user cancellation, and the next scan starts a new Stage stay", () => {
+    const state: PolicyState = {
+      ...stopWithoutMove(empty(), "a"),
+      nativeCancelled: { [story.id]: { stage: story.stage } },
+    };
+    const released = releaseStory(state, story);
+    expect(released.nativeCancelled).toEqual({});
+    const plan = evaluateScan(released, facts());
+    expect(action(plan)).toBe("start");
+    expect(reason(plan)).toBe("new stage stay");
+  });
+
+  it("does not start a second worker for an attempt that is not stopped", () => {
+    const state = running();
+    expect(hasUnstoppedAttempt(state, story)).toBe(true);
+    expect(hasUnstoppedAttempt(stopWithoutMove(empty(), "a"), story)).toBe(false);
+    const plan = evaluateScan(releaseStory(state, story), facts());
+    expect(action(plan)).toBe("skip");
+    expect(reason(plan)).toBe("worker stop unconfirmed");
+  });
+
+  it("does not start a worker for a Story with an active harness worker", () => {
+    const plan = evaluateScan(
+      releaseStory(empty(), story),
+      facts([{ story: story.id, threadId: "x", status: "running" }]),
+    );
+    expect(action(plan)).toBe("skip");
   });
 });
 

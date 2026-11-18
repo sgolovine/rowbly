@@ -129,4 +129,56 @@ describe("project watch registry", () => {
 
     expect(openWatches()).toEqual([]);
   });
+
+  it("gives the changed names of one quiet time to the callback, relative to the first route", async () => {
+    const child = join(project.paths.dir, "child");
+    await mkdir(child);
+    const onChange = vi.fn();
+    const stop = watchRoutes(
+      [
+        { path: project.paths.dir, recursive: false, accept: (filename) => filename === "a.txt" },
+        { path: child, recursive: true, accept: () => true },
+      ],
+      onChange,
+    );
+
+    try {
+      await writeFile(join(project.paths.dir, "a.txt"), "1");
+      await writeFile(join(child, "b.txt"), "1");
+      await writeFile(join(child, "b.txt"), "2");
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
+      await sleep(150);
+
+      expect(onChange).toHaveBeenCalledOnce();
+      expect(onChange.mock.calls[0]?.[0]).toEqual(["a.txt", join("child", "b.txt")]);
+
+      onChange.mockClear();
+      await writeFile(join(child, "c.txt"), "1");
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
+      expect(onChange.mock.calls[0]?.[0]).toEqual([join("child", "c.txt")]);
+    } finally {
+      stop();
+    }
+  });
+
+  it("gives null for an event with no name", async () => {
+    const child = join(project.paths.dir, "child");
+    const onChange = vi.fn();
+    const stop = watchRoutes(
+      [
+        { path: project.paths.dir, recursive: false, accept: () => false },
+        { path: child, recursive: false, accept: () => true },
+      ],
+      onChange,
+    );
+
+    try {
+      // The watch of the new folder starts, and gives one event with no name for the files that it did not see.
+      await mkdir(child);
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
+      expect(onChange.mock.calls[0]?.[0]).toContain(null);
+    } finally {
+      stop();
+    }
+  });
 });

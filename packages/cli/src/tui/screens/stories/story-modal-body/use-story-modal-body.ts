@@ -13,6 +13,12 @@ import {
   useStoryPaste,
 } from "../../../hooks/index.js";
 import type { KeyHint } from "../../../keymap.js";
+import {
+  FORCE_ASSIGNMENT_ROWS,
+  type ForceAssignmentState,
+  useForceAssignment,
+  withForceAssignmentHint,
+} from "../force-assignment/index.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import type { DependencyLists } from "../story-dependency-view.js";
 import type { StoryTabId, StoryTabReports } from "../story-tab-panes/index.js";
@@ -66,6 +72,8 @@ export interface StoryModalBodyState {
   readonly submitRequest: number;
   readonly generalLayout: Layout;
   readonly specsLayout: Layout;
+  /** The `Force assignment` Button at the top of the Story view. */
+  readonly force: ForceAssignmentState;
 }
 
 /** The counts, the key hints and the editing states that the tabs report. */
@@ -123,6 +131,7 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
   const [submitRequest, setSubmitRequest] = useState(0);
   const [saving, setSaving] = useState(false);
   const savingNow = useRef(false);
+  const force = useForceAssignment(ctx, storyId);
 
   const tab = Math.max(0, tabIds.indexOf(tabId));
   const shown = tabIds[tab] ?? "general";
@@ -130,8 +139,8 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
   // A sub-region of a tab that takes `esc` and `tab` for itself.
   const tabOwnsKeys = values.specEditing || values.threadViewing;
   const paste = useStoryPaste(`${ctx.cwd ?? ""}:${storyId}`, storyId, idle && !saving);
-  const summaryRows = paste.summary ? 1 : 0;
-  const hints = storyModalHints(shown, { ...values, tabOwnsKeys });
+  const extraRows = (paste.summary ? 1 : 0) + (force.shown ? FORCE_ASSIGNMENT_ROWS : 0);
+  const hints = withForceAssignmentHint(storyModalHints(shown, { ...values, tabOwnsKeys }), force.shown);
   // A tab that asks a question or has a picker open takes `esc` and the save key.
   const tabTask = values.attachmentTask || values.modelTask;
 
@@ -148,6 +157,7 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
     setSaving,
     onSubmit: props.onSubmit,
     onConfirming: props.onConfirming,
+    onForceAssignment: force.send,
   };
 
   useKeyCapture(active, { text: false, escape: true });
@@ -156,14 +166,14 @@ export function useStoryModalBody(props: StoryModalBodyProps): StoryModalBodySta
   useReportHints(onHints, hints);
 
   const generalLayout = useMemo(
-    () => generalLayoutOf(layout.width, layout.height, summaryRows),
-    [layout.width, layout.height, summaryRows],
+    () => generalLayoutOf(layout.width, layout.height, extraRows),
+    [layout.width, layout.height, extraRows],
   );
   const specsLayout = useMemo(
-    () => specsLayoutOf(layout.width, layout.height, summaryRows),
-    [layout.width, layout.height, summaryRows],
+    () => specsLayoutOf(layout.width, layout.height, extraRows),
+    [layout.width, layout.height, extraRows],
   );
   const labels = storyTabLabels(specs, values.specCount, values.threadCount);
 
-  return { env, layout, idle, labels, reports, submitRequest, generalLayout, specsLayout };
+  return { env, layout, idle, labels, reports, submitRequest, generalLayout, specsLayout, force };
 }
