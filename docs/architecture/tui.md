@@ -624,7 +624,8 @@ tags, only the Stage sidebar shows. `src/tui/shell/shell/` contains the code.
 - **The mouse.** A click in the tag sidebar gives it the focus. A click on an entry selects it. When
   the entries do not fit, the wheel selects. A click on `+ New Tag` opens the New Tag Modal.
 - **The size.** The tag sidebar has the width of the Stage sidebar. A drag of the right edge of the
-  Stage sidebar changes the width of the two sidebars. Beside the list, the tag sidebar gets the
+  Stage sidebar or of the tag sidebar changes the width of the two sidebars. The two edges use the
+  same handler. In a narrow terminal, the width does not drag. Beside the list, the tag sidebar gets the
   rows for all its entries, but not more than half of the main area. The Stage sidebar gets the
   other rows. Beside the list, a drag of the top edge of the tag sidebar (the border between the
   two Panels) up or down changes the rows of the tag sidebar (`ResizeEdge` with `side="top"`). The
