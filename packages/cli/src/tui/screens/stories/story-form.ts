@@ -49,7 +49,16 @@ function tagsFormField(tags: TagChoices): FormField[] {
     return [];
   }
 
-  return [{ name: "tags", label: "Tags", kind: "multiselect", options: tags.options, optionLabels: tags.labels }];
+  return [
+    {
+      name: "tags",
+      label: "Tags",
+      kind: "multiselect",
+      searchable: true,
+      options: tags.options,
+      optionLabels: tags.labels,
+    },
+  ];
 }
 
 /** The form value of a custom field: `NONE` or `""` when it is unset, otherwise its value as text. */
