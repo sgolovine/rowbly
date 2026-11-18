@@ -722,7 +722,9 @@ the tokens (`tokens.json`), one guideline for each component (`components/*.md`)
    the component.
 4. For a change that comes from outside the TUI, use `refresh` from `useAsync`. It does not show a
    loading state or a toast, and it does not render when it starts. `useStoryChanges` and
-   `useThreadChanges` call a function when the files change. For a poll, give `useAsync` an `isEqual`
+   `useThreadChanges` call a function when the files change. `useStoryChanges` gives the changed
+   names. When only Story files change, the shell reads only these Stories with `readStoryChanges`.
+   Other changes read the full board again. For a poll, give `useAsync` an `isEqual`
    option. Then a read that gives the same data does not render again.
 5. For a run time that counts up, use `useClock(enabled)`. Enable it only while the view shows a
    running Thread and no full-screen view, Modal or main overlay (`useOverlayOpen()`) covers it.

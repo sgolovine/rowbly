@@ -1,5 +1,5 @@
 import { type FSWatcher, watch } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { Store, withEntry, withMember, withoutEntry, withoutMember } from "../store/store.js";
 
 /** Gets the name of a changed entry relative to the watched path, or `null` when the event has no name. */
@@ -25,8 +25,19 @@ interface WatchRegistry {
   readonly entries: ReadonlyMap<string, WatchEntry>;
 }
 
+/**
+ * One changed name: the path of the changed entry relative to the path of the first route, or `null` when the event
+ * has no name. `null` means that any file can have changed.
+ */
+export type WatchChange = string | null;
+
+/** Gets the changed names of one quiet time, in the order of their first event. A name is in the list one time. */
+export type WatchCallback = (changes: readonly WatchChange[]) => void;
+
+/** The timer of the quiet time, and the changed names that the timer collected. */
 interface WatchTimer {
   readonly timer: NodeJS.Timeout | undefined;
+  readonly changes: readonly WatchChange[];
 }
 
 /** A description of one shared watch, for tests and diagnostics. */
@@ -179,14 +190,41 @@ function removeListener(path: string, listener: WatchListener): void {
   registry.update((state) => ({ entries: withoutEntry(state.entries, path) }));
 }
 
-/** Starts the quiet time again, so that a burst of events gives one call. */
-function schedule(timer: Store<WatchTimer>, onChange: () => void): void {
-  clearTimeout(timer.current.timer);
-  timer.update(() => ({ timer: setTimeout(onChange, QUIET_MS) }));
+/** Gives the collected names to `onChange`, and clears them for the next quiet time. */
+function flush(timer: Store<WatchTimer>, onChange: WatchCallback): void {
+  const { changes } = timer.current;
+
+  timer.update(() => ({ timer: undefined, changes: [] }));
+  onChange(changes);
 }
 
-function routeListener(route: WatchRoute, timer: Store<WatchTimer>, onChange: () => void): WatchListener {
-  return (filename) => (route.accept(filename) ? schedule(timer, onChange) : undefined);
+/** Adds `change` to the names of the quiet time. A name that the list has already does not go in again. */
+function withChange(changes: readonly WatchChange[], change: WatchChange): readonly WatchChange[] {
+  return changes.includes(change) ? changes : [...changes, change];
+}
+
+/** Starts the quiet time again, so that a burst of events gives one call with all of their names. */
+function schedule(timer: Store<WatchTimer>, change: WatchChange, onChange: WatchCallback): void {
+  clearTimeout(timer.current.timer);
+  timer.update((state) => ({
+    timer: setTimeout(() => flush(timer, onChange), QUIET_MS),
+    changes: withChange(state.changes, change),
+  }));
+}
+
+/** The name of an event of `route`, relative to `root`. An event with no name gives `null`. */
+function changeOf(root: string, route: WatchRoute, filename: string | null): WatchChange {
+  return filename === null ? null : relative(root, join(route.path, filename));
+}
+
+function routeListener(
+  root: string,
+  route: WatchRoute,
+  timer: Store<WatchTimer>,
+  onChange: WatchCallback,
+): WatchListener {
+  return (filename) =>
+    route.accept(filename) ? schedule(timer, changeOf(root, route, filename), onChange) : undefined;
 }
 
 function stopRoutes(timer: Store<WatchTimer>, subscriptions: readonly (readonly [string, WatchListener])[]): void {
@@ -196,13 +234,15 @@ function stopRoutes(timer: Store<WatchTimer>, subscriptions: readonly (readonly 
 
 /**
  * Watches each path of `routes` with the shared watch of that path. Calls `onChange` after the quiet time,
- * for each event that its route accepts. Give a parent folder before its child folders: the watch of a child
+ * for the events that their routes accept, with the changed names of that quiet time. The names are relative to the
+ * path of the first route. Give a parent folder before its child folders: the watch of a child
  * folder that does not exist starts when the watch of its parent sees its creation. Returns the function that
  * stops the watch. The watches do not keep the process alive.
  */
-export function watchRoutes(routes: readonly WatchRoute[], onChange: () => void): () => void {
-  const timer = new Store<WatchTimer>({ timer: undefined });
-  const subscriptions = routes.map((route) => [route.path, routeListener(route, timer, onChange)] as const);
+export function watchRoutes(routes: readonly WatchRoute[], onChange: WatchCallback): () => void {
+  const timer = new Store<WatchTimer>({ timer: undefined, changes: [] });
+  const root = routes[0]?.path ?? "";
+  const subscriptions = routes.map((route) => [route.path, routeListener(root, route, timer, onChange)] as const);
 
   subscriptions.map(([path, listener], index) => addListener(path, routes[index]?.recursive ?? false, listener));
 
