@@ -247,6 +247,38 @@ step. The shell keeps the selection as a set of Story IDs, and the range anchor 
   exist go out of the selection.
 - **The keys of a row.** `enter`, `d` and `n` act on the cursor row only.
 
+## The context menu of a Story
+
+A right click on a Story row of the Story list opens the context menu of the Story at the pointer. The
+menu is a `ContextMenu` (`src/tui/components/context-menu/`). The guide is
+[context-menu.md](../../.agents/skills/rowbly-tui-design/components/context-menu.md).
+
+- **The right click.** The mouse registry sends a `menu` event to the smallest box under the pointer
+  that has `onMenu`. If a drag or a pull is in progress, the event only ends it. `StoryList` gives the
+  index of the row and the cell of the pointer to the shell. The shell moves the cursor to the row and
+  opens the overlay `{ kind: "storyMenu", story, x, y }`. The multi-selection does not change. A right
+  click on a Stage heading row does nothing. While a Modal, a confirmation or a different overlay
+  shows, the rows do not take the mouse, so no menu opens.
+- **The place.** The cell below the pointer is the top-left corner of the menu. The menu moves in from
+  the right and the bottom edges of the screen, so that all of it shows. The shell renders the menu as
+  its last child, so that the menu is on top of all other content.
+- **The items.** `shell/story-menu/story-menu-items.ts` makes the items, in this order: `Open`
+  (`enter`), `Move to next Stage` (`shift+↓`), `Move to previous Stage` (`shift+↑`), `Move to Backlog`
+  (no key), `Delete` (`d`) and `Force assignment` (`ctrl+r`). An item that does not apply shows in
+  `ink-faint`: the move to the next Stage from the last Stage, the moves back and to the Backlog from
+  the first Stage, and `Force assignment` when `canForceAssignment` gives `false`.
+- **The keys and the mouse.** `↑/↓` and `j/k` move the highlight past the items that do not apply. The
+  pointer on an item highlights it. `enter` or a click runs the highlighted item and closes the menu.
+  `esc`, a click or a right click outside the menu only closes the menu. A transparent box on the full
+  screen takes that click, so the click does not go to the box below the menu. The footer shows
+  `↑/↓ select`, `enter run` and `esc close`.
+- **The operations.** Before an item runs, the menu makes sure that the Story still exists. If it does
+  not, the menu closes and does nothing. `Open` opens the Story in the Story sidebar, as `enter` does.
+  The moves use `moveStoryStage` and `moveStoryToBacklog` in `story-changes.ts`. The Backlog is the
+  first Stage of the board. Each move puts the Story at the top of the target Stage. `Delete` opens the
+  same confirmation as `d`. `Force assignment` uses `useForceAssignment`, as the Button of the Story
+  view does, and shows the same toasts.
+
 ## The Factory view
 
 The right Panel of the shell has two view modes. The `stories` mode shows the Story list. It is the
@@ -398,7 +430,8 @@ keys of the Story sidebar. Only one Story or Thread shows in the Story sidebar a
 | File in `hooks/`            | Exports                                                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | `layout.ts`                 | `LayoutContext`, `useLayout`: the room of the main area or of a Modal.                          |
-| `mouse.ts`                  | `createMouseRegistry`, `MouseContext`, `useMouseSource`, `useMouse`, `WHEEL_LINES`.             |
+| `mouse.ts`                  | `createMouseRegistry`, `MouseHandlers`, `WHEEL_LINES`: the clickable boxes and their events.    |
+| `use-mouse.ts`              | `MouseContext`, `useMouseSource`, `useMouse`: the React side of the mouse registry.             |
 | `refs.ts`                   | `writeRef`, `useLatest`, `runExclusive`: the only writes to a React ref.                        |
 | `section-shell.ts`          | `sectionShell`: the shell of a screen inside a different screen, with its own key hints.        |
 | `shell.ts`                  | `createShellRegistry`, focus (`useIsActive`), `useOverlayOpen`, `useKeyCapture`, `useKeyHints`. |

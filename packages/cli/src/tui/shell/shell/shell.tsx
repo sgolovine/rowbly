@@ -1,11 +1,13 @@
 import { Box } from "ink";
 import type { FactoryLaunch } from "../../../services/factory/factory.js";
 import type { ServiceContext } from "../../../services/workspace/workspace.js";
-import { Footer, Sidebar, ToastArea } from "../../components/index.js";
+import { CONTEXT_MENU_HINTS, Footer, Sidebar, ToastArea } from "../../components/index.js";
 import { FactoryStatusContext, LayoutContext } from "../../hooks/index.js";
 import type { KeyHint } from "../../keymap.js";
 import { Header } from "../header/index.js";
+import type { Overlay } from "../overlay.js";
 import { ShellOverlays } from "../shell-overlays/index.js";
+import { StoryMenu } from "../story-menu/index.js";
 import { StoryPanel } from "../story-panel/index.js";
 import { StorySidebar } from "../story-sidebar/index.js";
 import { useShell } from "./use-shell.js";
@@ -16,6 +18,15 @@ const CWD: ServiceContext = {};
 
 /** One empty list, so the memo children that get no keys keep the same prop. */
 const NO_HINTS: readonly KeyHint[] = [];
+
+/** The keys of the footer: the keys of the screen, the keys of an open context menu, or none over a Modal. */
+function footerHints(overlay: Overlay | null, hints: readonly KeyHint[]): readonly KeyHint[] {
+  if (overlay?.kind === "storyMenu") {
+    return CONTEXT_MENU_HINTS;
+  }
+
+  return overlay ? NO_HINTS : hints;
+}
 
 interface ShellProps {
   readonly ctx?: ServiceContext;
@@ -35,7 +46,7 @@ interface ShellProps {
  * or a click on a Story opens it for editing, and so does a pick in the Story finder. `shift+↑/↓` moves the
  * selected Story up or down its Stage, and past either end into the next Stage. `ctrl+shift+↑/↓` moves it
  * to the previous or next Stage. A drag of a Story to another row moves it there. `d` asks before it
- * deletes the selected Story. `n`, **+ New Story**, `enter` and a click on a Story open the new Story form or
+ * deletes the selected Story. A right click on a Story opens its context menu at the pointer. `n`, **+ New Story**, `enter` and a click on a Story open the new Story form or
  * the edit form in the Story sidebar on the right of the list. `tab` moves the focus from the Stage sidebar to
  * the tag sidebar, to the list and then to the Story sidebar. In the tag sidebar, `↑/↓` select a tag, `n` and **+ New Tag**
  * open the New Tag Modal, and `esc` gives the focus to the list. Drag the top edge of the tag sidebar to change its
@@ -90,8 +101,21 @@ export function Shell({ ctx: initialCtx = CWD, launch, preloadPi }: ShellProps) 
             </LayoutContext.Provider>
           </Box>
         </Box>
-        <Footer hints={overlay ? NO_HINTS : hints} atRoot />
+        <Footer hints={footerHints(overlay, hints)} atRoot />
         <ToastArea />
+        {/* The context menu is the last child, so that it is on top of all other content, also the toasts. */}
+        {overlay?.kind === "storyMenu" && view.board && (
+          <StoryMenu
+            ctx={env.ctx}
+            story={overlay.story}
+            x={overlay.x}
+            y={overlay.y}
+            stages={view.board.stages}
+            stories={view.board.stories}
+            onClose={handlers.overlay.close}
+            onAction={handlers.overlay.storyAction}
+          />
+        )}
       </Box>
     </FactoryStatusContext.Provider>
   );

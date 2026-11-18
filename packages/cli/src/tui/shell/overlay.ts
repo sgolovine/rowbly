@@ -2,6 +2,7 @@ import type { Project } from "../../services/project/project.js";
 import type { Stage } from "../../services/stage/stage.js";
 import type { Story } from "../../services/story/story.js";
 import type { ThreadRecord } from "../../services/thread/thread.js";
+import type { StoryMenuAction } from "./story-menu/index.js";
 
 /** What the Story sidebar shows: the form of a new Story, or the edit form of a Story. */
 type StoryPane = { readonly kind: "new" } | { readonly kind: "edit"; readonly story: Story };
@@ -18,6 +19,8 @@ export type Overlay =
   /** The Story sidebar has unsaved changes. A confirmation shows `next` in the sidebar, or closes it with `null`. */
   | { readonly kind: "discardStory"; readonly next: SidePane | null }
   | { readonly kind: "deleteStory"; readonly story: Story }
+  /** The context menu of the Story `story`, opened by a right click at the cell `x`, `y` of the screen. */
+  | { readonly kind: "storyMenu"; readonly story: Story; readonly x: number; readonly y: number }
   | { readonly kind: "newStage" }
   | { readonly kind: "editStage"; readonly stage: Stage }
   | { readonly kind: "newTag" }
@@ -43,6 +46,8 @@ export interface OverlayHandlers {
   discardStory(next: SidePane | null): void;
   /** The delete of a Story was confirmed. */
   removeStory(story: Story): void;
+  /** An item of the Story menu other than `Force assignment` runs on the Story `story`. */
+  storyAction(action: StoryMenuAction, story: Story): void;
   stageSaved(stage: Stage): void;
   /** The New Tag Modal added a tag. */
   tagSaved(): void;

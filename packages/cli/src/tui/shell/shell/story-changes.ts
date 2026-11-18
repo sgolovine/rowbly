@@ -63,6 +63,17 @@ export function moveStoryStage(env: ShellEnv, story: Story, delta: -1 | 1): void
   placeStory(env, story, to.key);
 }
 
+/** Moves the Story `story` to the top of the first Stage of the board, the Backlog. */
+export function moveStoryToBacklog(env: ShellEnv, story: Story): void {
+  const [backlog] = env.view.stages;
+
+  if (!backlog) {
+    return;
+  }
+
+  placeStory(env, story, backlog.key);
+}
+
 /** The selected Stories in list order: by the order of their Stages, then by their positions. */
 function markedInOrder(view: ShellView): readonly Story[] {
   const order = new Map(view.stages.map((stage, index) => [stage.key, index]));

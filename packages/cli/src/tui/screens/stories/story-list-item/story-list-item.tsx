@@ -21,6 +21,8 @@ export interface StoryListItemProps {
   /** The Story of the row is in the multi-selection. */
   readonly marked: boolean;
   readonly onClick: (event: ClickEvent) => void;
+  /** A right click on a Story row, at the cell `x`, `y` of the screen. A Stage heading has no menu. */
+  readonly onMenu?: (x: number, y: number) => void;
   /** The props that let the mouse drag the row and drop a Story on it. */
   readonly dragProps: RowDragProps;
 }
@@ -36,6 +38,7 @@ export function StoryListItem({
   indented,
   marked,
   onClick,
+  onMenu,
   dragProps,
 }: StoryListItemProps) {
   return row.kind === "stage" ? (
@@ -62,6 +65,7 @@ export function StoryListItem({
       indented={indented}
       marked={marked}
       onClick={onClick}
+      onMenu={onMenu}
       {...dragProps}
     />
   );

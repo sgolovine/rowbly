@@ -205,6 +205,7 @@ function boardBody(handlers: ShellHandlers, input: PanelInput, board: Board): St
       onActivate: handlers.clickRow,
       onRange: handlers.markRange,
       onClear: handlers.clearMarks,
+      onMenu: handlers.openStoryMenu,
     },
   };
 }
