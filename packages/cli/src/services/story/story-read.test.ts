@@ -7,7 +7,7 @@ import { NotFoundError, ValidationError } from "../errors/errors.js";
 import { readStoryFiles } from "../story-files/story-files.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { createStory, updateStory } from "./story.js";
-import { findStoryFile, getStory, getStoryDetails, searchStories } from "./story-read.js";
+import { findStoryFile, getStory, getStoryDetails, readStoryAt, searchStories } from "./story-read.js";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs/promises")>();
@@ -356,6 +356,44 @@ describe("story-read", () => {
         "ROW-01",
       ]);
       expect(await searchStories({ dependency: "blocked", query: "upstream" }, project.ctx)).toEqual([]);
+    });
+  });
+
+  describe("readStoryAt", () => {
+    it("reads only the changed Story file", async () => {
+      await writeBoard();
+      const path = join(project.paths.storiesDir, "BACKLOG", "ROW-02.md");
+      await project.write("stories/BACKLOG/ROW-02.md", story("Changed", "BACKLOG", 2));
+      vi.mocked(fs.readFile).mockClear();
+
+      const read = await readStoryAt(path, project.ctx);
+
+      expect(read).toMatchObject({ id: "ROW-02", title: "Changed", stage: "BACKLOG", path, attachmentCount: 0 });
+      const storyReads = vi.mocked(fs.readFile).mock.calls.filter(([file]) => String(file).endsWith(".md"));
+      expect(storyReads.map(([file]) => String(file))).toEqual([path]);
+    });
+
+    it("reads a new Story file", async () => {
+      await writeBoard();
+      await project.write("stories/DONE/ROW-05.md", story("Five", "DONE"));
+
+      const read = await readStoryAt(join(project.paths.storiesDir, "DONE", "ROW-05.md"), project.ctx);
+
+      expect(read).toMatchObject({ id: "ROW-05", number: 5, title: "Five", stage: "DONE" });
+    });
+
+    it("gives undefined for a file that does not exist", async () => {
+      await writeBoard();
+
+      expect(await readStoryAt(join(project.paths.storiesDir, "BACKLOG", "ROW-09.md"), project.ctx)).toBeUndefined();
+    });
+
+    it("throws a ValidationError for an invalid Story", async () => {
+      await project.write("stories/BACKLOG/ROW-01.md", story("One", "NOWHERE"));
+
+      await expect(
+        readStoryAt(join(project.paths.storiesDir, "BACKLOG", "ROW-01.md"), project.ctx),
+      ).rejects.toBeInstanceOf(ValidationError);
     });
   });
 });

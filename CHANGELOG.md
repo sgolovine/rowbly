@@ -25,6 +25,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The Tags and Custom Fields sections of the TUI Settings now use one shared list component. Their text, keys and hints do not change. (ROW-146)
 - Changed: The Threads screen and the Threads tab of a Story are faster with many Threads, because the TUI now shows only the Thread rows that are in view. (ROW-145)
 - Changed: The `Tags` field of the new Story form and of the General tab now works the same as `Depends on`. Each chosen tag shows on its own line with a `✕`, and `+ add` opens the `Add Tags` picker with fuzzy search. (ROW-160)
+- Changed: The TUI updates the board faster when a different process, for example a factory worker, changes a Story file. It reads only the changed Story and not the full board. (ROW-157)
 - Added: In the Story view of the TUI, a `Force assignment` button (`ctrl+r`) shows for a Story in a work Stage with no active worker while the factory runs. It makes the factory evaluate the Story for a worker again, and `rowbly factory release <story-id>` now does this for each Story, not only for a parked Story. (ROW-158)
 
 ### 0.20.0
