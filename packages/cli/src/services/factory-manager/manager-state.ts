@@ -64,6 +64,18 @@ interface ActiveWorker {
   readonly control?: WorkerControl;
 }
 
+/**
+ * The refusal of the last dispatch of one launch decision. The status shows it while the decision of the Story stays the
+ * same: the same Stage, action and attempt.
+ */
+export interface DispatchRefusal {
+  readonly stage: string;
+  readonly action: string;
+  readonly attempt?: number;
+  /** The message of the `ConflictError` that refused the dispatch. */
+  readonly message: string;
+}
+
 /** The state of one factory manager. Each change replaces the whole value in the store. */
 export interface ManagerState {
   // Lifecycle
@@ -96,6 +108,8 @@ export interface ManagerState {
   readonly requests: ReadonlyMap<string, string>;
   /** The Stories of the remote worker Threads that are not synchronized: their outbox or final status did not arrive. */
   readonly hostSync: ReadonlySet<string>;
+  /** The dispatch refusals of the last dispatch step, by Story ID. The manager keeps them only in memory. */
+  readonly dispatchRefusals: ReadonlyMap<string, DispatchRefusal>;
 
   // Status
   readonly attention: ReadonlyMap<string, Attention>;

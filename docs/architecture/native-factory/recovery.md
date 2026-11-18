@@ -84,6 +84,8 @@ commit does not run, and its entry does not change.
 
 A dispatch error that is not a `ConflictError` sets the `dispatch` entry, and the dispatch continues
 with the next Story. A `ConflictError`, for example a full host, skips only its Story and sets no entry.
+The status shows the message of the `ConflictError` as the skip reason of the Story, `dispatch refused:
+<message>`. See [Factory pass](README.md#factory-pass).
 
 The text of each entry has the error message, limited to 500 characters.
 
@@ -323,6 +325,9 @@ repairs missing native state projections.
   recovery stops with a `ConflictError` and does not write `state.json`.
 - The write is atomic. After a crash, the next recovery repairs the projections again. Each attempt
   has its Thread ID, so a repeated repair does not add a duplicate attempt.
+- Each policy scan of the factory loop also repairs the projections of all worker Threads. Thus a
+  projection that failed after a Thread change does not stop a Story until the next recovery. If no
+  attempt changes, the scan does not write the file for the projection.
 
 - An old heartbeat does not prove death. A live or uncertain owner prevents takeover.
 - Shell descendants that a crashed daemon started are not tracked. Check processes are an exception.
