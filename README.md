@@ -106,7 +106,7 @@ rowbly factory restart
 
 Use `rowbly factory start --foreground` to run in the current terminal.
 Native execution must use a Git repository. Workers preserve existing branch work and dirty worktrees.
-The factory makes no model call when no worker runs. Use `rowbly factory release <story-id>` to release a parked Story.
+The factory makes no model call when no worker runs. Use `rowbly factory release <story-id>`, or the `Force assignment` Button of the Story view, to make the factory evaluate a Story for a worker again.
 
 A Project without `state.json` remains valid and shows no activity status line below the Story list.
 

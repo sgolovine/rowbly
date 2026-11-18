@@ -4,6 +4,7 @@ import type { PendingImage } from "../../../../services/attachment/attachment.js
 import type { FormValues } from "../../../components/index.js";
 import { runExclusive, type useStoryPaste } from "../../../hooks/index.js";
 import { isSubmitKey } from "../../../keymap.js";
+import { isForceAssignmentKey } from "../force-assignment/index.js";
 import type { StoryConfirm } from "../story-confirm-dialogs/index.js";
 import type { StoryTabId } from "../story-tab-panes/index.js";
 import { nextTabId } from "./story-modal-body-view.js";
@@ -26,11 +27,18 @@ export interface StoryModalBodyEnv {
   readonly setSaving: Dispatch<SetStateAction<boolean>>;
   readonly onSubmit: (values: FormValues, attachments?: readonly PendingImage[]) => void | Promise<void>;
   readonly onConfirming: (confirm: StoryConfirm) => void;
+  /** Sends the `Force assignment` request when its Button shows. */
+  readonly onForceAssignment: () => void;
 }
 
-/** `shift+tab` goes to the next tab, the save key asks the Form to save, and `ctrl+d` on the General tab deletes. */
+/**
+ * `shift+tab` goes to the next tab, the save key asks the Form to save, `ctrl+r` forces the assignment, and `ctrl+d`
+ * on the General tab deletes.
+ */
 export function handleBodyKey(env: StoryModalBodyEnv, input: string, key: Key): void {
-  if (key.tab && key.shift) {
+  if (isForceAssignmentKey(input, key)) {
+    env.onForceAssignment();
+  } else if (key.tab && key.shift) {
     env.setTabId(nextTabId(env.tabIds, env.tab));
   } else if (!env.specEditing && !env.attachmentTask && isSubmitKey(input, key)) {
     env.setSubmitRequest((n) => n + 1);

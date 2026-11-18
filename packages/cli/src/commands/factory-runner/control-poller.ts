@@ -1,5 +1,9 @@
 import { ValidationError } from "../../services/errors/errors.js";
-import { type FactoryCommand, processCommands } from "../../services/factory-control/factory-control.js";
+import {
+  type CommandOutcome,
+  type FactoryCommand,
+  processCommands,
+} from "../../services/factory-control/factory-control.js";
 import type { FactoryManager } from "../../services/factory-manager/factory-manager.js";
 import { Store } from "../../services/store/store.js";
 import type { ProjectPaths } from "../../services/workspace/workspace.js";
@@ -30,7 +34,19 @@ export function createControlPoller(paths: ProjectPaths, token: string, manager:
   return { paths, token, manager, state: new Store<PollState>({ queue: Promise.resolve(), polling: false }) };
 }
 
-async function executeCommand(manager: ControlTarget, command: FactoryCommand): Promise<void> {
+async function executeCommand(manager: ControlTarget, command: FactoryCommand): Promise<CommandOutcome | undefined> {
+  if (command.type === "release-story") {
+    const { released } = await manager.releaseStory(command.storyId ?? "");
+
+    return { released };
+  }
+
+  await executeActionCommand(manager, command);
+
+  return undefined;
+}
+
+async function executeActionCommand(manager: ControlTarget, command: FactoryCommand): Promise<void> {
   if (command.type === "stop") {
     await manager.shutdown();
 
@@ -39,12 +55,6 @@ async function executeCommand(manager: ControlTarget, command: FactoryCommand): 
 
   if (command.type === "dismiss") {
     await manager.dismissAttention(command.attentionKey ?? "");
-
-    return;
-  }
-
-  if (command.type === "release-story") {
-    await manager.releaseStory(command.storyId ?? "");
 
     return;
   }

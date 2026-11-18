@@ -138,7 +138,8 @@ removes its entry.
   start.
 - **Stalled workers.** The policy gives `stalled` workers. The manager does not stop them.
 - **Parked Stories.** The policy parks a Story after the attempt limit. A person releases it with
-  `rowbly factory release <story-id>`, a Stage move or a change of the Story. See
+  `rowbly factory release <story-id>`, the `Force assignment` Button of the Story view, a Stage move or a
+  change of the Story. The release also removes a retry delay, a launch delay and a user cancellation. See
   [controls.md](controls.md).
 
 ## Worker attention

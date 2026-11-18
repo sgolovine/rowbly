@@ -1298,6 +1298,45 @@ describe("foreground factory", () => {
       await run;
     }
   });
+  it("forces the assignment of a Story only in a work Stage and without an unstopped attempt", async () => {
+    const work = await createStory({ title: "Delayed", stage: "WORK" }, { cwd: root });
+    const busy = await createStory({ title: "Busy", stage: "WORK" }, { cwd: root });
+    const held = await createStory({ title: "Held", stage: "BACKLOG" }, { cwd: root });
+    const attempt = (storyId: string, workerId: string, status: "failed" | "running") => ({
+      story: storyId,
+      stage: "WORK",
+      workerId,
+      status,
+      result: null,
+      reported: true,
+    });
+    await updateFactoryState(root, (state) => ({
+      ...state,
+      attempts: [attempt(work.id, "w-1", "failed"), attempt(busy.id, "w-2", "running")],
+      launchFailures: { [work.id]: { count: 2, at: new Date().toISOString(), error: "usage limit" } },
+      nativeCancelled: { [work.id]: { stage: "WORK", hash: storyHash(work) } },
+      parked: { [held.id]: { stage: "BACKLOG", hash: storyHash(held), reason: "test", since: "", reported: true } },
+    }));
+    const f = await fixture();
+    const before = await readFactoryState(root);
+    expect(await f.manager.releaseStory(held.id)).toEqual({ storyId: held.id, released: false });
+    expect(await f.manager.releaseStory(busy.id)).toEqual({ storyId: busy.id, released: false });
+    expect(await f.manager.releaseStory("TST-999")).toEqual({ storyId: "TST-999", released: false });
+    expect(await readFactoryState(root)).toEqual(before);
+    expect(await f.manager.releaseStory(work.id)).toEqual({ storyId: work.id, released: true });
+    const after = await readFactoryState(root);
+    expect(after.launchFailures?.[work.id]).toBeUndefined();
+    expect((after.nativeCancelled as Record<string, unknown>)[work.id]).toBeUndefined();
+    expect(after.parked?.[held.id]).toBeDefined();
+    expect(after.attempts.find((a) => a.workerId === "w-1")).toMatchObject({
+      budgetReset: true,
+      observedStageDeparture: true,
+    });
+    expect(after.attempts.find((a) => a.workerId === "w-2")).toMatchObject({ status: "running" });
+    const unchanged = await getStory({ id: work.id }, { cwd: root });
+    expect(unchanged.stage).toBe("WORK");
+    expect(unchanged.updatedAt).toBe(work.updatedAt);
+  });
   it("loads an old state file with notes and report flags, and an old status file with holds", async () => {
     const story = await createStory({ title: "Old files", stage: "WORK" }, { cwd: root });
     const paths = projectPaths(root);
