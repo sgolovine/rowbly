@@ -113,12 +113,15 @@ function registerStop(program: Command): void {
 function registerRelease(program: Command): void {
   program
     .command("release <story-id>")
-    .description("Release a parked Story in the live factory, so that the next pass can start a worker for it")
+    .description("Force the live factory to evaluate a Story for a worker again, as a Stage round trip does")
     .action((storyId: string, _opts: unknown, command: Command) =>
       run(
         command,
         (ctx) => releaseFactoryStory(storyId, {}, ctx),
-        (result) => `Released ${result.storyId}.`,
+        (result) =>
+          result.released
+            ? `Released ${result.storyId}. The next pass evaluates it for a worker.`
+            : `No change for ${result.storyId}: it is not in a work Stage, does not exist or has an active worker.`,
       ),
     );
 }

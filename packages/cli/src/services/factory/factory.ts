@@ -298,8 +298,10 @@ export async function dismissFactoryAttentions(
 }
 
 /**
- * Asks the live daemon to release the policy parking of a Story, so that the next pass can start a worker for it.
- * A Story that is not parked gives a success with no change.
+ * Asks the live daemon to force the evaluation of a Story for a worker, with the same result as a Stage round trip.
+ * The daemon removes the parking, the user cancellation and the launch failures of the Story, resets its budget and
+ * starts a new pass. `released` is false when the daemon did not change its state: the Story does not exist, is not
+ * in a work Stage or has an active worker. The release does not change the Story file.
  */
 export async function releaseFactoryStory(
   storyId: string,
@@ -312,7 +314,7 @@ export async function releaseFactoryStory(
 
   const receipt = await sendFactoryCommand("release-story", { ...input, storyId }, ctx);
 
-  return { ...receipt, storyId };
+  return { ...receipt, storyId, released: receipt.released === true };
 }
 
 /**

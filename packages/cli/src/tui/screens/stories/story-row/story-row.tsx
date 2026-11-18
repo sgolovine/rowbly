@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+import { memo } from "react";
 import type { StoryActivity } from "../../../../services/factory-activity/factory-activity.js";
 import type { Story } from "../../../../services/story/story.js";
 import { LOCAL_HOST } from "../../../../services/thread/thread.js";
@@ -51,9 +52,9 @@ function showsWaiting(
  * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. An agent on a worker host shows
  * `@<host>` after the agent, and `connection lost` in `danger` when `hostLost` is true. A blocked Story in a work Stage
  * without activity shows `waiting for` and the IDs there. `indented` moves the key and title two columns to the
- * right, below the heading of a Stage section. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it.
+ * right, below the heading of a Stage section. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it. The row renders again only when a prop changes.
  */
-export function StoryRow({
+export const StoryRow = memo(function StoryRow({
   story,
   activity,
   hostLost = false,
@@ -132,4 +133,4 @@ export function StoryRow({
       </Box>
     </SelectionRow>
   );
-}
+});

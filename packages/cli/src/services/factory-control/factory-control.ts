@@ -42,8 +42,19 @@ export interface CommandReceipt {
   ownerToken: string;
   status: "accepted" | "completed" | "rejected";
   threadId?: string;
+  /** The result of a `release-story`: true when the release changed the factory state. */
+  released?: boolean;
   error?: { code: string; message: string };
 }
+
+/** The result of a command that the daemon adds to the completed receipt. */
+export interface CommandOutcome {
+  readonly released?: boolean;
+}
+
+/** Runs one command in the daemon. A command can give an outcome for its receipt. */
+export type CommandExecutor = (command: FactoryCommand) => Promise<CommandOutcome | undefined> | Promise<void>;
+
 /** A command file after the read. `failure` holds the error of a file that cannot be read or parsed. */
 interface LoadedCommand {
   readonly command: FactoryCommand | undefined;
@@ -190,7 +201,7 @@ function acceptedCommand(loaded: LoadedCommand, id: string, token: string): Fact
 async function processCommand(
   paths: ProjectPaths,
   token: string,
-  execute: (command: FactoryCommand) => Promise<void>,
+  execute: CommandExecutor,
   file: string,
 ): Promise<void> {
   const id = file.slice(0, -5);
@@ -205,8 +216,16 @@ async function processCommand(
     const command = acceptedCommand(loaded, id, token);
 
     await writeReceipt(paths, { version: 1, id, ownerToken: token, status: "accepted", threadId: command.threadId });
-    await execute(command);
-    await writeReceipt(paths, { version: 1, id, ownerToken: token, status: "completed", threadId: command.threadId });
+    const outcome: CommandOutcome = (await execute(command)) ?? {};
+
+    await writeReceipt(paths, {
+      version: 1,
+      id,
+      ownerToken: token,
+      status: "completed",
+      threadId: command.threadId,
+      ...outcome,
+    });
   } catch (error) {
     await writeReceipt(paths, {
       version: 1,
@@ -223,11 +242,7 @@ async function processCommand(
 }
 
 /** One caller serializes scans. Receipts retain command results across daemon restarts. */
-export async function processCommands(
-  paths: ProjectPaths,
-  token: string,
-  execute: (command: FactoryCommand) => Promise<void>,
-) {
+export async function processCommands(paths: ProjectPaths, token: string, execute: CommandExecutor) {
   const files = (await readdir(await runtimePath(paths, "control"))).filter((f) => f.endsWith(".json")).toSorted();
 
   await mapInOrder(files, (file) => processCommand(paths, token, execute, file));

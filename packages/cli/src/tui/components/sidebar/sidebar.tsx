@@ -1,6 +1,6 @@
 import { Box, type DOMElement, Text } from "ink";
 import { memo, useRef, useState } from "react";
-import { useMouse } from "../../hooks/index.js";
+import { useLatest, useMouse } from "../../hooks/index.js";
 import { theme } from "../../theme.js";
 import { Button, type ButtonProps } from "../button/index.js";
 import { Panel } from "../panel/index.js";
@@ -94,6 +94,8 @@ export const Sidebar = memo(function Sidebar({
   const start = Math.max(0, Math.min(current - Math.floor(limit / 2), entries.length - limit));
   const below = entries.length - start - limit;
   const env: SidebarRowEnv = { self, onFocus, onSelect, onEdit, onMove, setOver };
+  // The rows read the latest callbacks through this ref, so their props stay equal when only `current` changes.
+  const sidebar = useLatest(env);
 
   useMouse(ref, { onWheel: (direction) => wheelSelect(entries, current, onSelect, direction) }, clickable && overflow);
 
@@ -117,7 +119,9 @@ export const Sidebar = memo(function Sidebar({
               numbered={numbered}
               clickable={clickable}
               dropTarget={over === entry.id}
-              env={env}
+              editable={onEdit !== undefined && entry.editable === true}
+              droppable={onMove !== undefined}
+              sidebar={sidebar}
             />
           ))}
           {overflow && <Text color={theme.inkFaint}>{moreText("↓", below)}</Text>}

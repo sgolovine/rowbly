@@ -25,7 +25,7 @@ viewer or the AI section of Settings.
 | `factory configure --clear-fallback-workers`                               | Remove the fallback worker models.                                    |
 | `factory start [--foreground] [--max-workers <n>] [--adopt-external]`      | Start a detached daemon, or use the foreground path.                  |
 | `factory status`, `factory stop`, `factory restart [--adopt-external]`     | Observe or control the native daemon.                                 |
-| `factory release <story-id>`                                               | Release a parked Story in the live factory. See below.                |
+| `factory release <story-id>`                                               | Force the live factory to evaluate a Story for a worker. See below.   |
 | `factory logs [--tail <n>]`                                                | Read bounded operational logs. There is no follow mode.               |
 | `factory check add <key> --command <command> [options]`                    | Add a check that the factory runs for its workers.                    |
 | `factory check update <key> [options]`, `factory check remove <key>`       | Change or remove a check.                                             |
@@ -129,18 +129,44 @@ A duplicate key gives `CONFLICT`. An unknown key gives `NOT_FOUND`. A value out 
 
 ### The release command
 
-`rowbly factory release <story-id>` releases a parked Story, so that the next pass of the live factory
-can start a worker for it. The command sends the control command `release-story` to the daemon and waits for
-the receipt. The JSON output is the receipt with `storyId`.
+`rowbly factory release <story-id>` forces the live factory to evaluate a Story for a worker again. The
+result is the same as a move of the Story out of its Stage and back, for example to Backlog and back. Use
+it when the factory does not start a worker for a Story in a work Stage. The command does not move the
+Story and does not change the Story file. It changes only the factory state.
 
-- A Story that is not parked gives a success with no change.
+The command sends the control command `release-story` to the daemon and waits for the receipt. The JSON
+output is the receipt with `storyId` and `released`.
+
+- `released: true` tells that the daemon changed its state. The next pass evaluates the Story.
+- A Story that does not exist, that is not in a work Stage, or that has an active worker gives
+  `released: false`. The factory state does not change.
+- The command does not start a second worker. A Story with a pending or running worker Thread, or with an
+  attempt whose stop is not confirmed, gives `released: false`.
 - Without a live daemon, the command gives `CONFLICT` with the text `Factory is not running`.
 - A Story ID that is empty or longer than 128 characters gives `VALIDATION`.
-- The command does not load Pi. The TUI has no key for it.
+- The command does not load Pi.
+- The Story view of the TUI has the `Force assignment` Button and the key `ctrl+r` for this command. See
+  [Force assignment in the TUI](#force-assignment-in-the-tui).
 - The control command `release-story` is not the control command `release`. `rowbly thread release <id>`
   sends `release` with a Thread ID. See [README.md](README.md#abandoned-threads).
 
 See [recovery.md](recovery.md#release-a-parked-story).
+
+### Force assignment in the TUI
+
+The Story view shows a `Force assignment` Button at the top, above the tabs, when all of these
+conditions are true:
+
+- The factory is live.
+- The factory status has a queue entry for the Story. The status queue leaves out `hold stage` and
+  `stage unavailable`, so a queue entry tells that the Story is in a work Stage.
+- The Story has no pending or running Thread.
+
+A click on the Button, or `ctrl+r`, calls `releaseFactoryStory`. The key hints show `ctrl+r force
+assignment` while the Button shows. A change of state shows an `info` toast. A result with
+`released: false` shows a `warning` toast. A failure shows an error toast with the reason.
+`useForceAssignment` in `src/tui/screens/stories/force-assignment/` reads the shared factory status and
+the Threads of the Story.
 
 ## Factory controls in the TUI
 
