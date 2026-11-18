@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { type Dispatch, memo, type RefObject, type SetStateAction } from "react";
 import { SidebarItem } from "../sidebar-item/index.js";
 
 /** One row of a sidebar. */
@@ -39,7 +39,15 @@ export interface SidebarRowProps {
   readonly clickable: boolean;
   /** A drag of another row is over this row. */
   readonly dropTarget: boolean;
-  readonly env: SidebarRowEnv;
+  /** The sidebar has `onEdit` and the entry is `editable`, so the row shows a `✎`. */
+  readonly editable: boolean;
+  /** The sidebar has `onMove`, so the row takes a drop. */
+  readonly droppable: boolean;
+  /**
+   * The latest sidebar of the row. The ref keeps its identity, so a move of `current` does not render the rows that
+   * did not change, and the handlers of a row still read the latest callbacks.
+   */
+  readonly sidebar: RefObject<SidebarRowEnv>;
 }
 
 function isDragged(self: object, value: unknown): value is DraggedEntry {
@@ -68,9 +76,22 @@ function dropOnRow(env: SidebarRowEnv, value: unknown, entry: SidebarEntry, inde
   env.onMove?.(value.id, index);
 }
 
-/** A `SidebarItem` for one entry, with the clicks, the edit and the drag and drop of the sidebar. */
-export function SidebarRow({ entry, index, selected, numbered, clickable, dropTarget, env }: SidebarRowProps) {
-  const { self, onEdit, onMove, setOver } = env;
+/**
+ * A `SidebarItem` for one entry, with the clicks, the edit and the drag and drop of the sidebar. It renders again
+ * only when its data changes.
+ */
+export const SidebarRow = memo(function SidebarRow({
+  entry,
+  index,
+  selected,
+  numbered,
+  clickable,
+  dropTarget,
+  editable,
+  droppable,
+  sidebar,
+}: SidebarRowProps) {
+  const { self } = sidebar.current;
 
   return (
     <SidebarItem
@@ -78,13 +99,13 @@ export function SidebarRow({ entry, index, selected, numbered, clickable, dropTa
       name={entry.label}
       selected={selected}
       clickable={clickable}
-      onClick={() => selectRow(env, entry.id)}
-      onEdit={onEdit && entry.editable ? () => editRow(env, entry.id) : undefined}
-      drag={onMove && entry.movable ? ({ sidebar: self, id: entry.id } satisfies DraggedEntry) : undefined}
-      onDrop={onMove ? (value) => dropOnRow(env, value, entry, index) : undefined}
-      onDragOver={(value) => setOver(isDragged(self, value) ? entry.id : null)}
-      onDragLeave={() => setOver((id) => (id === entry.id ? null : id))}
+      onClick={() => selectRow(sidebar.current, entry.id)}
+      onEdit={editable ? () => editRow(sidebar.current, entry.id) : undefined}
+      drag={droppable && entry.movable ? ({ sidebar: self, id: entry.id } satisfies DraggedEntry) : undefined}
+      onDrop={droppable ? (value) => dropOnRow(sidebar.current, value, entry, index) : undefined}
+      onDragOver={(value) => sidebar.current.setOver(isDragged(self, value) ? entry.id : null)}
+      onDragLeave={() => sidebar.current.setOver((id) => (id === entry.id ? null : id))}
       dropTarget={dropTarget}
     />
   );
-}
+});

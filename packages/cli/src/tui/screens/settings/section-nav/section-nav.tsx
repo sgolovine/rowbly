@@ -9,7 +9,8 @@ export const SECTION_NAV_WIDTH = 22;
 /**
  * The section list of Settings, in a Panel: a heading for each group, with a blank row between the
  * groups. The selected section keeps its bar and its fill, also when the section has the focus. A click
- * on a section opens it.
+ * on a section opens it. Page Up and Page Down scroll the list only while it has the focus. The wheel scrolls it
+ * while it is `clickable`.
  */
 export function SectionNav({
   groups,
@@ -35,7 +36,8 @@ export function SectionNav({
     <Panel focused={focused} onClick={onFocus} flexShrink={0} width={SECTION_NAV_WIDTH} height={height}>
       <ScrollBody
         height={height === undefined ? undefined : Math.max(1, height - PANEL_FRAME_HEIGHT)}
-        active={clickable}
+        active={focused === true}
+        wheel={clickable}
       >
         <Box flexDirection="column" gap={1}>
           {groups.map((group) => (
