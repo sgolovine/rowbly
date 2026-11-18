@@ -23,6 +23,8 @@ export interface StoryListEnv {
   /** A click without `shift` clears the multi-selection before it does its action. */
   readonly onClear?: () => void;
   readonly onMove?: (id: string, gap: number) => void;
+  /** A right click on the Story row at `index`, at the cell `x`, `y` of the screen. */
+  readonly onMenu?: (index: number, x: number, y: number) => void;
 }
 
 /** True when `value` is a Story that a drag of this list carries. */

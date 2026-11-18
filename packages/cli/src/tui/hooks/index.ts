@@ -11,6 +11,7 @@ export * from "./use-clock.js";
 export * from "./use-cursor.js";
 export * from "./use-escape.js";
 export * from "./use-factory-state-changes.js";
+export * from "./use-mouse.js";
 export * from "./use-report-hints.js";
 export * from "./use-story-changes.js";
 export * from "./use-story-paste.js";

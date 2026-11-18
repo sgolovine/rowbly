@@ -1,9 +1,7 @@
-import type { EventEmitter } from "node:events";
 import { type DOMElement, measureElement } from "ink";
-import { createContext, type RefObject, useContext, useEffect } from "react";
+import type { RefObject } from "react";
 import { Store, withMember, withoutMember } from "../../services/store/store.js";
 import type { MouseEvent } from "../mouse.js";
-import { useLatest } from "./refs.js";
 
 /** Lines one notch of the mouse wheel scrolls. */
 export const WHEEL_LINES = 3;
@@ -35,6 +33,8 @@ export interface MouseHandlers {
   onPull?(x: number, y: number): void;
   /** A notch of the wheel over this box: `-1` up, `1` down. */
   onWheel?(direction: -1 | 1): void;
+  /** A right click on this box, at cell `x`, `y`, when no drag or pull is in progress. */
+  onMenu?(x: number, y: number): void;
 }
 
 interface Target {
@@ -45,7 +45,8 @@ interface Target {
 
 /**
  * The clickable boxes on screen. A press goes to the smallest box under the pointer. A right click
- * (`menu`) ends a drag or pull in progress. A wheel notch goes to the smallest such box with `onWheel`.
+ * (`menu`) ends a drag or pull in progress. Without a drag or pull, it goes to the smallest box under the
+ * pointer with `onMenu`. A wheel notch goes to the smallest such box with `onWheel`.
  */
 export interface MouseRegistry {
   register(target: Target): () => void;
@@ -96,7 +97,7 @@ interface Hit {
 const DISPATCH: Readonly<Record<MouseEvent["kind"], (store: MouseStore, event: MouseEvent) => void>> = {
   wheelUp: dispatchWheel,
   wheelDown: dispatchWheel,
-  menu: cancelGesture,
+  menu: dispatchMenu,
   move: dispatchMove,
   press: dispatchPress,
   release: dispatchRelease,
@@ -228,7 +229,20 @@ function dispatchWheel(store: MouseStore, event: MouseEvent): void {
   );
 }
 
-/** A right click ends a drag or a pull. */
+/** A right click ends a drag or a pull. Without a drag or a pull, it goes to the smallest box with `onMenu`. */
+function dispatchMenu(store: MouseStore, event: MouseEvent): void {
+  const { pulling, dragging } = store.current;
+
+  if (pulling || dragging) {
+    cancelGesture(store);
+
+    return;
+  }
+
+  hit(store, event, (handlers) => Boolean(handlers.onMenu))?.handlers.current.onMenu?.(event.x, event.y);
+}
+
+/** Ends a drag or a pull. */
 function cancelGesture(store: MouseStore): void {
   store.update(() => ({ pulling: null, dragging: null }));
   setOver(store, undefined);
@@ -358,54 +372,4 @@ export function createMouseRegistry(): MouseRegistry {
     dispatch: (event) => DISPATCH[event.kind](store, event),
     invalidate: () => invalidate(store),
   };
-}
-
-export const MouseContext = createContext<MouseRegistry | null>(null);
-
-/** Restricts descendant mouse targets to the visible cells of a borderless viewport. */
-const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null);
-
-/** Gives one listener for the `on` and the `off` of a mouse source. */
-function mouseListener(registry: MouseRegistry): (event: MouseEvent) => void {
-  return (event) => registry.dispatch(event);
-}
-
-/** Gives one listener for the `on` and the `off` of the layout commits of a mouse source. */
-function layoutListener(registry: MouseRegistry): () => void {
-  return () => registry.invalidate();
-}
-
-/**
- * Feeds the reports from a `MouseStdin` into the registry until unmounted. A `layout` event on the
- * source tells the registry that the layout changed, so that it measures the boxes again.
- */
-export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
-  useEffect(() => {
-    if (!source) {
-      return;
-    }
-
-    const listener = mouseListener(registry);
-    const onLayout = layoutListener(registry);
-
-    source.on("mouse", listener);
-    source.on("layout", onLayout);
-
-    return () => {
-      source.off("mouse", listener);
-      source.off("layout", onLayout);
-    };
-  }, [registry, source]);
-}
-
-/** Makes the box behind `ref` respond to the mouse while `active`. */
-export function useMouse(ref: RefObject<DOMElement | null>, handlers: MouseHandlers, active = true): void {
-  const registry = useContext(MouseContext);
-  const clip = useContext(MouseClipContext);
-  const latest = useLatest(handlers);
-
-  useEffect(
-    () => (registry && active ? registry.register({ ref, handlers: latest, clip }) : undefined),
-    [registry, ref, active, clip, latest],
-  );
 }

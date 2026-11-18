@@ -24,6 +24,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: "ctrl+shift+↑/↓", description: "move the Story to the previous or next Stage (in the Story list)" },
   { key: "space", description: "start the range mode, or select the Stories of the range (in the Story list)" },
   { key: "shift+click", description: "select the Stories from the cursor to the Story (in the Story list)" },
+  { key: "right click", description: "open the menu of the Story (in the Story list)" },
   {
     key: "shift+↑/↓",
     description: "move the selected Stories to the previous or next Stage (in the Story list, with a selection)",

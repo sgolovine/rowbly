@@ -52,7 +52,7 @@ function showsWaiting(
  * shows `▶` and the agent (or `conflict` or `unknown`) to the left of its Stage. An agent on a worker host shows
  * `@<host>` after the agent, and `connection lost` in `danger` when `hostLost` is true. A blocked Story in a work Stage
  * without activity shows `waiting for` and the IDs there. `indented` moves the key and title two columns to the
- * right, below the heading of a Stage section. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it. The row renders again only when a prop changes.
+ * right, below the heading of a Stage section. A right click calls `onMenu`. A `marked` Story (in the multi-selection) shows `●` before its key. The `RowDragProps` let the mouse drag the row and drop on it. The row renders again only when a prop changes.
  */
 export const StoryRow = memo(function StoryRow({
   story,
@@ -66,6 +66,7 @@ export const StoryRow = memo(function StoryRow({
   indented = false,
   marked = false,
   onClick,
+  onMenu,
   ...dragProps
 }: {
   story: Story;
@@ -84,9 +85,11 @@ export const StoryRow = memo(function StoryRow({
   /** The Story is in the multi-selection of the Story list. */
   marked?: boolean;
   onClick(event: ClickEvent): void;
+  /** A right click on the row, at the cell `x`, `y` of the screen. */
+  onMenu?(x: number, y: number): void;
 } & RowDragProps) {
   return (
-    <SelectionRow selected={selected} active={clickable} onClick={onClick} {...dragProps}>
+    <SelectionRow selected={selected} active={clickable} onClick={onClick} onMenu={onMenu} {...dragProps}>
       <Box paddingRight={1}>
         <Box flexGrow={1} flexShrink={1}>
           <Text wrap="truncate-end" color={theme.ink} bold={selected}>
