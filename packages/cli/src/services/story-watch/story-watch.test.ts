@@ -1,11 +1,11 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "../errors/errors.js";
 import { createStory, updateStory } from "../story/story.js";
 import { useTempDir, useTestProject } from "../test-project/test-project.js";
-import { watchFactoryState, watchStories } from "./story-watch.js";
+import { readStoryChanges, storyFileChanges, watchFactoryState, watchStories } from "./story-watch.js";
 
 describe("watchStories", () => {
   const project = useTestProject();
@@ -20,6 +20,23 @@ describe("watchStories", () => {
     await sleep(200);
     expect(onChange).toHaveBeenCalledOnce();
     stop();
+  });
+
+  it("gives the changed Story file, and ignores the temporary file of the write", async () => {
+    const story = await createStory({ title: "T" }, project.ctx);
+    const onChange = vi.fn();
+    const stop = await watchStories(onChange, project.ctx);
+    try {
+      await updateStory({ id: "ROW-01", title: "U" }, project.ctx);
+      await vi.waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+      const changes = onChange.mock.calls[0]?.[0];
+      expect(storyFileChanges(project.paths, changes)).toEqual([story.path]);
+      expect(await readStoryChanges(changes, project.ctx)).toMatchObject([
+        { path: story.path, story: { id: "ROW-01", title: "U" } },
+      ]);
+    } finally {
+      stop();
+    }
   });
 
   it("does not call back after the stop, also for a change that it already saw", async () => {
@@ -139,5 +156,74 @@ describe("attachment file watch", () => {
     } finally {
       stop();
     }
+  });
+});
+
+describe("storyFileChanges", () => {
+  const project = useTestProject();
+  const temp = ".0b7c6f3e-2d4a-4f1e-9c8b-5a6d7e8f9a0b.tmp";
+
+  it("gives the Story files in the Story folder and in its Stage folders", () => {
+    expect(
+      storyFileChanges(project.paths, [
+        "stories/IN_DEVELOPMENT/ROW-01.md",
+        "stories/ROW-02.md",
+        "stories/IN_DEVELOPMENT/ROW-01.md",
+      ]),
+    ).toEqual([
+      join(project.paths.storiesDir, "IN_DEVELOPMENT", "ROW-01.md"),
+      join(project.paths.storiesDir, "ROW-02.md"),
+    ]);
+  });
+
+  it("ignores the temporary file of an atomic write", () => {
+    expect(storyFileChanges(project.paths, [`stories/BACKLOG/${temp}`])).toEqual([]);
+    expect(storyFileChanges(project.paths, [`stories/BACKLOG/${temp}`, "stories/BACKLOG/ROW-01.md"])).toEqual([
+      join(project.paths.storiesDir, "BACKLOG", "ROW-01.md"),
+    ]);
+  });
+
+  it("asks for a full read for a change with no name", () => {
+    expect(storyFileChanges(project.paths, ["stories/BACKLOG/ROW-01.md", null])).toBeUndefined();
+  });
+
+  it.each([
+    "config.json",
+    "stories",
+    "stories/BACKLOG",
+    "stories/BACKLOG/notes.md",
+    "stories/BACKLOG/deep/ROW-01.md",
+    "stages/BACKLOG.md",
+    "specs/design.md",
+    "prompts/WORKER.md",
+    "attachments/ROW-01",
+    "attachments/ROW-01/image.png",
+  ])("asks for a full read for a change of %s", (change) => {
+    expect(storyFileChanges(project.paths, ["stories/BACKLOG/ROW-01.md", change])).toBeUndefined();
+  });
+});
+
+describe("readStoryChanges", () => {
+  const project = useTestProject();
+
+  it("reads each changed Story, and gives undefined for a deleted file", async () => {
+    const story = await createStory({ title: "T" }, project.ctx);
+    const gone = join(project.paths.storiesDir, "BACKLOG", "ROW-09.md");
+    const changes = [relative(project.paths.dir, story.path), relative(project.paths.dir, gone)];
+
+    expect(await readStoryChanges(changes, project.ctx)).toMatchObject([
+      { path: story.path, story: { id: "ROW-01", title: "T" } },
+      { path: gone, story: undefined },
+    ]);
+  });
+
+  it("asks for a full read when a change is not a Story file", async () => {
+    expect(await readStoryChanges(["config.json"], project.ctx)).toBeUndefined();
+  });
+
+  it("asks for a full read when the read of one Story fails", async () => {
+    await writeFile(join(project.paths.storiesDir, "ROW-03.md"), "---\ntitle: Bad\nstage: NOWHERE\n---\n");
+
+    expect(await readStoryChanges(["stories/ROW-03.md"], project.ctx)).toBeUndefined();
   });
 });

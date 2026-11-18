@@ -104,7 +104,8 @@ export function tagEntries(tags: readonly TagConfig[]): readonly SidebarEntry[] 
 
 /**
  * The tag sidebar below the Stage sidebar, or `undefined` when it does not show. It has the width of the Stage
- * sidebar, and only the Stage sidebar changes the width. A drag of its top edge changes its height beside the list.
+ * sidebar. Beside the list, a drag of the right edge of either sidebar changes the width of the two sidebars, and a
+ * drag of its top edge changes its height.
  * `entries` and `button` come from the caller, which keeps their references.
  */
 export function tagSidebarProps(
@@ -125,6 +126,7 @@ export function tagSidebarProps(
     width: frame.stacked ? frame.width : frame.shownWidth,
     maxWidth: frame.room,
     maxHeight: frame.tagsRoom,
+    onResize: frame.stacked ? undefined : handlers.resizeStages,
     onResizeHeight: frame.tagsRoom > 0 ? handlers.resizeTags : undefined,
     focused: view.tagSidebarFocused,
     clickable: view.idle,
