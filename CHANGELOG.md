@@ -27,6 +27,7 @@ This file records the changes to Rowbly that users can see.
 - Changed: The `Tags` field of the new Story form and of the General tab now works the same as `Depends on`. Each chosen tag shows on its own line with a `✕`, and `+ add` opens the `Add Tags` picker with fuzzy search. (ROW-160)
 - Changed: The TUI updates the board faster when a different process, for example a factory worker, changes a Story file. It reads only the changed Story and not the full board. (ROW-157)
 - Fixed: In the TUI, a drag of the right edge of the tag sidebar now changes the width of the Stage sidebar and of the tag sidebar, the same as a drag of the right edge of the Stage sidebar. (ROW-162)
+- Fixed: The factory now starts a worker for a Story in a work Stage without a move of the Story out of the Stage and back. When the factory cannot start the worker, `rowbly factory status` shows the reason `dispatch refused: <message>` in the queue. (ROW-161)
 
 ### 0.20.0
 
