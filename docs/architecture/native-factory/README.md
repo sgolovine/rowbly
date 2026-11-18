@@ -103,7 +103,8 @@ The factory loop (`factory-manager/factory-loop.ts`) runs one pass after each ch
 Project, after each worker end, at each deadline and every 30 seconds. A pass does these steps, in this
 order:
 
-1. The policy scan (`reconcilePolicy`). It applies the outbox of the worker hosts, then writes the
+1. The policy scan (`reconcilePolicy`). It applies the outbox of the worker hosts. Then it projects
+   each worker Thread into its attempt in `state.json` again, under the state lock. Then it writes the
    policy state to `state.json`. Only a failed scan stops the pass. It sets the attention entry
    `reconcile`.
 2. The upstream steps: `pull-upstream`, the `upstream-stuck:` entries and the removal of stale
@@ -126,11 +127,24 @@ removes its entry.
   the decision, or 1. A known request ID gives the Thread of the first request. Thus a second pass, or a
   second decision for the same work, cannot start the same work two times. When the Thread of a known
   request ID is final, the dispatch forgets the request ID, because a new Stage stay after a budget
-  reset can have the same attempt number.
+  reset can have the same attempt number. When the Thread of a known request ID is not final, the
+  dispatch refuses the request with a `ConflictError`. Thus the Story does not wait silently.
 - **Errors.** A `ConflictError` for one Story skips only that Story, with no attention entry. Examples
   are a full host, a paused provider and a Story that moved. A different error sets the attention entry
   `dispatch` with the Story ID and the error message, and the dispatch continues with the next decision.
   A pass with no dispatch error removes the `dispatch` entry.
+- **Dispatch refusals.** The dispatch keeps the message of each `ConflictError` as the dispatch refusal
+  of its Story, in the manager state (`dispatchRefusals`). The manager does not write the refusals to
+  `state.json`. The status (`status.json` and the snapshot) shows the decision of the Story as
+  `action: "skip"` with the reason `dispatch refused: <message>`. The status shows a refusal only while
+  the decision of the Story has the same Stage, action and attempt. Each dispatch step replaces all
+  refusals. Thus a refusal goes away when a worker starts or when the decision changes. The status does
+  not change the decisions of the dispatch: the next pass tries the dispatch again.
+- **Run end without a final status.** When the run of a local worker ends and its Thread is still
+  `pending` or `running`, the manager makes the Thread `failed` with the error code `WORKER_ENDED`. If
+  the factory stops, the Thread becomes `interrupted`. Thus the attempt stops, and the Story does not
+  wait with `worker stop unconfirmed`. A Thread on a worker host keeps its status, because its run can
+  continue on the host.
 - **Retry.** A `retry` decision starts a new worker Thread. The network resume adds a run to an old
   Thread. A dispatch never does.
 - **Stop confirmation.** The scan that first confirms the stop of a worker gives the reason

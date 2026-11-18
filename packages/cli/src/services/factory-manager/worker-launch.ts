@@ -55,8 +55,42 @@ export async function launchWorker(manager: Manager, id: string): Promise<void> 
       await runOnHost(manager, launch, request);
     }
   } finally {
-    await releaseWorker(manager, id);
+    try {
+      await endUnfinishedRun(manager, id);
+    } finally {
+      await releaseWorker(manager, id);
+    }
   }
+}
+
+/** The error of a local worker run that ended without a final Thread status. */
+const UNFINISHED_RUN_ERROR = {
+  class: "unknown",
+  code: "WORKER_ENDED",
+  message: "The worker run ended without a final status",
+} as const;
+
+/**
+ * Gives a final status to a local worker Thread of this manager that is still active after its run ended. Without it,
+ * the attempt of the Thread does not stop, and its Story waits with `worker stop unconfirmed`. A Thread on a worker
+ * host keeps its status, because its run can continue on the host.
+ */
+async function endUnfinishedRun(manager: Manager, id: string): Promise<void> {
+  await serial(manager, async () => {
+    const thread = await getThread(id, manager.ctx);
+    const local = (thread.host ?? LOCAL_HOST) === LOCAL_HOST;
+
+    if (!local || !isActiveStatus(thread.status) || thread.runs.at(-1)?.ownerToken !== manager.owner.token) {
+      return;
+    }
+
+    const { stopping } = getState(manager);
+
+    await changeThread(manager, id, stopping ? "interrupted" : "failed", {
+      resumable: stopping && !!thread.session.file,
+      error: UNFINISHED_RUN_ERROR,
+    });
+  });
 }
 
 /** Runs the worker with the executor of the host of its Thread. */

@@ -18,7 +18,7 @@ import { createStage } from "../stage/stage.js";
 import { createStory, deleteStory, getStory, updateStory } from "../story/story.js";
 import { addTag } from "../tag/tag.js";
 import { useTempDir } from "../test-project/test-project.js";
-import { listThreads } from "../thread/thread.js";
+import { createThread, listThreads, transitionThread } from "../thread/thread.js";
 import { projectPaths } from "../workspace/workspace.js";
 import { createFactoryManager, type FactoryManager } from "./factory-manager.js";
 import { getState, readAuthStamp, setState } from "./manager-state.js";
@@ -1348,5 +1348,125 @@ describe("foreground factory", () => {
     // The old hold has no effect.
     expect((await f.manager.reconcile()).find((d) => d.story === story.id)?.action).toBe("start");
     expect((await readFactoryState(root)).notes).toEqual(["Old note"]);
+  });
+  async function queueEntry(storyId: string) {
+    const status = JSON.parse(await readFile(await runtimePath(projectPaths(root), "status.json"), "utf8"));
+    return (status.queue as { story: string; action: string; reason: string }[]).find((e) => e.story === storyId);
+  }
+  it("shows a dispatch refusal as the queue reason until a later pass starts the worker", async () => {
+    const launch = gate();
+    const story = await createStory({ title: "Refused", stage: "WORK" }, { cwd: root });
+    const f = await fixture(launch.wait);
+    const original = vi.mocked(reserveWorker).getMockImplementation();
+    if (!original) throw new Error("Missing reserveWorker");
+    vi.mocked(reserveWorker).mockImplementation((target, input) =>
+      input.storyId === story.id
+        ? Promise.reject(new ConflictError("Cannot place the worker: no host has a free slot"))
+        : original(target, input),
+    );
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () =>
+          expect(await queueEntry(story.id)).toMatchObject({
+            action: "skip",
+            reason: "dispatch refused: Cannot place the worker: no host has a free slot",
+          }),
+        { timeout: 10000, interval: 20 },
+      );
+      const decision = (await f.manager.snapshot()).decisions.find((d) => d.story === story.id);
+      expect(decision).toMatchObject({ action: "skip", reason: expect.stringContaining("no host has a free slot") });
+      expect((await attentionOf(f)).has("dispatch")).toBe(false);
+      expect(await workersOf(story.id)).toEqual([]);
+      // The next pass tries the dispatch again. The refusal goes away when the worker starts.
+      vi.mocked(reserveWorker).mockImplementation(original);
+      await updateStory({ id: story.id, title: "Refused again" }, { cwd: root });
+      await workerStarted(story.id);
+      await vi.waitFor(async () => expect((await queueEntry(story.id))?.reason).not.toContain("dispatch refused"), {
+        timeout: 10000,
+        interval: 20,
+      });
+    } finally {
+      launch.release();
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("starts a worker after an earlier stay in the same Stage, with the same attempt and request ID", async () => {
+    const story = await createStory({ title: "Again", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    f.worker.setResponses([
+      tool("bash", { command: `rowbly -C "$ROWBLY_ROOT" --json story update ${story.id} --stage DONE` }),
+      ...completeWorker(),
+      ...completeWorker(),
+    ]);
+    const run = f.manager.run();
+    try {
+      await workerEnded(story.id);
+      expect((await getStory({ id: story.id }, { cwd: root })).stage).toBe("DONE");
+      // Done is a hold Stage. A pass that sees the Story in Done starts its budget again at attempt 1.
+      await f.manager.reconcile();
+      await updateStory({ id: story.id, stage: "WORK" }, { cwd: root });
+      await vi.waitFor(async () => expect(await workersOf(story.id)).toHaveLength(2), {
+        timeout: 10000,
+        interval: 20,
+      });
+      expect((await workersOf(story.id)).map((t) => t.attemptNumber)).toEqual([1, 1]);
+      expect(requestIds()).toEqual([`${story.id}:WORK:1`, `${story.id}:WORK:1`]);
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  }, 30000);
+  it("fails a local worker Thread whose run ended without a final status, so that the Story can retry", async () => {
+    const story = await createStory({ title: "Silent end", stage: "WORK" }, { cwd: root });
+    const noop = async () => {};
+    const f = await fixture(undefined, { executor: { launch: noop, stop: noop, cancel: noop, steer: noop } });
+    const run = f.manager.run();
+    try {
+      await vi.waitFor(
+        async () => {
+          const [first] = await workersOf(story.id);
+          expect(first?.status).toBe("failed");
+          expect(first?.error).toMatchObject({ code: "WORKER_ENDED" });
+        },
+        { timeout: 10000, interval: 20 },
+      );
+      // The first failure retries on the next scan.
+      await vi.waitFor(async () => expect((await workersOf(story.id)).length).toBeGreaterThan(1), {
+        timeout: 10000,
+        interval: 20,
+      });
+    } finally {
+      await f.manager.shutdown();
+      await run;
+    }
+  });
+  it("projects a final worker Thread again when its attempt did not stop", async () => {
+    const story = await createStory({ title: "Stale attempt", stage: "WORK" }, { cwd: root });
+    const f = await fixture();
+    const created = await createThread(
+      {
+        role: "worker",
+        storyId: story.id,
+        stage: "WORK",
+        attemptNumber: 1,
+        cwd: root,
+        ownerToken: (await f.manager.snapshot()).owner.token,
+      },
+      { cwd: root },
+    );
+    await transitionThread(created.id, { expectedRevision: created.revision, status: "completed" }, { cwd: root });
+    // The projection of the final status failed, so the attempt still runs.
+    await updateFactoryState(root, (state) => ({
+      ...state,
+      attempts: [
+        ...state.attempts,
+        { story: story.id, stage: "WORK", workerId: created.id, threadId: created.id, status: "running" },
+      ],
+    }));
+    const decision = (await f.manager.reconcile()).find((d) => d.story === story.id);
+    expect(decision).toMatchObject({ action: "retry", reason: "worker stopped without a stage move" });
+    expect((await readFactoryState(root)).attempts.find((a) => a.threadId === created.id)?.status).toBe("completed");
   });
 });
