@@ -133,7 +133,8 @@ export interface ShellEnv {
   readonly setThreadHints: Dispatch<SetStateAction<readonly KeyHint[]>>;
   readonly setMode: Dispatch<SetStateAction<ViewMode>>;
   readonly setPane: Dispatch<SetStateAction<Pane>>;
-  readonly setSidebarWidth: Dispatch<SetStateAction<number>>;
+  /** The width of the Stage sidebar after a drag, or `null` for the saved or default width. */
+  readonly setSidebarWidth: Dispatch<SetStateAction<number | null>>;
   readonly setSidebarShown: Dispatch<SetStateAction<boolean>>;
   /** The rows of the tag sidebar after a drag of its top edge, or `null` for the default height. */
   readonly setTagsHeight: Dispatch<SetStateAction<number | null>>;

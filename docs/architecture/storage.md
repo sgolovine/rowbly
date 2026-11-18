@@ -800,17 +800,26 @@ becomes old.
 
 ## `~/.rowblyrc.json`
 
-Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project` and `host` services read
-and write it. They use the `user-rc` module for each read and write, so that the safety rules below
+Rowbly keeps one file for each user, `~/.rowblyrc.json`. The `known-project`, `host` and
+`layout-prefs` services read and write it. They use the `user-rc` module for each read and write, so that the safety rules below
 apply in one place.
 
 ```
 ~/.rowblyrc.json      # projects [{path,name}], with the most recent project first; deviceId;
-                      # hosts [{id,ssh,maxWorkers,enabled,projects?,lastCheck?}], in the order that the user added them
+                      # hosts [{id,ssh,maxWorkers,enabled,projects?,lastCheck?}], in the order that the user added them;
+                      # layout {sidebarWidth?,tagsHeight?,storyWidth?}, the sidebar sizes of the TUI
 ```
 
 - The TUI adds a Project to this file when the Project opens.
 - The Project switcher in the header reads the list.
+- `layout` holds the sizes of the TUI sidebars that the user dragged with the mouse:
+  `{ "sidebarWidth": number, "tagsHeight": number, "storyWidth": number }`. Each size is optional.
+  The `layout-prefs` service reads and writes the key. See
+  [tui.md](tui.md#the-saved-sizes-of-the-sidebars).
+  - A missing key, a value that is not an object, or a size that is not a positive integer gives no
+    value for that size. The TUI then uses the default size. A bad value does not give an error.
+  - A write changes only the sizes that it gets. It keeps the other sizes and the other keys of the
+    object. It writes nothing when no size changes.
 - `deviceId` is a nonsecret installation ID. `rowbly auth login` creates it at the first login and
   gives it to Pi.
 - `hosts` is the list of the worker hosts of the user. `rowbly host` changes it. A missing key is an
