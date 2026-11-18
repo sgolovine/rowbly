@@ -55,13 +55,35 @@ describe("factory commands", () => {
     expect(result.stdout + result.stderr).toContain("Factory is not running");
   });
   it("releases a Story through the live daemon", async () => {
-    const release = vi
-      .spyOn(factory, "releaseFactoryStory")
-      .mockResolvedValue({ version: 1, id: "cmd", ownerToken: "owner", status: "completed", storyId: "TST-1" });
+    const release = vi.spyOn(factory, "releaseFactoryStory").mockResolvedValue({
+      version: 1,
+      id: "cmd",
+      ownerToken: "owner",
+      status: "completed",
+      storyId: "TST-1",
+      released: true,
+    });
     const result = await runCli(["--json", "factory", "release", "TST-1"], project.paths.root);
     expect(result.exitCode).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ status: "completed", storyId: "TST-1" });
+    expect(JSON.parse(result.stdout)).toMatchObject({ status: "completed", storyId: "TST-1", released: true });
     expect(release).toHaveBeenCalledWith("TST-1", {}, expect.anything());
+    const text = await runCli(["factory", "release", "TST-1"], project.paths.root);
+    expect(text.stdout).toContain("Released TST-1.");
+  });
+  it("tells when a release does not change the factory state", async () => {
+    vi.spyOn(factory, "releaseFactoryStory").mockResolvedValue({
+      version: 1,
+      id: "cmd",
+      ownerToken: "owner",
+      status: "completed",
+      storyId: "TST-2",
+      released: false,
+    });
+    const result = await runCli(["--json", "factory", "release", "TST-2"], project.paths.root);
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ status: "completed", storyId: "TST-2", released: false });
+    const text = await runCli(["factory", "release", "TST-2"], project.paths.root);
+    expect(text.stdout).toContain("No change for TST-2");
   });
   it("hides the watchdog command from the help", async () => {
     const result = await runCli(["factory", "--help"], project.paths.root);

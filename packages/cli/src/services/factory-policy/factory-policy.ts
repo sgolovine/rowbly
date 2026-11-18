@@ -32,6 +32,7 @@ import type {
 
 export {
   DEFAULT_LIMITS,
+  hasUnstoppedAttempt,
   normalizeStatus,
   promptHash,
   recordLaunchFailure,

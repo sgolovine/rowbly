@@ -132,17 +132,29 @@ A cancellation holds the Story and the Stage until one of these events:
 
 ## Release a parked Story
 
-The policy parks a Story after the attempt limit. `rowbly factory release <story-id>` releases it.
+The policy parks a Story after the attempt limit. Other skip reasons also stop a worker for a Story in a
+work Stage: `retry delay`, `launch delay` and `cancelled by user`. `rowbly factory release <story-id>`, or
+the `Force assignment` Button of the Story view, releases the Story from each of these reasons. The result
+is the same as a Stage round trip, for example to Backlog and back.
+
 `releaseFactoryStory(storyId)` in `src/services/factory/factory.ts` sends the command `release-story` to the
 live daemon and waits for the receipt. It does not load Pi. Without a live daemon, it gives `CONFLICT`
-with the text `Factory is not running`.
+with the text `Factory is not running`. The receipt has `released`.
 
 `releaseParkedStory` in `src/services/factory-manager/story-release.ts` does the work in the daemon:
 
-1. In `serial`, it reads `state.json`. A Story that is not parked gives a success with no change.
-2. It calls `releaseStory` of the policy through `updateFactoryState`. The release takes only the state
-   lock. It removes the parked record and gives the Story a new attempt budget.
-3. It calls `notify`, so that the next pass can start a worker for the Story.
+1. In `serial`, it reads the Story, the Stages and the worker Threads of the Story. A Story that does not
+   exist, that is not in an enabled Stage with a work prompt, or that has a pending or running Thread gives
+   `released: false` with no change.
+2. It calls `releaseStory` of the policy through `updateFactoryStateIfChanged`. The release takes only the
+   state lock. In the lock, an attempt of the Story whose stop is not confirmed (`hasUnstoppedAttempt`)
+   stops the release with `released: false` and no write. Otherwise `releaseStory` removes the `parked`,
+   `nativeCancelled` and `launchFailures` entries of the Story, resets its attempt budget and marks its
+   last stopped attempt as a Stage departure.
+3. It calls `notify`, so that the next pass evaluates the Story. The policy gives `start` with the reason
+   `new stage stay`.
+
+The release does not change the Story file and does not move the Story.
 
 A Stage move or a change of the Story also releases a parked Story, with no command.
 

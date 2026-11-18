@@ -124,7 +124,7 @@ A flag with `(repeat)` can occur more than one time.
 | `rowbly project update --time-zone <zone>`            | Project     | Sets the time zone of the Story times in the TUI. `""` uses the system time zone. |
 | `rowbly status`                                       | Status      | Shows the factory phase, the Thread counts and the Story count of each Stage. |
 | `rowbly thread steer <id> --message <text>`           | Receipt     | Sends a message of 1 to 4000 characters to a running worker through the running factory. Gives `VALIDATION` for an empty or long message, and `CONFLICT` when the factory or the worker does not run. |
-| `rowbly factory release <story-id>`                   | Receipt     | Releases a parked Story in the running factory, so that the next pass can start a worker for it. A Story that is not parked gives a success with no change. Gives `CONFLICT` with `Factory is not running` when the factory does not run. |
+| `rowbly factory release <story-id>`                   | Receipt     | Forces the running factory to evaluate a Story for a worker again, with the same result as a Stage round trip. It removes the parking, the retry and launch delays and the user cancellation of the Story. It does not move the Story. The receipt has `storyId` and `released`. A Story that does not exist, that is not in a work Stage or that has an active worker gives `released: false` with no change. Gives `CONFLICT` with `Factory is not running` when the factory does not run. |
 
 `rowbly status --json` gives this object. `stages` is in config order and includes the disabled Stages.
 A Story with a Stage that is not in the config is in `stories` only.
