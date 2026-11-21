@@ -53,7 +53,7 @@ export function workerOverride(settings: FactorySettings, target: WorkerTarget):
 
 /** The worker model that the manager selects for a Story. */
 export interface WorkerSelection {
-  /** The selected model. Without a model, Pi selects one. */
+  /** The selected model. Without a model, the worker session refuses to open. */
   readonly choice?: ModelChoice;
   /** True when the provider of the selected model and of each fallback model is paused. */
   readonly paused: boolean;
@@ -62,7 +62,7 @@ export interface WorkerSelection {
 /**
  * Selects the worker model of a Story in a Stage: the Story override, the tag rule, the Stage override, the requested
  * model, then `workerModel`. When the provider of that model is paused, the first fallback model whose provider is not
- * paused applies. Without a model, Pi selects one, so the manager cannot check a pause.
+ * paused applies. Without a model, the worker session refuses to open, so the manager cannot check a pause.
  */
 export function selectWorkerModel(
   settings: FactorySettings,

@@ -1,7 +1,7 @@
 import { useInput } from "ink";
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import type { FactoryLaunch, FactoryStatus } from "../../../../services/factory/factory.js";
-import { getFactorySettings } from "../../../../services/factory-settings/factory-settings.js";
+import { getFactorySettings, hasWorkerModel } from "../../../../services/factory-settings/factory-settings.js";
 import type { Story } from "../../../../services/story/story.js";
 import { listThreads, type ThreadRecord, watchThreads } from "../../../../services/thread/thread.js";
 import type { ServiceContext } from "../../../../services/workspace/workspace.js";
@@ -75,6 +75,8 @@ export interface FactoryModalModel {
   readonly confirm: boolean;
   /** False after a start found no AI provider with credentials. */
   readonly provider: boolean | undefined;
+  /** False when the settings have no worker model. Undefined while the settings load. */
+  readonly workerModel: boolean | undefined;
   readonly can: FactoryAbilities;
   /** The old supervisor Threads, the oldest first. */
   readonly threads: readonly ThreadRecord[];
@@ -263,6 +265,7 @@ export function useFactoryModal(input: FactoryModalInput): FactoryModalModel {
     busy,
     confirm,
     provider,
+    workerModel: settings.data && hasWorkerModel(settings.data),
     can,
     threads,
     selectedId: selected?.id,

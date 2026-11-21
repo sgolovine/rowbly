@@ -19,6 +19,11 @@ describe("pausedProviders", () => {
     vi.useRealTimers();
   });
 
+  it("never pauses the placeholder provider of Pi", () => {
+    const providers = new Map<string, ProviderPause>();
+    expect(pausedProviders(providers, "unknown", new Error("401 unauthorized"))).toBe(providers);
+  });
+
   it("keeps the quota and authentication rules", () => {
     vi.useFakeTimers({ toFake: ["Date"], now: NOW });
     expect(pausedProviders(new Map(), "p", new Error("429 usage limit")).get("p")).toEqual({

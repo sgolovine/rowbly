@@ -8,7 +8,7 @@ import { columnWidth } from "../column-width.js";
 /** One row of the list: a Stage and the model text of the row. */
 export interface StageModelItem {
   readonly stage: Stage;
-  /** The model text, for example `acme/deep-1 · thinking high` or `Worker model: Pi default`. */
+  /** The model text, for example `acme/deep-1 · thinking high` or `Worker model`. */
   readonly value: string;
   /** True when the row has no override of its own, so the value comes from a different setting. */
   readonly inherited: boolean;

@@ -26,6 +26,7 @@ export function FactoryMain({ model, status, canLaunch, stages, onAiSettings }: 
         live={live}
         limit={model.limit}
         provider={model.provider}
+        workerModel={model.workerModel}
         canLaunch={canLaunch}
         aiSettings={onAiSettings !== undefined}
         stages={stages}

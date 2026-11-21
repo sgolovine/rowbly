@@ -94,7 +94,10 @@ The `factory-settings/` service reads and writes the optional `factory` key of
 `.rowbly/rowbly.config.json`: `maxWorkers`, `workerModel`, `stageWorkerModels`,
 `storyWorkerModels`, `tagWorkerModels`, `fallbackWorkerModels`, `git`, `checks`, `dependencies` and `placement`. See [../storage.md](../storage.md#factory-settings).
 
-- Without the `factory` key, the worker limit is four and Pi selects default models.
+- Without the `factory` key, the worker limit is four and no worker model is set.
+- The factory does not start without `workerModel`. `assertWorkerModelSet` in
+  `factory-settings/worker-model-gate.ts` gives a `ValidationError` with
+  `details.setting = "factory.workerModel"`. Pi never selects a default model for a worker.
 - A write keeps the other keys of the config. The other config writers keep the `factory` key.
 - A `factory` key that is not valid gives a `ValidationError` on the factory paths. The board checks
   only that the key is an object, so it continues to work.
@@ -121,7 +124,8 @@ The `factory-settings/` service reads and writes the optional `factory` key of
   the canonical checkout. The `--git-push`, `--no-git-push`, `--git-pull`, `--no-git-pull` and
   `--git-sync-interval` flags set them. See
   [runtime-and-locks.md](runtime-and-locks.md#git-sync-of-the-canonical-checkout).
-- The model picker of the TUI offers the supported thinking levels and `Pi default`.
+- The model picker of the TUI offers the supported thinking levels. The picker of the worker model
+  cannot clear the model.
 
 ### Checks
 
@@ -246,8 +250,10 @@ Without the key, there is no fallback.
   fallback models.
   The `provider` of each queue entry of the status file is the provider of this selection, with the
   fallback.
-- If no model resolves, Pi selects the model. The manager does not check a pause and does not use the
-  list.
+- If no model resolves, `openFactorySession` refuses the session before it loads Pi. The Thread gets
+  the error class `configuration` and the code `WORKER_MODEL_MISSING`. A session that Pi opens with
+  the placeholder provider `unknown` fails as `Model unavailable`. The manager never pauses the
+  provider `unknown`.
 - A resumed Thread keeps its model, also when its provider is paused. A network resume waits for the
   end of the pause of the provider of the Thread.
 - `rowbly factory configure --fallback-worker <provider/model>` (repeat) replaces the list.

@@ -31,6 +31,9 @@ Read this page when you start a task on the factory. Then read only the sub-page
   [recovery.md](recovery.md#automatic-restart-after-a-crash). `--foreground` runs the daemon code
   in the current terminal, without a watchdog (`src/commands/factory-runner/`). Close the TUI
   without a stop to leave the daemon active.
+- **Worker model.** `startFactory`, `restartFactory` and `preflightFactory` refuse to continue without
+  `factory.workerModel`. They give a `VALIDATION` error with a hint. This rule does not use the worker
+  model overrides. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 - **Dispatch.** The manager starts the workers itself. See [Factory pass](#factory-pass).
   A pass with no eligible Story and no running worker makes no model call.
 - **Worker problems.** The manager shows the problems that a worker reports as the attention entry
@@ -339,7 +342,9 @@ that host. See [host-agent.md](host-agent.md) and the Spec `remote-worker-hosts`
   7. It starts the host agent with `host serve --detach`. Then it submits a `launch` command with
      `host submit`. A Thread with more than one run gets a `resume` command.
   8. It follows the `run` frames of the Thread on the `host attach` channel until the run ends.
-- **Model.** The model is the model of the Thread, else the worker model of the factory settings.
+- **Model.** The model is the model of the Thread, else the worker model of the factory settings. The
+  factory does not start without a worker model. A host session without a model fails with the same
+  `VALIDATION` error.
 - **Message.** The Run section of a remote worker has the copy as the Project root, the worktree of
   the host (`<clone>-worktrees/<story-id>`), and a command prefix with the `write.lock` of the Thread,
   the shim of the host and `-C <copy>`. It has no checks block.

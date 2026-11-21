@@ -63,7 +63,7 @@ These rules apply:
   text. It does not throw.
 - The worker models are `workerModel`, each value of `stageWorkerModels`, each value of
   `storyWorkerModels` and each value of `tagWorkerModels` of the factory settings. Without a worker
-  model, `models` is a `warning`: the host uses its default Pi model.
+  model, `models` is a `warning`: the factory does not start without a worker model.
 - Outside a Project, `models`, `clone`, `git-push` and `local-ahead` are `skipped`.
 - The `clone` item reads the record of the current Project on the host (`hostProjectFor`), then runs
   `cloneStatus` with the local `origin` URL. A test can replace this finder with the dependency

@@ -64,6 +64,7 @@ export function AiTaskView({ task, ctx, runtime, provider, status, settings, ...
           title="AI › Worker model"
           models={status.models}
           current={settings?.workerModel}
+          clearable={false}
           onSave={(choice) => on.onSaveModel(choice)}
           onClose={on.onCancel}
         />

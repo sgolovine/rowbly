@@ -26,7 +26,9 @@ export type Overlay =
   | { readonly kind: "newTag" }
   | { readonly kind: "factory" }
   /** The checks in the queue of the live factory. */
-  | { readonly kind: "checks" };
+  | { readonly kind: "checks" }
+  /** The setup Modal that asks for the worker model of a Project without one. */
+  | { readonly kind: "workerModelSetup" };
 
 /** The records of an open Project that the overlays show. */
 export interface OverlayBoard {

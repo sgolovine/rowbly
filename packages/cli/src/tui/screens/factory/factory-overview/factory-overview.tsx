@@ -4,7 +4,7 @@ import { DetailView } from "../../../components/index.js";
 import { formatDateTime, theme } from "../../../theme.js";
 import { hostRow, workerHosts } from "../factory-hosts.js";
 import { FactoryList } from "../factory-list/index.js";
-import { checksText, PHASES, providerNotice, workersText } from "../factory-modal-text.js";
+import { checksText, PHASES, providerNotice, workerModelNotice, workersText } from "../factory-modal-text.js";
 import { factoryProblems, queueReason, restartText } from "../factory-status.js";
 
 /** The props of `FactoryOverview`. */
@@ -15,6 +15,8 @@ export interface FactoryOverviewProps {
   readonly limit: number | undefined;
   /** False after a start found no AI provider with credentials. */
   readonly provider: boolean | undefined;
+  /** False when the settings have no worker model, so that the factory cannot start. */
+  readonly workerModel: boolean | undefined;
   /** False when the Modal cannot start the factory process. */
   readonly canLaunch: boolean;
   readonly aiSettings: boolean;
@@ -49,6 +51,7 @@ export function FactoryOverview({
   live,
   limit,
   provider,
+  workerModel,
   canLaunch,
   aiSettings,
   stages,
@@ -80,6 +83,11 @@ export function FactoryOverview({
           ...restartRows(status),
         ]}
       />
+      {workerModel === false && (
+        <Text color={theme.inkMuted} wrap="wrap">
+          {workerModelNotice(aiSettings)}
+        </Text>
+      )}
       {!live && provider === false && (
         <Text color={theme.inkMuted} wrap="wrap">
           {providerNotice(aiSettings)}

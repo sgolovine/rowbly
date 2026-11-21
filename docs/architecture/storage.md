@@ -90,7 +90,7 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 | Key                    | Type    | Default            | Effect                                                 |
 | ---------------------- | ------- | ------------------ | ------------------------------------------------------ |
 | `maxWorkers`           | integer | `4`                | The maximum number of workers. The minimum is 1.       |
-| `workerModel`          | object  | Pi selects a model | The model choice of the workers.                       |
+| `workerModel`          | object  | none               | The model of the workers. It is necessary for a start. |
 | `stageWorkerModels`    | object  | none               | The worker model overrides for each Stage key.         |
 | `storyWorkerModels`    | object  | none               | The worker model overrides for each Story ID.          |
 | `tagWorkerModels`      | object  | none               | The worker model rules for each tag value.             |
@@ -105,7 +105,8 @@ The optional `factory` key of `rowbly.config.json` holds the settings of the nat
 [native-factory/pi-runtime-and-auth.md](native-factory/pi-runtime-and-auth.md#placement).
 
 A model choice has `provider`, `modelId` and an optional `thinkingLevel`. Without the `factory` key,
-the worker limit is four and Pi selects the default models.
+the worker limit is four and no worker model is set. The factory does not start without
+`workerModel`. This rule does not use the worker model overrides.
 
 An old config can have the key `supervisorModel`. The key is valid with all values, and the factory
 ignores it. `rowbly factory configure` keeps the key when it writes the config. `rowbly doctor` shows

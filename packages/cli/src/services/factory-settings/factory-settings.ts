@@ -46,6 +46,14 @@ export {
   validFactorySettings,
   writeSettings,
 } from "./settings-file.js";
+export {
+  assertWorkerModelSet,
+  hasWorkerModel,
+  isWorkerModelMissing,
+  PI_PLACEHOLDER_PROVIDER,
+  WORKER_MODEL_SETTING,
+  workerModelMissingError,
+} from "./worker-model-gate.js";
 
 type AgentAuth = typeof import("../agent-auth/agent-auth.js");
 type AuthRuntime = import("../agent-auth/agent-auth.js").AuthRuntime;

@@ -31,6 +31,8 @@ interface PickerEnv {
   readonly saving: RefObject<boolean>;
   readonly setModel: Dispatch<SetStateAction<PickerModel | undefined>>;
   readonly onSave: (choice: ModelChoice | null) => Promise<void>;
+  /** False when the picker has no first option that saves `null`. */
+  readonly clearable: boolean;
 }
 
 /** Saves the choice. An error shows as a toast, and the Modal stays open. */
@@ -38,12 +40,14 @@ function saveChoice(env: PickerEnv, choice: ModelChoice | null): void {
   runExclusive(env.saving, () => env.onSave(choice)).catch((error: unknown) => env.toast.error(error));
 }
 
-/** The Pi default and a model with one level or none have no level to choose, so they save at once. */
+/** The first option and a model with one level or none have no level to choose, so they save at once. */
 function pickModel(env: PickerEnv, id: string): void {
   const found = env.models.find((m) => pickerId(m) === id);
 
   if (!found) {
-    saveChoice(env, null);
+    if (env.clearable) {
+      saveChoice(env, null);
+    }
 
     return;
   }
@@ -57,16 +61,34 @@ function pickModel(env: PickerEnv, id: string): void {
   env.setModel(found);
 }
 
+/** The options of the model search: the first option when the picker is clearable, then each model. */
+function pickerOptions(models: readonly PickerModel[], clearable: boolean): string[] {
+  const ids = models.map(pickerId);
+
+  return clearable ? [DEFAULT, ...ids] : ids;
+}
+
+/** The option of the current choice. Without a choice, it is the first option, or none when the picker cannot clear. */
+function currentOption(current: ModelChoice | undefined, clearable: boolean): string | null {
+  if (current) {
+    return pickerId(current);
+  }
+
+  return clearable ? DEFAULT : null;
+}
+
 /**
  * Selects the model of one factory role in two steps, in a generic Modal: a model from a search of the
- * available models (or the first option, `Pi default` or `No override`), then one of the thinking levels that the model supports. `esc` goes
- * back one step, then closes. `onSave` gets `null` for the first option.
+ * available models (or the first option, `No override`), then one of the thinking levels that the model supports. `esc` goes
+ * back one step, then closes. `onSave` gets `null` for the first option. A picker that is not `clearable` has no first
+ * option, so it always saves a model.
  */
 export function ModelPickerModal({
   title,
   models,
   current,
   defaultLabel = PI_DEFAULT_LABEL,
+  clearable = true,
   onSave,
   onClose,
 }: {
@@ -75,6 +97,8 @@ export function ModelPickerModal({
   current?: ModelChoice;
   /** The label of the first option, which saves `null`. An override picker uses `No override`. */
   defaultLabel?: string;
+  /** False removes the first option. The base worker model uses it, because the factory needs a model. */
+  clearable?: boolean;
   /** May throw: the error shows as a toast, and the Modal stays open. */
   onSave(choice: ModelChoice | null): Promise<void>;
   onClose(): void;
@@ -84,7 +108,7 @@ export function ModelPickerModal({
   const [model, setModel] = useState<PickerModel | undefined>(undefined);
   const saving = useRef(false);
 
-  const env: PickerEnv = { models, toast, saving, setModel, onSave };
+  const env: PickerEnv = { models, toast, saving, setModel, onSave, clearable };
 
   useKeyCapture(active && model !== undefined, { text: false, escape: true });
   useEscape(active && model !== undefined, () => setModel(undefined));
@@ -101,10 +125,10 @@ export function ModelPickerModal({
         />
       ) : (
         <SearchableSelectPicker
-          options={[DEFAULT, ...models.map(pickerId)]}
+          options={pickerOptions(models, clearable)}
           labels={modelLabels(models, defaultLabel)}
           initialQuery=""
-          value={current ? pickerId(current) : DEFAULT}
+          value={currentOption(current, clearable)}
           onSelect={(id) => pickModel(env, id)}
           onCancel={onClose}
         />

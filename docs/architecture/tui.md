@@ -19,6 +19,24 @@ code.
 3. `App` (`app.tsx`) puts `TuiProviders` around the `Shell`. Keep `app.tsx` thin.
 4. `renderTui()` waits until the user quits.
 
+### The worker model setup
+
+When the board of a Project shows and the factory settings have no `workerModel`, the shell opens the
+setup Modal `Set up › Worker model`. The hook `useWorkerModelSetup` (`shell/shell/use-worker-model-setup.ts`)
+does the check. The Modal is in `screens/settings/worker-model-setup/`.
+
+- The shell asks one time for each Project root in each TUI process. A Project switch checks the new
+  root. After the onboarding steps, the board loads, and the check runs for the new Project.
+- The Modal does not open over a different overlay.
+- `w` opens the model picker. The picker has no option to clear the model. A save writes
+  `factory.workerModel` and closes the Modal.
+- `a` opens Settings at the AI section, for example to sign in to a provider.
+- `esc` closes the Modal and shows a warning toast. The board works, but the factory does not start.
+- The skip is only in React state. Thus the Modal opens again at the next start while the model is not
+  set. The setup never writes `~/.rowblyrc.json`.
+- The Modal reads the models through the Pi worker and the model cache, as the Models tab of a Story
+  does. Without a signed-in provider, it tells you to press `a`.
+
 ### Lazy screens
 
 The board does not show some screens at launch. `src/tui/shell/lazy-screens.ts` loads them with
@@ -28,6 +46,7 @@ less code before the first render. The lazy screens are:
 - The Settings Modal (`LazySettingsModal`).
 - The Factory Modal (`LazyFactoryModal`) and the Checks Modal (`LazyChecksModal`).
 - The onboarding steps (`LazyOnboarding`).
+- The worker model setup (`LazyWorkerModelSetup`).
 
 Obey these rules:
 
@@ -94,6 +113,9 @@ Modal has these views:
   in `danger`. A `degraded` state is in `stage-board`. Without a worker host, the list does not show.
   `workerHosts` and `hostRow` in `src/tui/screens/factory/factory-hosts.tsx` make the rows. See
   [native-factory/remote-hosts.md](native-factory/remote-hosts.md) for an overview of the worker hosts.
+  When the factory settings have no worker model, the overview shows a notice under the rows. The
+  notice tells you to press `a` and select the model in Settings › AI. `s` stays available, and a
+  start shows the error of the service in a toast.
 - **Attention.** `Factory › Attention` lists all warnings in a `SelectList` with `clickToHighlight`.
   `↑/↓` selects, `enter` opens the detail view, `/` filters and `esc` goes back. A click on a row
   that is not highlighted highlights the row. A click on the highlighted row opens the detail view.
@@ -715,8 +737,9 @@ Both places use `ModelPickerModal` (`settings/model-picker-modal/`) and `StageMo
 board order. Each row has the `StageBadge` of the Stage and a model text. The list shows all Stages,
 also disabled Stages.
 
-The first option of the picker of an override is `No override`, not `Pi default`. Use the
-`defaultLabel` prop of `ModelPickerModal` for this label. When you select `No override`, the
+The first option of the picker of an override is `No override`. Use the `defaultLabel` prop of
+`ModelPickerModal` for this label. The picker of the worker model has `clearable={false}`, so it has
+no first option. The factory does not start without a worker model. When you select `No override`, the
 override goes away. A map that becomes empty goes away from the factory settings. The other keys of
 the factory settings and of the config do not change. If the save fails, the error shows as a toast,
 and the picker stays open.
@@ -736,7 +759,7 @@ no override.
 The `Models` tab is the last tab of a Story, after the `Threads` tab (`stories/models-tab/`). A row
 shows the Story override for the Stage. When the Story has no override for the Stage, the row shows
 the model that applies and its source, for example `Stage model: openai/gpt-sol` or
-`Worker model: Pi default`.
+`Worker model: Not set`.
 
 - `↑/↓` select a Stage. `enter` or a click opens the picker when the models have loaded.
 - The title of the picker is `<Story ID> › Model › <Stage label>`.

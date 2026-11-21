@@ -5,7 +5,7 @@ import type { KeyHint } from "../../keymap.js";
 import { TagFormModal } from "../../screens/settings/tag-form-modal/index.js";
 import { StageFormModal } from "../../screens/stages/index.js";
 import { HelpModal } from "../help-modal/index.js";
-import { LazyChecksModal, LazyFactoryModal, LazySettingsModal } from "../lazy-screens.js";
+import { LazyChecksModal, LazyFactoryModal, LazySettingsModal, LazyWorkerModelSetup } from "../lazy-screens.js";
 import type { Overlay, OverlayBoard, OverlayHandlers } from "../overlay.js";
 import { ProjectSwitcher } from "../project-switcher/index.js";
 import { StoryOverlays } from "../story-overlays/index.js";
@@ -75,6 +75,9 @@ export const ShellOverlays = memo(function ShellOverlays({
         )}
         {board && overlay?.kind === "checks" && (
           <LazyChecksModal status={factory} stages={stageLabels(board)} onClose={on.close} />
+        )}
+        {board && overlay?.kind === "workerModelSetup" && (
+          <LazyWorkerModelSetup ctx={ctx} onClose={on.close} onAiSettings={on.openAiSettings} />
         )}
       </Suspense>
       {overlay?.kind === "projects" && (

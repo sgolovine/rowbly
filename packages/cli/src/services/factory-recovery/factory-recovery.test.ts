@@ -7,6 +7,7 @@ import { readCheckJobs, writeCheckJobs } from "../check-queue/check-records.js";
 import type { CheckJob } from "../check-queue/check-types.js";
 import { readStartTicks, spawnCheck } from "../check-queue/proc-readers.js";
 import { acquireFactoryOwnership, newOwner } from "../factory-ownership/factory-ownership.js";
+import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readFactoryState, updateFactoryState } from "../factory-state/factory-state.js";
 import { prepareRuntime } from "../runtime-files/runtime-files.js";
 import { createStory, updateStory } from "../story/story.js";
@@ -105,11 +106,19 @@ describe("factory recovery", () => {
   );
   it.runIf(process.platform === "linux")("refuses the preflight while an old factory.json exists", async () => {
     await promisify(execFile)("git", ["init", project.paths.root]);
+    await updateFactorySettings({ workerModel: { provider: "faux", modelId: "faux-1" } }, project.ctx);
     await expect(preflightFactory(project.ctx)).resolves.toBeUndefined();
     await project.write("factory.json", "{ not parsed");
     await expect(preflightFactory(project.ctx)).rejects.toMatchObject({
       code: "CONFLICT",
       hint: expect.stringContaining("rowbly doctor --fix"),
+    });
+  });
+  it.runIf(process.platform === "linux")("refuses the preflight without a worker model", async () => {
+    await promisify(execFile)("git", ["init", project.paths.root]);
+    await expect(preflightFactory(project.ctx)).rejects.toMatchObject({
+      code: "VALIDATION",
+      details: { setting: "factory.workerModel" },
     });
   });
   it("interrupts a local worker of a dead owner, and keeps an active worker on a worker host", async () => {

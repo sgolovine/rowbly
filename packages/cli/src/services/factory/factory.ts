@@ -10,7 +10,7 @@ import {
 } from "../factory-control/factory-control.js";
 import { type FactoryManager, getFactoryStatus as readStatus } from "../factory-manager/factory-manager.js";
 import { type Owner, probeOwner, probeOwnerCached, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
-import { assertNoLegacyFactorySettings } from "../factory-settings/factory-settings.js";
+import { assertNoLegacyFactorySettings, assertWorkerModelSet } from "../factory-settings/factory-settings.js";
 import { readWatchdogState, type WatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { mapInOrder } from "../in-order/in-order.js";
 import { refuseRemoteWrite } from "../outbox/outbox.js";
@@ -175,6 +175,7 @@ export async function startFactory(input: StartFactoryInput, ctx: ServiceContext
   // A live watchdog in its back-off starts the daemon itself. A second watchdog is not necessary.
   if ((!existing || (await probeOwner(existing)) === "dead") && !(await watchdogLive(paths))) {
     await assertNoLegacyFactorySettings(paths);
+    await assertWorkerModelSet(ctx);
     await launchDaemon(paths, input, launch);
   }
 
@@ -351,6 +352,8 @@ export async function stopFactory(input: { timeoutMs?: number } = {}, ctx: Servi
 export async function restartFactory(input: Parameters<typeof startFactory>[0], ctx: ServiceContext = {}) {
   refuseRemoteWrite(ctx, "restart the factory");
 
+  // A refusal after the stop leaves no factory. Refuse before the stop, so that a live factory stays.
+  await assertWorkerModelSet(ctx);
   await stopFactory({ timeoutMs: input.timeoutMs }, ctx);
 
   return startFactory(input, ctx);
