@@ -20,6 +20,11 @@ export const LazyChecksModal = lazy(() =>
   import("../screens/factory/checks-modal/index.js").then((m) => ({ default: m.ChecksModal })),
 );
 
+/** The setup Modal of the worker model, for a Project without one. */
+export const LazyWorkerModelSetup = lazy(() =>
+  import("../screens/settings/worker-model-setup/index.js").then((m) => ({ default: m.WorkerModelSetup })),
+);
+
 /** The onboarding steps, for a folder with no Project. */
 export const LazyOnboarding = lazy(() =>
   import("../screens/onboarding/onboarding/index.js").then((m) => ({ default: m.Onboarding })),

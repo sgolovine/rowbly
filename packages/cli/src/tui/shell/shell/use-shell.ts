@@ -17,11 +17,12 @@ import { type ShellFrame, shellFrame } from "./shell-frame.js";
 import { type ShellHandlers, shellHandlers } from "./shell-handlers.js";
 import { shellHints } from "./shell-hints.js";
 import { handleShellKey } from "./shell-keys.js";
-import type { ShellEnv } from "./shell-state.js";
+import type { Board, ShellEnv } from "./shell-state.js";
 import { shellRows, shellView } from "./shell-view.js";
 import { useShellData } from "./use-shell-data.js";
 import { useShellState } from "./use-shell-state.js";
 import { useStageDefaults } from "./use-stage-defaults.js";
+import { useWorkerModelSetup } from "./use-worker-model-setup.js";
 
 /** What the shell renders. */
 export interface ShellModel {
@@ -37,6 +38,17 @@ export interface ShellModel {
   readonly hints: KeyHint[];
 }
 
+/** The defaults of an open board: the collapsed Stages, and the setup of a missing worker model. */
+function useBoardDefaults(
+  ctx: ServiceContext,
+  board: Board | null | undefined,
+  overlay: Overlay | null,
+  setters: Pick<ShellEnv, "setCollapsed" | "setOverlay">,
+): void {
+  useStageDefaults(board, setters.setCollapsed);
+  useWorkerModelSetup({ ctx, root: board?.project.root, overlay, setOverlay: setters.setOverlay });
+}
+
 /** The state, the data and the keys of the shell. `preloadPi` imports the Pi SDK after the board shows. */
 export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<void>): ShellModel {
   const { exit } = useApp();
@@ -50,7 +62,7 @@ export function useShell(initialCtx: ServiceContext, preloadPi?: () => Promise<v
   const { overlay, sidebarShown, stageKey, tagKey, collapsed } = values;
   const toast = useToast();
 
-  useStageDefaults(data.data, setters.setCollapsed);
+  useBoardDefaults(ctx, data.data, overlay, setters);
 
   // Only a change of the board, a filter or the collapsed Stages builds the rows again, not a cursor move.
   const rows = useMemo(
