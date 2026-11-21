@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { build } from "tsup";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { newOwner, probeOwner, readFactoryOwner } from "../factory-ownership/factory-ownership.js";
+import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { initProject } from "../project/project.js";
 import { createThread, getThread, listThreads } from "../thread/thread.js";
@@ -23,6 +24,7 @@ import {
 const exec = promisify(execFile);
 // The package root, so that the test does not depend on the working directory.
 const repo = fileURLToPath(new URL("../../..", import.meta.url));
+const fauxModel = { workerModel: { provider: "faux", modelId: "faux-1" } };
 describe("detached factory with offline Pi", () => {
   let dir: string;
   let hook: string;
@@ -111,6 +113,7 @@ describe("detached factory with offline Pi", () => {
       root = join(dir, `${mode} project with spaces`);
       await mkdir(root);
       await initProject({ name: "Daemon", key: "D" }, { cwd: root });
+      await updateFactorySettings(fauxModel, { cwd: root });
       await exec("git", ["init", root]);
       await exec("git", ["-C", root, "add", ".rowbly"]);
       await exec("git", [
@@ -196,10 +199,47 @@ describe("detached factory with offline Pi", () => {
     await expect(readFile(marker, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
     expect(await readFactoryOwner(projectPaths(root))).toBeFalsy();
   });
+  it("refuses a start without a worker model, and does not launch the daemon", async () => {
+    root = join(dir, "no model project");
+    await mkdir(root);
+    await initProject({ name: "No model", key: "N" }, { cwd: root });
+    const marker = join(dir, "launched without model");
+    const entry = join(dir, "mark-model.mjs");
+    await writeFile(entry, `import { writeFileSync } from "node:fs"; writeFileSync(${JSON.stringify(marker)}, "x");`);
+    const error = await startFactory({ launch: { executable: process.execPath, entry, execArgv: [] } }, { cwd: root })
+      .then(() => undefined)
+      .catch((caught: unknown) => caught);
+    expect(error).toMatchObject({
+      code: "VALIDATION",
+      details: { setting: "factory.workerModel" },
+      hint: expect.stringContaining("rowbly factory configure --worker"),
+    });
+    await expect(readFile(marker, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+    expect(await readFactoryOwner(projectPaths(root))).toBeFalsy();
+  });
+  it("refuses a restart without a worker model and keeps the live owner", async () => {
+    root = join(dir, "no model restart project");
+    await mkdir(root);
+    await initProject({ name: "No model restart", key: "R" }, { cwd: root });
+    const owner = await newOwner();
+    const { acquireFactoryOwnership, releaseFactoryOwnership } = await import(
+      "../factory-ownership/factory-ownership.js"
+    );
+    await acquireFactoryOwnership(projectPaths(root), owner);
+    try {
+      await expect(
+        restartFactory({ launch: { executable: process.execPath, entry: "unused.mjs", execArgv: [] } }, { cwd: root }),
+      ).rejects.toMatchObject({ code: "VALIDATION" });
+      expect((await readFactoryOwner(projectPaths(root)))?.token).toBe(owner.token);
+    } finally {
+      await releaseFactoryOwnership(projectPaths(root), owner.token);
+    }
+  });
   it("returns early launch errors and refuses restart on stop timeout", async () => {
     root = join(dir, "failure project");
     await mkdir(root);
     await initProject({ name: "Failure", key: "F" }, { cwd: root });
+    await updateFactorySettings(fauxModel, { cwd: root });
     const fail = join(dir, "fail.mjs");
     await writeFile(fail, 'console.error("fixture early failure"); process.exitCode=1;');
     await expect(

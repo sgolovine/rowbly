@@ -108,7 +108,7 @@ export async function modelsItem(env: CheckEnv): Promise<CheckItem> {
     return item(
       "models",
       "warning",
-      "The factory settings have no worker model. The host uses its default Pi model.",
+      "The factory settings have no worker model. The factory does not start without one.",
       "Set a worker model in the factory settings of the Project.",
     );
   }

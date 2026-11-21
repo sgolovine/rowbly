@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { newOwner, probeOwner } from "../factory-ownership/factory-ownership.js";
+import { updateFactorySettings } from "../factory-settings/factory-settings.js";
 import { readWatchdogState, writeWatchdogState } from "../factory-watchdog/factory-watchdog.js";
 import { useTestProject } from "../test-project/test-project.js";
 import { getFactoryStatus, startFactory, stopFactory } from "./factory.js";
@@ -79,6 +80,7 @@ describe("factory watchdog control", () => {
     // Stop has nothing to stop and keeps the failed record for the next start.
     expect(await stopFactory({}, project.ctx)).toEqual({ phase: "stopped" });
 
+    await updateFactorySettings({ workerModel: { provider: "faux", modelId: "faux-1" } }, project.ctx);
     const marker = join(project.paths.root, "launched");
     const entry = join(project.paths.root, "mark.mjs");
     await writeFile(

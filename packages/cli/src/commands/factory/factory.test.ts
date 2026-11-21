@@ -98,6 +98,21 @@ describe("factory commands", () => {
     expect(JSON.parse(result.stdout).phase).toBe("ready");
     expect(start).toHaveBeenCalledOnce();
   });
+  it("refuses a start without a worker model, with a hint and no stdout", async () => {
+    const json = await runCli(["--json", "factory", "start"], project.paths.root);
+    expect(json.exitCode).toBe(1);
+    expect(json.stdout).toBe("");
+    expect(JSON.parse(json.stderr).error).toMatchObject({
+      code: "VALIDATION",
+      hint: expect.stringContaining("rowbly factory configure --worker"),
+    });
+
+    const text = await runCli(["factory", "start"], project.paths.root);
+    expect(text.exitCode).toBe(1);
+    expect(text.stdout).toBe("");
+    expect(text.stderr).toContain("Error: No worker model is set");
+    expect(text.stderr).toContain("Hint:");
+  });
   it("configures the Git sync keys and keeps the keys of flags that are not given", async () => {
     const settingsFile = project.paths.configFile;
     const on = await runCli(
