@@ -47,7 +47,8 @@ take or change a lock. For the worker hosts, read [remote-hosts.md](remote-hosts
   `sessions/` one time. Use a checked folder only for one operation. Do not keep it across calls.
 - `state.json` uses version 1 of the policy format. The types are in
   `src/services/factory-policy/policy-types.ts`. The `factory-state/` service keeps unknown v1 keys.
-- Without the `factory` key of the config, the worker limit is four and Pi selects default models. See
+- Without the `factory` key of the config, the worker limit is four and no worker model is set. The
+  factory does not start without a worker model. See
   [pi-runtime-and-auth.md](pi-runtime-and-auth.md#factory-settings).
 - `placement` selects the machine of a new worker: `prefer-local` (the default), `most-free` or
   `prefer-remote`. See [pi-runtime-and-auth.md](pi-runtime-and-auth.md#placement).

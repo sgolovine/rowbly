@@ -66,6 +66,12 @@ the new list. The new list replaces the full list. The command validates each mo
 `validateModelChoice` before the config changes, as `--worker` does. `--clear-fallback-workers`
 removes the key. The other keys of `rowbly.config.json` do not change.
 
+`factory start` and `factory restart` give the error code `VALIDATION` (exit 1) when
+`factory.workerModel` is not set. The hint tells you to run
+`rowbly factory configure --worker <provider/model>`. `rowbly model list` shows the models. A restart
+does this check before the stop, so a live factory continues. With `--json`, the error object goes
+to stderr, and stdout is empty.
+
 `factory run` and `factory watchdog` are hidden commands. `factory start` starts a detached
 `factory watchdog`, and the watchdog starts `factory run` as its child. See
 [recovery.md](recovery.md#automatic-restart-after-a-crash).
@@ -177,6 +183,9 @@ the Threads of the Story.
 - When the live factory has a worker host, the `Hosts` list shows each host: the id, the connection
   state, `<used>/<max>` slots and, for a host that is not `connected` or `degraded`, the time since
   the last contact or `no contact`. Without a worker host, the list does not show.
+- When the factory settings have no worker model, Factory controls show the notice
+  `No worker model is set. The factory cannot start a worker without one. Press a to select it in Settings › AI.`
+  The `s` key stays available. A start shows the error of the service and its hint in a toast.
 - In Factory controls:
   - `s` starts the factory.
   - `x` requests a stop, with confirmation.
@@ -302,8 +311,11 @@ and Checks.
   limits. `n` adds a check. `↑/↓` select a check. Enter or a click edits the check. `d` removes the
   check, with confirmation. See [checks.md](checks.md).
 - `s`, `w` and `l` also work on the other tabs.
-- The model picker offers the supported thinking levels and `Pi default`. The picker of an override offers
-  `No override` in place of `Pi default`.
+- The picker of the worker model offers the available models and their supported thinking levels. It
+  has no option to clear the worker model, because the factory does not start without it. The picker
+  of an override has the first option `No override`.
+- When the worker model is not set, the card shows `Not set`. The text of the card tells that the
+  factory does not start without a worker model.
 - Escape cancels authentication and restores the focus.
 
 ## Related

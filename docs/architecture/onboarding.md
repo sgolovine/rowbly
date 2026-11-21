@@ -40,6 +40,11 @@ prompts" row points to `.rowbly/prompts/`, Settings › Prompts and `rowbly prom
   installed.
 - Initialization creates `.rowbly/.gitignore` and the two user prompts in `.rowbly/prompts/`, with no
   text. See [storage.md](storage.md) and [prompts.md](prompts.md).
+- Onboarding does not set `factory.workerModel`. The factory does not start without it.
+- After the onboarding steps of the TUI, the board loads and the TUI asks for the worker model. See
+  [tui.md](tui.md#the-worker-model-setup).
+- After `rowbly init`, run `rowbly factory configure --worker <provider/model>` to set the worker
+  model. `rowbly model list` shows the models.
 
 ## `rowbly init` input
 

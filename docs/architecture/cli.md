@@ -208,6 +208,9 @@ and `host unuse` need a Project. The `host-project` service does their work. See
 - `rowbly factory configure --stage <key> --class <work|hold>` sets the class of a Stage in
   `factory.stageClasses`. `--stage <key> --clear-class` removes it. See
   [native-factory/controls.md](native-factory/controls.md#cli-commands).
+- `rowbly factory start` and `rowbly factory restart` give a `VALIDATION` error (exit 1) when
+  `factory.workerModel` is not set. The hint names `rowbly factory configure --worker <provider/model>`.
+  See [native-factory/controls.md](native-factory/controls.md#cli-commands).
 - `rowbly factory release <story-id>` forces the live factory to evaluate a Story for a worker again,
   with the same result as a Stage round trip. It sends the control command `release-story` to the daemon
   and waits for the receipt. A Story that does not exist, that is not in a work Stage or that has an active

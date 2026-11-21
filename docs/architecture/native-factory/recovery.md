@@ -278,6 +278,9 @@ loop is in `src/commands/factory-runner/watchdog-runner.ts`. The pure rules and 
   exit code or signal and the path of the last log. You cannot dismiss this entry, because no daemon
   is live. The next `rowbly factory start` clears it.
 - The back-off, the crash limit and the stable period are constants. They are not settings.
+- If a person removes `factory.workerModel` while the factory runs, a daemon that the watchdog starts
+  again fails its preflight with a `VALIDATION` error. Each try is a crash, so the watchdog stops at
+  the crash limit, and the phase is `failed`.
 - Each restart uses the usual start path of `factory run`: the owner probe, the recovery after owner
   death and the release of ownership. Thus recovery marks the active local runs of the crashed daemon
   as interrupted. The new daemon adopts the active remote runs. See
