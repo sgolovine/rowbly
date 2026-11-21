@@ -84,11 +84,17 @@ export function finishSignIn(env: AiEnv, signedIn: boolean): void {
   }
 }
 
-/** Saves the worker model. `null` clears it, so that Pi selects its default. */
+/**
+ * Saves the worker model. The picker of the worker model cannot clear it, because the factory does not start without
+ * one, so `null` only closes the picker.
+ */
 export async function saveModel(env: AiEnv, choice: ModelChoice | null): Promise<void> {
-  await updateFactorySettings({ workerModel: choice ?? undefined }, env.ctx);
-  showToast(env.toast, "info", `Saved the worker model: ${modelText(choice ?? undefined)}`);
-  finishTask(env, true);
+  if (choice) {
+    await updateFactorySettings({ workerModel: choice }, env.ctx);
+    showToast(env.toast, "info", `Saved the worker model: ${modelText(choice)}`);
+  }
+
+  finishTask(env, !!choice);
 }
 
 /** Saves the worker model override of a Stage. `null` removes the override, so that the worker model applies. */

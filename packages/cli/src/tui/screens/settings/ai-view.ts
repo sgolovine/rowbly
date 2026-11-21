@@ -42,10 +42,10 @@ export function providerStatus(provider: { configured: boolean; credentialType?:
   return "not signed in";
 }
 
-/** `provider/model`, with its thinking level, or `Pi default`. */
+/** `provider/model`, with its thinking level, or `Not set`. */
 export function modelText(choice: ModelChoice | undefined): string {
   if (!choice) {
-    return "Pi default";
+    return "Not set";
   }
 
   return `${choice.provider}/${choice.modelId}${choice.thinkingLevel ? ` · thinking ${choice.thinkingLevel}` : ""}`;

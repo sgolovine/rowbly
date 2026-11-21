@@ -25,6 +25,13 @@ function workerModel(settings: FactorySettings | undefined): string {
   return settings ? modelText(settings.workerModel) : "—";
 }
 
+/** The text of the worker model card. It tells that the factory needs the model when it is not set. */
+function workerModelDescription(settings: FactorySettings | undefined): string {
+  const text = "Each worker does the work of one Story in its Stage.";
+
+  return settings && !settings.workerModel ? `${text} The factory does not start without a worker model.` : text;
+}
+
 /**
  * The Models tab: the model of the workers in a card. Under it, one row for each Stage shows the worker model
  * override of the Stage.
@@ -45,7 +52,7 @@ export function AiModelsPage({
       <AiSettingCard
         title="Worker model"
         value={workerModel(settings)}
-        description="Each worker does the work of one Story in its Stage."
+        description={workerModelDescription(settings)}
         action={action}
         keyName="w"
         clickable={idle}

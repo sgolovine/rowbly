@@ -85,3 +85,10 @@ export function providerNotice(aiSettings: boolean): string {
     ? "No AI provider is signed in. Press a to sign in before you start the factory."
     : "No AI provider is signed in. Sign in with rowbly auth login before you start the factory.";
 }
+
+/** Tells the person how to select a worker model: in the TUI when it has the AI settings, or else with the CLI. */
+export function workerModelNotice(aiSettings: boolean): string {
+  return aiSettings
+    ? "No worker model is set. The factory cannot start a worker without one. Press a to select it in Settings › AI."
+    : "No worker model is set. The factory cannot start a worker without one. Run rowbly factory configure --worker <provider/model>.";
+}
