@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { workerModelMissingError } from "../factory-settings/worker-model-gate.js";
 import { HostUnreachableError } from "../host-transport/host-errors.js";
 import type { Story } from "../story/story.js";
 import type { ThreadRecord } from "../thread/thread.js";
@@ -68,6 +69,12 @@ describe("networkWaitingThreads", () => {
 });
 
 describe("workerFailure", () => {
+  it("gives a configuration error for a worker without a model", () => {
+    expect(workerFailure(workerModelMissingError(), { launched: false, stopping: false })).toMatchObject({
+      class: "configuration",
+      code: "WORKER_MODEL_MISSING",
+    });
+  });
   it("gives a transient NETWORK error for a connectivity error", () => {
     const retryAt = "2026-01-01T00:01:00.000Z";
     expect(workerFailure(new Error("fetch failed"), { launched: true, stopping: false, retryAt })).toEqual({

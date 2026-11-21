@@ -4,6 +4,7 @@ import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import type { CheckQueue, CheckQueueDeps } from "../check-queue/check-queue.js";
 import { assertFactoryOwnership, type Owner } from "../factory-ownership/factory-ownership.js";
 import type { FactorySettings, ModelChoice } from "../factory-settings/factory-settings.js";
+import { PI_PLACEHOLDER_PROVIDER } from "../factory-settings/worker-model-gate.js";
 import { isHostTransportError } from "../host-transport/host-errors.js";
 import type { HostConnection, RemoteExecutor } from "../remote-executor/remote-executor.js";
 import type { HeartbeatLimits, HostHealth } from "../remote-executor/remote-heartbeat.js";
@@ -205,8 +206,9 @@ export function pausedProviders(
   error: unknown,
   failures = 0,
 ): ReadonlyMap<string, ProviderPause> {
-  // A failure of the connection to a worker host does not pause the provider of the model.
-  if (!provider || isHostTransportError(error)) {
+  // A failure of the connection to a worker host does not pause the provider of the model. The placeholder provider
+  // of Pi is not a real provider, so it is never paused.
+  if (!provider || provider === PI_PLACEHOLDER_PROVIDER || isHostTransportError(error)) {
     return providers;
   }
 

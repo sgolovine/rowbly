@@ -1,4 +1,5 @@
 import { stat } from "node:fs/promises";
+import { isWorkerModelMissing } from "../factory-settings/worker-model-gate.js";
 import { isHostTransportError } from "../host-transport/host-errors.js";
 import { RemoteRunError } from "../remote-executor/run-frames.js";
 import type { Story } from "../story/story.js";
@@ -23,11 +24,16 @@ interface FailureFacts {
 /**
  * Gives the Thread error of a failed worker. A connectivity error gives the class `transient` and the code
  * `NETWORK`, so that the manager can resume the Thread when the pause of its provider ends. A failure on a worker host,
- * or of the connection to a worker host, keeps the error code of the host.
+ * or of the connection to a worker host, keeps the error code of the host. A worker without a model is a
+ * `configuration` failure.
  */
 export function workerFailure(error: unknown, facts: FailureFacts): NonNullable<ThreadRecord["error"]> {
   const message = (error instanceof Error ? error.message : "Worker failed").slice(0, 1000);
   const transport = isHostTransportError(error);
+
+  if (isWorkerModelMissing(error)) {
+    return { class: "configuration", code: "WORKER_MODEL_MISSING", message };
+  }
 
   // A failure of the connection to a worker host is not a failure of the provider, so it is never `NETWORK`.
   if (!transport && !facts.stopping && isConnectivityError(error)) {

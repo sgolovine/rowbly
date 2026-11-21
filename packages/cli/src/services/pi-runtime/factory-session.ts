@@ -4,6 +4,7 @@ import type { CreateAgentSessionOptions, ModelRuntime, SessionManager } from "@e
 import { ValidationError } from "../errors/errors.js";
 import type { CheckSpec } from "../factory-settings/check-settings.js";
 import type { ModelChoice } from "../factory-settings/factory-settings.js";
+import { PI_PLACEHOLDER_PROVIDER, workerModelMissingError } from "../factory-settings/worker-model-gate.js";
 import { blockedCheck, workerShellEnv } from "../factory-worker/worker-env.js";
 import type { ThreadRecord } from "../thread/thread.js";
 import { createPiSession, loadPi, type PiSdk, type PiSession } from "./pi-runtime.js";
@@ -50,11 +51,15 @@ function sessionManager(sdk: PiSdk, o: FactorySessionOptions, dir: string): Sess
   return sdk.SessionManager.create(sessionCwd(o), dir, { id: o.thread.id });
 }
 
-function selectedModel(o: FactorySessionOptions): ReturnType<ModelRuntime["getModel"]> {
-  const model = o.choice ? o.runtime.getModel(o.choice.provider, o.choice.modelId) : undefined;
+function unavailable(choice: ModelChoice): ValidationError {
+  return new ValidationError(`Model unavailable: ${choice.provider}/${choice.modelId}`);
+}
 
-  if (o.choice && !model) {
-    throw new ValidationError(`Model unavailable: ${o.choice.provider}/${o.choice.modelId}`);
+function selectedModel(o: FactorySessionOptions, choice: ModelChoice): ReturnType<ModelRuntime["getModel"]> {
+  const model = o.runtime.getModel(choice.provider, choice.modelId);
+
+  if (!model) {
+    throw unavailable(choice);
   }
 
   return model;
@@ -112,28 +117,33 @@ async function loadResources(
   return { settingsManager, resourceLoader };
 }
 
-async function validateChoice(o: FactorySessionOptions): Promise<void> {
-  if (!o.choice) {
-    return;
-  }
-
+async function validateChoice(o: FactorySessionOptions, choice: ModelChoice): Promise<void> {
   const { validateModelChoice } = await import("../agent-auth/agent-auth.js");
 
-  await validateModelChoice(o.runtime, o.choice);
+  await validateModelChoice(o.runtime, choice);
 }
 
-/** Resolves a real model through Pi. Injected runtimes use the same session path in tests. */
+/**
+ * Resolves a real model through Pi. Injected runtimes use the same session path in tests. Without a model choice, it
+ * refuses before it loads Pi, because Pi then gives the session a placeholder model that cannot do work.
+ */
 export async function openFactorySession(o: FactorySessionOptions): Promise<OpenedSession> {
+  const choice = o.choice;
+
+  if (!choice) {
+    throw workerModelMissingError();
+  }
+
   const sdk = await loadPi();
 
-  await validateChoice(o);
+  await validateChoice(o, choice);
 
   const dir = `${o.runtimeDir}/sessions/${o.thread.id}`;
 
   await mkdir(dir, { recursive: true, mode: 0o700 });
 
   const manager = sessionManager(sdk, o, dir);
-  const model = selectedModel(o);
+  const model = selectedModel(o, choice);
   const tools = o.worker ? [...o.tools, workerBash(sdk, o.worker)] : [...o.tools];
   const resources = await loadResources(sdk, o);
 
@@ -142,7 +152,7 @@ export async function openFactorySession(o: FactorySessionOptions): Promise<Open
     agentDir: o.agentDir,
     modelRuntime: o.runtime,
     model,
-    thinkingLevel: o.choice?.thinkingLevel,
+    thinkingLevel: choice.thinkingLevel,
     sessionManager: manager,
     ...resources,
     tools: o.worker ? workerToolNames(tools) : tools.map((t) => t.name),
@@ -150,14 +160,14 @@ export async function openFactorySession(o: FactorySessionOptions): Promise<Open
   });
   const selected = handle.session.model;
 
-  if (!selected) {
+  if (!selected || selected.provider === PI_PLACEHOLDER_PROVIDER) {
     await handle.close();
-    throw new ValidationError("No authenticated model is available. Configure Pi credentials first.");
+    throw unavailable(choice);
   }
 
   return {
     handle,
-    model: { provider: selected.provider, modelId: selected.id, thinkingLevel: o.choice?.thinkingLevel },
+    model: { provider: selected.provider, modelId: selected.id, thinkingLevel: choice.thinkingLevel },
     file: relative(o.runtimeDir, manager.getSessionFile() ?? ""),
   };
 }

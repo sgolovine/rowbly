@@ -201,6 +201,7 @@ function workerModelFor(manager: Manager, story: Story, model: ModelChoice | und
 }
 
 async function assertWorkerModel(manager: Manager, choice: ModelChoice | undefined): Promise<void> {
+  // Without a model, the session of the worker refuses the launch with a configuration error.
   if (!choice) {
     return;
   }
